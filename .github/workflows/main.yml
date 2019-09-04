@@ -1,0 +1,92 @@
+name: Angular CI
+
+on: [push]
+
+jobs:
+  angular-lint:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: |
+        yarn install
+
+    - name: Pull Angular cli
+      run: docker pull trion/ng-cli:8.3.2
+
+    - name: Run Angular lint
+      run: |
+        docker run --rm \
+          -w ${GITHUB_WORKSPACE} \
+          -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+          trion/ng-cli:8.3.2 \
+          ng lint;
+
+  angular-test-karma:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: |
+        yarn install
+
+    - name: Pull Angular cli Karma
+      run: docker pull trion/ng-cli-karma:8.3.2
+
+    - name: Run Karma
+      run: |
+        docker run --rm \
+          -w ${GITHUB_WORKSPACE} \
+          -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+          trion/ng-cli-karma:8.3.2 \
+          ng test --code-coverage --progress false --watch false;
+
+    - name: SonarQube Scan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        export SONAR_SCANNER_VERSION=4.0.0.1744;
+        export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux;
+        rm -rf $SONAR_SCANNER_HOME;
+        mkdir -p $SONAR_SCANNER_HOME;
+        curl -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip;
+        unzip $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/;
+        rm $HOME/.sonar/sonar-scanner.zip;
+        export PATH=$SONAR_SCANNER_HOME/bin:$PATH;
+        export SONAR_SCANNER_OPTS="-server";
+        sonar-scanner \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.projectKey=Steins-fr_synchronous-chess \
+          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
+          -Dsonar.login=${{ secrets.SONAR_LOGIN }} \
+          -Dsonar.typescript.lcov.reportPaths=coverage/synchronous-chess/lcov.info \
+          -Dsonar.sourceEncoding=UTF-8 \
+          -Dsonar.sources=src/app \
+          -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts \
+          -Dsonar.tests=src/app \
+          -Dsonar.test.inclusions=**/*.spec.ts;
+
+  angular-test-e2e:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: |
+        yarn install
+
+    - name: Pull Angular cli e2e
+      run: docker pull trion/ng-cli-e2e:8.3.2
+
+    - name: Run e2e
+      run: |
+        docker run --rm \
+          -w ${GITHUB_WORKSPACE} \
+          -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+          trion/ng-cli-e2e:8.3.2 \
+          ng e2e;
