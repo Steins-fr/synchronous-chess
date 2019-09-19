@@ -90,3 +90,20 @@ jobs:
           -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
           trion/ng-cli-e2e:8.3.2 \
           ng e2e;
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [angular-lint, angular-test-karma, angular-test-e2e]
+    steps:
+
+    - uses: actions/checkout@v1
+
+    - name: Install dependencies
+      run: |
+        yarn install
+
+    - name: Deploy to staging
+      run: |
+        export AWS_ACCESS_KEY_ID=${{ secrets.AWS_STAGING_ACCESS_KEY }}
+        export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_STAGING_SECRET_KEY }}
+        yarn build:staging:deploy;
