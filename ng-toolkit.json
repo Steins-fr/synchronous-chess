@@ -1,0 +1,13 @@
+{
+  "serverless": {
+    "provider": "aws",
+    "project": "synchronous-chess",
+    "skipInstall": false,
+    "directory": ".",
+    "clientProject": "synchronous-chess",
+    "serverless": {
+      "aws": {},
+      "gcloud": {}
+    }
+  }
+}
