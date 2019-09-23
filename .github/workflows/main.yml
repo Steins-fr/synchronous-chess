@@ -64,6 +64,7 @@ jobs:
           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
           -Dsonar.login=${{ secrets.SONAR_LOGIN }} \
           -Dsonar.typescript.lcov.reportPaths=coverage/synchronous-chess/lcov.info \
+          -Dsonar.typescript.tsconfigPath=tslint.json \
           -Dsonar.sourceEncoding=UTF-8 \
           -Dsonar.sources=src/app \
           -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts \
