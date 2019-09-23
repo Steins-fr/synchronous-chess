@@ -6,19 +6,19 @@ import * as express from 'express';
 import * as cors from 'cors';
 import * as compression from 'compression';
 
-import {join} from 'path';
+import { join } from 'path';
 
-export const app = express();
+export const app: any = express();
 
 app.use(compression());
 app.use(cors());
 
-const DIST_FOLDER = join(process.cwd(), 'dist/synchronous-chess');
+const DIST_FOLDER: string = join(process.cwd(), 'dist/synchronous-chess');
 
 app.get('*.*', express.static(join(DIST_FOLDER), {
     maxAge: '1y'
 }));
 
-app.get('/*', (req, res) => {
+app.get('/*', (req: any, res: any) => {
     res.sendFile(join(DIST_FOLDER + '/index.html'));
 });
