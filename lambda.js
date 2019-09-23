@@ -4,22 +4,22 @@ const server = require('./dist/server');
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware');
 
 const binaryMimeTypes = [
-  'application/javascript',
-  'application/json',
-  'application/octet-stream',
-  'application/xml',
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'text/comma-separated-values',
-  'text/css',
-  'text/html',
-  'text/javascript',
-  'text/plain',
-  'text/text',
-  'text/xml',
-  'image/x-icon',
-  'image/svg+xml',
+    'application/javascript',
+    'application/json',
+    'application/octet-stream',
+    'application/xml',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'text/comma-separated-values',
+    'text/css',
+    'text/html',
+    'text/javascript',
+    'text/plain',
+    'text/text',
+    'text/xml',
+    'image/x-icon',
+    'image/svg+xml',
     'application/x-font-ttf'
 ];
 
