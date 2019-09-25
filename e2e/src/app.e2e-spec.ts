@@ -8,9 +8,9 @@ describe('workspace-project App', () => {
         page = new AppPage();
     });
 
-    it('should display welcome message', () => {
+    it('should have a navbar', () => {
         page.navigateTo();
-        expect(page.getTitleText()).toEqual('synchronous-chess app is running!');
+        expect(page.getNavbar()).toBe('nav');
     });
 
     afterEach(async () => {

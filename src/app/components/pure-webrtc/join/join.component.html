@@ -1,0 +1,27 @@
+<div id="join-channel" class="channel">
+    <h3>Join webrtc channel</h3>
+    <label>2. Register remote SDP (paste)</label>
+    <textarea id="remote-sdp-input" rows=5 [(ngModel)]="remoteSdpInput"></textarea>
+    <div class="row">
+        <label>3. Create Participant SDP (copy)</label>
+        <button id="create-participant" (click)="start()">Create</button>
+    </div>
+    <textarea id="participant-output" rows=5
+        readonly>{{ (webRTCChat.sessionDescription | async) || 'No answer' }}</textarea>
+
+    <label>Chat</label>
+    <div id="chat">
+        <span *ngFor="let entry of (webRTCChat.chat | async)">{{ entry }}</span>
+    </div>
+    <div class="row">
+        <input id="send-input" type="text" [(ngModel)]="sendInput" />
+        <button id="send" (click)="sendMessage()">Send</button>
+    </div>
+    <app-debug-webrtc-states [stateIce]="webRTCChat.stateIce | async"
+        [stateReceiveChannel]="webRTCChat.stateReceiveChannel | async"
+        [stateSendChannel]="webRTCChat.stateSendChannel | async"></app-debug-webrtc-states>
+</div>
+
+<section id="debug">
+    <app-debug-icecandidates [candidates]="webRTCChat.candidates | async"></app-debug-icecandidates>
+</section>

@@ -30,6 +30,6 @@ describe('AppComponent', () => {
         const fixture: ComponentFixture<AppComponent> = TestBed.createComponent(AppComponent);
         fixture.detectChanges();
         const compiled: any = fixture.debugElement.nativeElement;
-        expect(compiled.querySelector('.content span').textContent).toContain('synchronous-chess app is running!');
+        expect(compiled.querySelector('nav').textContent).not.toContain('synchronous-chess app is running!');
     });
 });

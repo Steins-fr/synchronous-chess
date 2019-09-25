@@ -1,3 +1,6 @@
 {
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "auto-close-tag.activationOnLanguage": [
+        "html"
+    ]
 }
