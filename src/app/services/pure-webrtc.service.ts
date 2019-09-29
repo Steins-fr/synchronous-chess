@@ -30,6 +30,11 @@ export class PureWebrtcService {
         ]
     };
 
+    private static readonly defaultSessionDescription: SessionDescription = {
+        sdp: null,
+        ice: []
+    };
+
     private readonly _stateIce: BehaviorSubject<string> = new BehaviorSubject<string>('');
     public stateIce: Observable<string> = this._stateIce.asObservable();
     private readonly _stateSendChannel: BehaviorSubject<string> = new BehaviorSubject<string>('');
@@ -41,7 +46,7 @@ export class PureWebrtcService {
     private readonly _chat: BehaviorSubject<Array<string>> = new BehaviorSubject<Array<string>>([]);
     public chat: Observable<Array<string>> = this._chat.asObservable();
 
-    private readonly _candidateEntries: Array<Candidate> = [];
+    private _candidateEntries: Array<Candidate> = [];
     private readonly _candidates: BehaviorSubject<Array<Candidate>> = new BehaviorSubject<Array<Candidate>>([]);
     public candidates: Observable<Array<Candidate>> = this._candidates.asObservable();
 
@@ -70,7 +75,6 @@ export class PureWebrtcService {
     }
 
     public configure(peerConnectionConfig?: RTCConfiguration): void {
-        this.begin = window.performance.now();
         this.peerConnection = new RTCPeerConnection(peerConnectionConfig || PureWebrtcService.defaultPeerConnectionConfig);
         this.peerConnection.onicecandidate = (e: any): void => this.gotIceCandidate(e);
         this.peerConnection.oniceconnectionstatechange = (): void => this.onIceConnectionStateChange();
@@ -82,15 +86,24 @@ export class PureWebrtcService {
         this.sendChannel.onclose = (): void => this.onSendChannelStateChange();
 
         this.peerConnection.ondatachannel = (e: any): void => this.receiveDataChannel(e);
+
+        this.description = PureWebrtcService.defaultSessionDescription;
+        this._sessionDescription.next('');
+
+        this._candidateEntries = [];
+        this._candidates.next(this._candidateEntries);
+
+        this.onEventDone();
     }
 
     public createOffer(options?: RTCOfferOptions): void {
+        this.begin = window.performance.now();
         this.peerConnection.createOffer(options)
             .then((description: any): void => this.gotDescription(description));
     }
 
     public createAnswer(remoteOffer: SessionDescription): void {
-
+        this.begin = window.performance.now();
         this.peerConnection.setRemoteDescription(new RTCSessionDescription(remoteOffer.sdp)).then(
             () => {
                 if (remoteOffer.sdp.type === 'offer') {
