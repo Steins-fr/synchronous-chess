@@ -7,21 +7,21 @@
         <button id="create-participant" (click)="start()">Create</button>
     </div>
     <textarea id="participant-output" rows=5
-        readonly>{{ (webRTCChat.sessionDescription | async) || 'No answer' }}</textarea>
+        readonly>{{ (webRTC.sessionDescription | async) || 'No answer' }}</textarea>
 
     <label>Chat</label>
     <div id="chat">
-        <span *ngFor="let entry of (webRTCChat.chat | async)">{{ entry }}</span>
+        <span *ngFor="let entry of chat">{{ entry }}</span>
     </div>
     <div class="row">
         <input id="send-input" type="text" [(ngModel)]="sendInput" />
         <button id="send" (click)="sendMessage()">Send</button>
     </div>
-    <app-debug-webrtc-states [stateIce]="(webRTCChat.states | async).ice"
-        [stateReceiveChannel]="(webRTCChat.states | async).receiveChannel"
-        [stateSendChannel]="(webRTCChat.states | async).sendChannel"></app-debug-webrtc-states>
+    <app-debug-webrtc-states [stateIce]="(webRTC.states | async).ice"
+        [stateReceiveChannel]="(webRTC.states | async).receiveChannel"
+        [stateSendChannel]="(webRTC.states | async).sendChannel"></app-debug-webrtc-states>
 </div>
 
 <section id="debug">
-    <app-debug-icecandidates [candidates]="webRTCChat.candidates | async"></app-debug-icecandidates>
+    <app-debug-icecandidates [candidates]="webRTC.candidates | async"></app-debug-icecandidates>
 </section>
