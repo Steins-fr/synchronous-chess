@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 export interface Candidate {
     component?: any;
@@ -72,7 +72,7 @@ export class PureWebrtcService {
     private readonly _sessionDescription: BehaviorSubject<string> = new BehaviorSubject<string>('');
     public sessionDescription: Observable<string> = this._sessionDescription.asObservable();
 
-    private readonly _eventDone: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    private readonly _eventDone: Subject<boolean> = new Subject<boolean>();
     public eventDone: Observable<boolean> = this._eventDone.asObservable();
 
     private begin: number;
