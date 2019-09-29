@@ -17,6 +17,13 @@ export interface SessionDescription {
     ice: Array<RTCIceCandidateInit>;
 }
 
+interface WebrtcStates {
+    error: string;
+    ice: string;
+    sendChannel: string;
+    receiveChannel: string;
+}
+
 @Injectable()
 export class PureWebrtcService {
 
@@ -35,12 +42,15 @@ export class PureWebrtcService {
         ice: []
     };
 
-    private readonly _stateIce: BehaviorSubject<string> = new BehaviorSubject<string>('');
-    public stateIce: Observable<string> = this._stateIce.asObservable();
-    private readonly _stateSendChannel: BehaviorSubject<string> = new BehaviorSubject<string>('');
-    public stateSendChannel: Observable<string> = this._stateSendChannel.asObservable();
-    private readonly _stateReceiveChannel: BehaviorSubject<string> = new BehaviorSubject<string>('');
-    public stateReceiveChannel: Observable<string> = this._stateReceiveChannel.asObservable();
+    private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>({
+        error: '',
+        ice: 'None',
+        sendChannel: 'None',
+        receiveChannel: 'None'
+    });
+
+    public states: Observable<WebrtcStates> = this._states.asObservable();
+
 
     private readonly _chatEntries: Array<string> = [];
     private readonly _chat: BehaviorSubject<Array<string>> = new BehaviorSubject<Array<string>>([]);
@@ -64,9 +74,6 @@ export class PureWebrtcService {
 
     private readonly _eventDone: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     public eventDone: Observable<boolean> = this._eventDone.asObservable();
-
-    private readonly _error: BehaviorSubject<string> = new BehaviorSubject<string>('');
-    public error: Observable<string> = this._error.asObservable();
 
     private begin: number;
 
@@ -149,17 +156,26 @@ export class PureWebrtcService {
     }
 
     private onIceConnectionStateChange(): void {
-        this._stateIce.next(this.peerConnection.iceConnectionState);
+        this._states.next({
+            ...this._states.getValue(),
+            ice: this.peerConnection.iceConnectionState
+        });
         this.onEventDone();
     }
 
     private onSendChannelStateChange(): void {
-        this._stateSendChannel.next(this.sendChannel.readyState);
+        this._states.next({
+            ...this._states.getValue(),
+            sendChannel: this.sendChannel.readyState
+        });
         this.onEventDone();
     }
 
     private onReceiveChannelStateChange(): void {
-        this._stateReceiveChannel.next(this.receiveChannel.readyState);
+        this._states.next({
+            ...this._states.getValue(),
+            receiveChannel: this.receiveChannel.readyState
+        });
         this.onEventDone();
     }
 
@@ -177,7 +193,10 @@ export class PureWebrtcService {
     }
 
     private createError(error: any): void {
-        this._error.next(error);
+        this._states.next({
+            ...this._states.getValue(),
+            error
+        });
     }
 
     private gotDescription(description: RTCSessionDescription): void {
