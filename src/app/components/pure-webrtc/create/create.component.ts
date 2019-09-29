@@ -15,17 +15,20 @@ export class CreateComponent implements OnInit, OnDestroy {
     public remoteSdpInput: string = '';
     public sendInput: string = '';
 
-    public webRTCChat: PureWebrtcService = new PureWebrtcService();
+    public webRTC: PureWebrtcService = new PureWebrtcService();
+    public chat: Array<string> = [];
 
     public constructor(private readonly changeDetectorRef: ChangeDetectorRef) {
 
     }
 
     public ngOnInit(): void {
-        this.subs.push(this.webRTCChat.eventDone
+        this.subs.push(this.webRTC.eventDone
             .subscribe(() => {
                 this.changeDetectorRef.detectChanges();
             }));
+
+        this.subs.push(this.webRTC.data.subscribe((data: string) => this.chat.push(data)));
     }
 
     public ngOnDestroy(): void {
@@ -33,19 +36,20 @@ export class CreateComponent implements OnInit, OnDestroy {
     }
 
     public sendMessage(): void {
-        this.webRTCChat.sendMessage(this.sendInput);
+        this.webRTC.sendMessage(this.sendInput);
+        this.chat.push(`Me: ${this.sendInput}`);
         this.sendInput = '';
     }
 
     public start(): void {
-        this.webRTCChat.configure();
-        this.webRTCChat.createOffer();
+        this.webRTC.configure();
+        this.webRTC.createOffer();
     }
 
     public registerRemoteSdp(): void {
         const remoteSdp: SessionDescription = JSON.parse(this.remoteSdpInput);
 
-        this.webRTCChat.registerRemoteSdp(remoteSdp.sdp);
-        this.webRTCChat.registerRemoteIce(remoteSdp.ice);
+        this.webRTC.registerRemoteSdp(remoteSdp.sdp);
+        this.webRTC.registerRemoteIce(remoteSdp.ice);
     }
 }

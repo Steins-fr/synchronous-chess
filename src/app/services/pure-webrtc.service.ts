@@ -51,10 +51,8 @@ export class PureWebrtcService {
 
     public states: Observable<WebrtcStates> = this._states.asObservable();
 
-
-    private readonly _chatEntries: Array<string> = [];
-    private readonly _chat: BehaviorSubject<Array<string>> = new BehaviorSubject<Array<string>>([]);
-    public chat: Observable<Array<string>> = this._chat.asObservable();
+    private readonly _data: Subject<string> = new Subject<string>();
+    public data: Observable<string> = this._data.asObservable();
 
     private _candidateEntries: Array<Candidate> = [];
     private readonly _candidates: BehaviorSubject<Array<Candidate>> = new BehaviorSubject<Array<Candidate>>([]);
@@ -126,8 +124,6 @@ export class PureWebrtcService {
 
     public sendMessage(message: string): boolean {
         if (this.sendChannel.readyState === 'open') {
-            this._chatEntries.push(`Me: ${message}`);
-            this._chat.next(this._chatEntries);
             if (this.sendChannel) {
                 this.sendChannel.send(message);
             }
@@ -180,8 +176,7 @@ export class PureWebrtcService {
     }
 
     private onReceiveMessage(event: any): void {
-        this._chatEntries.push(`Other: ${event.data}`);
-        this._chat.next(this._chatEntries);
+        this._data.next(`Other: ${event.data}`);
         this.onEventDone();
     }
 
