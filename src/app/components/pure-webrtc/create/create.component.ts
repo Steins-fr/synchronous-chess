@@ -38,6 +38,7 @@ export class CreateComponent implements OnInit, OnDestroy {
     }
 
     public start(): void {
+        this.webRTCChat.configure();
         this.webRTCChat.createOffer();
     }
 

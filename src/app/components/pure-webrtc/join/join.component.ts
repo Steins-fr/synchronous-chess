@@ -37,6 +37,8 @@ export class JoinComponent implements OnInit, OnDestroy {
 
     public start(): void {
         const remoteOffer: SessionDescription = JSON.parse(this.remoteSdpInput);
+
+        this.webRTCChat.configure();
         this.webRTCChat.createAnswer(remoteOffer);
     }
 }
