@@ -18,9 +18,9 @@
         <input id="send-input" type="text" [(ngModel)]="sendInput" />
         <button id="send" (click)="sendMessage()">Send</button>
     </div>
-    <app-debug-webrtc-states [stateIce]="webRTCChat.stateIce | async"
-        [stateReceiveChannel]="webRTCChat.stateReceiveChannel | async"
-        [stateSendChannel]="webRTCChat.stateSendChannel | async"></app-debug-webrtc-states>
+    <app-debug-webrtc-states [stateIce]="(webRTCChat.states | async).ice"
+        [stateReceiveChannel]="(webRTCChat.states | async).receiveChannel"
+        [stateSendChannel]="(webRTCChat.states | async).sendChannel"></app-debug-webrtc-states>
 </div>
 <section id="debug">
     <app-debug-icecandidates [candidates]="webRTCChat.candidates | async"></app-debug-icecandidates>

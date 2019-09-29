@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { PureWebrtcService } from './pure-webrtc.service';
+import { PureWebrtcService, WebrtcStates } from './pure-webrtc.service';
 import { skipWhile } from 'rxjs/operators';
 
 describe('PureWebrtcService', () => {
@@ -16,8 +16,8 @@ describe('PureWebrtcService', () => {
     it('should configure WebRTC connection', (done: DoneFn) => {
         const service: PureWebrtcService = TestBed.get(PureWebrtcService);
         service.configure();
-        service.error.subscribe((errorMessage: string) => {
-            expect(errorMessage).toBe('');
+        service.states.subscribe((states: WebrtcStates) => {
+            expect(states.error).toBe('');
             done();
         });
     });
@@ -25,8 +25,8 @@ describe('PureWebrtcService', () => {
     it('should create WebRTC offer', (done: DoneFn) => {
         const service: PureWebrtcService = TestBed.get(PureWebrtcService);
         service.createOffer();
-        service.error.subscribe((errorMessage: string) => {
-            expect(errorMessage).toBe('');
+        service.states.subscribe((states: WebrtcStates) => {
+            expect(states.error).toBe('');
             done();
         });
     });
@@ -41,8 +41,8 @@ describe('PureWebrtcService', () => {
             ice: []
         });
 
-        service.error.pipe(skipWhile((e: string) => e === '')).subscribe((errorMessage: string) => {
-            expect(errorMessage).not.toBe('');
+        service.states.pipe(skipWhile((states: WebrtcStates) => states.error === '')).subscribe((states: WebrtcStates) => {
+            expect(states.error).not.toBe('');
             done();
         });
     });
@@ -58,8 +58,8 @@ describe('PureWebrtcService', () => {
             ice: []
         });
 
-        service.error.subscribe((errorMessage: string) => {
-            expect(errorMessage).toBe('');
+        service.states.subscribe((states: WebrtcStates) => {
+            expect(states.error).toBe('');
             done();
         });
     });
