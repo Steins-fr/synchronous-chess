@@ -1,12 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { PureWebrtcService, Signal } from 'src/app/services/pure-webrtc.service';
+import { WebrtcService, Signal } from 'src/app/services/webrtc.service';
 import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-pure-webrtc-join',
     templateUrl: './join.component.html',
     styleUrls: ['./join.component.scss'],
-    providers: [PureWebrtcService]
+    providers: [WebrtcService]
 })
 export class JoinComponent implements OnInit, OnDestroy {
 
@@ -17,7 +17,7 @@ export class JoinComponent implements OnInit, OnDestroy {
 
     public chat: Array<string> = [];
 
-    public constructor(public webRTC: PureWebrtcService) { }
+    public constructor(public webRTC: WebrtcService) { }
 
     public ngOnInit(): void {
         this.subs.push(this.webRTC.data.subscribe((data: string) => this.chat.push(data)));

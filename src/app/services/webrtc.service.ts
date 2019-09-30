@@ -17,7 +17,7 @@ export interface Signal {
     ice: Array<RTCIceCandidateInit>;
 }
 
-interface WebrtcStates {
+export interface WebrtcStates {
     error: string;
     ice: string;
     sendChannel: string;
@@ -25,7 +25,7 @@ interface WebrtcStates {
 }
 
 @Injectable()
-export class PureWebrtcService {
+export class WebrtcService {
 
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
@@ -78,7 +78,7 @@ export class PureWebrtcService {
     }
 
     public configure(peerConnectionConfig?: RTCConfiguration): void {
-        this.peerConnection = new RTCPeerConnection(peerConnectionConfig || PureWebrtcService.defaultPeerConnectionConfig);
+        this.peerConnection = new RTCPeerConnection(peerConnectionConfig || WebrtcService.defaultPeerConnectionConfig);
         this.peerConnection.onicecandidate = (e: any): void => this.gotIceCandidate(e);
         this.peerConnection.oniceconnectionstatechange = (): void => this.onIceConnectionStateChange();
         this.peerConnection.onicegatheringstatechange = (): void => this._gatheringStateChange();
@@ -90,7 +90,7 @@ export class PureWebrtcService {
 
         this.peerConnection.ondatachannel = (e: any): void => this.receiveDataChannel(e);
 
-        this._signal = PureWebrtcService.defaultSignal;
+        this._signal = WebrtcService.defaultSignal;
 
         this._candidateEntries = [];
     }
