@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { WebrtcService, Signal } from 'src/app/services/webrtc.service';
+import { WebrtcService, Signal } from 'src/app/services/webrtc/webrtc.service';
 import { Subscription } from 'rxjs';
 
 @Component({
