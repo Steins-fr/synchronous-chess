@@ -1,20 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 
-import { PureWebrtcService, WebrtcStates } from './pure-webrtc.service';
+import { WebrtcService, WebrtcStates } from './webrtc.service';
 import { skipWhile } from 'rxjs/operators';
 
 describe('PureWebrtcService', () => {
     beforeEach(() => TestBed.configureTestingModule({
-        providers: [PureWebrtcService]
+        providers: [WebrtcService]
     }));
 
     it('should be created', () => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
         expect(service).toBeTruthy();
     });
 
     it('should configure WebRTC connection', (done: DoneFn) => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
         service.configure();
         service.states.subscribe((states: WebrtcStates) => {
             expect(states.error).toBe('');
@@ -23,7 +23,7 @@ describe('PureWebrtcService', () => {
     });
 
     it('should create WebRTC offer', (done: DoneFn) => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
         service.createOffer();
         service.states.subscribe((states: WebrtcStates) => {
             expect(states.error).toBe('');
@@ -32,7 +32,7 @@ describe('PureWebrtcService', () => {
     });
 
     it('should detect SDP parsing', (done: DoneFn) => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
         service.createAnswer({
             sdp: {
                 sdp: '',
@@ -49,7 +49,7 @@ describe('PureWebrtcService', () => {
 
 
     it('should create WebRTC answer', (done: DoneFn) => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
         service.createAnswer({
             sdp: {
                 type: 'offer',
@@ -65,13 +65,13 @@ describe('PureWebrtcService', () => {
     });
 
     it('should not send a message without connection', () => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
 
         expect(service.sendMessage('test')).toBeFalsy();
     });
 
     it('should not send a message without connection', () => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
 
         service.registerRemoteSdp({
             type: 'offer',
@@ -81,7 +81,7 @@ describe('PureWebrtcService', () => {
     });
 
     it('should not send a message without connection', () => {
-        const service: PureWebrtcService = TestBed.get(PureWebrtcService);
+        const service: WebrtcService = TestBed.get(WebrtcService);
 
         service.registerRemoteIce([]);
 
