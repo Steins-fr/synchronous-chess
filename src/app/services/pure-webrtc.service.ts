@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 export interface Candidate {
@@ -71,12 +71,9 @@ export class PureWebrtcService {
     private readonly _signalSubject: Subject<string> = new Subject<string>();
     public signal: Observable<string> = this._signalSubject.asObservable();
 
-    private readonly _eventDone: Subject<boolean> = new Subject<boolean>();
-    public eventDone: Observable<boolean> = this._eventDone.asObservable();
-
     private begin: number;
 
-    public constructor() {
+    public constructor(private readonly ngZone: NgZone) {
         this.configure();
     }
 
@@ -96,8 +93,6 @@ export class PureWebrtcService {
         this._signal = PureWebrtcService.defaultSignal;
 
         this._candidateEntries = [];
-
-        this.onEventDone();
     }
 
     public createOffer(options?: RTCOfferOptions): void {
@@ -126,7 +121,6 @@ export class PureWebrtcService {
             if (this.sendChannel) {
                 this.sendChannel.send(message);
             }
-            this.onEventDone();
             return true;
         }
         return false;
@@ -146,37 +140,29 @@ export class PureWebrtcService {
         }
     }
 
-    private onEventDone(): void {
-        this._eventDone.next(true);
-    }
-
     private onIceConnectionStateChange(): void {
-        this._states.next({
+        this.ngZone.run(() => this._states.next({
             ...this._states.getValue(),
             ice: this.peerConnection.iceConnectionState
-        });
-        this.onEventDone();
+        }));
     }
 
     private onSendChannelStateChange(): void {
-        this._states.next({
+        this.ngZone.run(() => this._states.next({
             ...this._states.getValue(),
             sendChannel: this.sendChannel.readyState
-        });
-        this.onEventDone();
+        }));
     }
 
     private onReceiveChannelStateChange(): void {
-        this._states.next({
+        this.ngZone.run(() => this._states.next({
             ...this._states.getValue(),
             receiveChannel: this.receiveChannel.readyState
-        });
-        this.onEventDone();
+        }));
     }
 
     private onReceiveMessage(event: any): void {
-        this._data.next(`Other: ${event.data}`);
-        this.onEventDone();
+        this.ngZone.run(() => this._data.next(`Other: ${event.data}`));
     }
 
     private receiveDataChannel(event: any): void {
@@ -187,10 +173,10 @@ export class PureWebrtcService {
     }
 
     private createError(error: any): void {
-        this._states.next({
+        this.ngZone.run(() => this._states.next({
             ...this._states.getValue(),
             error
-        });
+        }));
     }
 
     private gotDescription(description: RTCSessionDescription): void {
@@ -198,7 +184,6 @@ export class PureWebrtcService {
             () => {
                 this._signal.sdp = description;
                 // check icegathering
-                this.onEventDone();
             }
         ).catch((e: any) => this.createError(e));
     }
@@ -254,9 +239,8 @@ export class PureWebrtcService {
             elapsed
         };
         this._candidateEntries.push(candidate);
-        this._candidates.next([...this._candidateEntries]);
+        this.ngZone.run(() => this._candidates.next([...this._candidateEntries]));
 
-        this._signalSubject.next(JSON.stringify(this._signal));
-        this.onEventDone();
+        this.ngZone.run(() => this._signalSubject.next(JSON.stringify(this._signal)));
     }
 }
