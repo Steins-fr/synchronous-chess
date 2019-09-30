@@ -1,5 +1,5 @@
 import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
-import { PureWebrtcService, SessionDescription } from 'src/app/services/pure-webrtc.service';
+import { PureWebrtcService, Signal } from 'src/app/services/pure-webrtc.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -47,7 +47,7 @@ export class CreateComponent implements OnInit, OnDestroy {
     }
 
     public registerRemoteSdp(): void {
-        const remoteSdp: SessionDescription = JSON.parse(this.remoteSdpInput);
+        const remoteSdp: Signal = JSON.parse(this.remoteSdpInput);
 
         this.webRTC.registerRemoteSdp(remoteSdp.sdp);
         this.webRTC.registerRemoteIce(remoteSdp.ice);
