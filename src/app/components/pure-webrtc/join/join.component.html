@@ -6,8 +6,7 @@
         <label>3. Create Participant SDP (copy)</label>
         <button id="create-participant" (click)="start()">Create</button>
     </div>
-    <textarea id="participant-output" rows=5
-        readonly>{{ (webRTC.sessionDescription | async) || 'No answer' }}</textarea>
+    <textarea id="participant-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
 
     <label>Chat</label>
     <div id="chat">

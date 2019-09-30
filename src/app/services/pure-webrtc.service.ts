@@ -12,7 +12,7 @@ export interface Candidate {
     elapsed: string;
 }
 
-export interface SessionDescription {
+export interface Signal {
     sdp: RTCSessionDescriptionInit;
     ice: Array<RTCIceCandidateInit>;
 }
@@ -37,7 +37,7 @@ export class PureWebrtcService {
         ]
     };
 
-    private static readonly defaultSessionDescription: SessionDescription = {
+    private static readonly defaultSignal: Signal = {
         sdp: null,
         ice: []
     };
@@ -55,20 +55,21 @@ export class PureWebrtcService {
     public data: Observable<string> = this._data.asObservable();
 
     private _candidateEntries: Array<Candidate> = [];
-    private readonly _candidates: BehaviorSubject<Array<Candidate>> = new BehaviorSubject<Array<Candidate>>([]);
+    private readonly _candidates: Subject<Array<Candidate>> = new Subject<Array<Candidate>>();
     public candidates: Observable<Array<Candidate>> = this._candidates.asObservable();
 
     public peerConnection: RTCPeerConnection = undefined;
     public sendChannel: RTCDataChannel = undefined;
     public receiveChannel: RTCDataChannel = undefined;
 
-    public description: SessionDescription = {
+    // Signals
+    private _signal: Signal = {
         sdp: null,
         ice: []
     };
 
-    private readonly _sessionDescription: BehaviorSubject<string> = new BehaviorSubject<string>('');
-    public sessionDescription: Observable<string> = this._sessionDescription.asObservable();
+    private readonly _signalSubject: Subject<string> = new Subject<string>();
+    public signal: Observable<string> = this._signalSubject.asObservable();
 
     private readonly _eventDone: Subject<boolean> = new Subject<boolean>();
     public eventDone: Observable<boolean> = this._eventDone.asObservable();
@@ -92,11 +93,9 @@ export class PureWebrtcService {
 
         this.peerConnection.ondatachannel = (e: any): void => this.receiveDataChannel(e);
 
-        this.description = PureWebrtcService.defaultSessionDescription;
-        this._sessionDescription.next('');
+        this._signal = PureWebrtcService.defaultSignal;
 
         this._candidateEntries = [];
-        this._candidates.next(this._candidateEntries);
 
         this.onEventDone();
     }
@@ -107,7 +106,7 @@ export class PureWebrtcService {
             .then((description: any): void => this.gotDescription(description));
     }
 
-    public createAnswer(remoteOffer: SessionDescription): void {
+    public createAnswer(remoteOffer: Signal): void {
         this.begin = window.performance.now();
         this.peerConnection.setRemoteDescription(new RTCSessionDescription(remoteOffer.sdp)).then(
             () => {
@@ -197,8 +196,8 @@ export class PureWebrtcService {
     private gotDescription(description: RTCSessionDescription): void {
         this.peerConnection.setLocalDescription(description).then(
             () => {
-                this.description.sdp = description;
-                this._sessionDescription.next(JSON.stringify(this.description));
+                this._signal.sdp = description;
+                // check icegathering
                 this.onEventDone();
             }
         ).catch((e: any) => this.createError(e));
@@ -207,9 +206,7 @@ export class PureWebrtcService {
     private gotIceCandidate(event: any): void {
         this._iceCallback(event);
         if (event.candidate !== null) {
-            this.description.ice.push(event.candidate);
-            this._sessionDescription.next(JSON.stringify(this.description));
-            this.onEventDone();
+            this._signal.ice.push(event.candidate);
         }
     }
 
@@ -244,7 +241,6 @@ export class PureWebrtcService {
             };
 
             this._candidateEntries.push(candidate);
-            this._candidates.next([...this._candidateEntries]);
         }
     }
 
@@ -259,6 +255,8 @@ export class PureWebrtcService {
         };
         this._candidateEntries.push(candidate);
         this._candidates.next([...this._candidateEntries]);
+
+        this._signalSubject.next(JSON.stringify(this._signal));
         this.onEventDone();
     }
 }
