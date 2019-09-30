@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { PureWebrtcService, Signal } from 'src/app/services/pure-webrtc.service';
 import { Subscription } from 'rxjs';
 
@@ -15,19 +15,13 @@ export class CreateComponent implements OnInit, OnDestroy {
     public remoteSdpInput: string = '';
     public sendInput: string = '';
 
-    public webRTC: PureWebrtcService = new PureWebrtcService();
     public chat: Array<string> = [];
 
-    public constructor(private readonly changeDetectorRef: ChangeDetectorRef) {
+    public constructor(public webRTC: PureWebrtcService) {
 
     }
 
     public ngOnInit(): void {
-        this.subs.push(this.webRTC.eventDone
-            .subscribe(() => {
-                this.changeDetectorRef.detectChanges();
-            }));
-
         this.subs.push(this.webRTC.data.subscribe((data: string) => this.chat.push(data)));
     }
 
