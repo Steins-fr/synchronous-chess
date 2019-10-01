@@ -1,29 +1,30 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { JoinComponent } from './join.component';
-import { FormsModule } from '@angular/forms';
-import { IcecandidatesComponent } from '../../shared/debug/icecandidates/icecandidates.component';
+import { ChatComponent } from './chat.component';
 import { WebrtcStatesComponent } from '../../shared/debug/webrtc-states/webrtc-states.component';
+import { IcecandidatesComponent } from '../../shared/debug/icecandidates/icecandidates.component';
+import { FormsModule } from '@angular/forms';
 
-describe('JoinComponent', () => {
-    let component: JoinComponent;
-    let fixture: ComponentFixture<JoinComponent>;
+describe('ChatComponent', () => {
+    let component: ChatComponent;
+    let fixture: ComponentFixture<ChatComponent>;
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
             declarations: [
-                JoinComponent,
-                IcecandidatesComponent,
-                WebrtcStatesComponent],
+                ChatComponent,
+                WebrtcStatesComponent,
+                IcecandidatesComponent
+            ],
             imports: [
                 FormsModule
-            ],
+            ]
         })
             .compileComponents();
     }));
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(JoinComponent);
+        fixture = TestBed.createComponent(ChatComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

@@ -1,0 +1,44 @@
+<div class="channel">
+
+    <ng-container [ngTemplateOutlet]="initiator ? create : join"></ng-container>
+
+    <label>Chat</label>
+    <div id="chat">
+        <span *ngFor="let entry of chat">{{ entry }}</span>
+    </div>
+    <div class="row">
+        <input id="send-input" type="text" [(ngModel)]="sendInput" />
+        <button id="send" (click)="sendMessage()">Send</button>
+    </div>
+    <app-debug-webrtc-states [stateIce]="(webRTC.states | async).ice"
+        [stateReceiveChannel]="(webRTC.states | async).receiveChannel"
+        [stateSendChannel]="(webRTC.states | async).sendChannel"></app-debug-webrtc-states>
+</div>
+<section id="debug">
+    <app-debug-icecandidates [candidates]="webRTC.candidates | async"></app-debug-icecandidates>
+</section>
+
+<ng-template #create>
+    <h3>Create webrtc channel</h3>
+    <div class="row">
+        <label>1. Create offer (copy)</label>
+        <button id="create-offer" (click)="start()">Start Call</button>
+    </div>
+    <textarea id="offer-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
+    <div class="row">
+        <label>4. Register remote SDP (paste)</label>
+        <button id="register-remote" (click)="registerRemoteSdp()">Register</button>
+    </div>
+    <textarea id="remote-sdp-input" rows=5 [(ngModel)]="signalInput"></textarea>
+</ng-template>
+
+<ng-template #join>
+    <h3>Join webrtc channel</h3>
+    <label>2. Register remote SDP (paste)</label>
+    <textarea id="remote-sdp-input" rows=5 [(ngModel)]="signalInput"></textarea>
+    <div class="row">
+        <label>3. Create Participant SDP (copy)</label>
+        <button id="create-participant" (click)="start()">Create</button>
+    </div>
+    <textarea id="participant-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
+</ng-template>

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { pureWebrtcPath, homePath } from './app-routing.module';
+import { dualChatPath, homePath } from './app-routing.module';
 
 @Component({
     selector: 'app-root',
@@ -10,5 +10,5 @@ export class AppComponent {
     public title: string = 'synchronous-chess';
 
     public homePath: string = `/${homePath}`;
-    public pureWebrtcPath: string = `/${pureWebrtcPath}`;
+    public dualChatPath: string = `/${dualChatPath}`;
 }

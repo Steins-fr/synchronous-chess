@@ -1,25 +1,25 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { WebrtcService, Signal } from 'src/app/services/webrtc/webrtc.service';
 import { Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-pure-webrtc-create',
-    templateUrl: './create.component.html',
-    styleUrls: ['./create.component.scss'],
+    selector: 'app-chat',
+    templateUrl: './chat.component.html',
+    styleUrls: ['./chat.component.scss'],
     providers: [WebrtcService]
 })
-export class CreateComponent implements OnInit, OnDestroy {
+export class ChatComponent implements OnInit, OnDestroy {
 
     private readonly subs: Array<Subscription> = [];
 
-    public remoteSdpInput: string = '';
+    @Input() public initiator: boolean = true;
+
+    public signalInput: string = '';
     public sendInput: string = '';
 
     public chat: Array<string> = [];
 
-    public constructor(public webRTC: WebrtcService) {
-
-    }
+    public constructor(public webRTC: WebrtcService) { }
 
     public ngOnInit(): void {
         this.subs.push(this.webRTC.data.subscribe((data: string) => this.chat.push(data)));
@@ -37,13 +37,19 @@ export class CreateComponent implements OnInit, OnDestroy {
 
     public start(): void {
         this.webRTC.configure();
-        this.webRTC.createOffer();
+        if (this.initiator) {
+            this.webRTC.createOffer();
+        } else if (this.registerRemoteSdp()) {
+            this.webRTC.createAnswer();
+        }
     }
 
-    public registerRemoteSdp(): void {
-        const remoteSdp: Signal = JSON.parse(this.remoteSdpInput);
-
-        this.webRTC.registerRemoteSdp(remoteSdp.sdp);
-        this.webRTC.registerRemoteIce(remoteSdp.ice);
+    public registerRemoteSdp(): boolean {
+        try {
+            this.webRTC.registerSignal(JSON.parse(this.signalInput));
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 }
