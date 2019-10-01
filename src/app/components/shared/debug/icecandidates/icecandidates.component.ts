@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
-import { Candidate } from 'src/app/services/webrtc/webrtc.service';
+import { DebugRTCIceCandidate } from 'src/app/services/webrtc/webrtc.service';
 
 @Component({
     selector: 'app-debug-icecandidates',
@@ -8,7 +8,5 @@ import { Candidate } from 'src/app/services/webrtc/webrtc.service';
 })
 export class IcecandidatesComponent {
 
-    @Input() public candidates: Array<Candidate>;
-
-    public constructor() { }
+    @Input() public candidates: Array<DebugRTCIceCandidate>;
 }
