@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import { WebrtcStates } from 'src/app/services/webrtc/webrtc.service';
 
 @Component({
     selector: 'app-debug-webrtc-states',
@@ -6,11 +7,5 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WebrtcStatesComponent {
-
-    @Input() public stateIce: string;
-    @Input() public stateSendChannel: string;
-    @Input() public stateReceiveChannel: string;
-
-    public constructor() { }
-
+    @Input() public states: WebrtcStates;
 }

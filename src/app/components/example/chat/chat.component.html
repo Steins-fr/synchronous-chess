@@ -10,12 +10,10 @@
         <input id="send-input" type="text" [(ngModel)]="sendInput" />
         <button id="send" (click)="sendMessage()">Send</button>
     </div>
-    <app-debug-webrtc-states [stateIce]="(webRTC.states | async).ice"
-        [stateReceiveChannel]="(webRTC.states | async).receiveChannel"
-        [stateSendChannel]="(webRTC.states | async).sendChannel"></app-debug-webrtc-states>
+    <app-debug-webrtc-states [states]="(webRTC.states | async)"></app-debug-webrtc-states>
 </div>
 <section id="debug">
-    <app-debug-icecandidates [candidates]="webRTC.candidates | async"></app-debug-icecandidates>
+    <app-debug-icecandidates [candidates]="webRTC.iceCandidates | async"></app-debug-icecandidates>
 </section>
 
 <ng-template #create>

@@ -1,32 +1,38 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
-export interface Candidate {
-    component?: any;
-    type: string;
-    foundation?: any;
-    protocol?: any;
-    address?: any;
-    port?: any;
-    priority?: any;
-    elapsed: string;
-}
-
 export interface Signal {
     sdp: RTCSessionDescriptionInit;
     ice: Array<RTCIceCandidateInit>;
 }
 
+/**
+ * States of WebRTC channels and connection.
+ */
 export interface WebrtcStates {
     error: string;
-    ice: string;
+    iceConnection: string;
     sendChannel: string;
     receiveChannel: string;
+    iceGathering: string;
+    signaling: string;
+}
+
+/**
+ * Interface for debugging Ice candidates.
+ */
+export interface DebugRTCIceCandidate extends RTCIceCandidate {
+    address?: string; // This property is not described in RTCIceCandidate but present
+    priorities?: string;
+    elapsed?: string;
 }
 
 @Injectable()
 export class WebrtcService {
 
+    /**
+     * Configuration of the PeerConnection. Use google stun server for the moment.
+     */
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
             {
@@ -37,40 +43,37 @@ export class WebrtcService {
         ]
     };
 
-    private static readonly defaultSignal: Signal = {
-        sdp: null,
-        ice: []
-    };
-
+    // WebRTC states observables
     private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>({
         error: '',
-        ice: 'None',
+        iceConnection: 'None',
         sendChannel: 'None',
-        receiveChannel: 'None'
+        receiveChannel: 'None',
+        iceGathering: 'None',
+        signaling: 'None'
     });
-
     public states: Observable<WebrtcStates> = this._states.asObservable();
 
+    // Observables for data received by DataChannel
     private readonly _data: Subject<string> = new Subject<string>();
     public data: Observable<string> = this._data.asObservable();
 
-    private _candidateEntries: Array<Candidate> = [];
-    private readonly _candidates: Subject<Array<Candidate>> = new Subject<Array<Candidate>>();
-    public candidates: Observable<Array<Candidate>> = this._candidates.asObservable();
+    // Ice candidates observables (used for debugging)
+    private _iceCandidateEntries: Array<DebugRTCIceCandidate> = [];
+    private readonly _iceCandidates: Subject<Array<DebugRTCIceCandidate>> = new Subject<Array<DebugRTCIceCandidate>>();
+    public iceCandidates: Observable<Array<DebugRTCIceCandidate>> = this._iceCandidates.asObservable();
 
+    // PeerConnection and full-duplex dataChannels
     public peerConnection: RTCPeerConnection = undefined;
     public sendChannel: RTCDataChannel = undefined;
     public receiveChannel: RTCDataChannel = undefined;
 
-    // Signals
-    private _signal: Signal = {
-        sdp: null,
-        ice: []
-    };
-
+    // Signal variable and observables
+    private _signal: Signal;
     private readonly _signalSubject: Subject<string> = new Subject<string>();
     public signal: Observable<string> = this._signalSubject.asObservable();
 
+    // Debug statistics, set at the beginning of ice gathering
     private begin: number;
 
     public constructor(private readonly ngZone: NgZone) {
@@ -78,21 +81,31 @@ export class WebrtcService {
     }
 
     public configure(peerConnectionConfig?: RTCConfiguration): void {
+
+        // Create PeerConnection and bind events
         this.peerConnection = new RTCPeerConnection(peerConnectionConfig || WebrtcService.defaultPeerConnectionConfig);
-        this.peerConnection.onicecandidate = (e: any): void => this.gotIceCandidate(e);
+        this.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent): void => this.gotIceCandidate(event);
         this.peerConnection.oniceconnectionstatechange = (): void => this.onIceConnectionStateChange();
-        this.peerConnection.onicegatheringstatechange = (): void => this._gatheringStateChange();
+        this.peerConnection.onicegatheringstatechange = (): void => this.onIceGatheringStateChange();
+        this.peerConnection.onsignalingstatechange = (): void => this.onSignalingStateChange();
+        this.peerConnection.ondatachannel = (event: RTCDataChannelEvent): void => this.onDataChannel(event);
 
+        // Create DataChannel for sending data and bind events
         this.sendChannel = this.peerConnection.createDataChannel('sendDataChannel');
-
         this.sendChannel.onopen = (): void => this.onSendChannelStateChange();
         this.sendChannel.onclose = (): void => this.onSendChannelStateChange();
 
-        this.peerConnection.ondatachannel = (e: any): void => this.receiveDataChannel(e);
+        // Reinitialize signal object
+        this._signal = {
+            sdp: null,
+            ice: []
+        };
+        this._iceCandidateEntries = [];
 
-        this._signal = WebrtcService.defaultSignal;
-
-        this._candidateEntries = [];
+        // Manually get states information
+        this.onIceConnectionStateChange();
+        this.onSendChannelStateChange();
+        this.onSignalingStateChange();
     }
 
     public createOffer(options?: RTCOfferOptions): void {
@@ -134,33 +147,35 @@ export class WebrtcService {
     }
 
     private onIceConnectionStateChange(): void {
-        this.ngZone.run(() => this._states.next({
-            ...this._states.getValue(),
-            ice: this.peerConnection.iceConnectionState
-        }));
+        this.updateState({ iceConnection: this.peerConnection.iceConnectionState });
     }
 
     private onSendChannelStateChange(): void {
-        this.ngZone.run(() => this._states.next({
-            ...this._states.getValue(),
-            sendChannel: this.sendChannel.readyState
-        }));
+        this.updateState({ sendChannel: this.sendChannel.readyState });
     }
 
     private onReceiveChannelStateChange(): void {
+        this.updateState({ receiveChannel: this.receiveChannel.readyState });
+    }
+
+    private onSignalingStateChange(): void {
+        this.updateState({ signaling: this.peerConnection.signalingState });
+    }
+
+    private updateState(newState: Partial<WebrtcStates>): void {
         this.ngZone.run(() => this._states.next({
             ...this._states.getValue(),
-            receiveChannel: this.receiveChannel.readyState
+            ...newState
         }));
     }
 
-    private onReceiveMessage(event: any): void {
+    private onReceiveMessage(event: MessageEvent): void {
         this.ngZone.run(() => this._data.next(`Other: ${event.data}`));
     }
 
-    private receiveDataChannel(event: any): void {
+    private onDataChannel(event: RTCDataChannelEvent): void {
         this.receiveChannel = event.channel;
-        this.receiveChannel.onmessage = (e: any): void => this.onReceiveMessage(e);
+        this.receiveChannel.onmessage = (messageEvent: MessageEvent): void => this.onReceiveMessage(messageEvent);
         this.receiveChannel.onopen = (): void => this.onReceiveChannelStateChange();
         this.receiveChannel.onclose = (): void => this.onReceiveChannelStateChange();
     }
@@ -176,15 +191,34 @@ export class WebrtcService {
         this.peerConnection.setLocalDescription(description).then(
             () => {
                 this._signal.sdp = description;
-                // check icegathering
+
+                if (this.peerConnection.iceGatheringState === 'complete') {
+                    this.onSignal();
+                }
             }
         ).catch((e: any) => this.createError(e));
     }
 
-    private gotIceCandidate(event: any): void {
-        this._iceCallback(event);
-        if (event.candidate !== null) {
+    private onSignal(): void {
+        this.ngZone.run(() => this._signalSubject.next(JSON.stringify(this._signal)));
+    }
+
+    private gotIceCandidate(event: RTCPeerConnectionIceEvent): void {
+
+        if (event.candidate !== null) { // Gathering 'complete' send a null candidate
+            const candidate: DebugRTCIceCandidate = event.candidate;
             this._signal.ice.push(event.candidate);
+
+            this._iceDebug({
+                ...candidate,
+                component: candidate.component,
+                type: candidate.type,
+                foundation: candidate.foundation,
+                protocol: candidate.protocol,
+                address: candidate.address,
+                priorities: this._formatPriority(candidate.priority),
+                port: candidate.port
+            });
         }
     }
 
@@ -199,41 +233,25 @@ export class WebrtcService {
         ].join(' | ');
     }
 
-    private _iceCallback(event: any): void {
+    private _iceDebug(iceCandidate: DebugRTCIceCandidate): void {
         const elapsed: string = ((window.performance.now() - this.begin) / 1000).toFixed(3);
-        if (event.candidate) {
-            if (event.candidate.candidate === '') {
-                return;
-            }
-            let { candidate }: { candidate: Candidate } = event;
 
-            candidate = {
-                component: candidate.component,
-                type: candidate.type,
-                foundation: candidate.foundation,
-                protocol: candidate.protocol,
-                address: candidate.address,
-                port: candidate.port,
-                priority: this._formatPriority(candidate.priority),
-                elapsed
-            };
-
-            this._candidateEntries.push(candidate);
-        }
+        iceCandidate.elapsed = elapsed;
+        this._iceCandidateEntries.push(iceCandidate);
+        this.ngZone.run(() => this._iceCandidates.next([...this._iceCandidateEntries]));
     }
 
-    private _gatheringStateChange(): void {
+    private onIceGatheringStateChange(): void {
+        this.updateState({ iceGathering: this.peerConnection.iceGatheringState });
+
         if (this.peerConnection.iceGatheringState !== 'complete') {
             return;
         }
-        const elapsed: string = ((window.performance.now() - this.begin) / 1000).toFixed(3);
-        const candidate: Candidate = {
-            type: 'Done',
-            elapsed
-        };
-        this._candidateEntries.push(candidate);
-        this.ngZone.run(() => this._candidates.next([...this._candidateEntries]));
 
-        this.ngZone.run(() => this._signalSubject.next(JSON.stringify(this._signal)));
+        this._iceDebug({
+            relatedAddress: 'Done'
+        } as DebugRTCIceCandidate);
+
+        this.onSignal();
     }
 }

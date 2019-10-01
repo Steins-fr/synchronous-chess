@@ -1,15 +1,30 @@
 <div class="row">
     <span>
-        State ICE: <span id="state-ice">{{ stateIce || 'None' }}</span>
+        States:
     </span>
 </div>
 <div class="row">
     <span>
-        State send channel: <span id="state-send-channel">{{ stateSendChannel || 'None' }}</span>
+        ICE Connection: <span id="state-ice-connection">{{ states?.iceConnection }}</span>
     </span>
 </div>
 <div class="row">
     <span>
-        State receive channel: <span id="state-receive-channel">{{ stateReceiveChannel || 'None' }}</span>
+        ICE Gathering: <span id="state-ice-gathering">{{ states?.iceGathering }}</span>
+    </span>
+</div>
+<div class="row">
+    <span>
+        Signaling: <span id="state-signaling">{{ states?.signaling }}</span>
+    </span>
+</div>
+<div class="row">
+    <span>
+        Send channel: <span id="state-send-channel">{{ states?.sendChannel }}</span>
+    </span>
+</div>
+<div class="row">
+    <span>
+        Receive channel: <span id="state-receive-channel">{{ states?.receiveChannel }}</span>
     </span>
 </div>
