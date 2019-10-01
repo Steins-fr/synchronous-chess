@@ -101,19 +101,11 @@ export class WebrtcService {
             .then((description: any): void => this.gotDescription(description));
     }
 
-    public createAnswer(remoteOffer: Signal): void {
+    public createAnswer(): void {
         this.begin = window.performance.now();
-        this.peerConnection.setRemoteDescription(new RTCSessionDescription(remoteOffer.sdp)).then(
-            () => {
-                if (remoteOffer.sdp.type === 'offer') {
-                    this.peerConnection.createAnswer()
-                        .then((description: RTCSessionDescription) => this.gotDescription(description))
-                        .catch((e: any) => this.createError(e));
-                }
-            })
+        this.peerConnection.createAnswer()
+            .then((description: RTCSessionDescription) => this.gotDescription(description))
             .catch((e: any) => this.createError(e));
-
-        this.registerRemoteIce(remoteOffer.ice);
     }
 
     public sendMessage(message: string): boolean {
@@ -126,18 +118,19 @@ export class WebrtcService {
         return false;
     }
 
-    public registerRemoteSdp(sdp: RTCSessionDescriptionInit): void {
-        if (sdp) {
-            this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
-        }
+    public registerSignal(signal: Signal): void {
+        this.registerRemoteSdp(signal.sdp);
+        this.registerRemoteIce(signal.ice);
     }
 
-    public registerRemoteIce(ice: Array<RTCIceCandidateInit>): void {
-        if (ice && ice.length > 0) {
-            ice.forEach((iceCandidate: any): void => {
-                this.peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
-            });
-        }
+    private registerRemoteSdp(sdp: RTCSessionDescriptionInit): void {
+        this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+    }
+
+    private registerRemoteIce(ice: Array<RTCIceCandidateInit>): void {
+        ice.forEach((iceCandidate: any): void => {
+            this.peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
+        });
     }
 
     private onIceConnectionStateChange(): void {
