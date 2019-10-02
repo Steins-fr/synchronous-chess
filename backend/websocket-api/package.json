@@ -1,0 +1,13 @@
+{
+    "name": "synchronous-chess-websockets-api",
+    "version": "0.0.0",
+    "scripts": {
+        "bucket": "aws s3 mb s3://synchronous-chess-websockets-api --region eu-west-1",
+        "package": "sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket synchronous-chess-websockets-api",
+        "deploy": "sam deploy --template-file packaged.yaml --stack-name synchronous-chess-websockets-api --capabilities CAPABILITY_IAM",
+        "describe": "aws cloudformation describe-stacks --stack-name synchronous-chess-websockets-api --query 'Stacks[].Outputs'",
+        "package:deploy": "yarn package && yarn deploy",
+        "ws": "wscat -c wss://ss-wss-staging.steins.fr"
+    },
+    "private": true
+}
