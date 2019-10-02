@@ -1,15 +1,26 @@
 <div class="channel">
 
-    <ng-container [ngTemplateOutlet]="initiator ? create : join"></ng-container>
+    <div *ngIf="initiator === null" class="row">
+        <label>Mode?</label>
+        <button (click)="setMode(true, true)">Auto Init</button>
+        <button (click)="setMode(false, true)">Auto Join</button>
+        <button (click)="setMode(true, false)">Manual Init</button>
+        <button (click)="setMode(false, false)">Manual Join</button>
+    </div>
 
-    <label>Chat</label>
-    <div id="chat">
-        <span *ngFor="let entry of chat">{{ entry }}</span>
-    </div>
-    <div class="row">
-        <input id="send-input" type="text" [(ngModel)]="sendInput" />
-        <button id="send" (click)="sendMessage()">Send</button>
-    </div>
+    <ng-container *ngIf="initiator !== null">
+        <ng-container [ngTemplateOutlet]="initiator ? create : join"></ng-container>
+
+        <label>Chat</label>
+        <div id="chat">
+            <span *ngFor="let entry of chat">{{ entry }}</span>
+        </div>
+        <div class="row">
+            <input id="send-input" type="text" [(ngModel)]="sendInput" />
+            <button id="send" (click)="sendMessage()">Send</button>
+        </div>
+    </ng-container>
+
     <app-debug-webrtc-states [states]="(webRTC.states | async)"></app-debug-webrtc-states>
 </div>
 <section id="debug">
@@ -25,7 +36,7 @@
     <textarea id="offer-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
     <div class="row">
         <label>4. Register remote SDP (paste)</label>
-        <button id="register-remote" (click)="registerRemoteSdp()">Register</button>
+        <button id="register-remote" (click)="registerRemoteSignal()">Register</button>
     </div>
     <textarea id="remote-sdp-input" rows=5 [(ngModel)]="signalInput"></textarea>
 </ng-template>
@@ -36,7 +47,7 @@
     <textarea id="remote-sdp-input" rows=5 [(ngModel)]="signalInput"></textarea>
     <div class="row">
         <label>3. Create Participant SDP (copy)</label>
-        <button id="create-participant" (click)="start()">Create</button>
+        <button id="create-participant" (click)="registerRemoteSignal()">Create</button>
     </div>
     <textarea id="participant-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
 </ng-template>

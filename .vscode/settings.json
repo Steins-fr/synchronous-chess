@@ -2,5 +2,13 @@
     "editor.detectIndentation": false,
     "auto-close-tag.activationOnLanguage": [
         "html"
+    ],
+    "cSpell.ignoreWords": [
+        "ondatachannel",
+        "onicecandidate",
+        "oniceconnectionstatechange",
+        "onicegatheringstatechange",
+        "onsignalingstatechange",
+        "sendmessage"
     ]
 }

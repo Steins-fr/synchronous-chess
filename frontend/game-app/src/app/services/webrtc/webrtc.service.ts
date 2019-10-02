@@ -1,5 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { WebSocketService, SocketPayload } from '../web-socket/web-socket.service';
 
 export interface Signal {
     sdp: RTCSessionDescriptionInit;
@@ -36,9 +38,7 @@ export class WebrtcService {
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
             {
-                urls: [
-                    'stun:stun.l.google.com:19302'
-                ]
+                urls: environment.iceServers
             }
         ]
     };
@@ -76,11 +76,15 @@ export class WebrtcService {
     // Debug statistics, set at the beginning of ice gathering
     private begin: number;
 
-    public constructor(private readonly ngZone: NgZone) {
-        this.configure();
-    }
+    //private webSocket: Websocket = null;
+    private initiator: boolean;
+    private socket: WebSocketService = null;
 
-    public configure(peerConnectionConfig?: RTCConfiguration): void {
+    public constructor(private readonly ngZone: NgZone) { }
+
+    public configure(initiator: boolean, peerConnectionConfig?: RTCConfiguration): void {
+
+        this.initiator = initiator;
 
         // Create PeerConnection and bind events
         this.peerConnection = new RTCPeerConnection(peerConnectionConfig || WebrtcService.defaultPeerConnectionConfig);
@@ -109,16 +113,22 @@ export class WebrtcService {
     }
 
     public createOffer(options?: RTCOfferOptions): void {
-        this.begin = window.performance.now();
-        this.peerConnection.createOffer(options)
-            .then((description: any): void => this.gotDescription(description));
+        if (this.peerConnection) {
+            this.begin = window.performance.now();
+            this.peerConnection.createOffer(options)
+                .then((description: any): void => this.gotDescription(description));
+            this.initiator = true;
+        }
     }
 
     public createAnswer(): void {
-        this.begin = window.performance.now();
-        this.peerConnection.createAnswer()
-            .then((description: RTCSessionDescription) => this.gotDescription(description))
-            .catch((e: any) => this.createError(e));
+        if (this.peerConnection) {
+            this.begin = window.performance.now();
+            this.peerConnection.createAnswer()
+                .then((description: RTCSessionDescription) => this.gotDescription(description))
+                .catch((e: any) => this.createError(e));
+            this.initiator = false;
+        }
     }
 
     public sendMessage(message: string): boolean {
@@ -131,13 +141,53 @@ export class WebrtcService {
         return false;
     }
 
-    public registerSignal(signal: Signal): void {
-        this.registerRemoteSdp(signal.sdp);
-        this.registerRemoteIce(signal.ice);
+    private onMessage(payload: SocketPayload): void {
+        switch (payload.type) {
+            case 'signal':
+                this.registerSignal(payload.data);
+                break;
+            case 'joinRequest':
+                if (this.initiator) {
+                    this.createOffer();
+                }
+                break;
+            default:
+                console.log('Not supported type');
+        }
+    }
+
+    public negotiate(socket: WebSocketService): Subscription {
+        this.socket = socket;
+
+        // socket outside
+        const sub: Subscription = this.socket.message.subscribe((payload: SocketPayload): void => this.onMessage(payload));
+
+        if (this.initiator === false) {
+            this.socket.send('sendmessage', 'joinRequest', 'true');
+        }
+
+        return sub;
+    }
+
+    public registerSignal(remoteSignal?: string): boolean {
+        try {
+            const signal: Signal = JSON.parse(remoteSignal);
+            if ((this.initiator && signal.sdp.type === 'answer')) {
+                this.registerRemoteSdp(signal.sdp);
+                this.registerRemoteIce(signal.ice);
+            } else if (!this.initiator && signal.sdp.type === 'offer') {
+                this.registerRemoteSdp(signal.sdp);
+                this.registerRemoteIce(signal.ice);
+                this.createAnswer();
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     private registerRemoteSdp(sdp: RTCSessionDescriptionInit): void {
-        this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+        this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).catch((e: any) => this.createError(e.message));
     }
 
     private registerRemoteIce(ice: Array<RTCIceCandidateInit>): void {
@@ -200,7 +250,13 @@ export class WebrtcService {
     }
 
     private onSignal(): void {
-        this.ngZone.run(() => this._signalSubject.next(JSON.stringify(this._signal)));
+        this.ngZone.run(() => {
+            const signal: string = JSON.stringify(this._signal);
+            if (this.socket) {
+                this.socket.send('sendmessage', 'signal', signal);
+            }
+            this._signalSubject.next(signal);
+        });
     }
 
     private gotIceCandidate(event: RTCPeerConnectionIceEvent): void {

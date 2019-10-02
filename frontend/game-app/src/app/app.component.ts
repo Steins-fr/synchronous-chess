@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { dualChatPath, homePath } from './app-routing.module';
+import { dualChatPath, homePath, simpleChatPath } from './app-routing.module';
 
 @Component({
     selector: 'app-root',
@@ -11,4 +11,5 @@ export class AppComponent {
 
     public homePath: string = `/${homePath}`;
     public dualChatPath: string = `/${dualChatPath}`;
+    public simpleChatPath: string = `/${simpleChatPath}`;
 }
