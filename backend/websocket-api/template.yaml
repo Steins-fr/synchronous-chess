@@ -7,10 +7,18 @@ Description: >
   functions needed to demonstrate the Websocket protocol on API Gateway.
 
 Parameters:
-  TableName:
+  TableNameConnections:
     Type: String
     Default: "synchronous_chess_connections"
     Description: (Required) The name of the new DynamoDB to store connection identifiers for each connected clients. Minimum 3 characters
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_]+$
+    ConstraintDescription: "Required. Can be characters and underscore only. No numbers or special characters allowed."
+  TableNameRooms:
+    Type: String
+    Default: "synchronous_chess_rooms"
+    Description: (Required) The name of the new DynamoDB to store rooms. Minimum 3 characters
     MinLength: 3
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
@@ -109,7 +117,22 @@ Resources:
         WriteCapacityUnits: 5
       SSESpecification:
         SSEEnabled: True
-      TableName: !Ref TableName
+      TableName: !Ref TableNameConnections
+  RoomsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "ID"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "ID"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      SSESpecification:
+        SSEEnabled: True
+      TableName: !Ref TableNameRooms
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -119,10 +142,10 @@ Resources:
       Runtime: nodejs10.x
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME_CONNECTIONS: !Ref TableNameConnections
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: !Ref TableNameConnections
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -141,10 +164,10 @@ Resources:
       Runtime: nodejs10.x
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME_CONNECTIONS: !Ref TableNameConnections
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: !Ref TableNameConnections
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -163,10 +186,13 @@ Resources:
       Runtime: nodejs10.x
       Environment:
         Variables:
-          TABLE_NAME: !Ref TableName
+          TABLE_NAME_CONNECTIONS: !Ref TableNameConnections
+          TABLE_NAME_ROOMS: !Ref TableNameRooms
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: !Ref TableNameConnections
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableNameRooms
         - Statement:
             - Effect: Allow
               Action:

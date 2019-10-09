@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { IcecandidatesComponent } from './icecandidates.component';
+import { Webrtc } from 'src/app/classes/webrtc/webrtc';
 
 describe('IcecandidatesComponent', () => {
     let component: IcecandidatesComponent;
@@ -16,6 +17,8 @@ describe('IcecandidatesComponent', () => {
     beforeEach(() => {
         fixture = TestBed.createComponent(IcecandidatesComponent);
         component = fixture.componentInstance;
+        component.playerName = 'playerName';
+        component.webRTC = new Webrtc();
         fixture.detectChanges();
     });
 
