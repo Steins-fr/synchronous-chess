@@ -1,69 +1,113 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { WebrtcService } from 'src/app/services/webrtc/webrtc.service';
+import { Component, OnDestroy, NgZone } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { WebSocketService, SocketState } from 'src/app/services/web-socket/web-socket.service';
+import { WebSocketService, SocketState, SocketPayload } from 'src/app/services/web-socket/web-socket.service';
 import { environment } from 'src/environments/environment';
+import { Player, PlayerType } from 'src/app/classes/player/player';
+import { Webrtc, WebrtcStates } from 'src/app/classes/webrtc/webrtc';
 
 @Component({
     selector: 'app-chat',
     templateUrl: './chat.component.html',
     styleUrls: ['./chat.component.scss'],
-    providers: [WebrtcService, WebSocketService]
+    providers: [WebSocketService]
 })
-export class ChatComponent implements OnInit, OnDestroy {
+export class ChatComponent implements OnDestroy {
 
     private readonly subs: Array<Subscription> = [];
 
+    public localPlayer: Player;
+    public remotePlayer: Player;
     public initiator: boolean = null;
-    public autoNegotiate: boolean = false;
+    public roomName: string = '';
+    public playerName: string = '';
+    public activeRoom: boolean = false;
 
     public signalInput: string = '';
     public sendInput: string = '';
+    public socketState: SocketState = SocketState.CONNECTING;
 
     public chat: Array<string> = [];
 
-    public constructor(public webRTC: WebrtcService, public socket: WebSocketService) { }
-
-    public ngOnInit(): void {
-        this.subs.push(this.webRTC.data.subscribe((data: string) => this.chat.push(data)));
-    }
+    public constructor(public socket: WebSocketService, private readonly ngZone: NgZone) { }
 
     public ngOnDestroy(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
+        if (this.remotePlayer) {
+            this.remotePlayer.clear();
+        }
     }
 
     public sendMessage(): void {
-        this.webRTC.sendMessage(this.sendInput);
-        this.chat.push(`Me: ${this.sendInput}`);
+        this.remotePlayer.sendData({
+            type: 'chat',
+            message: this.sendInput
+        });
+        this.chat.push(`${this.localPlayer.name}: ${this.sendInput}`);
         this.sendInput = '';
     }
 
-    public start(): void {
-        if (this.initiator) {
-            this.webRTC.createOffer();
-        } else {
-            this.webRTC.createAnswer();
+    public createRoom(): void {
+        if (this.socketState === SocketState.OPEN && this.initiator) {
+            this.localPlayer = new Player(this.roomName, this.playerName, PlayerType.LOCAL);
+            this.socket.send('sendmessage', 'create', JSON.stringify({ roomName: this.roomName, maxPlayer: 2, playerName: this.localPlayer.name }));
         }
     }
 
-    public setMode(initiator: boolean, autoNegotiate: boolean): void {
+    public joinRoom(): void {
+        if (this.socketState === SocketState.OPEN && !this.initiator) {
+            this.localPlayer = new Player(this.roomName, this.playerName, PlayerType.LOCAL);
+            this.socket.send('sendmessage', 'join', JSON.stringify({ roomName: this.roomName, playerName: this.localPlayer.name }));
+        }
+    }
+
+    public enterRoom(): void {
+        this.initiator ? this.createRoom() : this.joinRoom();
+    }
+
+    public setMode(initiator: boolean): void {
         this.initiator = initiator;
-        this.autoNegotiate = autoNegotiate;
 
-        this.webRTC.configure(initiator);
+        this.socket.connect(new WebSocket(environment.webSocketServer));
+        this.subs.push(this.socket.state.subscribe((state: SocketState) => {
+            this.socketState = state;
+        }));
 
-        if (this.autoNegotiate) {
-            this.socket.connect(new WebSocket(environment.webSocketServer));
-            const sub: Subscription = this.socket.state.subscribe((state: SocketState) => {
-                if (state === SocketState.OPEN) {
-                    this.subs.push(this.webRTC.negotiate(this.socket));
-                    sub.unsubscribe();
-                }
-            });
+        this.subs.push(this.socket.message.subscribe((payload: SocketPayload) => this.socketMessage(payload)));
+
+    }
+
+    private subscribeChat(): void {
+        this.subs.push(this.remotePlayer.data.subscribe((d: any) => {
+            if (d.type === 'chat') {
+                this.ngZone.run(() => this.chat.push(`${d.from}: ${d.message}`));
+            }
+        }));
+
+        this.subs.push(this.remotePlayer.webRTC.states.subscribe((states: WebrtcStates) => {
+            if (!this.initiator) {
+                this.activeRoom = states.iceConnection === 'connected';
+            }
+        }));
+    }
+
+    private socketMessage(payload: SocketPayload): void {
+        const data: any = JSON.parse(payload.data);
+        switch (payload.type) {
+            case 'created':
+                this.activeRoom = true;
+                break;
+            case 'joiningRoom':
+                this.remotePlayer = new Player(this.roomName, data.playerName, PlayerType.REMOTE_HOST, this.socket, new Webrtc());
+                this.subscribeChat();
+                break;
+            case 'joinRequest':
+                this.remotePlayer = new Player(this.roomName, data.playerName, PlayerType.REMOTE_PEER, this.socket, new Webrtc());
+                this.subscribeChat();
+                break;
         }
     }
 
-    public registerRemoteSignal(): void {
-        this.webRTC.registerSignal(this.signalInput);
+    public displayEnterRoomButton(): boolean {
+        return !this.activeRoom && this.socketState === SocketState.OPEN;
     }
 }

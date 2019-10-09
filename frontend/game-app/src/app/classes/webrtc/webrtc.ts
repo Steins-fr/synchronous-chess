@@ -1,7 +1,6 @@
-import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { WebSocketService, SocketPayload } from '../web-socket/web-socket.service';
+import { WebSocketService, SocketPayload } from '../../services/web-socket/web-socket.service';
 
 export interface Signal {
     sdp: RTCSessionDescriptionInit;
@@ -29,12 +28,10 @@ export interface DebugRTCIceCandidate extends RTCIceCandidate {
     elapsed?: string;
 }
 
-@Injectable()
-export class WebrtcService {
-
+export class Webrtc {
     /**
-     * Configuration of the PeerConnection. Use google stun server for the moment.
-     */
+ * Configuration of the PeerConnection. Use google stun server for the moment.
+ */
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
             {
@@ -43,15 +40,17 @@ export class WebrtcService {
         ]
     };
 
-    // WebRTC states observables
-    private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>({
+    private static readonly defaultStates: WebrtcStates = {
         error: '',
         iceConnection: 'None',
         sendChannel: 'None',
         receiveChannel: 'None',
         iceGathering: 'None',
         signaling: 'None'
-    });
+    };
+
+    // WebRTC states observables
+    private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>(Webrtc.defaultStates);
     public states: Observable<WebrtcStates> = this._states.asObservable();
 
     // Observables for data received by DataChannel
@@ -70,24 +69,24 @@ export class WebrtcService {
 
     // Signal variable and observables
     private _signal: Signal;
-    private readonly _signalSubject: Subject<string> = new Subject<string>();
-    public signal: Observable<string> = this._signalSubject.asObservable();
+    private _signalSubject: Subject<Signal> = new Subject<Signal>();
+    public signal: Observable<Signal> = this._signalSubject.asObservable();
 
     // Debug statistics, set at the beginning of ice gathering
     private begin: number;
 
     //private webSocket: Websocket = null;
     private initiator: boolean;
-    private socket: WebSocketService = null;
 
-    public constructor(private readonly ngZone: NgZone) { }
+    public constructor() { }
 
     public configure(initiator: boolean, peerConnectionConfig?: RTCConfiguration): void {
 
         this.initiator = initiator;
+        this.close();
 
         // Create PeerConnection and bind events
-        this.peerConnection = new RTCPeerConnection(peerConnectionConfig || WebrtcService.defaultPeerConnectionConfig);
+        this.peerConnection = new RTCPeerConnection(peerConnectionConfig || Webrtc.defaultPeerConnectionConfig);
         this.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent): void => this.gotIceCandidate(event);
         this.peerConnection.oniceconnectionstatechange = (): void => this.onIceConnectionStateChange();
         this.peerConnection.onicegatheringstatechange = (): void => this.onIceGatheringStateChange();
@@ -104,12 +103,24 @@ export class WebrtcService {
             sdp: null,
             ice: []
         };
+        this._signalSubject = new Subject<Signal>();
+        this.signal = this._signalSubject.asObservable();
+
         this._iceCandidateEntries = [];
+        this._iceCandidates.next([]);
+
+        this._states.next(Webrtc.defaultStates);
 
         // Manually get states information
         this.onIceConnectionStateChange();
         this.onSendChannelStateChange();
         this.onSignalingStateChange();
+    }
+
+    public close(): void {
+        if (this.peerConnection) {
+            this.peerConnection.close();
+        }
     }
 
     public createOffer(options?: RTCOfferOptions): void {
@@ -141,43 +152,14 @@ export class WebrtcService {
         return false;
     }
 
-    private onMessage(payload: SocketPayload): void {
-        switch (payload.type) {
-            case 'signal':
-                this.registerSignal(payload.data);
-                break;
-            case 'joinRequest':
-                if (this.initiator) {
-                    this.createOffer();
-                }
-                break;
-            default:
-                console.log('Not supported type');
-        }
-    }
-
-    public negotiate(socket: WebSocketService): Subscription {
-        this.socket = socket;
-
-        // socket outside
-        const sub: Subscription = this.socket.message.subscribe((payload: SocketPayload): void => this.onMessage(payload));
-
-        if (this.initiator === false) {
-            this.socket.send('sendmessage', 'joinRequest', 'true');
-        }
-
-        return sub;
-    }
-
-    public registerSignal(remoteSignal?: string): boolean {
+    public registerSignal(remoteSignal: Signal): boolean {
         try {
-            const signal: Signal = JSON.parse(remoteSignal);
-            if ((this.initiator && signal.sdp.type === 'answer')) {
-                this.registerRemoteSdp(signal.sdp);
-                this.registerRemoteIce(signal.ice);
-            } else if (!this.initiator && signal.sdp.type === 'offer') {
-                this.registerRemoteSdp(signal.sdp);
-                this.registerRemoteIce(signal.ice);
+            if ((this.initiator && remoteSignal.sdp.type === 'answer')) {
+                this.registerRemoteSdp(remoteSignal.sdp);
+                this.registerRemoteIce(remoteSignal.ice);
+            } else if (!this.initiator && remoteSignal.sdp.type === 'offer') {
+                this.registerRemoteSdp(remoteSignal.sdp);
+                this.registerRemoteIce(remoteSignal.ice);
                 this.createAnswer();
             }
             return true;
@@ -213,14 +195,14 @@ export class WebrtcService {
     }
 
     private updateState(newState: Partial<WebrtcStates>): void {
-        this.ngZone.run(() => this._states.next({
+        this._states.next({
             ...this._states.getValue(),
             ...newState
-        }));
+        });
     }
 
     private onReceiveMessage(event: MessageEvent): void {
-        this.ngZone.run(() => this._data.next(`Other: ${event.data}`));
+        this._data.next(event.data);
     }
 
     private onDataChannel(event: RTCDataChannelEvent): void {
@@ -231,10 +213,10 @@ export class WebrtcService {
     }
 
     private createError(error: any): void {
-        this.ngZone.run(() => this._states.next({
+        this._states.next({
             ...this._states.getValue(),
             error
-        }));
+        });
     }
 
     private gotDescription(description: RTCSessionDescription): void {
@@ -250,13 +232,7 @@ export class WebrtcService {
     }
 
     private onSignal(): void {
-        this.ngZone.run(() => {
-            const signal: string = JSON.stringify(this._signal);
-            if (this.socket) {
-                this.socket.send('sendmessage', 'signal', signal);
-            }
-            this._signalSubject.next(signal);
-        });
+        this._signalSubject.next(this._signal);
     }
 
     private gotIceCandidate(event: RTCPeerConnectionIceEvent): void {
@@ -294,7 +270,7 @@ export class WebrtcService {
 
         iceCandidate.elapsed = elapsed;
         this._iceCandidateEntries.push(iceCandidate);
-        this.ngZone.run(() => this._iceCandidates.next([...this._iceCandidateEntries]));
+        this._iceCandidates.next([...this._iceCandidateEntries]);
     }
 
     private onIceGatheringStateChange(): void {

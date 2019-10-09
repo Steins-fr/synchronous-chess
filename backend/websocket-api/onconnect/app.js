@@ -7,7 +7,7 @@ var DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
 
 exports.handler = function (event, context, callback) {
     var putParams = {
-        TableName: process.env.TABLE_NAME,
+        TableName: process.env.TABLE_NAME_CONNECTIONS,
         Item: {
             connectionId: { S: event.requestContext.connectionId }
         }

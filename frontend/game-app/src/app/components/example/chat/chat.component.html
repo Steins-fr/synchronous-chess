@@ -2,52 +2,37 @@
 
     <div *ngIf="initiator === null" class="row">
         <label>Mode?</label>
-        <button (click)="setMode(true, true)">Auto Init</button>
-        <button (click)="setMode(false, true)">Auto Join</button>
-        <button (click)="setMode(true, false)">Manual Init</button>
-        <button (click)="setMode(false, false)">Manual Join</button>
+        <button (click)="setMode(true)">Auto Init</button>
+        <button (click)="setMode(false)">Auto Join</button>
     </div>
 
     <ng-container *ngIf="initiator !== null">
-        <ng-container [ngTemplateOutlet]="initiator ? create : join"></ng-container>
+        <ng-container>
+            <h3>{{ initiator ? 'Create' : 'Join' }} webrtc channel</h3>
+            <div class="row" *ngIf="displayEnterRoomButton()">
+                <label>Room name</label>
+                <input [(ngModel)]="roomName" />
+                <label>Player name</label>
+                <input [(ngModel)]="playerName" />
+                <button id="room-session" (click)="enterRoom()">Enter the room</button>
+            </div>
+        </ng-container>
 
-        <label>Chat</label>
-        <div id="chat">
-            <span *ngFor="let entry of chat">{{ entry }}</span>
-        </div>
-        <div class="row">
-            <input id="send-input" type="text" [(ngModel)]="sendInput" />
-            <button id="send" (click)="sendMessage()">Send</button>
-        </div>
+        <ng-container *ngIf="activeRoom">
+            <label>Chat - Room ({{ roomName }}) - Pseudo ({{ localPlayer.name }}) - In the room:
+                {{ remotePlayer?.isConnected ? remotePlayer.name : '' }} </label>
+            <div id="chat">
+                <span *ngFor="let entry of chat">{{ entry }}</span>
+            </div>
+            <div class="row">
+                <input id="send-input" type="text" [(ngModel)]="sendInput" />
+                <button id="send" (click)="sendMessage()">Send</button>
+            </div>
+        </ng-container>
     </ng-container>
-
-    <app-debug-webrtc-states [states]="(webRTC.states | async)"></app-debug-webrtc-states>
 </div>
-<section id="debug">
-    <app-debug-icecandidates [candidates]="webRTC.iceCandidates | async"></app-debug-icecandidates>
+<section id="debug" *ngIf="remotePlayer">
+    <h4>Debug for connection with {{ remotePlayer.name }}</h4>
+    <app-debug-webrtc-states [webRTC]="remotePlayer.webRTC"></app-debug-webrtc-states>
+    <app-debug-icecandidates [webRTC]="remotePlayer.webRTC"></app-debug-icecandidates>
 </section>
-
-<ng-template #create>
-    <h3>Create webrtc channel</h3>
-    <div class="row">
-        <label>1. Create offer (copy)</label>
-        <button id="create-offer" (click)="start()">Start Call</button>
-    </div>
-    <textarea id="offer-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
-    <div class="row">
-        <label>4. Register remote SDP (paste)</label>
-        <button id="register-remote" (click)="registerRemoteSignal()">Register</button>
-    </div>
-    <textarea id="remote-sdp-input" rows=5 [(ngModel)]="signalInput"></textarea>
-</ng-template>
-
-<ng-template #join>
-    <h3>Join webrtc channel</h3>
-    <label>2. Register remote SDP (paste)</label>
-    <textarea id="remote-sdp-input" rows=5 [(ngModel)]="signalInput"></textarea>
-    <div class="row">
-        <label>3. Create Participant SDP (copy)</label>
-        <button id="create-participant" (click)="registerRemoteSignal()">Create</button>
-    </div>
-    <textarea id="participant-output" rows=5 readonly>{{ (webRTC.signal | async) || 'No answer' }}</textarea>
-</ng-template>
