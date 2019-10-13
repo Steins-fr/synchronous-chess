@@ -1,6 +1,6 @@
 data "aws_iam_policy_document" "sc_room_table" {
+  version = "2012-10-17"
   statement {
-    sid = "1"
     actions = [
       "dynamodb:GetItem",
       "dynamodb:DeleteItem",
@@ -13,10 +13,28 @@ data "aws_iam_policy_document" "sc_room_table" {
   }
 }
 
+data "aws_iam_policy_document" "sc_manage_connection" {
+  version = "2012-10-17"
+  statement {
+    actions = [
+      "execute-api:ManageConnections"
+    ]
+    resources = [
+      "${var.api_gateway}/*"
+    ]
+  }
+}
+
 resource "aws_iam_policy" "sc_room_table" {
   name   = "sc_room_table"
   path   = "/"
   policy = data.aws_iam_policy_document.sc_room_table.json
+}
+
+resource "aws_iam_policy" "sc_manage_connection" {
+  name   = "sc_manage_connection"
+  path   = "/"
+  policy = data.aws_iam_policy_document.sc_manage_connection.json
 }
 
 resource "aws_iam_role" "iam_sc_ws_lambda_logs" {
@@ -84,6 +102,11 @@ resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_logs_attachme
 resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_room_table_attachment" {
   role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
   policy_arn = aws_iam_policy.sc_room_table.arn
+}
+
+resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_connection_attachment" {
+  role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
+  policy_arn = aws_iam_policy.sc_manage_connection.arn
 }
 
 resource "aws_dynamodb_table" "sc_database_rooms" {
