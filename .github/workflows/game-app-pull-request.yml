@@ -3,7 +3,7 @@ name: Angular CI Pull request Game App
 on:
   pull_request:
     paths:
-      - "frontend/game-app/**"
+      - "application/frontend/game-app/**"
 
 jobs:
   angular-lint:
@@ -13,7 +13,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend/game-app
+          cd application/frontend/game-app
           yarn install
 
       - name: Pull Angular cli
@@ -22,7 +22,7 @@ jobs:
       - name: Run Angular lint
         run: |
           docker run --rm \
-            -w ${GITHUB_WORKSPACE}/frontend/game-app \
+            -w ${GITHUB_WORKSPACE}/application/frontend/game-app \
             -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
             trion/ng-cli:8.3.2 \
             ng lint;
@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend/game-app
+          cd application/frontend/game-app
           yarn install
 
       - name: Pull Angular cli Karma
@@ -43,7 +43,7 @@ jobs:
       - name: Run Karma
         run: |
           docker run --rm \
-            -w ${GITHUB_WORKSPACE}/frontend/game-app \
+            -w ${GITHUB_WORKSPACE}/application/frontend/game-app \
             -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
             trion/ng-cli-karma:8.3.2 \
             ng test --code-coverage --progress false --watch false;
@@ -52,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd frontend/game-app
+          cd application/frontend/game-app
           export SONAR_SCANNER_VERSION=4.0.0.1744;
           export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux;
           rm -rf $SONAR_SCANNER_HOME;
@@ -82,7 +82,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend/game-app
+          cd application/frontend/game-app
           yarn install
 
       - name: Pull Angular cli e2e
@@ -91,7 +91,7 @@ jobs:
       - name: Run e2e
         run: |
           docker run --rm \
-            -w ${GITHUB_WORKSPACE}/frontend/game-app \
+            -w ${GITHUB_WORKSPACE}/application/frontend/game-app \
             -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
             trion/ng-cli-e2e:8.3.2 \
             ng e2e;
@@ -104,12 +104,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend/game-app
+          cd application/frontend/game-app
           yarn install
 
       - name: Deploy to staging
         run: |
-          cd frontend/game-app
+          cd application/frontend/game-app
           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_STAGING_ACCESS_KEY }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_STAGING_SECRET_KEY }}
           yarn build:staging:deploy;
