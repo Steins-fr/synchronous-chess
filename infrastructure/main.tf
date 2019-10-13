@@ -39,6 +39,29 @@ resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_logs_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_dynamodb_table" "sc_database_rooms" {
+  name           = "sc_rooms"
+  hash_key       = "ID"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 5
+  write_capacity = 5
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  attribute {
+    name = "ID"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "sc_database_rooms"
+    Application = "Synchronous chess"
+    Environment = "test"
+  }
+}
+
 resource "aws_lambda_function" "sc_ws_lambda_onconnect" {
   filename      = local.archive_path
   function_name = "sc_ws_lambda_onconnect"
