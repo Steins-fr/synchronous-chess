@@ -1,22 +1,6 @@
-// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: MIT-0
+exports.handler = async function (event) {
 
-var AWS = require("aws-sdk");
-AWS.config.update({ region: process.env.AWS_REGION });
-var DDB = new AWS.DynamoDB({ apiVersion: "2012-10-08" });
+    console.log(`New connection: ${event.requestContext.connectionId}`);
 
-exports.handler = function (event, context, callback) {
-    var putParams = {
-        TableName: process.env.TABLE_NAME_CONNECTIONS,
-        Item: {
-            connectionId: { S: event.requestContext.connectionId }
-        }
-    };
-
-    DDB.putItem(putParams, function (err) {
-        callback(null, {
-            statusCode: err ? 500 : 200,
-            body: err ? "Failed to connect: " + JSON.stringify(err) : "Connected."
-        });
-    });
+    return { statusCode: 200, body: 'Connected' };
 };

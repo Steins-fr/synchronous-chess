@@ -5,7 +5,7 @@ const AWS = require('aws-sdk');
 
 const ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 
-const { TABLE_NAME_CONNECTIONS, TABLE_NAME_ROOMS } = process.env;
+const { TABLE_NAME } = process.env;
 
 function createPayloadValidation(payload) {
     if (payload.type !== 'create' || !payload.data) {
@@ -27,7 +27,7 @@ function createPayloadValidation(payload) {
 function roomExist(data) {
     return new Promise((resolve, reject) => {
         const params = {
-            TableName: TABLE_NAME_ROOMS,
+            TableName: TABLE_NAME,
             Key: {
                 "ID": {
                     S: data.roomName
@@ -49,7 +49,7 @@ function roomExist(data) {
 function createRoom(data, connectionId) {
     return new Promise((resolve, reject) => {
         var putParams = {
-            TableName: process.env.TABLE_NAME_ROOMS,
+            TableName: process.env.TABLE_NAME,
             Item: {
                 ID: { S: data.roomName },
                 connectionId: { S: connectionId },
@@ -76,7 +76,7 @@ function createRoom(data, connectionId) {
 function getRoom(data) {
     return new Promise((resolve, reject) => {
         const params = {
-            TableName: TABLE_NAME_ROOMS,
+            TableName: TABLE_NAME,
             Key: {
                 "ID": {
                     S: data.roomName
@@ -136,7 +136,7 @@ function addRoomQueue(data, connectionId) {
     return new Promise((resolve, reject) => {
 
         const updateParams = {
-            TableName: process.env.TABLE_NAME_ROOMS,
+            TableName: process.env.TABLE_NAME,
             Key: {
                 ID: { S: data.roomName }
             },
