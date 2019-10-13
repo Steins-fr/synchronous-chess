@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - "application/frontend/game-app/**"
 
 jobs:
   angular-test-karma:

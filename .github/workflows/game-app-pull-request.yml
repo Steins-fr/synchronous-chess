@@ -2,8 +2,6 @@ name: Angular CI Pull request Game App
 
 on:
   pull_request:
-    paths:
-      - "application/frontend/game-app/**"
 
 jobs:
   angular-lint:
