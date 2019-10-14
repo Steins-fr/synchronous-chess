@@ -1,19 +1,21 @@
-// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: MIT-0
+import * as AWS from 'aws-sdk';
 
-const AWS = require('aws-sdk');
+interface Response {
+    statusCode: number;
+    body: string;
+}
 
-const ddb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
+const ddb: AWS.DynamoDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 
-const { TABLE_NAME } = process.env;
+const TABLE_NAME: string = process.env.TABLE_NAME as string;
 
-function createPayloadValidation(payload) {
+function createPayloadValidation(payload: any): boolean { // TYPEDEF
     if (payload.type !== 'create' || !payload.data) {
         return false;
     }
 
     try {
-        const data = JSON.parse(payload.data);
+        const data: any = JSON.parse(payload.data); // TYPEDEF
         if (!data.roomName || !data.maxPlayer || !data.playerName) {
             return false;
         }
@@ -24,19 +26,19 @@ function createPayloadValidation(payload) {
     return true;
 }
 
-function roomExist(data) {
-    return new Promise((resolve, reject) => {
-        const params = {
+function roomExist(data: any): Promise<any> { // TYPEDEF // TYPEDEF
+    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => { // TYPEDEF
+        const params: any = { // TYPEDEF
             TableName: TABLE_NAME,
             Key: {
-                "ID": {
+                ID: {
                     S: data.roomName
                 }
             },
-            ProjectionExpression: "ID"
-        }
+            ProjectionExpression: 'ID'
+        };
 
-        ddb.getItem(params, (err, roomData) => {
+        ddb.getItem(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.GetItemOutput) => {
             if (err) {
                 reject(err);
             }
@@ -46,9 +48,9 @@ function roomExist(data) {
     });
 }
 
-function createRoom(data, connectionId) {
-    return new Promise((resolve, reject) => {
-        var putParams = {
+function createRoom(data: any, connectionId: string): Promise<any> { // TYPEDEF // TYPEDEF
+    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => {
+        const putParams: any = { // TYPEDEF
             TableName: process.env.TABLE_NAME,
             Item: {
                 ID: { S: data.roomName },
@@ -64,7 +66,7 @@ function createRoom(data, connectionId) {
             }
         };
 
-        ddb.putItem(putParams, function (err) {
+        ddb.putItem(putParams, function (err: AWS.AWSError): void {
             if (err) {
                 reject(err);
             }
@@ -73,19 +75,19 @@ function createRoom(data, connectionId) {
     });
 }
 
-function getRoom(data) {
-    return new Promise((resolve, reject) => {
-        const params = {
+function getRoom(data: any): Promise<any> { // TYPEDEF // TYPEDEF
+    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => {
+        const params: any = { // TYPEDEF
             TableName: TABLE_NAME,
             Key: {
-                "ID": {
+                ID: {
                     S: data.roomName
                 }
             },
-            ProjectionExpression: "ID, connectionId, players, queue, hostPlayer, maxPlayer"
-        }
+            ProjectionExpression: 'ID, connectionId, players, queue, hostPlayer, maxPlayer'
+        };
 
-        ddb.getItem(params, (err, roomData) => {
+        ddb.getItem(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.GetItemOutput) => {
             if (err) {
                 reject(err);
             }
@@ -95,19 +97,19 @@ function getRoom(data) {
     });
 }
 
-async function messageCreate(event, payload) {
+async function messageCreate(event: any, payload: any): Promise<void> { // TYPEDEF
     if (!createPayloadValidation(payload)) {
         throw new Error('Payload not valid');
     }
 
-    const data = JSON.parse(payload.data);
+    const data: any = JSON.parse(payload.data); // TYPEDEF
 
     if (await roomExist(data)) {
         throw new Error('Room already exists');
     }
-    const connectionId = event.requestContext.connectionId;
+    const connectionId: string = event.requestContext.connectionId;
     await createRoom(data, connectionId);
-    const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+    const apigwManagementApi: AWS.ApiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
         endpoint: event.requestContext.domainName
     });
@@ -115,13 +117,13 @@ async function messageCreate(event, payload) {
     await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify({ type: 'created', data: JSON.stringify(data) }) }).promise();
 }
 
-function joinPayloadValidation(payload) {
+function joinPayloadValidation(payload: any): boolean { // TYPEDEF
     if (payload.type !== 'join' || !payload.data) {
         return false;
     }
 
     try {
-        const data = JSON.parse(payload.data);
+        const data: any = JSON.parse(payload.data); // TYPEDEF
         if (!data.roomName || !data.playerName) {
             return false;
         }
@@ -132,21 +134,21 @@ function joinPayloadValidation(payload) {
     return true;
 }
 
-function addRoomQueue(data, connectionId) {
-    return new Promise((resolve, reject) => {
+function addRoomQueue(data: any, connectionId: string): Promise<any> { // TYPEDEF // TYPEDEF
+    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => {
 
-        const updateParams = {
+        const updateParams: any = { // TYPEDEF
             TableName: process.env.TABLE_NAME,
             Key: {
                 ID: { S: data.roomName }
             },
-            UpdateExpression: "set queue = list_append(queue, :items)",
+            UpdateExpression: 'set queue = list_append(queue, :items)',
             ExpressionAttributeValues: {
-                ":items": { L: [{ M: { playerName: { S: data.playerName }, connectionId: { S: connectionId } } }] }
+                ':items': { L: [{ M: { playerName: { S: data.playerName }, connectionId: { S: connectionId } } }] }
             }
         };
 
-        ddb.updateItem(updateParams, function (err) {
+        ddb.updateItem(updateParams, function (err: AWS.AWSError): void {
             if (err) {
                 reject(err);
             }
@@ -155,14 +157,14 @@ function addRoomQueue(data, connectionId) {
     });
 }
 
-function isInQueue(room, playerName) {
+function isInQueue(room: any, playerName: string): boolean { // TYPEDEF
 
-    let found = false;
+    let found: boolean = false;
 
-    const queueArray = room.queue.L;
-    queueArray.forEach((playerMap) => {
-        const player = playerMap.M;
-        const pName = player.playerName.S;
+    const queueArray: Array<any> = room.queue.L; // TYPEDEF
+    queueArray.forEach((playerMap: any) => { // TYPEDEF
+        const player: any = playerMap.M; // TYPEDEF
+        const pName: string = player.playerName.S;
         if (pName === playerName) {
             found = true;
         }
@@ -171,14 +173,14 @@ function isInQueue(room, playerName) {
     return found;
 }
 
-function isInGame(room, playerName) {
+function isInGame(room: any, playerName: string): boolean {
 
-    let found = false;
+    let found: boolean = false;
 
-    const playersArray = room.players.L;
-    playersArray.forEach((playerMap) => {
-        const player = playerMap.M;
-        const pName = player.playerName.S;
+    const playersArray: Array<any> = room.players.L; // TYPEDEF
+    playersArray.forEach((playerMap: any) => { // TYPEDEF
+        const player: any = playerMap.M; // TYPEDEF
+        const pName: string = player.playerName.S;
         if (pName === playerName) {
             found = true;
         }
@@ -187,7 +189,7 @@ function isInGame(room, playerName) {
     return found;
 }
 
-function joinHostResponse(data) {
+function joinHostResponse(data: any): string { // TYPEDEF
     return JSON.stringify({
         type: 'joinRequest', data: JSON.stringify({
             playerName: data.playerName // Replace by generated playerId
@@ -195,7 +197,7 @@ function joinHostResponse(data) {
     });
 }
 
-function joinResponse(room) {
+function joinResponse(room: any): string { // TYPEDEF
     return JSON.stringify({
         type: 'joiningRoom', data: JSON.stringify({
             playerName: room.hostPlayer.S,
@@ -204,25 +206,25 @@ function joinResponse(room) {
     });
 }
 
-async function messageJoin(event, payload) {
+async function messageJoin(event: any, payload: any): Promise<void> { // TYPEDEF // TYPEDEF
     if (!joinPayloadValidation(payload)) {
         throw new Error('Payload not valid');
     }
 
-    const data = JSON.parse(payload.data);
+    const data: any = JSON.parse(payload.data); // TYPEDEF
 
-    const room = await getRoom(data);
+    const room: any = await getRoom(data); // TYPEDEF
 
     if (!room) {
         throw new Error('Room does not exist');
     }
 
-    const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+    const apigwManagementApi: AWS.ApiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
         endpoint: event.requestContext.domainName
     });
 
-    const connectionId = event.requestContext.connectionId;
+    const connectionId: string = event.requestContext.connectionId;
     if (isInGame(room, data.playerName)) {
         await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify({ type: 'error', data: 'Already in game' }) }).promise();
         return;
@@ -236,13 +238,13 @@ async function messageJoin(event, payload) {
     await apigwManagementApi.postToConnection({ ConnectionId: room.connectionId.S, Data: joinHostResponse(data) }).promise();
 }
 
-function signalPayloadValidation(payload) {
+function signalPayloadValidation(payload: any): boolean { // TYPEDEF
     if (payload.type !== 'signal' || !payload.data) {
         return false;
     }
 
     try {
-        const data = JSON.parse(payload.data);
+        const data: any = JSON.parse(payload.data); // TYPEDEF
         if (!data.roomName || !data.to || !data.signal) {
             return false;
         }
@@ -253,21 +255,21 @@ function signalPayloadValidation(payload) {
     return true;
 }
 
-function getPlayerByName(room, playerName) {
+function getPlayerByName(room: any, playerName: string): any { // TYPEDEF // TYPEDEF
 
-    const playersArray = room.players.L;
-    for (let i = 0; i < playersArray.length; ++i) {
-        const player = playersArray[i].M;
-        const pName = player.playerName.S;
+    const playersArray: Array<any> = room.players.L; // TYPEDEF
+    for (let i: number = 0; i < playersArray.length; ++i) {
+        const player: any = playersArray[i].M; // TYPEDEF
+        const pName: string = player.playerName.S;
         if (pName === playerName) {
             return player;
         }
     }
 
-    const queueArray = room.queue.L;
-    for (let i = 0; i < queueArray.length; ++i) {
-        const player = queueArray[i].M;
-        const pName = player.playerName.S;
+    const queueArray: Array<any> = room.queue.L; // TYPEDEF
+    for (let i: number = 0; i < queueArray.length; ++i) {
+        const player: any = queueArray[i].M; // TYPEDEF
+        const pName: string = player.playerName.S;
         if (pName === playerName) {
             return player;
         }
@@ -276,21 +278,21 @@ function getPlayerByName(room, playerName) {
     return null;
 }
 
-function getPlayerByConnectionId(room, connectionId) {
+function getPlayerByConnectionId(room: any, connectionId: string): any { // TYPEDEF // TYPEDEF
 
-    const playersArray = room.players.L;
-    for (let i = 0; i < playersArray.length; ++i) {
-        const player = playersArray[i].M;
-        const cId = player.connectionId.S;
+    const playersArray: Array<any> = room.players.L; // TYPEDEF
+    for (let i: number = 0; i < playersArray.length; ++i) {
+        const player: any = playersArray[i].M; // TYPEDEF
+        const cId: string = player.connectionId.S;
         if (cId === connectionId) {
             return player;
         }
     }
 
-    const queueArray = room.queue.L;
-    for (let i = 0; i < queueArray.length; ++i) {
-        const player = queueArray[i].M;
-        const cId = player.connectionId.S;
+    const queueArray: Array<any> = room.queue.L; // TYPEDEF
+    for (let i: number = 0; i < queueArray.length; ++i) {
+        const player: any = queueArray[i].M; // TYPEDEF
+        const cId: string = player.connectionId.S;
         if (cId === connectionId) {
             return player;
         }
@@ -299,7 +301,7 @@ function getPlayerByConnectionId(room, connectionId) {
     return null;
 }
 
-function signalResponse(data, fromPlayer) {
+function signalResponse(data: any, fromPlayer: any): string { // TYPEDEF // TYPEDEF
     return JSON.stringify({
         type: 'remoteSignal', data: JSON.stringify({
             from: fromPlayer.playerName.S,
@@ -308,27 +310,27 @@ function signalResponse(data, fromPlayer) {
     });
 }
 
-async function messageSignal(event, payload) {
+async function messageSignal(event: any, payload: any): Promise<void> { // TYPEDEF // TYPEDEF
     if (!signalPayloadValidation(payload)) {
         throw new Error('Payload not valid');
     }
 
-    const data = JSON.parse(payload.data);
+    const data: any = JSON.parse(payload.data); // TYPEDEF
 
-    const room = await getRoom(data);
+    const room: any = await getRoom(data); // TYPEDEF
 
     if (!room) {
         throw new Error('Room does not exist');
     }
 
-    const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+    const apigwManagementApi: AWS.ApiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
         endpoint: event.requestContext.domainName
     });
 
-    const fromConnectionId = event.requestContext.connectionId;
-    const fromPlayer = getPlayerByConnectionId(room, fromConnectionId);
-    const toPlayer = getPlayerByName(room, data.to);
+    const fromConnectionId: string = event.requestContext.connectionId;
+    const fromPlayer: any = getPlayerByConnectionId(room, fromConnectionId); // TYPEDEF
+    const toPlayer: any = getPlayerByName(room, data.to); // TYPEDEF
     if (toPlayer === null) {
         await apigwManagementApi.postToConnection({ ConnectionId: fromConnectionId, Data: JSON.stringify({ type: 'error', data: 'No destination found!' }) }).promise();
         return;
@@ -337,21 +339,21 @@ async function messageSignal(event, payload) {
     await apigwManagementApi.postToConnection({ ConnectionId: toPlayer.connectionId.S, Data: signalResponse(data, fromPlayer) }).promise();
 }
 
-exports.handler = async (event, context) => {
+export const handler: (event: any) => Promise<Response> = async function (event: any): Promise<Response> { // TYPEDEF // TYPEDEF
 
-    const messageHandlers = {
+    const messageHandlers: any = { // TYPEDEF
         create: messageCreate,
         join: messageJoin,
         signal: messageSignal
-    }
+    };
 
-    const apigwManagementApi = new AWS.ApiGatewayManagementApi({
+    const apigwManagementApi: AWS.ApiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
         endpoint: event.requestContext.domainName
     });
 
-    const payload = JSON.parse(JSON.parse(event.body).data);
-    const connectionId = event.requestContext.connectionId;
+    const payload: any = JSON.parse(JSON.parse(event.body).data); // TYPEDEF
+    const connectionId: string = event.requestContext.connectionId;
 
     if (messageHandlers[payload.type]) {
         try {
