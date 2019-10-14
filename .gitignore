@@ -87,4 +87,9 @@ fabric.properties
 # Ignore all local history of files
 .history
 
+### Typescript
+
+node_modules
+dist
+
 # End of https://www.gitignore.io/api/node,angular,phpstorm,visualstudiocode
