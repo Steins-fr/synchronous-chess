@@ -1,4 +1,13 @@
 import * as AWS from 'aws-sdk';
+import PlayerDocument from './entities/player-document';
+import RoomDocument from './entities/room-document';
+import { AttributeMap } from './entities/types';
+import SocketPayload from './interfaces/socket-payload';
+import Room from './interfaces/room-request';
+import { APIGatewayProxyEvent } from 'aws-lambda';
+import { PutItemInputAttributeMap } from 'aws-sdk/clients/dynamodb';
+import JoinRequest from './interfaces/join-request';
+import SignalRequest from './interfaces/signal-request';
 
 interface Response {
     statusCode: number;
@@ -9,13 +18,21 @@ const ddb: AWS.DynamoDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
 
 const TABLE_NAME: string = process.env.TABLE_NAME as string;
 
-function createPayloadValidation(payload: any): boolean { // TYPEDEF
+function errorResponse(message: string): string {
+    return JSON.stringify({ // TODO: ErrorResponse
+        type: 'error', data: JSON.stringify({
+            message
+        })
+    });
+}
+
+function createPayloadValidation(payload: SocketPayload): boolean {
     if (payload.type !== 'create' || !payload.data) {
         return false;
     }
 
     try {
-        const data: any = JSON.parse(payload.data); // TYPEDEF
+        const data: Room = JSON.parse(payload.data);
         if (!data.roomName || !data.maxPlayer || !data.playerName) {
             return false;
         }
@@ -26,15 +43,18 @@ function createPayloadValidation(payload: any): boolean { // TYPEDEF
     return true;
 }
 
-function roomExist(data: any): Promise<any> { // TYPEDEF // TYPEDEF
-    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => { // TYPEDEF
-        const params: any = { // TYPEDEF
+function roomExist(data: Room): Promise<boolean> {
+    return new Promise<boolean>((resolve: (value: boolean) => void, reject: (value: AWS.AWSError) => void): void => {
+
+        const keys: AWS.DynamoDB.Key & Partial<RoomDocument> = {
+            ID: {
+                S: data.roomName
+            }
+        };
+
+        const params: AWS.DynamoDB.GetItemInput = {
             TableName: TABLE_NAME,
-            Key: {
-                ID: {
-                    S: data.roomName
-                }
-            },
+            Key: keys,
             ProjectionExpression: 'ID'
         };
 
@@ -48,40 +68,49 @@ function roomExist(data: any): Promise<any> { // TYPEDEF // TYPEDEF
     });
 }
 
-function createRoom(data: any, connectionId: string): Promise<any> { // TYPEDEF // TYPEDEF
-    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => {
-        const putParams: any = { // TYPEDEF
-            TableName: process.env.TABLE_NAME,
-            Item: {
-                ID: { S: data.roomName },
-                connectionId: { S: connectionId },
-                hostPlayer: { S: data.playerName },
-                maxPlayer: { N: `${data.maxPlayer}` },
-                players: {
-                    L: [
-                        { M: { playerName: { S: data.playerName }, connectionId: { S: connectionId } } }
-                    ]
-                },
-                queue: { L: [] }
-            }
+type UpdatePutItemOutput = AWS.DynamoDB.UpdateItemOutput | AWS.DynamoDB.PutItemOutput;
+
+function genUpdatePutCallback(resolve: (value: UpdatePutItemOutput) => void,
+    reject: (value: AWS.AWSError) => void): (err: AWS.AWSError, output: UpdatePutItemOutput) => void {
+    return (err: AWS.AWSError, output: UpdatePutItemOutput): void => {
+        if (err) {
+            reject(err);
+        }
+        resolve(output);
+    };
+}
+
+function createRoom(data: Room, connectionId: string): Promise<AWS.DynamoDB.PutItemOutput> {
+    return new Promise((resolve: (value: AWS.DynamoDB.PutItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
+        const item: PutItemInputAttributeMap & RoomDocument = {
+            ID: { S: data.roomName },
+            connectionId: { S: connectionId },
+            hostPlayer: { S: data.playerName },
+            maxPlayer: { N: `${data.maxPlayer}` },
+            players: {
+                L: [
+                    { M: { playerName: { S: data.playerName }, connectionId: { S: connectionId } } }
+                ]
+            },
+            queue: { L: [] }
         };
 
-        ddb.putItem(putParams, function (err: AWS.AWSError): void {
-            if (err) {
-                reject(err);
-            }
-            resolve();
-        });
+        const putParams: AWS.DynamoDB.PutItemInput = {
+            TableName: TABLE_NAME,
+            Item: item
+        };
+
+        ddb.putItem(putParams, genUpdatePutCallback(resolve, reject));
     });
 }
 
-function getRoom(data: any): Promise<any> { // TYPEDEF // TYPEDEF
-    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => {
-        const params: any = { // TYPEDEF
+function getRoom(roomName: string): Promise<RoomDocument> {
+    return new Promise((resolve: (value: any) => void, reject: (value: AWS.AWSError) => void): void => { // TYPEDEF
+        const params: AWS.DynamoDB.GetItemInput = {
             TableName: TABLE_NAME,
             Key: {
                 ID: {
-                    S: data.roomName
+                    S: roomName
                 }
             },
             ProjectionExpression: 'ID, connectionId, players, queue, hostPlayer, maxPlayer'
@@ -97,7 +126,7 @@ function getRoom(data: any): Promise<any> { // TYPEDEF // TYPEDEF
     });
 }
 
-async function messageCreate(event: any, payload: any): Promise<void> { // TYPEDEF
+async function messageCreate(event: APIGatewayProxyEvent, payload: SocketPayload): Promise<void> {
     if (!createPayloadValidation(payload)) {
         throw new Error('Payload not valid');
     }
@@ -107,23 +136,25 @@ async function messageCreate(event: any, payload: any): Promise<void> { // TYPED
     if (await roomExist(data)) {
         throw new Error('Room already exists');
     }
-    const connectionId: string = event.requestContext.connectionId;
+    const connectionId: string = event.requestContext.connectionId as string;
+
     await createRoom(data, connectionId);
     const apigwManagementApi: AWS.ApiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
         endpoint: event.requestContext.domainName
     });
 
+    // TODO: CreateResponse
     await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify({ type: 'created', data: JSON.stringify(data) }) }).promise();
 }
 
-function joinPayloadValidation(payload: any): boolean { // TYPEDEF
+function joinPayloadValidation(payload: SocketPayload): boolean {
     if (payload.type !== 'join' || !payload.data) {
         return false;
     }
 
     try {
-        const data: any = JSON.parse(payload.data); // TYPEDEF
+        const data: JoinRequest = JSON.parse(payload.data);
         if (!data.roomName || !data.playerName) {
             return false;
         }
@@ -134,11 +165,11 @@ function joinPayloadValidation(payload: any): boolean { // TYPEDEF
     return true;
 }
 
-function addRoomQueue(data: any, connectionId: string): Promise<any> { // TYPEDEF // TYPEDEF
-    return new Promise((resolve: (value?: any) => void, reject: (value?: any) => void): void => {
+function addRoomQueue(data: JoinRequest, connectionId: string): Promise<AWS.DynamoDB.UpdateItemOutput> {
+    return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
 
-        const updateParams: any = { // TYPEDEF
-            TableName: process.env.TABLE_NAME,
+        const updateParams: AWS.DynamoDB.UpdateItemInput = {
+            TableName: TABLE_NAME,
             Key: {
                 ID: { S: data.roomName }
             },
@@ -148,57 +179,56 @@ function addRoomQueue(data: any, connectionId: string): Promise<any> { // TYPEDE
             }
         };
 
-        ddb.updateItem(updateParams, function (err: AWS.AWSError): void {
-            if (err) {
-                reject(err);
-            }
-            resolve();
-        });
+        ddb.updateItem(updateParams, genUpdatePutCallback(resolve, reject));
     });
 }
 
-function isInQueue(room: any, playerName: string): boolean { // TYPEDEF
-
-    let found: boolean = false;
-
-    const queueArray: Array<any> = room.queue.L; // TYPEDEF
-    queueArray.forEach((playerMap: any) => { // TYPEDEF
-        const player: any = playerMap.M; // TYPEDEF
-        const pName: string = player.playerName.S;
-        if (pName === playerName) {
-            found = true;
+function findPlayerWith(players: Array<AttributeMap<PlayerDocument>>, test: (player: PlayerDocument) => boolean): PlayerDocument | null {
+    for (let i: number = 0; i < players.length; ++i) {
+        const player: PlayerDocument = players[i].M;
+        if (test(player)) {
+            return player;
         }
-    });
-
-    return found;
+    }
+    return null;
 }
 
-function isInGame(room: any, playerName: string): boolean {
-
-    let found: boolean = false;
-
-    const playersArray: Array<any> = room.players.L; // TYPEDEF
-    playersArray.forEach((playerMap: any) => { // TYPEDEF
-        const player: any = playerMap.M; // TYPEDEF
-        const pName: string = player.playerName.S;
-        if (pName === playerName) {
-            found = true;
-        }
-    });
-
-    return found;
+function findPlayerByName(players: Array<AttributeMap<PlayerDocument>>, playerName: string): PlayerDocument | null {
+    const playerNameTest: (player: PlayerDocument) => boolean = (player: PlayerDocument): boolean => player.playerName.S === playerName;
+    return findPlayerWith(players, playerNameTest);
 }
 
-function joinHostResponse(data: any): string { // TYPEDEF
-    return JSON.stringify({
+function findPlayerConnectionId(players: Array<AttributeMap<PlayerDocument>>, connectionId: string): PlayerDocument | null {
+    const connectionIdTest: (player: PlayerDocument) => boolean = (player: PlayerDocument): boolean => player.connectionId.S === connectionId;
+    return findPlayerWith(players, connectionIdTest);
+}
+
+function getPlayerByName(room: RoomDocument, playerName: string): PlayerDocument | null {
+    return findPlayerByName(room.players.L, playerName) || findPlayerByName(room.queue.L, playerName);
+}
+
+function getPlayerByConnectionId(room: RoomDocument, connectionId: string): PlayerDocument | null {
+    return findPlayerConnectionId(room.players.L, connectionId) || findPlayerConnectionId(room.queue.L, connectionId);
+}
+
+function isInQueue(room: RoomDocument, playerName: string): boolean {
+    return !!findPlayerByName(room.queue.L, playerName);
+}
+
+function isInGame(room: RoomDocument, playerName: string): boolean {
+    return !!findPlayerByName(room.players.L, playerName);
+}
+
+function joinHostResponse(data: JoinRequest): string {
+    return JSON.stringify({ // TODO: JoinResponse1
         type: 'joinRequest', data: JSON.stringify({
-            playerName: data.playerName // Replace by generated playerId
+            playerName: data.playerName // TODO: Replace by generated playerId
         })
     });
 }
 
-function joinResponse(room: any): string { // TYPEDEF
-    return JSON.stringify({
+function joinResponse(room: RoomDocument): string {
+    return JSON.stringify({ // TODO: JoinResponse2
         type: 'joiningRoom', data: JSON.stringify({
             playerName: room.hostPlayer.S,
             roomName: room.ID.S
@@ -206,14 +236,13 @@ function joinResponse(room: any): string { // TYPEDEF
     });
 }
 
-async function messageJoin(event: any, payload: any): Promise<void> { // TYPEDEF // TYPEDEF
+async function messageJoin(event: APIGatewayProxyEvent, payload: SocketPayload): Promise<void> {
     if (!joinPayloadValidation(payload)) {
         throw new Error('Payload not valid');
     }
 
-    const data: any = JSON.parse(payload.data); // TYPEDEF
-
-    const room: any = await getRoom(data); // TYPEDEF
+    const data: JoinRequest = JSON.parse(payload.data);
+    const room: RoomDocument = await getRoom(data.roomName);
 
     if (!room) {
         throw new Error('Room does not exist');
@@ -224,27 +253,29 @@ async function messageJoin(event: any, payload: any): Promise<void> { // TYPEDEF
         endpoint: event.requestContext.domainName
     });
 
-    const connectionId: string = event.requestContext.connectionId;
+    const connectionId: string = event.requestContext.connectionId as string;
     if (isInGame(room, data.playerName)) {
-        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify({ type: 'error', data: 'Already in game' }) }).promise();
+        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: errorResponse('Already in game') }).promise();
         return;
     }
 
-    if (!isInQueue(room, data.playerName)) {
-        await addRoomQueue(data, connectionId);
+    if (isInQueue(room, data.playerName)) {
+        await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: errorResponse('Already in queue') }).promise();
+        return;
     }
+    await addRoomQueue(data, connectionId);
 
     await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: joinResponse(room) }).promise();
     await apigwManagementApi.postToConnection({ ConnectionId: room.connectionId.S, Data: joinHostResponse(data) }).promise();
 }
 
-function signalPayloadValidation(payload: any): boolean { // TYPEDEF
+function signalPayloadValidation(payload: SocketPayload): boolean {
     if (payload.type !== 'signal' || !payload.data) {
         return false;
     }
 
     try {
-        const data: any = JSON.parse(payload.data); // TYPEDEF
+        const data: SignalRequest = JSON.parse(payload.data);
         if (!data.roomName || !data.to || !data.signal) {
             return false;
         }
@@ -255,54 +286,8 @@ function signalPayloadValidation(payload: any): boolean { // TYPEDEF
     return true;
 }
 
-function getPlayerByName(room: any, playerName: string): any { // TYPEDEF // TYPEDEF
-
-    const playersArray: Array<any> = room.players.L; // TYPEDEF
-    for (let i: number = 0; i < playersArray.length; ++i) {
-        const player: any = playersArray[i].M; // TYPEDEF
-        const pName: string = player.playerName.S;
-        if (pName === playerName) {
-            return player;
-        }
-    }
-
-    const queueArray: Array<any> = room.queue.L; // TYPEDEF
-    for (let i: number = 0; i < queueArray.length; ++i) {
-        const player: any = queueArray[i].M; // TYPEDEF
-        const pName: string = player.playerName.S;
-        if (pName === playerName) {
-            return player;
-        }
-    }
-
-    return null;
-}
-
-function getPlayerByConnectionId(room: any, connectionId: string): any { // TYPEDEF // TYPEDEF
-
-    const playersArray: Array<any> = room.players.L; // TYPEDEF
-    for (let i: number = 0; i < playersArray.length; ++i) {
-        const player: any = playersArray[i].M; // TYPEDEF
-        const cId: string = player.connectionId.S;
-        if (cId === connectionId) {
-            return player;
-        }
-    }
-
-    const queueArray: Array<any> = room.queue.L; // TYPEDEF
-    for (let i: number = 0; i < queueArray.length; ++i) {
-        const player: any = queueArray[i].M; // TYPEDEF
-        const cId: string = player.connectionId.S;
-        if (cId === connectionId) {
-            return player;
-        }
-    }
-
-    return null;
-}
-
-function signalResponse(data: any, fromPlayer: any): string { // TYPEDEF // TYPEDEF
-    return JSON.stringify({
+function signalResponse(data: SignalRequest, fromPlayer: PlayerDocument): string {
+    return JSON.stringify({ // TODO: SignalResponse
         type: 'remoteSignal', data: JSON.stringify({
             from: fromPlayer.playerName.S,
             signal: data.signal
@@ -310,14 +295,14 @@ function signalResponse(data: any, fromPlayer: any): string { // TYPEDEF // TYPE
     });
 }
 
-async function messageSignal(event: any, payload: any): Promise<void> { // TYPEDEF // TYPEDEF
+async function messageSignal(event: APIGatewayProxyEvent, payload: SocketPayload): Promise<void> {
     if (!signalPayloadValidation(payload)) {
         throw new Error('Payload not valid');
     }
 
-    const data: any = JSON.parse(payload.data); // TYPEDEF
+    const data: SignalRequest = JSON.parse(payload.data);
 
-    const room: any = await getRoom(data); // TYPEDEF
+    const room: RoomDocument = await getRoom(data.roomName);
 
     if (!room) {
         throw new Error('Room does not exist');
@@ -328,20 +313,30 @@ async function messageSignal(event: any, payload: any): Promise<void> { // TYPED
         endpoint: event.requestContext.domainName
     });
 
-    const fromConnectionId: string = event.requestContext.connectionId;
-    const fromPlayer: any = getPlayerByConnectionId(room, fromConnectionId); // TYPEDEF
-    const toPlayer: any = getPlayerByName(room, data.to); // TYPEDEF
+    const fromConnectionId: string = event.requestContext.connectionId as string;
+    const fromPlayer: PlayerDocument | null = getPlayerByConnectionId(room, fromConnectionId);
+    const toPlayer: PlayerDocument | null = getPlayerByName(room, data.to);
+
+    if (fromPlayer === null) {
+        await apigwManagementApi.postToConnection({ ConnectionId: fromConnectionId, Data: errorResponse('You was not in the queue!') }).promise();
+        return;
+    }
+
     if (toPlayer === null) {
-        await apigwManagementApi.postToConnection({ ConnectionId: fromConnectionId, Data: JSON.stringify({ type: 'error', data: 'No destination found!' }) }).promise();
+        await apigwManagementApi.postToConnection({ ConnectionId: fromConnectionId, Data: errorResponse('No destination found!') }).promise();
         return;
     }
 
     await apigwManagementApi.postToConnection({ ConnectionId: toPlayer.connectionId.S, Data: signalResponse(data, fromPlayer) }).promise();
 }
 
-export const handler: (event: any) => Promise<Response> = async function (event: any): Promise<Response> { // TYPEDEF // TYPEDEF
+interface MessageHandlers {
+    [type: string]: (event: APIGatewayProxyEvent, payload: SocketPayload) => Promise<void>;
+}
 
-    const messageHandlers: any = { // TYPEDEF
+export const handler: (event: APIGatewayProxyEvent) => Promise<Response> = async function (event: APIGatewayProxyEvent): Promise<Response> {
+
+    const messageHandlers: MessageHandlers = {
         create: messageCreate,
         join: messageJoin,
         signal: messageSignal
@@ -352,14 +347,16 @@ export const handler: (event: any) => Promise<Response> = async function (event:
         endpoint: event.requestContext.domainName
     });
 
-    const payload: any = JSON.parse(JSON.parse(event.body).data); // TYPEDEF
-    const connectionId: string = event.requestContext.connectionId;
+    const body: string = event.body as string;
+
+    const payload: SocketPayload = JSON.parse(JSON.parse(body).data);
+    const connectionId: string = event.requestContext.connectionId as string;
 
     if (messageHandlers[payload.type]) {
         try {
             await messageHandlers[payload.type](event, payload);
         } catch (e) {
-            await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: JSON.stringify({ type: 'error', data: JSON.stringify(e.message) }) }).promise();
+            await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: errorResponse(e.message) }).promise();
             return { statusCode: 500, body: e.stack };
         }
     } else {
