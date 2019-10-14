@@ -5,7 +5,15 @@
     "main": "src/app.js",
     "author": "SAM CLI",
     "license": "MIT",
-    "dependencies": {
-        "aws-sdk": "^2.434.0"
+    "scripts": {
+        "tsc": "tsc",
+        "build": "tsc"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@types/node": "^12.7.12",
+        "ts-node": "^8.4.1",
+        "tslint": "^5.20.0",
+        "typescript": "^3.6.4"
     }
 }
