@@ -7,7 +7,7 @@
     "license": "MIT",
     "scripts": {
         "tsc": "tsc",
-        "build": "tsc"
+        "build": "rm -rf dist/* && tsc"
     },
     "dependencies": {
         "aws-sdk": "^2.434.0"
