@@ -60,7 +60,7 @@ export default class CreateHandler extends MessageHandler {
                 maxPlayer: { N: `${data.maxPlayer}` },
                 players: {
                     L: [
-                        { M: { playerName: { S: data.playerName }, connectionId: { S: this.connectionId } } }
+                        { M: { playerName: { S: data.playerName } } }
                     ]
                 },
                 queue: { L: [] }

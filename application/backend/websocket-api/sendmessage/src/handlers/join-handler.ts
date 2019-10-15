@@ -8,7 +8,6 @@ import JoinResponse from 'src/interfaces/join-response';
 
 export default class JoinHandler extends MessageHandler {
 
-    private static readonly ERROR_ROOM_NOT_EXIST: string = 'Room does not exist';
     private static readonly ERROR_ALREADY_IN_GAME: string = 'Already in game';
     private static readonly ERROR_ALREADY_IN_QUEUE: string = 'Already in queue';
 
@@ -43,10 +42,10 @@ export default class JoinHandler extends MessageHandler {
             throw new Error(JoinHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: RoomDocument = await this.getRoom(this.data.roomName);
+        const room: RoomDocument = await this.getRoomByName(this.data.roomName);
 
         if (!room) {
-            throw new Error(JoinHandler.ERROR_ROOM_NOT_EXIST);
+            throw new Error(JoinHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
         if (this.isInGame(room, this.data.playerName)) {
@@ -58,19 +57,20 @@ export default class JoinHandler extends MessageHandler {
             await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_QUEUE));
             return;
         }
-        await this.addRoomQueue(this.data);
+        await this.addRoomQueue(this.data, room);
 
         await this.sendTo(this.connectionId, this.joinResponse(room));
         await this.sendTo(room.connectionId.S, this.joinHostResponse(this.data));
     }
 
-    private addRoomQueue(data: JoinRequest): Promise<AWS.DynamoDB.UpdateItemOutput> {
+    private addRoomQueue(data: JoinRequest, room: RoomDocument): Promise<AWS.DynamoDB.UpdateItemOutput> {
         return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
 
             const updateParams: AWS.DynamoDB.UpdateItemInput = {
                 TableName: this.tableName,
                 Key: {
-                    ID: { S: data.roomName }
+                    ID: { S: room.ID.S },
+                    connectionId: { S: room.connectionId.S }
                 },
                 UpdateExpression: 'set queue = list_append(queue, :items)',
                 ExpressionAttributeValues: {

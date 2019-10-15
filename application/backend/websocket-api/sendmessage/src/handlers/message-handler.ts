@@ -7,14 +7,18 @@ import ErrorResponse from 'src/interfaces/error-response';
 import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
+import PlayerRequest from 'src/interfaces/player-request';
+import { DynamoDB } from 'aws-sdk';
 
 export type UpdatePutItemOutput = AWS.DynamoDB.UpdateItemOutput | AWS.DynamoDB.PutItemOutput;
-type RequestType = JoinRequest | CreateRequest | SignalRequest;
+type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest;
 
 export enum RequestPayloadType {
     SIGNAL = 'signal',
     CREATE = 'create',
-    JOIN = 'join'
+    JOIN = 'join',
+    PLAYER_ADD = 'playerAdd',
+    PLAYER_REMOVE = 'playerRemove'
 }
 
 export enum ResponsePayloadType {
@@ -22,13 +26,17 @@ export enum ResponsePayloadType {
     CREATE = 'created',
     JOIN = 'joinRequest',
     JOINING = 'joiningRoom',
+    ADDED = 'added',
+    REMOVED = 'removed',
     ERROR = 'error'
 }
 
 abstract class MessageHandler {
-    public static readonly ERROR_PARSING: string = 'Payload not valid';
-    public static readonly ERROR_SOCKET_CONNECTION: string = 'Socket connection undefined';
-    public static readonly ERROR_DATA_UNDEFINED: string = 'No data for the request';
+    protected static readonly ERROR_PARSING: string = 'Payload not valid';
+    protected static readonly ERROR_SOCKET_CONNECTION: string = 'Socket connection undefined';
+    protected static readonly ERROR_DATA_UNDEFINED: string = 'No data for the request';
+    protected static readonly ERROR_ROOM_DOES_NOT_EXIST: string = 'Room does not exist';
+    protected static readonly ERROR_PLAYER_NOT_FOUND: string = 'Player not found';
 
     protected static readonly ROOM_PROJECTION: string = 'ID, connectionId, players, queue, hostPlayer, maxPlayer';
 
@@ -56,6 +64,7 @@ abstract class MessageHandler {
             this.data = this.parsePayload();
             await this.handle();
         } catch (e) {
+            console.error(e);
             await this.sendTo(this.connectionId, this.errorResponse(e.message));
             throw (e);
         }
@@ -65,49 +74,43 @@ abstract class MessageHandler {
         return this.apigwManagementApi.postToConnection({ ConnectionId: to, Data: data }).promise();
     }
 
-    protected roomExist(roomName: string): Promise<boolean> {
-        return new Promise<boolean>((resolve: (value: boolean) => void, reject: (value: AWS.AWSError) => void): void => {
-
-            const keys: AWS.DynamoDB.Key & Partial<RoomDocument> = {
-                ID: {
-                    S: roomName
-                }
-            };
-
-            const params: AWS.DynamoDB.GetItemInput = {
-                TableName: this.tableName,
-                Key: keys,
-                ProjectionExpression: 'ID'
-            };
-
-            this.ddb.getItem(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.GetItemOutput) => {
-                if (err) {
-                    reject(err);
-                }
-
-                resolve(!!roomData.Item);
-            });
-        });
+    protected async roomExist(roomName: string): Promise<boolean> {
+        const room: RoomDocument = await this.getRoomByName(roomName);
+        return room.ID !== undefined;
     }
 
-    protected getRoom(roomName: string): Promise<RoomDocument> {
+    protected getRoomByName(roomName: string): Promise<RoomDocument> {
+        const paramValues: DynamoDB.ExpressionAttributeValueMap = {
+            ':roomName': { S: roomName }
+        };
+        return this.getRoom(`ID = :roomName`, paramValues);
+    }
+
+    protected getRoomByKeys(connectionId: string, roomName: string): Promise<RoomDocument> {
+        const paramValues: DynamoDB.ExpressionAttributeValueMap = {
+            ':roomName': { S: roomName },
+            ':connectionId': { S: connectionId }
+        };
+        return this.getRoom(`ID = :roomName AND connectionId = :connectionId`, paramValues);
+    }
+
+    private getRoom(keys: string, paramValues: DynamoDB.ExpressionAttributeValueMap): Promise<RoomDocument> {
         return new Promise((resolve: (value: any) => void, reject: (value: AWS.AWSError) => void): void => { // TYPEDEF
-            const params: AWS.DynamoDB.GetItemInput = {
+            const params: AWS.DynamoDB.QueryInput = {
                 TableName: this.tableName,
-                Key: {
-                    ID: {
-                        S: roomName
-                    }
-                },
-                ProjectionExpression: MessageHandler.ROOM_PROJECTION
+                KeyConditionExpression: keys,
+                ExpressionAttributeValues: paramValues,
+                ProjectionExpression: MessageHandler.ROOM_PROJECTION,
+                Limit: 1
             };
 
-            this.ddb.getItem(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.GetItemOutput) => {
+            this.ddb.query(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.QueryOutput) => {
                 if (err) {
                     reject(err);
+                    return;
                 }
 
-                resolve(roomData.Item);
+                resolve(roomData.Count === 0 || roomData === undefined || roomData.Items === undefined ? {} : roomData.Items.shift());
             });
         });
     }
@@ -117,6 +120,7 @@ abstract class MessageHandler {
         return (err: AWS.AWSError, output: UpdatePutItemOutput): void => {
             if (err) {
                 reject(err);
+                return;
             }
             resolve(output);
         };
@@ -143,7 +147,8 @@ abstract class MessageHandler {
     }
 
     protected findPlayerConnectionId(players: Array<AttributeMap<PlayerDocument>>, connectionId: string): PlayerDocument | null {
-        const connectionIdTest: (player: PlayerDocument) => boolean = (player: PlayerDocument): boolean => player.connectionId.S === connectionId;
+        const connectionIdTest: (player: PlayerDocument) => boolean = (player: PlayerDocument): boolean =>
+            player.connectionId !== undefined && player.connectionId.S === connectionId;
         return this.findPlayerWith(players, connectionIdTest);
     }
 

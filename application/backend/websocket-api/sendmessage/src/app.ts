@@ -5,6 +5,8 @@ import CreateHandler from './handlers/create-handler';
 import MessageHandler from './handlers/message-handler';
 import JoinHandler from './handlers/join-handler';
 import SignalHandler from './handlers/signal-handler';
+import PlayerAddHandler from './handlers/player-add-handler';
+import PlayerRemoveHandler from './handlers/player-remove-handler';
 
 interface Response {
     statusCode: number;
@@ -18,12 +20,16 @@ interface MessageHandlers {
     create: typeof CreateHandler;
     join: typeof JoinHandler;
     signal: typeof SignalHandler;
+    playerAdd: typeof PlayerAddHandler;
+    playerRemove: typeof PlayerRemoveHandler;
 }
 
 const messageHandlers: MessageHandlers = {
     create: CreateHandler,
     join: JoinHandler,
-    signal: SignalHandler
+    signal: SignalHandler,
+    playerAdd: PlayerAddHandler,
+    playerRemove: PlayerRemoveHandler
 };
 
 export const handler: (event: APIGatewayProxyEvent) => Promise<Response> = async function (event: APIGatewayProxyEvent): Promise<Response> {

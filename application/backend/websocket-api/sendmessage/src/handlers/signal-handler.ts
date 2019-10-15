@@ -40,29 +40,35 @@ export default class SignalHandler extends MessageHandler {
             throw new Error(SignalHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: RoomDocument = await this.getRoom(this.data.roomName);
+        const room: RoomDocument = await this.getRoomByName(this.data.roomName);
 
         if (!room) {
-            throw new Error('Room does not exist');
+            throw new Error(SignalHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        const fromPlayer: PlayerDocument | null = this.getPlayerByConnectionId(room, this.connectionId);
-        const toPlayer: PlayerDocument | null = this.getPlayerByName(room, this.data.to);
-
-        if (fromPlayer === null) {
-            throw new Error('You was not in the queue!');
+        let toConnectionId: string;
+        let fromPlayerName: string = room.hostPlayer.S;
+        if (this.connectionId !== room.connectionId.S) { // Send the message to the host
+            toConnectionId = room.connectionId.S;
+            const fromPlayer: PlayerDocument | null = this.getPlayerByConnectionId(room, this.connectionId);
+            if (fromPlayer === null) {
+                throw new Error('You was not in the queue!');
+            }
+            fromPlayerName = fromPlayer.playerName.S;
+        } else {
+            const toPlayer: PlayerDocument | null = this.getPlayerByName(room, this.data.to);
+            if (toPlayer === null || toPlayer.connectionId === undefined) {
+                throw new Error('The player was not in the queue!');
+            }
+            toConnectionId = toPlayer.connectionId.S;
         }
 
-        if (toPlayer === null) {
-            throw new Error('No destination found!');
-        }
-
-        await this.sendTo(toPlayer.connectionId.S, this.signalResponse(this.data, fromPlayer));
+        await this.sendTo(toConnectionId, this.signalResponse(this.data, fromPlayerName));
     }
 
-    private signalResponse(data: SignalRequest, fromPlayer: PlayerDocument): string {
+    private signalResponse(data: SignalRequest, playerName: string): string {
         const response: SignalResponse = {
-            from: fromPlayer.playerName.S,
+            from: playerName,
             signal: data.signal
         };
 

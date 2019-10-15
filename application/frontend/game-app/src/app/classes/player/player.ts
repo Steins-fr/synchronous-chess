@@ -1,11 +1,22 @@
 import { Webrtc, Signal, WebrtcStates } from '../webrtc/webrtc';
 import { WebSocketService, SocketPayload } from 'src/app/services/web-socket/web-socket.service';
-import { Subject, Observable, Subscription } from 'rxjs';
+import { Subject, Observable, Subscription, BehaviorSubject } from 'rxjs';
 
 export enum PlayerType {
     REMOTE_HOST = 'remote_host',
     REMOTE_PEER = 'remote_peer',
     LOCAL = 'local'
+}
+
+export enum PlayerEventType {
+    CONNECTED = 'connected',
+    DISCONNECTED = 'disconnected'
+}
+
+export interface PlayerEvent {
+    type: PlayerEventType;
+    name: string; // Player name
+    payload?: boolean;
 }
 
 export class Player {
@@ -17,6 +28,8 @@ export class Player {
     private readonly socketSub: Subscription;
     public isConnected: boolean = false;
     public connectionTry: number = 0;
+    private readonly _event: Subject<PlayerEvent> = new Subject<PlayerEvent>();
+    public readonly event: Observable<PlayerEvent> = this._event.asObservable();
 
     public constructor(private readonly roomName: string, public readonly name: string, public readonly type: PlayerType, public readonly socket?: WebSocketService, public readonly webRTC?: Webrtc) {
         if (this.type !== PlayerType.LOCAL) {
@@ -52,11 +65,23 @@ export class Player {
         }
     }
 
+    private pushEvent(type: PlayerEventType, payload?: boolean): void {
+        this._event.next({
+            type,
+            payload,
+            name: this.name
+        });
+    }
+
     private onPeerStates(states: WebrtcStates): void {
         if (states.iceConnection === 'checking' && this.isWebRtcInitiator()) {
             setTimeout(() => this.setupConnection(), 3000);
         }
+        const oldIsConnected: boolean = this.isConnected;
         this.isConnected = states.iceConnection === 'connected';
+        if (this.isConnected !== oldIsConnected) {
+            this.pushEvent(this.isConnected ? PlayerEventType.CONNECTED : PlayerEventType.DISCONNECTED);
+        }
     }
 
     private onSignal(signal: Signal): void {
