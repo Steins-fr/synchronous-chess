@@ -5,7 +5,8 @@ data "aws_iam_policy_document" "sc_room_table" {
       "dynamodb:GetItem",
       "dynamodb:DeleteItem",
       "dynamodb:PutItem",
-      "dynamodb:UpdateItem"
+      "dynamodb:UpdateItem",
+      "dynamodb:Query"
     ]
     resources = [
       aws_dynamodb_table.sc_database_rooms.arn
@@ -112,6 +113,7 @@ resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_connection_at
 resource "aws_dynamodb_table" "sc_database_rooms" {
   name           = "sc_rooms"
   hash_key       = "ID"
+  range_key      = "connectionId"
   billing_mode   = "PROVISIONED"
   read_capacity  = 5
   write_capacity = 5
@@ -122,6 +124,11 @@ resource "aws_dynamodb_table" "sc_database_rooms" {
 
   attribute {
     name = "ID"
+    type = "S"
+  }
+
+  attribute {
+    name = "connectionId"
     type = "S"
   }
 

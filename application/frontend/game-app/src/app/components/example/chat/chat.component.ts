@@ -2,7 +2,7 @@ import { Component, OnDestroy, NgZone } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { WebSocketService, SocketState, SocketPayload } from 'src/app/services/web-socket/web-socket.service';
 import { environment } from 'src/environments/environment';
-import { Player, PlayerType } from 'src/app/classes/player/player';
+import { Player, PlayerType, PlayerEvent, PlayerEventType } from 'src/app/classes/player/player';
 import { Webrtc, WebrtcStates } from 'src/app/classes/webrtc/webrtc';
 
 @Component({
@@ -60,6 +60,14 @@ export class ChatComponent implements OnDestroy {
         }
     }
 
+    public connected(playerName: string): void {
+        this.socket.send('sendmessage', 'playerAdd', JSON.stringify({ roomName: this.roomName, playerName: playerName }));
+    }
+
+    public disconnected(playerName: string): void {
+        this.socket.send('sendmessage', 'playerRemove', JSON.stringify({ roomName: this.roomName, playerName: playerName }));
+    }
+
     public enterRoom(): void {
         this.initiator ? this.createRoom() : this.joinRoom();
     }
@@ -82,12 +90,30 @@ export class ChatComponent implements OnDestroy {
                 this.ngZone.run(() => this.chat.push(`${d.from}: ${d.message}`));
             }
         }));
+    }
 
-        this.subs.push(this.remotePlayer.webRTC.states.subscribe((states: WebrtcStates) => {
-            if (!this.initiator) {
-                this.activeRoom = states.iceConnection === 'connected';
+    private subscribeOnConnected(): void {
+        const sub: Subscription = this.remotePlayer.event.subscribe((playerEvent: PlayerEvent) => {
+            if (playerEvent.type === PlayerEventType.CONNECTED) {
+                if (this.initiator) {
+                    this.connected(playerEvent.name);
+                } else {
+                    this.activeRoom = true;
+                }
+                sub.unsubscribe();
             }
-        }));
+        });
+    }
+
+    private subscribeOnDisconnected(): void {
+        const sub: Subscription = this.remotePlayer.event.subscribe((playerEvent: PlayerEvent) => {
+            if (playerEvent.type === PlayerEventType.DISCONNECTED) {
+                if (this.initiator) {
+                    this.disconnected(playerEvent.name);
+                }
+                sub.unsubscribe();
+            }
+        });
     }
 
     private socketMessage(payload: SocketPayload): void {
@@ -99,10 +125,14 @@ export class ChatComponent implements OnDestroy {
             case 'joiningRoom':
                 this.remotePlayer = new Player(this.roomName, data.playerName, PlayerType.REMOTE_HOST, this.socket, new Webrtc());
                 this.subscribeChat();
+                this.subscribeOnConnected();
+                this.subscribeOnDisconnected();
                 break;
             case 'joinRequest':
                 this.remotePlayer = new Player(this.roomName, data.playerName, PlayerType.REMOTE_PEER, this.socket, new Webrtc());
                 this.subscribeChat();
+                this.subscribeOnConnected();
+                this.subscribeOnDisconnected();
                 break;
         }
     }
