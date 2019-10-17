@@ -1,16 +1,12 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import RequestPayload from 'src/interfaces/request-payload';
-import RoomDocument from 'src/entities/room-document';
-import { AttributeMap } from 'src/entities/types';
-import PlayerDocument from 'src/entities/player-document';
 import ErrorResponse from 'src/interfaces/error-response';
 import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
 import PlayerRequest from 'src/interfaces/player-request';
-import { DynamoDB } from 'aws-sdk';
+import { RoomDatabase, Player, Room } from '/opt/nodejs/room-database';
 
-export type UpdatePutItemOutput = AWS.DynamoDB.UpdateItemOutput | AWS.DynamoDB.PutItemOutput;
 type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest;
 
 export enum RequestPayloadType {
@@ -38,20 +34,19 @@ abstract class MessageHandler {
     protected static readonly ERROR_ROOM_DOES_NOT_EXIST: string = 'Room does not exist';
     protected static readonly ERROR_PLAYER_NOT_FOUND: string = 'Player not found';
 
-    protected static readonly ROOM_PROJECTION: string = 'ID, connectionId, players, queue, hostPlayer, maxPlayer';
-
     protected data: any;
     public readonly connectionId: string;
+    protected readonly ddb: RoomDatabase;
 
     public constructor(
-        protected readonly ddb: AWS.DynamoDB,
-        protected readonly tableName: string,
         private readonly apigwManagementApi: AWS.ApiGatewayManagementApi,
         protected readonly event: APIGatewayProxyEvent,
         protected readonly payload: RequestPayload) {
         if (event.requestContext.connectionId === undefined) {
             throw Error(MessageHandler.ERROR_SOCKET_CONNECTION);
         }
+
+        this.ddb = new RoomDatabase();
 
         this.connectionId = event.requestContext.connectionId;
     }
@@ -74,66 +69,14 @@ abstract class MessageHandler {
         return this.apigwManagementApi.postToConnection({ ConnectionId: to, Data: data }).promise();
     }
 
-    protected async roomExist(roomName: string): Promise<boolean> {
-        const room: RoomDocument = await this.getRoomByName(roomName);
-        return room.ID !== undefined;
-    }
-
-    protected getRoomByName(roomName: string): Promise<RoomDocument> {
-        const paramValues: DynamoDB.ExpressionAttributeValueMap = {
-            ':roomName': { S: roomName }
-        };
-        return this.getRoom(`ID = :roomName`, paramValues);
-    }
-
-    protected getRoomByKeys(connectionId: string, roomName: string): Promise<RoomDocument> {
-        const paramValues: DynamoDB.ExpressionAttributeValueMap = {
-            ':roomName': { S: roomName },
-            ':connectionId': { S: connectionId }
-        };
-        return this.getRoom(`ID = :roomName AND connectionId = :connectionId`, paramValues);
-    }
-
-    private getRoom(keys: string, paramValues: DynamoDB.ExpressionAttributeValueMap): Promise<RoomDocument> {
-        return new Promise((resolve: (value: any) => void, reject: (value: AWS.AWSError) => void): void => { // TYPEDEF
-            const params: AWS.DynamoDB.QueryInput = {
-                TableName: this.tableName,
-                KeyConditionExpression: keys,
-                ExpressionAttributeValues: paramValues,
-                ProjectionExpression: MessageHandler.ROOM_PROJECTION,
-                Limit: 1
-            };
-
-            this.ddb.query(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.QueryOutput) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-
-                resolve(roomData.Count === 0 || roomData === undefined || roomData.Items === undefined ? {} : roomData.Items.shift());
-            });
-        });
-    }
-
-    protected genUpdatePutCallback(resolve: (value: UpdatePutItemOutput) => void,
-        reject: (value: AWS.AWSError) => void): (err: AWS.AWSError, output: UpdatePutItemOutput) => void {
-        return (err: AWS.AWSError, output: UpdatePutItemOutput): void => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            resolve(output);
-        };
-    }
-
     protected errorResponse(message: string): string {
         const response: ErrorResponse = { message };
         return this.response(ResponsePayloadType.ERROR, response);
     }
 
-    protected findPlayerWith(players: Array<AttributeMap<PlayerDocument>>, test: (player: PlayerDocument) => boolean): PlayerDocument | null {
+    protected findPlayerWith(players: Array<Player>, test: (player: Player) => boolean): Player | null {
         for (let i: number = 0; i < players.length; ++i) {
-            const player: PlayerDocument = players[i].M;
+            const player: Player = players[i];
             if (test(player)) {
                 return player;
             }
@@ -141,31 +84,31 @@ abstract class MessageHandler {
         return null;
     }
 
-    protected findPlayerByName(players: Array<AttributeMap<PlayerDocument>>, playerName: string): PlayerDocument | null {
-        const playerNameTest: (player: PlayerDocument) => boolean = (player: PlayerDocument): boolean => player.playerName.S === playerName;
+    protected findPlayerByName(players: Array<Player>, playerName: string): Player | null {
+        const playerNameTest: (player: Player) => boolean = (player: Player): boolean => player.playerName === playerName;
         return this.findPlayerWith(players, playerNameTest);
     }
 
-    protected findPlayerConnectionId(players: Array<AttributeMap<PlayerDocument>>, connectionId: string): PlayerDocument | null {
-        const connectionIdTest: (player: PlayerDocument) => boolean = (player: PlayerDocument): boolean =>
-            player.connectionId !== undefined && player.connectionId.S === connectionId;
+    protected findPlayerConnectionId(players: Array<Player>, connectionId: string): Player | null {
+        const connectionIdTest: (player: Player) => boolean = (player: Player): boolean =>
+            player.connectionId !== undefined && player.connectionId === connectionId;
         return this.findPlayerWith(players, connectionIdTest);
     }
 
-    protected getPlayerByName(room: RoomDocument, playerName: string): PlayerDocument | null {
-        return this.findPlayerByName(room.players.L, playerName) || this.findPlayerByName(room.queue.L, playerName);
+    protected getPlayerByName(room: Room, playerName: string): Player | null {
+        return this.findPlayerByName(room.players, playerName) || this.findPlayerByName(room.queue, playerName);
     }
 
-    protected getPlayerByConnectionId(room: RoomDocument, connectionId: string): PlayerDocument | null {
-        return this.findPlayerConnectionId(room.players.L, connectionId) || this.findPlayerConnectionId(room.queue.L, connectionId);
+    protected getPlayerByConnectionId(room: Room, connectionId: string): Player | null {
+        return this.findPlayerConnectionId(room.players, connectionId) || this.findPlayerConnectionId(room.queue, connectionId);
     }
 
-    protected isInQueue(room: RoomDocument, playerName: string): boolean {
-        return !!this.findPlayerByName(room.queue.L, playerName);
+    protected isInQueue(room: Room, playerName: string): boolean {
+        return !!this.findPlayerByName(room.queue, playerName);
     }
 
-    protected isInGame(room: RoomDocument, playerName: string): boolean {
-        return !!this.findPlayerByName(room.players.L, playerName);
+    protected isInGame(room: Room, playerName: string): boolean {
+        return !!this.findPlayerByName(room.players, playerName);
     }
 
     protected response(type: ResponsePayloadType, data: any): string {

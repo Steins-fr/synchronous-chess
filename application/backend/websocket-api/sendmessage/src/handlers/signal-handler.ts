@@ -3,20 +3,18 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import SignalRequest from 'src/interfaces/signal-request';
 import SignalResponse from 'src/interfaces/signal-response';
-import RoomDocument from 'src/entities/room-document';
-import PlayerDocument from 'src/entities/player-document';
+import { Room, Player } from '/opt/nodejs/room-database';
 
 
 export default class SignalHandler extends MessageHandler {
 
     protected data: SignalRequest | undefined;
 
-    public constructor(ddb: AWS.DynamoDB,
-        tableName: string,
+    public constructor(
         apigwManagementApi: AWS.ApiGatewayManagementApi,
         event: APIGatewayProxyEvent,
         payload: RequestPayload) {
-        super(ddb, tableName, apigwManagementApi, event, payload);
+        super(apigwManagementApi, event, payload);
     }
 
     protected parsePayload(): SignalRequest {
@@ -40,27 +38,27 @@ export default class SignalHandler extends MessageHandler {
             throw new Error(SignalHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: RoomDocument = await this.getRoomByName(this.data.roomName);
+        const room: Room = await this.ddb.getRoomByName(this.data.roomName);
 
         if (!room) {
             throw new Error(SignalHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
         let toConnectionId: string;
-        let fromPlayerName: string = room.hostPlayer.S;
-        if (this.connectionId !== room.connectionId.S) { // Send the message to the host
-            toConnectionId = room.connectionId.S;
-            const fromPlayer: PlayerDocument | null = this.getPlayerByConnectionId(room, this.connectionId);
+        let fromPlayerName: string = room.hostPlayer;
+        if (this.connectionId !== room.connectionId) { // Send the message to the host
+            toConnectionId = room.connectionId;
+            const fromPlayer: Player | null = this.getPlayerByConnectionId(room, this.connectionId);
             if (fromPlayer === null) {
                 throw new Error('You was not in the queue!');
             }
-            fromPlayerName = fromPlayer.playerName.S;
+            fromPlayerName = fromPlayer.playerName;
         } else {
-            const toPlayer: PlayerDocument | null = this.getPlayerByName(room, this.data.to);
+            const toPlayer: Player | null = this.getPlayerByName(room, this.data.to);
             if (toPlayer === null || toPlayer.connectionId === undefined) {
                 throw new Error('The player was not in the queue!');
             }
-            toConnectionId = toPlayer.connectionId.S;
+            toConnectionId = toPlayer.connectionId;
         }
 
         await this.sendTo(toConnectionId, this.signalResponse(this.data, fromPlayerName));

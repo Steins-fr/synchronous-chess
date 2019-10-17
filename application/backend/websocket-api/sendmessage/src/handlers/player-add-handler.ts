@@ -3,19 +3,18 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import RoomDocument from 'src/entities/room-document';
+import { Room } from '/opt/nodejs/room-database';
 
 
 export default class PlayerAddHandler extends MessageHandler {
 
     protected data: PlayerRequest | undefined;
 
-    public constructor(ddb: AWS.DynamoDB,
-        tableName: string,
+    public constructor(
         apigwManagementApi: AWS.ApiGatewayManagementApi,
         event: APIGatewayProxyEvent,
         payload: RequestPayload) {
-        super(ddb, tableName, apigwManagementApi, event, payload);
+        super(apigwManagementApi, event, payload);
     }
 
     protected parsePayload(): PlayerRequest {
@@ -39,34 +38,15 @@ export default class PlayerAddHandler extends MessageHandler {
             throw new Error(PlayerAddHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: RoomDocument = await this.getRoomByKeys(this.connectionId, this.data.roomName);
+        const room: Room = await this.ddb.getRoomByKeys(this.connectionId, this.data.roomName);
 
         if (!room) {
             throw new Error(PlayerAddHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        await this.addPlayerToRoom(this.data.playerName, room);
+        await this.ddb.addPlayerToRoom(this.data.playerName, room);
 
         await this.sendTo(this.connectionId, this.playerAddResponse(this.data));
-    }
-
-    private addPlayerToRoom(playerName: string, room: RoomDocument): Promise<AWS.DynamoDB.UpdateItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
-
-            const updateParams: AWS.DynamoDB.UpdateItemInput = {
-                TableName: this.tableName,
-                Key: {
-                    ID: { S: room.ID.S },
-                    connectionId: { S: room.connectionId.S }
-                },
-                UpdateExpression: 'set players = list_append(players, :items)',
-                ExpressionAttributeValues: {
-                    ':items': { L: [{ M: { playerName: { S: playerName } } }] }
-                }
-            };
-
-            this.ddb.updateItem(updateParams, this.genUpdatePutCallback(resolve, reject));
-        });
     }
 
     private playerAddResponse(data: PlayerRequest): string {

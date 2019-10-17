@@ -3,21 +3,17 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import RoomDocument from 'src/entities/room-document';
-import PlayerDocument from 'src/entities/player-document';
-import { AttributeMap } from 'src/entities/types';
-
+import { Room } from '/opt/nodejs/room-database';
 
 export default class PlayerRemoveHandler extends MessageHandler {
 
     protected data: PlayerRequest | undefined;
 
-    public constructor(ddb: AWS.DynamoDB,
-        tableName: string,
+    public constructor(
         apigwManagementApi: AWS.ApiGatewayManagementApi,
         event: APIGatewayProxyEvent,
         payload: RequestPayload) {
-        super(ddb, tableName, apigwManagementApi, event, payload);
+        super(apigwManagementApi, event, payload);
     }
 
     protected parsePayload(): PlayerRequest {
@@ -41,7 +37,7 @@ export default class PlayerRemoveHandler extends MessageHandler {
             throw new Error(PlayerRemoveHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: RoomDocument = await this.getRoomByKeys(this.connectionId, this.data.roomName);
+        const room: Room = await this.ddb.getRoomByKeys(this.connectionId, this.data.roomName);
 
         if (!room) {
             throw new Error(PlayerRemoveHandler.ERROR_ROOM_DOES_NOT_EXIST);
@@ -51,32 +47,9 @@ export default class PlayerRemoveHandler extends MessageHandler {
             throw new Error(PlayerRemoveHandler.ERROR_PLAYER_NOT_FOUND);
         }
 
-        await this.removePlayerFromRoom(this.data.playerName, room);
+        await this.ddb.removePlayerFromRoom(this.data.playerName, room);
 
         await this.sendTo(this.connectionId, this.playerRemoveResponse(this.data));
-    }
-
-    private removePlayerFromRoom(playerName: string, room: RoomDocument): Promise<AWS.DynamoDB.UpdateItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
-
-            let index: number = -1;
-            room.players.L.forEach((playerMap: AttributeMap<PlayerDocument>, i: number) => {
-                if (playerMap.M.playerName.S === playerName) {
-                    index = i;
-                }
-            });
-
-            const updateParams: AWS.DynamoDB.UpdateItemInput = {
-                TableName: this.tableName,
-                Key: {
-                    ID: { S: room.ID.S },
-                    connectionId: { S: room.connectionId.S }
-                },
-                UpdateExpression: `REMOVE players[${index}]`
-            };
-
-            this.ddb.updateItem(updateParams, this.genUpdatePutCallback(resolve, reject));
-        });
     }
 
     private playerRemoveResponse(data: PlayerRequest): string {

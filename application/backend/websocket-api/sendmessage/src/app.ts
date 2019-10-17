@@ -13,9 +13,6 @@ interface Response {
     body: string;
 }
 
-const ddb: AWS.DynamoDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
-const TABLE_NAME: string = process.env.TABLE_NAME as string;
-
 interface MessageHandlers {
     create: typeof CreateHandler;
     join: typeof JoinHandler;
@@ -44,7 +41,7 @@ export const handler: (event: APIGatewayProxyEvent) => Promise<Response> = async
         const payload: RequestPayload = JSON.parse(JSON.parse(body).data);
 
         if (messageHandlers[payload.type]) {
-            const messageHandler: MessageHandler = new messageHandlers[payload.type](ddb, TABLE_NAME, apigwManagementApi, event, payload);
+            const messageHandler: MessageHandler = new messageHandlers[payload.type](apigwManagementApi, event, payload);
             await messageHandler.execute();
         } else {
             return { statusCode: 401, body: 'Operation not permitted.' };

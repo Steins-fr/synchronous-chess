@@ -140,6 +140,14 @@ resource "aws_dynamodb_table" "sc_database_rooms" {
   }
 }
 
+module "sc_layer_room_database" {
+  source = "./modules/aws-lambda-layer"
+
+  domain = "layers"
+  name   = "room-database"
+  stage  = "test"
+}
+
 module "sc_lambda_onconnect" {
   source = "./modules/aws-lambda-api"
 
@@ -167,6 +175,7 @@ module "sc_lambda_sendmessage" {
   domain = "websocket-api"
   name   = "sendmessage"
   role   = aws_iam_role.iam_sc_ws_lambda_dynamo.arn
+  layers = [module.sc_layer_room_database.layer_arn]
   stage  = "test"
   environment = {
     TABLE_NAME = aws_dynamodb_table.sc_database_rooms.name
