@@ -2,9 +2,10 @@
     "compilerOptions": {
         "target": "es2017",
         "module": "commonjs",
-        "outDir": "./dist",
+        "outDir": "./dist/nodejs/room-database",
         "strict": true,
         "baseUrl": "./",
+        "declaration": true,
         "typeRoots": [
             "node_modules/@types"
         ],
@@ -12,11 +13,6 @@
             "node"
         ],
         "esModuleInterop": true,
-        "inlineSourceMap": true,
-        "paths": {
-            "/opt/nodejs/room-database": [
-                "../../layers/room-database/dist/nodejs/room-database/index"
-            ]
-        }
+        "inlineSourceMap": true
     }
 }

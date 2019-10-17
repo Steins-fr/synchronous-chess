@@ -1,0 +1,22 @@
+{
+    "name": "room-database",
+    "version": "1.0.0",
+    "description": "Layer for database interactions",
+    "main": "src/app.js",
+    "author": "Steins_fr",
+    "license": "MIT",
+    "scripts": {
+        "tsc": "tsc",
+        "build": "rm -rf dist/* && tsc"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.434.0"
+    },
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.33",
+        "@types/node": "^12.7.12",
+        "ts-node": "^8.4.1",
+        "tslint": "^5.20.0",
+        "typescript": "^3.6.4"
+    }
+}

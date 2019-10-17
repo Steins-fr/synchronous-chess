@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './message-handler';
 import RequestPayload from 'src/interfaces/request-payload';
-import RoomDocument from 'src/entities/room-document';
 import JoinRequest from 'src/interfaces/join-request';
 import JoinResponse from 'src/interfaces/join-response';
+import { Room } from '/opt/nodejs/room-database';
 
 
 export default class JoinHandler extends MessageHandler {
@@ -13,12 +13,11 @@ export default class JoinHandler extends MessageHandler {
 
     protected data: JoinRequest | undefined;
 
-    public constructor(ddb: AWS.DynamoDB,
-        tableName: string,
+    public constructor(
         apigwManagementApi: AWS.ApiGatewayManagementApi,
         event: APIGatewayProxyEvent,
         payload: RequestPayload) {
-        super(ddb, tableName, apigwManagementApi, event, payload);
+        super(apigwManagementApi, event, payload);
     }
 
     protected parsePayload(): JoinRequest {
@@ -42,7 +41,7 @@ export default class JoinHandler extends MessageHandler {
             throw new Error(JoinHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: RoomDocument = await this.getRoomByName(this.data.roomName);
+        const room: Room = await this.ddb.getRoomByName(this.data.roomName);
 
         if (!room) {
             throw new Error(JoinHandler.ERROR_ROOM_DOES_NOT_EXIST);
@@ -57,29 +56,10 @@ export default class JoinHandler extends MessageHandler {
             await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_QUEUE));
             return;
         }
-        await this.addRoomQueue(this.data, room);
+        await this.ddb.addRoomQueue(this.data.playerName, this.connectionId, room);
 
         await this.sendTo(this.connectionId, this.joinResponse(room));
-        await this.sendTo(room.connectionId.S, this.joinHostResponse(this.data));
-    }
-
-    private addRoomQueue(data: JoinRequest, room: RoomDocument): Promise<AWS.DynamoDB.UpdateItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
-
-            const updateParams: AWS.DynamoDB.UpdateItemInput = {
-                TableName: this.tableName,
-                Key: {
-                    ID: { S: room.ID.S },
-                    connectionId: { S: room.connectionId.S }
-                },
-                UpdateExpression: 'set queue = list_append(queue, :items)',
-                ExpressionAttributeValues: {
-                    ':items': { L: [{ M: { playerName: { S: data.playerName }, connectionId: { S: this.connectionId } } }] }
-                }
-            };
-
-            this.ddb.updateItem(updateParams, this.genUpdatePutCallback(resolve, reject));
-        });
+        await this.sendTo(room.connectionId, this.joinHostResponse(this.data));
     }
 
     private joinHostResponse(data: JoinRequest): string {
@@ -90,9 +70,9 @@ export default class JoinHandler extends MessageHandler {
         return this.response(ResponsePayloadType.JOIN, response);
     }
 
-    private joinResponse(room: RoomDocument): string {
+    private joinResponse(room: Room): string {
         const response: JoinResponse = {
-            playerName: room.hostPlayer.S,
+            playerName: room.hostPlayer,
         };
 
         return this.response(ResponsePayloadType.JOINING, response);
