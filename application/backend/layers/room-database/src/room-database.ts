@@ -11,12 +11,12 @@ export class RoomDatabase {
     protected static readonly ROOM_PROJECTION: string = 'ID, connectionId, players, queue, hostPlayer, maxPlayer';
 
     private readonly ddb: AWS.DynamoDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
-    private readonly tableName: string = process.env.TABLE_NAME as string;
+    private readonly tableNameRooms: string = process.env.TABLE_NAME_ROOMS as string;
 
     private getRoom(keys: string, paramValues: AWS.DynamoDB.ExpressionAttributeValueMap): Promise<Room> {
         return new Promise((resolve: (value: Room) => void, reject: (value: AWS.AWSError) => void): void => {
             const params: AWS.DynamoDB.QueryInput = {
-                TableName: this.tableName,
+                TableName: this.tableNameRooms,
                 KeyConditionExpression: keys,
                 ExpressionAttributeValues: paramValues,
                 ProjectionExpression: RoomDatabase.ROOM_PROJECTION,
@@ -71,7 +71,7 @@ export class RoomDatabase {
         return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
 
             const updateParams: AWS.DynamoDB.UpdateItemInput = {
-                TableName: this.tableName,
+                TableName: this.tableNameRooms,
                 Key: {
                     ID: { S: room.ID },
                     connectionId: { S: room.connectionId }
@@ -97,7 +97,7 @@ export class RoomDatabase {
             });
 
             const updateParams: AWS.DynamoDB.UpdateItemInput = {
-                TableName: this.tableName,
+                TableName: this.tableNameRooms,
                 Key: {
                     ID: { S: room.ID },
                     connectionId: { S: room.connectionId }
@@ -113,7 +113,7 @@ export class RoomDatabase {
         return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
 
             const updateParams: AWS.DynamoDB.UpdateItemInput = {
-                TableName: this.tableName,
+                TableName: this.tableNameRooms,
                 Key: {
                     ID: { S: room.ID },
                     connectionId: { S: room.connectionId }
@@ -144,7 +144,7 @@ export class RoomDatabase {
             };
 
             const putParams: AWS.DynamoDB.PutItemInput = {
-                TableName: this.tableName,
+                TableName: this.tableNameRooms,
                 Item: item
             };
 

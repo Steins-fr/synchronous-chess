@@ -165,7 +165,7 @@ module "sc_lambda_ondisconnect" {
   role   = aws_iam_role.iam_sc_ws_lambda_dynamo.arn
   stage  = "test"
   environment = {
-    TABLE_NAME = aws_dynamodb_table.sc_database_rooms.name
+    TABLE_NAME_ROOMS = aws_dynamodb_table.sc_database_rooms.name
   }
 }
 
@@ -178,6 +178,6 @@ module "sc_lambda_sendmessage" {
   layers = [module.sc_layer_room_database.layer_arn]
   stage  = "test"
   environment = {
-    TABLE_NAME = aws_dynamodb_table.sc_database_rooms.name
+    TABLE_NAME_ROOMS = aws_dynamodb_table.sc_database_rooms.name
   }
 }
