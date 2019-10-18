@@ -2,7 +2,6 @@ data "aws_iam_policy_document" "sc_room_table" {
   version = "2012-10-17"
   statement {
     actions = [
-      "dynamodb:GetItem",
       "dynamodb:DeleteItem",
       "dynamodb:PutItem",
       "dynamodb:UpdateItem",
@@ -11,6 +10,86 @@ data "aws_iam_policy_document" "sc_room_table" {
     resources = [
       aws_dynamodb_table.sc_database_rooms.arn
     ]
+  }
+}
+
+resource "aws_iam_policy" "sc_room_table" {
+  name   = "sc_room_table"
+  path   = "/"
+  policy = data.aws_iam_policy_document.sc_room_table.json
+}
+
+resource "aws_dynamodb_table" "sc_database_rooms" {
+  name           = "sc_rooms"
+  hash_key       = "ID"
+  range_key      = "connectionId"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 5
+  write_capacity = 5
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  attribute {
+    name = "ID"
+    type = "S"
+  }
+
+  attribute {
+    name = "connectionId"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "sc_database_rooms"
+    Application = "Synchronous chess"
+    Tool        = "Terraform"
+    Environment = "test"
+  }
+}
+
+data "aws_iam_policy_document" "sc_connection_table" {
+  version = "2012-10-17"
+  statement {
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:PutItem"
+    ]
+    resources = [
+      aws_dynamodb_table.sc_database_connections.arn
+    ]
+  }
+}
+
+resource "aws_iam_policy" "sc_connection_table" {
+  name   = "sc_connection_table"
+  path   = "/"
+  policy = data.aws_iam_policy_document.sc_connection_table.json
+}
+
+resource "aws_dynamodb_table" "sc_database_connections" {
+  name           = "sc_connections"
+  hash_key       = "connectionId"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 5
+  write_capacity = 5
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  attribute {
+    name = "connectionId"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "sc_database_connections"
+    Application = "Synchronous chess"
+    Tool        = "Terraform"
+    Environment = "test"
   }
 }
 
@@ -24,12 +103,6 @@ data "aws_iam_policy_document" "sc_manage_connection" {
       "${var.api_gateway}/*"
     ]
   }
-}
-
-resource "aws_iam_policy" "sc_room_table" {
-  name   = "sc_room_table"
-  path   = "/"
-  policy = data.aws_iam_policy_document.sc_room_table.json
 }
 
 resource "aws_iam_policy" "sc_manage_connection" {
@@ -105,39 +178,14 @@ resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_room_table_at
   policy_arn = aws_iam_policy.sc_room_table.arn
 }
 
+resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_connection_table_attachment" {
+  role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
+  policy_arn = aws_iam_policy.sc_connection_table.arn
+}
+
 resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_connection_attachment" {
   role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
   policy_arn = aws_iam_policy.sc_manage_connection.arn
-}
-
-resource "aws_dynamodb_table" "sc_database_rooms" {
-  name           = "sc_rooms"
-  hash_key       = "ID"
-  range_key      = "connectionId"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 5
-  write_capacity = 5
-
-  server_side_encryption {
-    enabled = true
-  }
-
-  attribute {
-    name = "ID"
-    type = "S"
-  }
-
-  attribute {
-    name = "connectionId"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "sc_database_rooms"
-    Application = "Synchronous chess"
-    Tool        = "Terraform"
-    Environment = "test"
-  }
 }
 
 module "sc_layer_room_database" {
