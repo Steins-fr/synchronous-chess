@@ -3,7 +3,7 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import JoinRequest from 'src/interfaces/join-request';
 import JoinResponse from 'src/interfaces/join-response';
-import { Room } from '/opt/nodejs/room-database';
+import { Room, RoomService } from '/opt/nodejs/room-database';
 
 
 export default class JoinHandler extends MessageHandler {
@@ -41,22 +41,24 @@ export default class JoinHandler extends MessageHandler {
             throw new Error(JoinHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: Room = await this.ddb.getRoomByName(this.data.roomName);
+        const room: Room = await this.roomService.getRoomByName(this.data.roomName);
 
         if (!room) {
             throw new Error(JoinHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        if (this.isInGame(room, this.data.playerName)) {
+        if (RoomService.isInGame(room, this.data.playerName)) {
             await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_GAME));
             return;
         }
 
-        if (this.isInQueue(room, this.data.playerName)) {
+        if (RoomService.isInQueue(room, this.data.playerName)) {
             await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_QUEUE));
             return;
         }
-        await this.ddb.addRoomQueue(this.data.playerName, this.connectionId, room);
+
+        await this.connectionService.create({ connectionId: this.connectionId, roomName: room.ID });
+        await this.roomService.addRoomQueue(this.data.playerName, this.connectionId, room);
 
         await this.sendTo(this.connectionId, this.joinResponse(room));
         await this.sendTo(room.connectionId, this.joinHostResponse(this.data));

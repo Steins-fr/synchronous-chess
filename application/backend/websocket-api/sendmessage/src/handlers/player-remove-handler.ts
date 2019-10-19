@@ -3,7 +3,7 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import { Room } from '/opt/nodejs/room-database';
+import { Room, RoomService } from '/opt/nodejs/room-database';
 
 export default class PlayerRemoveHandler extends MessageHandler {
 
@@ -37,17 +37,17 @@ export default class PlayerRemoveHandler extends MessageHandler {
             throw new Error(PlayerRemoveHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: Room = await this.ddb.getRoomByKeys(this.connectionId, this.data.roomName);
+        const room: Room = await this.roomService.getRoomByKeys(this.connectionId, this.data.roomName);
 
         if (!room) {
             throw new Error(PlayerRemoveHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        if (this.isInGame(room, this.data.playerName) === false) {
+        if (RoomService.isInGame(room, this.data.playerName) === false) {
             throw new Error(PlayerRemoveHandler.ERROR_PLAYER_NOT_FOUND);
         }
 
-        await this.ddb.removePlayerFromRoom(this.data.playerName, room);
+        await this.roomService.removePlayerFromRoom(this.data.playerName, room);
 
         await this.sendTo(this.connectionId, this.playerRemoveResponse(this.data));
     }

@@ -5,7 +5,7 @@ import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
 import PlayerRequest from 'src/interfaces/player-request';
-import { RoomDatabase, Player, Room } from '/opt/nodejs/room-database';
+import { RoomService, Player, Room, ConnectionService } from '/opt/nodejs/room-database';
 
 type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest;
 
@@ -36,7 +36,8 @@ abstract class MessageHandler {
 
     protected data: any;
     public readonly connectionId: string;
-    protected readonly ddb: RoomDatabase;
+    protected readonly roomService: RoomService;
+    protected readonly connectionService: ConnectionService = new ConnectionService();
 
     public constructor(
         private readonly apigwManagementApi: AWS.ApiGatewayManagementApi,
@@ -46,7 +47,7 @@ abstract class MessageHandler {
             throw Error(MessageHandler.ERROR_SOCKET_CONNECTION);
         }
 
-        this.ddb = new RoomDatabase();
+        this.roomService = new RoomService();
 
         this.connectionId = event.requestContext.connectionId;
     }
@@ -72,43 +73,6 @@ abstract class MessageHandler {
     protected errorResponse(message: string): string {
         const response: ErrorResponse = { message };
         return this.response(ResponsePayloadType.ERROR, response);
-    }
-
-    protected findPlayerWith(players: Array<Player>, test: (player: Player) => boolean): Player | null {
-        for (let i: number = 0; i < players.length; ++i) {
-            const player: Player = players[i];
-            if (test(player)) {
-                return player;
-            }
-        }
-        return null;
-    }
-
-    protected findPlayerByName(players: Array<Player>, playerName: string): Player | null {
-        const playerNameTest: (player: Player) => boolean = (player: Player): boolean => player.playerName === playerName;
-        return this.findPlayerWith(players, playerNameTest);
-    }
-
-    protected findPlayerConnectionId(players: Array<Player>, connectionId: string): Player | null {
-        const connectionIdTest: (player: Player) => boolean = (player: Player): boolean =>
-            player.connectionId !== undefined && player.connectionId === connectionId;
-        return this.findPlayerWith(players, connectionIdTest);
-    }
-
-    protected getPlayerByName(room: Room, playerName: string): Player | null {
-        return this.findPlayerByName(room.players, playerName) || this.findPlayerByName(room.queue, playerName);
-    }
-
-    protected getPlayerByConnectionId(room: Room, connectionId: string): Player | null {
-        return this.findPlayerConnectionId(room.players, connectionId) || this.findPlayerConnectionId(room.queue, connectionId);
-    }
-
-    protected isInQueue(room: Room, playerName: string): boolean {
-        return !!this.findPlayerByName(room.queue, playerName);
-    }
-
-    protected isInGame(room: Room, playerName: string): boolean {
-        return !!this.findPlayerByName(room.players, playerName);
     }
 
     protected response(type: ResponsePayloadType, data: any): string {
