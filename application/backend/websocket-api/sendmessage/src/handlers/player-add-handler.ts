@@ -38,13 +38,13 @@ export default class PlayerAddHandler extends MessageHandler {
             throw new Error(PlayerAddHandler.ERROR_DATA_UNDEFINED);
         }
 
-        const room: Room = await this.ddb.getRoomByKeys(this.connectionId, this.data.roomName);
+        const room: Room = await this.roomService.getRoomByKeys(this.connectionId, this.data.roomName);
 
         if (!room) {
             throw new Error(PlayerAddHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        await this.ddb.addPlayerToRoom(this.data.playerName, room);
+        await this.roomService.addPlayerToRoom(this.data.playerName, room);
 
         await this.sendTo(this.connectionId, this.playerAddResponse(this.data));
     }

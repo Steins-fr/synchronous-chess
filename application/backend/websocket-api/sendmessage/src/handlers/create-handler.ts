@@ -39,11 +39,12 @@ export default class CreateHandler extends MessageHandler {
             throw new Error(CreateHandler.ERROR_DATA_UNDEFINED);
         }
 
-        if (await this.ddb.roomExist(this.data.roomName)) {
+        if (await this.roomService.roomExist(this.data.roomName)) {
             throw new Error(CreateHandler.ERROR_ROOM_ALREADY_EXIST);
         }
 
-        await this.ddb.createRoom(this.data.roomName, this.connectionId, this.data.playerName, this.data.maxPlayer);
+        await this.connectionService.create({ connectionId: this.connectionId, roomName: this.data.roomName });
+        await this.roomService.create(this.data.roomName, this.connectionId, this.data.playerName, this.data.maxPlayer);
 
         await this.sendTo(this.connectionId, this.createResponse(this.data));
     }

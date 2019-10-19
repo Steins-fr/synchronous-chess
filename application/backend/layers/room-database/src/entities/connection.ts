@@ -1,4 +1,4 @@
 export default interface Connection {
-    connectionID: string;
+    connectionId: string;
     roomName: string;
 }
