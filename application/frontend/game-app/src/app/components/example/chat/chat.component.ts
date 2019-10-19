@@ -16,7 +16,8 @@ export class ChatComponent implements OnDestroy {
     private readonly subs: Array<Subscription> = [];
 
     public localPlayer: Player;
-    public remotePlayer: Player;
+    public remotePlayers: Array<Player> = [];
+    public participants: Array<string> = [];
     public initiator: boolean = null;
     public roomName: string = '';
     public playerName: string = '';
@@ -32,16 +33,43 @@ export class ChatComponent implements OnDestroy {
 
     public ngOnDestroy(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
-        if (this.remotePlayer) {
-            this.remotePlayer.clear();
-        }
+        this.remotePlayers.forEach((player: Player) => player.clear());
+    }
+
+    private transmitMessage(message: string, from: string, isPropagation: boolean = false): void {
+        this.remotePlayers.forEach((player: Player) => {
+            if (isPropagation === true && player.name === from) {
+                return; // Don't send message to the expeditor
+            }
+
+            player.sendData({
+                type: 'chat',
+                message,
+                from,
+                isPropagation
+            });
+        });
+    }
+
+    private updateParticipants(): void {
+        const remoteParticipants: Array<string> = this.remotePlayers.filter((player: Player) => player.isConnected)
+            .map((player: Player) => player.name);
+        this.ngZone.run(() => this.participants = [this.localPlayer.name, ...remoteParticipants]);
+    }
+
+    private transmitParticipants(): void {
+        this.updateParticipants();
+        this.remotePlayers.forEach((player: Player) => {
+            console.log(player);
+            player.sendData({
+                type: 'participants',
+                participants: JSON.stringify(this.participants)
+            });
+        });
     }
 
     public sendMessage(): void {
-        this.remotePlayer.sendData({
-            type: 'chat',
-            message: this.sendInput
-        });
+        this.transmitMessage(this.sendInput, this.localPlayer.name);
         this.chat.push(`${this.localPlayer.name}: ${this.sendInput}`);
         this.sendInput = '';
     }
@@ -49,7 +77,7 @@ export class ChatComponent implements OnDestroy {
     public createRoom(): void {
         if (this.socketState === SocketState.OPEN && this.initiator) {
             this.localPlayer = new Player(this.roomName, this.playerName, PlayerType.LOCAL);
-            this.socket.send('sendmessage', 'create', JSON.stringify({ roomName: this.roomName, maxPlayer: 2, playerName: this.localPlayer.name }));
+            this.socket.send('sendmessage', 'create', JSON.stringify({ roomName: this.roomName, maxPlayer: 6, playerName: this.localPlayer.name }));
         }
     }
 
@@ -61,10 +89,12 @@ export class ChatComponent implements OnDestroy {
     }
 
     public connected(playerName: string): void {
+        this.transmitParticipants();
         this.socket.send('sendmessage', 'playerAdd', JSON.stringify({ roomName: this.roomName, playerName: playerName }));
     }
 
     public disconnected(playerName: string): void {
+        this.transmitParticipants();
         this.socket.send('sendmessage', 'playerRemove', JSON.stringify({ roomName: this.roomName, playerName: playerName }));
     }
 
@@ -84,32 +114,45 @@ export class ChatComponent implements OnDestroy {
 
     }
 
-    private subscribeChat(): void {
-        this.subs.push(this.remotePlayer.data.subscribe((d: any) => {
-            if (d.type === 'chat') {
-                this.ngZone.run(() => this.chat.push(`${d.from}: ${d.message}`));
+    private subscribeParticipants(player: Player): void { // TODO: memory leak
+        this.subs.push(player.data.subscribe((d: any) => {
+            if (d.type === 'participants') {
+                this.ngZone.run(() => this.participants = JSON.parse(d.participants));
             }
         }));
     }
 
-    private subscribeOnConnected(): void {
-        const sub: Subscription = this.remotePlayer.event.subscribe((playerEvent: PlayerEvent) => {
+    private subscribeChat(player: Player): void { // TODO: memory leak
+        this.subs.push(player.data.subscribe((d: any) => {
+            if (d.type === 'chat') {
+                this.ngZone.run(() => this.chat.push(`${d.from}: ${d.message}`));
+                if (d.isPropagation === false) {
+                    this.transmitMessage(d.message, d.from, true);
+                }
+            }
+        }));
+    }
+
+    private subscribeOnConnected(player: Player): void { // TODO: memory leak
+        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent) => {
             if (playerEvent.type === PlayerEventType.CONNECTED) {
                 if (this.initiator) {
                     this.connected(playerEvent.name);
                 } else {
-                    this.activeRoom = true;
+                    this.ngZone.run(() => this.activeRoom = true);
                 }
                 sub.unsubscribe();
             }
         });
     }
 
-    private subscribeOnDisconnected(): void {
-        const sub: Subscription = this.remotePlayer.event.subscribe((playerEvent: PlayerEvent) => {
+    private subscribeOnDisconnected(player: Player): void { // TODO: memory leak
+        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent) => {
             if (playerEvent.type === PlayerEventType.DISCONNECTED) {
                 if (this.initiator) {
                     this.disconnected(playerEvent.name);
+                } else {
+                    this.updateParticipants();
                 }
                 sub.unsubscribe();
             }
@@ -118,21 +161,26 @@ export class ChatComponent implements OnDestroy {
 
     private socketMessage(payload: SocketPayload): void {
         const data: any = JSON.parse(payload.data);
+        let player: Player;
         switch (payload.type) {
             case 'created':
                 this.activeRoom = true;
+                this.updateParticipants();
                 break;
             case 'joiningRoom':
-                this.remotePlayer = new Player(this.roomName, data.playerName, PlayerType.REMOTE_HOST, this.socket, new Webrtc());
-                this.subscribeChat();
-                this.subscribeOnConnected();
-                this.subscribeOnDisconnected();
+                player = new Player(this.roomName, data.playerName, PlayerType.REMOTE_HOST, this.socket, new Webrtc());
+                this.ngZone.run(() => this.remotePlayers.push(player));
+                this.subscribeChat(player);
+                this.subscribeParticipants(player);
+                this.subscribeOnConnected(player);
+                this.subscribeOnDisconnected(player);
                 break;
             case 'joinRequest':
-                this.remotePlayer = new Player(this.roomName, data.playerName, PlayerType.REMOTE_PEER, this.socket, new Webrtc());
-                this.subscribeChat();
-                this.subscribeOnConnected();
-                this.subscribeOnDisconnected();
+                player = new Player(this.roomName, data.playerName, PlayerType.REMOTE_PEER, this.socket, new Webrtc());
+                this.ngZone.run(() => this.remotePlayers.push(player));
+                this.subscribeChat(player);
+                this.subscribeOnConnected(player);
+                this.subscribeOnDisconnected(player);
                 break;
         }
     }
