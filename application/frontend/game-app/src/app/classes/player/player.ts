@@ -80,7 +80,8 @@ export class Player {
         const oldIsConnected: boolean = this.isConnected;
         this.isConnected = states.iceConnection === 'connected';
         if (this.isConnected !== oldIsConnected) {
-            this.pushEvent(this.isConnected ? PlayerEventType.CONNECTED : PlayerEventType.DISCONNECTED);
+            const eventType: PlayerEventType = this.isConnected ? PlayerEventType.CONNECTED : PlayerEventType.DISCONNECTED;
+            setTimeout(() => this.pushEvent(eventType), 100);
         }
     }
 
@@ -124,7 +125,6 @@ export class Player {
 
     private onPeerData(data: string): void {
         const d: any = JSON.parse(data);
-        d.from = this.name;
         this._data.next(d);
     }
 }

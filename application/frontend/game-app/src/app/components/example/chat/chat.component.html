@@ -20,7 +20,10 @@
 
         <ng-container *ngIf="activeRoom">
             <label>Chat - Room ({{ roomName }}) - Pseudo ({{ localPlayer.name }}) - In the room:
-                {{ remotePlayer?.isConnected ? remotePlayer.name : '' }} </label>
+                <ng-container *ngFor="let participant of participants; let isFirst = first;">
+                    {{ isFirst ? '' : '-'}} {{ participant }}
+                </ng-container>
+            </label>
             <div id="chat">
                 <span *ngFor="let entry of chat">{{ entry }}</span>
             </div>
@@ -31,8 +34,12 @@
         </ng-container>
     </ng-container>
 </div>
-<section id="debug" *ngIf="remotePlayer">
-    <h4>Debug for connection with {{ remotePlayer.name }}</h4>
-    <app-debug-webrtc-states [webRTC]="remotePlayer.webRTC"></app-debug-webrtc-states>
-    <app-debug-icecandidates [webRTC]="remotePlayer.webRTC"></app-debug-icecandidates>
+<section id="debug" *ngFor="let remotePlayer of remotePlayers">
+    <ng-container *ngIf="remotePlayer.type !== 'local'">
+        <h4>Debug for connection with {{ remotePlayer.name }}</h4>
+        <app-debug-webrtc-states [webRTC]="remotePlayer.webRTC" [playerName]="remotePlayer.name">
+        </app-debug-webrtc-states>
+        <app-debug-icecandidates [webRTC]="remotePlayer.webRTC" [playerName]="remotePlayer.name">
+        </app-debug-icecandidates>
+    </ng-container>
 </section>
