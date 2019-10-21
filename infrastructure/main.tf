@@ -1,11 +1,10 @@
 terraform {
-  backend "s3" {
-    bucket = "synchronous-chess-terraform"
-    key    = "dev/terraform.rfstate"
-    region = "eu-west-1"
-  }
+  backend "s3" {}
 }
 
+/**
+ * Tables
+ */
 module "sc_database_rooms" {
   source = "./modules/aws-dynamodb"
 
@@ -14,28 +13,7 @@ module "sc_database_rooms" {
   range-key  = "connectionId"
   attributes = ["ID", "connectionId"]
 
-  stage = "dev"
-}
-
-data "aws_iam_policy_document" "sc_room_table" {
-  version = "2012-10-17"
-  statement {
-    actions = [
-      "dynamodb:DeleteItem",
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-      "dynamodb:Query"
-    ]
-    resources = [
-      module.sc_database_rooms.arn
-    ]
-  }
-}
-
-resource "aws_iam_policy" "sc_room_table" {
-  name   = "sc_room_table"
-  path   = "/"
-  policy = data.aws_iam_policy_document.sc_room_table.json
+  stage = var.stage
 }
 
 module "sc_database_connections" {
@@ -47,141 +25,97 @@ module "sc_database_connections" {
   write-capacity = 2
   attributes     = ["connectionId"]
 
-  stage = "dev"
+  stage = var.stage
 }
 
-data "aws_iam_policy_document" "sc_connection_table" {
-  version = "2012-10-17"
-  statement {
-    actions = [
-      "dynamodb:GetItem",
-      "dynamodb:DeleteItem",
-      "dynamodb:PutItem"
-    ]
-    resources = [
-      module.sc_database_connections.arn
-    ]
-  }
-}
-
-resource "aws_iam_policy" "sc_connection_table" {
-  name   = "sc_connection_table"
-  path   = "/"
-  policy = data.aws_iam_policy_document.sc_connection_table.json
-}
-
-
-
-data "aws_iam_policy_document" "sc_manage_connection" {
-  version = "2012-10-17"
-  statement {
-    actions = [
-      "execute-api:ManageConnections"
-    ]
-    resources = [
-      "${var.api_gateway}/*"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "sc_manage_connection" {
-  name   = "sc_manage_connection"
-  path   = "/"
-  policy = data.aws_iam_policy_document.sc_manage_connection.json
-}
-
-resource "aws_iam_role" "iam_sc_ws_lambda_logs" {
-  name = "iam_sc_ws_lambda_logs"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
+/**
+ * Policies
+ */
+module "sc_policy_room_table" {
+  source = "./modules/aws-iam-policy-document"
+  name   = "room_table"
+  actions = [
+    "dynamodb:DeleteItem",
+    "dynamodb:PutItem",
+    "dynamodb:UpdateItem",
+    "dynamodb:Query"
   ]
-}
-EOF
-
-  tags = {
-    Name        = "iam_sc_ws_lambda_logs"
-    Application = "Synchronous chess"
-    Tool        = "Terraform"
-    Environment = "test"
-  }
-}
-
-resource "aws_iam_role" "iam_sc_ws_lambda_dynamo" {
-  name = "iam_sc_ws_lambda_dynamo"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow"
-    }
+  resources = [
+    module.sc_database_rooms.arn
   ]
-}
-EOF
-
-  tags = {
-    Name        = "iam_sc_ws_lambda_dynamo"
-    Application = "Synchronous chess"
-    Tool        = "Terraform"
-    Environment = "test"
-  }
+  stage = var.stage
 }
 
-resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_logs_attachment" {
-  role       = aws_iam_role.iam_sc_ws_lambda_logs.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+module "sc_policy_connection_table" {
+  source = "./modules/aws-iam-policy-document"
+  name   = "connection_table"
+  actions = [
+    "dynamodb:GetItem",
+    "dynamodb:DeleteItem",
+    "dynamodb:PutItem"
+  ]
+  resources = [
+    module.sc_database_connections.arn
+  ]
+  stage = var.stage
 }
 
-resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_logs_attachment" {
-  role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+module "sc_policy_manage_connection" {
+  source = "./modules/aws-iam-policy-document"
+  name   = "manage_connection"
+  actions = [
+    "execute-api:ManageConnections"
+  ]
+  resources = [
+    "${var.api_gateway}/*"
+  ]
+  stage = var.stage
 }
 
-resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_room_table_attachment" {
-  role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
-  policy_arn = aws_iam_policy.sc_room_table.arn
+/**
+ * Roles
+ */
+
+module "sc_role_lambda_basic" {
+  source   = "./modules/aws-iam-role"
+  name     = "lambda_basic"
+  policies = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+  stage    = var.stage
 }
 
-resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_connection_table_attachment" {
-  role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
-  policy_arn = aws_iam_policy.sc_connection_table.arn
+module "sc_role_lambda_dynamo" {
+  source = "./modules/aws-iam-role"
+  name   = "lambda_dynamo"
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    module.sc_policy_room_table.arn,
+    module.sc_policy_connection_table.arn,
+    module.sc_policy_manage_connection.arn
+  ]
+  stage = var.stage
 }
 
-resource "aws_iam_role_policy_attachment" "iam_sc_ws_lambda_dynamo_connection_attachment" {
-  role       = aws_iam_role.iam_sc_ws_lambda_dynamo.name
-  policy_arn = aws_iam_policy.sc_manage_connection.arn
-}
-
+/**
+ * Layers
+ */
 module "sc_layer_room_database" {
   source = "./modules/aws-lambda-layer"
 
   domain = "layers"
   name   = "room-database"
-  stage  = "dev"
+  stage  = var.stage
 }
 
+/**
+ * Lambdas
+ */
 module "sc_lambda_onconnect" {
   source = "./modules/aws-lambda-api"
 
   domain = "websocket-api"
   name   = "onconnect"
-  role   = aws_iam_role.iam_sc_ws_lambda_logs.arn
-  stage  = "dev"
+  role   = module.sc_role_lambda_basic.arn
+  stage  = var.stage
 }
 
 module "sc_lambda_ondisconnect" {
@@ -189,9 +123,9 @@ module "sc_lambda_ondisconnect" {
 
   domain = "websocket-api"
   name   = "ondisconnect"
-  role   = aws_iam_role.iam_sc_ws_lambda_dynamo.arn
+  role   = module.sc_role_lambda_dynamo.arn
   layers = [module.sc_layer_room_database.layer_arn]
-  stage  = "dev"
+  stage  = var.stage
   environment = {
     TABLE_NAME_ROOMS       = module.sc_database_rooms.name
     TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
@@ -203,9 +137,9 @@ module "sc_lambda_sendmessage" {
 
   domain = "websocket-api"
   name   = "sendmessage"
-  role   = aws_iam_role.iam_sc_ws_lambda_dynamo.arn
+  role   = module.sc_role_lambda_dynamo.arn
   layers = [module.sc_layer_room_database.layer_arn]
-  stage  = "dev"
+  stage  = var.stage
   environment = {
     TABLE_NAME_ROOMS       = module.sc_database_rooms.name
     TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
