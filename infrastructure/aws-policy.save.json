@@ -1,0 +1,99 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:CreateFunction",
+                "lambda:TagResource",
+                "iam:UntagRole",
+                "lambda:ListVersionsByFunction",
+                "dynamodb:DeleteItem",
+                "iam:TagRole",
+                "dynamodb:ListTagsOfResource",
+                "iam:CreateRole",
+                "lambda:GetFunctionConfiguration",
+                "s3:ListBucket",
+                "iam:AttachRolePolicy",
+                "iam:PutRolePolicy",
+                "dynamodb:DeleteTable",
+                "lambda:UntagResource",
+                "iam:ListInstanceProfilesForRole",
+                "iam:PassRole",
+                "iam:DetachRolePolicy",
+                "dynamodb:TagResource",
+                "lambda:ListTags",
+                "dynamodb:DescribeTable",
+                "iam:ListAttachedRolePolicies",
+                "iam:DeleteRolePolicy",
+                "dynamodb:DescribeContinuousBackups",
+                "lambda:DeleteFunction",
+                "s3:DeleteObject",
+                "iam:GetRole",
+                "dynamodb:UntagResource",
+                "dynamodb:PutItem",
+                "lambda:GetFunction",
+                "lambda:UpdateFunctionConfiguration",
+                "iam:UpdateRoleDescription",
+                "iam:DeleteRole",
+                "dynamodb:UpdateItem",
+                "dynamodb:DescribeTimeToLive",
+                "dynamodb:CreateTable",
+                "lambda:UpdateFunctionCode",
+                "s3:PutObject",
+                "s3:GetObject",
+                "lambda:PublishVersion",
+                "iam:UpdateRole",
+                "iam:GetRolePolicy",
+                "lambda:GetPolicy",
+                "dynamodb:UpdateTable"
+            ],
+            "Resource": [
+                "arn:aws:lambda:eu-west-1:404273159415:function:sc_onconnect_dev",
+                "arn:aws:lambda:eu-west-1:404273159415:function:sc_ondisconnect_dev",
+                "arn:aws:lambda:eu-west-1:404273159415:function:sc_sendmessage_dev",
+                "arn:aws:s3:::synchronous-chess-terraform",
+                "arn:aws:s3:::synchronous-chess-terraform/*",
+                "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_rooms_dev",
+                "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_connections_dev",
+                "arn:aws:iam::404273159415:role/sc_lambda_dynamo_dev",
+                "arn:aws:iam::404273159415:role/sc_lambda_basic_dev"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListPolicies",
+                "dynamodb:DescribeReservedCapacityOfferings",
+                "dynamodb:ListTables",
+                "dynamodb:DescribeReservedCapacity",
+                "iam:ListRoles",
+                "dynamodb:DescribeLimits"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreatePolicy",
+                "iam:GetPolicyVersion",
+                "iam:GetPolicy",
+                "iam:ListPolicyVersions",
+                "lambda:GetLayerVersion",
+                "lambda:PublishLayerVersion",
+                "lambda:DeleteLayerVersion",
+                "iam:DeletePolicy"
+            ],
+            "Resource": [
+                "arn:aws:lambda:eu-west-1:404273159415:layer:room-database",
+                "arn:aws:lambda:eu-west-1:404273159415:layer:room-database:*",
+                "arn:aws:iam::404273159415:policy/sc_manage_connection_dev",
+                "arn:aws:iam::404273159415:policy/sc_room_table_dev",
+                "arn:aws:iam::404273159415:policy/sc_connection_table_dev"
+            ]
+        }
+    ]
+}
