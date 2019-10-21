@@ -1,3 +1,22 @@
+terraform {
+  backend "s3" {
+    bucket = "synchronous-chess-terraform"
+    key    = "dev/terraform.rfstate"
+    region = "eu-west-1"
+  }
+}
+
+module "sc_database_rooms" {
+  source = "./modules/aws-dynamodb"
+
+  name       = "rooms"
+  hash-key   = "ID"
+  range-key  = "connectionId"
+  attributes = ["ID", "connectionId"]
+
+  stage = "dev"
+}
+
 data "aws_iam_policy_document" "sc_room_table" {
   version = "2012-10-17"
   statement {
@@ -8,7 +27,7 @@ data "aws_iam_policy_document" "sc_room_table" {
       "dynamodb:Query"
     ]
     resources = [
-      aws_dynamodb_table.sc_database_rooms.arn
+      module.sc_database_rooms.arn
     ]
   }
 }
@@ -19,34 +38,16 @@ resource "aws_iam_policy" "sc_room_table" {
   policy = data.aws_iam_policy_document.sc_room_table.json
 }
 
-resource "aws_dynamodb_table" "sc_database_rooms" {
-  name           = "sc_rooms"
-  hash_key       = "ID"
-  range_key      = "connectionId"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 5
-  write_capacity = 5
+module "sc_database_connections" {
+  source = "./modules/aws-dynamodb"
 
-  server_side_encryption {
-    enabled = true
-  }
+  name           = "connections"
+  hash-key       = "connectionId"
+  read-capacity  = 2
+  write-capacity = 2
+  attributes     = ["connectionId"]
 
-  attribute {
-    name = "ID"
-    type = "S"
-  }
-
-  attribute {
-    name = "connectionId"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "sc_database_rooms"
-    Application = "Synchronous chess"
-    Tool        = "Terraform"
-    Environment = "test"
-  }
+  stage = "dev"
 }
 
 data "aws_iam_policy_document" "sc_connection_table" {
@@ -58,7 +59,7 @@ data "aws_iam_policy_document" "sc_connection_table" {
       "dynamodb:PutItem"
     ]
     resources = [
-      aws_dynamodb_table.sc_database_connections.arn
+      module.sc_database_connections.arn
     ]
   }
 }
@@ -69,29 +70,7 @@ resource "aws_iam_policy" "sc_connection_table" {
   policy = data.aws_iam_policy_document.sc_connection_table.json
 }
 
-resource "aws_dynamodb_table" "sc_database_connections" {
-  name           = "sc_connections"
-  hash_key       = "connectionId"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 5
-  write_capacity = 5
 
-  server_side_encryption {
-    enabled = true
-  }
-
-  attribute {
-    name = "connectionId"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "sc_database_connections"
-    Application = "Synchronous chess"
-    Tool        = "Terraform"
-    Environment = "test"
-  }
-}
 
 data "aws_iam_policy_document" "sc_manage_connection" {
   version = "2012-10-17"
@@ -193,7 +172,7 @@ module "sc_layer_room_database" {
 
   domain = "layers"
   name   = "room-database"
-  stage  = "test"
+  stage  = "dev"
 }
 
 module "sc_lambda_onconnect" {
@@ -202,7 +181,7 @@ module "sc_lambda_onconnect" {
   domain = "websocket-api"
   name   = "onconnect"
   role   = aws_iam_role.iam_sc_ws_lambda_logs.arn
-  stage  = "test"
+  stage  = "dev"
 }
 
 module "sc_lambda_ondisconnect" {
@@ -212,10 +191,10 @@ module "sc_lambda_ondisconnect" {
   name   = "ondisconnect"
   role   = aws_iam_role.iam_sc_ws_lambda_dynamo.arn
   layers = [module.sc_layer_room_database.layer_arn]
-  stage  = "test"
+  stage  = "dev"
   environment = {
-    TABLE_NAME_ROOMS       = aws_dynamodb_table.sc_database_rooms.name
-    TABLE_NAME_CONNECTIONS = aws_dynamodb_table.sc_database_connections.name
+    TABLE_NAME_ROOMS       = module.sc_database_rooms.name
+    TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
   }
 }
 
@@ -226,9 +205,9 @@ module "sc_lambda_sendmessage" {
   name   = "sendmessage"
   role   = aws_iam_role.iam_sc_ws_lambda_dynamo.arn
   layers = [module.sc_layer_room_database.layer_arn]
-  stage  = "test"
+  stage  = "dev"
   environment = {
-    TABLE_NAME_ROOMS       = aws_dynamodb_table.sc_database_rooms.name
-    TABLE_NAME_CONNECTIONS = aws_dynamodb_table.sc_database_connections.name
+    TABLE_NAME_ROOMS       = module.sc_database_rooms.name
+    TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
   }
 }
