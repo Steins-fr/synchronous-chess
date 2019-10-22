@@ -1,8 +1,30 @@
+// Deployment user - Synchronous-chess-deployment-dev
 {
     "Version": "2012-10-17",
     "Statement": [
         {
             "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "iam:DetachRolePolicy",
+                "iam:AttachRolePolicy"
+            ],
+            "Resource": [
+                "arn:aws:iam::404273159415:role/sc_lambda_dynamo_dev",
+                "arn:aws:iam::404273159415:role/sc_lambda_basic_dev"
+            ],
+            "Condition": {
+                "ArnEquals": {
+                    "iam:PolicyARN": [
+                        "arn:aws:iam::404273159415:policy/sc-manage-connection-dev",
+                        "arn:aws:iam::404273159415:policy/sc-manage-tables-dev",
+                        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
                 "lambda:CreateFunction",
@@ -11,22 +33,18 @@
                 "lambda:ListVersionsByFunction",
                 "dynamodb:DeleteItem",
                 "iam:TagRole",
-                "dynamodb:ListTagsOfResource",
                 "iam:CreateRole",
+                "dynamodb:ListTagsOfResource",
                 "lambda:GetFunctionConfiguration",
                 "s3:ListBucket",
-                "iam:AttachRolePolicy",
-                "iam:PutRolePolicy",
                 "dynamodb:DeleteTable",
                 "lambda:UntagResource",
                 "iam:ListInstanceProfilesForRole",
                 "iam:PassRole",
-                "iam:DetachRolePolicy",
                 "dynamodb:TagResource",
                 "lambda:ListTags",
                 "dynamodb:DescribeTable",
                 "iam:ListAttachedRolePolicies",
-                "iam:DeleteRolePolicy",
                 "dynamodb:DescribeContinuousBackups",
                 "lambda:DeleteFunction",
                 "s3:DeleteObject",
@@ -55,14 +73,14 @@
                 "arn:aws:lambda:eu-west-1:404273159415:function:sc_sendmessage_dev",
                 "arn:aws:s3:::synchronous-chess-terraform",
                 "arn:aws:s3:::synchronous-chess-terraform/*",
-                "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_rooms_dev",
-                "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_connections_dev",
                 "arn:aws:iam::404273159415:role/sc_lambda_dynamo_dev",
-                "arn:aws:iam::404273159415:role/sc_lambda_basic_dev"
+                "arn:aws:iam::404273159415:role/sc_lambda_basic_dev",
+                "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_rooms_dev",
+                "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_connections_dev"
             ]
         },
         {
-            "Sid": "VisualEditor1",
+            "Sid": "VisualEditor2",
             "Effect": "Allow",
             "Action": [
                 "iam:ListPolicies",
@@ -75,25 +93,61 @@
             "Resource": "*"
         },
         {
-            "Sid": "VisualEditor2",
+            "Sid": "VisualEditor3",
             "Effect": "Allow",
             "Action": [
-                "iam:CreatePolicy",
                 "iam:GetPolicyVersion",
                 "iam:GetPolicy",
                 "iam:ListPolicyVersions",
                 "lambda:GetLayerVersion",
                 "lambda:PublishLayerVersion",
-                "lambda:DeleteLayerVersion",
-                "iam:DeletePolicy"
+                "lambda:DeleteLayerVersion"
             ],
             "Resource": [
-                "arn:aws:lambda:eu-west-1:404273159415:layer:room-database",
-                "arn:aws:lambda:eu-west-1:404273159415:layer:room-database:*",
-                "arn:aws:iam::404273159415:policy/sc_manage_connection_dev",
-                "arn:aws:iam::404273159415:policy/sc_room_table_dev",
-                "arn:aws:iam::404273159415:policy/sc_connection_table_dev"
+                "arn:aws:iam::404273159415:policy/sc-manage-connection-dev",
+                "arn:aws:iam::404273159415:policy/sc-manage-tables-dev",
+                "arn:aws:lambda:eu-west-1:404273159415:layer:sc_room_manager_dev",
+                "arn:aws:lambda:eu-west-1:404273159415:layer:sc_room_manager_dev:*"
             ]
+        }
+    ]
+}
+// Allowing the lamdba to use the websockets connections. (dev)
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "execute-api:ManageConnections",
+            "Resource": "arn:aws:execute-api:eu-west-1:404273159415:9qmff14h01/*"
+        }
+    ]
+}
+// Allowing the lamdba to manage the items in the tables. (dev)
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem"
+            ],
+            "Resource": "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_connections_dev"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:Query",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": "arn:aws:dynamodb:eu-west-1:404273159415:table/sc_rooms_dev"
         }
     ]
 }
