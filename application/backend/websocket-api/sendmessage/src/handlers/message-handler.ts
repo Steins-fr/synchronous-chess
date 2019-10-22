@@ -5,7 +5,7 @@ import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
 import PlayerRequest from 'src/interfaces/player-request';
-import { RoomService, Player, Room, ConnectionService } from '/opt/nodejs/room-database';
+import { RoomService, Player, Room, ConnectionService } from '/opt/nodejs/room-manager';
 
 type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest;
 

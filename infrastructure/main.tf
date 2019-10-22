@@ -57,7 +57,7 @@ module "sc_layer_room_manager" {
 
   name        = "room_manager"
   domain      = "layers"
-  folder_name = "room-database"
+  folder_name = "room-manager"
   stage       = var.stage
 }
 

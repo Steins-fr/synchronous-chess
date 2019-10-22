@@ -1,5 +1,5 @@
 {
-    "name": "room-database",
+    "name": "room-manager",
     "version": "1.0.0",
     "description": "Layer for database interactions",
     "main": "src/app.js",

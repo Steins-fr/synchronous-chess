@@ -1,4 +1,4 @@
-import { RoomService, Room, Connection, ConnectionService } from '/opt/nodejs/room-database';
+import { RoomService, Room, Connection, ConnectionService } from '/opt/nodejs/room-manager';
 
 interface Response {
     statusCode: number;

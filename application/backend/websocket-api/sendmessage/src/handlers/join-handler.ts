@@ -3,7 +3,7 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import JoinRequest from 'src/interfaces/join-request';
 import JoinResponse from 'src/interfaces/join-response';
-import { Room, RoomService } from '/opt/nodejs/room-database';
+import { Room, RoomHelper } from '/opt/nodejs/room-manager';
 
 
 export default class JoinHandler extends MessageHandler {
@@ -47,12 +47,12 @@ export default class JoinHandler extends MessageHandler {
             throw new Error(JoinHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        if (RoomService.isInGame(room, this.data.playerName)) {
+        if (RoomHelper.isInGame(room, this.data.playerName)) {
             await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_GAME));
             return;
         }
 
-        if (RoomService.isInQueue(room, this.data.playerName)) {
+        if (RoomHelper.isInQueue(room, this.data.playerName)) {
             await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_QUEUE));
             return;
         }
