@@ -6,12 +6,12 @@ locals {
 data "archive_file" "archive" {
   type        = "zip"
   output_path = local.archive_path
-  source_dir  = "${path.module}/../../../application/backend/${var.domain}/${var.name}/dist"
+  source_dir  = "${path.module}/../../../application/backend/${var.domain}/${var.folder_name}/dist"
 }
 
 resource "aws_lambda_layer_version" "lambda_layer" {
   filename   = local.archive_path
-  layer_name = var.name
+  layer_name = local.layer_name
 
   compatible_runtimes = ["nodejs10.x"]
 

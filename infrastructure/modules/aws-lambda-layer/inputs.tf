@@ -4,7 +4,12 @@ variable "domain" {
 }
 
 variable "name" {
-  description = "Function name"
+  description = "Layer name"
+  type        = string
+}
+
+variable "folder_name" {
+  description = "Folder name of the layer"
   type        = string
 }
 

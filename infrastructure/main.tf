@@ -29,53 +29,8 @@ module "sc_database_connections" {
 }
 
 /**
- * Policies
- */
-module "sc_policy_room_table" {
-  source = "./modules/aws-iam-policy-document"
-  name   = "room_table"
-  actions = [
-    "dynamodb:DeleteItem",
-    "dynamodb:PutItem",
-    "dynamodb:UpdateItem",
-    "dynamodb:Query"
-  ]
-  resources = [
-    module.sc_database_rooms.arn
-  ]
-  stage = var.stage
-}
-
-module "sc_policy_connection_table" {
-  source = "./modules/aws-iam-policy-document"
-  name   = "connection_table"
-  actions = [
-    "dynamodb:GetItem",
-    "dynamodb:DeleteItem",
-    "dynamodb:PutItem"
-  ]
-  resources = [
-    module.sc_database_connections.arn
-  ]
-  stage = var.stage
-}
-
-module "sc_policy_manage_connection" {
-  source = "./modules/aws-iam-policy-document"
-  name   = "manage_connection"
-  actions = [
-    "execute-api:ManageConnections"
-  ]
-  resources = [
-    "${var.api_gateway}/*"
-  ]
-  stage = var.stage
-}
-
-/**
  * Roles
  */
-
 module "sc_role_lambda_basic" {
   source   = "./modules/aws-iam-role"
   name     = "lambda_basic"
@@ -88,9 +43,8 @@ module "sc_role_lambda_dynamo" {
   name   = "lambda_dynamo"
   policies = [
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-    module.sc_policy_room_table.arn,
-    module.sc_policy_connection_table.arn,
-    module.sc_policy_manage_connection.arn
+    "arn:aws:iam::404273159415:policy/sc-manage-tables-${var.stage}",
+    "arn:aws:iam::404273159415:policy/sc-manage-connection-${var.stage}"
   ]
   stage = var.stage
 }
@@ -98,12 +52,13 @@ module "sc_role_lambda_dynamo" {
 /**
  * Layers
  */
-module "sc_layer_room_database" {
+module "sc_layer_room_manager" {
   source = "./modules/aws-lambda-layer"
 
-  domain = "layers"
-  name   = "room-database"
-  stage  = var.stage
+  name        = "room_manager"
+  domain      = "layers"
+  folder_name = "room-database"
+  stage       = var.stage
 }
 
 /**
@@ -124,7 +79,7 @@ module "sc_lambda_ondisconnect" {
   domain = "websocket-api"
   name   = "ondisconnect"
   role   = module.sc_role_lambda_dynamo.arn
-  layers = [module.sc_layer_room_database.layer_arn]
+  layers = [module.sc_layer_room_manager.layer_arn]
   stage  = var.stage
   environment = {
     TABLE_NAME_ROOMS       = module.sc_database_rooms.name
@@ -138,7 +93,7 @@ module "sc_lambda_sendmessage" {
   domain = "websocket-api"
   name   = "sendmessage"
   role   = module.sc_role_lambda_dynamo.arn
-  layers = [module.sc_layer_room_database.layer_arn]
+  layers = [module.sc_layer_room_manager.layer_arn]
   stage  = var.stage
   environment = {
     TABLE_NAME_ROOMS       = module.sc_database_rooms.name
