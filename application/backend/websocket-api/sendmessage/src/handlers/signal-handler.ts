@@ -3,7 +3,7 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import SignalRequest from 'src/interfaces/signal-request';
 import SignalResponse from 'src/interfaces/signal-response';
-import { Room, Player, RoomService } from '/opt/nodejs/room-database';
+import { Room, Player, RoomHelper } from '/opt/nodejs/room-manager';
 
 
 export default class SignalHandler extends MessageHandler {
@@ -48,13 +48,13 @@ export default class SignalHandler extends MessageHandler {
         let fromPlayerName: string = room.hostPlayer;
         if (this.connectionId !== room.connectionId) { // Send the message to the host
             toConnectionId = room.connectionId;
-            const fromPlayer: Player | null = RoomService.getPlayerByConnectionId(room, this.connectionId);
+            const fromPlayer: Player | null = RoomHelper.getPlayerByConnectionId(room, this.connectionId);
             if (fromPlayer === null) {
                 throw new Error('You was not in the queue!');
             }
             fromPlayerName = fromPlayer.playerName;
         } else {
-            const toPlayer: Player | null = RoomService.getPlayerByName(room, this.data.to);
+            const toPlayer: Player | null = RoomHelper.getPlayerByName(room, this.data.to);
             if (toPlayer === null || toPlayer.connectionId === undefined) {
                 throw new Error('The player was not in the queue!');
             }

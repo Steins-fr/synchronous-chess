@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "es2017",
         "module": "commonjs",
-        "outDir": "./dist/nodejs/room-database",
+        "outDir": "./dist/nodejs/room-manager",
         "strict": true,
         "baseUrl": "./",
         "declaration": true,

@@ -14,8 +14,8 @@
         "esModuleInterop": true,
         "inlineSourceMap": true,
         "paths": {
-            "/opt/nodejs/room-database": [
-                "../../layers/room-database/dist/nodejs/room-database/index"
+            "/opt/nodejs/room-manager": [
+                "../../layers/room-manager/dist/nodejs/room-manager/index"
             ]
         }
     }

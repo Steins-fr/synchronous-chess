@@ -3,7 +3,7 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import { Room } from '/opt/nodejs/room-database';
+import { Room } from '/opt/nodejs/room-manager';
 
 
 export default class PlayerAddHandler extends MessageHandler {

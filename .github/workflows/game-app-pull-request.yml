@@ -120,7 +120,7 @@ jobs:
         uses: actions/checkout@v1
       - name: Build layer
         run: |
-          cd application/backend/layers/room-database
+          cd application/backend/layers/room-manager
           yarn
           yarn build
       - name: Build lambda onConnect

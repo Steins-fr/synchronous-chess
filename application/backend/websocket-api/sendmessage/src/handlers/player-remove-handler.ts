@@ -3,7 +3,7 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import { Room, RoomService } from '/opt/nodejs/room-database';
+import { Room, RoomHelper } from '/opt/nodejs/room-manager';
 
 export default class PlayerRemoveHandler extends MessageHandler {
 
@@ -43,7 +43,7 @@ export default class PlayerRemoveHandler extends MessageHandler {
             throw new Error(PlayerRemoveHandler.ERROR_ROOM_DOES_NOT_EXIST);
         }
 
-        if (RoomService.isInGame(room, this.data.playerName) === false) {
+        if (RoomHelper.isInGame(room, this.data.playerName) === false) {
             throw new Error(PlayerRemoveHandler.ERROR_PLAYER_NOT_FOUND);
         }
 
