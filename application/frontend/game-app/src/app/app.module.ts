@@ -7,7 +7,6 @@ import { AppComponent } from './app.component';
 import { IcecandidatesComponent } from './components/shared/debug/icecandidates/icecandidates.component';
 import { WebrtcStatesComponent } from './components/shared/debug/webrtc-states/webrtc-states.component';
 import { ChatComponent } from './components/example/chat/chat.component';
-import { DualChatComponent } from './components/example/dual-chat/dual-chat.component';
 
 @NgModule({
     declarations: [
@@ -15,7 +14,6 @@ import { DualChatComponent } from './components/example/dual-chat/dual-chat.comp
         IcecandidatesComponent,
         WebrtcStatesComponent,
         ChatComponent,
-        DualChatComponent
     ],
     imports: [
         BrowserModule,
