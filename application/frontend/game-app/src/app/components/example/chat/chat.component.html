@@ -1,26 +1,26 @@
 <div class="channel">
 
-    <div *ngIf="initiator === null" class="row">
+    <div *ngIf="roomService.initiator === null" class="row">
         <label>Mode?</label>
         <button (click)="setMode(true)">Auto Init</button>
         <button (click)="setMode(false)">Auto Join</button>
     </div>
 
-    <ng-container *ngIf="initiator !== null">
+    <ng-container *ngIf="roomService.initiator !== null">
         <ng-container>
-            <h3>{{ initiator ? 'Create' : 'Join' }} webrtc channel</h3>
+            <h3>{{ roomService.initiator ? 'Create' : 'Join' }} webrtc channel</h3>
             <div class="row" *ngIf="displayEnterRoomButton()">
                 <label>Room name</label>
-                <input [(ngModel)]="roomName" />
+                <input [(ngModel)]="roomService.roomName" />
                 <label>Player name</label>
-                <input [(ngModel)]="playerName" />
-                <button id="room-session" (click)="enterRoom()">Enter the room</button>
+                <input [(ngModel)]="roomService.playerName" />
+                <button id="room-session" (click)="roomService.enterRoom()">Enter the room</button>
             </div>
         </ng-container>
 
-        <ng-container *ngIf="activeRoom">
-            <label>Chat - Room ({{ roomName }}) - Pseudo ({{ localPlayer.name }}) - In the room:
-                <ng-container *ngFor="let participant of participants; let isFirst = first;">
+        <ng-container *ngIf="roomService.activeRoom">
+            <label>Chat - Room ({{ roomService.roomName }}) - Pseudo ({{ roomService.localPlayer.name }}) - In the room:
+                <ng-container *ngFor="let participant of roomService.participants; let isFirst = first;">
                     {{ isFirst ? '' : '-'}} {{ participant }}
                 </ng-container>
             </label>
@@ -34,7 +34,7 @@
         </ng-container>
     </ng-container>
 </div>
-<section id="debug" *ngFor="let remotePlayer of remotePlayers">
+<section id="debug" *ngFor="let remotePlayer of roomService.remotePlayers">
     <ng-container *ngIf="remotePlayer.type !== 'local'">
         <h4>Debug for connection with {{ remotePlayer.name }}</h4>
         <app-debug-webrtc-states [webRTC]="remotePlayer.webRTC" [playerName]="remotePlayer.name">
