@@ -26,8 +26,6 @@ export class WebSocketService {
     private readonly _message: Subject<SocketPayload> = new Subject<SocketPayload>();
     public message: Observable<SocketPayload> = this._message.asObservable();
 
-    public constructor() { }
-
     public connect(webSocket: WebSocket): void {
         if (this.webSocket) {
             this.close();

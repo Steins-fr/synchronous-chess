@@ -7,6 +7,8 @@ import { AppComponent } from './app.component';
 import { IcecandidatesComponent } from './components/shared/debug/icecandidates/icecandidates.component';
 import { WebrtcStatesComponent } from './components/shared/debug/webrtc-states/webrtc-states.component';
 import { ChatComponent } from './components/example/chat/chat.component';
+import { RoomService } from './services/room/room.service';
+import { RoomSetupComponent } from './components/shared/room-setup/room-setup/room-setup.component';
 
 @NgModule({
     declarations: [
@@ -14,13 +16,14 @@ import { ChatComponent } from './components/example/chat/chat.component';
         IcecandidatesComponent,
         WebrtcStatesComponent,
         ChatComponent,
+        RoomSetupComponent
     ],
     imports: [
         BrowserModule,
         FormsModule,
         AppRoutingModule
     ],
-    providers: [],
+    providers: [RoomService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

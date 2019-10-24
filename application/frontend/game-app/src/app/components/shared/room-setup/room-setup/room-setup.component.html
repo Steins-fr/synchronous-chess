@@ -1,0 +1,8 @@
+<div class="row" *ngIf="roomService.waitingRoomInformation()">
+    <label>Nom de la salle</label>
+    <input [(ngModel)]="roomName" />
+    <label>Nom du joueur</label>
+    <input [(ngModel)]="playerName" />
+    <button id="host-room" (click)="hostRoom()">Nouvelle</button>
+    <button id="host-room" (click)="joinRoom()">Rejoindre</button>
+</div>
