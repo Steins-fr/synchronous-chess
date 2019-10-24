@@ -4,6 +4,7 @@ import { ChatComponent } from './chat.component';
 import { WebrtcStatesComponent } from '../../shared/debug/webrtc-states/webrtc-states.component';
 import { IcecandidatesComponent } from '../../shared/debug/icecandidates/icecandidates.component';
 import { FormsModule } from '@angular/forms';
+import { RoomSetupComponent } from '../../shared/room-setup/room-setup/room-setup.component';
 
 describe('ChatComponent', () => {
     let component: ChatComponent;
@@ -14,7 +15,8 @@ describe('ChatComponent', () => {
             declarations: [
                 ChatComponent,
                 WebrtcStatesComponent,
-                IcecandidatesComponent
+                IcecandidatesComponent,
+                RoomSetupComponent
             ],
             imports: [
                 FormsModule

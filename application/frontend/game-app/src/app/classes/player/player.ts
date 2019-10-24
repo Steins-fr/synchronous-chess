@@ -3,37 +3,88 @@ import { WebSocketService, SocketPayload } from 'src/app/services/web-socket/web
 import { Subject, Observable, Subscription, BehaviorSubject } from 'rxjs';
 
 export enum PlayerType {
-    REMOTE_HOST = 'remote_host',
-    REMOTE_PEER = 'remote_peer',
+    PEER_ANSWER = 'remote_host',
+    PEER_OFFER = 'remote_peer',
     LOCAL = 'local'
 }
 
 export enum PlayerEventType {
     CONNECTED = 'connected',
-    DISCONNECTED = 'disconnected'
+    DISCONNECTED = 'disconnected',
+    MESSAGE = 'message',
+    //NEGOTIATION = 'negotiation'
 }
 
-export interface PlayerEvent {
+export enum PlayerMessageType {
+    CHAT = 'chat', // TO REMOVE
+    NEW_PLAYER = 'newPlayer',
+    SIGNAL = 'signal',
+    REMOTE_SIGNAL = 'remoteSignal'
+    //PARTICIPANTS = 'participants',
+    //NEGOTIATION = 'negotiation'
+}
+
+export interface PlayerEvent<T> {
     type: PlayerEventType;
     name: string; // Player name
-    payload?: boolean;
+    payload: T;
+}
+
+export interface NewPlayerPayload {
+    playerName: string;
+}
+
+export interface SignalPayload {
+    to: string;
+    signal: Signal;
+}
+
+export interface RemoteSignalPayload {
+    from: string;
+    signal: Signal;
+}
+
+export interface PlayerMessage {
+    type: PlayerMessageType;
+    payload: string;
+    isPrivate: boolean;
+    from: string;
+}
+
+export interface RemoteSignalMessage {
+    type: string;
+    data: string;
 }
 
 export class Player {
 
-    // Observables for data received from see player
-    private readonly _data: Subject<any> = new Subject<any>();
-    public data: Observable<any> = this._data.asObservable();
     private readonly subs: Array<Subscription> = [];
-    private readonly socketSub: Subscription;
+    private negotiationSub: Subscription;
     public isConnected: boolean = false;
-    public connectionTry: number = 0;
-    private readonly _event: Subject<PlayerEvent> = new Subject<PlayerEvent>();
-    public readonly event: Observable<PlayerEvent> = this._event.asObservable();
+    public signalTry: number = 0;
+    private readonly _event: Subject<PlayerEvent<any>> = new Subject<PlayerEvent<any>>(); // TODO: other than any
+    public readonly event: Observable<PlayerEvent<any>> = this._event.asObservable();
+    public socket?: WebSocketService;
+    private peer?: Player;
+    public webRTC?: Webrtc;
 
-    public constructor(private readonly roomName: string, public readonly name: string, public readonly type: PlayerType, public readonly socket?: WebSocketService, public readonly webRTC?: Webrtc) {
+    public constructor(private readonly roomName: string, public readonly name: string, public readonly type: PlayerType) { }
+
+    public negotiateBySocket(webRTC: Webrtc, socket: WebSocketService): void {
         if (this.type !== PlayerType.LOCAL) {
-            this.socketSub = this.socket.message.subscribe((payload: SocketPayload) => this.socketMessage(payload));
+            this.webRTC = webRTC;
+            this.socket = socket;
+            this.negotiationSub = this.socket.message.subscribe((payload: SocketPayload) => this.negotiationMessage(payload));
+            if (this.isWebRtcInitiator()) {
+                this.setupConnection();
+            }
+        }
+    }
+
+    public negotiateByPeer(webRTC: Webrtc, peer: Player): void {
+        if (this.type !== PlayerType.LOCAL) {
+            this.webRTC = webRTC;
+            this.peer = peer;
             if (this.isWebRtcInitiator()) {
                 this.setupConnection();
             }
@@ -42,7 +93,7 @@ export class Player {
 
     private setupConnection(): void {
 
-        if (this.connectionTry < 3 && this.isConnected === false) {
+        if (this.signalTry < 3 && this.isConnected === false) {
             this.subs.forEach((sub: Subscription) => sub.unsubscribe());
             this.webRTC.configure(this.isWebRtcInitiator());
             if (this.isWebRtcInitiator()) {
@@ -57,15 +108,15 @@ export class Player {
 
     public clear(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
-        if (this.socketSub) {
-            this.socketSub.unsubscribe();
+        if (this.negotiationSub) {
+            this.negotiationSub.unsubscribe();
         }
         if (this.webRTC) {
             this.webRTC.close();
         }
     }
 
-    private pushEvent(type: PlayerEventType, payload?: boolean): void {
+    private pushEvent(type: PlayerEventType, payload?: any): void {
         this._event.next({
             type,
             payload,
@@ -86,45 +137,61 @@ export class Player {
     }
 
     private onSignal(signal: Signal): void {
-        const signalPacket: any = {
+        const signalPacket: any = { // TODO: type
             signal,
             to: this.name,
             roomName: this.roomName
         };
-        this.socket.send('sendmessage', 'signal', JSON.stringify(signalPacket));
+
+        this.signalTry++;
+
+        if (this.socket !== undefined) {
+            this.socket.send('sendmessage', 'signal', JSON.stringify(signalPacket));
+        } else if (this.peer !== undefined) {
+            const signalPayload: SignalPayload = {
+                to: this.name,
+                signal
+            };
+
+            this.peer.sendData({
+                type: PlayerMessageType.SIGNAL,
+                payload: JSON.stringify(signalPayload),
+                isPrivate: true,
+                from: this.name
+            });
+        }
     }
 
     private isWebRtcInitiator(): boolean {
-        return this.type === PlayerType.REMOTE_PEER;
+        return this.type === PlayerType.PEER_OFFER;
     }
 
-    private socketMessage(payload: SocketPayload): void {
-        if (payload.type !== 'remoteSignal') {
+    public negotiationMessage(remoteSignalMessage: RemoteSignalMessage): void {
+        if (remoteSignalMessage.type !== 'remoteSignal') {
             return;
         }
 
-        const data: any = JSON.parse(payload.data);
-        if (data.from !== this.name) {
+        const remoteSignalPayload: RemoteSignalPayload = JSON.parse(remoteSignalMessage.data);
+        if (remoteSignalPayload.from !== this.name) {
             return;
         }
 
         if (this.isWebRtcInitiator() === false) {
             this.setupConnection(); // Start/Restart the connection for new signal.
         }
-        this.connectionTry++;
 
-        this.webRTC.registerSignal(data.signal);
+        this.webRTC.registerSignal(remoteSignalPayload.signal);
     }
 
 
-    public sendData(data: object): void {
+    public sendData(data: PlayerMessage): void {
         if (this.webRTC) {
             this.webRTC.sendMessage(JSON.stringify(data));
         }
     }
 
     private onPeerData(data: string): void {
-        const d: any = JSON.parse(data);
-        this._data.next(d);
+        const message: PlayerMessage = JSON.parse(data);
+        this.pushEvent(PlayerEventType.MESSAGE, message);
     }
 }

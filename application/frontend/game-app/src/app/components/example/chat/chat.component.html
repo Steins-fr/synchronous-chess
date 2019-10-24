@@ -1,27 +1,15 @@
 <div class="channel">
+    <h3>Webrtc chat</h3>
+    <app-room-setup></app-room-setup>
 
-    <div *ngIf="roomService.initiator === null" class="row">
-        <label>Mode?</label>
-        <button (click)="setMode(true)">Auto Init</button>
-        <button (click)="setMode(false)">Auto Join</button>
-    </div>
+    <ng-container *ngIf="roomService.isActive | async">
 
-    <ng-container *ngIf="roomService.initiator !== null">
+
         <ng-container>
-            <h3>{{ roomService.initiator ? 'Create' : 'Join' }} webrtc channel</h3>
-            <div class="row" *ngIf="displayEnterRoomButton()">
-                <label>Room name</label>
-                <input [(ngModel)]="roomService.roomName" />
-                <label>Player name</label>
-                <input [(ngModel)]="roomService.playerName" />
-                <button id="room-session" (click)="roomService.enterRoom()">Enter the room</button>
-            </div>
-        </ng-container>
-
-        <ng-container *ngIf="roomService.activeRoom">
-            <label>Chat - Room ({{ roomService.roomName }}) - Pseudo ({{ roomService.localPlayer.name }}) - In the room:
-                <ng-container *ngFor="let participant of roomService.participants; let isFirst = first;">
-                    {{ isFirst ? '' : '-'}} {{ participant }}
+            <label>Chat - Room ({{ roomService.room.roomName }}) - Pseudo ({{ roomService.room.localPlayer.name }}) - In
+                the room:
+                <ng-container *ngFor="let participant of roomService.room.players | keyvalue; let isFirst = first;">
+                    {{ isFirst ? '' : '-'}} {{ participant.key }}
                 </ng-container>
             </label>
             <div id="chat">
@@ -34,12 +22,14 @@
         </ng-container>
     </ng-container>
 </div>
-<section id="debug" *ngFor="let remotePlayer of roomService.remotePlayers">
-    <ng-container *ngIf="remotePlayer.type !== 'local'">
-        <h4>Debug for connection with {{ remotePlayer.name }}</h4>
-        <app-debug-webrtc-states [webRTC]="remotePlayer.webRTC" [playerName]="remotePlayer.name">
-        </app-debug-webrtc-states>
-        <app-debug-icecandidates [webRTC]="remotePlayer.webRTC" [playerName]="remotePlayer.name">
-        </app-debug-icecandidates>
-    </ng-container>
-</section>
+<ng-container *ngIf="roomService.isActive | async">
+    <section id="debug" *ngFor="let remotePlayer of roomService.room.players | keyvalue">
+        <ng-container *ngIf="remotePlayer.value.type !== 'local'">
+            <h4>Debug for connection with {{ remotePlayer.value.name }}</h4>
+            <app-debug-webrtc-states [webRTC]="remotePlayer.value.webRTC" [playerName]="remotePlayer.value.name">
+            </app-debug-webrtc-states>
+            <app-debug-icecandidates [webRTC]="remotePlayer.value.webRTC" [playerName]="remotePlayer.value.name">
+            </app-debug-icecandidates>
+        </ng-container>
+    </section>
+</ng-container>
