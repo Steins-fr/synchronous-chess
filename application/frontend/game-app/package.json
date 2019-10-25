@@ -8,16 +8,8 @@
         "test": "ng test",
         "lint": "ng lint",
         "e2e": "ng e2e",
-        "build:browser:prod": "ng build --prod",
-        "build:browser:staging": "ng build --configuration staging",
-        "build:prod": "yarn build:browser:prod && yarn build:server:prod",
-        "build:staging": "yarn build:browser:staging && yarn build:server:staging",
-        "server": "node local.js",
-        "build:prod:deploy": "yarn build:prod && yarn deploy",
-        "build:staging:deploy": "yarn build:staging && yarn deploy",
-        "deploy": "serverless deploy",
-        "build:server:prod": "webpack --config webpack.server.config.js --progress --colors --mode=production",
-        "build:server:staging": "webpack --config webpack.server.config.js --progress --colors --mode=production"
+        "build:prod": "ng build --prod",
+        "build:staging": "ng build --configuration staging"
     },
     "private": true,
     "dependencies": {
@@ -29,10 +21,6 @@
         "@angular/platform-browser": "~8.2.4",
         "@angular/platform-browser-dynamic": "~8.2.4",
         "@angular/router": "~8.2.4",
-        "@ng-toolkit/serverless": "^7.1.2",
-        "aws-serverless-express": "^3.2.0",
-        "cors": "~2.8.4",
-        "cp-cli": "^1.1.0",
         "rxjs": "~6.4.0",
         "tslib": "^1.10.0",
         "zone.js": "~0.9.1"
@@ -55,12 +43,8 @@
         "karma-jasmine-html-reporter": "^1.4.0",
         "opencollective": "^1.0.3",
         "protractor": "~5.4.0",
-        "serverless": "1.40.0",
-        "serverless-apigw-binary": "^0.4.4",
-        "ts-loader": "4.2.0",
         "ts-node": "~7.0.0",
         "tslint": "~5.15.0",
-        "typescript": "~3.5.3",
-        "webpack-cli": "3.3.9"
+        "typescript": "~3.5.3"
     }
 }
