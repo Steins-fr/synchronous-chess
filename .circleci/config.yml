@@ -1,0 +1,197 @@
+version: 2.1
+jobs:
+  Angular-dependencies:
+    docker:
+      - image: circleci/node:12.13
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - game-app-{{ .Branch }}-{{ checksum "application/frontend/game-app/package.json" }}
+      - run:
+          name: Installing dependencies
+          working_directory: ~/project/application/frontend/game-app
+          command: yarn
+      - save_cache:
+          key: game-app-{{ .Branch }}-{{ checksum "application/frontend/game-app/package.json" }}
+          paths:
+            - application/frontend/game-app/node_modules
+
+  Angular-lint:
+    docker:
+      - image: circleci/node:12.13
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - game-app-{{ .Branch }}-{{ checksum "application/frontend/game-app/package.json" }}
+      - run:
+          name: Angular lint
+          working_directory: ~/project/application/frontend/game-app
+          command: |
+            yarn
+            yarn lint
+  Angular-test-karma:
+    docker:
+      - image: circleci/node:12.13-browsers
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - game-app-{{ .Branch }}-{{ checksum "application/frontend/game-app/package.json" }}
+      - run:
+          name: Testing karma
+          working_directory: ~/project/application/frontend/game-app
+          command: |
+            yarn
+            yarn test --progress false --watch false
+
+  Build-frontend:
+    docker:
+      - image: circleci/node:12.13
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - game-app-{{ .Branch }}-{{ checksum "application/frontend/game-app/package.json" }}
+      - run:
+          name: Testing karma
+          working_directory: ~/project/application/frontend/game-app
+          command: |
+            yarn
+            yarn build:staging
+      - save_cache:
+          key: build-frontend-{{ .Branch }}
+          paths:
+            - ~/project/application/frontend/game-app/dist
+
+  Build-backend:
+    docker:
+      - image: circleci/node:12.13
+    steps:
+      - checkout
+      - run:
+          name: Build layer
+          working_directory: ~/project/application/backend/layers/room-manager
+          command: |
+            yarn
+            yarn build
+      - run:
+          name: Build lambda onConnect
+          working_directory: ~/project/application/backend/websocket-api/onconnect
+          command: |
+            yarn
+            yarn build
+      - run:
+          name: Build lambda onDisconnect
+          working_directory: ~/project/application/backend/websocket-api/ondisconnect
+          command: |
+            yarn
+            yarn build
+      - run:
+          name: Build lambda sendMessage
+          working_directory: ~/project/application/backend/websocket-api/sendmessage
+          command: |
+            yarn
+            yarn build
+      - save_cache:
+          key: build-backend-{{ .Branch }}
+          paths:
+            - ~/project/application/backend/layers/room-manager/dist
+            - ~/project/application/backend/websocket-api/onconnect/dist
+            - ~/project/application/backend/websocket-api/ondisconnect/dist
+            - ~/project/application/backend/websocket-api/sendmessage/dist
+  Deployment-plan:
+    docker:
+      - image: hashicorp/terraform:0.12.12
+    working_directory: /home/circleci/project
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - build-backend-{{ .Branch }}
+      - restore_cache:
+          keys:
+            - build-frontend-{{ .Branch }}
+      - run:
+          name: Terraform init
+          working_directory: /home/circleci/project/infrastructure
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_BACKEND_STAGING_ACCESS_KEY
+            export AWS_SECRET_ACCESS_KEY=$AWS_BACKEND_STAGING_SECRET_KEY
+            terraform init -backend-config="region=$AWS_REGION" -backend-config="bucket=$AWS_BUCKET" -backend-config="key=$AWS_STAGING_BUCKET_KEY"
+      - run:
+          name: Terraform validate
+          working_directory: /home/circleci/project/infrastructure
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_BACKEND_STAGING_ACCESS_KEY
+            export AWS_SECRET_ACCESS_KEY=$AWS_BACKEND_STAGING_SECRET_KEY
+            terraform validate
+      - run:
+          name: Terraform plan
+          working_directory: /home/circleci/project/infrastructure
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_BACKEND_STAGING_ACCESS_KEY
+            export AWS_SECRET_ACCESS_KEY=$AWS_BACKEND_STAGING_SECRET_KEY
+            terraform plan -var stage="staging" -var acm_certificate_arn="${AWS_STAGING_CERTIFICATE_ARN}" -var main_domain_name="${DOMAIN_NAME}" -out=tfplan -input=false
+      - persist_to_workspace:
+          root: /home/circleci/project
+          paths:
+            - application
+            - infrastructure
+  Deployment-apply:
+    docker:
+      - image: hashicorp/terraform:0.12.12
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Terraform apply
+          working_directory: ~/project/infrastructure
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_BACKEND_STAGING_ACCESS_KEY
+            export AWS_SECRET_ACCESS_KEY=$AWS_BACKEND_STAGING_SECRET_KEY
+            terraform apply -input=false tfplan
+
+workflows:
+  version: 2
+  deployment:
+    jobs:
+      - Angular-dependencies
+      - Angular-lint:
+          requires:
+            - Angular-dependencies
+      - Angular-test-karma:
+          requires:
+            - Angular-dependencies
+      - Build-frontend:
+          filters:
+            branches:
+              ignore: master
+      - Build-backend:
+          filters:
+            branches:
+              ignore: master
+      - Deployment-plan:
+          requires:
+            - Build-frontend
+            - Build-backend
+            - Angular-lint
+            - Angular-test-karma
+          filters:
+            branches:
+              ignore: master
+
+      - Hold-deployment:
+          type: approval
+          requires:
+            - Deployment-plan
+          filters:
+            branches:
+              ignore: master
+      - Deployment-apply:
+          requires:
+            - Hold-deployment
+          filters:
+            branches:
+              ignore: master
