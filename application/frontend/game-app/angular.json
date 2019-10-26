@@ -20,6 +20,7 @@
                         "outputPath": "dist/synchronous-chess",
                         "index": "src/index.html",
                         "main": "src/main.ts",
+                        "outputHashing": "all",
                         "polyfills": "src/polyfills.ts",
                         "tsConfig": "tsconfig.app.json",
                         "aot": false,
