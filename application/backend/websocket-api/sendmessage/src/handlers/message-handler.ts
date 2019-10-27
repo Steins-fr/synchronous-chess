@@ -5,7 +5,8 @@ import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
 import PlayerRequest from 'src/interfaces/player-request';
-import { RoomService, Player, Room, ConnectionService } from '/opt/nodejs/room-manager';
+import { RoomService, ConnectionService, ExceptionType } from '/opt/nodejs/room-manager';
+import ResponsePayload from 'src/interfaces/response-payload';
 
 type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest;
 
@@ -18,7 +19,8 @@ export enum RequestPayloadType {
 }
 
 export enum ResponsePayloadType {
-    SIGNAL = 'remoteSignal',
+    REMOTE_SIGNAL = 'remoteSignal',
+    SIGNAL_SENT = 'signalSent',
     CREATE = 'created',
     JOIN = 'joinRequest',
     JOINING = 'joiningRoom',
@@ -31,7 +33,6 @@ abstract class MessageHandler {
     protected static readonly ERROR_PARSING: string = 'Payload not valid';
     protected static readonly ERROR_SOCKET_CONNECTION: string = 'Socket connection undefined';
     protected static readonly ERROR_DATA_UNDEFINED: string = 'No data for the request';
-    protected static readonly ERROR_ROOM_DOES_NOT_EXIST: string = 'Room does not exist';
     protected static readonly ERROR_PLAYER_NOT_FOUND: string = 'Player not found';
 
     protected data: any;
@@ -61,27 +62,37 @@ abstract class MessageHandler {
             await this.handle();
         } catch (e) {
             console.error(e);
-            await this.sendTo(this.connectionId, this.errorResponse(e.message));
+            if (e.type === ExceptionType.BAD_REQUEST) {
+                await this.replyError(e.message);
+            }
             throw (e);
         }
     }
 
-    protected sendTo(to: string, data: string): Promise<object> {
-        return this.apigwManagementApi.postToConnection({ ConnectionId: to, Data: data }).promise();
+    protected sendTo(to: string, data: ResponsePayload): Promise<object> {
+        data.id = -1; // Data that is not a reply does not have a id. Set to -1 for not disrupting the exchanges
+        return this.apigwManagementApi.postToConnection({ ConnectionId: to, Data: JSON.stringify(data) }).promise();
     }
 
-    protected errorResponse(message: string): string {
+    protected reply(data: ResponsePayload): Promise<object> {
+        return this.apigwManagementApi.postToConnection({ ConnectionId: this.connectionId, Data: JSON.stringify(data) }).promise();
+    }
+
+    protected replyError(message: string): Promise<object> {
+        return this.reply(this.errorResponse(message));
+    }
+
+    protected errorResponse(message: string): ResponsePayload {
         const response: ErrorResponse = { message };
         return this.response(ResponsePayloadType.ERROR, response);
     }
 
-    protected response(type: ResponsePayloadType, data: any): string {
-        const payload: any = {
+    protected response(type: ResponsePayloadType, data: any): ResponsePayload {
+        return {
+            id: this.payload.id,
             type,
             data: JSON.stringify(data)
         };
-
-        return JSON.stringify(payload);
     }
 }
 

@@ -3,7 +3,8 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import { Room } from '/opt/nodejs/room-manager';
+import { Room, BadRequestException } from '/opt/nodejs/room-manager';
+import ResponsePayload from 'src/interfaces/response-payload';
 
 
 export default class PlayerAddHandler extends MessageHandler {
@@ -19,37 +20,33 @@ export default class PlayerAddHandler extends MessageHandler {
 
     protected parsePayload(): PlayerRequest {
         if (this.payload.type !== RequestPayloadType.PLAYER_ADD || !this.payload.data) {
-            throw new Error(PlayerAddHandler.ERROR_PARSING);
+            throw new BadRequestException(PlayerAddHandler.ERROR_PARSING);
         }
 
         try {
             const data: PlayerRequest = JSON.parse(this.payload.data);
             if (!data.playerName || !data.roomName) {
-                throw new Error(PlayerAddHandler.ERROR_PARSING);
+                throw new BadRequestException(PlayerAddHandler.ERROR_PARSING);
             }
             return data;
         } catch (e) {
-            throw new Error(PlayerAddHandler.ERROR_PARSING);
+            throw new BadRequestException(PlayerAddHandler.ERROR_PARSING);
         }
     }
 
     protected async handle(): Promise<void> {
         if (!this.data) {
-            throw new Error(PlayerAddHandler.ERROR_DATA_UNDEFINED);
+            throw new BadRequestException(PlayerAddHandler.ERROR_DATA_UNDEFINED);
         }
 
         const room: Room = await this.roomService.getRoomByKeys(this.connectionId, this.data.roomName);
 
-        if (!room) {
-            throw new Error(PlayerAddHandler.ERROR_ROOM_DOES_NOT_EXIST);
-        }
-
         await this.roomService.addPlayerToRoom(this.data.playerName, room);
 
-        await this.sendTo(this.connectionId, this.playerAddResponse(this.data));
+        await this.reply(this.playerAddResponse(this.data));
     }
 
-    private playerAddResponse(data: PlayerRequest): string {
+    private playerAddResponse(data: PlayerRequest): ResponsePayload {
         const response: PlayerResponse = data;
 
         return this.response(ResponsePayloadType.ADDED, response);

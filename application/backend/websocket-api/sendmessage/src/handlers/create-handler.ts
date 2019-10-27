@@ -3,6 +3,8 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import CreateRequest from 'src/interfaces/create-request';
 import CreateResponse from 'src/interfaces/create-response';
+import { BadRequestException } from '/opt/nodejs/room-manager';
+import ResponsePayload from 'src/interfaces/response-payload';
 
 
 export default class CreateHandler extends MessageHandler {
@@ -20,36 +22,36 @@ export default class CreateHandler extends MessageHandler {
 
     protected parsePayload(): CreateRequest {
         if (this.payload.type !== RequestPayloadType.CREATE || !this.payload.data) {
-            throw new Error(CreateHandler.ERROR_PARSING);
+            throw new BadRequestException(CreateHandler.ERROR_PARSING);
         }
 
         try {
             const data: CreateRequest = JSON.parse(this.payload.data);
             if (!data.roomName || !data.maxPlayer || !data.playerName) {
-                throw new Error(CreateHandler.ERROR_PARSING);
+                throw new BadRequestException(CreateHandler.ERROR_PARSING);
             }
             return data;
         } catch (e) {
-            throw new Error(CreateHandler.ERROR_PARSING);
+            throw new BadRequestException(CreateHandler.ERROR_PARSING);
         }
     }
 
     protected async handle(): Promise<void> {
         if (!this.data) {
-            throw new Error(CreateHandler.ERROR_DATA_UNDEFINED);
+            throw new BadRequestException(CreateHandler.ERROR_DATA_UNDEFINED);
         }
 
         if (await this.roomService.roomExist(this.data.roomName)) {
-            throw new Error(CreateHandler.ERROR_ROOM_ALREADY_EXIST);
+            throw new BadRequestException(CreateHandler.ERROR_ROOM_ALREADY_EXIST);
         }
 
         await this.connectionService.create({ connectionId: this.connectionId, roomName: this.data.roomName });
         await this.roomService.create(this.data.roomName, this.connectionId, this.data.playerName, this.data.maxPlayer);
 
-        await this.sendTo(this.connectionId, this.createResponse(this.data));
+        await this.reply(this.createResponse(this.data));
     }
 
-    private createResponse(data: CreateRequest): string {
+    private createResponse(data: CreateRequest): ResponsePayload {
         const response: CreateResponse = data;
 
         return this.response(ResponsePayloadType.CREATE, response);

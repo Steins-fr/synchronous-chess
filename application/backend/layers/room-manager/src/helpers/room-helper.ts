@@ -2,7 +2,12 @@ import Player from '../entities/player';
 import Room from '../entities/room';
 
 export default abstract class RoomHelper {
+
     public static findPlayerWith(players: Array<Player>, test: (player: Player) => boolean): Player | null {
+        if (players === undefined) {
+            return null;
+        }
+
         for (let i: number = 0; i < players.length; ++i) {
             const player: Player = players[i];
             if (test(player)) {

@@ -21,7 +21,6 @@ export abstract class Room {
     public isSetup: boolean = false;
     public roomName: string = '';
     public socketState: SocketState = SocketState.CONNECTING;
-    protected hasSucceeded: AsyncSubject<boolean>;
 
     protected _onMessage: Subject<PlayerMessage>;
 
@@ -41,14 +40,7 @@ export abstract class Room {
 
     private socketMessage(payload: SocketPayload): void {
         if (payload.type === 'error') {
-            if (this.hasSucceeded !== undefined) {
-                this.hasSucceeded.next(false);
-                this.hasSucceeded.complete();
-                this.hasSucceeded = undefined;
-                console.error('Socket error', payload.data);
-            } else {
-                console.error('Unhandled socket error', payload.data);
-            }
+            console.error('Socket error', payload.data);
         } else {
             this.onSocketMessage(payload);
         }
@@ -69,21 +61,18 @@ export abstract class Room {
 
     // Room creation
 
-    public create(roomName: string, playerName: string): AsyncSubject<boolean> {
-        this.hasSucceeded = new AsyncSubject<boolean>();
+    public create(roomName: string, playerName: string): Promise<void> {
         if (this.socketState === SocketState.OPEN) {
             this.roomName = roomName;
             this.localPlayer = new Player(this.roomName, playerName, PlayerType.LOCAL);
             this.players.set(this.localPlayer.name, this.localPlayer);
-            this.notifyRoomCreation();
+            return this.askRoomCreation();
         } else {
-            this.hasSucceeded.next(false);
-            this.hasSucceeded.complete();
+            return Promise.reject();
         }
-        return this.hasSucceeded;
     }
 
-    protected abstract notifyRoomCreation(): void;
+    protected abstract askRoomCreation(): Promise<void>;
 
     // Remote player creation
 
