@@ -1,7 +1,8 @@
 import * as AWS from 'aws-sdk';
 import { PutItemInputAttributeMap } from 'aws-sdk/clients/dynamodb';
+import Exception from '../exceptions/exception';
+import DynamoException, { DynamoCrudAction } from '../exceptions/dynamo-exception';
 
-type UpdatePutItemOutput = AWS.DynamoDB.UpdateItemOutput | AWS.DynamoDB.PutItemOutput;
 export type TableKey = AWS.DynamoDB.Key;
 
 export default abstract class BaseRepository<T, U> {
@@ -17,16 +18,16 @@ export default abstract class BaseRepository<T, U> {
     }
 
     private createOrUpdate(item: T): Promise<AWS.DynamoDB.PutItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.PutItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
+        return new Promise((resolve: (value: AWS.DynamoDB.PutItemOutput) => void, reject: (value: Exception) => void): void => {
 
-            const document: PutItemInputAttributeMap = AWS.DynamoDB.Converter.marshall(item);
+            const document: PutItemInputAttributeMap = this.marshall(item);
 
             const putParams: AWS.DynamoDB.PutItemInput = {
                 TableName: this.tableName,
                 Item: document
             };
 
-            this.ddb.putItem(putParams, this.genUpdatePutCallback(resolve, reject));
+            this.ddb.putItem(putParams, this.genPutItemCallback(resolve, reject));
         });
     }
 
@@ -36,7 +37,7 @@ export default abstract class BaseRepository<T, U> {
 
 
     public delete(item: T): Promise<AWS.DynamoDB.DeleteItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.DeleteItemOutput) => void, reject: (value: AWS.AWSError) => void): void => {
+        return new Promise((resolve: (value: AWS.DynamoDB.DeleteItemOutput) => void, reject: (value: Exception) => void): void => {
 
             const deleteParams: AWS.DynamoDB.DeleteItemInput = {
                 TableName: this.tableName,
@@ -48,7 +49,7 @@ export default abstract class BaseRepository<T, U> {
     }
 
     public get(item: Partial<T>): Promise<T> {
-        return new Promise((resolve: (value: T) => void, reject: (value: AWS.AWSError) => void): void => {
+        return new Promise((resolve: (value: T) => void, reject: (value: Exception) => void): void => {
             const params: AWS.DynamoDB.GetItemInput = {
                 TableName: this.tableName,
                 Key: this.getKey(item),
@@ -57,7 +58,7 @@ export default abstract class BaseRepository<T, U> {
 
             this.ddb.getItem(params, (err: AWS.AWSError, connectionData: AWS.DynamoDB.GetItemOutput) => {
                 if (err) {
-                    reject(err);
+                    reject(new DynamoException(DynamoCrudAction.GET, err.message));
                     return;
                 }
 
@@ -68,8 +69,8 @@ export default abstract class BaseRepository<T, U> {
         });
     }
 
-    public query(keys: string, paramValues: AWS.DynamoDB.ExpressionAttributeValueMap, limit: number = 1): Promise<T> { // TODO: Room or Null
-        return new Promise((resolve: (value: T) => void, reject: (value: AWS.AWSError) => void): void => {
+    public query(keys: string, paramValues: AWS.DynamoDB.ExpressionAttributeValueMap, limit: number = 1): Promise<T | null> {
+        return new Promise((resolve: (value: T | null) => void, reject: (value: Exception) => void): void => {
             const params: AWS.DynamoDB.QueryInput = {
                 TableName: this.tableName,
                 KeyConditionExpression: keys,
@@ -80,22 +81,47 @@ export default abstract class BaseRepository<T, U> {
 
             this.ddb.query(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.QueryOutput) => {
                 if (err) {
-                    reject(err);
+                    reject(new DynamoException(DynamoCrudAction.GET, err.message));
                     return;
                 }
 
-                const document: AWS.DynamoDB.AttributeMap = (roomData.Count === 0 || roomData === undefined || roomData.Items === undefined ? {} : roomData.Items.shift()) || {};
-
-                resolve(AWS.DynamoDB.Converter.unmarshall(document) as T);
+                if (roomData.Count === 0 || roomData === undefined || roomData.Items === undefined) {
+                    resolve(null);
+                } else {
+                    const document: AWS.DynamoDB.AttributeMap = roomData.Items.shift() || {};
+                    resolve(AWS.DynamoDB.Converter.unmarshall(document) as T);
+                }
             });
         });
     }
 
-    protected genUpdatePutCallback(resolve: (value: UpdatePutItemOutput) => void,
-        reject: (value: AWS.AWSError) => void): (err: AWS.AWSError, output: UpdatePutItemOutput) => void {
-        return (err: AWS.AWSError, output: UpdatePutItemOutput): void => {
+    protected genUpdateInput(item: T,
+        updateExpression: AWS.DynamoDB.UpdateExpression,
+        expressionValues?: AWS.DynamoDB.ExpressionAttributeValueMap): AWS.DynamoDB.UpdateItemInput {
+        return {
+            TableName: this.tableName,
+            Key: this.getKey(item),
+            UpdateExpression: updateExpression,
+            ExpressionAttributeValues: expressionValues
+        };
+    }
+
+    protected genUpdateItemCallback(resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void,
+        reject: (value: Exception) => void): (err: AWS.AWSError, output: AWS.DynamoDB.UpdateItemOutput) => void {
+        return (err: AWS.AWSError, output: AWS.DynamoDB.UpdateItemOutput): void => {
             if (err) {
-                reject(err);
+                reject(new DynamoException(DynamoCrudAction.UPDATE, err.message));
+                return;
+            }
+            resolve(output);
+        };
+    }
+
+    protected genPutItemCallback(resolve: (value: AWS.DynamoDB.PutItemOutput) => void,
+        reject: (value: Exception) => void): (err: AWS.AWSError, output: AWS.DynamoDB.PutItemOutput) => void {
+        return (err: AWS.AWSError, output: AWS.DynamoDB.PutItemOutput): void => {
+            if (err) {
+                reject(new DynamoException(DynamoCrudAction.PUT, err.message));
                 return;
             }
             resolve(output);
@@ -103,10 +129,10 @@ export default abstract class BaseRepository<T, U> {
     }
 
     protected genDeleteItemCallback(resolve: (value: AWS.DynamoDB.DeleteItemOutput) => void,
-        reject: (value: AWS.AWSError) => void): (err: AWS.AWSError, output: AWS.DynamoDB.DeleteItemOutput) => void {
+        reject: (value: Exception) => void): (err: AWS.AWSError, output: AWS.DynamoDB.DeleteItemOutput) => void {
         return (err: AWS.AWSError, output: AWS.DynamoDB.DeleteItemOutput): void => {
             if (err) {
-                reject(err);
+                reject(new DynamoException(DynamoCrudAction.DELETE, err.message));
                 return;
             }
             resolve(output);

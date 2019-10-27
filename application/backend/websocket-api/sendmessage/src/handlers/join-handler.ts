@@ -3,7 +3,8 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import JoinRequest from 'src/interfaces/join-request';
 import JoinResponse from 'src/interfaces/join-response';
-import { Room, RoomHelper } from '/opt/nodejs/room-manager';
+import { Room, RoomHelper, BadRequestException } from '/opt/nodejs/room-manager';
+import ResponsePayload from 'src/interfaces/response-payload';
 
 
 export default class JoinHandler extends MessageHandler {
@@ -22,49 +23,43 @@ export default class JoinHandler extends MessageHandler {
 
     protected parsePayload(): JoinRequest {
         if (this.payload.type !== RequestPayloadType.JOIN || !this.payload.data) {
-            throw new Error(JoinHandler.ERROR_PARSING);
+            throw new BadRequestException(JoinHandler.ERROR_PARSING);
         }
 
         try {
             const data: JoinRequest = JSON.parse(this.payload.data);
             if (!data.roomName || !data.playerName) {
-                throw new Error(JoinHandler.ERROR_PARSING);
+                throw new BadRequestException(JoinHandler.ERROR_PARSING);
             }
             return data;
         } catch (e) {
-            throw new Error(JoinHandler.ERROR_PARSING);
+            throw new BadRequestException(JoinHandler.ERROR_PARSING);
         }
     }
 
     protected async handle(): Promise<void> {
         if (!this.data) {
-            throw new Error(JoinHandler.ERROR_DATA_UNDEFINED);
+            throw new BadRequestException(JoinHandler.ERROR_DATA_UNDEFINED);
         }
 
         const room: Room = await this.roomService.getRoomByName(this.data.roomName);
 
-        if (!room) {
-            throw new Error(JoinHandler.ERROR_ROOM_DOES_NOT_EXIST);
-        }
-
         if (RoomHelper.isInGame(room, this.data.playerName)) {
-            await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_GAME));
-            return;
+            throw new BadRequestException(JoinHandler.ERROR_ALREADY_IN_GAME);
         }
 
         if (RoomHelper.isInQueue(room, this.data.playerName)) {
-            await this.sendTo(this.connectionId, this.errorResponse(JoinHandler.ERROR_ALREADY_IN_QUEUE));
-            return;
+            throw new BadRequestException(JoinHandler.ERROR_ALREADY_IN_QUEUE);
         }
 
         await this.connectionService.create({ connectionId: this.connectionId, roomName: room.ID });
-        await this.roomService.addRoomQueue(this.data.playerName, this.connectionId, room);
+        await this.roomService.addPlayerToQueue(this.data.playerName, this.connectionId, room);
 
-        await this.sendTo(this.connectionId, this.joinResponse(room));
-        await this.sendTo(room.connectionId, this.joinHostResponse(this.data));
+        await this.sendTo(room.connectionId, this.joinReplyResponse(this.data));
+        await this.reply(this.joinResponse(room));
     }
 
-    private joinHostResponse(data: JoinRequest): string {
+    private joinReplyResponse(data: JoinRequest): ResponsePayload {
         const response: JoinResponse = {
             playerName: data.playerName,
         };
@@ -72,7 +67,7 @@ export default class JoinHandler extends MessageHandler {
         return this.response(ResponsePayloadType.JOIN, response);
     }
 
-    private joinResponse(room: Room): string {
+    private joinResponse(room: Room): ResponsePayload {
         const response: JoinResponse = {
             playerName: room.hostPlayer,
         };

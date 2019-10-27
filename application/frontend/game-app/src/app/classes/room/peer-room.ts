@@ -7,9 +7,9 @@ export class PeerRoom extends Room {
     public initiator: boolean = false;
     public hostPlayer?: Player;
 
-    protected notifyRoomCreation(): void {
+    protected askRoomCreation(): Promise<void> {
         // TODO: Need socket functions
-        this.socketService.send('sendmessage', 'join', JSON.stringify({ roomName: this.roomName, playerName: this.localPlayer.name }));
+        return this.socketService.send('sendmessage', 'join', JSON.stringify({ roomName: this.roomName, playerName: this.localPlayer.name }));
     }
 
     protected onSocketMessage(payload: SocketPayload): void {
@@ -23,14 +23,11 @@ export class PeerRoom extends Room {
 
     protected onPlayerConnected(): void {
         // Response for the request of joining the room
-        this.hasSucceeded.next(true);
-        this.hasSucceeded.complete();
-        this.hasSucceeded = undefined;
     }
 
     protected onPlayerDisconnected(): void { }
 
-    protected onPeerPrivateMessage(playerMessage: PlayerMessage, fromPlayer: string): void {
+    protected onPeerPrivateMessage(playerMessage: PlayerMessage): void {
         if (playerMessage.isPrivate === false) {
             return;
         }

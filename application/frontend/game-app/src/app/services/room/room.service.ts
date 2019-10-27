@@ -25,8 +25,7 @@ export class RoomService {
     protected _onMessage: Subject<PlayerMessage> = new Subject<PlayerMessage>();
     public onMessage: Observable<PlayerMessage> = this._onMessage.asObservable();
 
-    public constructor(private readonly ngZone: NgZone) {
-    }
+    public constructor(private readonly ngZone: NgZone) { }
 
     public setup(socketService: WebSocketService): void {
         this.clear();
@@ -44,13 +43,12 @@ export class RoomService {
     public enterRoom(host: boolean, roomName: string, playerName: string): void {
         this.room = host ? new HostRoom() : new PeerRoom();
         this.room.setup(this.socketService, this._onMessage);
-        this.subs.push(this.room.create(roomName, playerName).subscribe((hasSucceeded: boolean) => {
-            if (hasSucceeded === false) {
-                this.room.clear();
-                this.room = undefined;
-            }
-            this.ngZone.run(() => this._isActive.next(hasSucceeded));
-        }));
+        this.room.create(roomName, playerName).then(() => {
+            this.ngZone.run(() => this._isActive.next(true));
+        }).catch(() => {
+            this.room.clear();
+            this.room = undefined;
+        });
     }
 
     public waitingRoomInformation(): boolean {

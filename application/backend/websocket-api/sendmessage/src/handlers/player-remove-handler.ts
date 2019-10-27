@@ -3,7 +3,8 @@ import MessageHandler, { ResponsePayloadType, RequestPayloadType } from './messa
 import RequestPayload from 'src/interfaces/request-payload';
 import PlayerRequest from 'src/interfaces/player-request';
 import PlayerResponse from 'src/interfaces/player-response';
-import { Room, RoomHelper } from '/opt/nodejs/room-manager';
+import { Room, RoomHelper, BadRequestException } from '/opt/nodejs/room-manager';
+import ResponsePayload from 'src/interfaces/response-payload';
 
 export default class PlayerRemoveHandler extends MessageHandler {
 
@@ -18,41 +19,37 @@ export default class PlayerRemoveHandler extends MessageHandler {
 
     protected parsePayload(): PlayerRequest {
         if (this.payload.type !== RequestPayloadType.PLAYER_REMOVE || !this.payload.data) {
-            throw new Error(PlayerRemoveHandler.ERROR_PARSING);
+            throw new BadRequestException(PlayerRemoveHandler.ERROR_PARSING);
         }
 
         try {
             const data: PlayerRequest = JSON.parse(this.payload.data);
             if (!data.playerName || !data.roomName) {
-                throw new Error(PlayerRemoveHandler.ERROR_PARSING);
+                throw new BadRequestException(PlayerRemoveHandler.ERROR_PARSING);
             }
             return data;
         } catch (e) {
-            throw new Error(PlayerRemoveHandler.ERROR_PARSING);
+            throw new BadRequestException(PlayerRemoveHandler.ERROR_PARSING);
         }
     }
 
     protected async handle(): Promise<void> {
         if (!this.data) {
-            throw new Error(PlayerRemoveHandler.ERROR_DATA_UNDEFINED);
+            throw new BadRequestException(PlayerRemoveHandler.ERROR_DATA_UNDEFINED);
         }
 
         const room: Room = await this.roomService.getRoomByKeys(this.connectionId, this.data.roomName);
 
-        if (!room) {
-            throw new Error(PlayerRemoveHandler.ERROR_ROOM_DOES_NOT_EXIST);
-        }
-
         if (RoomHelper.isInGame(room, this.data.playerName) === false) {
-            throw new Error(PlayerRemoveHandler.ERROR_PLAYER_NOT_FOUND);
+            throw new BadRequestException(PlayerRemoveHandler.ERROR_PLAYER_NOT_FOUND);
         }
 
         await this.roomService.removePlayerFromRoom(this.data.playerName, room);
 
-        await this.sendTo(this.connectionId, this.playerRemoveResponse(this.data));
+        await this.reply(this.playerRemoveResponse(this.data));
     }
 
-    private playerRemoveResponse(data: PlayerRequest): string {
+    private playerRemoveResponse(data: PlayerRequest): ResponsePayload {
         const response: PlayerResponse = data;
 
         return this.response(ResponsePayloadType.REMOVED, response);

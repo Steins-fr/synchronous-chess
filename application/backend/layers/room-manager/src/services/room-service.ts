@@ -16,36 +16,36 @@ export default class RoomService {
     }
 
     public getRoomByName(roomName: string): Promise<Room> {
-        return this.roomRepository.getRoomByName(roomName);
+        return this.roomRepository.getByName(roomName);
     }
 
     public getRoomByKeys(connectionId: string, roomName: string): Promise<Room> {
-        return this.roomRepository.getRoomByKeys(connectionId, roomName);
+        return this.roomRepository.getByKeys(connectionId, roomName);
     }
 
     public async roomExist(roomName: string): Promise<boolean> {
-        const room: Room = await this.getRoomByName(roomName);
-        return room.ID !== undefined;
+        try {
+            await this.getRoomByName(roomName);
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     public async addPlayerToRoom(playerName: string, room: Room): Promise<void> {
-        room.players.push({ playerName });
-        await this.roomRepository.update(room);
+        await this.roomRepository.addPlayerToRoom({ playerName }, room);
     }
 
     public async removePlayerFromRoom(playerName: string, room: Room): Promise<void> {
-        room.players = room.players.filter((player: Player) => player.playerName !== playerName);
-        await this.roomRepository.update(room);
+        await this.roomRepository.removePlayerFromRoom(playerName, room);
     }
 
     private async removePlayerFromQueue(connectionId: string, room: Room): Promise<void> {
-        room.queue = room.queue.filter((player: Player) => player.connectionId !== connectionId);
-        await this.roomRepository.update(room);
+        await this.roomRepository.removePlayerFromQueue(connectionId, room);
     }
 
-    public async addRoomQueue(playerName: string, connectionId: string, room: Room): Promise<void> {
-        room.queue.push({ playerName, connectionId });
-        await this.roomRepository.update(room);
+    public async addPlayerToQueue(playerName: string, connectionId: string, room: Room): Promise<void> {
+        await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, room);
     }
 
     public async create(roomName: string, connectionId: string, playerName: string, maxPlayer: number): Promise<void> {

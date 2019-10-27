@@ -7,18 +7,13 @@ export class HostRoom extends Room {
 
     public initiator: boolean = true;
 
-    protected notifyRoomCreation(): void {
+    protected askRoomCreation(): Promise<void> {
         // TODO: Need API class
-        this.socketService.send('sendmessage', 'create', JSON.stringify({ roomName: this.roomName, maxPlayer: 6, playerName: this.localPlayer.name }));
+        return this.socketService.send('sendmessage', 'create', JSON.stringify({ roomName: this.roomName, maxPlayer: 6, playerName: this.localPlayer.name }));
     }
 
     protected onSocketMessage(payload: SocketPayload): void {
         switch (payload.type) {
-            case 'created':
-                this.hasSucceeded.next(true);
-                this.hasSucceeded.complete();
-                this.hasSucceeded = undefined;
-                break;
             case 'joinRequest':
                 const data: any = JSON.parse(payload.data); // TODO: data type
                 const player: Player = this.newPlayer(data.playerName, PlayerType.PEER_OFFER);

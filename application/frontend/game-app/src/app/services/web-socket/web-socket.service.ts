@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 
 export enum SocketState {
     CONNECTING = WebSocket.CONNECTING,
@@ -9,6 +9,7 @@ export enum SocketState {
 }
 
 export interface SocketPayload {
+    id: number;
     type: string;
     data: string;
 }
@@ -17,6 +18,14 @@ export interface SocketPayload {
 export class WebSocketService {
 
     public static readonly ERROR_MESSAGE_SOCKET_DOES_NOT_EXIST: string = 'Socket does not exist! Please call "connect(__url__)"';
+
+    private static readonly requestIdGenerator: Generator = function* name(): Generator {
+        let id: number = 0;
+        while (true) {
+            yield ++id;
+        }
+    }();
+
     private webSocket: WebSocket;
 
     // Socket state observables
@@ -25,6 +34,8 @@ export class WebSocketService {
 
     private readonly _message: Subject<SocketPayload> = new Subject<SocketPayload>();
     public message: Observable<SocketPayload> = this._message.asObservable();
+
+
 
     public connect(webSocket: WebSocket): void {
         if (this.webSocket) {
@@ -44,16 +55,36 @@ export class WebSocketService {
         }
     }
 
-    public send(message: string, type: string, data: string): boolean {
+    public send(message: string, requestType: string, data: string): Promise<void> {
         this.checkSocketCreation();
         if (this.webSocket.readyState === SocketState.OPEN) {
-            const payload: string = JSON.stringify({ type, data });
-            const packet: string = JSON.stringify({ message, data: payload });
+            const payload: SocketPayload = {
+                type: requestType,
+                data,
+                id: WebSocketService.requestIdGenerator.next().value
+            };
+            const stringifiedPayload: string = JSON.stringify(payload);
+            const packet: string = JSON.stringify({ message, data: stringifiedPayload });
             this.webSocket.send(packet);
-            return true;
+            return this.followRequestResponse(payload.id);
         }
 
-        return false;
+        return Promise.reject();
+    }
+
+    private followRequestResponse(id: number): Promise<void> {
+        return new Promise(
+            (resolve: () => void, reject: () => void): void => {
+                const sub: Subscription = this.message.subscribe((payload: SocketPayload) => {
+                    if (payload.id !== id) {
+                        return;
+                    }
+
+                    payload.type !== 'error' ? resolve() : reject(); // TODO: no magic string
+                    // TODO: timeout
+                    sub.unsubscribe();
+                });
+            });
     }
 
     public get stateValue(): SocketState {
