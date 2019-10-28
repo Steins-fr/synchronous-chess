@@ -1,7 +1,13 @@
 import { Component, OnDestroy, NgZone } from '@angular/core';
 import { Subscription } from 'rxjs';
+
+import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
+
 import { RoomService } from 'src/app/services/room/room.service';
-import { PlayerMessageType, PlayerMessage } from 'src/app/classes/player/player';
+
+enum ChatMessageType {
+    CHAT = 'chat'
+}
 
 @Component({
     selector: 'app-chat',
@@ -26,14 +32,14 @@ export class ChatComponent implements OnDestroy {
     }
 
     public sendMessage(): void {
-        this.roomService.transmitMessage(PlayerMessageType.CHAT, this.sendInput);
+        this.roomService.transmitMessage(ChatMessageType.CHAT, this.sendInput);
         this.chat.push(`${this.roomService.room.localPlayer.name}: ${this.sendInput}`);
         this.sendInput = '';
     }
 
     private listenChat(): void {
-        this.subs.push(this.roomService.onMessage.subscribe((message: PlayerMessage) => {
-            if (message.type === PlayerMessageType.CHAT) {
+        this.subs.push(this.roomService.onMessage.subscribe((message: RoomServiceMessage<ChatMessageType>) => {
+            if (message.type === ChatMessageType.CHAT) {
                 this.ngZone.run(() => this.chat.push(`${message.from}: ${message.payload}`));
             }
         }));

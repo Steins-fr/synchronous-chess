@@ -1,74 +1,101 @@
-import { Room } from './room';
-import { SocketPayload } from 'src/app/services/web-socket/web-socket.service';
-import { Player, PlayerType, PlayerMessageType, RemoteSignalPayload, PlayerMessage, NewPlayerPayload, RemoteSignalMessage } from '../player/player';
+import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
+import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
+import { Negotiator } from '../negotiator/negotiator';
+
+import { HostRoomMessage, HostRoomMessageType } from '../webrtc/messages/host-room-message';
+import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
+
+import { Player } from '../player/player';
+import { Room } from './room';
+
+import { SocketPayload } from 'src/app/services/web-socket/web-socket.service';
+import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
+import SignalResponse from 'src/app/services/room-api/responses/signal-response';
+import { RoomApiResponseType } from 'src/app/services/room-api/room-api.service';
+
+interface NewPlayerPayload {
+    playerName: string;
+}
+
+interface JoiningRoomPayload {
+    playerName: string;
+}
 
 export class PeerRoom extends Room {
     public initiator: boolean = false;
     public hostPlayer?: Player;
 
-    protected askRoomCreation(): Promise<void> {
-        // TODO: Need socket functions
-        return this.socketService.send('sendmessage', 'join', JSON.stringify({ roomName: this.roomName, playerName: this.localPlayer.name }));
+    protected askRoomCreation(): Promise<RoomJoinResponse> {
+        return this.roomApi.join(this.roomName, this.localPlayer.name);
     }
 
     protected onSocketMessage(payload: SocketPayload): void {
-        if (payload.type === 'joiningRoom') {
-            const data: any = JSON.parse(payload.data); // TODO: data type
-            this.hostPlayer = this.newPlayer(data.playerName, PlayerType.PEER_ANSWER);
-            this.hostPlayer.negotiateBySocket(new Webrtc(), this.socketService);
-            this.addPlayer(this.hostPlayer);
+        // TODO: do another way
+        if (payload.type === RoomApiResponseType.JOINING_ROOM) {
+            const data: JoiningRoomPayload = JSON.parse(payload.data);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
+            this.addNegotiator(negotiator);
         }
     }
 
-    protected onPlayerConnected(): void {
-        // Response for the request of joining the room
+    protected onPlayerConnected(player: Player): void {
+        if (this.hostPlayer === undefined) {
+            this.hostPlayer = player;
+        }
     }
 
-    protected onPlayerDisconnected(): void { }
+    protected onPlayerDisconnected(player: Player): void {
+        if (this.hostPlayer !== undefined && this.hostPlayer.name === player.name) {
+            this.hostPlayer = undefined;
+        }
+    }
 
-    protected onPeerPrivateMessage(playerMessage: PlayerMessage): void {
-        if (playerMessage.isPrivate === false) {
+    protected onRoomMessage(roomMessage: HostRoomMessage): void {
+        if (roomMessage.origin !== MessageOriginType.HOST_ROOM) {
             return;
         }
 
-        switch (playerMessage.type) {
-            case PlayerMessageType.NEW_PLAYER:
-                this.onNewPlayer(JSON.parse(playerMessage.payload));
+        switch (roomMessage.type) {
+            case HostRoomMessageType.NEW_PLAYER:
+                this.onNewPlayer(JSON.parse(roomMessage.payload));
                 break;
-            case PlayerMessageType.REMOTE_SIGNAL:
-                this.onRemoteSignal(JSON.parse(playerMessage.payload));
+            case HostRoomMessageType.REMOTE_SIGNAL:
+                this.onRemoteSignal(JSON.parse(roomMessage.payload));
                 break;
         }
     }
 
     private onNewPlayer(newPlayerPayload: NewPlayerPayload): void {
-        if (this.localPlayer.name === newPlayerPayload.playerName) {
-            this.socketService.close();
+        if (this.localPlayer.name === newPlayerPayload.playerName) { // I am notified that I joined the room => close the socket
+            this.roomApi.close();
         }
 
-        if (this.players.has(newPlayerPayload.playerName) === true) {
+        if (this.hostPlayer === undefined) { // Do nothing if we don't have a host for transmitting negotiations
             return;
         }
-        const player: Player = this.newPlayer(newPlayerPayload.playerName, PlayerType.PEER_OFFER);
-        player.negotiateByPeer(new Webrtc(), this.hostPlayer);
-        this.addPlayer(player);
+
+        if (this.players.has(newPlayerPayload.playerName) || this.queue.has(newPlayerPayload.playerName)) {
+            return;
+        }
+        const negotiator: Negotiator = new WebrtcNegotiator(this.roomName, newPlayerPayload.playerName, new Webrtc(), this.hostPlayer);
+        negotiator.initiate();
+        this.addNegotiator(negotiator);
     }
 
-    private onRemoteSignal(remoteSignalPayload: RemoteSignalPayload): void {
-        let player: Player;
-        if (this.players.has(remoteSignalPayload.from) === false) { // Create new player
-            player = this.newPlayer(remoteSignalPayload.from, PlayerType.PEER_ANSWER);
-            player.negotiateByPeer(new Webrtc(), this.hostPlayer);
-            this.addPlayer(player);
-        } else { // If exists, get the receiving player.
-            player = this.players.get(remoteSignalPayload.from);
+    private onRemoteSignal(remoteSignalPayload: SignalResponse): void {
+        if (this.hostPlayer === undefined) { // Do nothing if we don't have a host for transmitting negotiations
+            return;
         }
 
-        const remoteSignalMessage: RemoteSignalMessage = {
-            type: 'remoteSignal', // TODO: enum
-            data: JSON.stringify(remoteSignalPayload)
-        };
-        player.negotiationMessage(remoteSignalMessage);
+        let negotiator: Negotiator;
+        if (this.queue.has(remoteSignalPayload.from) === false) { // Create new negotiator
+            negotiator = new WebrtcNegotiator(this.roomName, remoteSignalPayload.from, new Webrtc(), this.hostPlayer);
+            this.addNegotiator(negotiator);
+        } else { // If exists, get the receiving negotiator.
+            negotiator = this.queue.get(remoteSignalPayload.from);
+        }
+
+        negotiator.negotiationMessage(remoteSignalPayload);
     }
 }

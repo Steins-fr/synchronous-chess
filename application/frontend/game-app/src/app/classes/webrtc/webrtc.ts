@@ -1,10 +1,19 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
+
 import WebrtcStates, { DebugRTCIceCandidate } from './webrtc-states';
+
+import { Message } from './messages/message';
 
 export interface Signal {
     sdp: RTCSessionDescriptionInit;
     ice: Array<RTCIceCandidateInit>;
+}
+
+export enum WebrtcConnectionState {
+    CONNECTED = 'connected',
+    DISCONNECTED = 'disconnected',
+    CHECKING = 'checking'
 }
 
 export class Webrtc {
@@ -24,8 +33,8 @@ export class Webrtc {
     public states: Observable<WebrtcStates> = this._states.asObservable();
 
     // Observables for data received by DataChannel
-    private readonly _data: Subject<string> = new Subject<string>();
-    public data: Observable<string> = this._data.asObservable();
+    private readonly _data: Subject<Message> = new Subject<Message>();
+    public data: Observable<Message> = this._data.asObservable();
 
     // PeerConnection and full-duplex dataChannels
     public peerConnection: RTCPeerConnection = undefined;
@@ -104,10 +113,10 @@ export class Webrtc {
         }
     }
 
-    public sendMessage(message: string): boolean {
+    public sendMessage(message: Message): boolean {
         if (this.sendChannel.readyState === 'open') {
             if (this.sendChannel) {
-                this.sendChannel.send(message);
+                this.sendChannel.send(JSON.stringify(message));
             }
             return true;
         }
@@ -164,7 +173,7 @@ export class Webrtc {
     }
 
     private onReceiveMessage(event: MessageEvent): void {
-        this._data.next(event.data);
+        this._data.next(JSON.parse(event.data));
     }
 
     private onDataChannel(event: RTCDataChannelEvent): void {

@@ -1,5 +1,6 @@
-import { Webrtc, WebrtcStates } from './webrtc';
+import { Webrtc } from './webrtc';
 import { skipWhile } from 'rxjs/operators';
+import WebrtcStates from './webrtc-states';
 
 describe('Webrtc', () => {
     it('should create an instance', () => {
@@ -65,7 +66,7 @@ describe('Webrtc', () => {
         const service: Webrtc = new Webrtc();
 
         service.configure(true);
-        expect(service.sendMessage('test')).toBeFalsy();
+        expect(service.sendMessage({ payload: 'test' })).toBeFalsy();
     });
 
     it('should not send a message without connection 2', () => {
@@ -78,6 +79,6 @@ describe('Webrtc', () => {
             },
             ice: []
         });
-        expect(service.sendMessage('test')).toBeFalsy();
+        expect(service.sendMessage({ payload: 'test' })).toBeFalsy();
     });
 });

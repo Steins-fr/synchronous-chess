@@ -123,8 +123,8 @@ describe('WebsocketService', () => {
         // Given
         const service: WebSocketService = TestBed.get(WebSocketService);
         service.connect(socketSpy);
-        const payload1: SocketPayload = { id: 1, type: 'message', data: 'data1' };
-        const payload2: SocketPayload = { id: 1, type: 'message', data: 'data2' };
+        const payload1: SocketPayload = { type: 'message', data: 'data1' };
+        const payload2: SocketPayload = { type: 'message', data: 'data2' };
         const payloads: Array<SocketPayload> = [payload1, payload2];
 
         service.message.subscribe((payload: SocketPayload) => {
@@ -137,42 +137,5 @@ describe('WebsocketService', () => {
         // When
         service.socket.onmessage(new MessageEvent('', { data: JSON.stringify(payload1) }));
         service.socket.onmessage(new MessageEvent('', { data: JSON.stringify(payload2) }));
-    });
-
-    it('should send message on send() call with opened socket', () => {
-        // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
-        Object.defineProperty(socketSpy, 'readyState', {
-            value: SocketState.OPEN,
-            writable: false
-        });
-        /* const message: string = 'sendmessage';
-        const type: string = 'join';
-        const data: string = 'message1'; */
-        service.connect(socketSpy);
-        // When
-        //const result: boolean = service.send(message, type, data);
-        // Then
-        //expect(socketSpy.send.calls.count()).toBe(1, '1 call');
-        //expect(socketSpy.send.calls.first().args.shift()).toEqual(JSON.stringify({ message, data: JSON.stringify({ type, data }) }));
-        expect(true).toBeTruthy();
-    });
-
-    it('should not send message on send() call with closed socket', () => {
-        // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
-        Object.defineProperty(socketSpy, 'readyState', {
-            value: SocketState.CLOSED,
-            writable: false
-        });
-        /* const message: string = 'sendmessage';
-        const type: string = 'join';
-        const data: string = 'message1'; */
-        service.connect(socketSpy);
-        // When
-        //const result: boolean = service.send(message, type, data);
-        // Then
-        expect(socketSpy.send.calls.count()).toBe(0, '0 call');
-        //expect(result).toBeFalsy();
     });
 });

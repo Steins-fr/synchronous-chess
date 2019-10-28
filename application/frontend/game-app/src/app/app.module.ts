@@ -9,6 +9,8 @@ import { ChatComponent } from './components/example/chat/chat.component';
 import { RoomService } from './services/room/room.service';
 import { RoomSetupComponent } from './components/shared/room-setup/room-setup/room-setup.component';
 import { WebrtcDebugComponent } from './components/shared/debug/webrtc-debug/webrtc-debug.component';
+import { RoomApiService } from './services/room-api/room-api.service';
+import { WebSocketService } from './services/web-socket/web-socket.service';
 
 @NgModule({
     declarations: [
@@ -23,7 +25,7 @@ import { WebrtcDebugComponent } from './components/shared/debug/webrtc-debug/web
         FormsModule,
         AppRoutingModule
     ],
-    providers: [RoomService],
+    providers: [RoomService, RoomApiService, WebSocketService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }

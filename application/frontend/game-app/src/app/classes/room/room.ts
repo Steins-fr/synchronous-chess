@@ -1,45 +1,53 @@
-import { NgZone } from '@angular/core';
-import { WebSocketService, SocketPayload, SocketState } from '../../services/web-socket/web-socket.service';
+import { Subscription, Subject } from 'rxjs';
+
+import { SocketPayload, SocketState } from '../../services/web-socket/web-socket.service';
+import { RoomApiService } from 'src/app/services/room-api/room-api.service';
+import RoomCreateResponse from 'src/app/services/room-api/responses/room-create-response';
+import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
+
+import { Message } from '../webrtc/messages/message';
+import { RoomMessage } from '../webrtc/messages/room-message';
+import MessageOriginType from '../webrtc/messages/message-origin.types';
+
+import { NegotiatorEventType, Negotiator, NegotiatorEvent } from '../negotiator/negotiator';
 import {
     Player,
-    PlayerType,
     PlayerEventType,
-    PlayerEvent,
-    PlayerMessageType,
-    PlayerMessage
-} from 'src/app/classes/player/player';
-import { Subscription, Subject, AsyncSubject } from 'rxjs';
+    PlayerEvent
+} from '../player/player';
 
 export abstract class Room {
     protected socketSubs: Array<Subscription> = [];
     protected playersSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
-    protected socketService?: WebSocketService;
+    protected negotiatorsSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
 
     public localPlayer?: Player;
     public players: Map<string, Player> = new Map<string, Player>();
+    public queue: Map<string, Negotiator> = new Map<string, Negotiator>();
     public initiator: boolean;
     public isSetup: boolean = false;
     public roomName: string = '';
     public socketState: SocketState = SocketState.CONNECTING;
 
-    protected _onMessage: Subject<PlayerMessage>;
+    protected _onMessage: Subject<Message>;
 
-    public constructor() { }
+    public constructor(protected readonly roomApi: RoomApiService) { }
 
-    public setup(socketService: WebSocketService, onMessage: Subject<PlayerMessage>): void {
+    public setup(onMessage: Subject<Message>): void {
         this.clear();
         this._onMessage = onMessage;
-        this.socketService = socketService;
-        this.socketSubs.push(this.socketService.state.subscribe((state: SocketState) => {
+        // TODO: think another way
+        this.socketSubs.push(this.roomApi.state.subscribe((state: SocketState) => {
             this.socketState = state;
         }));
 
-        this.socketSubs.push(this.socketService.message.subscribe((payload: SocketPayload) => this.socketMessage(payload)));
+        // TODO: think another way
+        this.socketSubs.push(this.roomApi.message.subscribe((payload: SocketPayload) => this.socketMessage(payload)));
         this.isSetup = true;
     }
 
     private socketMessage(payload: SocketPayload): void {
-        if (payload.type === 'error') {
+        if (payload.type === 'error') { // TODO: handle in API
             console.error('Socket error', payload.data);
         } else {
             this.onSocketMessage(payload);
@@ -48,23 +56,19 @@ export abstract class Room {
 
     protected abstract onSocketMessage(payload: SocketPayload): void;
 
-    public transmitMessage(type: PlayerMessageType, message: string): void {
+    public transmitMessage(message: RoomMessage): void {
         this.players.forEach((player: Player) => {
-            player.sendData({
-                type,
-                payload: message,
-                isPrivate: false,
-                from: this.localPlayer.name
-            });
+            message.from = this.localPlayer.name;
+            player.sendData(message);
         });
     }
 
     // Room creation
 
-    public create(roomName: string, playerName: string): Promise<void> {
+    public create(roomName: string, playerName: string): Promise<RoomCreateResponse | RoomJoinResponse> {
         if (this.socketState === SocketState.OPEN) {
             this.roomName = roomName;
-            this.localPlayer = new Player(this.roomName, playerName, PlayerType.LOCAL);
+            this.localPlayer = new Player(playerName);
             this.players.set(this.localPlayer.name, this.localPlayer);
             return this.askRoomCreation();
         } else {
@@ -72,19 +76,55 @@ export abstract class Room {
         }
     }
 
-    protected abstract askRoomCreation(): Promise<void>;
+    protected abstract askRoomCreation(): Promise<RoomCreateResponse | RoomJoinResponse>;
 
     // Remote player creation
 
-    protected newPlayer(playerName: string, playerType: PlayerType): Player {
-        return new Player(this.roomName, playerName, playerType);
+    protected addNegotiator(negotiator: Negotiator): void {
+        this.queue.set(negotiator.playerName, negotiator);
+        this.subscribeNegotiatorConnected(negotiator);
+        this.subscribeNegotiatorDisconnected(negotiator);
     }
 
     protected addPlayer(player: Player): void {
         this.players.set(player.name, player);
         this.subscribeData(player);
-        this.subscribeOnConnected(player);
         this.subscribeOnDisconnected(player);
+    }
+
+    protected abstract onRoomMessage(message: Message, fromPlayer: string): void;
+
+    // Player events
+
+    protected subscribeData(player: Player): void {
+        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<RoomMessage>) => {
+            if (playerEvent.type !== PlayerEventType.MESSAGE) {
+                return;
+            }
+            const message: RoomMessage = playerEvent.payload;
+            if (message.origin !== MessageOriginType.ROOM_SERVICE) {
+                this.onRoomMessage(message, playerEvent.name);
+            } else {
+                this._onMessage.next(message);
+            }
+        });
+        this.pushSubscriptionForPlayer(player.name, sub);
+    }
+
+    private subscribeOnDisconnected(player: Player): void {
+        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<void>) => {
+            if (playerEvent.type === PlayerEventType.DISCONNECTED) {
+                if (this.players.has(playerEvent.name)) {
+                    const p: Player = this.players.get(playerEvent.name);
+                    this.onPlayerDisconnected(p);
+                    this.players.delete(playerEvent.name);
+                    p.clear();
+                    this.clearSubscriptions(this.playersSubs, p.name);
+                }
+                sub.unsubscribe();
+            }
+        });
+        this.pushSubscriptionForPlayer(player.name, sub); // To unsubscribe without receiving the event
     }
 
     private pushSubscriptionForPlayer(playerName: string, sub: Subscription): void {
@@ -96,57 +136,60 @@ export abstract class Room {
         this.playersSubs.set(playerName, subs);
     }
 
-    protected abstract onPeerPrivateMessage(playerMessage: PlayerMessage, fromPlayer: string): void;
+    protected abstract onPlayerConnected(player: Player): void;
+    protected abstract onPlayerDisconnected(player: Player): void;
 
-    // Player events
+    // Negotiator events
 
-    protected subscribeData(player: Player): void {
-        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<PlayerMessage>) => {
-            if (playerEvent.type !== PlayerEventType.MESSAGE) {
-                return;
-            }
-            const playerMessage: PlayerMessage = playerEvent.payload;
-            if (playerMessage.isPrivate) {
-                this.onPeerPrivateMessage(playerMessage, playerEvent.name);
-            } else {
-                this._onMessage.next(playerMessage);
-            }
-        });
-        this.pushSubscriptionForPlayer(player.name, sub);
-    }
-
-    private subscribeOnConnected(player: Player): void {
-        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<void>) => {
-            if (playerEvent.type === PlayerEventType.CONNECTED) {
-                this.onPlayerConnected(playerEvent.name);
-                sub.unsubscribe();
-            }
-        });
-        this.pushSubscriptionForPlayer(player.name, sub); // To unsubscribe without receiving the event
-    }
-
-    protected abstract onPlayerConnected(playerName: string): void;
-
-    private subscribeOnDisconnected(player: Player): void {
-        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<void>) => {
-            if (playerEvent.type === PlayerEventType.DISCONNECTED) {
-                this.onPlayerDisconnected(playerEvent.name);
-                if (this.players.has(playerEvent.name)) {
-                    this.players.delete(playerEvent.name);
+    private subscribeNegotiatorConnected(negotiator: Negotiator): void {
+        const sub: Subscription = negotiator.event.subscribe((negotiatorEvent: NegotiatorEvent) => {
+            if (negotiatorEvent.type === NegotiatorEventType.CONNECTED) {
+                if (this.queue.has(negotiatorEvent.playerName)) {
+                    const n: Negotiator = this.queue.get(negotiatorEvent.playerName);
+                    const player: Player = new Player(n.playerName, n.webRTC);
+                    this.addPlayer(player);
+                    this.removeNegotiator(negotiatorEvent.playerName);
+                    this.onPlayerConnected(player);
                 }
                 sub.unsubscribe();
             }
         });
-        this.pushSubscriptionForPlayer(player.name, sub); // To unsubscribe without receiving the event
+        this.pushSubscriptionForNegotiator(negotiator.playerName, sub); // To unsubscribe without receiving the event
     }
 
-    protected abstract onPlayerDisconnected(playerName: string): void;
+    private subscribeNegotiatorDisconnected(negotiator: Negotiator): void {
+        const sub: Subscription = negotiator.event.subscribe((negotiatorEvent: NegotiatorEvent) => {
+            if (negotiatorEvent.type === NegotiatorEventType.DISCONNECTED) {
+                this.removeNegotiator(negotiatorEvent.playerName);
+                sub.unsubscribe();
+            }
+        });
+        this.pushSubscriptionForNegotiator(negotiator.playerName, sub); // To unsubscribe without receiving the event
+    }
+
+    private pushSubscriptionForNegotiator(playerName: string, sub: Subscription): void {
+        let subs: Array<Subscription> = [];
+        if (this.negotiatorsSubs.has(playerName)) {
+            subs = this.negotiatorsSubs.get(playerName);
+        }
+        subs.push(sub);
+        this.negotiatorsSubs.set(playerName, subs);
+    }
+
+    private removeNegotiator(playerName: string): void {
+        if (this.queue.has(playerName)) {
+            const negotiator: Negotiator = this.queue.get(playerName);
+            this.queue.delete(playerName);
+            negotiator.clear();
+            this.clearSubscriptions(this.negotiatorsSubs, negotiator.playerName);
+        }
+    }
 
     // Cleaning
 
-    private clearPlayerSubscriptions(playerName: string): void {
-        if (this.playersSubs.has(playerName)) {
-            const subs: Array<Subscription> = this.playersSubs.get(playerName);
+    private clearSubscriptions(map: Map<string, Array<Subscription>>, playerName: string): void {
+        if (map.has(playerName)) {
+            const subs: Array<Subscription> = map.get(playerName);
             subs.forEach((sub: Subscription) => {
                 if (sub.closed === false) {
                     sub.unsubscribe();
@@ -157,9 +200,13 @@ export abstract class Room {
 
     public clear(): void {
         this.socketSubs.forEach((sub: Subscription) => sub.unsubscribe());
-        this.players.forEach((player: Player) => player.clear());
-        this.playersSubs.forEach((_: Array<Subscription>, playerName: string) => {
-            this.clearPlayerSubscriptions(playerName);
+        this.players.forEach((player: Player) => {
+            player.clear();
+            this.clearSubscriptions(this.playersSubs, player.name);
+        });
+        this.queue.forEach((negotiator: Negotiator) => {
+            negotiator.clear();
+            this.clearSubscriptions(this.negotiatorsSubs, negotiator.playerName);
         });
     }
 }

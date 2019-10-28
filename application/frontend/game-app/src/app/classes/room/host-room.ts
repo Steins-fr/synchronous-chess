@@ -1,73 +1,92 @@
-import { Room } from './room';
 import { SocketPayload } from 'src/app/services/web-socket/web-socket.service';
-import { PlayerType, PlayerMessageType, SignalPayload, RemoteSignalPayload, Player, PlayerMessage } from '../player/player';
+import RoomCreateResponse from 'src/app/services/room-api/responses/room-create-response';
+import SignalResponse from 'src/app/services/room-api/responses/signal-response';
+import { RoomApiResponseType } from 'src/app/services/room-api/room-api.service';
+import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
+
+import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
+import { SignalPayload } from '../negotiator/webrtc-negotiator';
+
+import { HostRoomMessage, HostRoomMessageType } from '../webrtc/messages/host-room-message';
+import { NegotiatorMessage, NegotiatorMessageType } from '../webrtc/messages/negotiator-message';
+import { RoomMessage } from '../webrtc/messages/room-message';
+import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
+
+import { Room } from './room';
+import { Player } from '../player/player';
 
 export class HostRoom extends Room {
 
     public initiator: boolean = true;
 
-    protected askRoomCreation(): Promise<void> {
-        // TODO: Need API class
-        return this.socketService.send('sendmessage', 'create', JSON.stringify({ roomName: this.roomName, maxPlayer: 6, playerName: this.localPlayer.name }));
+    protected askRoomCreation(): Promise<RoomCreateResponse> {
+        return this.roomApi.create(this.roomName, 6, this.localPlayer.name);
     }
 
     protected onSocketMessage(payload: SocketPayload): void {
-        switch (payload.type) {
-            case 'joinRequest':
-                const data: any = JSON.parse(payload.data); // TODO: data type
-                const player: Player = this.newPlayer(data.playerName, PlayerType.PEER_OFFER);
-                player.negotiateBySocket(new Webrtc(), this.socketService);
-                this.addPlayer(player);
-                break;
+        // TODO: do another way ?
+        if (payload.type === RoomApiResponseType.JOIN_REQUEST) {
+            const data: RoomJoinResponse = JSON.parse(payload.data);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
+            negotiator.initiate();
+            this.addNegotiator(negotiator);
         }
     }
 
     protected transmitNewPlayer(playerName: string): void {
         this.players.forEach((player: Player) => {
-
-            player.sendData({
-                type: PlayerMessageType.NEW_PLAYER,
+            const message: HostRoomMessage = {
+                type: HostRoomMessageType.NEW_PLAYER,
                 payload: JSON.stringify({
                     playerName
                 }),
-                isPrivate: true,
+                origin: MessageOriginType.HOST_ROOM,
                 from: this.localPlayer.name
-            });
+            };
+            player.sendData(message);
         });
     }
 
-    protected onPlayerConnected(playerName: string): void {
-        this.transmitNewPlayer(playerName);
-        this.socketService.send('sendmessage', 'playerAdd', JSON.stringify({ roomName: this.roomName, playerName: playerName }));
+    protected onPlayerConnected(player: Player): void {
+        this.roomApi.addPlayer(this.roomName, player.name).then(() => {
+            this.transmitNewPlayer(player.name);
+        }).catch((err: string) => {
+            console.error(err);
+        });
     }
-    protected onPlayerDisconnected(playerName: string): void {
-        this.socketService.send('sendmessage', 'playerRemove', JSON.stringify({ roomName: this.roomName, playerName: playerName }));
+    protected onPlayerDisconnected(player: Player): void {
+        this.roomApi.removePlayer(this.roomName, player.name).then().catch((err: string) => {
+            console.error(err);
+        });
     }
 
-    protected onPeerPrivateMessage(playerMessage: PlayerMessage, fromPlayer: string): void {
-        if (playerMessage.isPrivate === false) {
+    protected onRoomMessage(roomMessage: RoomMessage, fromPlayer: string): void {
+        if (roomMessage.origin !== MessageOriginType.NEGOTIATOR) {
             return;
         }
+        const negotiatorMessage: NegotiatorMessage = roomMessage as NegotiatorMessage;
 
-        if (playerMessage.type === PlayerMessageType.SIGNAL) {
-            const signalPayload: SignalPayload = JSON.parse(playerMessage.payload);
+        if (negotiatorMessage.type === NegotiatorMessageType.SIGNAL) {
+            const signalPayload: SignalPayload = JSON.parse(negotiatorMessage.payload);
             if (this.players.has(signalPayload.to) === false) {
                 return;
             }
 
             const player: Player = this.players.get(signalPayload.to);
-            const remoteSignalPayload: RemoteSignalPayload = {
+            const remoteSignalPayload: SignalResponse = {
                 from: fromPlayer,
                 signal: signalPayload.signal
             };
 
-            player.sendData({
-                type: PlayerMessageType.REMOTE_SIGNAL,
+            const negotiationMessage: HostRoomMessage = {
+                type: HostRoomMessageType.REMOTE_SIGNAL,
                 payload: JSON.stringify(remoteSignalPayload),
-                isPrivate: true,
+                origin: MessageOriginType.HOST_ROOM,
                 from: this.localPlayer.name
-            });
+            };
+
+            player.sendData(negotiationMessage);
         }
     }
 }
