@@ -1,11 +1,15 @@
 import { Injectable, NgZone } from '@angular/core';
-import { WebSocketService, SocketState } from '../web-socket/web-socket.service';
-import { PlayerMessageType, PlayerMessage } from 'src/app/classes/player/player';
-import { environment } from 'src/environments/environment';
+import { Subscription, BehaviorSubject, Observable, Subject } from 'rxjs';
+
+import { Message } from 'src/app/classes/webrtc/messages/message';
+import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
+import MessageOriginType from 'src/app/classes/webrtc/messages/message-origin.types';
+
 import { Room } from 'src/app/classes/room/room';
 import { HostRoom } from 'src/app/classes/room/host-room';
 import { PeerRoom } from 'src/app/classes/room/peer-room';
-import { Subscription, BehaviorSubject, Observable, Subject } from 'rxjs';
+
+import { RoomApiService } from '../room-api/room-api.service';
 
 @Injectable(
     { providedIn: 'root' }
@@ -13,36 +17,33 @@ import { Subscription, BehaviorSubject, Observable, Subject } from 'rxjs';
 export class RoomService {
 
     protected subs: Array<Subscription> = [];
-    private socketService?: WebSocketService;
 
     public room: Room;
-
-    public socketState: SocketState = SocketState.CONNECTING;
 
     private readonly _isActive: BehaviorSubject<boolean> = new BehaviorSubject(false);
     public readonly isActive: Observable<boolean> = this._isActive.asObservable();
 
-    protected _onMessage: Subject<PlayerMessage> = new Subject<PlayerMessage>();
-    public onMessage: Observable<PlayerMessage> = this._onMessage.asObservable();
+    protected _onMessage: Subject<Message> = new Subject<Message>();
+    public onMessage: Observable<Message> = this._onMessage.asObservable();
 
-    public constructor(private readonly ngZone: NgZone) { }
+    public constructor(private readonly ngZone: NgZone, private readonly roomApi: RoomApiService) { }
 
-    public setup(socketService: WebSocketService): void {
-        this.clear();
-        this.socketService = socketService;
-        this.socketService.connect(new WebSocket(environment.webSocketServer));
-        this.subs.push(this.socketService.state.subscribe((state: SocketState) => {
-            this.socketState = state;
-        }));
+    public setup(): void {
+        this.roomApi.setup();
     }
 
-    public transmitMessage(type: PlayerMessageType, message: string): void {
-        this.room.transmitMessage(type, message);
+    public transmitMessage<T>(type: T, message: string): void {
+        const roomServiceMessage: RoomServiceMessage<T> = {
+            type,
+            payload: message,
+            origin: MessageOriginType.ROOM_SERVICE
+        };
+        this.room.transmitMessage(roomServiceMessage);
     }
 
     public enterRoom(host: boolean, roomName: string, playerName: string): void {
-        this.room = host ? new HostRoom() : new PeerRoom();
-        this.room.setup(this.socketService, this._onMessage);
+        this.room = host ? new HostRoom(this.roomApi) : new PeerRoom(this.roomApi);
+        this.room.setup(this._onMessage);
         this.room.create(roomName, playerName).then(() => {
             this.ngZone.run(() => this._isActive.next(true));
         }).catch(() => {
@@ -52,7 +53,7 @@ export class RoomService {
     }
 
     public waitingRoomInformation(): boolean {
-        return this.socketState === SocketState.OPEN && !(this.room !== undefined && this.room.isSetup);
+        return this.roomApi.isSocketOpen() && !(this.room !== undefined && this.room.isSetup);
     }
 
     public clear(): void {
@@ -61,9 +62,8 @@ export class RoomService {
             this.room.clear();
             this.room = undefined;
         }
-        if (this.socketService) {
-            this.socketService.close();
-        }
+
+        this.roomApi.close();
         this._isActive.next(false);
     }
 }

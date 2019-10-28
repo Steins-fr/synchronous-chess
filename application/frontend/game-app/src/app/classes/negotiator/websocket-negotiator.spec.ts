@@ -1,8 +1,9 @@
-import { PeerRoom } from './peer-room';
+import { WebsocketNegotiator } from './websocket-negotiator';
+import { Webrtc } from '../webrtc/webrtc';
 import { TestBed } from '@angular/core/testing';
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 
-describe('PeerRoom', () => {
+describe('WebsocketNegotiator', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
@@ -11,6 +12,6 @@ describe('PeerRoom', () => {
     });
 
     it('should create an instance', () => {
-        expect(new PeerRoom(TestBed.get(RoomApiService))).toBeTruthy();
+        expect(new WebsocketNegotiator('', '', new Webrtc(), TestBed.get(RoomApiService))).toBeTruthy();
     });
 });
