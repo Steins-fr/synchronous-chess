@@ -1,10 +1,7 @@
 <div class="channel">
     <h3>Webrtc chat</h3>
     <app-room-setup></app-room-setup>
-
     <ng-container *ngIf="roomService.isActive | async">
-
-
         <ng-container>
             <label>Chat - Room ({{ roomService.room.roomName }}) - Pseudo ({{ roomService.room.localPlayer.name }}) - In
                 the room:
@@ -22,14 +19,4 @@
         </ng-container>
     </ng-container>
 </div>
-<ng-container *ngIf="roomService.isActive | async">
-    <section id="debug" *ngFor="let remotePlayer of roomService.room.players | keyvalue">
-        <ng-container *ngIf="remotePlayer.value.type !== 'local'">
-            <h4>Debug for connection with {{ remotePlayer.value.name }}</h4>
-            <app-debug-webrtc-states [webRTC]="remotePlayer.value.webRTC" [playerName]="remotePlayer.value.name">
-            </app-debug-webrtc-states>
-            <app-debug-icecandidates [webRTC]="remotePlayer.value.webRTC" [playerName]="remotePlayer.value.name">
-            </app-debug-icecandidates>
-        </ng-container>
-    </section>
-</ng-container>
+<app-debug-webrtc></app-debug-webrtc>

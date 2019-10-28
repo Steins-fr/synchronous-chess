@@ -1,0 +1,10 @@
+<ng-container *ngIf="roomService.isActive | async">
+    <section id="debug" *ngFor="let remotePlayer of roomService.room.players | keyvalue">
+        <ng-container *ngIf="remotePlayer.value.type !== 'local'">
+            <h4>Debug for connection with {{ remotePlayer.value.name }}</h4>
+            <app-debug-webrtc-states [states]="remotePlayer.value.states | async"
+                [playerName]="remotePlayer.value.name">
+            </app-debug-webrtc-states>
+        </ng-container>
+    </section>
+</ng-container>

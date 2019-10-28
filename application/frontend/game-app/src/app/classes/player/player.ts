@@ -1,6 +1,7 @@
-import { Webrtc, Signal, WebrtcStates } from '../webrtc/webrtc';
+import { Webrtc, Signal } from '../webrtc/webrtc';
 import { WebSocketService, SocketPayload } from 'src/app/services/web-socket/web-socket.service';
 import { Subject, Observable, Subscription, BehaviorSubject } from 'rxjs';
+import WebrtcStates from '../webrtc/webrtc-states';
 
 export enum PlayerType {
     PEER_ANSWER = 'remote_host',
@@ -61,18 +62,20 @@ export class Player {
     private readonly subs: Array<Subscription> = [];
     private negotiationSub: Subscription;
     public isConnected: boolean = false;
-    public signalTry: number = 0;
+    private signalTry: number = 0;
     private readonly _event: Subject<PlayerEvent<any>> = new Subject<PlayerEvent<any>>(); // TODO: other than any
     public readonly event: Observable<PlayerEvent<any>> = this._event.asObservable();
-    public socket?: WebSocketService;
+    private socket?: WebSocketService;
     private peer?: Player;
-    public webRTC?: Webrtc;
+    private webRTC?: Webrtc;
+    public states?: Observable<WebrtcStates>; // For external debugging
 
     public constructor(private readonly roomName: string, public readonly name: string, public readonly type: PlayerType) { }
 
     public negotiateBySocket(webRTC: Webrtc, socket: WebSocketService): void {
         if (this.type !== PlayerType.LOCAL) {
             this.webRTC = webRTC;
+            this.states = webRTC.states;
             this.socket = socket;
             this.negotiationSub = this.socket.message.subscribe((payload: SocketPayload) => this.negotiationMessage(payload));
             if (this.isWebRtcInitiator()) {
@@ -84,6 +87,7 @@ export class Player {
     public negotiateByPeer(webRTC: Webrtc, peer: Player): void {
         if (this.type !== PlayerType.LOCAL) {
             this.webRTC = webRTC;
+            this.states = webRTC.states;
             this.peer = peer;
             if (this.isWebRtcInitiator()) {
                 this.setupConnection();
