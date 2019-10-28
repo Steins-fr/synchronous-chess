@@ -1,30 +1,59 @@
-<div class="row">
-    <span>
-        RTC states of {{ playerName }}:
-    </span>
-</div>
-<div class="row">
-    <span>
-        ICE Connection: <span id="state-ice-connection">{{ states?.iceConnection }}</span>
-    </span>
-</div>
-<div class="row">
-    <span>
-        ICE Gathering: <span id="state-ice-gathering">{{ states?.iceGathering }}</span>
-    </span>
-</div>
-<div class="row">
-    <span>
-        Signaling: <span id="state-signaling">{{ states?.signaling }}</span>
-    </span>
-</div>
-<div class="row">
-    <span>
-        Send channel: <span id="state-send-channel">{{ states?.sendChannel }}</span>
-    </span>
-</div>
-<div class="row">
-    <span>
-        Receive channel: <span id="state-receive-channel">{{ states?.receiveChannel }}</span>
-    </span>
-</div>
+<ng-container *ngIf="states">
+    <div class="row">
+        <span>
+            RTC states of {{ playerName }}:
+        </span>
+    </div>
+    <div class="row">
+        <span>
+            ICE Connection: <span id="state-ice-connection">{{ states.iceConnection }}</span>
+        </span>
+    </div>
+    <div class="row">
+        <span>
+            ICE Gathering: <span id="state-ice-gathering">{{ states.iceGathering }}</span>
+        </span>
+    </div>
+    <div class="row">
+        <span>
+            Signaling: <span id="state-signaling">{{ states.signaling }}</span>
+        </span>
+    </div>
+    <div class="row">
+        <span>
+            Send channel: <span id="state-send-channel">{{ states.sendChannel }}</span>
+        </span>
+    </div>
+    <div class="row">
+        <span>
+            Receive channel: <span id="state-receive-channel">{{ states.receiveChannel }}</span>
+        </span>
+    </div>
+    <table id="candidates">
+        <caption>List of candidates of {{ playerName }}</caption>
+        <thead id="candidatesHead">
+            <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Component</th>
+                <th scope="col">Type</th>
+                <th scope="col">Foundation</th>
+                <th scope="col">Protocol</th>
+                <th scope="col">Address</th>
+                <th scope="col">Port</th>
+                <th scope="col">Priorities</th>
+            </tr>
+        </thead>
+        <tbody id="candidatesBody">
+            <tr *ngFor="let candidate of states.candidates">
+                <td>{{ candidate.elapsed }}</td>
+                <td>{{ candidate.component }}</td>
+                <td>{{ candidate.type }}</td>
+                <td>{{ candidate.foundation }}</td>
+                <td>{{ candidate.protocol }}</td>
+                <td>{{ candidate.address }}</td>
+                <td>{{ candidate.port }}</td>
+                <td>{{ candidate.priorities }}</td>
+            </tr>
+        </tbody>
+    </table>
+</ng-container>

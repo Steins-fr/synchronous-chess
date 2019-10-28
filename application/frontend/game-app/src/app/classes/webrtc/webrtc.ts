@@ -1,37 +1,16 @@
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { WebSocketService, SocketPayload } from '../../services/web-socket/web-socket.service';
+import WebrtcStates, { DebugRTCIceCandidate } from './webrtc-states';
 
 export interface Signal {
     sdp: RTCSessionDescriptionInit;
     ice: Array<RTCIceCandidateInit>;
 }
 
-/**
- * States of WebRTC channels and connection.
- */
-export interface WebrtcStates {
-    error: string;
-    iceConnection: string;
-    sendChannel: string;
-    receiveChannel: string;
-    iceGathering: string;
-    signaling: string;
-}
-
-/**
- * Interface for debugging Ice candidates.
- */
-export interface DebugRTCIceCandidate extends RTCIceCandidate {
-    address?: string; // This property is not described in RTCIceCandidate but present
-    priorities?: string;
-    elapsed?: string;
-}
-
 export class Webrtc {
     /**
- * Configuration of the PeerConnection. Use google stun server for the moment.
- */
+    * Configuration of the PeerConnection. Use google stun server for the moment.
+    */
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
             {
@@ -40,27 +19,13 @@ export class Webrtc {
         ]
     };
 
-    private static readonly defaultStates: WebrtcStates = {
-        error: '',
-        iceConnection: 'None',
-        sendChannel: 'None',
-        receiveChannel: 'None',
-        iceGathering: 'None',
-        signaling: 'None'
-    };
-
     // WebRTC states observables
-    private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>(Webrtc.defaultStates);
+    private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>(new WebrtcStates());
     public states: Observable<WebrtcStates> = this._states.asObservable();
 
     // Observables for data received by DataChannel
     private readonly _data: Subject<string> = new Subject<string>();
     public data: Observable<string> = this._data.asObservable();
-
-    // Ice candidates observables (used for debugging)
-    private _iceCandidateEntries: Array<DebugRTCIceCandidate> = [];
-    private readonly _iceCandidates: Subject<Array<DebugRTCIceCandidate>> = new Subject<Array<DebugRTCIceCandidate>>();
-    public iceCandidates: Observable<Array<DebugRTCIceCandidate>> = this._iceCandidates.asObservable();
 
     // PeerConnection and full-duplex dataChannels
     public peerConnection: RTCPeerConnection = undefined;
@@ -106,10 +71,7 @@ export class Webrtc {
         this._signalSubject = new Subject<Signal>();
         this.signal = this._signalSubject.asObservable();
 
-        this._iceCandidateEntries = [];
-        this._iceCandidates.next([]);
-
-        this._states.next(Webrtc.defaultStates);
+        this.updateState(new WebrtcStates());
 
         // Manually get states information
         this.onIceConnectionStateChange();
@@ -195,10 +157,10 @@ export class Webrtc {
     }
 
     private updateState(newState: Partial<WebrtcStates>): void {
-        this._states.next({
+        this._states.next(Object.assign(new WebrtcStates(), { // Immutability for changesDetection
             ...this._states.getValue(),
             ...newState
-        });
+        }));
     }
 
     private onReceiveMessage(event: MessageEvent): void {
@@ -213,10 +175,7 @@ export class Webrtc {
     }
 
     private createError(error: any): void {
-        this._states.next({
-            ...this._states.getValue(),
-            error
-        });
+        this.updateState({ error });
     }
 
     private gotDescription(description: RTCSessionDescription): void {
@@ -269,8 +228,9 @@ export class Webrtc {
         const elapsed: string = ((window.performance.now() - this.begin) / 1000).toFixed(3);
 
         iceCandidate.elapsed = elapsed;
-        this._iceCandidateEntries.push(iceCandidate);
-        this._iceCandidates.next([...this._iceCandidateEntries]);
+        this.updateState({
+            candidates: [...this._states.value.candidates, iceCandidate]
+        });
     }
 
     private onIceGatheringStateChange(): void {
