@@ -1,27 +1,20 @@
-import { Subscription } from 'rxjs';
-
 import { Webrtc, Signal } from '../webrtc/webrtc';
 import { Negotiator } from './negotiator';
 
-import { SocketPayload } from 'src/app/services/web-socket/web-socket.service';
-import { RoomApiService, RoomApiResponseType } from 'src/app/services/room-api/room-api.service';
+import { RoomApiService, RoomApiNotificationType } from 'src/app/services/room-api/room-api.service';
+import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
 
 export class WebsocketNegotiator extends Negotiator {
-
-    private readonly negotiationSub: Subscription;
 
     public constructor(roomName: string, playerName: string, webRTC: Webrtc,
         private readonly roomApi: RoomApiService) {
 
         super(roomName, playerName, webRTC);
-        this.negotiationSub = this.roomApi.message.subscribe((payload: SocketPayload) => {
+        this.roomApi.followNotification(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
+    }
 
-            // TODO: do another way !
-            if (payload.type !== RoomApiResponseType.REMOTE_SIGNAL) {
-                return;
-            }
-            this.negotiationMessage(JSON.parse(payload.data));
-        });
+    private onRemoteSignal(data: SignalNotification): void {
+        this.negotiationMessage(data);
     }
 
     protected handleSignal(signal: Signal): void {
@@ -31,7 +24,7 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     public clear(): void {
-        this.negotiationSub.unsubscribe();
+        this.roomApi.unfollowNotification(RoomApiNotificationType.REMOTE_SIGNAL, this);
         super.clear();
     }
 }

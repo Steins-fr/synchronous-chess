@@ -9,10 +9,8 @@ import { Webrtc } from '../webrtc/webrtc';
 import { Player } from '../player/player';
 import { Room } from './room';
 
-import { SocketPayload } from 'src/app/services/web-socket/web-socket.service';
 import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
 import SignalResponse from 'src/app/services/room-api/responses/signal-response';
-import { RoomApiResponseType } from 'src/app/services/room-api/room-api.service';
 
 interface NewPlayerPayload {
     playerName: string;
@@ -26,17 +24,11 @@ export class PeerRoom extends Room {
     public initiator: boolean = false;
     public hostPlayer?: Player;
 
-    protected askRoomCreation(): Promise<RoomJoinResponse> {
-        return this.roomApi.join(this.roomName, this.localPlayer.name);
-    }
-
-    protected onSocketMessage(payload: SocketPayload): void {
-        // TODO: do another way
-        if (payload.type === RoomApiResponseType.JOINING_ROOM) {
-            const data: JoiningRoomPayload = JSON.parse(payload.data);
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
-            this.addNegotiator(negotiator);
-        }
+    protected async askRoomCreation(): Promise<RoomJoinResponse> {
+        const response: RoomJoinResponse = await this.roomApi.join(this.roomName, this.localPlayer.name);
+        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, response.playerName, new Webrtc(), this.roomApi);
+        this.addNegotiator(negotiator);
+        return response;
     }
 
     protected onPlayerConnected(player: Player): void {
