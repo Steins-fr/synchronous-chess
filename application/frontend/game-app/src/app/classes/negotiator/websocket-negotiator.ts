@@ -6,10 +6,10 @@ import SignalNotification from 'src/app/services/room-api/notifications/signal-n
 
 export class WebsocketNegotiator extends Negotiator {
 
-    public constructor(roomName: string, playerName: string, webRTC: Webrtc,
+    public constructor(private readonly roomName: string, playerName: string, webRTC: Webrtc,
         private readonly roomApi: RoomApiService) {
 
-        super(roomName, playerName, webRTC);
+        super(playerName, webRTC);
         this.roomApi.followNotification(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
     }
 

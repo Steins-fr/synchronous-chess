@@ -12,9 +12,9 @@ export interface SignalPayload {
 
 export class WebrtcNegotiator extends Negotiator {
 
-    public constructor(roomName: string, playerName: string, webRTC: Webrtc,
+    public constructor(playerName: string, webRTC: Webrtc,
         private readonly peer: Player) {
-        super(roomName, playerName, webRTC);
+        super(playerName, webRTC);
     }
 
     protected handleSignal(signal: Signal): void {

@@ -25,7 +25,6 @@ export abstract class Negotiator {
     public isInitiator: boolean = false;
 
     public constructor(
-        protected readonly roomName: string,
         public readonly playerName: string,
         public readonly webRTC: Webrtc) {
         this.states = webRTC.states;
