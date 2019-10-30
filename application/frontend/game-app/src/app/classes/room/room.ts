@@ -1,6 +1,5 @@
 import { Subscription, Subject } from 'rxjs';
 
-import { SocketPayload, SocketState } from '../../services/web-socket/web-socket.service';
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 import RoomCreateResponse from 'src/app/services/room-api/responses/room-create-response';
 import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
@@ -17,7 +16,6 @@ import {
 } from '../player/player';
 
 export abstract class Room {
-    protected socketSubs: Array<Subscription> = [];
     protected playersSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
     protected negotiatorsSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
 
@@ -27,34 +25,15 @@ export abstract class Room {
     public initiator: boolean;
     public isSetup: boolean = false;
     public roomName: string = '';
-    public socketState: SocketState = SocketState.CONNECTING;
 
     protected _onMessage: Subject<Message>;
 
     public constructor(protected readonly roomApi: RoomApiService) { }
 
     public setup(onMessage: Subject<Message>): void {
-        this.clear();
         this._onMessage = onMessage;
-        // TODO: think another way
-        this.socketSubs.push(this.roomApi.state.subscribe((state: SocketState) => {
-            this.socketState = state;
-        }));
-
-        // TODO: think another way
-        this.socketSubs.push(this.roomApi.message.subscribe((payload: SocketPayload) => this.socketMessage(payload)));
         this.isSetup = true;
     }
-
-    private socketMessage(payload: SocketPayload): void {
-        if (payload.type === 'error') { // TODO: handle in API
-            console.error('Socket error', payload.data);
-        } else {
-            this.onSocketMessage(payload);
-        }
-    }
-
-    protected abstract onSocketMessage(payload: SocketPayload): void;
 
     public transmitMessage(message: RoomMessage): void {
         this.players.forEach((player: Player) => {
@@ -66,7 +45,7 @@ export abstract class Room {
     // Room creation
 
     public create(roomName: string, playerName: string): Promise<RoomCreateResponse | RoomJoinResponse> {
-        if (this.socketState === SocketState.OPEN) {
+        if (this.roomApi.isSocketOpen()) {
             this.roomName = roomName;
             this.localPlayer = new Player(playerName);
             this.players.set(this.localPlayer.name, this.localPlayer);
@@ -101,7 +80,7 @@ export abstract class Room {
             if (playerEvent.type !== PlayerEventType.MESSAGE) {
                 return;
             }
-            const message: RoomMessage = playerEvent.payload;
+            const message: RoomMessage = playerEvent.message;
             if (message.origin !== MessageOriginType.ROOM_SERVICE) {
                 this.onRoomMessage(message, playerEvent.name);
             } else {
@@ -112,7 +91,7 @@ export abstract class Room {
     }
 
     private subscribeOnDisconnected(player: Player): void {
-        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<void>) => {
+        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<Message>) => {
             if (playerEvent.type === PlayerEventType.DISCONNECTED) {
                 if (this.players.has(playerEvent.name)) {
                     const p: Player = this.players.get(playerEvent.name);
@@ -199,7 +178,6 @@ export abstract class Room {
     }
 
     public clear(): void {
-        this.socketSubs.forEach((sub: Subscription) => sub.unsubscribe());
         this.players.forEach((player: Player) => {
             player.clear();
             this.clearSubscriptions(this.playersSubs, player.name);

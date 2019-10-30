@@ -9,17 +9,17 @@ export enum PlayerEventType {
     MESSAGE = 'message'
 }
 
-export interface PlayerEvent<T> {
+export interface PlayerEvent<T extends Message> {
     type: PlayerEventType;
     name: string; // Player name
-    payload: T;
+    message: T;
 }
 
 export class Player {
 
     private readonly subs: Array<Subscription> = [];
-    private readonly _event: Subject<PlayerEvent<any>> = new Subject<PlayerEvent<any>>(); // TODO: other than any
-    public readonly event: Observable<PlayerEvent<any>> = this._event.asObservable();
+    private readonly _event: Subject<PlayerEvent<Message>> = new Subject<PlayerEvent<Message>>();
+    public readonly event: Observable<PlayerEvent<Message>> = this._event.asObservable();
     public states?: Observable<WebrtcStates>; // For external debugging
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.CONNECTED;
 
@@ -38,10 +38,10 @@ export class Player {
         }
     }
 
-    private pushEvent(type: PlayerEventType, payload?: any): void {
+    private pushEvent(type: PlayerEventType, message?: Message): void {
         this._event.next({
             type,
-            payload,
+            message,
             name: this.name
         });
     }

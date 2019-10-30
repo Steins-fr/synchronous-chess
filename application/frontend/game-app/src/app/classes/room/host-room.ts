@@ -1,8 +1,7 @@
-import { SocketPayload } from 'src/app/services/web-socket/web-socket.service';
 import RoomCreateResponse from 'src/app/services/room-api/responses/room-create-response';
 import SignalResponse from 'src/app/services/room-api/responses/signal-response';
-import { RoomApiResponseType } from 'src/app/services/room-api/room-api.service';
-import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
+import { RoomApiService, RoomApiNotificationType } from 'src/app/services/room-api/room-api.service';
+import JoinNotification from 'src/app/services/room-api/notifications/join-notification';
 
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { SignalPayload } from '../negotiator/webrtc-negotiator';
@@ -16,22 +15,24 @@ import { Webrtc } from '../webrtc/webrtc';
 import { Room } from './room';
 import { Player } from '../player/player';
 
+
 export class HostRoom extends Room {
 
     public initiator: boolean = true;
+
+    public constructor(roomApi: RoomApiService) {
+        super(roomApi);
+        this.roomApi.followNotification(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
+    }
 
     protected askRoomCreation(): Promise<RoomCreateResponse> {
         return this.roomApi.create(this.roomName, 6, this.localPlayer.name);
     }
 
-    protected onSocketMessage(payload: SocketPayload): void {
-        // TODO: do another way ?
-        if (payload.type === RoomApiResponseType.JOIN_REQUEST) {
-            const data: RoomJoinResponse = JSON.parse(payload.data);
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
-            negotiator.initiate();
-            this.addNegotiator(negotiator);
-        }
+    private onJoinNotification(data: JoinNotification): void {
+        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
+        negotiator.initiate();
+        this.addNegotiator(negotiator);
     }
 
     protected transmitNewPlayer(playerName: string): void {
@@ -88,5 +89,10 @@ export class HostRoom extends Room {
 
             player.sendData(negotiationMessage);
         }
+    }
+
+    public clear(): void {
+        this.roomApi.unfollowNotification(RoomApiNotificationType.JOIN_REQUEST, this);
+        super.clear();
     }
 }

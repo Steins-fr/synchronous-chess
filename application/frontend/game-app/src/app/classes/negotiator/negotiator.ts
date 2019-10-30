@@ -3,7 +3,7 @@ import { Subscription, Subject, Observable } from 'rxjs';
 import WebrtcStates from '../webrtc/webrtc-states';
 import { Webrtc, Signal, WebrtcConnectionState } from '../webrtc/webrtc';
 
-import SignalResponse from 'src/app/services/room-api/responses/signal-response';
+import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
 
 export enum NegotiatorEventType {
     CONNECTED = 'connected',
@@ -85,7 +85,7 @@ export abstract class Negotiator {
 
     protected abstract handleSignal(signal: Signal): void;
 
-    public negotiationMessage(payload: SignalResponse): void {
+    public negotiationMessage(payload: SignalNotification): void {
 
         if (payload.from !== this.playerName) { // Because we are listening to the same socket as the other negotiator
             return;
