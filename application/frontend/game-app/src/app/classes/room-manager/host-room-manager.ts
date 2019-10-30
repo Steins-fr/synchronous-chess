@@ -12,21 +12,25 @@ import { RoomMessage } from '../webrtc/messages/room-message';
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
 
-import { Room } from './room';
+import { RoomManager } from './room-manager';
 import { Player } from '../player/player';
 
 
-export class HostRoom extends Room {
+export class HostRoomManager extends RoomManager {
 
-    public initiator: boolean = true;
+    protected initiator: boolean = true;
+    private roomName?: string;
 
     public constructor(roomApi: RoomApiService) {
         super(roomApi);
         this.roomApi.followNotification(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
     }
 
-    protected askRoomCreation(): Promise<RoomCreateResponse> {
-        return this.roomApi.create(this.roomName, 6, this.localPlayer.name);
+    public async create(roomName: string, playerName: string): Promise<RoomCreateResponse> {
+        const response: RoomCreateResponse = await this.roomApi.create(roomName, 6, playerName); // TODO: 6
+        this.roomName = roomName;
+        this.setLocalPlayer(playerName);
+        return response;
     }
 
     private onJoinNotification(data: JoinNotification): void {
@@ -36,17 +40,16 @@ export class HostRoom extends Room {
     }
 
     protected transmitNewPlayer(playerName: string): void {
-        this.players.forEach((player: Player) => {
-            const message: HostRoomMessage = {
-                type: HostRoomMessageType.NEW_PLAYER,
-                payload: JSON.stringify({
-                    playerName
-                }),
-                origin: MessageOriginType.HOST_ROOM,
-                from: this.localPlayer.name
-            };
-            player.sendData(message);
-        });
+        const message: HostRoomMessage = {
+            type: HostRoomMessageType.NEW_PLAYER,
+            payload: JSON.stringify({
+                playerName
+            }),
+            origin: MessageOriginType.HOST_ROOM,
+            from: this.localPlayer.name
+        };
+
+        this.transmitMessage(message);
     }
 
     protected onPlayerConnected(player: Player): void {

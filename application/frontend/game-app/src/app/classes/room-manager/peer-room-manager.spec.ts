@@ -1,4 +1,4 @@
-import { PeerRoom } from './peer-room';
+import { PeerRoomManager } from './peer-room-manager';
 import { TestBed } from '@angular/core/testing';
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 
@@ -11,6 +11,6 @@ describe('PeerRoom', () => {
     });
 
     it('should create an instance', () => {
-        expect(new PeerRoom(TestBed.get(RoomApiService))).toBeTruthy();
+        expect(new PeerRoomManager(TestBed.get(RoomApiService))).toBeTruthy();
     });
 });

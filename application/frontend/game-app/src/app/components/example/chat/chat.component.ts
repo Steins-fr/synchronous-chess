@@ -33,7 +33,7 @@ export class ChatComponent implements OnDestroy {
 
     public sendMessage(): void {
         this.roomService.transmitMessage(ChatMessageType.CHAT, this.sendInput);
-        this.chat.push(`${this.roomService.room.localPlayer.name}: ${this.sendInput}`);
+        this.chat.push(`${this.roomService.localPlayer.name}: ${this.sendInput}`);
         this.sendInput = '';
     }
 

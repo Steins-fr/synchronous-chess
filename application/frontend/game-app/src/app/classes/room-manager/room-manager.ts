@@ -1,8 +1,6 @@
-import { Subscription, Subject } from 'rxjs';
+import { Subscription, Subject, Observable, ReplaySubject } from 'rxjs';
 
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
-import RoomCreateResponse from 'src/app/services/room-api/responses/room-create-response';
-import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
 
 import { Message } from '../webrtc/messages/message';
 import { RoomMessage } from '../webrtc/messages/room-message';
@@ -14,19 +12,27 @@ import {
     PlayerEventType,
     PlayerEvent
 } from '../player/player';
+import RoomEvent from './events/room-event';
+import RoomPlayerAddEvent from './events/room-player-add-event';
+import RoomQueueAddEvent from './events/room-queue-add-event';
+import RoomPlayerRemoveEvent from './events/room-player-remove-event';
+import RoomQueueRemoveEvent from './events/room-queue-remove-event';
 
-export abstract class Room {
+export type RoomEventPayload = string;
+
+export abstract class RoomManager {
     protected playersSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
     protected negotiatorsSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
 
-    public localPlayer?: Player;
-    public players: Map<string, Player> = new Map<string, Player>();
-    public queue: Map<string, Negotiator> = new Map<string, Negotiator>();
-    public initiator: boolean;
+    protected localPlayer?: Player;
+    protected players: Map<string, Player> = new Map<string, Player>();
+    public negotiators: Map<string, Negotiator> = new Map<string, Negotiator>();
+    protected initiator: boolean;
     public isSetup: boolean = false;
-    public roomName: string = '';
 
-    protected _onMessage: Subject<Message>;
+    private _onMessage: Subject<Message>;
+    private readonly _events: ReplaySubject<RoomEvent> = new ReplaySubject<RoomEvent>(3);
+    public readonly events: Observable<RoomEvent> = this._events.asObservable();
 
     public constructor(protected readonly roomApi: RoomApiService) { }
 
@@ -42,33 +48,32 @@ export abstract class Room {
         });
     }
 
-    // Room creation
-
-    public create(roomName: string, playerName: string): Promise<RoomCreateResponse | RoomJoinResponse> {
-        if (this.roomApi.isSocketOpen()) {
-            this.roomName = roomName;
-            this.localPlayer = new Player(playerName);
-            this.players.set(this.localPlayer.name, this.localPlayer);
-            return this.askRoomCreation();
-        } else {
-            return Promise.reject();
-        }
+    private pushEvent(event: RoomEvent): void {
+        this._events.next(event);
     }
 
-    protected abstract askRoomCreation(): Promise<RoomCreateResponse | RoomJoinResponse>;
+    // Room creation
+
+    protected setLocalPlayer(playerName: string): void {
+        this.localPlayer = new Player(playerName);
+        this.pushEvent(new RoomPlayerAddEvent(this.localPlayer));
+        this.players.set(this.localPlayer.name, this.localPlayer);
+    }
 
     // Remote player creation
 
     protected addNegotiator(negotiator: Negotiator): void {
-        this.queue.set(negotiator.playerName, negotiator);
+        this.negotiators.set(negotiator.playerName, negotiator);
         this.subscribeNegotiatorConnected(negotiator);
         this.subscribeNegotiatorDisconnected(negotiator);
+        this.pushEvent(new RoomQueueAddEvent(negotiator.playerName));
     }
 
     protected addPlayer(player: Player): void {
         this.players.set(player.name, player);
         this.subscribeData(player);
         this.subscribeOnDisconnected(player);
+        this.pushEvent(new RoomPlayerAddEvent(player));
     }
 
     protected abstract onRoomMessage(message: Message, fromPlayer: string): void;
@@ -96,9 +101,7 @@ export abstract class Room {
                 if (this.players.has(playerEvent.name)) {
                     const p: Player = this.players.get(playerEvent.name);
                     this.onPlayerDisconnected(p);
-                    this.players.delete(playerEvent.name);
-                    p.clear();
-                    this.clearSubscriptions(this.playersSubs, p.name);
+                    this.removePlayer(p);
                 }
                 sub.unsubscribe();
             }
@@ -118,16 +121,25 @@ export abstract class Room {
     protected abstract onPlayerConnected(player: Player): void;
     protected abstract onPlayerDisconnected(player: Player): void;
 
+    private removePlayer(player: Player): void {
+        if (this.players.has(player.name)) {
+            this.pushEvent(new RoomPlayerRemoveEvent(player));
+            this.players.delete(player.name);
+            player.clear();
+            this.clearSubscriptions(this.playersSubs, player.name);
+        }
+    }
+
     // Negotiator events
 
     private subscribeNegotiatorConnected(negotiator: Negotiator): void {
         const sub: Subscription = negotiator.event.subscribe((negotiatorEvent: NegotiatorEvent) => {
             if (negotiatorEvent.type === NegotiatorEventType.CONNECTED) {
-                if (this.queue.has(negotiatorEvent.playerName)) {
-                    const n: Negotiator = this.queue.get(negotiatorEvent.playerName);
+                if (this.negotiators.has(negotiatorEvent.playerName)) {
+                    const n: Negotiator = this.negotiators.get(negotiatorEvent.playerName);
                     const player: Player = new Player(n.playerName, n.webRTC);
-                    this.addPlayer(player);
                     this.removeNegotiator(negotiatorEvent.playerName);
+                    this.addPlayer(player);
                     this.onPlayerConnected(player);
                 }
                 sub.unsubscribe();
@@ -156,9 +168,10 @@ export abstract class Room {
     }
 
     private removeNegotiator(playerName: string): void {
-        if (this.queue.has(playerName)) {
-            const negotiator: Negotiator = this.queue.get(playerName);
-            this.queue.delete(playerName);
+        if (this.negotiators.has(playerName)) {
+            this.pushEvent(new RoomQueueRemoveEvent(playerName));
+            const negotiator: Negotiator = this.negotiators.get(playerName);
+            this.negotiators.delete(playerName);
             negotiator.clear();
             this.clearSubscriptions(this.negotiatorsSubs, negotiator.playerName);
         }
@@ -182,7 +195,7 @@ export abstract class Room {
             player.clear();
             this.clearSubscriptions(this.playersSubs, player.name);
         });
-        this.queue.forEach((negotiator: Negotiator) => {
+        this.negotiators.forEach((negotiator: Negotiator) => {
             negotiator.clear();
             this.clearSubscriptions(this.negotiatorsSubs, negotiator.playerName);
         });

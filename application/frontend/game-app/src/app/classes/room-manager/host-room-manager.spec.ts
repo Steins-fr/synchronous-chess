@@ -1,4 +1,4 @@
-import { HostRoom } from './host-room';
+import { HostRoomManager } from './host-room-manager';
 import { TestBed } from '@angular/core/testing';
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 
@@ -10,6 +10,6 @@ describe('HostRoom', () => {
     });
 
     it('should create an instance', () => {
-        expect(new HostRoom(TestBed.get(RoomApiService))).toBeTruthy();
+        expect(new HostRoomManager(TestBed.get(RoomApiService))).toBeTruthy();
     });
 });
