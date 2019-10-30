@@ -66,6 +66,10 @@ export class WebSocketService {
         return this.webSocket;
     }
 
+    public isOpen(): boolean {
+        return this._state.getValue() === SocketState.OPEN;
+    }
+
     private onMessage(event: MessageEvent): void {
         this._message.next(JSON.parse(event.data));
     }
