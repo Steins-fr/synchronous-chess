@@ -48,6 +48,7 @@ export enum RoomApiNotificationType {
 
 type RoomApiNotification = SignalNotification | JoinNotification;
 export type NotifyCallback = (data: RoomApiNotification) => void;
+type RequestId = number;
 
 interface RoomApiFollower {
     reference: object;
@@ -60,18 +61,20 @@ interface RoomApiFollower {
 export class RoomApiService {
 
     private static readonly requestIdGenerator: Generator = function* name(): Generator {
-        let id: number = 0;
+        let id: RequestId = 0;
         while (true) {
             yield ++id;
         }
     }();
 
     private static readonly SOCKET_MESSAGE_KEY: string = 'sendmessage';
+    private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
 
     public socketState: SocketState = SocketState.CONNECTING;
     public readonly state: Observable<SocketState>;
     private readonly followerSubjects: Map<RoomApiNotificationType, Array<RoomApiFollower>> = new Map<RoomApiNotificationType, Array<RoomApiFollower>>();
     protected subs: Array<Subscription> = [];
+    private readonly requestTimers: Map<RequestId, NodeJS.Timer> = new Map<RequestId, NodeJS.Timer>();
 
     public constructor(private readonly webSocketService: WebSocketService) {
         this.state = this.webSocketService.state;
@@ -168,6 +171,9 @@ export class RoomApiService {
                         return;
                     }
 
+                    clearTimeout(this.requestTimers.get(id));
+                    this.requestTimers.delete(id);
+
                     if (payload.type !== RoomApiResponseType.ERROR) {
                         const data: T = JSON.parse(payload.data);
                         resolve(data);
@@ -175,17 +181,36 @@ export class RoomApiService {
                         const error: ErrorResponse = JSON.parse(payload.data);
                         reject(error.message);
                     }
-                    // TODO: timeout
-                    sub.unsubscribe();
+
+                    if (sub.closed === false) {
+                        sub.unsubscribe();
+                    }
                 });
+
+                this.detectRequestTimeout(id, sub, reject);
             });
     }
 
+    private detectRequestTimeout(id: RequestId, sub: Subscription, reject: (err: string) => void): void {
+        const timerId: NodeJS.Timer = setTimeout(() => {
+
+            if (sub.closed === false) {
+                sub.unsubscribe();
+            }
+            this.requestTimers.delete(id);
+            reject(`${RoomApiService.ERROR_REQUEST_TIMEOUT} ${id}`);
+            console.error(`${RoomApiService.ERROR_REQUEST_TIMEOUT} ${id}`);
+        }, 4000); // 3 seconds is the lambda AWS timeout, so add one more minute to it
+
+        this.requestTimers.set(id, timerId);
+    }
+
     public isSocketOpen(): boolean {
-        return this.socketState === SocketState.OPEN;
+        return this.webSocketService.isOpen();
     }
 
     public close(): void {
+        this.subs.forEach((sub: Subscription) => sub.unsubscribe());
         this.webSocketService.close();
     }
 }
