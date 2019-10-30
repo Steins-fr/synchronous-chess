@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 import { Signal } from 'src/app/classes/webrtc/webrtc';
 
@@ -18,7 +18,7 @@ import ErrorResponse from './responses/error-response';
 import SignalNotification from './notifications/signal-notification';
 import JoinNotification from './notifications/join-notification';
 
-import { WebSocketService, SocketState, SocketPayload } from '../web-socket/web-socket.service';
+import { WebSocketService, SocketPayload } from '../web-socket/web-socket.service';
 
 export interface PacketPayload extends SocketPayload {
     id: number;
@@ -70,22 +70,14 @@ export class RoomApiService {
     private static readonly SOCKET_MESSAGE_KEY: string = 'sendmessage';
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
 
-    public socketState: SocketState = SocketState.CONNECTING;
-    public readonly state: Observable<SocketState>;
     private readonly followerSubjects: Map<RoomApiNotificationType, Array<RoomApiFollower>> = new Map<RoomApiNotificationType, Array<RoomApiFollower>>();
-    protected subs: Array<Subscription> = [];
     private readonly requestTimers: Map<RequestId, NodeJS.Timer> = new Map<RequestId, NodeJS.Timer>();
+    private readonly subs: Array<Subscription> = [];
 
-    public constructor(private readonly webSocketService: WebSocketService) {
-        this.state = this.webSocketService.state;
-    }
+    public constructor(private readonly webSocketService: WebSocketService) { }
 
     public setup(): void {
         this.webSocketService.connect(new WebSocket(environment.webSocketServer));
-        this.subs.push(this.webSocketService.state.subscribe((state: SocketState) => {
-            this.socketState = state;
-        }));
-
         this.subs.push(this.webSocketService.message.subscribe((payload: PacketPayload) => this.onMessage(payload)));
     }
 
