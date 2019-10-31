@@ -2,9 +2,14 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ChatComponent } from './chat.component';
 import { FormsModule } from '@angular/forms';
-import { RoomSetupComponent } from '../../shared/room-setup/room-setup/room-setup.component';
-import { WebrtcDebugComponent } from '../../shared/debug/webrtc-debug/webrtc-debug.component';
-import { WebrtcStatesComponent } from '../../shared/debug/webrtc-states/webrtc-states.component';
+import { RoomSetupComponent } from '../shared/room-setup/room-setup/room-setup.component';
+import { WebrtcDebugComponent } from '../shared/debug/webrtc-debug/webrtc-debug.component';
+import { WebrtcStatesComponent } from '../shared/debug/webrtc-states/webrtc-states.component';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('ChatComponent', () => {
     let component: ChatComponent;
@@ -19,7 +24,12 @@ describe('ChatComponent', () => {
                 RoomSetupComponent
             ],
             imports: [
-                FormsModule
+                FormsModule,
+                BrowserAnimationsModule,
+                ScrollingModule,
+                MatFormFieldModule,
+                MatInputModule,
+                MatButtonModule
             ]
         })
             .compileComponents();

@@ -32,7 +32,7 @@ type RoomEventHandler = (event: RoomEvent) => void;
 export class RoomService {
 
     private roomManagerEventSub?: Subscription;
-    public roomManager: RoomManager;
+    public roomManager?: RoomManager;
     public roomName: string = '';
 
     private readonly _isActive: BehaviorSubject<boolean> = new BehaviorSubject(false);
@@ -59,12 +59,18 @@ export class RoomService {
     }
 
     public transmitMessage<T>(type: T, message: string): void {
-        const roomServiceMessage: RoomServiceMessage<T> = {
-            type,
-            payload: message,
-            origin: MessageOriginType.ROOM_SERVICE
-        };
-        this.roomManager.transmitMessage(roomServiceMessage);
+        if (this.isReady()) {
+            const roomServiceMessage: RoomServiceMessage<T> = {
+                type,
+                payload: message,
+                origin: MessageOriginType.ROOM_SERVICE
+            };
+            this.roomManager.transmitMessage(roomServiceMessage);
+        }
+    }
+
+    public isReady(): boolean {
+        return this.roomManager !== undefined;
     }
 
     public createRoom(roomName: string, playerName: string, maxPlayer: number): void {

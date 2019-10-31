@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ChatComponent } from './components/example/chat/chat.component';
+import { ChatComponent } from './components/chat/chat.component';
 
 export const homePath: string = '';
 export const chatPath: string = 'simple-chat';
