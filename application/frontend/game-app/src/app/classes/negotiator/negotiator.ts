@@ -19,6 +19,7 @@ export abstract class Negotiator {
     private readonly subs: Array<Subscription> = [];
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.DISCONNECTED;
     private signalTry: number = 0;
+    private timeoutId?: NodeJS.Timer;
     private readonly _event: Subject<NegotiatorEvent> = new Subject<NegotiatorEvent>();
     public readonly event: Observable<NegotiatorEvent> = this._event.asObservable();
     public states?: Observable<WebrtcStates>; // For external debugging
@@ -28,11 +29,19 @@ export abstract class Negotiator {
         public readonly playerName: string,
         public readonly webRTC: Webrtc) {
         this.states = webRTC.states;
+        this.checkTimeout();
     }
 
     public initiate(): void {
         this.isInitiator = true;
         this.setupConnection();
+    }
+
+    private checkTimeout(): void {
+        this.timeoutId = setTimeout(() => {
+            this.pushEvent(NegotiatorEventType.DISCONNECTED);
+            this.timeoutId = undefined;
+        }, 15000);
     }
 
     protected setupConnection(): void {
@@ -46,6 +55,8 @@ export abstract class Negotiator {
 
             this.subs.push(this.webRTC.signal.subscribe((signal: Signal) => this.onSignal(signal)));
             this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
+        } else {
+            this.pushEvent(NegotiatorEventType.DISCONNECTED);
         }
     }
 
@@ -69,7 +80,7 @@ export abstract class Negotiator {
                 }
                 break;
             case WebrtcConnectionState.CONNECTED:
-                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), 100);
+                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), 100); // Delay to assure that the canal is ready
                 break;
             case WebrtcConnectionState.DISCONNECTED:
                 this.pushEvent(NegotiatorEventType.DISCONNECTED);
@@ -98,6 +109,9 @@ export abstract class Negotiator {
     }
 
     public clear(): void {
+        if (this.timeoutId !== undefined) {
+            clearTimeout(this.timeoutId);
+        }
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
     }
 }
