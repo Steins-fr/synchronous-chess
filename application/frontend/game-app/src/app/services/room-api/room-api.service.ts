@@ -69,6 +69,7 @@ export class RoomApiService {
 
     private static readonly SOCKET_MESSAGE_KEY: string = 'sendmessage';
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
+    private static readonly ERROR_SEND: string = 'The message was not sent';
 
     private readonly followerSubjects: Map<RoomApiNotificationType, Array<RoomApiFollower>> = new Map<RoomApiNotificationType, Array<RoomApiFollower>>();
     private readonly requestTimers: Map<RequestId, NodeJS.Timer> = new Map<RequestId, NodeJS.Timer>();
@@ -147,12 +148,11 @@ export class RoomApiService {
     }
 
     private send<T>(payload: PacketPayload): Promise<T> {
-        const messageListener: Promise<T> = this.followRequestResponse(payload.id);
 
         if (this.webSocketService.send(RoomApiService.SOCKET_MESSAGE_KEY, JSON.stringify(payload)) === false) {
-            return Promise.reject();
+            return Promise.reject(RoomApiService.ERROR_SEND);
         }
-        return messageListener;
+        return this.followRequestResponse(payload.id);
     }
 
     private followRequestResponse<T>(id: number): Promise<T> {
