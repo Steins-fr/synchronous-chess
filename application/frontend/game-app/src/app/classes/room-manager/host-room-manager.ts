@@ -21,6 +21,7 @@ export class HostRoomManager extends RoomManager {
     protected initiator: boolean = true;
     private roomName?: string;
     private maxPlayer?: number;
+    private refreshId?: NodeJS.Timer;
 
     public constructor(roomApi: RoomApiService) {
         super(roomApi);
@@ -32,7 +33,32 @@ export class HostRoomManager extends RoomManager {
         this.roomName = roomName;
         this.maxPlayer = maxPlayer;
         this.setLocalPlayer(playerName);
+        this.enableRefresh();
         return response;
+    }
+
+    private enableRefresh(): void {
+        this.refreshId = setInterval(async () => {
+            try {
+                let serverPlayers: Array<string> = (await this.roomApi.allPlayers(this.roomName)).players;
+                for (const player of this.players.values()) {
+                    const beforeLength: number = serverPlayers.length;
+                    serverPlayers = serverPlayers.filter((playerName: string) => playerName !== player.name);
+                    if (serverPlayers.length === beforeLength) { // The server is missing one player
+                        await this.roomApi.addPlayer(this.roomName, player.name);
+                    }
+                }
+
+                if (serverPlayers.length > 0) { // The server has more players than the local
+                    for (const playerName of serverPlayers) {
+                        await this.roomApi.removePlayer(this.roomName, playerName);
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
+        }, 360000); // 360000 => 6 minutes
     }
 
     private onJoinNotification(data: JoinNotification): void {
@@ -103,6 +129,9 @@ export class HostRoomManager extends RoomManager {
 
     public clear(): void {
         this.roomApi.unfollowNotification(RoomApiNotificationType.JOIN_REQUEST, this);
+        if (this.refreshId !== undefined) {
+            clearInterval(this.refreshId);
+        }
         super.clear();
     }
 }

@@ -6,6 +6,7 @@ import MessageHandler from './handlers/message-handler';
 import JoinHandler from './handlers/join-handler';
 import FullHandler from './handlers/full-handler';
 import SignalHandler from './handlers/signal-handler';
+import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 
@@ -19,6 +20,7 @@ interface MessageHandlers {
     join: typeof JoinHandler;
     full: typeof FullHandler;
     signal: typeof SignalHandler;
+    playerGetAll: typeof PlayerGetAllHandler;
     playerAdd: typeof PlayerAddHandler;
     playerRemove: typeof PlayerRemoveHandler;
 }
@@ -28,6 +30,7 @@ const messageHandlers: MessageHandlers = {
     join: JoinHandler,
     full: FullHandler,
     signal: SignalHandler,
+    playerGetAll: PlayerGetAllHandler,
     playerAdd: PlayerAddHandler,
     playerRemove: PlayerRemoveHandler
 };
