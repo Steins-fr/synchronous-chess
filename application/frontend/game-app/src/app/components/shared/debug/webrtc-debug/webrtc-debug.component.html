@@ -1,14 +1,14 @@
 <ng-container *ngIf="roomService.isActive | async">
     <section id="debug" *ngFor="let remotePlayer of roomService.players | keyvalue">
         <ng-container *ngIf="remotePlayer.value.isLocal() === false">
-            <h4>Debug for connection with {{ remotePlayer.value.name }}</h4>
+            <h4>Debug connexion du joueur : {{ remotePlayer.value.name }}</h4>
             <app-debug-webrtc-states [states]="remotePlayer.value.states | async"
                 [playerName]="remotePlayer.value.name">
             </app-debug-webrtc-states>
         </ng-container>
     </section>
     <section id="debug" *ngFor="let negotiator of roomService.roomManager.negotiators | keyvalue">
-        <h4>Debug for connection with {{ negotiator.value.name }}</h4>
+        <h4>Debug connexion du négociateur : {{ negotiator.value.playerName }}</h4>
         <app-debug-webrtc-states [states]="negotiator.value.states | async" [playerName]="negotiator.value.playerName">
         </app-debug-webrtc-states>
     </section>
