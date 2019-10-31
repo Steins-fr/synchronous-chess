@@ -1,8 +1,12 @@
 <div class="row" *ngIf="roomService.waitingRoomInformation()">
-    <label>Nom de la salle</label>
-    <input [(ngModel)]="roomName" />
-    <label>Nom du joueur</label>
-    <input [(ngModel)]="playerName" />
-    <button id="host-room" (click)="hostRoom()">Nouvelle</button>
-    <button id="host-room" (click)="joinRoom()">Rejoindre</button>
+    <mat-form-field class="example-full-width">
+        <input matInput [(ngModel)]="roomName" placeholder="Nom de la salle" />
+    </mat-form-field>
+
+    <mat-form-field class="example-full-width">
+        <input matInput [(ngModel)]="playerName" placeholder="Nom du joueur" />
+    </mat-form-field>
+
+    <button mat-stroked-button color="primary" id="host-room" (click)="hostRoom()">Nouvelle</button>
+    <button mat-stroked-button color="primary" id="host-room" (click)="joinRoom()">Rejoindre</button>
 </div>

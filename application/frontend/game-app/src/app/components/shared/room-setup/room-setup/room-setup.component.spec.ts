@@ -2,6 +2,9 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RoomSetupComponent } from './room-setup.component';
 import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 describe('RoomSetupComponent', () => {
     let component: RoomSetupComponent;
@@ -11,7 +14,10 @@ describe('RoomSetupComponent', () => {
         TestBed.configureTestingModule({
             declarations: [RoomSetupComponent],
             imports: [
-                FormsModule
+                FormsModule,
+                MatFormFieldModule,
+                MatInputModule,
+                MatButtonModule
             ]
         })
             .compileComponents();
