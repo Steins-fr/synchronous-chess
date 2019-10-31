@@ -6,16 +6,18 @@ import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
 import PlayerRequest from 'src/interfaces/player-request';
+import PlayersRequest from 'src/interfaces/players-request';
 import { RoomService, ConnectionService, ExceptionType } from '/opt/nodejs/room-manager';
 import FullRequest from 'src/interfaces/full-request';
 
-type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest | FullRequest;
+type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest | PlayersRequest | FullRequest;
 
 export enum RequestPayloadType {
     SIGNAL = 'signal',
     CREATE = 'create',
     JOIN = 'join',
     FULL = 'full',
+    PLAYER_GET_ALL = 'playerGetAll',
     PLAYER_ADD = 'playerAdd',
     PLAYER_REMOVE = 'playerRemove'
 }
@@ -28,6 +30,7 @@ export enum ResponsePayloadType {
     CREATE = 'created',
     JOIN = 'joinRequest',
     JOINING = 'joiningRoom',
+    PLAYERS = 'players',
     ADDED = 'added',
     REMOVED = 'removed',
     ERROR = 'error'

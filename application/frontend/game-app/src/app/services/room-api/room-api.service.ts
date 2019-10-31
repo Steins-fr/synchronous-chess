@@ -22,6 +22,8 @@ import { WebSocketService, SocketPayload } from '../web-socket/web-socket.servic
 import FullRequest from './requests/full-request';
 import FullResponse from './responses/full-response';
 import FullNotification from './notifications/full-notification';
+import PlayersResponse from './responses/players-response';
+import PlayersRequest from './requests/players-request';
 
 export interface PacketPayload extends SocketPayload {
     id: number;
@@ -30,6 +32,7 @@ export interface PacketPayload extends SocketPayload {
 export enum RoomApiRequestType {
     CREATE = 'create',
     JOIN = 'join',
+    PLAYER_GET_ALL = 'playerGetAll',
     PLAYER_ADD = 'playerAdd',
     PLAYER_REMOVE = 'playerRemove',
     FULL = 'full',
@@ -136,6 +139,11 @@ export class RoomApiService {
     public join(roomName: string, playerName: string): Promise<RoomJoinResponse> {
         const request: RoomJoinRequest = { roomName, playerName };
         return this.send(this.buildPacket(RoomApiRequestType.JOIN, JSON.stringify(request)));
+    }
+
+    public allPlayers(roomName: string): Promise<PlayersResponse> {
+        const request: PlayersRequest = { roomName };
+        return this.send(this.buildPacket(RoomApiRequestType.PLAYER_GET_ALL, JSON.stringify(request)));
     }
 
     public addPlayer(roomName: string, playerName: string): Promise<PlayerResponse> {
