@@ -65,7 +65,7 @@ export default class RoomRepository extends BaseRepository<Room, RoomDocument> {
 
     public removePlayerFromRoom(playerName: string, room: Room): Promise<AWS.DynamoDB.UpdateItemOutput> {
         return new Promise((resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void, reject: (value: Exception) => void): void => {
-            const index: number = room.queue.findIndex((player: Player) => player.playerName === playerName);
+            const index: number = room.players.findIndex((player: Player) => player.playerName === playerName);
             if (index === -1) {
                 reject(new BadRequestException('Player not in the room'));
                 return;

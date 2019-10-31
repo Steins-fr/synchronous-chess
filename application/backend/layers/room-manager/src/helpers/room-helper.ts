@@ -37,10 +37,10 @@ export default abstract class RoomHelper {
     }
 
     public static isInQueue(room: Room, playerName: string): boolean {
-        return !!RoomHelper.findPlayerByName(room.queue, playerName);
+        return RoomHelper.findPlayerByName(room.queue, playerName) !== null;
     }
 
     public static isInGame(room: Room, playerName: string): boolean {
-        return !!RoomHelper.findPlayerByName(room.players, playerName);
+        return RoomHelper.findPlayerByName(room.players, playerName) !== null;
     }
 }
