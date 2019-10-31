@@ -20,23 +20,30 @@ export class HostRoomManager extends RoomManager {
 
     protected initiator: boolean = true;
     private roomName?: string;
+    private maxPlayer?: number;
 
     public constructor(roomApi: RoomApiService) {
         super(roomApi);
         this.roomApi.followNotification(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
     }
 
-    public async create(roomName: string, playerName: string): Promise<RoomCreateResponse> {
-        const response: RoomCreateResponse = await this.roomApi.create(roomName, 6, playerName); // TODO: 6
+    public async create(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
+        const response: RoomCreateResponse = await this.roomApi.create(roomName, maxPlayer, playerName);
         this.roomName = roomName;
+        this.maxPlayer = maxPlayer;
         this.setLocalPlayer(playerName);
         return response;
     }
 
     private onJoinNotification(data: JoinNotification): void {
-        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
-        negotiator.initiate();
-        this.addNegotiator(negotiator);
+        const nbPlayers: number = this.players.size + this.negotiators.size;
+        if (nbPlayers >= this.maxPlayer) {
+            this.roomApi.full(data.playerName, this.roomName).catch((err: string) => console.error(err));
+        } else {
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
+            negotiator.initiate();
+            this.addNegotiator(negotiator);
+        }
     }
 
     protected transmitNewPlayer(playerName: string): void {

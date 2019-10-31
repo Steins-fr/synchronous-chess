@@ -67,17 +67,17 @@ export class RoomService {
         this.roomManager.transmitMessage(roomServiceMessage);
     }
 
-    private createRoom(roomName: string, playerName: string): void {
+    public createRoom(roomName: string, playerName: string, maxPlayer: number): void {
         const hostRoom: HostRoomManager = new HostRoomManager(this.roomApi);
         hostRoom.setup(this._onMessage);
-        hostRoom.create(roomName, playerName)
+        hostRoom.create(roomName, playerName, maxPlayer)
             .then(() => this.finalizeSetup(roomName, hostRoom))
             .catch(() => {
                 hostRoom.clear();
             });
     }
 
-    private joinRoom(roomName: string, playerName: string): void {
+    public joinRoom(roomName: string, playerName: string): void {
         const peerRoom: PeerRoomManager = new PeerRoomManager(this.roomApi);
         peerRoom.setup(this._onMessage);
         peerRoom.join(roomName, playerName)
@@ -92,10 +92,6 @@ export class RoomService {
         this.roomName = roomName;
         this.ngZone.run(() => this._isActive.next(true));
         this.roomManagerEventSub = this.roomManager.events.subscribe((event: RoomEvent) => this.handleRoomEvent(event));
-    }
-
-    public enterRoom(host: boolean, roomName: string, playerName: string): void {
-        host ? this.createRoom(roomName, playerName) : this.joinRoom(roomName, playerName);
     }
 
     private handleRoomEvent(event: RoomEvent): void {

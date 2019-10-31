@@ -19,6 +19,9 @@ import SignalNotification from './notifications/signal-notification';
 import JoinNotification from './notifications/join-notification';
 
 import { WebSocketService, SocketPayload } from '../web-socket/web-socket.service';
+import FullRequest from './requests/full-request';
+import FullResponse from './responses/full-response';
+import FullNotification from './notifications/full-notification';
 
 export interface PacketPayload extends SocketPayload {
     id: number;
@@ -29,6 +32,7 @@ export enum RoomApiRequestType {
     JOIN = 'join',
     PLAYER_ADD = 'playerAdd',
     PLAYER_REMOVE = 'playerRemove',
+    FULL = 'full',
     SIGNAL = 'signal'
 }
 
@@ -38,15 +42,17 @@ export enum RoomApiResponseType {
     ADDED = 'added',
     REMOVED = 'removed',
     SIGNAL_SENT = 'signalSent',
+    FULL_SENT = 'fullSent',
     CREATE = 'created'
 }
 
 export enum RoomApiNotificationType {
+    FULL = 'full',
     JOIN_REQUEST = 'joinRequest',
     REMOTE_SIGNAL = 'remoteSignal'
 }
 
-type RoomApiNotification = SignalNotification | JoinNotification;
+type RoomApiNotification = SignalNotification | JoinNotification | FullNotification;
 export type NotifyCallback = (data: RoomApiNotification) => void;
 type RequestId = number;
 
@@ -145,6 +151,11 @@ export class RoomApiService {
     public signal(signal: Signal, to: string, roomName: string): Promise<SignalResponse> {
         const request: SignalRequest = { signal, to, roomName };
         return this.send(this.buildPacket(RoomApiRequestType.SIGNAL, JSON.stringify(request)));
+    }
+
+    public full(to: string, roomName: string): Promise<FullResponse> {
+        const request: FullRequest = { to, roomName };
+        return this.send(this.buildPacket(RoomApiRequestType.FULL, JSON.stringify(request)));
     }
 
     private send<T>(payload: PacketPayload): Promise<T> {

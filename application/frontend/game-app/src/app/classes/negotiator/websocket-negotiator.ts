@@ -1,8 +1,9 @@
 import { Webrtc, Signal } from '../webrtc/webrtc';
-import { Negotiator } from './negotiator';
+import { Negotiator, NegotiatorEventType } from './negotiator';
 
 import { RoomApiService, RoomApiNotificationType } from 'src/app/services/room-api/room-api.service';
 import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
+import FullNotification from 'src/app/services/room-api/notifications/full-notification';
 
 export class WebsocketNegotiator extends Negotiator {
 
@@ -11,6 +12,13 @@ export class WebsocketNegotiator extends Negotiator {
 
         super(playerName, webRTC);
         this.roomApi.followNotification(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
+        this.roomApi.followNotification(RoomApiNotificationType.FULL, this, (data: FullNotification) => this.onFull(data));
+    }
+
+    private onFull(data: FullNotification): void {
+        if (data.from === this.playerName) {
+            this.pushEvent(NegotiatorEventType.DISCONNECTED);
+        }
     }
 
     private onRemoteSignal(data: SignalNotification): void {
@@ -24,6 +32,7 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     public clear(): void {
+        this.roomApi.unfollowNotification(RoomApiNotificationType.FULL, this);
         this.roomApi.unfollowNotification(RoomApiNotificationType.REMOTE_SIGNAL, this);
         super.clear();
     }

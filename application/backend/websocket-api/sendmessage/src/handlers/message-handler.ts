@@ -1,19 +1,21 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import RequestPayload from 'src/interfaces/request-payload';
+import ResponsePayload from 'src/interfaces/response-payload';
 import ErrorResponse from 'src/interfaces/error-response';
 import JoinRequest from 'src/interfaces/join-request';
 import CreateRequest from 'src/interfaces/create-request';
 import SignalRequest from 'src/interfaces/signal-request';
 import PlayerRequest from 'src/interfaces/player-request';
 import { RoomService, ConnectionService, ExceptionType } from '/opt/nodejs/room-manager';
-import ResponsePayload from 'src/interfaces/response-payload';
+import FullRequest from 'src/interfaces/full-request';
 
-type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest;
+type RequestType = JoinRequest | CreateRequest | SignalRequest | PlayerRequest | FullRequest;
 
 export enum RequestPayloadType {
     SIGNAL = 'signal',
     CREATE = 'create',
     JOIN = 'join',
+    FULL = 'full',
     PLAYER_ADD = 'playerAdd',
     PLAYER_REMOVE = 'playerRemove'
 }
@@ -21,6 +23,8 @@ export enum RequestPayloadType {
 export enum ResponsePayloadType {
     REMOTE_SIGNAL = 'remoteSignal',
     SIGNAL_SENT = 'signalSent',
+    FULL_SENT = 'fullSent',
+    FULL = 'full',
     CREATE = 'created',
     JOIN = 'joinRequest',
     JOINING = 'joiningRoom',

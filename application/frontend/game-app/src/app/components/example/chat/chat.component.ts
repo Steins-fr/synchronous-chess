@@ -19,6 +19,7 @@ export class ChatComponent implements OnDestroy {
     private readonly subs: Array<Subscription> = [];
     public sendInput: string = '';
     public chat: Array<string> = [];
+    public maxPlayer: number = 6;
 
     public constructor(
         public roomService: RoomService,
