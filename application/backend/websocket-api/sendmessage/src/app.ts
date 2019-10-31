@@ -4,6 +4,7 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import CreateHandler from './handlers/create-handler';
 import MessageHandler from './handlers/message-handler';
 import JoinHandler from './handlers/join-handler';
+import FullHandler from './handlers/full-handler';
 import SignalHandler from './handlers/signal-handler';
 import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
@@ -16,6 +17,7 @@ interface Response {
 interface MessageHandlers {
     create: typeof CreateHandler;
     join: typeof JoinHandler;
+    full: typeof FullHandler;
     signal: typeof SignalHandler;
     playerAdd: typeof PlayerAddHandler;
     playerRemove: typeof PlayerRemoveHandler;
@@ -24,6 +26,7 @@ interface MessageHandlers {
 const messageHandlers: MessageHandlers = {
     create: CreateHandler,
     join: JoinHandler,
+    full: FullHandler,
     signal: SignalHandler,
     playerAdd: PlayerAddHandler,
     playerRemove: PlayerRemoveHandler

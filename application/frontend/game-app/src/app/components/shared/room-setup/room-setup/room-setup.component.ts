@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { RoomService } from 'src/app/services/room/room.service';
 
 @Component({
@@ -8,6 +8,7 @@ import { RoomService } from 'src/app/services/room/room.service';
 })
 export class RoomSetupComponent implements OnInit {
 
+    @Input() private readonly maxPlayer: number;
     public roomName: string;
     public playerName: string;
 
@@ -22,7 +23,11 @@ export class RoomSetupComponent implements OnInit {
     }
 
     private enterRoom(isHost: boolean): void {
-        this.roomService.enterRoom(isHost, this.roomName, this.playerName);
+        if (isHost) {
+            this.roomService.createRoom(this.roomName, this.playerName, this.maxPlayer);
+        } else {
+            this.roomService.joinRoom(this.roomName, this.playerName);
+        }
     }
 
     public joinRoom(): void {

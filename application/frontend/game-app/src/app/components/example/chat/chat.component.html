@@ -1,6 +1,6 @@
 <div class="channel">
     <h3>Webrtc chat</h3>
-    <app-room-setup></app-room-setup>
+    <app-room-setup [maxPlayer]="maxPlayer"></app-room-setup>
     <ng-container *ngIf="roomService.isActive | async">
         <div class="row">
             Entrain de rejoindre :
