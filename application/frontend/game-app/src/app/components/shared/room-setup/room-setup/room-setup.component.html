@@ -1,10 +1,10 @@
 <div class="row" *ngIf="roomService.waitingRoomInformation()">
-    <mat-form-field class="example-full-width">
-        <input matInput [(ngModel)]="roomName" placeholder="Nom de la salle" />
+    <mat-form-field>
+        <input matInput type="text" name="room-name" [(ngModel)]="roomName" placeholder="Nom de la salle" autocomplete="off" />
     </mat-form-field>
 
-    <mat-form-field class="example-full-width">
-        <input matInput [(ngModel)]="playerName" placeholder="Nom du joueur" />
+    <mat-form-field>
+        <input matInput type="text" name="player" [(ngModel)]="playerName" placeholder="Nom du joueur" autocomplete="off"/>
     </mat-form-field>
 
     <button mat-stroked-button color="primary" id="host-room" (click)="hostRoom()">Nouvelle</button>
