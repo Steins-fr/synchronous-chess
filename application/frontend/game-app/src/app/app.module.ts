@@ -18,6 +18,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @NgModule({
     declarations: [
@@ -35,7 +36,8 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
-        ScrollingModule
+        ScrollingModule,
+        MatProgressSpinnerModule
     ],
     providers: [RoomService, RoomApiService, WebSocketService],
     bootstrap: [AppComponent]
