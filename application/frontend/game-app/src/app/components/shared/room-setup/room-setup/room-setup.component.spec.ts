@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 describe('RoomSetupComponent', () => {
     let component: RoomSetupComponent;
@@ -17,7 +18,8 @@ describe('RoomSetupComponent', () => {
                 FormsModule,
                 MatFormFieldModule,
                 MatInputModule,
-                MatButtonModule
+                MatButtonModule,
+                MatProgressSpinnerModule
             ]
         })
             .compileComponents();

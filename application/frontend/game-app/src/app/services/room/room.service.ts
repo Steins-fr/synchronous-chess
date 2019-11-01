@@ -16,6 +16,8 @@ import { Player } from 'src/app/classes/player/player';
 import RoomPlayerRemoveEvent from 'src/app/classes/room-manager/events/room-player-remove-event';
 import RoomQueueAddEvent from 'src/app/classes/room-manager/events/room-queue-add-event';
 import RoomQueueRemoveEvent from 'src/app/classes/room-manager/events/room-queue-remove-event';
+import RoomCreateResponse from '../room-api/responses/room-create-response';
+import RoomJoinResponse from '../room-api/responses/room-join-response';
 
 interface RoomEventHandlers {
     playerAdd: (event: RoomPlayerAddEvent) => void;
@@ -73,24 +75,30 @@ export class RoomService {
         return this.roomManager !== undefined;
     }
 
-    public createRoom(roomName: string, playerName: string, maxPlayer: number): void {
+    public async createRoom(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
         const hostRoom: HostRoomManager = new HostRoomManager(this.roomApi);
         hostRoom.setup(this._onMessage);
-        hostRoom.create(roomName, playerName, maxPlayer)
-            .then(() => this.finalizeSetup(roomName, hostRoom))
-            .catch(() => {
-                hostRoom.clear();
-            });
+        try {
+            const response: RoomCreateResponse = await hostRoom.create(roomName, playerName, maxPlayer);
+            this.finalizeSetup(roomName, hostRoom);
+            return response;
+        } catch (err) {
+            hostRoom.clear();
+            return Promise.reject(err);
+        }
     }
 
-    public joinRoom(roomName: string, playerName: string): void {
+    public async joinRoom(roomName: string, playerName: string): Promise<RoomJoinResponse> {
         const peerRoom: PeerRoomManager = new PeerRoomManager(this.roomApi);
         peerRoom.setup(this._onMessage);
-        peerRoom.join(roomName, playerName)
-            .then(() => this.finalizeSetup(roomName, peerRoom))
-            .catch(() => {
-                peerRoom.clear();
-            });
+        try {
+            const response: RoomJoinResponse = await peerRoom.join(roomName, playerName);
+            this.finalizeSetup(roomName, peerRoom);
+            return response;
+        } catch (err) {
+            peerRoom.clear();
+            return Promise.reject(err);
+        }
     }
 
     private finalizeSetup(roomName: string, roomManager: RoomManager): void {
