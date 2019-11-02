@@ -1,42 +1,41 @@
 <div id="chat-app">
     <h3>Webrtc chat</h3>
     <app-room-setup [maxPlayer]="maxPlayer"></app-room-setup>
-    <ng-container *ngIf="roomService.isActive | async">
-        <h4>Salle ({{ roomService.roomName }}) - Pseudo ({{ roomService.localPlayer?.name }}) - Dans
-            la salle :
-            <ng-container *ngFor="let participant of roomService.players | keyvalue; let isFirst = first;">
-                {{ isFirst ? '' : '-'}} {{ participant.key }}
-            </ng-container>
-        </h4>
-        <div>
-            Entrain de rejoindre :&nbsp;
-            <span *ngFor="let playerName of roomService.queue; let isFirst = first;">
-                {{ isFirst ? '' : '-'}} {{ playerName }}
-            </span>
-        </div>
-    </ng-container>
-    <div id="chat">
-        <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
-            <div *cdkVirtualFor="let chatEntry of chat" class="chat-message">
-                <span class="author" [ngClass]="{'my-message': chatEntry.author === roomService.localPlayer?.name}">
-                    {{ chatEntry.author }} :</span>
-                {{ chatEntry.message }}
+    <h4 *ngIf="roomService.isActive | async">Salle ({{ roomService.roomName }})</h4>
+    <div id="chat-container">
+        <div id="chat">
+            <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
+                <div *cdkVirtualFor="let chatEntry of chat" class="chat-message">
+                    <span class="author" [ngClass]="{'my-message': chatEntry.author === roomService.localPlayer?.name}">
+                        {{ chatEntry.author }} :</span>
+                    {{ chatEntry.message }}
+                </div>
+            </cdk-virtual-scroll-viewport>
+            <div id="new-message-notification" class="chat-notification" *ngIf="newMessage > 0">
+                <button mat-flat-button color="primary" (click)="scrollDown(true)">
+                    <span>{{ newMessage }} nouveaux messages</span>
+                    <span>Voir.</span>
+                </button>
             </div>
-        </cdk-virtual-scroll-viewport>
-        <div id="new-message-notification" class="chat-notification" *ngIf="newMessage > 0">
-            <button mat-flat-button color="primary" (click)="scrollDown(true)">
-                <span>{{ newMessage }} nouveaux messages</span>
-                <span>Voir.</span>
-            </button>
+            <div id="history-notification" class="chat-notification" *ngIf="viewingHistory">
+                <button mat-flat-button color="primary" (click)="scrollDown(true)">
+                    <span>Tu es entrain de regarder des anciens messages.</span>
+                    <span>Revenir aux messages les plus récents.</span>
+                </button>
+            </div>
         </div>
-        <div id="history-notification" class="chat-notification" *ngIf="viewingHistory">
-            <button mat-flat-button color="primary" (click)="scrollDown(true)">
-                <span>Tu es entrain de regarder des anciens messages.</span>
-                <span>Revenir aux messages les plus récents.</span>
-            </button>
+        <div id="player-list">
+            <h4 class="list-title">Participants</h4>
+            <mat-chip-list class="mat-chip-list-stacked">
+                <app-chat-participant *ngFor="let participant of roomService.players | keyvalue"
+                    [player]="participant.value"></app-chat-participant>
+                <mat-chip *ngFor="let playerName of roomService.queue">
+                    {{ playerName }}
+                </mat-chip>
+            </mat-chip-list>
         </div>
-
     </div>
+
 
     <div id="send-form">
         <mat-form-field>

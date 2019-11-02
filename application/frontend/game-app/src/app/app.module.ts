@@ -19,6 +19,9 @@ import { MatButtonModule } from '@angular/material/button';
 
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { ParticipantComponent } from './components/chat/participant/participant.component';
+
 
 @NgModule({
     declarations: [
@@ -26,7 +29,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         WebrtcStatesComponent,
         ChatComponent,
         RoomSetupComponent,
-        WebrtcDebugComponent
+        WebrtcDebugComponent,
+        ParticipantComponent
     ],
     imports: [
         BrowserModule,
@@ -37,7 +41,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         MatInputModule,
         MatButtonModule,
         ScrollingModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatChipsModule
     ],
     providers: [RoomService, RoomApiService, WebSocketService],
     bootstrap: [AppComponent]

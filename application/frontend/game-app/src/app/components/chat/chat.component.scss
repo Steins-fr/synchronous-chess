@@ -2,59 +2,75 @@
     max-width: 1000px;
     margin: auto;
 
-    #chat {
-        position: relative;
-    }
-
-    #virtual-chat {
+    #chat-container {
+        display: flex;
+        flex-direction: row;
         margin-top: 10px;
-        border: gray 1px solid;
-        height: 400px;
-        display: flex;
-        flex-direction: column;
-    }
 
-    .chat-notification {
-        position: absolute;
-        width: 100%;
-        display: flex;
+        #chat {
+            position: relative;
+            flex: 4;
 
-        .mat-flat-button {
-            flex: auto;
-            line-height: 20px;
-            font-size: 12px;
-            margin: 0;
-
-            &::ng-deep .mat-button-wrapper {
-                flex: auto;
+            #virtual-chat {
+                border: gray 1px solid;
+                height: 400px;
                 display: flex;
-                flex-direction: row;
-                justify-content: space-between;
+                flex-direction: column;
+
+                .chat-message {
+                    height: 14px;
+                    padding: 3px;
+                }
+            }
+
+            .chat-notification {
+                position: absolute;
+                width: 100%;
+                display: flex;
+
+                .mat-flat-button {
+                    flex: auto;
+                    line-height: 20px;
+                    font-size: 12px;
+                    margin: 0;
+
+                    &::ng-deep .mat-button-wrapper {
+                        flex: auto;
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: space-between;
+                    }
+                }
+            }
+
+            #history-notification {
+                bottom: 0;
+
+                .mat-flat-button {
+                    border-bottom-left-radius: 0;
+                    border-bottom-right-radius: 0;
+                }
+            }
+
+            #new-message-notification {
+                top: 0;
+
+                .mat-flat-button {
+                    border-top-left-radius: 0;
+                    border-top-right-radius: 0;
+                }
             }
         }
-    }
 
-    #history-notification {
-        bottom: 0;
+        #player-list {
+            border: gray 1px solid;
+            flex: 1;
+            padding: 5px 18px 5px 10px;
 
-        .mat-flat-button {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
+            .list-title {
+                text-align: center;
+            }
         }
-    }
-
-    #new-message-notification {
-        top: 0;
-
-        .mat-flat-button {
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-        }
-    }
-
-    .chat-message {
-        height: 14px;
-        padding: 3px;
     }
 
     #send-form {
