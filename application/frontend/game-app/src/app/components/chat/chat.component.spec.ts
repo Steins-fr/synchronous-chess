@@ -11,6 +11,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
+import { ParticipantComponent } from './participant/participant.component';
 
 describe('ChatComponent', () => {
     let component: ChatComponent;
@@ -22,7 +24,8 @@ describe('ChatComponent', () => {
                 ChatComponent,
                 WebrtcDebugComponent,
                 WebrtcStatesComponent,
-                RoomSetupComponent
+                RoomSetupComponent,
+                ParticipantComponent
             ],
             imports: [
                 FormsModule,
@@ -31,7 +34,8 @@ describe('ChatComponent', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                MatProgressSpinnerModule
+                MatProgressSpinnerModule,
+                MatChipsModule
             ]
         })
             .compileComponents();
