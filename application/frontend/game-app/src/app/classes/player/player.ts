@@ -120,7 +120,7 @@ export class Player {
         const performances: Array<PerformanceEntry> = window.performance.getEntriesByName(measureName, 'measure');
         if (performances.length > 0) {
             const performance: PerformanceEntry = performances.shift();
-            this.ping.next(performance.duration.toFixed(1));
+            this.ping.next((performance.duration / 2.0).toFixed(1));
         }
         window.performance.clearMarks(pingMark);
         window.performance.clearMarks(pongMark);
