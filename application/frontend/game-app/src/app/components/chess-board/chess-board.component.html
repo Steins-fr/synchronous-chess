@@ -1,0 +1,24 @@
+<div id="board">
+    <div class="row">
+        <div id="fake-column"></div>
+        <div id="column-labels">
+            <div *ngFor="let i of 8 | range">
+                <span class="full-center">{{ 'ABCDEFGH'.charAt(i)}}</span>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div id="row-labels">
+            <div *ngFor="let i of 8 | range;">
+                <span class="full-center">{{ 8 - i }}</span>
+            </div>
+        </div>
+        <div id="board-grid">
+            <mat-grid-list cols="8">
+                <mat-grid-tile *ngFor="let i of 64 | range">
+                </mat-grid-tile>
+            </mat-grid-list>
+        </div>
+    </div>
+
+</div>
