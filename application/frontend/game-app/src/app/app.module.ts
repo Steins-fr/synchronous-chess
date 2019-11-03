@@ -21,6 +21,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { ParticipantComponent } from './components/chat/participant/participant.component';
+import { RangePipe } from './pipes/range.pipe';
 
 
 @NgModule({
@@ -30,7 +31,8 @@ import { ParticipantComponent } from './components/chat/participant/participant.
         ChatComponent,
         RoomSetupComponent,
         WebrtcDebugComponent,
-        ParticipantComponent
+        ParticipantComponent,
+        RangePipe
     ],
     imports: [
         BrowserModule,
