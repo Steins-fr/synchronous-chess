@@ -21,6 +21,8 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { ParticipantComponent } from './components/chat/participant/participant.component';
+import { ChessBoardComponent } from './components/chess-board/chess-board.component';
+import { MatGridListModule } from '@angular/material/grid-list';
 import { RangePipe } from './pipes/range.pipe';
 
 
@@ -32,6 +34,7 @@ import { RangePipe } from './pipes/range.pipe';
         RoomSetupComponent,
         WebrtcDebugComponent,
         ParticipantComponent,
+        ChessBoardComponent,
         RangePipe
     ],
     imports: [
@@ -44,7 +47,8 @@ import { RangePipe } from './pipes/range.pipe';
         MatButtonModule,
         ScrollingModule,
         MatProgressSpinnerModule,
-        MatChipsModule
+        MatChipsModule,
+        MatGridListModule
     ],
     providers: [RoomService, RoomApiService, WebSocketService],
     bootstrap: [AppComponent]
