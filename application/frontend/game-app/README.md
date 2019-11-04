@@ -1,6 +1,8 @@
-# SynchronousChessApp
+# Synchronous Chess Game
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.3.2.
+
+Requirement: Websocket API deployed. It is difficult to host locally a Websocket API that mimic AWS services.
 
 ## Development server
 
@@ -12,15 +14,20 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Run `yarn build` to build the project. The build artifacts will be stored in the `dist/` directory. 
+
+Use the `yarn build:staging` for a staging build.
+
+Use the `yarn build:prod` for a production build.
 
 ## Running unit tests
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Run `yarn test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
 ## Running end-to-end tests
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+Run `yarn e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+There isn't e2e tests.
 
 ## Further help
 

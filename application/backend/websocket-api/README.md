@@ -1,30 +1,11 @@
-# synchronous-chess-websockets-app
+# Websocket Room API
 
-## Deploying to your account - AWS CLI commands
+## Build
 
-Install the [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html) and use it to package, deploy, and describe the application. These are the commands you'll need to use:
+Required: Room Manager Layer build artefacts because the lambdas imports build types from the `dist/` layer folder.
 
-```
-yarn package
-yarn deploy
-yarn describe
-```
+For each lambdas, go into the lambda repository then run `yarn build` to build the project. The build artifacts will be stored in the `dist/` directory. 
 
-## Testing the chat API
+## Development server
 
-To test the WebSocket API, use [wscat](https://github.com/websockets/wscat), an open-source command line tool.
-
-Install wscat:
-``` bash
-$ npm install -g wscat
-```
-
-Run test:
-```bash
-yarn ws
-```
-connected (press CTRL+C to quit)
-```
-> {"message":"sendmessage", "data":"hello world"}
-< hello world
-```
+It is difficult to host locally a Websocket API that mimic AWS services. So prefer deploying the app to a AWS development environment with terraform.
