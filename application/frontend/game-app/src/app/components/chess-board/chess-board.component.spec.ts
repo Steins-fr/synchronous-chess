@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChessBoardComponent } from './chess-board.component';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { RangePipe } from 'src/app/pipes/range.pipe';
+import { PieceComponent } from './piece/piece.component';
 
 describe('ChessBoardComponent', () => {
     let component: ChessBoardComponent;
@@ -10,7 +11,10 @@ describe('ChessBoardComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [ChessBoardComponent, RangePipe],
+            declarations: [
+                ChessBoardComponent,
+                PieceComponent,
+                RangePipe],
             imports: [MatGridListModule]
         })
             .compileComponents();
