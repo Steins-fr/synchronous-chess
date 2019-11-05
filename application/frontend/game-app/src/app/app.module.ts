@@ -24,6 +24,7 @@ import { ParticipantComponent } from './components/chat/participant/participant.
 import { ChessBoardComponent } from './components/chess-board/chess-board.component';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { RangePipe } from './pipes/range.pipe';
+import { PieceComponent } from './components/chess-board/piece/piece.component';
 
 
 @NgModule({
@@ -35,7 +36,8 @@ import { RangePipe } from './pipes/range.pipe';
         WebrtcDebugComponent,
         ParticipantComponent,
         ChessBoardComponent,
-        RangePipe
+        RangePipe,
+        PieceComponent
     ],
     imports: [
         BrowserModule,

@@ -15,7 +15,8 @@
         </div>
         <div id="board-grid">
             <mat-grid-list cols="8">
-                <mat-grid-tile *ngFor="let i of 64 | range">
+                <mat-grid-tile *ngFor="let cell of cells">
+                    <app-board-piece [piece]="cell" *ngIf="cell"></app-board-piece>
                 </mat-grid-tile>
             </mat-grid-list>
         </div>
