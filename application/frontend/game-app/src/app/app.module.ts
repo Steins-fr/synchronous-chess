@@ -25,6 +25,7 @@ import { ChessBoardComponent } from './components/chess-board/chess-board.compon
 import { MatGridListModule } from '@angular/material/grid-list';
 import { RangePipe } from './pipes/range.pipe';
 import { PieceComponent } from './components/chess-board/piece/piece.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 
 @NgModule({
@@ -50,7 +51,8 @@ import { PieceComponent } from './components/chess-board/piece/piece.component';
         ScrollingModule,
         MatProgressSpinnerModule,
         MatChipsModule,
-        MatGridListModule
+        MatGridListModule,
+        DragDropModule
     ],
     providers: [RoomService, RoomApiService, WebSocketService],
     bootstrap: [AppComponent]
