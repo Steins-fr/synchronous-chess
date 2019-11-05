@@ -61,6 +61,21 @@
                     &:nth-of-type(16n + 15) {
                         background-color: rgb(60, 77, 175);
                     }
+
+                    .cell {
+                        width: 100%;
+                        height: 100%;
+
+                        &.dragHover {
+                            background-color: yellow;
+                        }
+                    }
+
+                    .hidden-placeholder {
+                        display: block;
+                        height: 0;
+                        width: 0;
+                    }
                 }
             }
         }
