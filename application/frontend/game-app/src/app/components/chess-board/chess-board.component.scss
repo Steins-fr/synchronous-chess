@@ -18,14 +18,14 @@
         }
 
         #fake-column {
-            flex: 1;
+            width: 30px;
         }
 
         #column-labels {
             display: flex;
             flex-direction: row;
             height: 30px;
-            flex: 15;
+            width: 100%;
 
             >div {
                 flex: auto;
@@ -35,7 +35,7 @@
         #row-labels {
             display: flex;
             flex-direction: column;
-            flex: 1;
+            width: 30px;
 
             >div {
                 flex: auto;
