@@ -19,13 +19,15 @@
                     <ng-container *ngFor="let cell of row; let x = index;">
                         <mat-grid-tile *ngIf="[x, y] | vector2d as pos">
                             <div cdkDropList class="cell" [ngClass]="{
-                                                'dragHover': cell.dragHover,
-                                                'dragged': pieceDragged.equal(pos)}" (cdkDropListDropped)="drop(pos)"
-                                (cdkDropListEntered)="dragEntered(pos)" (cdkDropListExited)="dragExited(pos)">
+                                                'drag-hover': cellHovered.equal(pos),
+                                                'dragged': pieceDragged.equal(pos),
+                                                'valid-move': cell.validMove}"
+                                (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
+                                (cdkDropListEntered)="dragEntered(pos)">
                                 <app-board-piece cdkDrag [piece]="cell.piece" *ngIf="cell.piece"
                                     cdkDragBoundary="#board-grid"
                                     [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}"
-                                    (cdkDragStarted)="dragStart(pos)">
+                                    (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)">
                                     <div class="hidden-placeholder" *cdkDragPlaceholder></div>
                                 </app-board-piece>
                             </div>
