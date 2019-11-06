@@ -66,12 +66,16 @@
                         width: 100%;
                         height: 100%;
 
-                        &.dragHover {
+                        &.drag-hover {
                             background-color: yellow;
                         }
 
                         &.dragged {
                             background-color: darkgoldenrod;
+                        }
+
+                        &.valid-move {
+                            background-color: greenyellow;
                         }
                     }
 

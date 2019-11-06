@@ -27,6 +27,7 @@ import { RangePipe } from './pipes/range.pipe';
 import { PieceComponent } from './components/chess-board/piece/piece.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { Vector2dPipe } from './pipes/vector2d.pipe';
+import { SyncChessGameComponent } from './components/sync-chess-game/sync-chess-game.component';
 
 
 @NgModule({
@@ -40,7 +41,8 @@ import { Vector2dPipe } from './pipes/vector2d.pipe';
         ChessBoardComponent,
         RangePipe,
         PieceComponent,
-        Vector2dPipe
+        Vector2dPipe,
+        SyncChessGameComponent
     ],
     imports: [
         BrowserModule,
