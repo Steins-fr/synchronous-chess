@@ -17,4 +17,19 @@ describe('Knight', () => {
         expect(whitePiece.color).toEqual(PieceColor.WHITE);
         expect(whitePiece.type).toEqual(PieceType.KNIGHT);
     });
+
+    it('should initialize movements', () => {
+        // Given When
+        const piece: Piece = new Knight(PieceColor.BLACK);
+
+        // Then
+        expect(piece.moves[0].vector.equal(1, 2)).toBeTruthy();
+        expect(piece.moves[1].vector.equal(2, 1)).toBeTruthy();
+        expect(piece.moves[2].vector.equal(-1, 2)).toBeTruthy();
+        expect(piece.moves[3].vector.equal(2, -1)).toBeTruthy();
+        expect(piece.moves[4].vector.equal(1, -2)).toBeTruthy();
+        expect(piece.moves[5].vector.equal(-2, 1)).toBeTruthy();
+        expect(piece.moves[6].vector.equal(-1, -2)).toBeTruthy();
+        expect(piece.moves[7].vector.equal(-2, -1)).toBeTruthy();
+    });
 });

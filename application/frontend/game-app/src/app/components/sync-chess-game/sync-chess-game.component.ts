@@ -8,6 +8,8 @@ import Queen from 'src/app/classes/chess/piece/pieces/queen';
 import King from 'src/app/classes/chess/piece/pieces/king';
 import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
 import Vec2 from 'vec2';
+import Move from 'src/app/classes/chess/moves/move';
+import ChessHelper from 'src/app/helpers/chess-helper';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -57,9 +59,22 @@ export class SyncChessGameComponent {
 
     public piecePicked(cellPos: Vec2): void {
         this.playedPiece = cellPos;
+
+        const cell: Cell = this.getCell(this.playedPiece);
+        cell.piece.moves.forEach((move: Move) => {
+            move.possiblePlays(this.playedPiece, ChessHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
+                this.getCell(posPlay).validMove = true;
+            });
+        });
     }
 
     public pieceDropped(cellPos: Vec2): void {
         this.moveTo(cellPos);
+
+        this.resetHighligh();
+    }
+
+    private resetHighligh(): void {
+        this.cells.forEach((row: Array<Cell>) => row.forEach((cell: Cell) => cell.validMove = false));
     }
 }

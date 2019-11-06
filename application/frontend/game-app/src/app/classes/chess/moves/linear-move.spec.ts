@@ -1,0 +1,105 @@
+import LinearMove from './linear-move';
+import { FenBoard } from 'src/app/helpers/chess-helper';
+import Vec2 from 'vec2';
+import { FenPiece } from '../piece/piece';
+
+describe('LinearMove', () => {
+    it('should create an instance', () => {
+        expect(LinearMove.build([1, 1])).toBeTruthy();
+    });
+
+    it('should throw vector error', () => {
+        expect(() => LinearMove.build([0, 0])).toThrowError();
+        expect(() => LinearMove.build([1, 2])).toThrowError();
+        expect(() => LinearMove.build([2, 1])).toThrowError();
+        expect(() => LinearMove.build([-4, -4])).toThrowError();
+    });
+
+    it('should not throw vector error', () => {
+        expect(() => LinearMove.build([0, 1])).not.toThrowError();
+        expect(() => LinearMove.build([1, 0])).not.toThrowError();
+        expect(() => LinearMove.build([1, 1])).not.toThrowError();
+        expect(() => LinearMove.build([0, -1])).not.toThrowError();
+        expect(() => LinearMove.build([-1, 0])).not.toThrowError();
+        expect(() => LinearMove.build([-1, -1])).not.toThrowError();
+    });
+
+    it('should create multiple instance', () => {
+        // Given
+        const coordinate1: Array<number> = [1, 0];
+        const coordinate2: Array<number> = [1, 1];
+        // When
+        const moves: Array<LinearMove> = LinearMove.build(coordinate1, coordinate2);
+
+        // Then
+        expect(moves.length).toEqual(2);
+        expect(moves.every((move: LinearMove) => move instanceof LinearMove));
+    });
+
+    it('should initiate properties', () => {
+
+        // Given
+        const coordinate: Array<number> = [1, 0];
+
+        // When
+        const [move]: Array<LinearMove> = LinearMove.build(coordinate);
+
+        // Then
+        expect(move.vector.equal(1, 0)).toBeTruthy();
+    });
+
+    it('should return all valid plays', () => {
+
+        // Given
+        const coordinate: Array<number> = [1, 0];
+
+        const position: Vec2 = new Vec2(0, 0);
+
+        const boardBlack: FenBoard = [
+            [FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+        const boardBlackExpectedPlays: Array<Vec2> = [new Vec2(1, 0), new Vec2(2, 0), new Vec2(3, 0)];
+        const boardWhite: FenBoard = [
+            [FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+        const boardWhiteExpectedPlays: Array<Vec2> = [new Vec2(1, 0), new Vec2(2, 0), new Vec2(3, 0), new Vec2(4, 0)];
+
+        const boardEmpty: FenBoard = [
+            [FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+        const boardEmptyExpectedPlays: Array<Vec2> = [new Vec2(1, 0), new Vec2(2, 0), new Vec2(3, 0), new Vec2(4, 0), new Vec2(5, 0), new Vec2(6, 0), new Vec2(7, 0)];
+
+        const [move]: Array<LinearMove> = LinearMove.build(coordinate);
+
+        // When
+        const boardBlackPlays: Array<Vec2> = move.possiblePlays(position, boardBlack);
+        const boardWhitePlays: Array<Vec2> = move.possiblePlays(position, boardWhite);
+        const boardEmptyPlays: Array<Vec2> = move.possiblePlays(position, boardEmpty);
+
+        // Then
+        expect(boardBlackPlays).toEqual(boardBlackExpectedPlays);
+        expect(boardWhitePlays).toEqual(boardWhiteExpectedPlays);
+        expect(boardEmptyPlays).toEqual(boardEmptyExpectedPlays);
+    });
+
+    it('should throw error if the position was not valid', () => {
+
+        // Given
+        const coordinate: Array<number> = [1, 0];
+
+        const position: Vec2 = new Vec2(0, 0);
+        const badPosition: Vec2 = new Vec2(-1, -1);
+
+        const boardFullEmpty: FenBoard = [[FenPiece.EMPTY]];
+
+        const [move]: Array<LinearMove> = LinearMove.build(coordinate);
+
+        // When
+        const badCall1: () => Array<Vec2> = (): Array<Vec2> => move.possiblePlays(badPosition, boardFullEmpty);
+        const badCall2: () => Array<Vec2> = (): Array<Vec2> => move.possiblePlays(position, boardFullEmpty);
+
+        // Then
+        expect(badCall1).toThrowError();
+        expect(badCall2).toThrowError();
+    });
+});
