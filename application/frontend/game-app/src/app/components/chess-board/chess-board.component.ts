@@ -22,6 +22,7 @@ export class ChessBoardComponent {
         ...Array(8).fill(null).map(() => new Pawn(PieceColor.WHITE)).map((piece: Piece) => new Cell(piece)),
         ...ChessBoardComponent.genMainRow(PieceColor.WHITE)
     ];
+    public pieceDragged: number = -1;
 
     private static genMainRow(color: PieceColor): Array<Cell> {
         return [
@@ -36,24 +37,28 @@ export class ChessBoardComponent {
         ].map((piece: Piece) => new Cell(piece));
     }
 
-    private move(from: number, to: number): void {
+    private moveTo(to: number): void {
+        const from: number = this.pieceDragged;
         const [f, t]: Array<Piece> = [this.cells[from].piece, this.cells[to].piece];
         this.cells[from].piece = t;
         this.cells[to].piece = f;
         this.cells[to].dragHover = false;
+        this.pieceDragged = -1;
     }
 
-    public drop(event: CdkDragDrop<Array<Piece>>): void {
-        this.move(parseInt(event.previousContainer.id, 10), parseInt(event.container.id, 10));
+    public dragStart(cellId: number): void {
+        this.pieceDragged = cellId;
     }
 
-    public dragEntered(event: CdkDragDrop<Array<Piece>>): void {
-        const cellId: number = parseInt(event.container.id, 10);
+    public drop(cellId: number): void {
+        this.moveTo(cellId);
+    }
+
+    public dragEntered(cellId: number): void {
         this.cells[cellId].dragHover = true;
     }
 
-    public dragExited(event: CdkDragDrop<Array<Piece>>): void {
-        const cellId: number = parseInt(event.container.id, 10);
+    public dragExited(cellId: number): void {
         this.cells[cellId].dragHover = false;
     }
 }
