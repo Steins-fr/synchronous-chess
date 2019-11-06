@@ -1,3 +1,5 @@
+import Move from '../moves/move';
+
 export enum PieceColor {
     WHITE = 'w',
     BLACK = 'b'
@@ -12,7 +14,7 @@ export enum PieceType {
     PAWN = 'p'
 }
 
-export enum PieceFullType {
+export enum FenPiece {
     BLACK_KING = 'k',
     BLACK_QUEEN = 'q',
     BLACK_BISHOP = 'b',
@@ -30,30 +32,32 @@ export enum PieceFullType {
 
 export default abstract class Piece {
 
-    protected static readonly fullTypes: Map<PieceColor, Map<PieceType, PieceFullType>> = new Map<PieceColor, Map<PieceType, PieceFullType>>([
-        [PieceColor.BLACK, new Map<PieceType, PieceFullType>([
-            [PieceType.BISHOP, PieceFullType.BLACK_BISHOP],
-            [PieceType.KING, PieceFullType.BLACK_KING],
-            [PieceType.KNIGHT, PieceFullType.BLACK_KNIGHT],
-            [PieceType.PAWN, PieceFullType.BLACK_PAWN],
-            [PieceType.QUEEN, PieceFullType.BLACK_QUEEN],
-            [PieceType.ROOK, PieceFullType.BLACK_ROOK],
+    protected static readonly fullTypes: Map<PieceColor, Map<PieceType, FenPiece>> = new Map<PieceColor, Map<PieceType, FenPiece>>([
+        [PieceColor.BLACK, new Map<PieceType, FenPiece>([
+            [PieceType.BISHOP, FenPiece.BLACK_BISHOP],
+            [PieceType.KING, FenPiece.BLACK_KING],
+            [PieceType.KNIGHT, FenPiece.BLACK_KNIGHT],
+            [PieceType.PAWN, FenPiece.BLACK_PAWN],
+            [PieceType.QUEEN, FenPiece.BLACK_QUEEN],
+            [PieceType.ROOK, FenPiece.BLACK_ROOK],
         ])],
-        [PieceColor.WHITE, new Map<PieceType, PieceFullType>([
-            [PieceType.BISHOP, PieceFullType.WHITE_BISHOP],
-            [PieceType.KING, PieceFullType.WHITE_KING],
-            [PieceType.KNIGHT, PieceFullType.WHITE_KNIGHT],
-            [PieceType.PAWN, PieceFullType.WHITE_PAWN],
-            [PieceType.QUEEN, PieceFullType.WHITE_QUEEN],
-            [PieceType.ROOK, PieceFullType.WHITE_ROOK],
+        [PieceColor.WHITE, new Map<PieceType, FenPiece>([
+            [PieceType.BISHOP, FenPiece.WHITE_BISHOP],
+            [PieceType.KING, FenPiece.WHITE_KING],
+            [PieceType.KNIGHT, FenPiece.WHITE_KNIGHT],
+            [PieceType.PAWN, FenPiece.WHITE_PAWN],
+            [PieceType.QUEEN, FenPiece.WHITE_QUEEN],
+            [PieceType.ROOK, FenPiece.WHITE_ROOK],
         ])]
     ]);
+
+    public abstract readonly moves: Array<Move>;
 
     public constructor(public readonly color: PieceColor, public readonly type: PieceType) {
 
     }
 
-    public get fullType(): PieceFullType {
+    public get fullType(): FenPiece {
         return Piece.fullTypes.get(this.color).get(this.type);
     }
 }

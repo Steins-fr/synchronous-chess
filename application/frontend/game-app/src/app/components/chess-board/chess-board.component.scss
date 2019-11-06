@@ -67,7 +67,7 @@
                         height: 100%;
 
                         &.drag-hover {
-                            background-color: yellow;
+                            background-color: red;
                         }
 
                         &.dragged {
@@ -76,6 +76,10 @@
 
                         &.valid-move {
                             background-color: greenyellow;
+                        }
+
+                        &.valid-move.drag-hover {
+                            background-color: green;
                         }
                     }
 
