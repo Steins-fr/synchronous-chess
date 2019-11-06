@@ -960,6 +960,11 @@
   resolved "https://registry.yarnpkg.com/@types/source-list-map/-/source-list-map-0.1.2.tgz#0078836063ffaf17412349bba364087e0ac02ec9"
   integrity sha512-K5K+yml8LTo9bWJI/rECfIPrGgxdpeNbj+d53lwN4QjW1MCwlkhUms+gtdzigTeUyBr09+u8BwOIY3MXvHdcsA==
 
+"@types/vec2@^1.6.1":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@types/vec2/-/vec2-1.6.1.tgz#4f02685683f8db18b40cfb4ac56b52f76ee10831"
+  integrity sha512-8Lhxlrz3v+rb0jq3b3WApSEllsmMEQ8tmlUHKEBlOCdQUHhHU0L1BPqAJtihz/YD0bcUYygC7oHCQIB2phsLKQ==
+
 "@types/webpack-sources@^0.1.5":
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/@types/webpack-sources/-/webpack-sources-0.1.5.tgz#be47c10f783d3d6efe1471ff7f042611bd464a92"
@@ -7675,6 +7680,11 @@ vary@~1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha1-IpnwLG3tMNSllhsLn3RSShj2NPw=
+
+vec2@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/vec2/-/vec2-1.6.1.tgz#45fad8384558fb103000e48d54e60c02804d181d"
+  integrity sha512-6/1i+Z2JSglrBQYCrjogt8f2X3pFXRpFOncMBrUL+T+640+bOBRRTXvZx3HUnaGelioNmfBLUnIIKdqwjO1hHw==
 
 verror@1.10.0:
   version "1.10.0"

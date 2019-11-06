@@ -13,19 +13,25 @@
                 <span class="full-center">{{ 8 - i }}</span>
             </div>
         </div>
-        <div id="board-grid" [ngClass]="{'grabbing-cursor': pieceDragged !== -1}" cdkDropListGroup>
+        <div id="board-grid" [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}" cdkDropListGroup>
             <mat-grid-list cols="8">
-                <mat-grid-tile *ngFor="let cell of cells; let i = index;">
-                    <div cdkDropList class="cell" [ngClass]="{
-                        'dragHover': cell.dragHover,
-                        'dragged': pieceDragged === i}" (cdkDropListDropped)="drop(i)"
-                        (cdkDropListEntered)="dragEntered(i)" (cdkDropListExited)="dragExited(i)" [id]="i">
-                        <app-board-piece cdkDrag [piece]="cell.piece" *ngIf="cell.piece" cdkDragBoundary="#board-grid"
-                            [ngClass]="{'grabbing-cursor': pieceDragged !== -1}" (cdkDragStarted)="dragStart(i)">
-                            <div class="hidden-placeholder" *cdkDragPlaceholder></div>
-                        </app-board-piece>
-                    </div>
-                </mat-grid-tile>
+                <ng-container *ngFor="let row of cells; let y = index;">
+                    <ng-container *ngFor="let cell of row; let x = index;">
+                        <mat-grid-tile *ngIf="[x, y] | vector2d as pos">
+                            <div cdkDropList class="cell" [ngClass]="{
+                                                'dragHover': cell.dragHover,
+                                                'dragged': pieceDragged.equal(pos)}" (cdkDropListDropped)="drop(pos)"
+                                (cdkDropListEntered)="dragEntered(pos)" (cdkDropListExited)="dragExited(pos)">
+                                <app-board-piece cdkDrag [piece]="cell.piece" *ngIf="cell.piece"
+                                    cdkDragBoundary="#board-grid"
+                                    [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}"
+                                    (cdkDragStarted)="dragStart(pos)">
+                                    <div class="hidden-placeholder" *cdkDragPlaceholder></div>
+                                </app-board-piece>
+                            </div>
+                        </mat-grid-tile>
+                    </ng-container>
+                </ng-container>
             </mat-grid-list>
         </div>
     </div>

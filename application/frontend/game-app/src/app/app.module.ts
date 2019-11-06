@@ -26,6 +26,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { RangePipe } from './pipes/range.pipe';
 import { PieceComponent } from './components/chess-board/piece/piece.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { Vector2dPipe } from './pipes/vector2d.pipe';
 
 
 @NgModule({
@@ -38,7 +39,8 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
         ParticipantComponent,
         ChessBoardComponent,
         RangePipe,
-        PieceComponent
+        PieceComponent,
+        Vector2dPipe
     ],
     imports: [
         BrowserModule,
