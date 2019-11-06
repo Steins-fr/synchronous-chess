@@ -1,21 +1,12 @@
-  :host {
-      font-family: Roboto, Helvetica, Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
-      font-size: 14px;
-      color: #333;
-      box-sizing: border-box;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-  }
+nav a {
+    margin: 10px;
 
-  nav a {
-      margin: 10px;
+    &.active {
+        color: green;
+    }
+}
 
-      &.active {
-          color: green;
-      }
-  }
-
-  #layout {
-      max-width: 1000px;
-      margin: auto;
-  }
+#layout {
+    max-width: 1000px;
+    margin: auto;
+}
