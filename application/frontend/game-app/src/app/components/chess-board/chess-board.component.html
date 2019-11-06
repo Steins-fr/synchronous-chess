@@ -13,17 +13,18 @@
                 <span class="full-center">{{ 8 - i }}</span>
             </div>
         </div>
-        <div id="board-grid" cdkDropListGroup>
+        <div id="board-grid" [ngClass]="{'grabbing-cursor': pieceDragged !== -1}" cdkDropListGroup>
             <mat-grid-list cols="8">
                 <mat-grid-tile *ngFor="let cell of cells; let i = index;">
-                    <div cdkDropList class="cell" [ngClass]="{'dragHover': cell.dragHover}"
-                        (cdkDropListDropped)="drop($event)" (cdkDropListEntered)="dragEntered($event)"
-                        (cdkDropListExited)="dragExited($event)" [id]="i">
-                        <app-board-piece [piece]="cell.piece" *ngIf="cell.piece" cdkDrag>
+                    <div cdkDropList class="cell" [ngClass]="{
+                        'dragHover': cell.dragHover,
+                        'dragged': pieceDragged === i}" (cdkDropListDropped)="drop(i)"
+                        (cdkDropListEntered)="dragEntered(i)" (cdkDropListExited)="dragExited(i)" [id]="i">
+                        <app-board-piece cdkDrag [piece]="cell.piece" *ngIf="cell.piece" cdkDragBoundary="#board-grid"
+                            [ngClass]="{'grabbing-cursor': pieceDragged !== -1}" (cdkDragStarted)="dragStart(i)">
                             <div class="hidden-placeholder" *cdkDragPlaceholder></div>
                         </app-board-piece>
                     </div>
-
                 </mat-grid-tile>
             </mat-grid-list>
         </div>

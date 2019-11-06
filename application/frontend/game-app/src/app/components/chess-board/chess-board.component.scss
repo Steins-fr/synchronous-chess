@@ -69,6 +69,10 @@
                         &.dragHover {
                             background-color: yellow;
                         }
+
+                        &.dragged {
+                            background-color: darkgoldenrod;
+                        }
                     }
 
                     .hidden-placeholder {
