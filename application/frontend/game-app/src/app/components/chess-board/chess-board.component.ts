@@ -6,8 +6,8 @@ import Bishop from 'src/app/classes/chess/piece/pieces/bishop';
 import Queen from 'src/app/classes/chess/piece/pieces/queen';
 import King from 'src/app/classes/chess/piece/pieces/king';
 import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
-import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import Cell from 'src/app/classes/chess/board/cell';
+import Vec2 from 'vec2';
 
 @Component({
     selector: 'app-chess-board',
@@ -15,14 +15,17 @@ import Cell from 'src/app/classes/chess/board/cell';
     styleUrls: ['./chess-board.component.scss']
 })
 export class ChessBoardComponent {
-    public cells: Array<Cell> = [
-        ...ChessBoardComponent.genMainRow(PieceColor.BLACK),
-        ...Array(8).fill(null).map(() => new Pawn(PieceColor.BLACK)).map((piece: Piece) => new Cell(piece)),
-        ...Array(32).fill(null).map(() => new Cell()),
-        ...Array(8).fill(null).map(() => new Pawn(PieceColor.WHITE)).map((piece: Piece) => new Cell(piece)),
-        ...ChessBoardComponent.genMainRow(PieceColor.WHITE)
+    public cells: Array<Array<Cell>> = [
+        ChessBoardComponent.genMainRow(PieceColor.BLACK),
+        Array(8).fill(null).map(() => new Pawn(PieceColor.BLACK)).map((piece: Piece) => new Cell(piece)),
+        Array(8).fill(null).map(() => new Cell()),
+        Array(8).fill(null).map(() => new Cell()),
+        Array(8).fill(null).map(() => new Cell()),
+        Array(8).fill(null).map(() => new Cell()),
+        Array(8).fill(null).map(() => new Pawn(PieceColor.WHITE)).map((piece: Piece) => new Cell(piece)),
+        ChessBoardComponent.genMainRow(PieceColor.WHITE)
     ];
-    public pieceDragged: number = -1;
+    public pieceDragged: Vec2 = new Vec2(-1, -1);
 
     private static genMainRow(color: PieceColor): Array<Cell> {
         return [
@@ -37,28 +40,32 @@ export class ChessBoardComponent {
         ].map((piece: Piece) => new Cell(piece));
     }
 
-    private moveTo(to: number): void {
-        const from: number = this.pieceDragged;
-        const [f, t]: Array<Piece> = [this.cells[from].piece, this.cells[to].piece];
-        this.cells[from].piece = t;
-        this.cells[to].piece = f;
-        this.cells[to].dragHover = false;
-        this.pieceDragged = -1;
+    private moveTo(to: Vec2): void {
+        const from: Vec2 = new Vec2(this.pieceDragged.toArray());
+        const [f, t]: Array<Piece> = [this.getCell(from).piece, this.getCell(to).piece];
+        this.getCell(from).piece = t;
+        this.getCell(to).piece = f;
+        this.getCell(to).dragHover = false;
+        this.pieceDragged = new Vec2(-1, -1);
     }
 
-    public dragStart(cellId: number): void {
-        this.pieceDragged = cellId;
+    private getCell(cellPos: Vec2): Cell {
+        return this.cells[cellPos.y][cellPos.x];
     }
 
-    public drop(cellId: number): void {
-        this.moveTo(cellId);
+    public dragStart(cellPos: Vec2): void {
+        this.pieceDragged = cellPos;
     }
 
-    public dragEntered(cellId: number): void {
-        this.cells[cellId].dragHover = true;
+    public drop(cellPos: Vec2): void {
+        this.moveTo(cellPos);
     }
 
-    public dragExited(cellId: number): void {
-        this.cells[cellId].dragHover = false;
+    public dragEntered(cellPos: Vec2): void {
+        this.getCell(cellPos).dragHover = true;
+    }
+
+    public dragExited(cellPos: Vec2): void {
+        this.getCell(cellPos).dragHover = false;
     }
 }

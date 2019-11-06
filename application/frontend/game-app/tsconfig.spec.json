@@ -5,7 +5,8 @@
         "types": [
             "jasmine",
             "node"
-        ]
+        ],
+        "allowSyntheticDefaultImports": true
     },
     "files": [
         "src/test.ts",
