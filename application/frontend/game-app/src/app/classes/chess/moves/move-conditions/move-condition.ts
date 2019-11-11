@@ -1,0 +1,6 @@
+import Vec2 from 'vec2';
+import { FenBoard } from 'src/app/helpers/chess-helper';
+
+export default abstract class MoveCondition {
+    public abstract canMove(oldPosition: Vec2, newPosition: Vec2, board: FenBoard): boolean;
+}

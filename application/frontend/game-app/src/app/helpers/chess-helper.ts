@@ -4,6 +4,17 @@ import Vec2 from 'vec2';
 
 export type FenBoard = Array<Array<FenPiece>>;
 
+export enum Line {
+    _8 = 0,
+    _7 = 1,
+    _6 = 2,
+    _5 = 3,
+    _4 = 4,
+    _3 = 5,
+    _2 = 6,
+    _1 = 7
+}
+
 export default abstract class ChessHelper {
 
     public static toSimpleBoard(board: Array<Array<Cell>>): FenBoard {
@@ -16,6 +27,9 @@ export default abstract class ChessHelper {
     }
 
     public static pieceColor(type: FenPiece): PieceColor {
+        if (type === FenPiece.EMPTY) {
+            return PieceColor.NONE;
+        }
         return type >= 'A' && type <= 'Z' ? PieceColor.WHITE : PieceColor.BLACK;
     }
 

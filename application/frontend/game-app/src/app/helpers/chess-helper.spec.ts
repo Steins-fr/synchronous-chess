@@ -92,6 +92,8 @@ describe('ChessHelper', () => {
         const blackPiece5: FenPiece = FenPiece.BLACK_QUEEN;
         const blackPiece6: FenPiece = FenPiece.BLACK_ROOK;
 
+        const empty: FenPiece = FenPiece.EMPTY;
+
         // When
 
         const resultWhite1: PieceColor = ChessHelper.pieceColor(whitePiece1);
@@ -108,6 +110,8 @@ describe('ChessHelper', () => {
         const resultBlack5: PieceColor = ChessHelper.pieceColor(blackPiece5);
         const resultBlack6: PieceColor = ChessHelper.pieceColor(blackPiece6);
 
+        const resultEmpty: PieceColor = ChessHelper.pieceColor(empty);
+
         // Then
         expect(resultWhite1).toEqual(PieceColor.WHITE);
         expect(resultWhite2).toEqual(PieceColor.WHITE);
@@ -122,9 +126,11 @@ describe('ChessHelper', () => {
         expect(resultBlack4).toEqual(PieceColor.BLACK);
         expect(resultBlack5).toEqual(PieceColor.BLACK);
         expect(resultBlack6).toEqual(PieceColor.BLACK);
+
+        expect(resultEmpty).toEqual(PieceColor.NONE);
     });
 
-    it('should give us the piece color', () => {
+    it('should indicates if a position is out of the board', () => {
         // Given
 
         const positions: Array<Array<Vec2>> = Array(10).fill(null).map((_1: null, y: number) =>

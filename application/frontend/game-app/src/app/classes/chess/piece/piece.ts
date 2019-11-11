@@ -2,7 +2,8 @@ import Move from '../moves/move';
 
 export enum PieceColor {
     WHITE = 'w',
-    BLACK = 'b'
+    BLACK = 'b',
+    NONE = 'none'
 }
 
 export enum PieceType {

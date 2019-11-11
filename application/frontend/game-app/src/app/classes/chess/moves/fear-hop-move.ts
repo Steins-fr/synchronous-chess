@@ -1,14 +1,15 @@
-import Move, { MoveType } from './move';
+import { MoveType } from './move';
 import Vec2 from 'vec2';
 import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
 import { FenPiece, PieceColor } from '../piece/piece';
+import VectorMove from './vector-move';
 
 export interface FearHopMoveObject {
     vector: Array<number>;
     dontApproche: FenPiece;
 }
 
-export default class FearHopMove extends Move {
+export default class FearHopMove extends VectorMove {
     private constructor(vector: Vec2, public readonly dontApproche: FenPiece) {
         super(MoveType.FEAR_HOP, vector);
         super.validVector();
