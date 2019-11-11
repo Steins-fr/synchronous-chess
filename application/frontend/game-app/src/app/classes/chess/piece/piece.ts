@@ -51,8 +51,6 @@ export default abstract class Piece {
         ])]
     ]);
 
-    public abstract readonly moves: Array<Move>;
-
     public constructor(public readonly color: PieceColor, public readonly type: PieceType) {
 
     }

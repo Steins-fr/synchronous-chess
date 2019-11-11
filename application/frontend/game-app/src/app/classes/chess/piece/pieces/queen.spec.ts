@@ -17,19 +17,4 @@ describe('Queen', () => {
         expect(whitePiece.color).toEqual(PieceColor.WHITE);
         expect(whitePiece.type).toEqual(PieceType.QUEEN);
     });
-
-    it('should initialize movements', () => {
-        // Given When
-        const piece: Piece = new Queen(PieceColor.BLACK);
-
-        // Then
-        expect(piece.moves[0].vector.equal(0, 1)).toBeTruthy();
-        expect(piece.moves[1].vector.equal(0, -1)).toBeTruthy();
-        expect(piece.moves[2].vector.equal(1, 0)).toBeTruthy();
-        expect(piece.moves[3].vector.equal(-1, 0)).toBeTruthy();
-        expect(piece.moves[4].vector.equal(1, 1)).toBeTruthy();
-        expect(piece.moves[5].vector.equal(-1, -1)).toBeTruthy();
-        expect(piece.moves[6].vector.equal(1, -1)).toBeTruthy();
-        expect(piece.moves[7].vector.equal(-1, 1)).toBeTruthy();
-    });
 });

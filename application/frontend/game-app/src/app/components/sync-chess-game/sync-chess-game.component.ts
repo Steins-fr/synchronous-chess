@@ -10,6 +10,9 @@ import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
 import Vec2 from 'vec2';
 import Move from 'src/app/classes/chess/moves/move';
 import ChessHelper from 'src/app/helpers/chess-helper';
+import SynchronousChessWhiteRules from 'src/app/classes/chess/rules/synchronous-chess-white-rules';
+import SynchronousChessBlackRules from 'src/app/classes/chess/rules/synchronous-chess-black-rules';
+import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -31,6 +34,9 @@ export class SyncChessGameComponent {
     ];
 
     public playedPiece: Vec2 = new Vec2(-1, -1);
+
+    private readonly whiteRules: SynchronousChessWhiteRules = new SynchronousChessWhiteRules();
+    private readonly blackRules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
 
     private static genMainRow(color: PieceColor): Array<Cell> {
         return [
@@ -61,11 +67,15 @@ export class SyncChessGameComponent {
         this.playedPiece = cellPos;
 
         const cell: Cell = this.getCell(this.playedPiece);
-        cell.piece.moves.forEach((move: Move) => {
-            move.possiblePlays(this.playedPiece, ChessHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
-                this.getCell(posPlay).validMove = true;
-            });
+        const piece: Piece = cell.piece;
+        const rules: SynchronousChessRules = this.getRules(piece.color);
+        rules.getPossiblePlays(piece.type, this.playedPiece, ChessHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
+            this.getCell(posPlay).validMove = true;
         });
+    }
+
+    private getRules(color: PieceColor): SynchronousChessRules {
+        return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
     }
 
     public pieceDropped(cellPos: Vec2): void {
