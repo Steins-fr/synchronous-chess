@@ -17,14 +17,4 @@ describe('Pawn', () => {
         expect(whitePiece.color).toEqual(PieceColor.WHITE);
         expect(whitePiece.type).toEqual(PieceType.PAWN);
     });
-
-    it('should initialize movements', () => {
-        // Given When
-        const whitePiece: Piece = new Pawn(PieceColor.WHITE);
-        const blackPiece: Piece = new Pawn(PieceColor.BLACK);
-
-        // Then
-        expect(whitePiece.moves[0].vector.equal(0, -1)).toBeTruthy();
-        expect(blackPiece.moves[0].vector.equal(0, 1)).toBeTruthy();
-    });
 });
