@@ -1,9 +1,10 @@
-import Move, { MoveType } from './move';
+import { MoveType } from './move';
 import Vec2 from 'vec2';
 import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
 import { PieceColor, FenPiece } from '../piece/piece';
+import VectorMove from './vector-move';
 
-export default class LinearMove extends Move {
+export default class LinearMove extends VectorMove {
     private constructor(vector: Vec2) {
         super(MoveType.LINEAR, vector);
         this.validVector();

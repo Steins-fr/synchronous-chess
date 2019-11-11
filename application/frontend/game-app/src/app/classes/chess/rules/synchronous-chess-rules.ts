@@ -2,7 +2,6 @@ import ChessRules from './chess-rules';
 import Move from '../moves/move';
 import LinearMove from '../moves/linear-move';
 import HopMove from '../moves/hop-move';
-import Piece, { PieceType } from '../piece/piece';
 
 export default abstract class SynchronousChessRules extends ChessRules {
 

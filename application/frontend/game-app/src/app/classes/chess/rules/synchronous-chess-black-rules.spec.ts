@@ -1,85 +1,60 @@
 import SynchronousChessBlackRules from './synchronous-chess-black-rules';
-import FearHopMove from '../moves/fear-hop-move';
-import { FenPiece } from '../piece/piece';
+import { PieceType, FenPiece } from '../piece/piece';
+import Move from '../moves/move';
+import Vec2 from 'vec2';
+import { FenBoard } from 'src/app/helpers/chess-helper';
 
 describe('SynchronousChessBlackRules', () => {
     it('should create an instance', () => {
         expect(new SynchronousChessBlackRules()).toBeTruthy();
     });
 
-    it('should initialize rook movements', () => {
-        // Given When
+    it('should get pieces movements', () => {
+        // Given
         const rules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
 
+        // When
+        const queenMoves: Array<Move> = rules.getPieceMoves(PieceType.QUEEN);
+        const kingMoves: Array<Move> = rules.getPieceMoves(PieceType.KING);
+        const bishopMoves: Array<Move> = rules.getPieceMoves(PieceType.BISHOP);
+        const knightMoves: Array<Move> = rules.getPieceMoves(PieceType.KNIGHT);
+        const rookMoves: Array<Move> = rules.getPieceMoves(PieceType.ROOK);
+        const pawnMoves: Array<Move> = rules.getPieceMoves(PieceType.PAWN);
+
         // Then
-        expect(rules.rookMove[0].vector.equal(0, 1)).toBeTruthy();
-        expect(rules.rookMove[1].vector.equal(0, -1)).toBeTruthy();
-        expect(rules.rookMove[2].vector.equal(1, 0)).toBeTruthy();
-        expect(rules.rookMove[3].vector.equal(-1, 0)).toBeTruthy();
+        expect(queenMoves).toEqual(rules.queenMove);
+        expect(kingMoves).toEqual(rules.kingMove);
+        expect(bishopMoves).toEqual(rules.bishopMove);
+        expect(knightMoves).toEqual(rules.knightMove);
+        expect(rookMoves).toEqual(rules.rookMove);
+        expect(pawnMoves).toEqual(rules.pawnMove);
     });
 
-    it('should initialize queen movements', () => {
-        // Given When
+    it('should get pieces possible plays', () => {
+        // Given
         const rules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
 
-        // Then
-        expect(rules.queenMove[0].vector.equal(0, 1)).toBeTruthy();
-        expect(rules.queenMove[1].vector.equal(0, -1)).toBeTruthy();
-        expect(rules.queenMove[2].vector.equal(1, 0)).toBeTruthy();
-        expect(rules.queenMove[3].vector.equal(-1, 0)).toBeTruthy();
-        expect(rules.queenMove[4].vector.equal(1, 1)).toBeTruthy();
-        expect(rules.queenMove[5].vector.equal(-1, -1)).toBeTruthy();
-        expect(rules.queenMove[6].vector.equal(1, -1)).toBeTruthy();
-        expect(rules.queenMove[7].vector.equal(-1, 1)).toBeTruthy();
-    });
+        const position: Vec2 = new Vec2(0, 0);
 
-    it('should initialize pawn movements', () => {
-        // Given When
-        const rules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
+        const boardEmpty: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+        const boardEmptyExpectedPlays: Array<Vec2> = [
+            new Vec2(0, 1), new Vec2(0, 2), new Vec2(0, 3), new Vec2(0, 4), new Vec2(0, 5), new Vec2(0, 6), new Vec2(0, 7),
+            new Vec2(1, 0), new Vec2(2, 0), new Vec2(3, 0), new Vec2(4, 0), new Vec2(5, 0), new Vec2(6, 0), new Vec2(7, 0)
+        ];
 
-        // Then
-        expect(rules.pawnMove[0].vector.equal(0, 1)).toBeTruthy();
-    });
-
-    it('should initialize knight movements', () => {
-        // Given When
-        const rules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
+        // When
+        const boardEmptyPlays: Array<Vec2> = rules.getPossiblePlays(PieceType.ROOK, position, boardEmpty);
 
         // Then
-        expect(rules.knightMove[0].vector.equal(1, 2)).toBeTruthy();
-        expect(rules.knightMove[1].vector.equal(2, 1)).toBeTruthy();
-        expect(rules.knightMove[2].vector.equal(-1, 2)).toBeTruthy();
-        expect(rules.knightMove[3].vector.equal(2, -1)).toBeTruthy();
-        expect(rules.knightMove[4].vector.equal(1, -2)).toBeTruthy();
-        expect(rules.knightMove[5].vector.equal(-2, 1)).toBeTruthy();
-        expect(rules.knightMove[6].vector.equal(-1, -2)).toBeTruthy();
-        expect(rules.knightMove[7].vector.equal(-2, -1)).toBeTruthy();
-    });
-
-    it('should initialize king movements', () => {
-        // Given When
-        const rules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
-
-        // Then
-        expect(rules.kingMove[0].vector.equal(0, 1)).toBeTruthy();
-        expect(rules.kingMove[1].vector.equal(0, -1)).toBeTruthy();
-        expect(rules.kingMove[2].vector.equal(1, 0)).toBeTruthy();
-        expect(rules.kingMove[3].vector.equal(-1, 0)).toBeTruthy();
-        expect(rules.kingMove[4].vector.equal(1, 1)).toBeTruthy();
-        expect(rules.kingMove[5].vector.equal(-1, -1)).toBeTruthy();
-        expect(rules.kingMove[6].vector.equal(1, -1)).toBeTruthy();
-        expect(rules.kingMove[7].vector.equal(-1, 1)).toBeTruthy();
-        expect(rules.kingMove.every((move: FearHopMove) => move.dontApproche === FenPiece.WHITE_KING));
-    });
-
-    it('should initialize bishop movements', () => {
-        // Given When
-        const rules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
-
-        // Then
-        expect(rules.bishopMove[0].vector.equal(1, 1)).toBeTruthy();
-        expect(rules.bishopMove[1].vector.equal(-1, -1)).toBeTruthy();
-        expect(rules.bishopMove[2].vector.equal(1, -1)).toBeTruthy();
-        expect(rules.bishopMove[3].vector.equal(-1, 1)).toBeTruthy();
+        expect(boardEmptyPlays).toEqual(boardEmptyExpectedPlays);
     });
 });
