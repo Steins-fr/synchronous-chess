@@ -55,13 +55,13 @@ jobs:
           keys:
             - game-app-{{ .Branch }}-{{ checksum "application/frontend/game-app/package.json" }}
       - run:
-          name: Testing karma
+          name: Build-frontend
           working_directory: ~/project/application/frontend/game-app
           command: |
             yarn
             yarn build:staging
       - save_cache:
-          key: build-frontend-{{ .Branch }}
+          key: build-frontend-{{ .Branch }}-{{ .Revision }}
           paths:
             - ~/project/application/frontend/game-app/dist
 
@@ -95,7 +95,7 @@ jobs:
             yarn
             yarn build
       - save_cache:
-          key: build-backend-{{ .Branch }}
+          key: build-backend-{{ .Branch }}-{{ .Revision }}
           paths:
             - ~/project/application/backend/layers/room-manager/dist
             - ~/project/application/backend/websocket-api/onconnect/dist
@@ -109,10 +109,10 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - build-backend-{{ .Branch }}
+            - build-backend-{{ .Branch }}-{{ .Revision }}
       - restore_cache:
           keys:
-            - build-frontend-{{ .Branch }}
+            - build-frontend-{{ .Branch }}-{{ .Revision }}
       - run:
           name: Terraform init
           working_directory: /home/circleci/project/infrastructure
