@@ -32,8 +32,8 @@ export class SyncChessGameComponent {
 
     public playedPiece: Vec2 = new Vec2(-1, -1);
 
-    private readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
-    private readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+    private readonly whiteRules: SynchronousChessRules = SynchronousChessRules.whiteRules;
+    private readonly blackRules: SynchronousChessRules = SynchronousChessRules.blackRules;
 
     private static genMainRow(color: PieceColor): Array<Cell> {
         return [

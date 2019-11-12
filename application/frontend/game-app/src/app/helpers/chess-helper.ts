@@ -1,5 +1,5 @@
 import Cell from '../classes/chess/board/cell';
-import { FenPiece, PieceColor, PieceType } from '../classes/chess/piece/piece';
+import Piece, { FenPiece, PieceColor, PieceType } from '../classes/chess/piece/piece';
 import Vec2 from 'vec2';
 import ChessRules from '../classes/chess/rules/chess-rules';
 
@@ -84,6 +84,12 @@ export default abstract class ChessHelper {
 
     private static getProtectionPlays(position: Vec2, board: FenBoard, rules: ChessRules): Array<Vec2> {
         const playedPiece: FenPiece = ChessHelper.getFenPiece(board, position);
+
+        // The kings can't enter in the danger perimeter of the other.
+        // To prevent recursive movement checks for the king, do not check its possible plays.
+        if (ChessHelper.pieceType(playedPiece) === PieceType.KING) {
+            return [];
+        }
 
         // Turn all pieces to the same color
         // This permits to simulate the protection of our piece.

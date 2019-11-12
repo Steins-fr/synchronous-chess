@@ -6,12 +6,12 @@ import { FenBoard } from 'src/app/helpers/chess-helper';
 
 describe('SynchronousChessRules', () => {
     it('should create an instance', () => {
-        expect(new SynchronousChessRules(PieceColor.BLACK)).toBeTruthy();
+        expect(SynchronousChessRules.blackRules).toBeTruthy();
     });
 
     it('should get pieces movements', () => {
         // Given
-        const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+        const rules: SynchronousChessRules = SynchronousChessRules.blackRules;
 
         // When
         const queenMoves: Array<Move> = rules.getPieceMoves(PieceType.QUEEN);
@@ -32,8 +32,8 @@ describe('SynchronousChessRules', () => {
 
     it('should tell is the rules are for blacks or whites', () => {
         // Given
-        const rulesBlack: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
-        const rulesWhite: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
+        const rulesBlack: SynchronousChessRules = SynchronousChessRules.blackRules;
+        const rulesWhite: SynchronousChessRules = SynchronousChessRules.whiteRules;
 
         // When
         const blackIsBlack: boolean = rulesBlack.isBlack();
@@ -50,7 +50,7 @@ describe('SynchronousChessRules', () => {
 
     it('should get pieces possible plays', () => {
         // Given
-        const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+        const rules: SynchronousChessRules = SynchronousChessRules.blackRules;
 
         const position: Vec2 = new Vec2(0, 0);
 
