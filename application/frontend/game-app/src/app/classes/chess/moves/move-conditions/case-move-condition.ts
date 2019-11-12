@@ -4,7 +4,11 @@ import { FenPiece } from '../../piece/piece';
 
 export default class CaseMoveCondition {
 
-    public constructor(public readonly relativePosition: Vec2, public readonly validPieces: Array<FenPiece>) { }
+    public readonly relativePosition: Vec2;
+
+    public constructor(relativePosition: Array<number>, public readonly validPieces: Array<FenPiece>) {
+        this.relativePosition = new Vec2(relativePosition);
+    }
 
     public canMove(oldPosition: Vec2, _newPosition: Vec2, board: FenBoard): boolean {
         const piece: FenPiece = ChessHelper.getFenPiece(board, oldPosition.add(this.relativePosition, true));

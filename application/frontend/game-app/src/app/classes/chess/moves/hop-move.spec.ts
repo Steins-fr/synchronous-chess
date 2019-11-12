@@ -26,7 +26,7 @@ describe('HopMove', () => {
         const coordinate1: Array<number> = [2, 2];
         const coordinate2: Array<number> = [1, 1];
         // When
-        const moves: Array<HopMove> = HopMove.build(coordinate1, coordinate2);
+        const moves: Array<HopMove> = HopMove.buildAll([coordinate1, coordinate2]);
 
         // Then
         expect(moves.length).toEqual(2);
@@ -39,7 +39,7 @@ describe('HopMove', () => {
         const coordinate: Array<number> = [34, 4];
 
         // When
-        const [move]: Array<HopMove> = HopMove.build(coordinate);
+        const move: HopMove = HopMove.build(coordinate);
 
         // Then
         expect(move.vector.equal(34, 4)).toBeTruthy();
@@ -73,7 +73,7 @@ describe('HopMove', () => {
         ];
         const boardEmptyExpectedPlays: Array<Vec2> = [new Vec2(1, 2)];
 
-        const [move, outMove]: Array<HopMove> = HopMove.build(coordinate, outCoordinate);
+        const [move, outMove]: Array<HopMove> = HopMove.buildAll([coordinate, outCoordinate]);
 
         // When
         const boardBlackPlays: Array<Vec2> = move.possiblePlays(position, boardBlack);
@@ -98,7 +98,7 @@ describe('HopMove', () => {
 
         const boardFullEmpty: FenBoard = [[FenPiece.EMPTY]];
 
-        const [move]: Array<HopMove> = HopMove.build(coordinate);
+        const move: HopMove = HopMove.build(coordinate);
 
         // When
         const badCall1: () => Array<Vec2> = (): Array<Vec2> => move.possiblePlays(badPosition, boardFullEmpty);
