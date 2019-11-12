@@ -1,17 +1,17 @@
-import SynchronousChessWhiteRules from './synchronous-chess-white-rules';
-import Piece, { PieceType, FenPiece } from '../piece/piece';
+import SynchronousChessRules from './synchronous-chess-rules';
+import { PieceType, FenPiece, PieceColor } from '../piece/piece';
 import Move from '../moves/move';
-import { FenBoard } from 'src/app/helpers/chess-helper';
 import Vec2 from 'vec2';
+import { FenBoard } from 'src/app/helpers/chess-helper';
 
-describe('SynchronousChessWhiteRules', () => {
+describe('SynchronousChessRules', () => {
     it('should create an instance', () => {
-        expect(new SynchronousChessWhiteRules()).toBeTruthy();
+        expect(new SynchronousChessRules(PieceColor.BLACK)).toBeTruthy();
     });
 
     it('should get pieces movements', () => {
         // Given
-        const rules: SynchronousChessWhiteRules = new SynchronousChessWhiteRules();
+        const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
         // When
         const queenMoves: Array<Move> = rules.getPieceMoves(PieceType.QUEEN);
@@ -30,9 +30,27 @@ describe('SynchronousChessWhiteRules', () => {
         expect(pawnMoves).toEqual(rules.pawnMove);
     });
 
+    it('should tell is the rules are for blacks or whites', () => {
+        // Given
+        const rulesBlack: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+        const rulesWhite: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
+
+        // When
+        const blackIsBlack: boolean = rulesBlack.isBlack();
+        const blackIsNotWhite: boolean = rulesBlack.isWhite();
+        const whiteIsWhite: boolean = rulesWhite.isWhite();
+        const whiteIsNotBlack: boolean = rulesWhite.isBlack();
+
+        // Then
+        expect(blackIsBlack).toBeTruthy();
+        expect(blackIsNotWhite).toBeFalsy();
+        expect(whiteIsWhite).toBeTruthy();
+        expect(whiteIsNotBlack).toBeFalsy();
+    });
+
     it('should get pieces possible plays', () => {
         // Given
-        const rules: SynchronousChessWhiteRules = new SynchronousChessWhiteRules();
+        const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
         const position: Vec2 = new Vec2(0, 0);
 

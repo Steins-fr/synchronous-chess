@@ -8,10 +8,7 @@ import Queen from 'src/app/classes/chess/piece/pieces/queen';
 import King from 'src/app/classes/chess/piece/pieces/king';
 import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
 import Vec2 from 'vec2';
-import Move from 'src/app/classes/chess/moves/move';
 import ChessHelper from 'src/app/helpers/chess-helper';
-import SynchronousChessWhiteRules from 'src/app/classes/chess/rules/synchronous-chess-white-rules';
-import SynchronousChessBlackRules from 'src/app/classes/chess/rules/synchronous-chess-black-rules';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
 
 @Component({
@@ -35,8 +32,8 @@ export class SyncChessGameComponent {
 
     public playedPiece: Vec2 = new Vec2(-1, -1);
 
-    private readonly whiteRules: SynchronousChessWhiteRules = new SynchronousChessWhiteRules();
-    private readonly blackRules: SynchronousChessBlackRules = new SynchronousChessBlackRules();
+    private readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
+    private readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
     private static genMainRow(color: PieceColor): Array<Cell> {
         return [
