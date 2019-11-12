@@ -13,8 +13,8 @@ export default class SynchronousChessRules extends ChessRules {
 
     public readonly direction: number;
 
-    public constructor(public readonly color: PieceColor) {
-        super();
+    public constructor(color: PieceColor) {
+        super(color);
         this.direction = this.isBlack() ? 1 : -1;
 
         this.pawnMove = [
