@@ -1,5 +1,5 @@
 import Cell from '../classes/chess/board/cell';
-import Piece, { FenPiece, PieceColor, PieceType } from '../classes/chess/piece/piece';
+import { FenPiece, PieceColor, PieceType } from '../classes/chess/piece/piece';
 import Vec2 from 'vec2';
 import ChessRules from '../classes/chess/rules/chess-rules';
 
@@ -16,6 +16,17 @@ export enum Line {
     _3 = 5,
     _2 = 6,
     _1 = 7
+}
+
+export enum Column {
+    A = 0,
+    B = 1,
+    C = 2,
+    D = 3,
+    E = 4,
+    F = 5,
+    G = 6,
+    H = 7
 }
 
 export default abstract class ChessHelper {
@@ -145,5 +156,9 @@ export default abstract class ChessHelper {
         ChessHelper.fenBoardToSafeBoardCache.set(board, safeBoard);
 
         return safeBoard;
+    }
+
+    public static castlingRook(from: Vec2, to: Vec2): Column {
+        return to.subtract(from, true).x > 0 ? Column.H : Column.A;
     }
 }

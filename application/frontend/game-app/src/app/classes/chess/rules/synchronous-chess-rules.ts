@@ -15,8 +15,6 @@ export default class SynchronousChessRules extends ChessRules {
     public static readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
     public static readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
-    public readonly castling: boolean = true;
-
     private constructor(color: PieceColor) {
         super(color);
         const direction: number = this.isBlack() ? 1 : -1;
@@ -59,19 +57,21 @@ export default class SynchronousChessRules extends ChessRules {
     public readonly pawnMove: Array<Move>;
 
     private castlingMove(opponentRules: ChessRules): Array<Move> {
-        if (this.castling === false) {
-            return [];
-        }
-        return [
-            HopMove.build([2, 0], [
+        const castlingMoves: Array<Move> = [];
+
+        if (this.castlingH === true) {
+            castlingMoves.push(HopMove.build([2, 0], [
                 new CaseMoveCondition([1, 0], [FenPiece.EMPTY]),
                 new KingSafeMoveCondition(opponentRules, [1, 0])
-            ]),
-            HopMove.build([-2, 0], [
+            ]));
+        }
+        if (this.castlingA === true) {
+            castlingMoves.push(HopMove.build([-2, 0], [
                 new CaseMoveCondition([-1, 0], [FenPiece.EMPTY]),
                 new KingSafeMoveCondition(opponentRules, [-1, 0])
-            ])
-        ];
+            ]));
+        }
+        return castlingMoves;
     }
 
     public get kingMove(): Array<Move> {
