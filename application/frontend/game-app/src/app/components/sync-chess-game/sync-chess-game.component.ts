@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import Piece, { PieceColor } from 'src/app/classes/chess/piece/piece';
+import Piece, { PieceColor, PieceType } from 'src/app/classes/chess/piece/piece';
 import Cell from 'src/app/classes/chess/board/cell';
 import Rook from 'src/app/classes/chess/piece/pieces/rook';
 import Knight from 'src/app/classes/chess/piece/pieces/knight';
@@ -8,8 +8,9 @@ import Queen from 'src/app/classes/chess/piece/pieces/queen';
 import King from 'src/app/classes/chess/piece/pieces/king';
 import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
 import Vec2 from 'vec2';
-import ChessHelper from 'src/app/helpers/chess-helper';
+import ChessHelper, { Column } from 'src/app/helpers/chess-helper';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
+import ChessRules from 'src/app/classes/chess/rules/chess-rules';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -48,12 +49,53 @@ export class SyncChessGameComponent {
         ].map((piece: Piece) => new Cell(piece));
     }
 
-    private moveTo(to: Vec2): void {
+    private kingPlay(from: Vec2, to: Vec2, rules: ChessRules): void {
+        // If this is a king move, check if it is a castling
+        if (from.distance(to) === 2) {
+            // The king has moved twice, this is a castling
+            const castlingRook: Column = ChessHelper.castlingRook(from, to);
+            const rookCell: Cell = this.getCell(new Vec2([castlingRook, from.y]));
+            const rookNewCell: Cell = this.getCell(from.add(to.subtract(from, true).divide(2, 2, true), true));
+            rookNewCell.piece = rookCell.piece;
+            rookCell.piece = undefined;
+        }
+        rules.castlingA = false;
+        rules.castlingH = false;
+    }
+
+    private rookPlay(from: Vec2, rules: ChessRules): void {
+        switch (from.x) {
+            case Column.A:
+                rules.castlingA = false;
+                break;
+            case Column.H:
+                rules.castlingH = false;
+                break;
+        }
+    }
+
+    private play(to: Vec2): void {
         const from: Vec2 = new Vec2(this.playedPiece.toArray());
-        const [f, t]: Array<Piece> = [this.getCell(from).piece, this.getCell(to).piece];
-        this.getCell(from).piece = t;
-        this.getCell(to).piece = f;
-        this.playedPiece = new Vec2(-1, -1);
+
+        const fromCell: Cell = this.getCell(from);
+        const toCell: Cell = this.getCell(to);
+        if (toCell.validMove === false) {
+            return;
+        }
+
+        const rules: ChessRules = this.getRules(fromCell.piece.color);
+
+        toCell.piece = fromCell.piece;
+        fromCell.piece = undefined;
+
+        switch (toCell.piece.type) {
+            case PieceType.KING:
+                this.kingPlay(from, to, rules);
+                break;
+            case PieceType.ROOK:
+                this.rookPlay(from, rules);
+                break;
+        }
     }
 
     private getCell(cellPos: Vec2): Cell {
@@ -76,12 +118,12 @@ export class SyncChessGameComponent {
     }
 
     public pieceDropped(cellPos: Vec2): void {
-        this.moveTo(cellPos);
-
+        this.play(cellPos);
         this.resetHighligh();
     }
 
     private resetHighligh(): void {
+        this.playedPiece = new Vec2(-1, -1);
         this.cells.forEach((row: Array<Cell>) => row.forEach((cell: Cell) => cell.validMove = false));
     }
 }

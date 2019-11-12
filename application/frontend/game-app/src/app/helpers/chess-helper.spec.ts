@@ -1,4 +1,4 @@
-import ChessHelper, { FenBoard, SafeBoard } from './chess-helper';
+import ChessHelper, { FenBoard, SafeBoard, Column } from './chess-helper';
 import Cell from '../classes/chess/board/cell';
 import King from '../classes/chess/piece/pieces/king';
 import { PieceColor, FenPiece, PieceType } from '../classes/chess/piece/piece';
@@ -360,5 +360,22 @@ describe('ChessHelper', () => {
         expect(resultLine).toEqual(safeBoardLine);
         expect(resultHop).toEqual(safeBoardHop);
         expect(resultPawn).toEqual(safeBoardPawn);
+    });
+
+    it('should indicates the rook targeted by the castling', () => {
+        // Given
+
+        const positionFrom: Vec2 = new Vec2([4, 0]);
+        const positionTo1: Vec2 = new Vec2([6, 0]);
+        const positionTo2: Vec2 = new Vec2([2, 0]);
+
+        // When
+
+        const resultH: Column = ChessHelper.castlingRook(positionFrom, positionTo1);
+        const resultA: Column = ChessHelper.castlingRook(positionFrom, positionTo2);
+
+        // Then
+        expect(resultH).toEqual(Column.H);
+        expect(resultA).toEqual(Column.A);
     });
 });
