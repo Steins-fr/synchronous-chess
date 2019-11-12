@@ -6,14 +6,14 @@ import { FenBoard } from 'src/app/helpers/chess-helper';
 
 describe('CaseMoveCondition', () => {
     it('should create an instance', () => {
-        expect(new CaseMoveCondition(new Vec2([1, 1]), [])).toBeTruthy();
+        expect(new CaseMoveCondition([1, 1], [])).toBeTruthy();
     });
 
     it('should say if it can move', () => {
         // Given
-        const conditionNoValidPieces: CaseMoveCondition = new CaseMoveCondition(new Vec2([1, 0]), []);
-        const conditionHasWhiteKing: CaseMoveCondition = new CaseMoveCondition(new Vec2([1, 0]), [FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.BLACK_BISHOP]);
-        const conditionNoWhiteKing: CaseMoveCondition = new CaseMoveCondition(new Vec2([1, 0]), [FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP]);
+        const conditionNoValidPieces: CaseMoveCondition = new CaseMoveCondition([1, 0], []);
+        const conditionHasWhiteKing: CaseMoveCondition = new CaseMoveCondition([1, 0], [FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.BLACK_BISHOP]);
+        const conditionNoWhiteKing: CaseMoveCondition = new CaseMoveCondition([1, 0], [FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP]);
 
         const board: FenBoard = [
             [FenPiece.BLACK_BISHOP, FenPiece.WHITE_KING, FenPiece.EMPTY]

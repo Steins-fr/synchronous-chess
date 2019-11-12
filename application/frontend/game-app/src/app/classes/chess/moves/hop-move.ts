@@ -1,20 +1,24 @@
-import { MoveType } from './move';
+import Move, { MoveType } from './move';
 import Vec2 from 'vec2';
 import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
 import { FenPiece, PieceColor } from '../piece/piece';
-import VectorMove from './vector-move';
+import MoveCondition from './move-conditions/move-condition';
 
-export default class HopMove extends VectorMove {
-    private constructor(vector: Vec2) {
-        super(MoveType.HOP, vector);
+export default class HopMove extends Move {
+    private constructor(vector: Vec2, conditions: Array<MoveCondition>) {
+        super(MoveType.HOP, vector, conditions);
         super.validVector();
     }
 
-    public static build(...vectors: Array<Array<number>>): Array<HopMove> {
-        return vectors.map((vector: Array<number>) => new HopMove(new Vec2(vector)));
+    public static buildAll(vectors: Array<Array<number>>, conditions: Array<MoveCondition> = []): Array<HopMove> {
+        return vectors.map((vector: Array<number>) => HopMove.build(vector, conditions));
     }
 
-    public possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {
+    public static build(vector: Array<number>, conditions: Array<MoveCondition> = []): HopMove {
+        return new HopMove(new Vec2(vector), conditions);
+    }
+
+    protected _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {
         this.validPosition(position, board);
 
         const myColor: PieceColor = ChessHelper.pieceColor(ChessHelper.getFenPiece(board, position));

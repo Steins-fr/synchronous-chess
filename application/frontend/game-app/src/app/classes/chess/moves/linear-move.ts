@@ -1,17 +1,21 @@
-import { MoveType } from './move';
+import Move, { MoveType } from './move';
 import Vec2 from 'vec2';
 import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
 import { PieceColor, FenPiece } from '../piece/piece';
-import VectorMove from './vector-move';
+import MoveCondition from './move-conditions/move-condition';
 
-export default class LinearMove extends VectorMove {
-    private constructor(vector: Vec2) {
-        super(MoveType.LINEAR, vector);
+export default class LinearMove extends Move {
+    private constructor(vector: Vec2, conditions: Array<MoveCondition>) {
+        super(MoveType.LINEAR, vector, conditions);
         this.validVector();
     }
 
-    public static build(...vectors: Array<Array<number>>): Array<LinearMove> {
-        return vectors.map((vector: Array<number>) => new LinearMove(new Vec2(vector)));
+    public static buildAll(vectors: Array<Array<number>>, conditions: Array<MoveCondition> = []): Array<LinearMove> {
+        return vectors.map((vector: Array<number>) => LinearMove.build(vector, conditions));
+    }
+
+    public static build(vector: Array<number>, conditions: Array<MoveCondition> = []): LinearMove {
+        return new LinearMove(new Vec2(vector), conditions);
     }
 
     protected validVector(): void {
@@ -23,7 +27,7 @@ export default class LinearMove extends VectorMove {
         }
     }
 
-    public possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {
+    protected _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {
         this.validPosition(position, board);
 
         let newPosition: Vec2 = new Vec2(position.toArray());

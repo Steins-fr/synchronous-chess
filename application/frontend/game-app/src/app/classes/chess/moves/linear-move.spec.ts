@@ -29,7 +29,7 @@ describe('LinearMove', () => {
         const coordinate1: Array<number> = [1, 0];
         const coordinate2: Array<number> = [1, 1];
         // When
-        const moves: Array<LinearMove> = LinearMove.build(coordinate1, coordinate2);
+        const moves: Array<LinearMove> = LinearMove.buildAll([coordinate1, coordinate2]);
 
         // Then
         expect(moves.length).toEqual(2);
@@ -42,7 +42,7 @@ describe('LinearMove', () => {
         const coordinate: Array<number> = [1, 0];
 
         // When
-        const [move]: Array<LinearMove> = LinearMove.build(coordinate);
+        const move: LinearMove = LinearMove.build(coordinate);
 
         // Then
         expect(move.vector.equal(1, 0)).toBeTruthy();
@@ -69,7 +69,7 @@ describe('LinearMove', () => {
         ];
         const boardEmptyExpectedPlays: Array<Vec2> = [new Vec2(1, 0), new Vec2(2, 0), new Vec2(3, 0), new Vec2(4, 0), new Vec2(5, 0), new Vec2(6, 0), new Vec2(7, 0)];
 
-        const [move]: Array<LinearMove> = LinearMove.build(coordinate);
+        const move: LinearMove = LinearMove.build(coordinate);
 
         // When
         const boardBlackPlays: Array<Vec2> = move.possiblePlays(position, boardBlack);
@@ -92,7 +92,7 @@ describe('LinearMove', () => {
 
         const boardFullEmpty: FenBoard = [[FenPiece.EMPTY]];
 
-        const [move]: Array<LinearMove> = LinearMove.build(coordinate);
+        const move: LinearMove = LinearMove.build(coordinate);
 
         // When
         const badCall1: () => Array<Vec2> = (): Array<Vec2> => move.possiblePlays(badPosition, boardFullEmpty);
