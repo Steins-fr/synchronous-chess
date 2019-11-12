@@ -12,7 +12,8 @@ export enum PieceType {
     BISHOP = 'b',
     KNIGHT = 'n',
     ROOK = 'r',
-    PAWN = 'p'
+    PAWN = 'p',
+    NONE = 'none'
 }
 
 export enum FenPiece {

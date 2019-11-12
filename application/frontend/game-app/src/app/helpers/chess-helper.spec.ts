@@ -1,13 +1,14 @@
-import ChessHelper from './chess-helper';
+import ChessHelper, { FenBoard, SafeBoard } from './chess-helper';
 import Cell from '../classes/chess/board/cell';
 import King from '../classes/chess/piece/pieces/king';
-import { PieceColor, FenPiece } from '../classes/chess/piece/piece';
+import { PieceColor, FenPiece, PieceType } from '../classes/chess/piece/piece';
 import Queen from '../classes/chess/piece/pieces/queen';
 import Rook from '../classes/chess/piece/pieces/rook';
 import Bishop from '../classes/chess/piece/pieces/bishop';
 import Knight from '../classes/chess/piece/pieces/knight';
 import Pawn from '../classes/chess/piece/pieces/pawn';
 import Vec2 from 'vec2';
+import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rules';
 
 describe('ChessHelper', () => {
     it('should transform a board into simpleNotation', () => {
@@ -40,7 +41,7 @@ describe('ChessHelper', () => {
             ]
         ];
 
-        const expectedSimpleBoard: Array<Array<FenPiece>> = [
+        const expectedSimpleBoard: FenBoard = [
             [
                 FenPiece.WHITE_KING,
                 FenPiece.BLACK_KING,
@@ -69,7 +70,7 @@ describe('ChessHelper', () => {
 
         // When
 
-        const simpleBoard: Array<Array<FenPiece>> = ChessHelper.toSimpleBoard(board);
+        const simpleBoard: FenBoard = ChessHelper.toSimpleBoard(board);
 
         // Then
         expect(simpleBoard).toEqual(expectedSimpleBoard);
@@ -130,6 +131,61 @@ describe('ChessHelper', () => {
         expect(resultEmpty).toEqual(PieceColor.NONE);
     });
 
+    it('should give us the piece type', () => {
+        // Given
+
+        const whitePiece1: FenPiece = FenPiece.WHITE_BISHOP;
+        const whitePiece2: FenPiece = FenPiece.WHITE_KING;
+        const whitePiece3: FenPiece = FenPiece.WHITE_KNIGHT;
+        const whitePiece4: FenPiece = FenPiece.WHITE_PAWN;
+        const whitePiece5: FenPiece = FenPiece.WHITE_QUEEN;
+        const whitePiece6: FenPiece = FenPiece.WHITE_ROOK;
+
+        const blackPiece1: FenPiece = FenPiece.BLACK_BISHOP;
+        const blackPiece2: FenPiece = FenPiece.BLACK_KING;
+        const blackPiece3: FenPiece = FenPiece.BLACK_KNIGHT;
+        const blackPiece4: FenPiece = FenPiece.BLACK_PAWN;
+        const blackPiece5: FenPiece = FenPiece.BLACK_QUEEN;
+        const blackPiece6: FenPiece = FenPiece.BLACK_ROOK;
+
+        const empty: FenPiece = FenPiece.EMPTY;
+
+        // When
+
+        const resultWhite1: PieceType = ChessHelper.pieceType(whitePiece1);
+        const resultWhite2: PieceType = ChessHelper.pieceType(whitePiece2);
+        const resultWhite3: PieceType = ChessHelper.pieceType(whitePiece3);
+        const resultWhite4: PieceType = ChessHelper.pieceType(whitePiece4);
+        const resultWhite5: PieceType = ChessHelper.pieceType(whitePiece5);
+        const resultWhite6: PieceType = ChessHelper.pieceType(whitePiece6);
+
+        const resultBlack1: PieceType = ChessHelper.pieceType(blackPiece1);
+        const resultBlack2: PieceType = ChessHelper.pieceType(blackPiece2);
+        const resultBlack3: PieceType = ChessHelper.pieceType(blackPiece3);
+        const resultBlack4: PieceType = ChessHelper.pieceType(blackPiece4);
+        const resultBlack5: PieceType = ChessHelper.pieceType(blackPiece5);
+        const resultBlack6: PieceType = ChessHelper.pieceType(blackPiece6);
+
+        const resultEmpty: PieceType = ChessHelper.pieceType(empty);
+
+        // Then
+        expect(resultWhite1).toEqual(PieceType.BISHOP);
+        expect(resultWhite2).toEqual(PieceType.KING);
+        expect(resultWhite3).toEqual(PieceType.KNIGHT);
+        expect(resultWhite4).toEqual(PieceType.PAWN);
+        expect(resultWhite5).toEqual(PieceType.QUEEN);
+        expect(resultWhite6).toEqual(PieceType.ROOK);
+
+        expect(resultBlack1).toEqual(PieceType.BISHOP);
+        expect(resultBlack2).toEqual(PieceType.KING);
+        expect(resultBlack3).toEqual(PieceType.KNIGHT);
+        expect(resultBlack4).toEqual(PieceType.PAWN);
+        expect(resultBlack5).toEqual(PieceType.QUEEN);
+        expect(resultBlack6).toEqual(PieceType.ROOK);
+
+        expect(resultEmpty).toEqual(PieceType.NONE);
+    });
+
     it('should indicates if a position is out of the board', () => {
         // Given
 
@@ -162,7 +218,7 @@ describe('ChessHelper', () => {
     it('should get the right FenPiece', () => {
         // Given
 
-        const fenBoard: Array<Array<FenPiece>> = [
+        const fenBoard: FenBoard = [
             Array(8).fill(null).map(() => FenPiece.BLACK_BISHOP),
             Array(8).fill(null).map(() => FenPiece.BLACK_KING),
             Array(8).fill(null).map(() => FenPiece.BLACK_KNIGHT),
@@ -224,5 +280,85 @@ describe('ChessHelper', () => {
         expect(resultRow7).toBeTruthy();
         expect(resultRow8).toBeTruthy();
         expect(resultOut).toBeTruthy();
+    });
+
+    it('should build a safe board', () => {
+        // Given
+        const boardLine: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.BLACK_BISHOP, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+
+        const safeBoardLine: SafeBoard = [
+            [true, false, false, false, false, false, false, false],
+            [false, false, false, true, false, false, false, false],
+            [false, true, false, false, false, false, true, true],
+            [false, false, true, false, false, false, true, true],
+            [false, true, true, false, true, true, false, true],
+            [false, true, false, false, true, true, true, false],
+            [false, false, true, false, true, true, true, true],
+            [false, true, true, false, true, true, true, true]
+        ];
+
+        const boardHop: FenBoard = [
+            [FenPiece.EMPTY, FenPiece.BLACK_KNIGHT, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.BLACK_KNIGHT, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+
+        const safeBoardHop: SafeBoard = [
+            [true, false, true, true, true, true, true, true],
+            [true, true, false, false, true, true, true, true],
+            [false, true, false, true, true, true, true, true],
+            [true, true, false, true, true, true, true, true],
+            [true, false, true, true, false, false, false, true],
+            [true, true, true, true, false, true, false, true],
+            [true, true, true, true, false, false, false, true],
+            [true, true, true, true, true, true, true, true]
+        ];
+
+        const boardPawn: FenBoard = [
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+
+        // No 'En passant' rule
+        const safeBoardPawn: SafeBoard = [
+            [true, true, true, true, true, true, true, true],
+            [true, true, true, true, true, true, true, true],
+            [true, true, false, true, false, true, true, true],
+            [true, true, true, true, true, true, true, true],
+            [true, true, true, true, true, true, true, true],
+            [true, true, true, true, true, true, true, true],
+            [true, true, true, true, true, true, true, true],
+            [true, true, true, true, true, true, true, true]
+        ];
+
+        // When
+        const resultLine: SafeBoard = ChessHelper.fenBoardToSafeBoard(boardLine, new SynchronousChessRules(PieceColor.BLACK));
+        const resultHop: SafeBoard = ChessHelper.fenBoardToSafeBoard(boardHop, new SynchronousChessRules(PieceColor.BLACK));
+        const resultPawn: SafeBoard = ChessHelper.fenBoardToSafeBoard(boardPawn, new SynchronousChessRules(PieceColor.BLACK));
+
+        // Then
+        expect(resultLine).toEqual(safeBoardLine);
+        expect(resultHop).toEqual(safeBoardHop);
+        expect(resultPawn).toEqual(safeBoardPawn);
     });
 });

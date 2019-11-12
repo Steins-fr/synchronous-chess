@@ -1,5 +1,5 @@
 import Move from '../moves/move';
-import { PieceType, FenPiece } from '../piece/piece';
+import { PieceType, FenPiece, PieceColor } from '../piece/piece';
 import Vec2 from 'vec2';
 
 export default abstract class ChessRules {
@@ -9,6 +9,8 @@ export default abstract class ChessRules {
     public abstract readonly knightMove: Array<Move>;
     public abstract readonly rookMove: Array<Move>;
     public abstract readonly pawnMove: Array<Move>;
+
+    public constructor(public readonly color: PieceColor) { }
 
     public getPieceMoves(pieceType: PieceType): Array<Move> {
         switch (pieceType) {
