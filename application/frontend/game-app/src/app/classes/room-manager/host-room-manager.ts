@@ -25,7 +25,7 @@ export class HostRoomManager extends RoomManager {
 
     public constructor(roomApi: RoomApiService) {
         super(roomApi);
-        this.roomApi.followNotification(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
+        this.roomApi.notifier.follow(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
     }
 
     public async create(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
@@ -128,7 +128,7 @@ export class HostRoomManager extends RoomManager {
     }
 
     public clear(): void {
-        this.roomApi.unfollowNotification(RoomApiNotificationType.JOIN_REQUEST, this);
+        this.roomApi.notifier.unfollow(RoomApiNotificationType.JOIN_REQUEST, this);
         if (this.refreshId !== undefined) {
             clearInterval(this.refreshId);
         }
