@@ -26,7 +26,6 @@ export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
     private readonly subs: Array<Subscription> = [];
     public sendInput: string = '';
     public chat: Array<ChatMessage> = [];
-    public maxPlayer: number = 6;
     public newMessage: number = 0;
     public viewingHistory: boolean = false;
 

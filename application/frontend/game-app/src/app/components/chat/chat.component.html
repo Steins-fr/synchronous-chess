@@ -1,6 +1,5 @@
 <div id="chat-app">
     <h3>Webrtc chat</h3>
-    <app-room-setup [maxPlayer]="maxPlayer"></app-room-setup>
     <h4 *ngIf="roomService.isActive | async">Salle ({{ roomService.roomName }})</h4>
     <div id="chat-container">
         <div id="chat">
@@ -45,4 +44,3 @@
             [disabled]="(roomService.isActive | async) === false">Envoyer</button>
     </div>
 </div>
-<app-debug-webrtc></app-debug-webrtc>

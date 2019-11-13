@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import Piece, { PieceColor, PieceType } from 'src/app/classes/chess/piece/piece';
 import Cell from 'src/app/classes/chess/board/cell';
 import Rook from 'src/app/classes/chess/piece/pieces/rook';
@@ -11,6 +11,8 @@ import Vec2 from 'vec2';
 import ChessHelper, { Column } from 'src/app/helpers/chess-helper';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
 import ChessRules from 'src/app/classes/chess/rules/chess-rules';
+import { RoomService } from 'src/app/services/room/room.service';
+import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -35,6 +37,10 @@ export class SyncChessGameComponent {
 
     private readonly whiteRules: SynchronousChessRules = SynchronousChessRules.whiteRules;
     private readonly blackRules: SynchronousChessRules = SynchronousChessRules.blackRules;
+
+    public constructor(
+        public roomService: RoomService) {
+    }
 
     private static genMainRow(color: PieceColor): Array<Cell> {
         return [
