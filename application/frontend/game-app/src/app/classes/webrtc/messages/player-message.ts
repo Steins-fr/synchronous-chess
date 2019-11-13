@@ -5,6 +5,6 @@ export enum PlayerMessageType {
     PONG = 'pong'
 }
 
-export interface PlayerMessage extends RoomMessage {
+export interface PlayerMessage<U = any> extends RoomMessage<U> {
     type: PlayerMessageType;
 }

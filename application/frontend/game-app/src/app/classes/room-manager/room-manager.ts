@@ -1,4 +1,4 @@
-import { Subscription, Subject, Observable, ReplaySubject } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 
@@ -12,16 +12,17 @@ import {
     PlayerEventType,
     PlayerEvent
 } from '../player/player';
-import RoomEvent from './events/room-event';
+import RoomEvent, { RoomEventType } from './events/room-event';
 import RoomPlayerAddEvent from './events/room-player-add-event';
 import RoomQueueAddEvent from './events/room-queue-add-event';
 import RoomPlayerRemoveEvent from './events/room-player-remove-event';
 import RoomQueueRemoveEvent from './events/room-queue-remove-event';
+import Notifier, { NotifierFlow } from '../notifier/notifier';
 
 export type RoomEventPayload = string;
+type OnMessageCallback = (message: Message) => void;
 
 export abstract class RoomManager {
-    protected playersSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
     protected negotiatorsSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
 
     protected localPlayer?: Player;
@@ -30,13 +31,20 @@ export abstract class RoomManager {
     protected initiator: boolean;
     public isSetup: boolean = false;
 
-    private _onMessage: Subject<Message>;
-    private readonly _events: ReplaySubject<RoomEvent> = new ReplaySubject<RoomEvent>(3);
-    public readonly events: Observable<RoomEvent> = this._events.asObservable();
+    private _onMessage: OnMessageCallback;
+
+    // TODO: Verify if we can do notifier
+    /*  private readonly _events: ReplaySubject<RoomEvent> = new ReplaySubject<RoomEvent>(3);
+     public readonly events: Observable<RoomEvent> = this._events.asObservable(); */
+    private readonly _notifier: Notifier<RoomEventType, RoomEvent> = new Notifier<RoomEventType, RoomEvent>();
 
     public constructor(protected readonly roomApi: RoomApiService) { }
 
-    public setup(onMessage: Subject<Message>): void {
+    public get notifier(): NotifierFlow<RoomEventType, RoomEvent> {
+        return this._notifier;
+    }
+
+    public setup(onMessage: OnMessageCallback): void {
         this._onMessage = onMessage;
         this.isSetup = true;
     }
@@ -49,7 +57,7 @@ export abstract class RoomManager {
     }
 
     private pushEvent(event: RoomEvent): void {
-        this._events.next(event);
+        this._notifier.notify(event.type, event);
     }
 
     // Room creation
@@ -79,43 +87,25 @@ export abstract class RoomManager {
     protected abstract onRoomMessage(message: Message, fromPlayer: string): void;
 
     // Player events
-
     protected subscribeData(player: Player): void {
-        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<RoomMessage>) => {
-            if (playerEvent.type !== PlayerEventType.MESSAGE) {
-                return;
-            }
+        player.notifier.follow(PlayerEventType.MESSAGE, this, (playerEvent: PlayerEvent<RoomMessage>) => {
             const message: RoomMessage = playerEvent.message;
             if (message.origin !== MessageOriginType.ROOM_SERVICE) {
                 this.onRoomMessage(message, playerEvent.name);
             } else {
-                this._onMessage.next(message);
+                this._onMessage(message);
             }
         });
-        this.pushSubscriptionForPlayer(player.name, sub);
     }
 
     private subscribeOnDisconnected(player: Player): void {
-        const sub: Subscription = player.event.subscribe((playerEvent: PlayerEvent<Message>) => {
-            if (playerEvent.type === PlayerEventType.DISCONNECTED) {
-                if (this.players.has(playerEvent.name)) {
-                    const p: Player = this.players.get(playerEvent.name);
-                    this.onPlayerDisconnected(p);
-                    this.removePlayer(p);
-                }
-                sub.unsubscribe();
+        player.notifier.follow(PlayerEventType.DISCONNECTED, this, (playerEvent: PlayerEvent<Message>) => {
+            if (this.players.has(playerEvent.name)) {
+                const p: Player = this.players.get(playerEvent.name);
+                this.onPlayerDisconnected(p);
+                this.removePlayer(p);
             }
         });
-        this.pushSubscriptionForPlayer(player.name, sub); // To unsubscribe without receiving the event
-    }
-
-    private pushSubscriptionForPlayer(playerName: string, sub: Subscription): void {
-        let subs: Array<Subscription> = [];
-        if (this.playersSubs.has(playerName)) {
-            subs = this.playersSubs.get(playerName);
-        }
-        subs.push(sub);
-        this.playersSubs.set(playerName, subs);
     }
 
     protected abstract onPlayerConnected(player: Player): void;
@@ -126,7 +116,6 @@ export abstract class RoomManager {
             this.pushEvent(new RoomPlayerRemoveEvent(player));
             this.players.delete(player.name);
             player.clear();
-            this.clearSubscriptions(this.playersSubs, player.name);
         }
     }
 
@@ -193,7 +182,6 @@ export abstract class RoomManager {
     public clear(): void {
         this.players.forEach((player: Player) => {
             player.clear();
-            this.clearSubscriptions(this.playersSubs, player.name);
         });
         this.negotiators.forEach((negotiator: Negotiator) => {
             negotiator.clear();

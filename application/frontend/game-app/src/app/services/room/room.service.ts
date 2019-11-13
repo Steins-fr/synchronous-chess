@@ -1,7 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
-import { Subscription, BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
-import { Message } from 'src/app/classes/webrtc/messages/message';
 import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
 import MessageOriginType from 'src/app/classes/webrtc/messages/message-origin.types';
 
@@ -10,7 +9,7 @@ import { HostRoomManager } from 'src/app/classes/room-manager/host-room-manager'
 import { PeerRoomManager } from 'src/app/classes/room-manager/peer-room-manager';
 
 import { RoomApiService } from '../room-api/room-api.service';
-import RoomEvent from 'src/app/classes/room-manager/events/room-event';
+import { RoomEventType } from 'src/app/classes/room-manager/events/room-event';
 import RoomPlayerAddEvent from 'src/app/classes/room-manager/events/room-player-add-event';
 import { Player } from 'src/app/classes/player/player';
 import RoomPlayerRemoveEvent from 'src/app/classes/room-manager/events/room-player-remove-event';
@@ -18,22 +17,17 @@ import RoomQueueAddEvent from 'src/app/classes/room-manager/events/room-queue-ad
 import RoomQueueRemoveEvent from 'src/app/classes/room-manager/events/room-queue-remove-event';
 import RoomCreateResponse from '../room-api/responses/room-create-response';
 import RoomJoinResponse from '../room-api/responses/room-join-response';
+import Notifier, { NotifierFlow } from 'src/app/classes/notifier/notifier';
 
-interface RoomEventHandlers {
-    playerAdd: (event: RoomPlayerAddEvent) => void;
-    playerRemove: (event: RoomPlayerRemoveEvent) => void;
-    queueAdd: (event: RoomQueueAddEvent) => void;
-    queueRemove: (event: RoomQueueRemoveEvent) => void;
-}
-
-type RoomEventHandler = (event: RoomEvent) => void;
+type RoomServiceNotificationType = string;
+type RoomServiceNotification = RoomServiceMessage;
+export type NotifyCallback = (data: RoomServiceNotification) => void;
 
 @Injectable(
     { providedIn: 'root' }
 )
 export class RoomService {
 
-    private roomManagerEventSub?: Subscription;
     public roomManager?: RoomManager;
     public roomName: string = '';
 
@@ -44,25 +38,21 @@ export class RoomService {
     public players: Map<string, Player> = new Map<string, Player>();
     public queue: Array<string> = [];
 
-    private readonly _onMessage: Subject<Message> = new Subject<Message>();
-    public onMessage: Observable<Message> = this._onMessage.asObservable();
-
-    private readonly roomEventHandlers: RoomEventHandlers = {
-        playerAdd: this.handleRoomPlayerAddEvent.bind(this),
-        playerRemove: this.handleRoomPlayerRemoveEvent.bind(this),
-        queueAdd: this.handleRoomQueueAddEvent.bind(this),
-        queueRemove: this.handleRoomQueueRemoveEvent.bind(this)
-    };
+    private readonly _notifier: Notifier<RoomServiceNotificationType, RoomServiceNotification> = new Notifier<RoomServiceNotificationType, RoomServiceNotification>();
 
     public constructor(private readonly ngZone: NgZone, private readonly roomApi: RoomApiService) { }
+
+    public get notifier(): NotifierFlow<RoomServiceNotificationType, RoomServiceNotification> {
+        return this._notifier;
+    }
 
     public setup(): void {
         this.roomApi.setup();
     }
 
-    public transmitMessage<T>(type: T, message: string): void {
+    public transmitMessage<T, U>(type: T, message: U): void {
         if (this.isReady()) {
-            const roomServiceMessage: RoomServiceMessage<T> = {
+            const roomServiceMessage: RoomServiceMessage<T, U> = {
                 type,
                 payload: message,
                 origin: MessageOriginType.ROOM_SERVICE
@@ -77,7 +67,8 @@ export class RoomService {
 
     public async createRoom(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
         const hostRoom: HostRoomManager = new HostRoomManager(this.roomApi);
-        hostRoom.setup(this._onMessage);
+        this.followRoomManager(hostRoom);
+        hostRoom.setup((message: RoomServiceMessage) => this.onMessage(message));
         try {
             const response: RoomCreateResponse = await hostRoom.create(roomName, playerName, maxPlayer);
             this.finalizeSetup(roomName, hostRoom);
@@ -88,9 +79,14 @@ export class RoomService {
         }
     }
 
+    private onMessage(message: RoomServiceMessage): void {
+        this._notifier.notify(message.type, message);
+    }
+
     public async joinRoom(roomName: string, playerName: string): Promise<RoomJoinResponse> {
         const peerRoom: PeerRoomManager = new PeerRoomManager(this.roomApi);
-        peerRoom.setup(this._onMessage);
+        this.followRoomManager(peerRoom);
+        peerRoom.setup((message: RoomServiceMessage) => this.onMessage(message));
         try {
             const response: RoomJoinResponse = await peerRoom.join(roomName, playerName);
             this.finalizeSetup(roomName, peerRoom);
@@ -105,14 +101,13 @@ export class RoomService {
         this.roomManager = roomManager;
         this.roomName = roomName;
         this.ngZone.run(() => this._isActive.next(true));
-        this.roomManagerEventSub = this.roomManager.events.subscribe((event: RoomEvent) => this.handleRoomEvent(event));
     }
 
-    private handleRoomEvent(event: RoomEvent): void {
-        const handler: RoomEventHandler = this.roomEventHandlers[event.type];
-        if (handler !== undefined) {
-            handler(event);
-        }
+    private followRoomManager(roomManager: RoomManager): void {
+        roomManager.notifier.follow(RoomEventType.PLAYER_ADD, this, this.handleRoomPlayerAddEvent.bind(this));
+        roomManager.notifier.follow(RoomEventType.PLAYER_REMOVE, this, this.handleRoomPlayerRemoveEvent.bind(this));
+        roomManager.notifier.follow(RoomEventType.QUEUE_ADD, this, this.handleRoomQueueAddEvent.bind(this));
+        roomManager.notifier.follow(RoomEventType.QUEUE_REMOVE, this, this.handleRoomQueueRemoveEvent.bind(this));
     }
 
     private handleRoomPlayerAddEvent(event: RoomPlayerAddEvent): void {
@@ -148,9 +143,6 @@ export class RoomService {
     }
 
     public clear(): void {
-        if (this.roomManagerEventSub && this.roomManagerEventSub.closed === false) {
-            this.roomManagerEventSub.unsubscribe();
-        }
         if (this.roomManager !== undefined) {
             this.roomManager.clear();
             this.roomManager = undefined;

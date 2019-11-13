@@ -5,6 +5,6 @@ export enum HostRoomMessageType {
     REMOTE_SIGNAL = 'remoteSignal'
 }
 
-export interface HostRoomMessage extends RoomMessage {
+export interface HostRoomMessage<U> extends RoomMessage<U> {
     type: HostRoomMessageType;
 }

@@ -1,17 +1,18 @@
-import { Subject, Observable, Subscription, BehaviorSubject } from 'rxjs';
+import { Observable, Subscription, BehaviorSubject } from 'rxjs';
 
 import { Webrtc, WebrtcConnectionState } from '../webrtc/webrtc';
 import WebrtcStates from '../webrtc/webrtc-states';
 import { Message } from '../webrtc/messages/message';
 import { PlayerMessage, PlayerMessageType } from '../webrtc/messages/player-message';
 import MessageOriginType from '../webrtc/messages/message-origin.types';
+import Notifier, { NotifierFlow } from '../notifier/notifier';
 
 export enum PlayerEventType {
     DISCONNECTED = 'disconnected',
     MESSAGE = 'message'
 }
 
-export interface PlayerEvent<T extends Message> {
+export interface PlayerEvent<T extends Message = any> {
     type: PlayerEventType;
     name: string; // Player name
     message: T;
@@ -23,8 +24,9 @@ export class Player {
     private static readonly PONG_MARK: string = 'pongMark';
 
     private readonly subs: Array<Subscription> = [];
-    private readonly _event: Subject<PlayerEvent<Message>> = new Subject<PlayerEvent<Message>>();
-    public readonly event: Observable<PlayerEvent<Message>> = this._event.asObservable();
+
+    private readonly _notifier: Notifier<PlayerEventType, PlayerEvent> = new Notifier<PlayerEventType, PlayerEvent>();
+
     public states?: Observable<WebrtcStates>; // For external debugging
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.CONNECTED;
 
@@ -48,6 +50,10 @@ export class Player {
         }
     }
 
+    public get notifier(): NotifierFlow<PlayerEventType, PlayerEvent> {
+        return this._notifier;
+    }
+
     public clear(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
         if (this.webRTC) {
@@ -63,7 +69,7 @@ export class Player {
             const markId: string = this.markIdGenerator.next().value;
             window.performance.mark(`${Player.PING_MARK}-${markId}`);
 
-            const pingMessage: PlayerMessage = {
+            const pingMessage: PlayerMessage<string> = {
                 type: PlayerMessageType.PING,
                 origin: MessageOriginType.PLAYER,
                 payload: markId
@@ -74,7 +80,7 @@ export class Player {
     }
 
     private pushEvent(type: PlayerEventType, message?: Message): void {
-        this._event.next({
+        this._notifier.notify(type, {
             type,
             message,
             name: this.name
@@ -102,8 +108,8 @@ export class Player {
         return this.webRTC === undefined;
     }
 
-    private onPlayerPingMessage(playerMessage: PlayerMessage): void {
-        const message: PlayerMessage = {
+    private onPlayerPingMessage(playerMessage: PlayerMessage<string>): void {
+        const message: PlayerMessage<string> = {
             type: PlayerMessageType.PONG,
             origin: MessageOriginType.PLAYER,
             payload: playerMessage.payload
@@ -111,7 +117,7 @@ export class Player {
         this.sendData(message);
     }
 
-    private onPlayerPongMessage(playerMessage: PlayerMessage): void {
+    private onPlayerPongMessage(playerMessage: PlayerMessage<string>): void {
         const pingMark: string = `${Player.PING_MARK}-${playerMessage.payload}`;
         const pongMark: string = `${Player.PONG_MARK}-${playerMessage.payload}`;
         const measureName: string = `${pingMark}_${pongMark}`;
@@ -127,7 +133,7 @@ export class Player {
         window.performance.clearMeasures(measureName);
     }
 
-    private onPlayerMessage(playerMessage: PlayerMessage): void {
+    private onPlayerMessage(playerMessage: PlayerMessage<string>): void {
         switch (playerMessage.type) {
             case PlayerMessageType.PING:
                 this.onPlayerPingMessage(playerMessage);

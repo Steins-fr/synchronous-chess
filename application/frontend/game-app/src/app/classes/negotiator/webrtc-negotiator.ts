@@ -23,9 +23,9 @@ export class WebrtcNegotiator extends Negotiator {
             signal
         };
 
-        const message: NegotiatorMessage = {
+        const message: NegotiatorMessage<SignalPayload> = {
             type: NegotiatorMessageType.SIGNAL,
-            payload: JSON.stringify(signalPayload),
+            payload: signalPayload,
             origin: MessageOriginType.NEGOTIATOR,
             from: this.playerName
         };

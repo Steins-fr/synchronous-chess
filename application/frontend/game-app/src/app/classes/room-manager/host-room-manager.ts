@@ -14,6 +14,7 @@ import { Webrtc } from '../webrtc/webrtc';
 
 import { RoomManager } from './room-manager';
 import { Player } from '../player/player';
+import { NewPlayerPayload } from './peer-room-manager';
 
 
 export class HostRoomManager extends RoomManager {
@@ -73,11 +74,9 @@ export class HostRoomManager extends RoomManager {
     }
 
     protected transmitNewPlayer(playerName: string): void {
-        const message: HostRoomMessage = {
+        const message: HostRoomMessage<NewPlayerPayload> = {
             type: HostRoomMessageType.NEW_PLAYER,
-            payload: JSON.stringify({
-                playerName
-            }),
+            payload: { playerName },
             origin: MessageOriginType.HOST_ROOM,
             from: this.localPlayer.name
         };
@@ -98,14 +97,16 @@ export class HostRoomManager extends RoomManager {
         });
     }
 
-    protected onRoomMessage(roomMessage: RoomMessage, fromPlayer: string): void {
+    protected onRoomMessage(roomMessage: RoomMessage<SignalPayload>, fromPlayer: string): void {
         if (roomMessage.origin !== MessageOriginType.NEGOTIATOR) {
             return;
         }
-        const negotiatorMessage: NegotiatorMessage = roomMessage as NegotiatorMessage;
+
+        // TODO: Better casting, notifier ?
+        const negotiatorMessage: NegotiatorMessage<SignalPayload> = roomMessage as NegotiatorMessage<SignalPayload>;
 
         if (negotiatorMessage.type === NegotiatorMessageType.SIGNAL) {
-            const signalPayload: SignalPayload = JSON.parse(negotiatorMessage.payload);
+            const signalPayload: SignalPayload = negotiatorMessage.payload;
             if (this.players.has(signalPayload.to) === false) {
                 return;
             }
@@ -116,9 +117,9 @@ export class HostRoomManager extends RoomManager {
                 signal: signalPayload.signal
             };
 
-            const negotiationMessage: HostRoomMessage = {
+            const negotiationMessage: HostRoomMessage<SignalResponse> = {
                 type: HostRoomMessageType.REMOTE_SIGNAL,
-                payload: JSON.stringify(remoteSignalPayload),
+                payload: remoteSignalPayload,
                 origin: MessageOriginType.HOST_ROOM,
                 from: this.localPlayer.name
             };

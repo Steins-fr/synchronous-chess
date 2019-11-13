@@ -12,7 +12,7 @@ import { RoomManager } from './room-manager';
 import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
 import SignalResponse from 'src/app/services/room-api/responses/signal-response';
 
-interface NewPlayerPayload {
+export interface NewPlayerPayload {
     playerName: string;
 }
 
@@ -40,17 +40,20 @@ export class PeerRoomManager extends RoomManager {
         }
     }
 
-    protected onRoomMessage(roomMessage: HostRoomMessage): void {
+    protected onRoomMessage(roomMessage: HostRoomMessage<SignalResponse> | HostRoomMessage<NewPlayerPayload>): void {
         if (roomMessage.origin !== MessageOriginType.HOST_ROOM) {
             return;
         }
 
+        // TODO: better casting, notifier ?
         switch (roomMessage.type) {
             case HostRoomMessageType.NEW_PLAYER:
-                this.onNewPlayer(JSON.parse(roomMessage.payload));
+                const newPlayerMessage: HostRoomMessage<NewPlayerPayload> = roomMessage as HostRoomMessage<NewPlayerPayload>;
+                this.onNewPlayer(newPlayerMessage.payload);
                 break;
             case HostRoomMessageType.REMOTE_SIGNAL:
-                this.onRemoteSignal(JSON.parse(roomMessage.payload));
+                const remoteMessage: HostRoomMessage<SignalResponse> = roomMessage as HostRoomMessage<SignalResponse>;
+                this.onRemoteSignal(remoteMessage.payload);
                 break;
         }
     }
