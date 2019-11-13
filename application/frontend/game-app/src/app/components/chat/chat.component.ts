@@ -10,10 +10,12 @@ enum ChatMessageType {
     CHAT = 'chat'
 }
 
-interface ChatMessage {
+interface ChatEntry {
     author: string;
     message: string;
 }
+
+type ChatMessage = string;
 
 @Component({
     selector: 'app-chat',
@@ -25,14 +27,13 @@ export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
     @ViewChild(CdkVirtualScrollViewport, { static: false }) public virtualScrollViewport?: CdkVirtualScrollViewport;
     private readonly subs: Array<Subscription> = [];
     public sendInput: string = '';
-    public chat: Array<ChatMessage> = [];
+    public chat: Array<ChatEntry> = [];
     public newMessage: number = 0;
     public viewingHistory: boolean = false;
 
     public constructor(
         public roomService: RoomService,
         private readonly ngZone: NgZone) {
-        this.listenChat();
     }
 
     public ngOnInit(): void {
@@ -40,6 +41,7 @@ export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
             .subscribe(() => {
                 this.scrollDown();
             }));
+        this.roomService.notifier.follow(ChatMessageType.CHAT, this, this.onChatMessage.bind(this));
     }
 
     public ngAfterViewInit(): void {
@@ -62,6 +64,7 @@ export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
 
     public ngOnDestroy(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
+        this.roomService.notifier.unfollow(ChatMessageType.CHAT, this);
         this.roomService.clear();
     }
 
@@ -77,15 +80,11 @@ export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
         }
     }
 
-    private listenChat(): void {
-        this.subs.push(this.roomService.onMessage.subscribe((message: RoomServiceMessage<ChatMessageType>) => {
-            if (message.type === ChatMessageType.CHAT) {
-                this.newMessage += 1;
-                this.ngZone.run(() => this.chat = [...this.chat, {
-                    author: message.from,
-                    message: message.payload
-                }]);
-            }
-        }));
+    private onChatMessage(message: RoomServiceMessage<ChatMessageType, ChatMessage>): void {
+        this.newMessage += 1;
+        this.ngZone.run(() => this.chat = [...this.chat, {
+            author: message.from,
+            message: message.payload
+        }]);
     }
 }
