@@ -96,12 +96,6 @@ export default abstract class ChessHelper {
     private static getProtectionPlays(position: Vec2, board: FenBoard, rules: ChessRules): Array<Vec2> {
         const playedPiece: FenPiece = ChessHelper.getFenPiece(board, position);
 
-        // The kings can't enter in the danger perimeter of the other.
-        // To prevent recursive movement checks for the king, do not check its possible plays.
-        if (ChessHelper.pieceType(playedPiece) === PieceType.KING) {
-            return [];
-        }
-
         // Turn all pieces to the same color
         // This permits to simulate the protection of our piece.
         // If we can eat our piece => we can eat the opponent piece which will eat my piece
