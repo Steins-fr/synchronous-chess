@@ -11,8 +11,8 @@ export class WebsocketNegotiator extends Negotiator {
         private readonly roomApi: RoomApiService) {
 
         super(playerName, webRTC);
-        this.roomApi.followNotification(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
-        this.roomApi.followNotification(RoomApiNotificationType.FULL, this, (data: FullNotification) => this.onFull(data));
+        this.roomApi.notifier.follow(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
+        this.roomApi.notifier.follow(RoomApiNotificationType.FULL, this, (data: FullNotification) => this.onFull(data));
     }
 
     private onFull(data: FullNotification): void {
@@ -32,8 +32,8 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     public clear(): void {
-        this.roomApi.unfollowNotification(RoomApiNotificationType.FULL, this);
-        this.roomApi.unfollowNotification(RoomApiNotificationType.REMOTE_SIGNAL, this);
+        this.roomApi.notifier.unfollow(RoomApiNotificationType.FULL, this);
+        this.roomApi.notifier.unfollow(RoomApiNotificationType.REMOTE_SIGNAL, this);
         super.clear();
     }
 }

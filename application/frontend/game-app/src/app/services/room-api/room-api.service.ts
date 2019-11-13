@@ -24,6 +24,7 @@ import FullResponse from './responses/full-response';
 import FullNotification from './notifications/full-notification';
 import PlayersResponse from './responses/players-response';
 import PlayersRequest from './requests/players-request';
+import Notifier, { NotifierFlow } from 'src/app/classes/notifier/notifier';
 
 export interface PacketPayload extends SocketPayload {
     id: number;
@@ -59,11 +60,6 @@ type RoomApiNotification = SignalNotification | JoinNotification | FullNotificat
 export type NotifyCallback = (data: RoomApiNotification) => void;
 type RequestId = number;
 
-interface RoomApiFollower {
-    reference: object;
-    notify: NotifyCallback;
-}
-
 @Injectable({
     providedIn: 'root'
 })
@@ -80,11 +76,16 @@ export class RoomApiService {
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
     private static readonly ERROR_SEND: string = 'The message was not sent';
 
-    private readonly followerSubjects: Map<RoomApiNotificationType, Array<RoomApiFollower>> = new Map<RoomApiNotificationType, Array<RoomApiFollower>>();
+    private readonly _notifier: Notifier<RoomApiNotificationType, RoomApiNotification> = new Notifier<RoomApiNotificationType, RoomApiNotification>();
+
     private readonly requestTimers: Map<RequestId, NodeJS.Timer> = new Map<RequestId, NodeJS.Timer>();
     private readonly subs: Array<Subscription> = [];
 
     public constructor(private readonly webSocketService: WebSocketService) { }
+
+    public get notifier(): NotifierFlow<RoomApiNotificationType, RoomApiNotification> {
+        return this._notifier;
+    }
 
     public setup(): void {
         this.webSocketService.connect(new WebSocket(environment.webSocketServer));
@@ -96,10 +97,7 @@ export class RoomApiService {
             return;
         }
         const type: RoomApiNotificationType = payload.type as RoomApiNotificationType;
-        if (this.followerSubjects.has(type)) {
-            const followers: Array<RoomApiFollower> = this.followerSubjects.get(type);
-            followers.forEach((follower: RoomApiFollower) => follower.notify(JSON.parse(payload.data)));
-        }
+        this._notifier.notify(type, JSON.parse(payload.data));
     }
 
     private buildPacket(requestType: string, data: string): PacketPayload {
@@ -109,26 +107,6 @@ export class RoomApiService {
             id: RoomApiService.requestIdGenerator.next().value
         };
         return payload;
-    }
-
-    public followNotification(type: RoomApiNotificationType, who: object, callback: NotifyCallback): void {
-        let followers: Array<RoomApiFollower> = [];
-        if (this.followerSubjects.has(type)) {
-            followers = this.followerSubjects.get(type);
-        }
-        followers.push({
-            reference: who,
-            notify: callback
-        });
-        this.followerSubjects.set(type, followers);
-    }
-
-    public unfollowNotification(type: RoomApiNotificationType, who: object): void {
-        if (this.followerSubjects.has(type)) {
-            let followers: Array<RoomApiFollower> = this.followerSubjects.get(type);
-            followers = followers.filter((follower: RoomApiFollower) => follower.reference !== who);
-            this.followerSubjects.set(type, followers);
-        }
     }
 
     public create(roomName: string, maxPlayer: number, playerName: string): Promise<RoomCreateResponse> {
