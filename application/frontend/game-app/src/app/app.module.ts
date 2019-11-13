@@ -28,6 +28,9 @@ import { PieceComponent } from './components/chess-board/piece/piece.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { Vector2dPipe } from './pipes/vector2d.pipe';
 import { SyncChessGameComponent } from './components/sync-chess-game/sync-chess-game.component';
+import { ChatPageComponent } from './pages/chat-page/chat-page.component';
+import { SynchronousChessPageComponent } from './pages/synchronous-chess-page/synchronous-chess-page.component';
+import { RoomLayoutComponent } from './layouts/room-layout/room-layout.component';
 
 
 @NgModule({
@@ -42,7 +45,10 @@ import { SyncChessGameComponent } from './components/sync-chess-game/sync-chess-
         RangePipe,
         PieceComponent,
         Vector2dPipe,
-        SyncChessGameComponent
+        SyncChessGameComponent,
+        ChatPageComponent,
+        SynchronousChessPageComponent,
+        RoomLayoutComponent
     ],
     imports: [
         BrowserModule,

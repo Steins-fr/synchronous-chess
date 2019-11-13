@@ -1,14 +1,14 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ChatComponent } from './components/chat/chat.component';
-import { SyncChessGameComponent } from './components/sync-chess-game/sync-chess-game.component';
+import { ChatPageComponent } from './pages/chat-page/chat-page.component';
+import { SynchronousChessPageComponent } from './pages/synchronous-chess-page/synchronous-chess-page.component';
 
 export const homePath: string = '';
 export const chatPath: string = 'simple-chat';
 
 const routes: Routes = [
-    { path: homePath, component: SyncChessGameComponent },
-    { path: chatPath, component: ChatComponent }
+    { path: homePath, component: SynchronousChessPageComponent },
+    { path: chatPath, component: ChatPageComponent }
 ];
 
 @NgModule({
