@@ -1,17 +1,17 @@
-import { KingSafeMoveCondition } from './king-safe-move-condition';
+import { SafeMoveCondition } from './safe-move-condition';
 import SynchronousChessRules from '../../rules/synchronous-chess-rules';
 import { FenBoard } from 'src/app/helpers/chess-helper';
 import { FenPiece } from '../../piece/piece';
 import Vec2 from 'vec2';
 
-describe('KingSafeMoveCondition', () => {
+describe('SafeMoveCondition', () => {
     it('should create an instance', () => {
-        expect(new KingSafeMoveCondition(undefined)).toBeTruthy();
+        expect(new SafeMoveCondition(undefined, false)).toBeTruthy();
     });
 
     it('should say if it can move', () => {
         // Given
-        const condition: KingSafeMoveCondition = new KingSafeMoveCondition(SynchronousChessRules.blackRules);
+        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.blackRules, false);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -32,9 +32,32 @@ describe('KingSafeMoveCondition', () => {
         expect(resultInvalidKingSafety).toBeFalsy();
     });
 
+    it('should say if it can move without safety', () => {
+        // Given
+        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.blackRules, true);
+        const board: FenBoard = [
+            [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+
+        // When
+        const resultValidKingSafety1: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([3, 0]), board);
+        const resultValidKingSafety2: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([5, 0]), board);
+
+        // Then
+        expect(resultValidKingSafety1).toBeTruthy();
+        expect(resultValidKingSafety2).toBeTruthy();
+    });
+
     it('should say if it can move (with cell condition safety)', () => {
         // Given
-        const condition: KingSafeMoveCondition = new KingSafeMoveCondition(SynchronousChessRules.blackRules, [1, 0]);
+        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.blackRules, false, [1, 0]);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING],

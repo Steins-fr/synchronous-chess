@@ -8,14 +8,16 @@ import CaseMoveCondition from '../moves/move-conditions/case-move-condition';
 import { FenPiece, PieceColor } from '../piece/piece';
 import { Line } from 'src/app/helpers/chess-helper';
 import { DoNotApprocheMoveCondition } from '../moves/move-conditions/do-not-approche-move-condition';
-import { KingSafeMoveCondition } from '../moves/move-conditions/king-safe-move-condition';
+import { SafeMoveCondition } from '../moves/move-conditions/safe-move-condition';
 
 export default class SynchronousChessRules extends ChessRules {
 
     public static readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
     public static readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+    private static readonly whiteNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE, true);
+    private static readonly blackNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK, true);
 
-    private constructor(color: PieceColor) {
+    private constructor(color: PieceColor, private readonly isForCheckSafety: boolean = false) {
         super(color);
         const direction: number = this.isBlack() ? 1 : -1;
 
@@ -59,23 +61,27 @@ export default class SynchronousChessRules extends ChessRules {
     private castlingMove(opponentRules: ChessRules): Array<Move> {
         const castlingMoves: Array<Move> = [];
 
+        if (this.isForCheckSafety) {
+            return castlingMoves;
+        }
+
         if (this.castlingH === true) {
             castlingMoves.push(HopMove.build([2, 0], [
                 new CaseMoveCondition([1, 0], [FenPiece.EMPTY]),
-                new KingSafeMoveCondition(opponentRules, [1, 0])
+                new SafeMoveCondition(opponentRules, this.isForCheckSafety, [1, 0])
             ]));
         }
         if (this.castlingA === true) {
             castlingMoves.push(HopMove.build([-2, 0], [
                 new CaseMoveCondition([-1, 0], [FenPiece.EMPTY]),
-                new KingSafeMoveCondition(opponentRules, [-1, 0])
+                new SafeMoveCondition(opponentRules, this.isForCheckSafety, [-1, 0])
             ]));
         }
         return castlingMoves;
     }
 
     public get kingMove(): Array<Move> {
-        const opponentRules: ChessRules = this.isBlack() ? SynchronousChessRules.whiteRules : SynchronousChessRules.blackRules;
+        const opponentRules: ChessRules = this.isBlack() ? SynchronousChessRules.whiteNoSafetyRules : SynchronousChessRules.blackNoSafetyRules;
 
         return [
             ...HopMove.buildAll([
@@ -83,7 +89,7 @@ export default class SynchronousChessRules extends ChessRules {
                 [1, 1], [-1, -1], [1, -1], [-1, 1]
             ], [
                 new DoNotApprocheMoveCondition(this.isBlack() ? FenPiece.WHITE_KING : FenPiece.BLACK_KING, 2),
-                new KingSafeMoveCondition(opponentRules)
+                new SafeMoveCondition(opponentRules, this.isForCheckSafety)
             ]),
             ...this.castlingMove(opponentRules)
         ];
