@@ -9,8 +9,8 @@ export default abstract class ChessRules {
     public abstract readonly knightMove: Array<Move>;
     public abstract readonly rookMove: Array<Move>;
     public abstract readonly pawnMove: Array<Move>;
-    public castlingA: boolean = true;
-    public castlingH: boolean = true;
+    public isQueenSideCastleAvailable: boolean = true;
+    public isKingSideCastelAvailable: boolean = true;
 
     public constructor(public readonly color: PieceColor) { }
 

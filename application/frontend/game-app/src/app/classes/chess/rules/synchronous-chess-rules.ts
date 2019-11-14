@@ -65,13 +65,13 @@ export default class SynchronousChessRules extends ChessRules {
             return castlingMoves;
         }
 
-        if (this.castlingH === true) {
+        if (this.isKingSideCastelAvailable === true) {
             castlingMoves.push(HopMove.build([2, 0], [
                 new CaseMoveCondition([1, 0], [FenPiece.EMPTY]),
                 new SafeMoveCondition(opponentRules, this.isForCheckSafety, [1, 0])
             ]));
         }
-        if (this.castlingA === true) {
+        if (this.isQueenSideCastleAvailable === true) {
             castlingMoves.push(HopMove.build([-2, 0], [
                 new CaseMoveCondition([-1, 0], [FenPiece.EMPTY]),
                 new SafeMoveCondition(opponentRules, this.isForCheckSafety, [-1, 0])

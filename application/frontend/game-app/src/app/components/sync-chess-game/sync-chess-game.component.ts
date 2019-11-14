@@ -1,4 +1,4 @@
-import { Component, NgZone } from '@angular/core';
+import { Component } from '@angular/core';
 import Piece, { PieceColor, PieceType } from 'src/app/classes/chess/piece/piece';
 import Cell from 'src/app/classes/chess/board/cell';
 import Rook from 'src/app/classes/chess/piece/pieces/rook';
@@ -12,7 +12,6 @@ import ChessHelper, { Column } from 'src/app/helpers/chess-helper';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
 import ChessRules from 'src/app/classes/chess/rules/chess-rules';
 import { RoomService } from 'src/app/services/room/room.service';
-import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -65,17 +64,17 @@ export class SyncChessGameComponent {
             rookNewCell.piece = rookCell.piece;
             rookCell.piece = undefined;
         }
-        rules.castlingA = false;
-        rules.castlingH = false;
+        rules.isQueenSideCastleAvailable = false;
+        rules.isKingSideCastelAvailable = false;
     }
 
     private rookPlay(from: Vec2, rules: ChessRules): void {
         switch (from.x) {
             case Column.A:
-                rules.castlingA = false;
+                rules.isQueenSideCastleAvailable = false;
                 break;
             case Column.H:
-                rules.castlingH = false;
+                rules.isKingSideCastelAvailable = false;
                 break;
         }
     }
