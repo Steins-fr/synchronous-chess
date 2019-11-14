@@ -1,6 +1,6 @@
 import HopMove from './hop-move';
 import Vec2 from 'vec2';
-import { FenBoard } from 'src/app/helpers/chess-helper';
+import { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { FenPiece } from '../piece/piece';
 
 describe('HopMove', () => {

@@ -1,6 +1,6 @@
 import MoveCondition from './move-condition';
 import Vec2 from 'vec2';
-import ChessHelper, { FenBoard, SafeBoard } from 'src/app/helpers/chess-helper';
+import ChessBoardHelper, { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
 import ChessRules from '../../rules/chess-rules';
 
 export class SafeMoveCondition extends MoveCondition {
@@ -19,10 +19,10 @@ export class SafeMoveCondition extends MoveCondition {
             return true;
         }
 
-        const safeBoard: SafeBoard = ChessHelper.fenBoardToSafeBoard(board, this.rules);
+        const safeBoard: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(board, this.rules);
         if (this.andRelativeSafeCell !== undefined) {
             const andSafeCell: Vec2 = oldPosition.add(this.andRelativeSafeCell, true);
-            if (ChessHelper.isOutOfBoard(andSafeCell) === false && safeBoard[andSafeCell.y][andSafeCell.x] === false) {
+            if (ChessBoardHelper.isOutOfBoard(andSafeCell) === false && safeBoard[andSafeCell.y][andSafeCell.x] === false) {
                 return false;
             }
         }

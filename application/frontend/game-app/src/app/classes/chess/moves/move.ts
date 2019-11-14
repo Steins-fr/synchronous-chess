@@ -1,5 +1,5 @@
 import Vec2 from 'vec2';
-import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
+import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { FenPiece } from '../piece/piece';
 import MoveCondition from './move-conditions/move-condition';
 
@@ -22,8 +22,8 @@ export default abstract class Move {
     }
 
     protected validPosition(position: Vec2, board: FenBoard): void {
-        if (ChessHelper.isOutOfBoard(position)
-            || ChessHelper.getFenPiece(board, position) === FenPiece.EMPTY) {
+        if (ChessBoardHelper.isOutOfBoard(position)
+            || ChessBoardHelper.getFenPiece(board, position) === FenPiece.EMPTY) {
             throw Error('The movement origin have to be valid.');
         }
     }

@@ -1,6 +1,6 @@
 import Move, { MoveType } from './move';
 import Vec2 from 'vec2';
-import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
+import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { FenPiece, PieceColor } from '../piece/piece';
 import MoveCondition from './move-conditions/move-condition';
 
@@ -21,16 +21,16 @@ export default class HopMove extends Move {
     protected _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {
         this.validPosition(position, board);
 
-        const myColor: PieceColor = ChessHelper.pieceColor(ChessHelper.getFenPiece(board, position));
+        const myColor: PieceColor = ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, position));
         const plays: Array<Vec2> = [];
         const newPosition: Vec2 = position.add(this.vector, true);
-        const destinationFenPiece: FenPiece = ChessHelper.getFenPiece(board, newPosition);
+        const destinationFenPiece: FenPiece = ChessBoardHelper.getFenPiece(board, newPosition);
 
         // If we stop on the board, we can move if the destination is empty or occupied by an opponent piece
-        if (ChessHelper.isOutOfBoard(newPosition) === false
+        if (ChessBoardHelper.isOutOfBoard(newPosition) === false
             && (
                 destinationFenPiece === FenPiece.EMPTY
-                || ChessHelper.pieceColor(destinationFenPiece) !== myColor)
+                || ChessBoardHelper.pieceColor(destinationFenPiece) !== myColor)
         ) {
             plays.push(newPosition);
         }
