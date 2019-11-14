@@ -12,8 +12,8 @@ import { SafeMoveCondition } from '../moves/move-conditions/safe-move-condition'
 
 export default class SynchronousChessRules extends ChessRules {
 
-    public static readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
-    public static readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+    private static readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
+    private static readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
     private static readonly whiteNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE, true);
     private static readonly blackNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK, true);
 
@@ -57,6 +57,10 @@ export default class SynchronousChessRules extends ChessRules {
     ]);
 
     public readonly pawnMove: Array<Move>;
+
+    public static getRules(color: PieceColor): SynchronousChessRules {
+        return color === PieceColor.BLACK ? SynchronousChessRules.blackRules : SynchronousChessRules.whiteRules;
+    }
 
     private castlingMove(opponentRules: ChessRules): Array<Move> {
         const castlingMoves: Array<Move> = [];
