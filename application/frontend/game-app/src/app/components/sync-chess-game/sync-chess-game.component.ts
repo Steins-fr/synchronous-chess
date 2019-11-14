@@ -109,11 +109,15 @@ export class SyncChessGameComponent {
 
     public piecePicked(cellPos: Vec2): void {
         this.playedPiece = cellPos;
+        this.pieceClicked(cellPos);
+    }
 
-        const cell: Cell = this.getCell(this.playedPiece);
+    public pieceClicked(cellPos: Vec2): void {
+        this.resetHighligh();
+        const cell: Cell = this.getCell(cellPos);
         const piece: Piece = cell.piece;
         const rules: SynchronousChessRules = this.getRules(piece.color);
-        rules.getPossiblePlays(piece.type, this.playedPiece, ChessHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
+        rules.getPossiblePlays(piece.type, cellPos, ChessHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
             this.getCell(posPlay).validMove = true;
         });
     }
@@ -125,10 +129,10 @@ export class SyncChessGameComponent {
     public pieceDropped(cellPos: Vec2): void {
         this.play(cellPos);
         this.resetHighligh();
+        this.playedPiece = new Vec2(-1, -1);
     }
 
     private resetHighligh(): void {
-        this.playedPiece = new Vec2(-1, -1);
         this.cells.forEach((row: Array<Cell>) => row.forEach((cell: Cell) => cell.validMove = false));
     }
 }

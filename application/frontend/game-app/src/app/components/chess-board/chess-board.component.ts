@@ -11,6 +11,7 @@ export class ChessBoardComponent {
 
     @Output() public piecePicked: EventEmitter<Vec2> = new EventEmitter<Vec2>();
     @Output() public pieceDropped: EventEmitter<Vec2> = new EventEmitter<Vec2>();
+    @Output() public pieceClicked: EventEmitter<Vec2> = new EventEmitter<Vec2>();
     @Input() public cells: Array<Array<Cell>> = [];
 
     public pieceDragged: Vec2 = new Vec2(-1, -1);

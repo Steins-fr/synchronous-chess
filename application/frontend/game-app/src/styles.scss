@@ -19,6 +19,13 @@ body {
     font-family: 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif;
 }
 
+.piece-preview-block {
+    .piece-preview {
+        position: relative;
+        transform: translate(-50%, -50%);
+    }
+}
+
 .mat-form-field {
     margin: 5px 10px;
 }
