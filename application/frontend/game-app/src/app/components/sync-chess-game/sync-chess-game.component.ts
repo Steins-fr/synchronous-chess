@@ -1,24 +1,46 @@
-import { Component } from '@angular/core';
-import Piece, { PieceColor, PieceType } from 'src/app/classes/chess/piece/piece';
+import { Component, OnInit, NgZone } from '@angular/core';
+import Piece, { PieceType } from 'src/app/classes/chess/piece/piece';
 import Cell from 'src/app/classes/chess/board/cell';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { Column, CellBoard } from 'src/app/helpers/chess-board-helper';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
 import ChessRules from 'src/app/classes/chess/rules/chess-rules';
 import { RoomService } from 'src/app/services/room/room.service';
+import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
+
+enum SCMessageType {
+    PLAY = 'SC-play'
+}
+
+type Position = Array<number>;
+
+interface PlayMessage {
+    from: Position;
+    to: Position;
+}
 
 @Component({
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss']
 })
-export class SyncChessGameComponent {
+export class SyncChessGameComponent implements OnInit {
 
     public cells: CellBoard = ChessBoardHelper.createCellBoard();
     public playedPiece: Vec2 = new Vec2(-1, -1);
 
     public constructor(
-        public roomService: RoomService) {
+        public roomService: RoomService,
+        private readonly ngZone: NgZone) {
+    }
+
+    public ngOnInit(): void {
+        this.roomService.notifier.follow(SCMessageType.PLAY, this, this.play.bind(this));
+    }
+
+    private play(message: RoomServiceMessage<SCMessageType, PlayMessage>): void {
+        const playMessage: PlayMessage = message.payload;
+        this.ngZone.run(() => this.applyPlay(playMessage.from, playMessage.to));
     }
 
     private kingPlay(from: Vec2, to: Vec2, rules: ChessRules): void {
@@ -46,16 +68,21 @@ export class SyncChessGameComponent {
         }
     }
 
-    private play(to: Vec2): void {
-        const from: Vec2 = new Vec2(this.playedPiece.toArray());
+    private applyPlay(fromPosition: Position, toPosition: Position): boolean {
+        const from: Vec2 = new Vec2(fromPosition);
+        const to: Vec2 = new Vec2(toPosition);
 
         const fromCell: Cell = ChessBoardHelper.getCell(this.cells, from);
         const toCell: Cell = ChessBoardHelper.getCell(this.cells, to);
-        if (toCell.validMove === false) {
-            return;
-        }
 
-        const rules: ChessRules = this.getRules(fromCell.piece.color);
+        const rules: ChessRules = SynchronousChessRules.getRules(fromCell.piece.color);
+
+        const playIsValid: boolean = rules.getPossiblePlays(fromCell.piece.type, from, ChessBoardHelper.toSimpleBoard(this.cells))
+            .some((posPlay: Vec2) => posPlay.equal(to.x, to.y));
+
+        if (playIsValid === false) {
+            return false;
+        }
 
         toCell.piece = fromCell.piece;
         fromCell.piece = undefined;
@@ -68,6 +95,8 @@ export class SyncChessGameComponent {
                 this.rookPlay(from, rules);
                 break;
         }
+
+        return playIsValid;
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -79,18 +108,21 @@ export class SyncChessGameComponent {
         this.resetHighligh();
         const cell: Cell = ChessBoardHelper.getCell(this.cells, cellPos);
         const piece: Piece = cell.piece;
-        const rules: SynchronousChessRules = this.getRules(piece.color);
+        const rules: SynchronousChessRules = SynchronousChessRules.getRules(piece.color);
+
+        // Move to the helper
         rules.getPossiblePlays(piece.type, cellPos, ChessBoardHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
             ChessBoardHelper.getCell(this.cells, posPlay).validMove = true;
         });
     }
 
-    private getRules(color: PieceColor): SynchronousChessRules {
-        return color === PieceColor.BLACK ? SynchronousChessRules.blackRules : SynchronousChessRules.whiteRules;
-    }
-
     public pieceDropped(cellPos: Vec2): void {
-        this.play(cellPos);
+        const from: Position = this.playedPiece.toArray();
+        const to: Position = cellPos.toArray();
+        if (this.applyPlay(from, to)) {
+            const playMessage: PlayMessage = { from, to };
+            this.roomService.transmitMessage(SCMessageType.PLAY, playMessage);
+        }
         this.resetHighligh();
         this.playedPiece = new Vec2(-1, -1);
     }

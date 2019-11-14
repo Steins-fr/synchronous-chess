@@ -352,9 +352,9 @@ describe('ChessHelper', () => {
         ];
 
         // When
-        const resultLine: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, SynchronousChessRules.blackRules);
-        const resultHop: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardHop, SynchronousChessRules.blackRules);
-        const resultPawn: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardPawn, SynchronousChessRules.blackRules);
+        const resultLine: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, SynchronousChessRules.getRules(PieceColor.BLACK));
+        const resultHop: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardHop, SynchronousChessRules.getRules(PieceColor.BLACK));
+        const resultPawn: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardPawn, SynchronousChessRules.getRules(PieceColor.BLACK));
 
         // Then
         expect(resultLine).toEqual(safeBoardLine);

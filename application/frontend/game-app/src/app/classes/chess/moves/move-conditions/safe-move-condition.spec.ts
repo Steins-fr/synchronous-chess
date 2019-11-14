@@ -1,7 +1,7 @@
 import { SafeMoveCondition } from './safe-move-condition';
 import SynchronousChessRules from '../../rules/synchronous-chess-rules';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
-import { FenPiece } from '../../piece/piece';
+import { FenPiece, PieceColor } from '../../piece/piece';
 import Vec2 from 'vec2';
 
 describe('SafeMoveCondition', () => {
@@ -11,7 +11,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.blackRules, false);
+        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.getRules(PieceColor.BLACK), false);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -34,7 +34,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move without safety', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.blackRules, true);
+        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.getRules(PieceColor.BLACK), true);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -57,7 +57,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move (with cell condition safety)', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.blackRules, false, [1, 0]);
+        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.getRules(PieceColor.BLACK), false, [1, 0]);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING],
