@@ -1,3 +1,12 @@
-<app-room-setup [maxPlayer]="maxPlayer"></app-room-setup>
-<ng-content></ng-content>
-<app-debug-webrtc *ngIf="isDebugging"></app-debug-webrtc>
+<div class="container">
+    <app-room-setup [maxPlayer]="maxPlayer"></app-room-setup>
+</div>
+<div id="room-content">
+    <div id="page-content" class="container">
+        <ng-content></ng-content>
+    </div>
+    <div id="room-content-overlay" *ngIf="(roomService.isActive | async) === false"></div>
+</div>
+<div class="container">
+    <app-debug-webrtc *ngIf="isDebugging"></app-debug-webrtc>
+</div>
