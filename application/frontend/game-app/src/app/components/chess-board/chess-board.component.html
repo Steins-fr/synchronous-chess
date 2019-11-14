@@ -1,34 +1,28 @@
 <div id="board">
+    <ng-container *ngTemplateOutlet="columnLabels"></ng-container>
     <div class="row">
-        <div id="fake-column"></div>
-        <div id="column-labels">
-            <div *ngFor="let i of 8 | range">
-                <span class="full-center">{{ 'ABCDEFGH'.charAt(i)}}</span>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div id="row-labels">
-            <div *ngFor="let i of 8 | range;">
-                <span class="full-center">{{ 8 - i }}</span>
-            </div>
-        </div>
+        <ng-container *ngTemplateOutlet="rowLabels"></ng-container>
         <div id="board-grid" [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}" cdkDropListGroup>
             <mat-grid-list cols="8">
                 <ng-container *ngFor="let row of cells; let y = index;">
                     <ng-container *ngFor="let cell of row; let x = index;">
-                        <mat-grid-tile *ngIf="[x, y] | vector2d as pos">
-                            <div cdkDropList class="cell" [ngClass]="{
+                        <mat-grid-tile *ngIf="[x, y] | vector2d as pos" [ngClass]="{
                                                 'drag-hover': cellHovered.equal(pos),
                                                 'dragged': pieceDragged.equal(pos),
-                                                'valid-move': cell.validMove}"
-                                (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
+                                                'valid-move': cell.validMove}">
+                            <div cdkDropList class="cell" (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
                                 (cdkDropListEntered)="dragEntered(pos)">
                                 <app-board-piece cdkDrag [piece]="cell.piece" *ngIf="cell.piece"
-                                    cdkDragBoundary="#board-grid"
                                     [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}"
-                                    (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)">
+                                    (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)"
+                                    (click)="pieceClicked.emit(pos)">
                                     <div class="hidden-placeholder" *cdkDragPlaceholder></div>
+                                    <div class="piece-preview-block" *cdkDragPreview>
+                                        <div class="piece-preview">
+                                            <app-board-piece [piece]="cell.piece">
+                                            </app-board-piece>
+                                        </div>
+                                    </div>
                                 </app-board-piece>
                             </div>
                         </mat-grid-tile>
@@ -36,6 +30,27 @@
                 </ng-container>
             </mat-grid-list>
         </div>
+        <ng-container *ngTemplateOutlet="rowLabels"></ng-container>
     </div>
-
+    <ng-container *ngTemplateOutlet="columnLabels"></ng-container>
 </div>
+
+<ng-template #columnLabels>
+    <div class="row">
+        <div class="fake-column"></div>
+        <div class="column-labels">
+            <div *ngFor="let i of 8 | range">
+                <span class="full-center">{{ 'ABCDEFGH'.charAt(i)}}</span>
+            </div>
+        </div>
+        <div class="fake-column"></div>
+    </div>
+</ng-template>
+
+<ng-template #rowLabels>
+    <div class="row-labels">
+        <div *ngFor="let i of 8 | range;">
+            <span class="full-center">{{ 8 - i }}</span>
+        </div>
+    </div>
+</ng-template>
