@@ -1,14 +1,8 @@
 import { Component } from '@angular/core';
 import Piece, { PieceColor, PieceType } from 'src/app/classes/chess/piece/piece';
 import Cell from 'src/app/classes/chess/board/cell';
-import Rook from 'src/app/classes/chess/piece/pieces/rook';
-import Knight from 'src/app/classes/chess/piece/pieces/knight';
-import Bishop from 'src/app/classes/chess/piece/pieces/bishop';
-import Queen from 'src/app/classes/chess/piece/pieces/queen';
-import King from 'src/app/classes/chess/piece/pieces/king';
-import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
 import Vec2 from 'vec2';
-import ChessHelper, { Column } from 'src/app/helpers/chess-helper';
+import ChessBoardHelper, { Column, CellBoard } from 'src/app/helpers/chess-board-helper';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
 import ChessRules from 'src/app/classes/chess/rules/chess-rules';
 import { RoomService } from 'src/app/services/room/room.service';
@@ -20,47 +14,20 @@ import { RoomService } from 'src/app/services/room/room.service';
 })
 export class SyncChessGameComponent {
 
-
-    public cells: Array<Array<Cell>> = [
-        SyncChessGameComponent.genMainRow(PieceColor.BLACK),
-        Array(8).fill(null).map(() => new Pawn(PieceColor.BLACK)).map((piece: Piece) => new Cell(piece)),
-        Array(8).fill(null).map(() => new Cell()),
-        Array(8).fill(null).map(() => new Cell()),
-        Array(8).fill(null).map(() => new Cell()),
-        Array(8).fill(null).map(() => new Cell()),
-        Array(8).fill(null).map(() => new Pawn(PieceColor.WHITE)).map((piece: Piece) => new Cell(piece)),
-        SyncChessGameComponent.genMainRow(PieceColor.WHITE)
-    ];
-
+    public cells: CellBoard = ChessBoardHelper.createCellBoard();
     public playedPiece: Vec2 = new Vec2(-1, -1);
-
-    private readonly whiteRules: SynchronousChessRules = SynchronousChessRules.whiteRules;
-    private readonly blackRules: SynchronousChessRules = SynchronousChessRules.blackRules;
 
     public constructor(
         public roomService: RoomService) {
-    }
-
-    private static genMainRow(color: PieceColor): Array<Cell> {
-        return [
-            new Rook(color),
-            new Knight(color),
-            new Bishop(color),
-            new Queen(color),
-            new King(color),
-            new Bishop(color),
-            new Knight(color),
-            new Rook(color)
-        ].map((piece: Piece) => new Cell(piece));
     }
 
     private kingPlay(from: Vec2, to: Vec2, rules: ChessRules): void {
         // If this is a king move, check if it is a castling
         if (from.distance(to) === 2) {
             // The king has moved twice, this is a castling
-            const castlingRook: Column = ChessHelper.castlingRook(from, to);
-            const rookCell: Cell = this.getCell(new Vec2([castlingRook, from.y]));
-            const rookNewCell: Cell = this.getCell(from.add(to.subtract(from, true).divide(2, 2, true), true));
+            const castlingRook: Column = ChessBoardHelper.castlingRook(from, to);
+            const rookCell: Cell = ChessBoardHelper.getCell(this.cells, new Vec2([castlingRook, from.y]));
+            const rookNewCell: Cell = ChessBoardHelper.getCell(this.cells, from.add(to.subtract(from, true).divide(2, 2, true), true));
             rookNewCell.piece = rookCell.piece;
             rookCell.piece = undefined;
         }
@@ -82,8 +49,8 @@ export class SyncChessGameComponent {
     private play(to: Vec2): void {
         const from: Vec2 = new Vec2(this.playedPiece.toArray());
 
-        const fromCell: Cell = this.getCell(from);
-        const toCell: Cell = this.getCell(to);
+        const fromCell: Cell = ChessBoardHelper.getCell(this.cells, from);
+        const toCell: Cell = ChessBoardHelper.getCell(this.cells, to);
         if (toCell.validMove === false) {
             return;
         }
@@ -103,10 +70,6 @@ export class SyncChessGameComponent {
         }
     }
 
-    private getCell(cellPos: Vec2): Cell {
-        return this.cells[cellPos.y][cellPos.x];
-    }
-
     public piecePicked(cellPos: Vec2): void {
         this.playedPiece = cellPos;
         this.pieceClicked(cellPos);
@@ -114,16 +77,16 @@ export class SyncChessGameComponent {
 
     public pieceClicked(cellPos: Vec2): void {
         this.resetHighligh();
-        const cell: Cell = this.getCell(cellPos);
+        const cell: Cell = ChessBoardHelper.getCell(this.cells, cellPos);
         const piece: Piece = cell.piece;
         const rules: SynchronousChessRules = this.getRules(piece.color);
-        rules.getPossiblePlays(piece.type, cellPos, ChessHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
-            this.getCell(posPlay).validMove = true;
+        rules.getPossiblePlays(piece.type, cellPos, ChessBoardHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
+            ChessBoardHelper.getCell(this.cells, posPlay).validMove = true;
         });
     }
 
     private getRules(color: PieceColor): SynchronousChessRules {
-        return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
+        return color === PieceColor.BLACK ? SynchronousChessRules.blackRules : SynchronousChessRules.whiteRules;
     }
 
     public pieceDropped(cellPos: Vec2): void {

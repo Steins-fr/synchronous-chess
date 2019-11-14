@@ -1,6 +1,6 @@
 import Vec2 from 'vec2';
 import { PieceColor } from '../../piece/piece';
-import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
+import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import MoveCondition from './move-condition';
 
 export default class DestinationColorMoveCondition extends MoveCondition {
@@ -10,6 +10,6 @@ export default class DestinationColorMoveCondition extends MoveCondition {
     }
 
     public canMove(_oldPosition: Vec2, newPosition: Vec2, board: FenBoard): boolean {
-        return ChessHelper.pieceColor(ChessHelper.getFenPiece(board, newPosition)) === this.pieceColor;
+        return ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, newPosition)) === this.pieceColor;
     }
 }

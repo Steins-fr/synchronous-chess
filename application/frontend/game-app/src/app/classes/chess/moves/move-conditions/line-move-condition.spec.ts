@@ -1,20 +1,20 @@
 import LineMoveCondition from './line-move-condition';
 import Vec2 from 'vec2';
-import { Line } from 'src/app/helpers/chess-helper';
+import { Row } from 'src/app/helpers/chess-board-helper';
 
 
 describe('LineMoveCondition', () => {
     it('should create an instance', () => {
-        expect(new LineMoveCondition(Line._5)).toBeTruthy();
+        expect(new LineMoveCondition(Row._5)).toBeTruthy();
     });
 
     it('should say if it can move', () => {
         // Given
-        const condition: LineMoveCondition = new LineMoveCondition(Line._4);
+        const condition: LineMoveCondition = new LineMoveCondition(Row._4);
 
         // When
-        const resultValidLine: boolean = condition.canMove(new Vec2([0, Line._4]));
-        const resultInvalidLine: boolean = condition.canMove(new Vec2([0, Line._6]));
+        const resultValidLine: boolean = condition.canMove(new Vec2([0, Row._4]));
+        const resultInvalidLine: boolean = condition.canMove(new Vec2([0, Row._6]));
 
         // Then
         expect(resultValidLine).toBeTruthy();

@@ -2,7 +2,7 @@ import SynchronousChessRules from './synchronous-chess-rules';
 import { PieceType, FenPiece, PieceColor } from '../piece/piece';
 import Move from '../moves/move';
 import Vec2 from 'vec2';
-import { FenBoard } from 'src/app/helpers/chess-helper';
+import { FenBoard } from 'src/app/helpers/chess-board-helper';
 
 describe('SynchronousChessRules', () => {
     it('should create an instance', () => {

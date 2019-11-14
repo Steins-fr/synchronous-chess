@@ -1,6 +1,6 @@
 import Move, { MoveType } from './move';
 import Vec2 from 'vec2';
-import ChessHelper, { FenBoard } from 'src/app/helpers/chess-helper';
+import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { PieceColor, FenPiece } from '../piece/piece';
 import MoveCondition from './move-conditions/move-condition';
 
@@ -32,21 +32,21 @@ export default class LinearMove extends Move {
 
         let newPosition: Vec2 = new Vec2(position.toArray());
 
-        const myColor: PieceColor = ChessHelper.pieceColor(ChessHelper.getFenPiece(board, position));
+        const myColor: PieceColor = ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, position));
         const plays: Array<Vec2> = [];
 
         // Add all plays on empty cells
         newPosition = newPosition.add(this.vector, true);
-        while (ChessHelper.isOutOfBoard(newPosition) === false
-            && ChessHelper.getFenPiece(board, newPosition) === FenPiece.EMPTY) {
+        while (ChessBoardHelper.isOutOfBoard(newPosition) === false
+            && ChessBoardHelper.getFenPiece(board, newPosition) === FenPiece.EMPTY) {
 
             plays.push(newPosition);
             newPosition = newPosition.add(this.vector, true);
         }
 
         // If we stop on the board, test if we stopped because of an opponent piece
-        if (ChessHelper.isOutOfBoard(newPosition) === false
-            && ChessHelper.pieceColor(ChessHelper.getFenPiece(board, newPosition)) !== myColor) {
+        if (ChessBoardHelper.isOutOfBoard(newPosition) === false
+            && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, newPosition)) !== myColor) {
             plays.push(newPosition);
         }
 

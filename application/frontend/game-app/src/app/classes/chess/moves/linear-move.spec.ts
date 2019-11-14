@@ -1,5 +1,5 @@
 import LinearMove from './linear-move';
-import { FenBoard } from 'src/app/helpers/chess-helper';
+import { FenBoard } from 'src/app/helpers/chess-board-helper';
 import Vec2 from 'vec2';
 import { FenPiece } from '../piece/piece';
 

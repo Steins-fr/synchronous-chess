@@ -6,7 +6,7 @@ import DestinationColorMoveCondition from '../moves/move-conditions/destination-
 import LineMoveCondition from '../moves/move-conditions/line-move-condition';
 import CaseMoveCondition from '../moves/move-conditions/case-move-condition';
 import { FenPiece, PieceColor } from '../piece/piece';
-import { Line } from 'src/app/helpers/chess-helper';
+import { Row } from 'src/app/helpers/chess-board-helper';
 import { DoNotApprocheMoveCondition } from '../moves/move-conditions/do-not-approche-move-condition';
 import { SafeMoveCondition } from '../moves/move-conditions/safe-move-condition';
 
@@ -26,7 +26,7 @@ export default class SynchronousChessRules extends ChessRules {
                 new DestinationColorMoveCondition(PieceColor.NONE)
             ]),
             HopMove.build([0, 2 * direction], [
-                new LineMoveCondition(this.isBlack() ? Line._7 : Line._2),
+                new LineMoveCondition(this.isBlack() ? Row._7 : Row._2),
                 new CaseMoveCondition([0, 1 * direction], [FenPiece.EMPTY]),
                 new CaseMoveCondition([0, 2 * direction], [FenPiece.EMPTY]),
             ]),

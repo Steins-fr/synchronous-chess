@@ -1,4 +1,4 @@
-import ChessHelper, { FenBoard, SafeBoard, Column } from './chess-helper';
+import ChessBoardHelper, { FenBoard, SafeBoard, Column, CellBoard } from './chess-board-helper';
 import Cell from '../classes/chess/board/cell';
 import King from '../classes/chess/piece/pieces/king';
 import { PieceColor, FenPiece, PieceType } from '../classes/chess/piece/piece';
@@ -70,7 +70,7 @@ describe('ChessHelper', () => {
 
         // When
 
-        const simpleBoard: FenBoard = ChessHelper.toSimpleBoard(board);
+        const simpleBoard: FenBoard = ChessBoardHelper.toSimpleBoard(board);
 
         // Then
         expect(simpleBoard).toEqual(expectedSimpleBoard);
@@ -97,21 +97,21 @@ describe('ChessHelper', () => {
 
         // When
 
-        const resultWhite1: PieceColor = ChessHelper.pieceColor(whitePiece1);
-        const resultWhite2: PieceColor = ChessHelper.pieceColor(whitePiece2);
-        const resultWhite3: PieceColor = ChessHelper.pieceColor(whitePiece3);
-        const resultWhite4: PieceColor = ChessHelper.pieceColor(whitePiece4);
-        const resultWhite5: PieceColor = ChessHelper.pieceColor(whitePiece5);
-        const resultWhite6: PieceColor = ChessHelper.pieceColor(whitePiece6);
+        const resultWhite1: PieceColor = ChessBoardHelper.pieceColor(whitePiece1);
+        const resultWhite2: PieceColor = ChessBoardHelper.pieceColor(whitePiece2);
+        const resultWhite3: PieceColor = ChessBoardHelper.pieceColor(whitePiece3);
+        const resultWhite4: PieceColor = ChessBoardHelper.pieceColor(whitePiece4);
+        const resultWhite5: PieceColor = ChessBoardHelper.pieceColor(whitePiece5);
+        const resultWhite6: PieceColor = ChessBoardHelper.pieceColor(whitePiece6);
 
-        const resultBlack1: PieceColor = ChessHelper.pieceColor(blackPiece1);
-        const resultBlack2: PieceColor = ChessHelper.pieceColor(blackPiece2);
-        const resultBlack3: PieceColor = ChessHelper.pieceColor(blackPiece3);
-        const resultBlack4: PieceColor = ChessHelper.pieceColor(blackPiece4);
-        const resultBlack5: PieceColor = ChessHelper.pieceColor(blackPiece5);
-        const resultBlack6: PieceColor = ChessHelper.pieceColor(blackPiece6);
+        const resultBlack1: PieceColor = ChessBoardHelper.pieceColor(blackPiece1);
+        const resultBlack2: PieceColor = ChessBoardHelper.pieceColor(blackPiece2);
+        const resultBlack3: PieceColor = ChessBoardHelper.pieceColor(blackPiece3);
+        const resultBlack4: PieceColor = ChessBoardHelper.pieceColor(blackPiece4);
+        const resultBlack5: PieceColor = ChessBoardHelper.pieceColor(blackPiece5);
+        const resultBlack6: PieceColor = ChessBoardHelper.pieceColor(blackPiece6);
 
-        const resultEmpty: PieceColor = ChessHelper.pieceColor(empty);
+        const resultEmpty: PieceColor = ChessBoardHelper.pieceColor(empty);
 
         // Then
         expect(resultWhite1).toEqual(PieceColor.WHITE);
@@ -152,21 +152,21 @@ describe('ChessHelper', () => {
 
         // When
 
-        const resultWhite1: PieceType = ChessHelper.pieceType(whitePiece1);
-        const resultWhite2: PieceType = ChessHelper.pieceType(whitePiece2);
-        const resultWhite3: PieceType = ChessHelper.pieceType(whitePiece3);
-        const resultWhite4: PieceType = ChessHelper.pieceType(whitePiece4);
-        const resultWhite5: PieceType = ChessHelper.pieceType(whitePiece5);
-        const resultWhite6: PieceType = ChessHelper.pieceType(whitePiece6);
+        const resultWhite1: PieceType = ChessBoardHelper.pieceType(whitePiece1);
+        const resultWhite2: PieceType = ChessBoardHelper.pieceType(whitePiece2);
+        const resultWhite3: PieceType = ChessBoardHelper.pieceType(whitePiece3);
+        const resultWhite4: PieceType = ChessBoardHelper.pieceType(whitePiece4);
+        const resultWhite5: PieceType = ChessBoardHelper.pieceType(whitePiece5);
+        const resultWhite6: PieceType = ChessBoardHelper.pieceType(whitePiece6);
 
-        const resultBlack1: PieceType = ChessHelper.pieceType(blackPiece1);
-        const resultBlack2: PieceType = ChessHelper.pieceType(blackPiece2);
-        const resultBlack3: PieceType = ChessHelper.pieceType(blackPiece3);
-        const resultBlack4: PieceType = ChessHelper.pieceType(blackPiece4);
-        const resultBlack5: PieceType = ChessHelper.pieceType(blackPiece5);
-        const resultBlack6: PieceType = ChessHelper.pieceType(blackPiece6);
+        const resultBlack1: PieceType = ChessBoardHelper.pieceType(blackPiece1);
+        const resultBlack2: PieceType = ChessBoardHelper.pieceType(blackPiece2);
+        const resultBlack3: PieceType = ChessBoardHelper.pieceType(blackPiece3);
+        const resultBlack4: PieceType = ChessBoardHelper.pieceType(blackPiece4);
+        const resultBlack5: PieceType = ChessBoardHelper.pieceType(blackPiece5);
+        const resultBlack6: PieceType = ChessBoardHelper.pieceType(blackPiece6);
 
-        const resultEmpty: PieceType = ChessHelper.pieceType(empty);
+        const resultEmpty: PieceType = ChessBoardHelper.pieceType(empty);
 
         // Then
         expect(resultWhite1).toEqual(PieceType.BISHOP);
@@ -195,16 +195,16 @@ describe('ChessHelper', () => {
 
         // When
 
-        const resultFirstRow: boolean = positions[0].every((vec: Vec2) => ChessHelper.isOutOfBoard(vec) === true);
-        const resultLastRow: boolean = positions[9].every((vec: Vec2) => ChessHelper.isOutOfBoard(vec) === true);
-        const resultFirstColumn: boolean = positions.every((row: Array<Vec2>) => ChessHelper.isOutOfBoard(row[0]) === true);
-        const resultLastColumn: boolean = positions.every((row: Array<Vec2>) => ChessHelper.isOutOfBoard(row[9]) === true);
+        const resultFirstRow: boolean = positions[0].every((vec: Vec2) => ChessBoardHelper.isOutOfBoard(vec) === true);
+        const resultLastRow: boolean = positions[9].every((vec: Vec2) => ChessBoardHelper.isOutOfBoard(vec) === true);
+        const resultFirstColumn: boolean = positions.every((row: Array<Vec2>) => ChessBoardHelper.isOutOfBoard(row[0]) === true);
+        const resultLastColumn: boolean = positions.every((row: Array<Vec2>) => ChessBoardHelper.isOutOfBoard(row[9]) === true);
         const resultBoard: boolean = positions.every((row: Array<Vec2>, y: number) => row.every((vec: Vec2, x: number) => {
             if (x === 0 || y === 0 || x === 9 || y === 9) { // Remove cases tested above
                 return true;
             }
 
-            return ChessHelper.isOutOfBoard(vec) === false;
+            return ChessBoardHelper.isOutOfBoard(vec) === false;
         }));
 
         // Then
@@ -242,32 +242,32 @@ describe('ChessHelper', () => {
 
         // When
         const resultRow1: boolean = fenBoard[0].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 0])) === FenPiece.BLACK_BISHOP
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 0])) === FenPiece.BLACK_BISHOP
         );
         const resultRow2: boolean = fenBoard[1].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 1])) === FenPiece.BLACK_KING
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 1])) === FenPiece.BLACK_KING
         );
         const resultRow3: boolean = fenBoard[2].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 2])) === FenPiece.BLACK_KNIGHT
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 2])) === FenPiece.BLACK_KNIGHT
         );
         const resultRow4: boolean = fenBoard[3].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 3])) === FenPiece.EMPTY
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 3])) === FenPiece.EMPTY
         );
         const resultRow5: boolean = fenBoard[4].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 4])) === FenPiece.EMPTY
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 4])) === FenPiece.EMPTY
         );
         const resultRow6: boolean = fenBoard[5].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 5])) === FenPiece.BLACK_PAWN
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 5])) === FenPiece.BLACK_PAWN
         );
         const resultRow7: boolean = fenBoard[6].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 6])) === FenPiece.BLACK_QUEEN
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 6])) === FenPiece.BLACK_QUEEN
         );
         const resultRow8: boolean = fenBoard[7].every(
-            (_: any, x: number) => ChessHelper.getFenPiece(fenBoard, new Vec2([x, 7])) === FenPiece.BLACK_ROOK
+            (_: any, x: number) => ChessBoardHelper.getFenPiece(fenBoard, new Vec2([x, 7])) === FenPiece.BLACK_ROOK
         );
 
         const resultOut: boolean = vecOutOfBound.every(
-            (vec: Vec2) => ChessHelper.getFenPiece(fenBoard, vec) === null
+            (vec: Vec2) => ChessBoardHelper.getFenPiece(fenBoard, vec) === null
         );
 
         // Then
@@ -323,7 +323,7 @@ describe('ChessHelper', () => {
             [false, true, false, true, true, true, true, true],
             [true, true, false, true, true, true, true, true],
             [true, false, true, true, false, false, false, true],
-            [true, true, true, true, false, true, false, true],
+            [true, true, true, false, false, true, false, false],
             [true, true, true, true, false, false, false, true],
             [true, true, true, true, true, true, true, true]
         ];
@@ -352,9 +352,9 @@ describe('ChessHelper', () => {
         ];
 
         // When
-        const resultLine: SafeBoard = ChessHelper.fenBoardToSafeBoard(boardLine, SynchronousChessRules.blackRules);
-        const resultHop: SafeBoard = ChessHelper.fenBoardToSafeBoard(boardHop, SynchronousChessRules.blackRules);
-        const resultPawn: SafeBoard = ChessHelper.fenBoardToSafeBoard(boardPawn, SynchronousChessRules.blackRules);
+        const resultLine: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, SynchronousChessRules.blackRules);
+        const resultHop: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardHop, SynchronousChessRules.blackRules);
+        const resultPawn: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardPawn, SynchronousChessRules.blackRules);
 
         // Then
         expect(resultLine).toEqual(safeBoardLine);
@@ -371,11 +371,52 @@ describe('ChessHelper', () => {
 
         // When
 
-        const resultH: Column = ChessHelper.castlingRook(positionFrom, positionTo1);
-        const resultA: Column = ChessHelper.castlingRook(positionFrom, positionTo2);
+        const resultH: Column = ChessBoardHelper.castlingRook(positionFrom, positionTo1);
+        const resultA: Column = ChessBoardHelper.castlingRook(positionFrom, positionTo2);
 
         // Then
         expect(resultH).toEqual(Column.H);
         expect(resultA).toEqual(Column.A);
+    });
+
+    it('should create an initialized cell board', () => {
+        // Given
+
+        const fenBoard: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+
+        const cellBoard: CellBoard = ChessBoardHelper.createCellBoard();
+
+        // Then
+        expect(ChessBoardHelper.toSimpleBoard(cellBoard)).toEqual(fenBoard);
+    });
+
+    it('should get the rights cell', () => {
+        // Given
+
+        const cellBoard: CellBoard = ChessBoardHelper.createCellBoard();
+        const pos: Vec2 = new Vec2([3, 4]);
+        const invalidPos: Vec2 = new Vec2([-1, -1]);
+
+        // When
+
+        const cell: Cell = ChessBoardHelper.getCell(cellBoard, pos);
+        const validCall: () => void = (): Cell => ChessBoardHelper.getCell(cellBoard, pos);
+        const invalidCall: () => void = (): Cell => ChessBoardHelper.getCell(cellBoard, invalidPos);
+
+        // Then
+        expect(cell).toEqual(cellBoard[pos.y][pos.x]);
+        expect(validCall).not.toThrowError();
+        expect(invalidCall).toThrowError();
     });
 });
