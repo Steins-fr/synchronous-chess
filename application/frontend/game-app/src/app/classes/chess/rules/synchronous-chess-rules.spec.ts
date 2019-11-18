@@ -6,7 +6,7 @@ import { FenBoard } from 'src/app/helpers/chess-board-helper';
 
 describe('SynchronousChessRules', () => {
     it('should create an instance', () => {
-        expect(SynchronousChessRules.getRules(PieceColor.BLACK)).toBeTruthy();
+        expect(new SynchronousChessRules(PieceColor.BLACK)).toBeTruthy();
     });
 
     it('should get the rules for a specific color', () => {
@@ -15,8 +15,8 @@ describe('SynchronousChessRules', () => {
         const whiteColor: PieceColor = PieceColor.WHITE;
 
         // When
-        const rulesBlack: SynchronousChessRules = SynchronousChessRules.getRules(blackColor);
-        const rulesWhite: SynchronousChessRules = SynchronousChessRules.getRules(whiteColor);
+        const rulesBlack: SynchronousChessRules = new SynchronousChessRules(blackColor);
+        const rulesWhite: SynchronousChessRules = new SynchronousChessRules(whiteColor);
 
         // Then
         expect(rulesBlack.color).toEqual(blackColor);
@@ -25,7 +25,7 @@ describe('SynchronousChessRules', () => {
 
     it('should get pieces movements', () => {
         // Given
-        const rules: SynchronousChessRules = SynchronousChessRules.getRules(PieceColor.BLACK);
+        const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
         // When
         const queenMoves: Array<Move> = rules.getPieceMoves(PieceType.QUEEN);
@@ -46,8 +46,8 @@ describe('SynchronousChessRules', () => {
 
     it('should tell is the rules are for blacks or whites', () => {
         // Given
-        const rulesBlack: SynchronousChessRules = SynchronousChessRules.getRules(PieceColor.BLACK);
-        const rulesWhite: SynchronousChessRules = SynchronousChessRules.getRules(PieceColor.WHITE);
+        const rulesBlack: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+        const rulesWhite: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
 
         // When
         const blackIsBlack: boolean = rulesBlack.isBlack();
@@ -64,7 +64,7 @@ describe('SynchronousChessRules', () => {
 
     it('should get pieces possible plays', () => {
         // Given
-        const rules: SynchronousChessRules = SynchronousChessRules.getRules(PieceColor.BLACK);
+        const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
         const position: Vec2 = new Vec2(0, 0);
 

@@ -12,13 +12,14 @@ import { SafeMoveCondition } from '../moves/move-conditions/safe-move-condition'
 
 export default class SynchronousChessRules extends ChessRules {
 
-    private static readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
-    private static readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
-    private static readonly whiteNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE, true);
-    private static readonly blackNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK, true);
+    private static readonly whiteNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE, true, false, false);
+    private static readonly blackNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK, true, false, false);
 
-    private constructor(color: PieceColor, private readonly isForCheckSafety: boolean = false) {
-        super(color);
+    public constructor(color: PieceColor,
+        private readonly isForCheckSafety: boolean = false,
+        isQueenSideCastleAvailable: boolean = true,
+        isKingSideCastelAvailable: boolean = true) {
+        super(color, isQueenSideCastleAvailable, isKingSideCastelAvailable);
         const direction: number = this.isBlack() ? 1 : -1;
 
         this.pawnMove = [
@@ -58,16 +59,8 @@ export default class SynchronousChessRules extends ChessRules {
 
     public readonly pawnMove: Array<Move>;
 
-    public static getRules(color: PieceColor): SynchronousChessRules {
-        return color === PieceColor.BLACK ? SynchronousChessRules.blackRules : SynchronousChessRules.whiteRules;
-    }
-
     private castlingMove(opponentRules: ChessRules): Array<Move> {
         const castlingMoves: Array<Move> = [];
-
-        if (this.isForCheckSafety) {
-            return castlingMoves;
-        }
 
         if (this.isKingSideCastelAvailable === true) {
             castlingMoves.push(HopMove.build([2, 0], [

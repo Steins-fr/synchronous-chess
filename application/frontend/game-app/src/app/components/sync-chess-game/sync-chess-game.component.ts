@@ -1,5 +1,5 @@
 import { Component, OnInit, NgZone } from '@angular/core';
-import Piece, { PieceType } from 'src/app/classes/chess/piece/piece';
+import Piece, { PieceType, PieceColor } from 'src/app/classes/chess/piece/piece';
 import Cell from 'src/app/classes/chess/board/cell';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { Column, CellBoard } from 'src/app/helpers/chess-board-helper';
@@ -28,6 +28,8 @@ export class SyncChessGameComponent implements OnInit {
 
     public cells: CellBoard = ChessBoardHelper.createCellBoard();
     public playedPiece: Vec2 = new Vec2(-1, -1);
+    public whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
+    public blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
     public constructor(
         public roomService: RoomService,
@@ -41,6 +43,10 @@ export class SyncChessGameComponent implements OnInit {
     private play(message: RoomServiceMessage<SCMessageType, PlayMessage>): void {
         const playMessage: PlayMessage = message.payload;
         this.ngZone.run(() => this.applyPlay(playMessage.from, playMessage.to));
+    }
+
+    private getRules(color: PieceColor): SynchronousChessRules {
+        return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
     }
 
     private kingPlay(from: Vec2, to: Vec2, rules: ChessRules): void {
@@ -75,7 +81,7 @@ export class SyncChessGameComponent implements OnInit {
         const fromCell: Cell = ChessBoardHelper.getCell(this.cells, from);
         const toCell: Cell = ChessBoardHelper.getCell(this.cells, to);
 
-        const rules: ChessRules = SynchronousChessRules.getRules(fromCell.piece.color);
+        const rules: ChessRules = this.getRules(fromCell.piece.color);
 
         const playIsValid: boolean = rules.getPossiblePlays(fromCell.piece.type, from, ChessBoardHelper.toSimpleBoard(this.cells))
             .some((posPlay: Vec2) => posPlay.equal(to.x, to.y));
@@ -108,9 +114,8 @@ export class SyncChessGameComponent implements OnInit {
         this.resetHighligh();
         const cell: Cell = ChessBoardHelper.getCell(this.cells, cellPos);
         const piece: Piece = cell.piece;
-        const rules: SynchronousChessRules = SynchronousChessRules.getRules(piece.color);
+        const rules: SynchronousChessRules = this.getRules(piece.color);
 
-        // Move to the helper
         rules.getPossiblePlays(piece.type, cellPos, ChessBoardHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
             ChessBoardHelper.getCell(this.cells, posPlay).validMove = true;
         });
