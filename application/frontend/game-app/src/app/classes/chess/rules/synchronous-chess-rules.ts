@@ -65,12 +65,15 @@ export default class SynchronousChessRules extends ChessRules {
         if (this.isKingSideCastelAvailable === true) {
             castlingMoves.push(HopMove.build([2, 0], [
                 new CaseMoveCondition([1, 0], [FenPiece.EMPTY]),
+                new CaseMoveCondition([2, 0], [FenPiece.EMPTY]),
                 new SafeMoveCondition(opponentRules, this.isForCheckSafety, [1, 0])
             ]));
         }
         if (this.isQueenSideCastleAvailable === true) {
             castlingMoves.push(HopMove.build([-2, 0], [
                 new CaseMoveCondition([-1, 0], [FenPiece.EMPTY]),
+                new CaseMoveCondition([-2, 0], [FenPiece.EMPTY]),
+                new CaseMoveCondition([-3, 0], [FenPiece.EMPTY]),
                 new SafeMoveCondition(opponentRules, this.isForCheckSafety, [-1, 0])
             ]));
         }
