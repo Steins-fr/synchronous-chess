@@ -11,7 +11,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.getRules(PieceColor.BLACK), false);
+        const condition: SafeMoveCondition = new SafeMoveCondition(new SynchronousChessRules(PieceColor.BLACK), false);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -34,7 +34,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move without safety', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.getRules(PieceColor.BLACK), true);
+        const condition: SafeMoveCondition = new SafeMoveCondition(new SynchronousChessRules(PieceColor.BLACK), true);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -57,7 +57,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move (with cell condition safety)', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(SynchronousChessRules.getRules(PieceColor.BLACK), false, [1, 0]);
+        const condition: SafeMoveCondition = new SafeMoveCondition(new SynchronousChessRules(PieceColor.BLACK), false, [1, 0]);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING],

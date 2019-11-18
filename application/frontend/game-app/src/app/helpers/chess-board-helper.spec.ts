@@ -323,7 +323,7 @@ describe('ChessHelper', () => {
             [false, true, false, true, true, true, true, true],
             [true, true, false, true, true, true, true, true],
             [true, false, true, true, false, false, false, true],
-            [true, true, true, false, false, true, false, false],
+            [true, true, true, true, false, true, false, true],
             [true, true, true, true, false, false, false, true],
             [true, true, true, true, true, true, true, true]
         ];
@@ -352,9 +352,9 @@ describe('ChessHelper', () => {
         ];
 
         // When
-        const resultLine: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, SynchronousChessRules.getRules(PieceColor.BLACK));
-        const resultHop: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardHop, SynchronousChessRules.getRules(PieceColor.BLACK));
-        const resultPawn: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardPawn, SynchronousChessRules.getRules(PieceColor.BLACK));
+        const resultLine: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, new SynchronousChessRules(PieceColor.BLACK, true, false, false));
+        const resultHop: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardHop, new SynchronousChessRules(PieceColor.BLACK, true, false, false));
+        const resultPawn: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardPawn, new SynchronousChessRules(PieceColor.BLACK, true, false, false));
 
         // Then
         expect(resultLine).toEqual(safeBoardLine);
