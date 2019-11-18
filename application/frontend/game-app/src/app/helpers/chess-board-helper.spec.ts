@@ -4,6 +4,51 @@ import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rule
 import { FenPiece, PieceColor, PieceType } from '../classes/chess/rules/chess-rules';
 
 describe('ChessHelper', () => {
+
+    it('should create an initialized fen board', () => {
+        // Given
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+
+        const fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
+
+        // Then
+        expect(fenBoard).toEqual(expectedFenBoard);
+    });
+
+    it('should create an initialized board of value', () => {
+        // Given
+
+        const expectedBoard: Array<Array<string>> = [
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
+            ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test']
+        ];
+
+        // When
+
+        const board: Array<Array<string>> = ChessBoardHelper.createFilledBoard('test');
+
+        // Then
+        expect(board).toEqual(expectedBoard);
+    });
+
     it('should clone a board', () => {
         // Given
 
@@ -63,7 +108,7 @@ describe('ChessHelper', () => {
 
         // When
 
-        const simpleBoard: FenBoard = ChessBoardHelper.clone(board);
+        const simpleBoard: FenBoard = ChessBoardHelper.cloneBoard(board);
 
         // Then
         expect(simpleBoard).toEqual(expectedSimpleBoard);
@@ -371,27 +416,5 @@ describe('ChessHelper', () => {
         // Then
         expect(resultH).toEqual(Column.H);
         expect(resultA).toEqual(Column.A);
-    });
-
-    it('should create an initialized fen board', () => {
-        // Given
-
-        const expectedFenBoard: FenBoard = [
-            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
-            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
-            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
-            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
-            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
-            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
-            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
-            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
-        ];
-
-        // When
-
-        const fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
-
-        // Then
-        expect(fenBoard).toEqual(expectedFenBoard);
     });
 });

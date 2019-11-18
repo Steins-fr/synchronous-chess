@@ -63,7 +63,7 @@ export default abstract class ChessBoardHelper {
         ];
     }
 
-    public static createFilledBoard(value: any): Array<Array<any>> {
+    public static createFilledBoard<T>(value: T): Array<Array<T>> {
         return [
             Array(8).fill(value),
             Array(8).fill(value),
@@ -76,8 +76,8 @@ export default abstract class ChessBoardHelper {
         ];
     }
 
-    public static clone(board: FenBoard): FenBoard {
-        return board.map((row: Array<FenPiece>) => row.map((fenPiece: FenPiece) => fenPiece));
+    public static cloneBoard<T>(board: Array<Array<T>>): Array<Array<T>> {
+        return board.map((row: Array<T>) => row.map((value: T) => value));
     }
 
     public static pieceColor(type: FenPiece): PieceColor {
@@ -192,18 +192,5 @@ export default abstract class ChessBoardHelper {
 
     public static castlingRook(from: Vec2, to: Vec2): Column {
         return to.subtract(from, true).x > 0 ? Column.H : Column.A;
-    }
-
-    private static genMainRow(color: PieceColor): Array<FenPiece> {
-        return [
-            FenPiece.BLACK_ROOK,
-            FenPiece.BLACK_KNIGHT,
-            FenPiece.BLACK_BISHOP,
-            FenPiece.BLACK_QUEEN,
-            FenPiece.BLACK_KING,
-            FenPiece.BLACK_BISHOP,
-            FenPiece.BLACK_KNIGHT,
-            FenPiece.BLACK_ROOK
-        ];
     }
 }

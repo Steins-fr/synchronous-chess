@@ -17,8 +17,8 @@ export default class SynchronousChessRules extends ChessRules {
     public constructor(color: PieceColor,
         private readonly isForCheckSafety: boolean = false,
         isQueenSideCastleAvailable: boolean = true,
-        isKingSideCastelAvailable: boolean = true) {
-        super(color, isQueenSideCastleAvailable, isKingSideCastelAvailable);
+        isKingSideCastleAvailable: boolean = true) {
+        super(color, isQueenSideCastleAvailable, isKingSideCastleAvailable);
         const direction: number = this.isBlack() ? 1 : -1;
 
         this.pawnMove = [
@@ -61,7 +61,7 @@ export default class SynchronousChessRules extends ChessRules {
     private castlingMove(opponentRules: ChessRules): Array<Move> {
         const castlingMoves: Array<Move> = [];
 
-        if (this.isKingSideCastelAvailable === true) {
+        if (this.isKingSideCastleAvailable === true) {
             castlingMoves.push(HopMove.build([2, 0], [
                 new CaseMoveCondition([1, 0], [FenPiece.EMPTY]),
                 new CaseMoveCondition([2, 0], [FenPiece.EMPTY]),
