@@ -4,15 +4,13 @@ import Cell from 'src/app/classes/chess/board/cell';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { Column, CellBoard } from 'src/app/helpers/chess-board-helper';
 import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
-import ChessRules from 'src/app/classes/chess/rules/chess-rules';
 import { RoomService } from 'src/app/services/room/room.service';
 import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
+import SynchronousChessGame, { Position } from 'src/app/classes/chess/games/synchronous-chess-game';
 
 enum SCMessageType {
     PLAY = 'SC-play'
 }
-
-type Position = Array<number>;
 
 interface PlayMessage {
     from: Position;
@@ -26,10 +24,8 @@ interface PlayMessage {
 })
 export class SyncChessGameComponent implements OnInit {
 
-    public cells: CellBoard = ChessBoardHelper.createCellBoard();
+    public game: SynchronousChessGame = new SynchronousChessGame();
     public playedPiece: Vec2 = new Vec2(-1, -1);
-    public whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
-    public blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
     public constructor(
         public roomService: RoomService,
@@ -42,67 +38,7 @@ export class SyncChessGameComponent implements OnInit {
 
     private play(message: RoomServiceMessage<SCMessageType, PlayMessage>): void {
         const playMessage: PlayMessage = message.payload;
-        this.ngZone.run(() => this.applyPlay(playMessage.from, playMessage.to));
-    }
-
-    private getRules(color: PieceColor): SynchronousChessRules {
-        return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
-    }
-
-    private kingPlay(from: Vec2, to: Vec2, rules: ChessRules): void {
-        // If this is a king move, check if it is a castling
-        if (from.distance(to) === 2) {
-            // The king has moved twice, this is a castling
-            const castlingRook: Column = ChessBoardHelper.castlingRook(from, to);
-            const rookCell: Cell = ChessBoardHelper.getCell(this.cells, new Vec2([castlingRook, from.y]));
-            const rookNewCell: Cell = ChessBoardHelper.getCell(this.cells, from.add(to.subtract(from, true).divide(2, 2, true), true));
-            rookNewCell.piece = rookCell.piece;
-            rookCell.piece = undefined;
-        }
-        rules.isQueenSideCastleAvailable = false;
-        rules.isKingSideCastelAvailable = false;
-    }
-
-    private rookPlay(from: Vec2, rules: ChessRules): void {
-        switch (from.x) {
-            case Column.A:
-                rules.isQueenSideCastleAvailable = false;
-                break;
-            case Column.H:
-                rules.isKingSideCastelAvailable = false;
-                break;
-        }
-    }
-
-    private applyPlay(fromPosition: Position, toPosition: Position): boolean {
-        const from: Vec2 = new Vec2(fromPosition);
-        const to: Vec2 = new Vec2(toPosition);
-
-        const fromCell: Cell = ChessBoardHelper.getCell(this.cells, from);
-        const toCell: Cell = ChessBoardHelper.getCell(this.cells, to);
-
-        const rules: ChessRules = this.getRules(fromCell.piece.color);
-
-        const playIsValid: boolean = rules.getPossiblePlays(fromCell.piece.type, from, ChessBoardHelper.toSimpleBoard(this.cells))
-            .some((posPlay: Vec2) => posPlay.equal(to.x, to.y));
-
-        if (playIsValid === false) {
-            return false;
-        }
-
-        toCell.piece = fromCell.piece;
-        fromCell.piece = undefined;
-
-        switch (toCell.piece.type) {
-            case PieceType.KING:
-                this.kingPlay(from, to, rules);
-                break;
-            case PieceType.ROOK:
-                this.rookPlay(from, rules);
-                break;
-        }
-
-        return playIsValid;
+        this.ngZone.run(() => this.game.applyPlay(playMessage.from, playMessage.to));
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -111,28 +47,18 @@ export class SyncChessGameComponent implements OnInit {
     }
 
     public pieceClicked(cellPos: Vec2): void {
-        this.resetHighligh();
-        const cell: Cell = ChessBoardHelper.getCell(this.cells, cellPos);
-        const piece: Piece = cell.piece;
-        const rules: SynchronousChessRules = this.getRules(piece.color);
-
-        rules.getPossiblePlays(piece.type, cellPos, ChessBoardHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
-            ChessBoardHelper.getCell(this.cells, posPlay).validMove = true;
-        });
+        this.game.resetHighlight();
+        this.game.highlightValidMoves(cellPos);
     }
 
     public pieceDropped(cellPos: Vec2): void {
         const from: Position = this.playedPiece.toArray();
         const to: Position = cellPos.toArray();
-        if (this.applyPlay(from, to)) {
+        if (this.game.applyPlay(from, to)) {
             const playMessage: PlayMessage = { from, to };
             this.roomService.transmitMessage(SCMessageType.PLAY, playMessage);
         }
-        this.resetHighligh();
+        this.game.resetHighlight();
         this.playedPiece = new Vec2(-1, -1);
-    }
-
-    private resetHighligh(): void {
-        this.cells.forEach((row: Array<Cell>) => row.forEach((cell: Cell) => cell.validMove = false));
     }
 }
