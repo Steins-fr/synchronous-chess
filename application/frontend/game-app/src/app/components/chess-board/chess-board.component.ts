@@ -1,6 +1,6 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
-import Cell from 'src/app/classes/chess/board/cell';
 import Vec2 from 'vec2';
+import { FenBoard, ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
 
 @Component({
     selector: 'app-chess-board',
@@ -12,7 +12,8 @@ export class ChessBoardComponent {
     @Output() public piecePicked: EventEmitter<Vec2> = new EventEmitter<Vec2>();
     @Output() public pieceDropped: EventEmitter<Vec2> = new EventEmitter<Vec2>();
     @Output() public pieceClicked: EventEmitter<Vec2> = new EventEmitter<Vec2>();
-    @Input() public cells: Array<Array<Cell>> = [];
+    @Input() public fenBoard: FenBoard = [];
+    @Input() public validPlayBoard: ValidPlayBoard = [];
 
     public pieceDragged: Vec2 = new Vec2(-1, -1);
     public cellHovered: Vec2 = new Vec2(-1, -1);

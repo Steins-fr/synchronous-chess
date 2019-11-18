@@ -1,8 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PieceComponent } from './piece.component';
-import Pawn from 'src/app/classes/chess/piece/pieces/pawn';
-import { PieceColor } from 'src/app/classes/chess/piece/piece';
+import { FenPiece } from 'src/app/classes/chess/rules/chess-rules';
 
 describe('PieceComponent', () => {
     let component: PieceComponent;
@@ -18,7 +17,7 @@ describe('PieceComponent', () => {
     beforeEach(() => {
         fixture = TestBed.createComponent(PieceComponent);
         component = fixture.componentInstance;
-        component.piece = new Pawn(PieceColor.BLACK);
+        component.piece = FenPiece.BLACK_PAWN;
         fixture.detectChanges();
     });
 

@@ -1,7 +1,7 @@
 import Move, { MoveType } from './move';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
-import { PieceColor, FenPiece } from '../piece/piece';
+import { PieceColor, FenPiece } from '../rules/chess-rules';
 import MoveCondition from './move-conditions/move-condition';
 
 export default class LinearMove extends Move {

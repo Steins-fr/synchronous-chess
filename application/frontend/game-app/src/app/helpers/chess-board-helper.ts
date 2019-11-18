@@ -1,18 +1,10 @@
-import Cell from '../classes/chess/board/cell';
-import Piece, { FenPiece, PieceColor, PieceType } from '../classes/chess/piece/piece';
 import Vec2 from 'vec2';
-import ChessRules from '../classes/chess/rules/chess-rules';
-import Rook from '../classes/chess/piece/pieces/rook';
-import Knight from '../classes/chess/piece/pieces/knight';
-import Bishop from '../classes/chess/piece/pieces/bishop';
-import Queen from '../classes/chess/piece/pieces/queen';
-import King from '../classes/chess/piece/pieces/king';
-import Pawn from '../classes/chess/piece/pieces/pawn';
+import ChessRules, { FenPiece, PieceType, PieceColor } from '../classes/chess/rules/chess-rules';
 
 export type FenBoard = Array<Array<FenPiece>>;
 export type SafeBoard = Array<Array<boolean>>;
+export type ValidPlayBoard = Array<Array<boolean>>;
 export type MovementBoard = Array<Array<Array<PieceType>>>;
-export type CellBoard = Array<Array<Cell>>;
 
 export enum Row {
     _8 = 0,
@@ -40,13 +32,52 @@ export default abstract class ChessBoardHelper {
 
     private static readonly fenBoardToSafeBoardCache: Map<FenBoard, SafeBoard> = new Map<FenBoard, SafeBoard>();
 
-    public static toSimpleBoard(board: Array<Array<Cell>>): FenBoard {
-        return board.map((row: Array<Cell>) => row.map((cell: Cell) => {
-            if (cell.piece) {
-                return cell.piece.fullType;
-            }
-            return FenPiece.EMPTY;
-        }));
+    public static createFenBoard(): FenBoard {
+        return [
+            [
+                FenPiece.BLACK_ROOK,
+                FenPiece.BLACK_KNIGHT,
+                FenPiece.BLACK_BISHOP,
+                FenPiece.BLACK_QUEEN,
+                FenPiece.BLACK_KING,
+                FenPiece.BLACK_BISHOP,
+                FenPiece.BLACK_KNIGHT,
+                FenPiece.BLACK_ROOK
+            ],
+            Array(8).fill(FenPiece.BLACK_PAWN),
+            Array(8).fill(FenPiece.EMPTY),
+            Array(8).fill(FenPiece.EMPTY),
+            Array(8).fill(FenPiece.EMPTY),
+            Array(8).fill(FenPiece.EMPTY),
+            Array(8).fill(FenPiece.WHITE_PAWN),
+            [
+                FenPiece.WHITE_ROOK,
+                FenPiece.WHITE_KNIGHT,
+                FenPiece.WHITE_BISHOP,
+                FenPiece.WHITE_QUEEN,
+                FenPiece.WHITE_KING,
+                FenPiece.WHITE_BISHOP,
+                FenPiece.WHITE_KNIGHT,
+                FenPiece.WHITE_ROOK
+            ]
+        ];
+    }
+
+    public static createFilledBoard(value: any): Array<Array<any>> {
+        return [
+            Array(8).fill(value),
+            Array(8).fill(value),
+            Array(8).fill(value),
+            Array(8).fill(value),
+            Array(8).fill(value),
+            Array(8).fill(value),
+            Array(8).fill(value),
+            Array(8).fill(value)
+        ];
+    }
+
+    public static clone(board: FenBoard): FenBoard {
+        return board.map((row: Array<FenPiece>) => row.map((fenPiece: FenPiece) => fenPiece));
     }
 
     public static pieceColor(type: FenPiece): PieceColor {
@@ -163,37 +194,16 @@ export default abstract class ChessBoardHelper {
         return to.subtract(from, true).x > 0 ? Column.H : Column.A;
     }
 
-    private static genMainRow(color: PieceColor): Array<Cell> {
+    private static genMainRow(color: PieceColor): Array<FenPiece> {
         return [
-            new Rook(color),
-            new Knight(color),
-            new Bishop(color),
-            new Queen(color),
-            new King(color),
-            new Bishop(color),
-            new Knight(color),
-            new Rook(color)
-        ].map((piece: Piece) => new Cell(piece));
-    }
-
-    public static createCellBoard(): CellBoard {
-        return [
-            ChessBoardHelper.genMainRow(PieceColor.BLACK),
-            Array(8).fill(null).map(() => new Pawn(PieceColor.BLACK)).map((piece: Piece) => new Cell(piece)),
-            Array(8).fill(null).map(() => new Cell()),
-            Array(8).fill(null).map(() => new Cell()),
-            Array(8).fill(null).map(() => new Cell()),
-            Array(8).fill(null).map(() => new Cell()),
-            Array(8).fill(null).map(() => new Pawn(PieceColor.WHITE)).map((piece: Piece) => new Cell(piece)),
-            ChessBoardHelper.genMainRow(PieceColor.WHITE)
+            FenPiece.BLACK_ROOK,
+            FenPiece.BLACK_KNIGHT,
+            FenPiece.BLACK_BISHOP,
+            FenPiece.BLACK_QUEEN,
+            FenPiece.BLACK_KING,
+            FenPiece.BLACK_BISHOP,
+            FenPiece.BLACK_KNIGHT,
+            FenPiece.BLACK_ROOK
         ];
-    }
-
-    public static getCell(cells: CellBoard, position: Vec2): Cell {
-        if (ChessBoardHelper.isOutOfBoard(position)) {
-            throw new Error(`Position ${position.x},${position.y} is out of bound!`);
-        }
-
-        return cells[position.y][position.x];
     }
 }

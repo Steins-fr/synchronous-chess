@@ -1,6 +1,6 @@
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
-import { FenPiece } from '../../piece/piece';
+import { FenPiece } from '../../rules/chess-rules';
 import MoveCondition from './move-condition';
 
 export default class CaseMoveCondition extends MoveCondition {

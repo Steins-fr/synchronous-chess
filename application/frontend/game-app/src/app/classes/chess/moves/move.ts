@@ -1,7 +1,7 @@
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
-import { FenPiece } from '../piece/piece';
 import MoveCondition from './move-conditions/move-condition';
+import { FenPiece } from '../rules/chess-rules';
 
 export enum MoveType {
     LINEAR = 'linear',

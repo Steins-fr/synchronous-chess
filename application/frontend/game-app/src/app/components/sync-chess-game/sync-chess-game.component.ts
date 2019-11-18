@@ -1,9 +1,6 @@
 import { Component, OnInit, NgZone } from '@angular/core';
-import Piece, { PieceType, PieceColor } from 'src/app/classes/chess/piece/piece';
-import Cell from 'src/app/classes/chess/board/cell';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { Column, CellBoard } from 'src/app/helpers/chess-board-helper';
-import SynchronousChessRules from 'src/app/classes/chess/rules/synchronous-chess-rules';
+import ChessBoardHelper, { ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
 import { RoomService } from 'src/app/services/room/room.service';
 import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
 import SynchronousChessGame, { Position } from 'src/app/classes/chess/games/synchronous-chess-game';
@@ -26,6 +23,7 @@ export class SyncChessGameComponent implements OnInit {
 
     public game: SynchronousChessGame = new SynchronousChessGame();
     public playedPiece: Vec2 = new Vec2(-1, -1);
+    public validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
 
     public constructor(
         public roomService: RoomService,
@@ -47,8 +45,10 @@ export class SyncChessGameComponent implements OnInit {
     }
 
     public pieceClicked(cellPos: Vec2): void {
-        this.game.resetHighlight();
-        this.game.highlightValidMoves(cellPos);
+        this.resetHighlight();
+        this.game.getPossiblePlays(cellPos).forEach((play: Vec2) => {
+            this.validPlayBoard[play.y][play.x] = true;
+        });
     }
 
     public pieceDropped(cellPos: Vec2): void {
@@ -58,7 +58,11 @@ export class SyncChessGameComponent implements OnInit {
             const playMessage: PlayMessage = { from, to };
             this.roomService.transmitMessage(SCMessageType.PLAY, playMessage);
         }
-        this.game.resetHighlight();
+        this.resetHighlight();
         this.playedPiece = new Vec2(-1, -1);
+    }
+
+    public resetHighlight(): void {
+        this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
     }
 }

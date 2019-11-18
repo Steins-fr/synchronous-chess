@@ -1,6 +1,6 @@
 import CaseMoveCondition from './case-move-condition';
 import Vec2 from 'vec2';
-import { FenPiece } from '../../piece/piece';
+import { FenPiece } from '../../rules/chess-rules';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
 
 
