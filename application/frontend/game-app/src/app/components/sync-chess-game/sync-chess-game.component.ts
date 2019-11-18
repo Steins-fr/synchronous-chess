@@ -1,6 +1,6 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { ValidPlayBoard, FenBoard } from 'src/app/helpers/chess-board-helper';
 import { RoomService } from 'src/app/services/room/room.service';
 import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
 import SynchronousChessGame, { Position } from 'src/app/classes/chess/games/synchronous-chess-game';
@@ -24,19 +24,19 @@ export class SyncChessGameComponent implements OnInit {
     public game: SynchronousChessGame = new SynchronousChessGame();
     public playedPiece: Vec2 = new Vec2(-1, -1);
     public validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
-
+    public fenBoard: FenBoard = this.game.fenBoard;
     public constructor(
         public roomService: RoomService,
         private readonly ngZone: NgZone) {
     }
 
     public ngOnInit(): void {
-        this.roomService.notifier.follow(SCMessageType.PLAY, this, this.play.bind(this));
+        this.roomService.notifier.follow(SCMessageType.PLAY, this, this.onPlay.bind(this));
     }
 
-    private play(message: RoomServiceMessage<SCMessageType, PlayMessage>): void {
+    private onPlay(message: RoomServiceMessage<SCMessageType, PlayMessage>): void {
         const playMessage: PlayMessage = message.payload;
-        this.ngZone.run(() => this.game.applyPlay(playMessage.from, playMessage.to));
+        this.ngZone.run(() => this.play(playMessage.from, playMessage.to));
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -51,18 +51,24 @@ export class SyncChessGameComponent implements OnInit {
         });
     }
 
+    private play(from: Position, to: Position): boolean {
+        const playIsValid: boolean = this.game.applyPlay(from, to);
+        this.fenBoard = this.game.fenBoard;
+        this.resetHighlight();
+        this.playedPiece = new Vec2(-1, -1);
+        return playIsValid;
+    }
+
     public pieceDropped(cellPos: Vec2): void {
         const from: Position = this.playedPiece.toArray();
         const to: Position = cellPos.toArray();
-        if (this.game.applyPlay(from, to)) {
+        if (this.play(from, to)) {
             const playMessage: PlayMessage = { from, to };
             this.roomService.transmitMessage(SCMessageType.PLAY, playMessage);
         }
-        this.resetHighlight();
-        this.playedPiece = new Vec2(-1, -1);
     }
 
-    public resetHighlight(): void {
+    private resetHighlight(): void {
         this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
     }
 }

@@ -43,7 +43,7 @@ export default abstract class ChessRules {
 
     public constructor(public readonly color: PieceColor,
         public isQueenSideCastleAvailable: boolean = true,
-        public isKingSideCastelAvailable: boolean = true) { }
+        public isKingSideCastleAvailable: boolean = true) { }
 
     public getPieceMoves(pieceType: PieceType): Array<Move> {
         switch (pieceType) {
