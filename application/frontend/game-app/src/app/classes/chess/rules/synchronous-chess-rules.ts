@@ -1,11 +1,10 @@
-import ChessRules from './chess-rules';
+import ChessRules, { PieceColor, FenPiece } from './chess-rules';
 import Move from '../moves/move';
 import LinearMove from '../moves/linear-move';
 import HopMove from '../moves/hop-move';
 import DestinationColorMoveCondition from '../moves/move-conditions/destination-color-move-condition';
 import LineMoveCondition from '../moves/move-conditions/line-move-condition';
 import CaseMoveCondition from '../moves/move-conditions/case-move-condition';
-import { FenPiece, PieceColor } from '../piece/piece';
 import { Row } from 'src/app/helpers/chess-board-helper';
 import { DoNotApprocheMoveCondition } from '../moves/move-conditions/do-not-approche-move-condition';
 import { SafeMoveCondition } from '../moves/move-conditions/safe-move-condition';

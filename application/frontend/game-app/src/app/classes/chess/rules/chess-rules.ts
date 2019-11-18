@@ -1,6 +1,37 @@
 import Move from '../moves/move';
-import { PieceType, FenPiece, PieceColor } from '../piece/piece';
 import Vec2 from 'vec2';
+
+export enum PieceColor {
+    WHITE = 'w',
+    BLACK = 'b',
+    NONE = 'none'
+}
+
+export enum PieceType {
+    KING = 'k',
+    QUEEN = 'q',
+    BISHOP = 'b',
+    KNIGHT = 'n',
+    ROOK = 'r',
+    PAWN = 'p',
+    NONE = 'none'
+}
+
+export enum FenPiece {
+    BLACK_KING = 'k',
+    BLACK_QUEEN = 'q',
+    BLACK_BISHOP = 'b',
+    BLACK_KNIGHT = 'n',
+    BLACK_ROOK = 'r',
+    BLACK_PAWN = 'p',
+    WHITE_KING = 'K',
+    WHITE_QUEEN = 'Q',
+    WHITE_BISHOP = 'B',
+    WHITE_KNIGHT = 'N',
+    WHITE_ROOK = 'R',
+    WHITE_PAWN = 'P',
+    EMPTY = ''
+}
 
 export default abstract class ChessRules {
     public abstract readonly kingMove: Array<Move>;

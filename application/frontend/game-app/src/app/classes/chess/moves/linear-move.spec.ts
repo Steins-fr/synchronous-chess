@@ -1,7 +1,7 @@
 import LinearMove from './linear-move';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
 import Vec2 from 'vec2';
-import { FenPiece } from '../piece/piece';
+import { FenPiece } from '../rules/chess-rules';
 
 describe('LinearMove', () => {
     it('should create an instance', () => {

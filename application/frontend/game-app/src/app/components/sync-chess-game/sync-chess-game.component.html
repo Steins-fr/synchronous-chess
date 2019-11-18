@@ -1,3 +1,3 @@
-<app-chess-board [cells]="game.cells" (piecePicked)="piecePicked($event)" (pieceDropped)="pieceDropped($event)"
-    (pieceClicked)="pieceClicked($event)">
+<app-chess-board [fenBoard]="game.fenBoard" [validPlayBoard]="validPlayBoard" (piecePicked)="piecePicked($event)"
+    (pieceDropped)="pieceDropped($event)" (pieceClicked)="pieceClicked($event)">
 </app-chess-board>

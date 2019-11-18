@@ -1,7 +1,7 @@
 import HopMove from './hop-move';
 import Vec2 from 'vec2';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
-import { FenPiece } from '../piece/piece';
+import { FenPiece } from '../rules/chess-rules';
 
 describe('HopMove', () => {
     it('should create an instance', () => {

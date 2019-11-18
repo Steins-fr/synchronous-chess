@@ -1,7 +1,7 @@
 import Move, { MoveType } from './move';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
-import { FenPiece, PieceColor } from '../piece/piece';
+import { FenPiece, PieceColor } from '../rules/chess-rules';
 import MoveCondition from './move-conditions/move-condition';
 
 export default class HopMove extends Move {

@@ -1,14 +1,12 @@
-import ChessBoardHelper, { CellBoard, Column } from 'src/app/helpers/chess-board-helper';
-import Piece, { PieceColor, PieceType } from '../piece/piece';
+import ChessBoardHelper, { Column, FenBoard } from 'src/app/helpers/chess-board-helper';
 import SynchronousChessRules from '../rules/synchronous-chess-rules';
 import Vec2 from 'vec2';
-import Cell from '../board/cell';
-import ChessRules from '../rules/chess-rules';
+import ChessRules, { PieceColor, FenPiece, PieceType } from '../rules/chess-rules';
 
 export type Position = Array<number>;
 
 export default class SynchronousChessGame {
-    public cells: CellBoard = ChessBoardHelper.createCellBoard();
+    public fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
     private readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
     private readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
@@ -21,10 +19,11 @@ export default class SynchronousChessGame {
         if (from.distance(to) === 2) {
             // The king has moved twice, this is a castling
             const castlingRook: Column = ChessBoardHelper.castlingRook(from, to);
-            const rookCell: Cell = ChessBoardHelper.getCell(this.cells, new Vec2([castlingRook, from.y]));
-            const rookNewCell: Cell = ChessBoardHelper.getCell(this.cells, from.add(to.subtract(from, true).divide(2, 2, true), true));
-            rookNewCell.piece = rookCell.piece;
-            rookCell.piece = undefined;
+            const rookEmplacement: Vec2 = new Vec2([castlingRook, from.y]);
+            const rookNewEmplacement: Vec2 = from.add(to.subtract(from, true).divide(2, 2, true), true);
+
+            this.fenBoard[rookNewEmplacement.y][rookNewEmplacement.x] = ChessBoardHelper.getFenPiece(this.fenBoard, rookEmplacement);
+            this.fenBoard[rookEmplacement.y][rookEmplacement.x] = FenPiece.EMPTY;
         }
         rules.isQueenSideCastleAvailable = false;
         rules.isKingSideCastelAvailable = false;
@@ -45,22 +44,22 @@ export default class SynchronousChessGame {
         const from: Vec2 = new Vec2(fromPosition);
         const to: Vec2 = new Vec2(toPosition);
 
-        const fromCell: Cell = ChessBoardHelper.getCell(this.cells, from);
-        const toCell: Cell = ChessBoardHelper.getCell(this.cells, to);
+        const fromPiece: FenPiece = ChessBoardHelper.getFenPiece(this.fenBoard, from);
+        const toPiece: FenPiece = ChessBoardHelper.getFenPiece(this.fenBoard, to);
 
-        const rules: ChessRules = this.getRules(fromCell.piece.color);
+        const rules: ChessRules = this.getRules(ChessBoardHelper.pieceColor(fromPiece));
 
-        const playIsValid: boolean = rules.getPossiblePlays(fromCell.piece.type, from, ChessBoardHelper.toSimpleBoard(this.cells))
+        const playIsValid: boolean = rules.getPossiblePlays(ChessBoardHelper.pieceType(fromPiece), from, ChessBoardHelper.clone(this.fenBoard))
             .some((posPlay: Vec2) => posPlay.equal(to.x, to.y));
 
         if (playIsValid === false) {
             return false;
         }
 
-        toCell.piece = fromCell.piece;
-        fromCell.piece = undefined;
+        this.fenBoard[to.y][to.x] = fromPiece;
+        this.fenBoard[from.y][from.x] = FenPiece.EMPTY;
 
-        switch (toCell.piece.type) {
+        switch (ChessBoardHelper.pieceType(toPiece)) {
             case PieceType.KING:
                 this.kingPlay(from, to, rules);
                 break;
@@ -72,17 +71,10 @@ export default class SynchronousChessGame {
         return playIsValid;
     }
 
-    public highlightValidMoves(cellPos: Vec2): void {
-        const cell: Cell = ChessBoardHelper.getCell(this.cells, cellPos);
-        const piece: Piece = cell.piece;
-        const rules: SynchronousChessRules = this.getRules(piece.color);
+    public getPossiblePlays(position: Vec2): Array<Vec2> {
+        const fenPiece: FenPiece = ChessBoardHelper.getFenPiece(this.fenBoard, position);
+        const rules: SynchronousChessRules = this.getRules(ChessBoardHelper.pieceColor(fenPiece));
 
-        rules.getPossiblePlays(piece.type, cellPos, ChessBoardHelper.toSimpleBoard(this.cells)).forEach((posPlay: Vec2) => {
-            ChessBoardHelper.getCell(this.cells, posPlay).validMove = true;
-        });
-    }
-
-    public resetHighlight(): void {
-        this.cells.forEach((row: Array<Cell>) => row.forEach((cell: Cell) => cell.validMove = false));
+        return rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.clone(this.fenBoard));
     }
 }

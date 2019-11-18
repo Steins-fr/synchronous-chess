@@ -4,22 +4,22 @@
         <ng-container *ngTemplateOutlet="rowLabels"></ng-container>
         <div id="board-grid" [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}" cdkDropListGroup>
             <mat-grid-list cols="8">
-                <ng-container *ngFor="let row of cells; let y = index;">
-                    <ng-container *ngFor="let cell of row; let x = index;">
+                <ng-container *ngFor="let row of fenBoard; let y = index;">
+                    <ng-container *ngFor="let piece of row; let x = index;">
                         <mat-grid-tile *ngIf="[x, y] | vector2d as pos" [ngClass]="{
                                                 'drag-hover': cellHovered.equal(pos),
                                                 'dragged': pieceDragged.equal(pos),
-                                                'valid-move': cell.validMove}">
+                                                'valid-move': validPlayBoard[y][x]}">
                             <div cdkDropList class="cell" (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
                                 (cdkDropListEntered)="dragEntered(pos)">
-                                <app-board-piece cdkDrag [piece]="cell.piece" *ngIf="cell.piece"
+                                <app-board-piece cdkDrag [piece]="piece" *ngIf="piece"
                                     [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}"
                                     (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)"
                                     (click)="pieceClicked.emit(pos)">
                                     <div class="hidden-placeholder" *cdkDragPlaceholder></div>
                                     <div class="piece-preview-block" *cdkDragPreview>
                                         <div class="piece-preview">
-                                            <app-board-piece [piece]="cell.piece">
+                                            <app-board-piece [piece]="piece">
                                             </app-board-piece>
                                         </div>
                                     </div>

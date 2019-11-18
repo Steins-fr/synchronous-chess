@@ -1,43 +1,36 @@
-import ChessBoardHelper, { FenBoard, SafeBoard, Column, CellBoard } from './chess-board-helper';
-import Cell from '../classes/chess/board/cell';
-import King from '../classes/chess/piece/pieces/king';
-import { PieceColor, FenPiece, PieceType } from '../classes/chess/piece/piece';
-import Queen from '../classes/chess/piece/pieces/queen';
-import Rook from '../classes/chess/piece/pieces/rook';
-import Bishop from '../classes/chess/piece/pieces/bishop';
-import Knight from '../classes/chess/piece/pieces/knight';
-import Pawn from '../classes/chess/piece/pieces/pawn';
+import ChessBoardHelper, { FenBoard, SafeBoard, Column } from './chess-board-helper';
 import Vec2 from 'vec2';
 import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rules';
+import { FenPiece, PieceColor, PieceType } from '../classes/chess/rules/chess-rules';
 
 describe('ChessHelper', () => {
-    it('should transform a board into simpleNotation', () => {
+    it('should clone a board', () => {
         // Given
 
-        const board: Array<Array<Cell>> = [
+        const board: FenBoard = [
             [
-                new Cell(new King(PieceColor.WHITE)),
-                new Cell(new King(PieceColor.BLACK)),
-                new Cell(new Queen(PieceColor.WHITE)),
-                new Cell(new Queen(PieceColor.BLACK))
+                FenPiece.WHITE_KING,
+                FenPiece.BLACK_KING,
+                FenPiece.WHITE_QUEEN,
+                FenPiece.BLACK_QUEEN
             ],
             [
-                new Cell(new Rook(PieceColor.WHITE)),
-                new Cell(new Rook(PieceColor.BLACK)),
-                new Cell(new Bishop(PieceColor.WHITE)),
-                new Cell(new Bishop(PieceColor.BLACK))
+                FenPiece.WHITE_ROOK,
+                FenPiece.BLACK_ROOK,
+                FenPiece.WHITE_BISHOP,
+                FenPiece.BLACK_BISHOP
             ],
             [
-                new Cell(new Knight(PieceColor.WHITE)),
-                new Cell(new Knight(PieceColor.BLACK)),
-                new Cell(new Pawn(PieceColor.WHITE)),
-                new Cell(new Pawn(PieceColor.BLACK))
+                FenPiece.WHITE_KNIGHT,
+                FenPiece.BLACK_KNIGHT,
+                FenPiece.WHITE_PAWN,
+                FenPiece.BLACK_PAWN
             ],
             [
-                new Cell(),
-                new Cell(),
-                new Cell(),
-                new Cell()
+                FenPiece.EMPTY,
+                FenPiece.EMPTY,
+                FenPiece.EMPTY,
+                FenPiece.EMPTY
             ]
         ];
 
@@ -70,10 +63,11 @@ describe('ChessHelper', () => {
 
         // When
 
-        const simpleBoard: FenBoard = ChessBoardHelper.toSimpleBoard(board);
+        const simpleBoard: FenBoard = ChessBoardHelper.clone(board);
 
         // Then
         expect(simpleBoard).toEqual(expectedSimpleBoard);
+        expect(simpleBoard).not.toBe(expectedSimpleBoard);
     });
 
     it('should give us the piece color', () => {
@@ -379,10 +373,10 @@ describe('ChessHelper', () => {
         expect(resultA).toEqual(Column.A);
     });
 
-    it('should create an initialized cell board', () => {
+    it('should create an initialized fen board', () => {
         // Given
 
-        const fenBoard: FenBoard = [
+        const expectedFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
             [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -395,28 +389,9 @@ describe('ChessHelper', () => {
 
         // When
 
-        const cellBoard: CellBoard = ChessBoardHelper.createCellBoard();
+        const fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
 
         // Then
-        expect(ChessBoardHelper.toSimpleBoard(cellBoard)).toEqual(fenBoard);
-    });
-
-    it('should get the rights cell', () => {
-        // Given
-
-        const cellBoard: CellBoard = ChessBoardHelper.createCellBoard();
-        const pos: Vec2 = new Vec2([3, 4]);
-        const invalidPos: Vec2 = new Vec2([-1, -1]);
-
-        // When
-
-        const cell: Cell = ChessBoardHelper.getCell(cellBoard, pos);
-        const validCall: () => void = (): Cell => ChessBoardHelper.getCell(cellBoard, pos);
-        const invalidCall: () => void = (): Cell => ChessBoardHelper.getCell(cellBoard, invalidPos);
-
-        // Then
-        expect(cell).toEqual(cellBoard[pos.y][pos.x]);
-        expect(validCall).not.toThrowError();
-        expect(invalidCall).toThrowError();
+        expect(fenBoard).toEqual(expectedFenBoard);
     });
 });
