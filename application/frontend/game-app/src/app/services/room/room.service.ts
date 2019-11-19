@@ -18,9 +18,16 @@ import RoomQueueRemoveEvent from 'src/app/classes/room-manager/events/room-queue
 import RoomCreateResponse from '../room-api/responses/room-create-response';
 import RoomJoinResponse from '../room-api/responses/room-join-response';
 import Notifier, { NotifierFlow } from 'src/app/classes/notifier/notifier';
+import { RoomMessage } from 'src/app/classes/webrtc/messages/room-message';
+import RoomReadyEvent from 'src/app/classes/room-manager/events/room-ready-event';
+
+export enum RoomServiceEventType {
+    IS_READY = 'RoomServiceIsReady',
+    ROOM_MANAGER = 'RoomServiceRoomManager'
+}
 
 type RoomServiceNotificationType = string;
-type RoomServiceNotification = RoomServiceMessage;
+type RoomServiceNotification = RoomMessage;
 
 @Injectable(
     { providedIn: 'root' }
@@ -28,7 +35,6 @@ type RoomServiceNotification = RoomServiceMessage;
 export class RoomService {
 
     public roomManager?: RoomManager;
-    public roomName: string = '';
 
     private readonly _isActive: BehaviorSubject<boolean> = new BehaviorSubject(false);
     public readonly isActive: Observable<boolean> = this._isActive.asObservable();
@@ -64,49 +70,46 @@ export class RoomService {
         return this.roomManager !== undefined;
     }
 
-    public async createRoom(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
-        const hostRoom: HostRoomManager = new HostRoomManager(this.roomApi);
+    public createRoom(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
+        const hostRoom: HostRoomManager = new HostRoomManager(this.roomApi, roomName);
         this.followRoomManager(hostRoom);
         hostRoom.setup((message: RoomServiceMessage) => this.onMessage(message));
-        try {
-            const response: RoomCreateResponse = await hostRoom.create(roomName, playerName, maxPlayer);
-            this.finalizeSetup(roomName, hostRoom);
-            return response;
-        } catch (err) {
-            hostRoom.clear();
-            return Promise.reject(err);
-        }
+        return hostRoom.create(playerName, maxPlayer);
     }
 
     private onMessage(message: RoomServiceMessage): void {
         this._notifier.notify(message.type, message);
     }
 
-    public async joinRoom(roomName: string, playerName: string): Promise<RoomJoinResponse> {
-        const peerRoom: PeerRoomManager = new PeerRoomManager(this.roomApi);
+    public joinRoom(roomName: string, playerName: string): Promise<RoomJoinResponse> {
+        const peerRoom: PeerRoomManager = new PeerRoomManager(this.roomApi, roomName);
         this.followRoomManager(peerRoom);
         peerRoom.setup((message: RoomServiceMessage) => this.onMessage(message));
-        try {
-            const response: RoomJoinResponse = await peerRoom.join(roomName, playerName);
-            this.finalizeSetup(roomName, peerRoom);
-            return response;
-        } catch (err) {
-            peerRoom.clear();
-            return Promise.reject(err);
-        }
+        return peerRoom.join(playerName);
     }
 
-    private finalizeSetup(roomName: string, roomManager: RoomManager): void {
-        this.roomManager = roomManager;
-        this.roomName = roomName;
-        this.ngZone.run(() => this._isActive.next(true));
+    private notify<T>(type: RoomServiceNotificationType, payload: T): void {
+        this._notifier.notify(type, { origin: MessageOriginType.ROOM_SERVICE, payload });
     }
 
     private followRoomManager(roomManager: RoomManager): void {
+        roomManager.notifier.follow(RoomEventType.READY, this, this.handleRoomManagerReadyEvent.bind(this));
         roomManager.notifier.follow(RoomEventType.PLAYER_ADD, this, this.handleRoomPlayerAddEvent.bind(this));
         roomManager.notifier.follow(RoomEventType.PLAYER_REMOVE, this, this.handleRoomPlayerRemoveEvent.bind(this));
         roomManager.notifier.follow(RoomEventType.QUEUE_ADD, this, this.handleRoomQueueAddEvent.bind(this));
         roomManager.notifier.follow(RoomEventType.QUEUE_REMOVE, this, this.handleRoomQueueRemoveEvent.bind(this));
+    }
+
+    public get roomName(): string {
+        return this.roomManager.roomName;
+    }
+
+    private handleRoomManagerReadyEvent(event: RoomReadyEvent): void {
+        const roomManager: RoomManager = event.payload;
+        this.roomManager = roomManager;
+        this.ngZone.run(() => this._isActive.next(true));
+
+        this.notify<RoomManager>(RoomServiceEventType.ROOM_MANAGER, roomManager);
     }
 
     private handleRoomPlayerAddEvent(event: RoomPlayerAddEvent): void {
@@ -120,6 +123,7 @@ export class RoomService {
 
     private handleRoomPlayerRemoveEvent(event: RoomPlayerRemoveEvent): void {
         const player: Player = event.payload;
+
         this.ngZone.run(() => this.players.delete(player.name));
     }
 

@@ -15,27 +15,33 @@ import { Webrtc } from '../webrtc/webrtc';
 import { RoomManager } from './room-manager';
 import { Player, PlayerType } from '../player/player';
 import { NewPlayerPayload } from './peer-room-manager';
+import { RoomEventType } from './events/room-event';
+import RoomReadyEvent from './events/room-ready-event';
 
 
 export class HostRoomManager extends RoomManager {
 
-    protected initiator: boolean = true;
-    private roomName?: string;
+    public readonly initiator: boolean = true;
     private maxPlayer?: number;
     private refreshId?: NodeJS.Timer;
 
-    public constructor(roomApi: RoomApiService) {
-        super(roomApi);
+    public constructor(roomApi: RoomApiService, roomName: string) {
+        super(roomApi, roomName);
         this.roomApi.notifier.follow(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
     }
 
-    public async create(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
-        const response: RoomCreateResponse = await this.roomApi.create(roomName, maxPlayer, playerName);
-        this.roomName = roomName;
-        this.maxPlayer = maxPlayer;
-        this.setLocalPlayer(playerName, PlayerType.HOST);
-        this.enableRefresh();
-        return response;
+    public async create(playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
+        try {
+            const response: RoomCreateResponse = await this.roomApi.create(this.roomName, maxPlayer, playerName);
+            this.maxPlayer = maxPlayer;
+            this._notifier.notify(RoomEventType.READY, new RoomReadyEvent(this));
+            this.setLocalPlayer(playerName, PlayerType.HOST);
+            this.enableRefresh();
+            return response;
+        } catch (err) {
+            this.clear();
+            return Promise.reject(err);
+        }
     }
 
     private enableRefresh(): void {

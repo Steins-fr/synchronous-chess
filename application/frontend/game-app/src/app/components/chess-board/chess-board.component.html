@@ -13,8 +13,10 @@
                             <div cdkDropList class="cell" (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
                                 (cdkDropListEntered)="dragEntered(pos)">
                                 <app-board-piece cdkDrag [piece]="piece" *ngIf="piece"
-                                    [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}"
-                                    (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)"
+                                    [cdkDragDisabled]="canBeDragged(pos) === false" [ngClass]="{
+                                        'grabbing-cursor': !pieceDragged.equal(-1, -1),
+                                        'grab-available': canBeDragged(pos)
+                                }" (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)"
                                     (click)="pieceClicked.emit(pos)">
                                     <div class="hidden-placeholder" *cdkDragPlaceholder></div>
                                     <div class="piece-preview-block" *cdkDragPreview>

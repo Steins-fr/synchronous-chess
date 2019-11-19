@@ -1,16 +1,15 @@
 import { PeerRoomManager } from './peer-room-manager';
-import { TestBed } from '@angular/core/testing';
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 
 describe('PeerRoom', () => {
 
+    let roomApiServiceSpy: jasmine.SpyObj<RoomApiService>;
+
     beforeEach(() => {
-        TestBed.configureTestingModule({
-            providers: [RoomApiService]
-        });
+        roomApiServiceSpy = jasmine.createSpyObj<RoomApiService>('RoomApiService', ['notifier']);
     });
 
     it('should create an instance', () => {
-        expect(new PeerRoomManager(TestBed.get(RoomApiService))).toBeTruthy();
+        expect(new PeerRoomManager(roomApiServiceSpy, '')).toBeTruthy();
     });
 });

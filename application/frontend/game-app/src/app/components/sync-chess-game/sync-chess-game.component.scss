@@ -1,1 +1,9 @@
-// No style for the moment
+#game {
+    display: flex;
+    flex-direction: column;
+
+    .player {
+        width: 100%;
+        text-align: center;
+    }
+}

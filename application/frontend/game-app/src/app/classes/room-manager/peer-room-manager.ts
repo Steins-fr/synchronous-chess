@@ -11,21 +11,29 @@ import { RoomManager } from './room-manager';
 
 import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
 import SignalResponse from 'src/app/services/room-api/responses/signal-response';
+import { RoomEventType } from './events/room-event';
+import RoomReadyEvent from './events/room-ready-event';
 
 export interface NewPlayerPayload {
     playerName: string;
 }
 
 export class PeerRoomManager extends RoomManager {
-    protected initiator: boolean = false;
+    public readonly initiator: boolean = false;
     protected hostPlayer?: Player;
 
-    public async join(roomName: string, playerName: string): Promise<RoomJoinResponse> {
-        const response: RoomJoinResponse = await this.roomApi.join(roomName, playerName);
-        this.setLocalPlayer(playerName, PlayerType.PEER);
-        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, response.playerName, PlayerType.HOST, new Webrtc(), this.roomApi);
-        this.addNegotiator(negotiator);
-        return response;
+    public async join(playerName: string): Promise<RoomJoinResponse> {
+        try {
+            const response: RoomJoinResponse = await this.roomApi.join(this.roomName, playerName);
+            this._notifier.notify(RoomEventType.READY, new RoomReadyEvent(this));
+            this.setLocalPlayer(playerName, PlayerType.PEER);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, response.playerName, PlayerType.HOST, new Webrtc(), this.roomApi);
+            this.addNegotiator(negotiator);
+            return response;
+        } catch (err) {
+            this.clear();
+            return Promise.reject(err);
+        }
     }
 
     protected onPlayerConnected(player: Player): void {

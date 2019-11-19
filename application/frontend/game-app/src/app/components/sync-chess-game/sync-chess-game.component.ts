@@ -1,18 +1,13 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { ValidPlayBoard, FenBoard } from 'src/app/helpers/chess-board-helper';
-import { RoomService } from 'src/app/services/room/room.service';
-import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
-import SynchronousChessGame, { Position } from 'src/app/classes/chess/games/synchronous-chess-game';
-
-enum SCMessageType {
-    PLAY = 'SC-play'
-}
-
-interface PlayMessage {
-    from: Position;
-    to: Position;
-}
+import ChessBoardHelper, { ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
+import { RoomService, RoomServiceEventType } from 'src/app/services/room/room.service';
+import { Position } from 'src/app/classes/chess/games/synchronous-chess-game';
+import SynchronousChessGameSession from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessLocalGameSession from 'src/app/classes/chess/game-sessions/synchronous-chess-local-game-session';
+import { RoomMessage } from 'src/app/classes/webrtc/messages/room-message';
+import SynchronousChessGameSessionBuilder from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
+import { RoomManager } from 'src/app/classes/room-manager/room-manager';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -21,22 +16,23 @@ interface PlayMessage {
 })
 export class SyncChessGameComponent implements OnInit {
 
-    public game: SynchronousChessGame = new SynchronousChessGame();
+    public gameSession: SynchronousChessGameSession;
     public playedPiece: Vec2 = new Vec2(-1, -1);
     public validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
-    public fenBoard: FenBoard = this.game.fenBoard;
+
     public constructor(
         public roomService: RoomService,
         private readonly ngZone: NgZone) {
+        this.gameSession = new SynchronousChessLocalGameSession(ngZone);
     }
 
     public ngOnInit(): void {
-        this.roomService.notifier.follow(SCMessageType.PLAY, this, this.onPlay.bind(this));
+        this.roomService.notifier.follow(RoomServiceEventType.ROOM_MANAGER, this, (roomTypeMessage: RoomMessage<RoomManager>) => this.onRoomManager(roomTypeMessage.payload));
     }
 
-    private onPlay(message: RoomServiceMessage<SCMessageType, PlayMessage>): void {
-        const playMessage: PlayMessage = message.payload;
-        this.ngZone.run(() => this.play(playMessage.from, playMessage.to));
+    private onRoomManager(roomManager: RoomManager): void {
+        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, roomManager, this.ngZone);
+        this.roomService.notifier.unfollow(RoomServiceEventType.ROOM_MANAGER, this);
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -46,26 +42,17 @@ export class SyncChessGameComponent implements OnInit {
 
     public pieceClicked(cellPos: Vec2): void {
         this.resetHighlight();
-        this.game.getPossiblePlays(cellPos).forEach((play: Vec2) => {
+        this.gameSession.game.getPossiblePlays(cellPos).forEach((play: Vec2) => {
             this.validPlayBoard[play.y][play.x] = true;
         });
-    }
-
-    private play(from: Position, to: Position): boolean {
-        const playIsValid: boolean = this.game.applyPlay(from, to);
-        this.fenBoard = this.game.fenBoard;
-        this.resetHighlight();
-        this.playedPiece = new Vec2(-1, -1);
-        return playIsValid;
     }
 
     public pieceDropped(cellPos: Vec2): void {
         const from: Position = this.playedPiece.toArray();
         const to: Position = cellPos.toArray();
-        if (this.play(from, to)) {
-            const playMessage: PlayMessage = { from, to };
-            this.roomService.transmitMessage(SCMessageType.PLAY, playMessage);
-        }
+        this.gameSession.play(from, to);
+        this.resetHighlight();
+        this.playedPiece = new Vec2(-1, -1);
     }
 
     private resetHighlight(): void {

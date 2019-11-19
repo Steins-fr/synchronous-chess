@@ -6,6 +6,7 @@ import { PieceComponent } from '../chess-board/piece/piece.component';
 import { RangePipe } from 'src/app/pipes/range.pipe';
 import { Vector2dPipe } from 'src/app/pipes/vector2d.pipe';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 describe('SyncChessGameComponent', () => {
     let component: SyncChessGameComponent;
@@ -20,7 +21,10 @@ describe('SyncChessGameComponent', () => {
                 RangePipe,
                 Vector2dPipe
             ],
-            imports: [MatGridListModule]
+            imports: [
+                MatGridListModule,
+                DragDropModule
+            ]
         })
             .compileComponents();
     }));
