@@ -127,6 +127,19 @@ export default abstract class ChessBoardHelper {
         return board[position.y][position.x];
     }
 
+    /**
+     * Set the piece in a board, then return a new board.
+     */
+    public static setFenPiece(fenBoard: FenBoard, position: Vec2, piece: FenPiece): FenBoard {
+        if (ChessBoardHelper.isOutOfBoard(position)) {
+            throw new Error(`Updated piece is out of board: ${position.toString()}`);
+        }
+
+        const board: FenBoard = ChessBoardHelper.cloneBoard(fenBoard);
+        board[position.y][position.x] = piece;
+        return board;
+    }
+
     private static inverseColor(fenPiece: FenPiece): FenPiece {
         return (ChessBoardHelper.pieceColor(fenPiece) === PieceColor.WHITE ? fenPiece.toLowerCase() : fenPiece.toUpperCase()) as FenPiece;
     }

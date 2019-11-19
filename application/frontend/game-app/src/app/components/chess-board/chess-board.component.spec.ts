@@ -5,6 +5,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import { RangePipe } from 'src/app/pipes/range.pipe';
 import { PieceComponent } from './piece/piece.component';
 import { Vector2dPipe } from 'src/app/pipes/vector2d.pipe';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 describe('ChessBoardComponent', () => {
     let component: ChessBoardComponent;
@@ -17,7 +18,10 @@ describe('ChessBoardComponent', () => {
                 PieceComponent,
                 RangePipe,
                 Vector2dPipe],
-            imports: [MatGridListModule]
+            imports: [
+                MatGridListModule,
+                DragDropModule
+            ]
         })
             .compileComponents();
     }));

@@ -29,13 +29,13 @@ export abstract class RoomManager {
     protected localPlayer?: Player;
     protected players: Map<string, Player> = new Map<string, Player>();
     public negotiators: Map<string, Negotiator> = new Map<string, Negotiator>();
-    protected initiator: boolean;
+    public abstract readonly initiator: boolean;
     public isSetup: boolean = false;
 
     private _onMessage: OnMessageCallback;
-    private readonly _notifier: Notifier<RoomEventType, RoomEvent> = new Notifier<RoomEventType, RoomEvent>();
+    protected readonly _notifier: Notifier<RoomEventType, RoomEvent> = new Notifier<RoomEventType, RoomEvent>();
 
-    public constructor(protected readonly roomApi: RoomApiService) { }
+    public constructor(protected readonly roomApi: RoomApiService, public readonly roomName: string) { }
 
     public get notifier(): NotifierFlow<RoomEventType, RoomEvent> {
         return this._notifier;

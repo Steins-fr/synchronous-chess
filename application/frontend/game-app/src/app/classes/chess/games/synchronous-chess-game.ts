@@ -15,7 +15,7 @@ export default class SynchronousChessGame {
     }
 
     public get fenBoard(): FenBoard {
-        return ChessBoardHelper.cloneBoard(this._fenBoard);
+        return this._fenBoard;
     }
 
     public load(fenBoard: FenBoard): void {
@@ -30,8 +30,8 @@ export default class SynchronousChessGame {
             const rookEmplacement: Vec2 = new Vec2([castlingRook, from.y]);
             const rookNewEmplacement: Vec2 = from.add(to.subtract(from, true).divide(2, 2, true), true);
 
-            this._fenBoard[rookNewEmplacement.y][rookNewEmplacement.x] = ChessBoardHelper.getFenPiece(this._fenBoard, rookEmplacement);
-            this._fenBoard[rookEmplacement.y][rookEmplacement.x] = FenPiece.EMPTY;
+            this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, rookNewEmplacement, ChessBoardHelper.getFenPiece(this._fenBoard, rookEmplacement));
+            this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, rookEmplacement, FenPiece.EMPTY);
         }
         rules.isQueenSideCastleAvailable = false;
         rules.isKingSideCastleAvailable = false;
@@ -66,8 +66,8 @@ export default class SynchronousChessGame {
             return false;
         }
 
-        this._fenBoard[to.y][to.x] = fromPiece;
-        this._fenBoard[from.y][from.x] = FenPiece.EMPTY;
+        this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, to, fromPiece);
+        this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, from, FenPiece.EMPTY);
 
         switch (ChessBoardHelper.pieceType(fromPiece)) {
             case PieceType.KING:

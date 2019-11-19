@@ -7,14 +7,17 @@
     height: 100%;
     color: black;
     user-select: none;
-    cursor: pointer;
 
     @media (max-width: 1024px) {
         font-size: 9vw;
     }
 
-    &:active,
-    &.grabbing-cursor {
-        cursor: grabbing;
+    &.grab-available {
+        cursor: pointer;
+
+        &:active,
+        &.grabbing-cursor {
+            cursor: grabbing;
+        }
     }
 }
