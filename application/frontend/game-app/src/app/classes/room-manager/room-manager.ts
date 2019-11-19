@@ -33,10 +33,6 @@ export abstract class RoomManager {
     public isSetup: boolean = false;
 
     private _onMessage: OnMessageCallback;
-
-    // TODO: Verify if we can do notifier
-    /*  private readonly _events: ReplaySubject<RoomEvent> = new ReplaySubject<RoomEvent>(3);
-     public readonly events: Observable<RoomEvent> = this._events.asObservable(); */
     private readonly _notifier: Notifier<RoomEventType, RoomEvent> = new Notifier<RoomEventType, RoomEvent>();
 
     public constructor(protected readonly roomApi: RoomApiService) { }
@@ -122,40 +118,22 @@ export abstract class RoomManager {
 
     // Negotiator events
 
-    // TODO: notifier
     private subscribeNegotiatorConnected(negotiator: Negotiator): void {
-        const sub: Subscription = negotiator.event.subscribe((negotiatorEvent: NegotiatorEvent) => {
-            if (negotiatorEvent.type === NegotiatorEventType.CONNECTED) {
-                if (this.negotiators.has(negotiatorEvent.playerName)) {
-                    const n: Negotiator = this.negotiators.get(negotiatorEvent.playerName);
-                    const player: Player = new Player(n.playerName, negotiator.playerType, n.webRTC);
-                    this.removeNegotiator(negotiatorEvent.playerName);
-                    this.addPlayer(player);
-                    this.onPlayerConnected(player);
-                }
-                sub.unsubscribe();
+        negotiator.notifier.follow(NegotiatorEventType.CONNECTED, this, (negotiatorEvent: NegotiatorEvent) => {
+            if (this.negotiators.has(negotiatorEvent.playerName)) {
+                const n: Negotiator = this.negotiators.get(negotiatorEvent.playerName);
+                const player: Player = new Player(n.playerName, negotiator.playerType, n.webRTC);
+                this.removeNegotiator(negotiatorEvent.playerName);
+                this.addPlayer(player);
+                this.onPlayerConnected(player);
             }
         });
-        this.pushSubscriptionForNegotiator(negotiator.playerName, sub); // To unsubscribe without receiving the event
     }
 
     private subscribeNegotiatorDisconnected(negotiator: Negotiator): void {
-        const sub: Subscription = negotiator.event.subscribe((negotiatorEvent: NegotiatorEvent) => {
-            if (negotiatorEvent.type === NegotiatorEventType.DISCONNECTED) {
-                this.removeNegotiator(negotiatorEvent.playerName);
-                sub.unsubscribe();
-            }
+        negotiator.notifier.follow(NegotiatorEventType.DISCONNECTED, this, (negotiatorEvent: NegotiatorEvent) => {
+            this.removeNegotiator(negotiatorEvent.playerName);
         });
-        this.pushSubscriptionForNegotiator(negotiator.playerName, sub); // To unsubscribe without receiving the event
-    }
-
-    private pushSubscriptionForNegotiator(playerName: string, sub: Subscription): void {
-        let subs: Array<Subscription> = [];
-        if (this.negotiatorsSubs.has(playerName)) {
-            subs = this.negotiatorsSubs.get(playerName);
-        }
-        subs.push(sub);
-        this.negotiatorsSubs.set(playerName, subs);
     }
 
     private removeNegotiator(playerName: string): void {
@@ -164,22 +142,10 @@ export abstract class RoomManager {
             const negotiator: Negotiator = this.negotiators.get(playerName);
             this.negotiators.delete(playerName);
             negotiator.clear();
-            this.clearSubscriptions(this.negotiatorsSubs, negotiator.playerName);
         }
     }
 
     // Cleaning
-
-    private clearSubscriptions(map: Map<string, Array<Subscription>>, playerName: string): void {
-        if (map.has(playerName)) {
-            const subs: Array<Subscription> = map.get(playerName);
-            subs.forEach((sub: Subscription) => {
-                if (sub.closed === false) {
-                    sub.unsubscribe();
-                }
-            });
-        }
-    }
 
     public clear(): void {
         this.players.forEach((player: Player) => {
@@ -187,7 +153,6 @@ export abstract class RoomManager {
         });
         this.negotiators.forEach((negotiator: Negotiator) => {
             negotiator.clear();
-            this.clearSubscriptions(this.negotiatorsSubs, negotiator.playerName);
         });
     }
 }

@@ -1,10 +1,11 @@
-import { Subscription, Subject, Observable } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 
 import WebrtcStates from '../webrtc/webrtc-states';
 import { Webrtc, Signal, WebrtcConnectionState } from '../webrtc/webrtc';
 
 import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
 import { PlayerType } from '../player/player';
+import Notifier, { NotifierFlow } from '../notifier/notifier';
 
 export enum NegotiatorEventType {
     CONNECTED = 'connected',
@@ -12,7 +13,6 @@ export enum NegotiatorEventType {
 }
 
 export interface NegotiatorEvent {
-    type: NegotiatorEventType;
     playerName: string;
 }
 
@@ -21,8 +21,9 @@ export abstract class Negotiator {
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.DISCONNECTED;
     private signalTry: number = 0;
     private timeoutId?: NodeJS.Timer;
-    private readonly _event: Subject<NegotiatorEvent> = new Subject<NegotiatorEvent>();
-    public readonly event: Observable<NegotiatorEvent> = this._event.asObservable();
+
+    private readonly _notifier: Notifier<NegotiatorEventType, NegotiatorEvent> = new Notifier<NegotiatorEventType, NegotiatorEvent>();
+
     public states?: Observable<WebrtcStates>; // For external debugging
     public isInitiator: boolean = false;
 
@@ -32,6 +33,10 @@ export abstract class Negotiator {
         public readonly webRTC: Webrtc) {
         this.states = webRTC.states;
         this.checkTimeout();
+    }
+
+    public get notifier(): NotifierFlow<NegotiatorEventType, NegotiatorEvent> {
+        return this._notifier;
     }
 
     public initiate(): void {
@@ -63,8 +68,7 @@ export abstract class Negotiator {
     }
 
     protected pushEvent(type: NegotiatorEventType): void {
-        this._event.next({
-            type,
+        this._notifier.notify(type, {
             playerName: this.playerName
         });
     }
