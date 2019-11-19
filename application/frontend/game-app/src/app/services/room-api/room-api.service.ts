@@ -57,7 +57,6 @@ export enum RoomApiNotificationType {
 }
 
 type RoomApiNotification = SignalNotification | JoinNotification | FullNotification;
-export type NotifyCallback = (data: RoomApiNotification) => void;
 type RequestId = number;
 
 @Injectable({

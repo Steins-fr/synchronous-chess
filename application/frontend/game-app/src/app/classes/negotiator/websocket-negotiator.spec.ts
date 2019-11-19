@@ -2,6 +2,7 @@ import { WebsocketNegotiator } from './websocket-negotiator';
 import { Webrtc } from '../webrtc/webrtc';
 import { TestBed } from '@angular/core/testing';
 import { RoomApiService } from 'src/app/services/room-api/room-api.service';
+import { PlayerType } from '../player/player';
 
 describe('WebsocketNegotiator', () => {
 
@@ -12,6 +13,6 @@ describe('WebsocketNegotiator', () => {
     });
 
     it('should create an instance', () => {
-        expect(new WebsocketNegotiator('', '', new Webrtc(), TestBed.get(RoomApiService))).toBeTruthy();
+        expect(new WebsocketNegotiator('', '', PlayerType.HOST, new Webrtc(), TestBed.get(RoomApiService))).toBeTruthy();
     });
 });

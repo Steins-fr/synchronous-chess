@@ -6,7 +6,7 @@ import { HostRoomMessage, HostRoomMessageType } from '../webrtc/messages/host-ro
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
 
-import { Player } from '../player/player';
+import { Player, PlayerType } from '../player/player';
 import { RoomManager } from './room-manager';
 
 import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
@@ -22,8 +22,8 @@ export class PeerRoomManager extends RoomManager {
 
     public async join(roomName: string, playerName: string): Promise<RoomJoinResponse> {
         const response: RoomJoinResponse = await this.roomApi.join(roomName, playerName);
-        this.setLocalPlayer(playerName);
-        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, response.playerName, new Webrtc(), this.roomApi);
+        this.setLocalPlayer(playerName, PlayerType.PEER);
+        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, response.playerName, PlayerType.HOST, new Webrtc(), this.roomApi);
         this.addNegotiator(negotiator);
         return response;
     }
@@ -70,7 +70,7 @@ export class PeerRoomManager extends RoomManager {
         if (this.players.has(newPlayerPayload.playerName) || this.negotiators.has(newPlayerPayload.playerName)) {
             return;
         }
-        const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, new Webrtc(), this.hostPlayer);
+        const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, PlayerType.PEER, new Webrtc(), this.hostPlayer);
         negotiator.initiate();
         this.addNegotiator(negotiator);
     }
@@ -82,7 +82,7 @@ export class PeerRoomManager extends RoomManager {
 
         let negotiator: Negotiator;
         if (this.negotiators.has(remoteSignalPayload.from) === false) { // Create new negotiator
-            negotiator = new WebrtcNegotiator(remoteSignalPayload.from, new Webrtc(), this.hostPlayer);
+            negotiator = new WebrtcNegotiator(remoteSignalPayload.from, PlayerType.PEER, new Webrtc(), this.hostPlayer);
             this.addNegotiator(negotiator);
         } else { // If exists, get the receiving negotiator.
             negotiator = this.negotiators.get(remoteSignalPayload.from);
