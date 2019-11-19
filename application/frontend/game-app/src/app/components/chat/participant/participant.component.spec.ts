@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ParticipantComponent } from './participant.component';
 import { MatChipsModule } from '@angular/material/chips';
-import { Player } from 'src/app/classes/player/player';
+import { Player, PlayerType } from 'src/app/classes/player/player';
 
 describe('ParticipantComponent', () => {
     let component: ParticipantComponent;
@@ -19,7 +19,7 @@ describe('ParticipantComponent', () => {
     beforeEach(() => {
         fixture = TestBed.createComponent(ParticipantComponent);
         component = fixture.componentInstance;
-        component.player = new Player('');
+        component.player = new Player('', PlayerType.HOST);
         fixture.detectChanges();
     });
 

@@ -1,7 +1,7 @@
-import { Player } from './player';
+import { Player, PlayerType } from './player';
 
 describe('Player', () => {
     it('should create an instance', () => {
-        expect(new Player('')).toBeTruthy();
+        expect(new Player('', PlayerType.HOST)).toBeTruthy();
     });
 });

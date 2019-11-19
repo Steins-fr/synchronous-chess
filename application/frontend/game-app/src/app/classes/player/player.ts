@@ -7,6 +7,10 @@ import { PlayerMessage, PlayerMessageType } from '../webrtc/messages/player-mess
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import Notifier, { NotifierFlow } from '../notifier/notifier';
 
+export enum PlayerType {
+    HOST, PEER
+}
+
 export enum PlayerEventType {
     DISCONNECTED = 'disconnected',
     MESSAGE = 'message'
@@ -40,7 +44,7 @@ export class Player {
         }
     }(this.name);
 
-    public constructor(public readonly name: string, private readonly webRTC?: Webrtc) {
+    public constructor(public readonly name: string, public readonly type: PlayerType, private readonly webRTC?: Webrtc) {
         if (this.isLocal() === false) {
             this.states = webRTC.states;
             this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));

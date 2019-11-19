@@ -3,7 +3,7 @@ import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc, Signal } from '../webrtc/webrtc';
 
 import { Negotiator } from './negotiator';
-import { Player } from '../player/player';
+import { Player, PlayerType } from '../player/player';
 
 export interface SignalPayload {
     to: string;
@@ -12,9 +12,9 @@ export interface SignalPayload {
 
 export class WebrtcNegotiator extends Negotiator {
 
-    public constructor(playerName: string, webRTC: Webrtc,
+    public constructor(playerName: string, playerType: PlayerType, webRTC: Webrtc,
         private readonly peer: Player) {
-        super(playerName, webRTC);
+        super(playerName, playerType, webRTC);
     }
 
     protected handleSignal(signal: Signal): void {

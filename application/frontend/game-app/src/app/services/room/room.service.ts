@@ -21,7 +21,6 @@ import Notifier, { NotifierFlow } from 'src/app/classes/notifier/notifier';
 
 type RoomServiceNotificationType = string;
 type RoomServiceNotification = RoomServiceMessage;
-export type NotifyCallback = (data: RoomServiceNotification) => void;
 
 @Injectable(
     { providedIn: 'root' }

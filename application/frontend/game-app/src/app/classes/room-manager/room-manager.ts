@@ -10,7 +10,8 @@ import { NegotiatorEventType, Negotiator, NegotiatorEvent } from '../negotiator/
 import {
     Player,
     PlayerEventType,
-    PlayerEvent
+    PlayerEvent,
+    PlayerType
 } from '../player/player';
 import RoomEvent, { RoomEventType } from './events/room-event';
 import RoomPlayerAddEvent from './events/room-player-add-event';
@@ -62,8 +63,8 @@ export abstract class RoomManager {
 
     // Room creation
 
-    protected setLocalPlayer(playerName: string): void {
-        this.localPlayer = new Player(playerName);
+    protected setLocalPlayer(playerName: string, playerType: PlayerType): void {
+        this.localPlayer = new Player(playerName, playerType);
         this.pushEvent(new RoomPlayerAddEvent(this.localPlayer));
         this.players.set(this.localPlayer.name, this.localPlayer);
     }
@@ -121,12 +122,13 @@ export abstract class RoomManager {
 
     // Negotiator events
 
+    // TODO: notifier
     private subscribeNegotiatorConnected(negotiator: Negotiator): void {
         const sub: Subscription = negotiator.event.subscribe((negotiatorEvent: NegotiatorEvent) => {
             if (negotiatorEvent.type === NegotiatorEventType.CONNECTED) {
                 if (this.negotiators.has(negotiatorEvent.playerName)) {
                     const n: Negotiator = this.negotiators.get(negotiatorEvent.playerName);
-                    const player: Player = new Player(n.playerName, n.webRTC);
+                    const player: Player = new Player(n.playerName, negotiator.playerType, n.webRTC);
                     this.removeNegotiator(negotiatorEvent.playerName);
                     this.addPlayer(player);
                     this.onPlayerConnected(player);

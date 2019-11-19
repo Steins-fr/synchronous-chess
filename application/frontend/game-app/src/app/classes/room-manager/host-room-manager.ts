@@ -13,7 +13,7 @@ import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
 
 import { RoomManager } from './room-manager';
-import { Player } from '../player/player';
+import { Player, PlayerType } from '../player/player';
 import { NewPlayerPayload } from './peer-room-manager';
 
 
@@ -33,7 +33,7 @@ export class HostRoomManager extends RoomManager {
         const response: RoomCreateResponse = await this.roomApi.create(roomName, maxPlayer, playerName);
         this.roomName = roomName;
         this.maxPlayer = maxPlayer;
-        this.setLocalPlayer(playerName);
+        this.setLocalPlayer(playerName, PlayerType.HOST);
         this.enableRefresh();
         return response;
     }
@@ -67,7 +67,7 @@ export class HostRoomManager extends RoomManager {
         if (nbPlayers >= this.maxPlayer) {
             this.roomApi.full(data.playerName, this.roomName).catch((err: string) => console.error(err));
         } else {
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomApi);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(), this.roomApi);
             negotiator.initiate();
             this.addNegotiator(negotiator);
         }

@@ -4,6 +4,7 @@ import WebrtcStates from '../webrtc/webrtc-states';
 import { Webrtc, Signal, WebrtcConnectionState } from '../webrtc/webrtc';
 
 import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
+import { PlayerType } from '../player/player';
 
 export enum NegotiatorEventType {
     CONNECTED = 'connected',
@@ -27,6 +28,7 @@ export abstract class Negotiator {
 
     public constructor(
         public readonly playerName: string,
+        public readonly playerType: PlayerType,
         public readonly webRTC: Webrtc) {
         this.states = webRTC.states;
         this.checkTimeout();

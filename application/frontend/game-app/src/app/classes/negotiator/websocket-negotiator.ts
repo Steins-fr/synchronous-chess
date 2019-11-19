@@ -4,13 +4,14 @@ import { Negotiator, NegotiatorEventType } from './negotiator';
 import { RoomApiService, RoomApiNotificationType } from 'src/app/services/room-api/room-api.service';
 import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
 import FullNotification from 'src/app/services/room-api/notifications/full-notification';
+import { PlayerType } from '../player/player';
 
 export class WebsocketNegotiator extends Negotiator {
 
-    public constructor(private readonly roomName: string, playerName: string, webRTC: Webrtc,
+    public constructor(private readonly roomName: string, playerName: string, playerType: PlayerType, webRTC: Webrtc,
         private readonly roomApi: RoomApiService) {
 
-        super(playerName, webRTC);
+        super(playerName, playerType, webRTC);
         this.roomApi.notifier.follow(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
         this.roomApi.notifier.follow(RoomApiNotificationType.FULL, this, (data: FullNotification) => this.onFull(data));
     }
