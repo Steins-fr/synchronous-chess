@@ -1,7 +1,8 @@
-import ChessBoardHelper, { FenBoard, SafeBoard, Column, Row } from './chess-board-helper';
+import ChessBoardHelper, { FenBoard, SafeBoard } from './chess-board-helper';
 import Vec2 from 'vec2';
 import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rules';
 import { FenPiece, PieceColor, PieceType } from '../classes/chess/rules/chess-rules';
+import { Column, Row } from '../classes/chess/interfaces/CoordinateMove';
 
 describe('ChessHelper', () => {
 

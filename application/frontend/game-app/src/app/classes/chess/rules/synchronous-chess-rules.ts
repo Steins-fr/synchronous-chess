@@ -6,8 +6,8 @@ import LineMovementCondition from '../movements/movement-conditions/line-movemen
 import CaseMovementCondition from '../movements/movement-conditions/case-movement-condition';
 import { DoNotApprocheMovementCondition } from '../movements/movement-conditions/do-not-approche-movement-condition';
 import { SafeMovementCondition } from '../movements/movement-conditions/safe-movement-condition';
-import { Row } from 'src/app/helpers/chess-board-helper';
 import Movement from '../movements/movement';
+import { Row } from '../interfaces/CoordinateMove';
 
 export default class SynchronousChessRules extends ChessRules {
 

@@ -2,12 +2,12 @@ import { Component, OnInit, NgZone } from '@angular/core';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
 import { RoomService, RoomServiceEventType } from 'src/app/services/room/room.service';
-import { Position } from 'src/app/classes/chess/games/synchronous-chess-game';
 import SynchronousChessGameSession from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session';
 import SynchronousChessLocalGameSession from 'src/app/classes/chess/game-sessions/synchronous-chess-local-game-session';
 import { RoomMessage } from 'src/app/classes/webrtc/messages/room-message';
 import SynchronousChessGameSessionBuilder from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
 import { RoomManager } from 'src/app/classes/room-manager/room-manager';
+import { Coordinate } from 'src/app/classes/chess/interfaces/CoordinateMove';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -48,9 +48,9 @@ export class SyncChessGameComponent implements OnInit {
     }
 
     public pieceDropped(cellPos: Vec2): void {
-        const from: Position = this.playedPiece.toArray();
-        const to: Position = cellPos.toArray();
-        this.gameSession.play(from, to);
+        const from: Coordinate = this.playedPiece.toArray();
+        const to: Coordinate = cellPos.toArray();
+        this.gameSession.move(from, to);
         this.resetHighlight();
         this.playedPiece = new Vec2(-1, -1);
     }

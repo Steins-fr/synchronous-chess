@@ -1,6 +1,6 @@
 import Vec2 from 'vec2';
-import { Row } from 'src/app/helpers/chess-board-helper';
 import MovementCondition from './movement-condition';
+import { Row } from '../../interfaces/CoordinateMove';
 
 export default class LineMovementCondition extends MovementCondition {
 

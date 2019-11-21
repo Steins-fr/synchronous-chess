@@ -9,7 +9,8 @@
                         <mat-grid-tile *ngIf="[x, y] | vector2d as pos" [ngClass]="{
                                                 'drag-hover': cellHovered.equal(pos),
                                                 'dragged': pieceDragged.equal(pos),
-                                                'valid-move': validPlayBoard[y][x]}">
+                                                'valid-move': validPlayBoard[y][x],
+                                                'move-preview': isMovePreview(pos)}">
                             <div cdkDropList class="cell" (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
                                 (cdkDropListEntered)="dragEntered(pos)">
                                 <app-board-piece cdkDrag [piece]="piece" *ngIf="piece"

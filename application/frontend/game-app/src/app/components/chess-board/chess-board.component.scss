@@ -75,7 +75,8 @@
                         background-color: greenyellow;
                     }
 
-                    &.valid-move.drag-hover {
+                    &.valid-move.drag-hover,
+                    &.move-preview {
                         background-color: green;
                     }
 
