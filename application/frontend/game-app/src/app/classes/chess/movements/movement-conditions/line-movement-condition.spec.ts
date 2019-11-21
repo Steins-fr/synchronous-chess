@@ -1,6 +1,6 @@
 import LineMovementCondition from './line-movement-condition';
 import Vec2 from 'vec2';
-import { Row } from 'src/app/helpers/chess-board-helper';
+import { Row } from '../../interfaces/CoordinateMove';
 
 
 describe('LineMoveCondition', () => {

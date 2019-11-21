@@ -16,6 +16,8 @@ export default class SynchronousChessOnlinePeerGameSession extends SynchronousCh
     }
 
     public onConfiguration(configuration: SessionConfiguration): void {
+
+        // TODO: prevent reception from other than host
         this.ngZone.run(() => this.configuration = configuration);
     }
 }

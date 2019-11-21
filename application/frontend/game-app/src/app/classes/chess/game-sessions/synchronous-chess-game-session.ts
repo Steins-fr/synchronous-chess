@@ -1,7 +1,10 @@
 import { NgZone } from '@angular/core';
 import { PieceColor } from '../rules/chess-rules';
-import SynchronousChessGame, { Position } from '../games/synchronous-chess-game';
-import { FenBoard } from 'src/app/helpers/chess-board-helper';
+import SynchronousChessGame from '../games/synchronous-chess-game';
+import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
+import Vec2 from 'vec2';
+import Move from '../interfaces/move';
+import CoordinateMove, { Coordinate } from '../interfaces/CoordinateMove';
 
 export interface SessionConfiguration {
     whitePlayer?: string;
@@ -12,12 +15,15 @@ export interface SessionConfiguration {
 export default abstract class SynchronousChessGameSession {
 
     public readonly game: SynchronousChessGame = new SynchronousChessGame();
+    public movePreview?: CoordinateMove;
     public configuration: SessionConfiguration = { spectatorNumber: 0 };
+
+    public abstract myColor: PieceColor;
 
     public constructor(protected readonly ngZone: NgZone) {
     }
 
-    public abstract get playerColor(): PieceColor;
+    public abstract get playingColor(): PieceColor;
 
     public get spectatorNumber(): number {
         return this.configuration.spectatorNumber;
@@ -27,7 +33,31 @@ export default abstract class SynchronousChessGameSession {
         return this.game.fenBoard;
     }
 
-    public play(from: Position, to: Position): boolean {
-        return this.game.applyPlay(from, to);
+    protected runMove(color: PieceColor, from: Coordinate, to: Coordinate): boolean {
+        if (ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, new Vec2(from))) !== color) {
+            return false;
+        }
+
+        const move: Move = {
+            from: ChessBoardHelper.positionToFenCoordinate(from),
+            to: ChessBoardHelper.positionToFenCoordinate(to)
+        };
+
+        if (this.game.isMoveValid(move) === false) {
+            return false;
+        }
+
+        if (color === this.myColor) {
+            this.movePreview = ChessBoardHelper.fromMoveToCoordinateMove(move);
+        }
+
+        this.game.registerMove(move, color);
+        if (this.game.runTurn()) {
+            this.movePreview = undefined;
+        }
+
+        return true;
     }
+
+    public abstract move(from: Coordinate, to: Coordinate): void;
 }

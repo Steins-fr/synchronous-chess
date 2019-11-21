@@ -1,36 +1,60 @@
 import Vec2 from 'vec2';
 import ChessRules, { FenPiece, PieceType, PieceColor } from '../classes/chess/rules/chess-rules';
+import Move, { FenCoordinate, FenRow, FenColumn } from '../classes/chess/interfaces/move';
+import CoordinateMove, { Row, Column, Coordinate } from '../classes/chess/interfaces/CoordinateMove';
 
 export type FenBoard = Array<Array<FenPiece>>;
 export type SafeBoard = Array<Array<boolean>>;
 export type ValidPlayBoard = Array<Array<boolean>>;
 export type MovementBoard = Array<Array<Array<PieceType>>>;
 
-export enum Row {
-    _8 = 0,
-    _7 = 1,
-    _6 = 2,
-    _5 = 3,
-    _4 = 4,
-    _3 = 5,
-    _2 = 6,
-    _1 = 7
-}
-
-export enum Column {
-    A = 0,
-    B = 1,
-    C = 2,
-    D = 3,
-    E = 4,
-    F = 5,
-    G = 6,
-    H = 7
-}
-
 export default abstract class ChessBoardHelper {
 
     private static readonly fenBoardToSafeBoardCache: Map<FenBoard, SafeBoard> = new Map<FenBoard, SafeBoard>();
+
+    private static readonly indexRowToFenRowMap: Map<Row, FenRow> = new Map([
+        [Row._1, 1],
+        [Row._2, 2],
+        [Row._3, 3],
+        [Row._4, 4],
+        [Row._5, 5],
+        [Row._6, 6],
+        [Row._7, 7],
+        [Row._8, 8],
+    ]);
+
+    private static readonly fenRowToIndexRowMap: Map<FenRow, Row> = new Map([
+        [1, Row._1],
+        [2, Row._2],
+        [3, Row._3],
+        [4, Row._4],
+        [5, Row._5],
+        [6, Row._6],
+        [7, Row._7],
+        [8, Row._8],
+    ]);
+
+    private static readonly indexColumnToFenColumnMap: Map<Column, FenColumn> = new Map([
+        [Column.A, FenColumn.A],
+        [Column.B, FenColumn.B],
+        [Column.C, FenColumn.C],
+        [Column.D, FenColumn.D],
+        [Column.E, FenColumn.E],
+        [Column.F, FenColumn.F],
+        [Column.G, FenColumn.G],
+        [Column.H, FenColumn.H],
+    ]);
+
+    private static readonly fenColumnToIndexColumnMap: Map<FenColumn, Column> = new Map([
+        [FenColumn.A, Column.A],
+        [FenColumn.B, Column.B],
+        [FenColumn.C, Column.C],
+        [FenColumn.D, Column.D],
+        [FenColumn.E, Column.E],
+        [FenColumn.F, Column.F],
+        [FenColumn.G, Column.G],
+        [FenColumn.H, Column.H],
+    ]);
 
     public static createFenBoard(): FenBoard {
         return [
@@ -205,5 +229,37 @@ export default abstract class ChessBoardHelper {
 
     public static castlingRook(from: Vec2, to: Vec2): Column {
         return to.subtract(from, true).x > 0 ? Column.H : Column.A;
+    }
+
+    public static indexRowToFenRow(index: Row): FenRow {
+        return ChessBoardHelper.indexRowToFenRowMap.get(index);
+    }
+
+    public static indexColumnToFenColumn(index: Column): FenColumn {
+        return ChessBoardHelper.indexColumnToFenColumnMap.get(index);
+    }
+
+    public static positionToFenCoordinate(position: Coordinate): FenCoordinate {
+        return [this.indexColumnToFenColumn(position[0]), this.indexRowToFenRow(position[1])];
+    }
+
+    public static toMove(from: Coordinate, to: Coordinate): Move {
+        return { from: ChessBoardHelper.positionToFenCoordinate(from), to: ChessBoardHelper.positionToFenCoordinate(to) };
+    }
+
+    public static fenRowToIndexRow(fenRow: FenRow): Row {
+        return ChessBoardHelper.fenRowToIndexRowMap.get(fenRow);
+    }
+
+    public static fenColumnToIndexColumn(fenColumn: FenColumn): Column {
+        return ChessBoardHelper.fenColumnToIndexColumnMap.get(fenColumn);
+    }
+
+    public static fenCoordinateToPosition(fenCoordinate: FenCoordinate): Coordinate {
+        return [this.fenColumnToIndexColumn(fenCoordinate[0]), this.fenRowToIndexRow(fenCoordinate[1])];
+    }
+
+    public static fromMoveToCoordinateMove(move: Move): CoordinateMove {
+        return { from: ChessBoardHelper.fenCoordinateToPosition(move.from), to: ChessBoardHelper.fenCoordinateToPosition(move.to) };
     }
 }

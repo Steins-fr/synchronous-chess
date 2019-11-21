@@ -3,7 +3,13 @@ import { PieceColor } from '../rules/chess-rules';
 
 export default class SynchronousChessLocalGameSession extends SynchronousChessGameSession {
 
-    public get playerColor(): PieceColor {
+    public myColor: PieceColor = PieceColor.NONE;
+    public get playingColor(): PieceColor {
         return PieceColor.NONE;
     }
+
+    public move(): void {
+
+    }
+
 }

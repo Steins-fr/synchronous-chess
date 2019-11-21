@@ -13,7 +13,7 @@ describe('SynchronousChessLocalGameSession', () => {
 
         // When
 
-        const color: PieceColor = session.playerColor;
+        const color: PieceColor = session.playingColor;
 
         expect(color).toEqual(PieceColor.NONE);
     });

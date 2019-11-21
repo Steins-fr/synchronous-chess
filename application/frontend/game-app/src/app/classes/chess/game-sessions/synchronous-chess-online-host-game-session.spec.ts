@@ -8,6 +8,16 @@ import { NgZone } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Player, PlayerType } from '../../player/player';
 import { SessionConfiguration } from './synchronous-chess-game-session';
+import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
+import { SCGameSessionType, PlayMessage } from './synchronous-chess-online-game-session';
+import MessageOriginType from '../../webrtc/messages/message-origin.types';
+import ChessBoardHelper from 'src/app/helpers/chess-board-helper';
+
+class ProtectedTest extends SynchronousChessOnlineHostGameSession {
+    public onMoveTest(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
+        this.onMove(message);
+    }
+}
 
 describe('SynchronousChessOnlineHostGameSession', () => {
 
@@ -49,9 +59,9 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         sessionNone.configuration.whitePlayer = 'b';
 
         // When
-        const whiteColor: PieceColor = sessionWhite.playerColor;
-        const blackColor: PieceColor = sessionBlack.playerColor;
-        const noneColor: PieceColor = sessionNone.playerColor;
+        const whiteColor: PieceColor = sessionWhite.playingColor;
+        const blackColor: PieceColor = sessionBlack.playingColor;
+        const noneColor: PieceColor = sessionNone.playingColor;
 
         // Then
         expect(whiteColor).toEqual(PieceColor.WHITE);
@@ -78,10 +88,10 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
         // When
         roomServiceSpy.isReady.and.returnValue(true);
-        const color1: PieceColor = session1.playerColor;
-        const color2: PieceColor = session2.playerColor;
+        const color1: PieceColor = session1.playingColor;
+        const color2: PieceColor = session2.playingColor;
         roomServiceSpy.isReady.and.returnValue(false);
-        const color3: PieceColor = session3.playerColor;
+        const color3: PieceColor = session3.playingColor;
 
         // Then
         expect(color1).toEqual(PieceColor.NONE);
@@ -91,51 +101,108 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should return true on valid play', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['applyPlay']);
+        Object.defineProperty(roomServiceSpy, 'localPlayer', {
+            value: { name: 'b' },
+            writable: false
+        });
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, undefined);
+        session.configuration.whitePlayer = 'a';
+        session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
         });
-        gameSpy.applyPlay.and.returnValue(true);
+        gameSpy.isMoveValid.and.returnValue(true);
+        Object.defineProperty(gameSpy, 'fenBoard', {
+            value: ChessBoardHelper.createFenBoard(),
+            writable: false
+        });
 
         // When
-        const playIsValid: boolean = session.play([1, 1], [1, 2]);
+        session.move([1, 1], [1, 2]);
 
         // Then
-        expect(playIsValid).toBeTruthy();
         expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(1);
+        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
+        expect(gameSpy.registerMove.calls.count()).toEqual(1);
+        expect(gameSpy.runTurn.calls.count()).toEqual(1);
     });
 
-    it('should return false on valid play', () => {
+    it('should return false on invalid move', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['applyPlay']);
+        Object.defineProperty(roomServiceSpy, 'localPlayer', {
+            value: { name: 'b' },
+            writable: false
+        });
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, undefined);
+        session.configuration.whitePlayer = 'a';
+        session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
         });
-        gameSpy.applyPlay.and.returnValue(false);
+        gameSpy.isMoveValid.and.returnValue(false);
+        Object.defineProperty(gameSpy, 'fenBoard', {
+            value: ChessBoardHelper.createFenBoard(),
+            writable: false
+        });
 
         // When
-        const playIsValid: boolean = session.play([1, 1], [1, 2]);
+        session.move([1, 1], [1, 6]);
 
         // Then
-        expect(playIsValid).toBeFalsy();
         expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(0);
+        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
+        expect(gameSpy.registerMove.calls.count()).toEqual(0);
+        expect(gameSpy.runTurn.calls.count()).toEqual(0);
     });
 
-    it('should call play into the zone', () => {
+    it('should run move from a remote playing player', () => {
         // Given
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
-        const playSpy: jasmine.Spy = jasmine.createSpy('play');
-        session.play = playSpy;
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
+        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
+        Object.defineProperty(session, 'runMove', {
+            value: runMoveSpy,
+            writable: false
+        });
+        const message: RoomServiceMessage<SCGameSessionType, PlayMessage> = {
+            from: 'a',
+            origin: MessageOriginType.ROOM_SERVICE,
+            type: SCGameSessionType.PLAY,
+            payload: { from: [2, 2], to: [2, 3] }
+        };
         // When
-        session.onPlay({ from: [2, 2], to: [2, 3] });
+        session.onMoveTest(message);
 
         // Then
-        expect(playSpy.calls.count()).toEqual(1);
+        expect(runMoveSpy.calls.count()).toEqual(1);
+    });
+
+    it('should not run move from a remote spectator', () => {
+        // Given
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
+        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
+
+        Object.defineProperty(session, 'runMove', {
+            value: runMoveSpy,
+            writable: false
+        });
+        const message: RoomServiceMessage<SCGameSessionType, PlayMessage> = {
+            from: 'C',
+            origin: MessageOriginType.ROOM_SERVICE,
+            type: SCGameSessionType.PLAY,
+            payload: { from: [2, 2], to: [2, 3] }
+        };
+        // When
+        session.onMoveTest(message);
+
+        // Then
+        expect(runMoveSpy.calls.count()).toEqual(0);
     });
 
     it('should set players on player add', () => {
