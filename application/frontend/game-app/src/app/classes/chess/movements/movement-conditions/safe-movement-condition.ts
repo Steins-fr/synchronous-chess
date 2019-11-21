@@ -1,9 +1,9 @@
-import MoveCondition from './move-condition';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
 import ChessRules from '../../rules/chess-rules';
+import MovementCondition from './movement-condition';
 
-export class SafeMoveCondition extends MoveCondition {
+export class SafeMovementCondition extends MovementCondition {
 
     public readonly andRelativeSafeCell?: Vec2;
 

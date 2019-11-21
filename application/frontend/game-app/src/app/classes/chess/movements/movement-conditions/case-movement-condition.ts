@@ -1,9 +1,9 @@
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { FenPiece } from '../../rules/chess-rules';
-import MoveCondition from './move-condition';
+import MovementCondition from './movement-condition';
 
-export default class CaseMoveCondition extends MoveCondition {
+export default class CaseMovementCondition extends MovementCondition {
 
     public readonly relativePosition: Vec2;
 

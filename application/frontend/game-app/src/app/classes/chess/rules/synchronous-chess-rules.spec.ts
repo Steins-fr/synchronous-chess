@@ -1,8 +1,8 @@
 import SynchronousChessRules from './synchronous-chess-rules';
-import Move from '../moves/move';
 import Vec2 from 'vec2';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { PieceColor, PieceType, FenPiece } from './chess-rules';
+import Movement from '../movements/movement';
 
 describe('SynchronousChessRules', () => {
     it('should create an instance', () => {
@@ -28,20 +28,20 @@ describe('SynchronousChessRules', () => {
         const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
         // When
-        const queenMoves: Array<Move> = rules.getPieceMoves(PieceType.QUEEN);
-        const kingMoves: Array<Move> = rules.getPieceMoves(PieceType.KING);
-        const bishopMoves: Array<Move> = rules.getPieceMoves(PieceType.BISHOP);
-        const knightMoves: Array<Move> = rules.getPieceMoves(PieceType.KNIGHT);
-        const rookMoves: Array<Move> = rules.getPieceMoves(PieceType.ROOK);
-        const pawnMoves: Array<Move> = rules.getPieceMoves(PieceType.PAWN);
+        const queenMovements: Array<Movement> = rules.getPieceMovements(PieceType.QUEEN);
+        const kingMovements: Array<Movement> = rules.getPieceMovements(PieceType.KING);
+        const bishopMovements: Array<Movement> = rules.getPieceMovements(PieceType.BISHOP);
+        const knightMovements: Array<Movement> = rules.getPieceMovements(PieceType.KNIGHT);
+        const rookMovements: Array<Movement> = rules.getPieceMovements(PieceType.ROOK);
+        const pawnMovements: Array<Movement> = rules.getPieceMovements(PieceType.PAWN);
 
         // Then
-        expect(queenMoves).toEqual(rules.queenMove);
-        expect(kingMoves).toEqual(rules.kingMove);
-        expect(bishopMoves).toEqual(rules.bishopMove);
-        expect(knightMoves).toEqual(rules.knightMove);
-        expect(rookMoves).toEqual(rules.rookMove);
-        expect(pawnMoves).toEqual(rules.pawnMove);
+        expect(queenMovements).toEqual(rules.queenMovement);
+        expect(kingMovements).toEqual(rules.kingMovement);
+        expect(bishopMovements).toEqual(rules.bishopMovement);
+        expect(knightMovements).toEqual(rules.knightMovement);
+        expect(rookMovements).toEqual(rules.rookMovement);
+        expect(pawnMovements).toEqual(rules.pawnMovement);
     });
 
     it('should tell is the rules are for blacks or whites', () => {

@@ -1,21 +1,21 @@
-import Move, { MoveType } from './move';
+import Movement, { MovementType } from './movement';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { PieceColor, FenPiece } from '../rules/chess-rules';
-import MoveCondition from './move-conditions/move-condition';
+import MoveCondition from './movement-conditions/movement-condition';
 
-export default class LinearMove extends Move {
+export default class LinearMovement extends Movement {
     private constructor(vector: Vec2, conditions: Array<MoveCondition>) {
-        super(MoveType.LINEAR, vector, conditions);
+        super(MovementType.LINEAR, vector, conditions);
         this.validVector();
     }
 
-    public static buildAll(vectors: Array<Array<number>>, conditions: Array<MoveCondition> = []): Array<LinearMove> {
-        return vectors.map((vector: Array<number>) => LinearMove.build(vector, conditions));
+    public static buildAll(vectors: Array<Array<number>>, conditions: Array<MoveCondition> = []): Array<LinearMovement> {
+        return vectors.map((vector: Array<number>) => LinearMovement.build(vector, conditions));
     }
 
-    public static build(vector: Array<number>, conditions: Array<MoveCondition> = []): LinearMove {
-        return new LinearMove(new Vec2(vector), conditions);
+    public static build(vector: Array<number>, conditions: Array<MoveCondition> = []): LinearMovement {
+        return new LinearMovement(new Vec2(vector), conditions);
     }
 
     protected validVector(): void {

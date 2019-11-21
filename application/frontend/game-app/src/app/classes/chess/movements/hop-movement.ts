@@ -1,21 +1,21 @@
-import Move, { MoveType } from './move';
+import Movement, { MovementType } from './movement';
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { FenPiece, PieceColor } from '../rules/chess-rules';
-import MoveCondition from './move-conditions/move-condition';
+import MoveCondition from './movement-conditions/movement-condition';
 
-export default class HopMove extends Move {
+export default class HopMovement extends Movement {
     private constructor(vector: Vec2, conditions: Array<MoveCondition>) {
-        super(MoveType.HOP, vector, conditions);
+        super(MovementType.HOP, vector, conditions);
         super.validVector();
     }
 
-    public static buildAll(vectors: Array<Array<number>>, conditions: Array<MoveCondition> = []): Array<HopMove> {
-        return vectors.map((vector: Array<number>) => HopMove.build(vector, conditions));
+    public static buildAll(vectors: Array<Array<number>>, conditions: Array<MoveCondition> = []): Array<HopMovement> {
+        return vectors.map((vector: Array<number>) => HopMovement.build(vector, conditions));
     }
 
-    public static build(vector: Array<number>, conditions: Array<MoveCondition> = []): HopMove {
-        return new HopMove(new Vec2(vector), conditions);
+    public static build(vector: Array<number>, conditions: Array<MoveCondition> = []): HopMovement {
+        return new HopMovement(new Vec2(vector), conditions);
     }
 
     protected _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {

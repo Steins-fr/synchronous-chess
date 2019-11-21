@@ -1,27 +1,27 @@
-import LinearMove from './linear-move';
+import LinearMovement from './linear-movement';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
 import Vec2 from 'vec2';
 import { FenPiece } from '../rules/chess-rules';
 
 describe('LinearMove', () => {
     it('should create an instance', () => {
-        expect(LinearMove.build([1, 1])).toBeTruthy();
+        expect(LinearMovement.build([1, 1])).toBeTruthy();
     });
 
     it('should throw vector error', () => {
-        expect(() => LinearMove.build([0, 0])).toThrowError();
-        expect(() => LinearMove.build([1, 2])).toThrowError();
-        expect(() => LinearMove.build([2, 1])).toThrowError();
-        expect(() => LinearMove.build([-4, -4])).toThrowError();
+        expect(() => LinearMovement.build([0, 0])).toThrowError();
+        expect(() => LinearMovement.build([1, 2])).toThrowError();
+        expect(() => LinearMovement.build([2, 1])).toThrowError();
+        expect(() => LinearMovement.build([-4, -4])).toThrowError();
     });
 
     it('should not throw vector error', () => {
-        expect(() => LinearMove.build([0, 1])).not.toThrowError();
-        expect(() => LinearMove.build([1, 0])).not.toThrowError();
-        expect(() => LinearMove.build([1, 1])).not.toThrowError();
-        expect(() => LinearMove.build([0, -1])).not.toThrowError();
-        expect(() => LinearMove.build([-1, 0])).not.toThrowError();
-        expect(() => LinearMove.build([-1, -1])).not.toThrowError();
+        expect(() => LinearMovement.build([0, 1])).not.toThrowError();
+        expect(() => LinearMovement.build([1, 0])).not.toThrowError();
+        expect(() => LinearMovement.build([1, 1])).not.toThrowError();
+        expect(() => LinearMovement.build([0, -1])).not.toThrowError();
+        expect(() => LinearMovement.build([-1, 0])).not.toThrowError();
+        expect(() => LinearMovement.build([-1, -1])).not.toThrowError();
     });
 
     it('should create multiple instance', () => {
@@ -29,11 +29,11 @@ describe('LinearMove', () => {
         const coordinate1: Array<number> = [1, 0];
         const coordinate2: Array<number> = [1, 1];
         // When
-        const moves: Array<LinearMove> = LinearMove.buildAll([coordinate1, coordinate2]);
+        const moves: Array<LinearMovement> = LinearMovement.buildAll([coordinate1, coordinate2]);
 
         // Then
         expect(moves.length).toEqual(2);
-        expect(moves.every((move: LinearMove) => move instanceof LinearMove));
+        expect(moves.every((move: LinearMovement) => move instanceof LinearMovement));
     });
 
     it('should initiate properties', () => {
@@ -42,7 +42,7 @@ describe('LinearMove', () => {
         const coordinate: Array<number> = [1, 0];
 
         // When
-        const move: LinearMove = LinearMove.build(coordinate);
+        const move: LinearMovement = LinearMovement.build(coordinate);
 
         // Then
         expect(move.vector.equal(1, 0)).toBeTruthy();
@@ -69,7 +69,7 @@ describe('LinearMove', () => {
         ];
         const boardEmptyExpectedPlays: Array<Vec2> = [new Vec2(1, 0), new Vec2(2, 0), new Vec2(3, 0), new Vec2(4, 0), new Vec2(5, 0), new Vec2(6, 0), new Vec2(7, 0)];
 
-        const move: LinearMove = LinearMove.build(coordinate);
+        const move: LinearMovement = LinearMovement.build(coordinate);
 
         // When
         const boardBlackPlays: Array<Vec2> = move.possiblePlays(position, boardBlack);
@@ -92,7 +92,7 @@ describe('LinearMove', () => {
 
         const boardFullEmpty: FenBoard = [[FenPiece.EMPTY]];
 
-        const move: LinearMove = LinearMove.build(coordinate);
+        const move: LinearMovement = LinearMovement.build(coordinate);
 
         // When
         const badCall1: () => Array<Vec2> = (): Array<Vec2> => move.possiblePlays(badPosition, boardFullEmpty);

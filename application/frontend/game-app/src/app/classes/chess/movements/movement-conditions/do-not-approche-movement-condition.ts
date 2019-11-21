@@ -1,9 +1,9 @@
-import MoveCondition from './move-condition';
 import { FenPiece } from '../../rules/chess-rules';
 import Vec2 from 'vec2';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
+import MovementCondition from './movement-condition';
 
-export class DoNotApprocheMoveCondition extends MoveCondition {
+export class DoNotApprocheMovementCondition extends MovementCondition {
     public constructor(public readonly fenPiece: FenPiece, public readonly distance: number) {
         super();
     }

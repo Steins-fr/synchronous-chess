@@ -1,17 +1,17 @@
 import Vec2 from 'vec2';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
-import MoveCondition from './move-conditions/move-condition';
+import MoveCondition from './movement-conditions/movement-condition';
 import { FenPiece } from '../rules/chess-rules';
 
-export enum MoveType {
+export enum MovementType {
     LINEAR = 'linear',
     HOP = 'hop',
     DOUBLE_HOP = 'double-hop',
     FEAR_HOP = 'fear-hop'
 }
 
-export default abstract class Move {
-    public constructor(public readonly type: MoveType, public readonly vector: Vec2, public readonly conditions: Array<MoveCondition>) { }
+export default abstract class Movement {
+    public constructor(public readonly type: MovementType, public readonly vector: Vec2, public readonly conditions: Array<MoveCondition>) { }
 
     protected abstract _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2>;
 

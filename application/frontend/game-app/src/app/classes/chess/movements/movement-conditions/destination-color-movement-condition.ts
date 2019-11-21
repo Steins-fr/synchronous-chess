@@ -1,9 +1,9 @@
 import Vec2 from 'vec2';
 import { PieceColor } from '../../rules/chess-rules';
 import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
-import MoveCondition from './move-condition';
+import MovementCondition from './movement-condition';
 
-export default class DestinationColorMoveCondition extends MoveCondition {
+export default class DestinationColorMovementCondition extends MovementCondition {
 
     public constructor(public readonly pieceColor: PieceColor) {
         super();
