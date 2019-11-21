@@ -1,4 +1,4 @@
-import { SafeMoveCondition } from './safe-move-condition';
+import { SafeMovementCondition } from './safe-movement-condition';
 import SynchronousChessRules from '../../rules/synchronous-chess-rules';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
 import { FenPiece, PieceColor } from '../../rules/chess-rules';
@@ -6,12 +6,12 @@ import Vec2 from 'vec2';
 
 describe('SafeMoveCondition', () => {
     it('should create an instance', () => {
-        expect(new SafeMoveCondition(undefined, false)).toBeTruthy();
+        expect(new SafeMovementCondition(undefined, false)).toBeTruthy();
     });
 
     it('should say if it can move', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(new SynchronousChessRules(PieceColor.BLACK), false);
+        const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), false);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -34,7 +34,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move without safety', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(new SynchronousChessRules(PieceColor.BLACK), true);
+        const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), true);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -57,7 +57,7 @@ describe('SafeMoveCondition', () => {
 
     it('should say if it can move (with cell condition safety)', () => {
         // Given
-        const condition: SafeMoveCondition = new SafeMoveCondition(new SynchronousChessRules(PieceColor.BLACK), false, [1, 0]);
+        const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), false, [1, 0]);
         const board: FenBoard = [
             [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_ROOK],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING],

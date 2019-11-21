@@ -1,4 +1,4 @@
-import Move from '../moves/move';
+import Movement from '../movements/movement';
 import Vec2 from 'vec2';
 
 export enum PieceColor {
@@ -34,37 +34,37 @@ export enum FenPiece {
 }
 
 export default abstract class ChessRules {
-    public abstract readonly kingMove: Array<Move>;
-    public abstract readonly queenMove: Array<Move>;
-    public abstract readonly bishopMove: Array<Move>;
-    public abstract readonly knightMove: Array<Move>;
-    public abstract readonly rookMove: Array<Move>;
-    public abstract readonly pawnMove: Array<Move>;
+    public abstract readonly kingMovement: Array<Movement>;
+    public abstract readonly queenMovement: Array<Movement>;
+    public abstract readonly bishopMovement: Array<Movement>;
+    public abstract readonly knightMovement: Array<Movement>;
+    public abstract readonly rookMovement: Array<Movement>;
+    public abstract readonly pawnMovement: Array<Movement>;
 
     public constructor(public readonly color: PieceColor,
         public isQueenSideCastleAvailable: boolean = true,
         public isKingSideCastleAvailable: boolean = true) { }
 
-    public getPieceMoves(pieceType: PieceType): Array<Move> {
+    public getPieceMovements(pieceType: PieceType): Array<Movement> {
         switch (pieceType) {
             case PieceType.KING:
-                return this.kingMove;
+                return this.kingMovement;
             case PieceType.QUEEN:
-                return this.queenMove;
+                return this.queenMovement;
             case PieceType.BISHOP:
-                return this.bishopMove;
+                return this.bishopMovement;
             case PieceType.KNIGHT:
-                return this.knightMove;
+                return this.knightMovement;
             case PieceType.ROOK:
-                return this.rookMove;
+                return this.rookMovement;
             case PieceType.PAWN:
-                return this.pawnMove;
+                return this.pawnMovement;
         }
     }
 
     public getPossiblePlays(pieceType: PieceType, piecePosition: Vec2, board: Array<Array<FenPiece>>): Array<Vec2> {
-        return this.getPieceMoves(pieceType).reduce((moves: Array<Vec2>, move: Move) => {
-            return [...moves, ...move.possiblePlays(piecePosition, board)];
+        return this.getPieceMovements(pieceType).reduce((movements: Array<Vec2>, movement: Movement) => {
+            return [...movements, ...movement.possiblePlays(piecePosition, board)];
         }, []);
     }
 }

@@ -1,8 +1,8 @@
 import Vec2 from 'vec2';
 import { Row } from 'src/app/helpers/chess-board-helper';
-import MoveCondition from './move-condition';
+import MovementCondition from './movement-condition';
 
-export default class LineMoveCondition extends MoveCondition {
+export default class LineMovementCondition extends MovementCondition {
 
     public constructor(public readonly row: Row) {
         super();

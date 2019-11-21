@@ -1,4 +1,4 @@
-import DestinationColorMoveCondition from './destination-color-move-condition';
+import DestinationColorMovementCondition from './destination-color-movement-condition';
 import Vec2 from 'vec2';
 import { PieceColor, FenPiece } from '../../rules/chess-rules';
 import { FenBoard } from 'src/app/helpers/chess-board-helper';
@@ -6,14 +6,14 @@ import { FenBoard } from 'src/app/helpers/chess-board-helper';
 
 describe('DestinationColorMoveCondition', () => {
     it('should create an instance', () => {
-        expect(new DestinationColorMoveCondition(PieceColor.BLACK)).toBeTruthy();
+        expect(new DestinationColorMovementCondition(PieceColor.BLACK)).toBeTruthy();
     });
 
     it('should say if it can move', () => {
         // Given
-        const condition1: DestinationColorMoveCondition = new DestinationColorMoveCondition(PieceColor.BLACK);
-        const condition2: DestinationColorMoveCondition = new DestinationColorMoveCondition(PieceColor.WHITE);
-        const condition3: DestinationColorMoveCondition = new DestinationColorMoveCondition(PieceColor.NONE);
+        const condition1: DestinationColorMovementCondition = new DestinationColorMovementCondition(PieceColor.BLACK);
+        const condition2: DestinationColorMovementCondition = new DestinationColorMovementCondition(PieceColor.WHITE);
+        const condition3: DestinationColorMovementCondition = new DestinationColorMovementCondition(PieceColor.NONE);
 
         const board: FenBoard = [
             [FenPiece.BLACK_BISHOP, FenPiece.WHITE_KING, FenPiece.EMPTY]
