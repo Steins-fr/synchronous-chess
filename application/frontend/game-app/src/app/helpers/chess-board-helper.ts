@@ -111,8 +111,12 @@ export default abstract class ChessBoardHelper {
         return type >= 'A' && type <= 'Z' ? PieceColor.WHITE : PieceColor.BLACK;
     }
 
-    public static isOutOfBoard(position: Vec2): boolean {
-        return (position.x >= Column.A && position.y >= Row._8 && position.x <= Column.H && position.y <= Row._1) === false;
+    public static isOutOfBoard(coordinate: Coordinate): boolean {
+        return (coordinate[0] >= Column.A && coordinate[1] >= Row._8 && coordinate[0] <= Column.H && coordinate[1] <= Row._1) === false;
+    }
+
+    public static isOutOfBoardByVec(vector: Vec2): boolean {
+        return ChessBoardHelper.isOutOfBoard(ChessBoardHelper.vec2ToCoordinate(vector));
     }
 
     public static pieceType(fenPiece: FenPiece): PieceType {
@@ -143,24 +147,40 @@ export default abstract class ChessBoardHelper {
     /**
      * Return the FenPiece if not out of bound
      */
-    public static getFenPiece(board: FenBoard, position: Vec2): FenPiece | null {
-        if (ChessBoardHelper.isOutOfBoard(position)) {
+    public static getFenPieceByVec(board: FenBoard, position: Vec2): FenPiece | null {
+        return ChessBoardHelper.getFenPiece(board, ChessBoardHelper.vec2ToFenCoordinate(position));
+    }
+
+    /**
+     * Return the FenPiece if not out of bound
+     */
+    public static getFenPiece(board: FenBoard, fenCoordinate: FenCoordinate): FenPiece | null {
+        const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
+        if (ChessBoardHelper.isOutOfBoard(coordinate)) {
             return null;
         }
 
-        return board[position.y][position.x];
+        return board[coordinate[1]][coordinate[0]];
     }
 
     /**
      * Set the piece in a board, then return a new board.
      */
-    public static setFenPiece(fenBoard: FenBoard, position: Vec2, piece: FenPiece): FenBoard {
-        if (ChessBoardHelper.isOutOfBoard(position)) {
-            throw new Error(`Updated piece is out of board: ${position.toString()}`);
+    public static setFenPieceByVec(fenBoard: FenBoard, position: Vec2, piece: FenPiece): FenBoard {
+        return ChessBoardHelper.setFenPiece(fenBoard, ChessBoardHelper.vec2ToFenCoordinate(position), piece);
+    }
+
+    /**
+     * Set the piece in a board, then return a new board.
+     */
+    public static setFenPiece(fenBoard: FenBoard, fenCoordinate: FenCoordinate, piece: FenPiece): FenBoard {
+        const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
+        if (ChessBoardHelper.isOutOfBoard(coordinate)) {
+            throw new Error(`Updated piece is out of board: ${coordinate.toString()}`);
         }
 
         const board: FenBoard = ChessBoardHelper.cloneBoard(fenBoard);
-        board[position.y][position.x] = piece;
+        board[coordinate[1]][coordinate[0]] = piece;
         return board;
     }
 
@@ -169,7 +189,7 @@ export default abstract class ChessBoardHelper {
     }
 
     private static getProtectionPlays(position: Vec2, board: FenBoard, rules: ChessRules): Array<Vec2> {
-        const playedPiece: FenPiece = ChessBoardHelper.getFenPiece(board, position);
+        const playedPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(board, position);
 
         // Turn all pieces to the same color
         // This permits to simulate the protection of our piece.
@@ -188,8 +208,9 @@ export default abstract class ChessBoardHelper {
                 position.add(1, 1, true), position.add(1, -1, true),
                 position.add(-1, 1, true), position.add(-1, -1, true)
             ].forEach((fakePiecePosition: Vec2) => {
-                if (ChessBoardHelper.isOutOfBoard(fakePiecePosition) === false) {
-                    fakeBoard[fakePiecePosition.y][fakePiecePosition.x] = ChessBoardHelper.getFenPiece(fakeBoard, position);
+                const coordinate: Coordinate = [fakePiecePosition.x, fakePiecePosition.y];
+                if (ChessBoardHelper.isOutOfBoard(coordinate) === false) {
+                    fakeBoard[fakePiecePosition.y][fakePiecePosition.x] = ChessBoardHelper.getFenPieceByVec(fakeBoard, position);
                 }
             });
         }
@@ -197,7 +218,7 @@ export default abstract class ChessBoardHelper {
         // Correct the color of the moving piece
         fakeBoard[position.y][position.x] = playedPiece;
 
-        return rules.getPossiblePlays(ChessBoardHelper.pieceType(ChessBoardHelper.getFenPiece(fakeBoard, position)), position, fakeBoard);
+        return rules.getPossiblePlays(ChessBoardHelper.pieceType(ChessBoardHelper.getFenPieceByVec(fakeBoard, position)), position, fakeBoard);
     }
 
 
@@ -239,12 +260,8 @@ export default abstract class ChessBoardHelper {
         return ChessBoardHelper.indexColumnToFenColumnMap.get(index);
     }
 
-    public static positionToFenCoordinate(position: Coordinate): FenCoordinate {
-        return [this.indexColumnToFenColumn(position[0]), this.indexRowToFenRow(position[1])];
-    }
-
-    public static toMove(from: Coordinate, to: Coordinate): Move {
-        return { from: ChessBoardHelper.positionToFenCoordinate(from), to: ChessBoardHelper.positionToFenCoordinate(to) };
+    public static coordinateToFenCoordinate(coordinate: Coordinate): FenCoordinate {
+        return [this.indexColumnToFenColumn(coordinate[0]), this.indexRowToFenRow(coordinate[1])];
     }
 
     public static fenRowToIndexRow(fenRow: FenRow): Row {
@@ -255,11 +272,24 @@ export default abstract class ChessBoardHelper {
         return ChessBoardHelper.fenColumnToIndexColumnMap.get(fenColumn);
     }
 
-    public static fenCoordinateToPosition(fenCoordinate: FenCoordinate): Coordinate {
+    public static fenCoordinateToCoordinate(fenCoordinate: FenCoordinate): Coordinate {
         return [this.fenColumnToIndexColumn(fenCoordinate[0]), this.fenRowToIndexRow(fenCoordinate[1])];
     }
 
     public static fromMoveToCoordinateMove(move: Move): CoordinateMove {
-        return { from: ChessBoardHelper.fenCoordinateToPosition(move.from), to: ChessBoardHelper.fenCoordinateToPosition(move.to) };
+        return { from: ChessBoardHelper.fenCoordinateToCoordinate(move.from), to: ChessBoardHelper.fenCoordinateToCoordinate(move.to) };
+    }
+
+    public static fenCoordinateToVec2(fenCoordinate: FenCoordinate): Vec2 {
+        const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
+        return new Vec2([coordinate[0], coordinate[1]]);
+    }
+
+    public static vec2ToFenCoordinate(vector: Vec2): FenCoordinate {
+        return ChessBoardHelper.coordinateToFenCoordinate(ChessBoardHelper.vec2ToCoordinate(vector));
+    }
+
+    public static vec2ToCoordinate(vector: Vec2): Coordinate {
+        return [vector.x, vector.y];
     }
 }

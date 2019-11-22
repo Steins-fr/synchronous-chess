@@ -22,8 +22,8 @@ export default abstract class Movement {
     }
 
     protected validPosition(position: Vec2, board: FenBoard): void {
-        if (ChessBoardHelper.isOutOfBoard(position)
-            || ChessBoardHelper.getFenPiece(board, position) === FenPiece.EMPTY) {
+        if (ChessBoardHelper.isOutOfBoardByVec(position)
+            || ChessBoardHelper.getFenPieceByVec(board, position) === FenPiece.EMPTY) {
             throw Error('The movement origin have to be valid.');
         }
     }

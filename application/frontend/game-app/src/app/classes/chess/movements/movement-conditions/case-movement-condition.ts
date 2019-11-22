@@ -13,7 +13,7 @@ export default class CaseMovementCondition extends MovementCondition {
     }
 
     public canMove(oldPosition: Vec2, _newPosition: Vec2, board: FenBoard): boolean {
-        const piece: FenPiece = ChessBoardHelper.getFenPiece(board, oldPosition.add(this.relativePosition, true));
+        const piece: FenPiece = ChessBoardHelper.getFenPieceByVec(board, oldPosition.add(this.relativePosition, true));
         return this.validPieces.some((validPiece: FenPiece) => piece === validPiece);
     }
 }

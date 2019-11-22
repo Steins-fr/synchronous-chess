@@ -54,7 +54,7 @@ export class ChessBoardComponent implements OnChanges {
     }
 
     public canBeDragged(cellPos: Vec2): boolean {
-        return ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.fenBoard, cellPos)) === this.grabColor;
+        return ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(this.fenBoard, cellPos)) === this.grabColor;
     }
 
     public isMovePreview(cellPos: Vec2): boolean {
