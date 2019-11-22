@@ -34,13 +34,13 @@ export default abstract class SynchronousChessGameSession {
     }
 
     protected runMove(color: PieceColor, from: Coordinate, to: Coordinate): boolean {
-        if (ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, new Vec2(from))) !== color) {
+        if (ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(this.game.fenBoard, new Vec2(from))) !== color) {
             return false;
         }
 
         const move: Move = {
-            from: ChessBoardHelper.positionToFenCoordinate(from),
-            to: ChessBoardHelper.positionToFenCoordinate(to)
+            from: ChessBoardHelper.coordinateToFenCoordinate(from),
+            to: ChessBoardHelper.coordinateToFenCoordinate(to)
         };
 
         if (this.game.isMoveValid(move) === false) {

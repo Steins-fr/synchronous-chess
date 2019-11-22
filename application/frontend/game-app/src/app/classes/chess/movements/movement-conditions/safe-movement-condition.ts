@@ -22,7 +22,7 @@ export class SafeMovementCondition extends MovementCondition {
         const safeBoard: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(board, this.rules);
         if (this.andRelativeSafeCell !== undefined) {
             const andSafeCell: Vec2 = oldPosition.add(this.andRelativeSafeCell, true);
-            if (ChessBoardHelper.isOutOfBoard(andSafeCell) === false && safeBoard[andSafeCell.y][andSafeCell.x] === false) {
+            if (ChessBoardHelper.isOutOfBoardByVec(andSafeCell) === false && safeBoard[andSafeCell.y][andSafeCell.x] === false) {
                 return false;
             }
         }

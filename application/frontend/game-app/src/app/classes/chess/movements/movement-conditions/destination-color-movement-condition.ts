@@ -10,6 +10,6 @@ export default class DestinationColorMovementCondition extends MovementCondition
     }
 
     public canMove(_oldPosition: Vec2, newPosition: Vec2, board: FenBoard): boolean {
-        return ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, newPosition)) === this.pieceColor;
+        return ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(board, newPosition)) === this.pieceColor;
     }
 }

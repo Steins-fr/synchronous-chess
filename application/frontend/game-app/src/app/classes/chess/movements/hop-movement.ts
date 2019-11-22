@@ -21,13 +21,13 @@ export default class HopMovement extends Movement {
     protected _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2> {
         this.validPosition(position, board);
 
-        const myColor: PieceColor = ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, position));
+        const myColor: PieceColor = ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(board, position));
         const plays: Array<Vec2> = [];
         const newPosition: Vec2 = position.add(this.vector, true);
-        const destinationFenPiece: FenPiece = ChessBoardHelper.getFenPiece(board, newPosition);
+        const destinationFenPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(board, newPosition);
 
         // If we stop on the board, we can move if the destination is empty or occupied by an opponent piece
-        if (ChessBoardHelper.isOutOfBoard(newPosition) === false
+        if (ChessBoardHelper.isOutOfBoardByVec(newPosition) === false
             && (
                 destinationFenPiece === FenPiece.EMPTY
                 || ChessBoardHelper.pieceColor(destinationFenPiece) !== myColor)

@@ -32,21 +32,21 @@ export default class LinearMovement extends Movement {
 
         let newPosition: Vec2 = new Vec2(position.toArray());
 
-        const myColor: PieceColor = ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, position));
+        const myColor: PieceColor = ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(board, position));
         const plays: Array<Vec2> = [];
 
         // Add all plays on empty cells
         newPosition = newPosition.add(this.vector, true);
-        while (ChessBoardHelper.isOutOfBoard(newPosition) === false
-            && ChessBoardHelper.getFenPiece(board, newPosition) === FenPiece.EMPTY) {
+        while (ChessBoardHelper.isOutOfBoardByVec(newPosition) === false
+            && ChessBoardHelper.getFenPieceByVec(board, newPosition) === FenPiece.EMPTY) {
 
             plays.push(newPosition);
             newPosition = newPosition.add(this.vector, true);
         }
 
         // If we stop on the board, test if we stopped because of an opponent piece
-        if (ChessBoardHelper.isOutOfBoard(newPosition) === false
-            && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(board, newPosition)) !== myColor) {
+        if (ChessBoardHelper.isOutOfBoardByVec(newPosition) === false
+            && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(board, newPosition)) !== myColor) {
             plays.push(newPosition);
         }
 
