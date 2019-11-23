@@ -6,4 +6,21 @@
         width: 100%;
         text-align: center;
     }
+
+    #board-section {
+        display: flex;
+        flex-direction: row;
+
+        #chess-board {
+            flex: auto;
+        }
+
+        #right-column {
+            width: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
 }

@@ -1,35 +1,61 @@
 import SynchronousChessGame from './synchronous-chess-game';
 import Vec2 from 'vec2';
-import { FenBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
 import ChessRules, { FenPiece, PieceColor } from '../rules/chess-rules';
 import { Column, Row } from '../interfaces/CoordinateMove';
-import Move, { FenColumn } from '../interfaces/move';
+import Move, { FenColumn, FenCoordinate } from '../interfaces/move';
 import Turn from '../turns/turn';
 import TurnType from '../turns/turn.types';
-import SynchroneTurn from '../turns/synchrone-turn';
 import SynchroneTurnAction from '../turns/turn-actions/synchrone-turn-action';
+import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-action';
 
 class ProtectedTest extends SynchronousChessGame {
     public runSynchroneTurnTest(): void {
         this.runSynchroneTurn();
     }
 
+    public runIntermediateTurnTest(): void {
+        this.runIntermediateTurn();
+    }
+
+    public nextTurnTest(): void {
+        this.nextTurn();
+    }
+
     public getRulesTest(color: PieceColor): ChessRules {
         return this.getRules(color);
     }
 
+    public isTurnValidTest(): boolean {
+        return this.isTurnValid();
+    }
+
+    public getIntermediateTurnPossiblePlaysTest(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
+        return this.getIntermediateTurnPossiblePlays(possiblePlays, position);
+    }
+
     public getTurn(): Turn {
         return this.turn;
+    }
+
+    public getOldTurn(): Turn {
+        return this.oldTurn;
     }
 }
 
 describe('SynchronousChessGame', () => {
 
     let turnSpy: jasmine.SpyObj<Turn>;
+    let oldTurnSpy: jasmine.SpyObj<Turn>;
 
     beforeEach(() => {
         turnSpy = jasmine.createSpyObj<Turn>('Turn', ['registerMove', 'canBeExecuted', 'type', 'isDone', 'action']);
         Object.defineProperty(turnSpy, 'action', {
+            value: {},
+            writable: false
+        });
+        oldTurnSpy = jasmine.createSpyObj<Turn>('Turn', ['registerMove', 'canBeExecuted', 'type', 'isDone', 'action']);
+        Object.defineProperty(oldTurnSpy, 'action', {
             value: {},
             writable: false
         });
@@ -117,6 +143,46 @@ describe('SynchronousChessGame', () => {
         expect(isMoveValidSpy.calls.count()).toEqual(1);
     });
 
+    it('isMoveValid should return false if origin is empty', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: false
+        });
+        const move: Move = { from: [FenColumn.D, 4], to: [FenColumn.F, 5] };
+
+        // When
+        const result: boolean = game.isMoveValid(move);
+
+        // Then
+        expect(result).toEqual(false);
+    });
+
+    it('isTurnValid should return false if the turn type is unknown', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+        const runSynchroneTurnSpy: jasmine.Spy = jasmine.createSpy('runSynchroneTurn');
+        Object.defineProperty(game, 'runSynchroneTurn', {
+            value: runSynchroneTurnSpy,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: 'unknownType',
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        // When
+        const result: boolean = game.isTurnValidTest();
+
+        // Then
+        expect(result).toEqual(false);
+    });
+
     it('should not execute the turn if not ready', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
@@ -137,7 +203,7 @@ describe('SynchronousChessGame', () => {
         expect(turnSpy.isDone).toEqual(false);
     });
 
-    it('should execute synchroneTurn if ready', () => {
+    it('should execute runSynchroneTurn if ready', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
         const runSynchroneTurnSpy: jasmine.Spy = jasmine.createSpy('runSynchroneTurn');
@@ -163,6 +229,35 @@ describe('SynchronousChessGame', () => {
         expect(result).toEqual(true);
         expect(turnSpy.canBeExecuted.calls.count()).toEqual(1);
         expect(runSynchroneTurnSpy.calls.count()).toEqual(1);
+        expect(turnSpy.isDone).toEqual(true);
+    });
+
+    it('should execute runIntermediateTurn if ready', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+        const runIntermediateTurnSpy: jasmine.Spy = jasmine.createSpy('runIntermediateTurn');
+        Object.defineProperty(game, 'runIntermediateTurn', {
+            value: runIntermediateTurnSpy,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.INTERMEDIATE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+        turnSpy.canBeExecuted.and.returnValue(true);
+        turnSpy.isDone = false;
+
+        // When
+        const result: boolean = game.runTurn();
+
+        // Then
+        expect(result).toEqual(true);
+        expect(turnSpy.canBeExecuted.calls.count()).toEqual(1);
+        expect(runIntermediateTurnSpy.calls.count()).toEqual(1);
         expect(turnSpy.isDone).toEqual(true);
     });
 
@@ -207,6 +302,10 @@ describe('SynchronousChessGame', () => {
 
         Object.defineProperty(turnSpy, 'action', {
             value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -259,6 +358,10 @@ describe('SynchronousChessGame', () => {
             value: action,
             writable: false
         });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
         Object.defineProperty(game, 'turn', {
             value: turnSpy,
             writable: true
@@ -296,6 +399,57 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard).toEqual(expectedFenBoard);
     });
 
+    it('runSynchroneTurn should pass move', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+
+        const action: SynchroneTurnAction = { whiteMove: null, blackMove: null };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+        const initBoard: FenBoard = game.fenBoard;
+        game.runSynchroneTurnTest();
+        // Then
+        expect(initBoard).toEqual(expectedFenBoardInit);
+        expect(game.fenBoard).toEqual(expectedFenBoard);
+    });
+
     it('runSynchroneTurn should double capture', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
@@ -306,12 +460,14 @@ describe('SynchronousChessGame', () => {
         const action: SynchroneTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(turnSpy, 'action', {
-            value: action,
+            value: action
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
-            value: turnSpy,
-            writable: true
+            value: turnSpy
         });
 
         const expectedFenBoardInit: FenBoard = [
@@ -357,6 +513,10 @@ describe('SynchronousChessGame', () => {
 
         Object.defineProperty(turnSpy, 'action', {
             value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -406,12 +566,14 @@ describe('SynchronousChessGame', () => {
         const action: SynchroneTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(turnSpy, 'action', {
-            value: action,
+            value: action
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
-            value: turnSpy,
-            writable: true
+            value: turnSpy
         });
 
         const expectedFenBoardInit: FenBoard = [
@@ -459,6 +621,10 @@ describe('SynchronousChessGame', () => {
             value: action,
             writable: false
         });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
         Object.defineProperty(game, 'turn', {
             value: turnSpy,
             writable: true
@@ -496,6 +662,274 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard).toEqual(expectedFenBoard);
     });
 
+    it('runSynchroneTurn should move only the white piece', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteMove: Move = { from: [FenColumn.A, 1], to: [FenColumn.A, 8] };
+
+        const action: SynchroneTurnAction = { whiteMove, blackMove: null };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.WHITE_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.EMPTY, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+        const initBoard: FenBoard = game.fenBoard;
+        game.runSynchroneTurnTest();
+        // Then
+        expect(initBoard).toEqual(expectedFenBoardInit);
+        expect(game.fenBoard).toEqual(expectedFenBoard);
+    });
+
+    it('runSynchroneTurn should move only the black piece', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+
+        const blackMove: Move = { from: [FenColumn.A, 8], to: [FenColumn.A, 1] };
+
+        const action: SynchroneTurnAction = { whiteMove: null, blackMove };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.EMPTY, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.BLACK_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+        const initBoard: FenBoard = game.fenBoard;
+        game.runSynchroneTurnTest();
+        // Then
+        expect(initBoard).toEqual(expectedFenBoardInit);
+        expect(game.fenBoard).toEqual(expectedFenBoard);
+    });
+
+    it('runIntermediateTurn should not apply a bad play', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.D, 7] };
+        const blackMove: Move = { from: [FenColumn.D, 5], to: [FenColumn.D, 7] };
+
+        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.from, blackTarget: blackMove.from };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.INTERMEDIATE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+        const initBoard: FenBoard = game.fenBoard;
+        game.runIntermediateTurnTest();
+
+        // Then
+        expect(initBoard).toEqual(expectedFenBoardInit);
+        expect(game.fenBoard).toEqual(expectedFenBoard);
+    });
+
+    it('runIntermediateTurn should apply a valid play', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+
+        const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
+        const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
+
+        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.INTERMEDIATE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.EMPTY, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_KNIGHT, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KNIGHT, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.EMPTY, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+        const initBoard: FenBoard = game.fenBoard;
+        game.runIntermediateTurnTest();
+        // Then
+        expect(initBoard).toEqual(expectedFenBoardInit);
+        expect(game.fenBoard).toEqual(expectedFenBoard);
+    });
+
+    it('runIntermediateTurn should pass moves', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+
+        const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
+        const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
+
+        const action: IntermediateTurnAction = { whiteMove: null, blackMove: null, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.INTERMEDIATE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        const expectedFenBoard: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        // When
+        const initBoard: FenBoard = game.fenBoard;
+        game.runIntermediateTurnTest();
+        // Then
+        expect(initBoard).toEqual(expectedFenBoardInit);
+        expect(game.fenBoard).toEqual(expectedFenBoard);
+    });
+
     it('should apply king single move', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
@@ -506,6 +940,10 @@ describe('SynchronousChessGame', () => {
 
         Object.defineProperty(turnSpy, 'action', {
             value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -563,6 +1001,10 @@ describe('SynchronousChessGame', () => {
             value: action,
             writable: false
         });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
         Object.defineProperty(game, 'turn', {
             value: turnSpy,
             writable: true
@@ -616,6 +1058,10 @@ describe('SynchronousChessGame', () => {
 
         Object.defineProperty(turnSpy, 'action', {
             value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -673,6 +1119,10 @@ describe('SynchronousChessGame', () => {
             value: action,
             writable: false
         });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
         Object.defineProperty(game, 'turn', {
             value: turnSpy,
             writable: true
@@ -714,5 +1164,393 @@ describe('SynchronousChessGame', () => {
         expect(castlingQueen).toBeTruthy();
         expect(game.blackRules.isKingSideCastleAvailable).toBeTruthy();
         expect(game.blackRules.isQueenSideCastleAvailable).toBeFalsy();
+    });
+
+    it('nextTurn should create an intermediate turn', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
+        const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
+
+        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: whiteMove.to };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(fenBoardInit);
+
+        // When
+        game.nextTurnTest();
+        // Then
+        expect(game.getTurn().type).toEqual(TurnType.INTERMEDIATE);
+        expect(game.getTurn().action).toEqual(expectedAction);
+        expect(game.getOldTurn()).toBe(turnSpy);
+    });
+
+    it('nextTurn should create an intermediate turn for the white', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+
+        const game: ProtectedTest = new ProtectedTest();
+
+        const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
+
+        const action: SynchroneTurnAction = { whiteMove: null, blackMove };
+        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: null, blackMove: null };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const expectedFenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(expectedFenBoardInit);
+
+        // When
+        game.nextTurnTest();
+        // Then
+        expect(game.getTurn().type).toEqual(TurnType.INTERMEDIATE);
+        expect(game.getTurn().action).toEqual(expectedAction);
+        expect(game.getOldTurn()).toBe(turnSpy);
+    });
+
+    it('nextTurn should create an intermediate turn for the black', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
+
+        const action: SynchroneTurnAction = { whiteMove, blackMove: null };
+        const expectedAction: IntermediateTurnAction = { whiteTarget: null, blackTarget: whiteMove.to, whiteMove: null };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(fenBoardInit);
+
+        // When
+        game.nextTurnTest();
+        // Then
+        expect(game.getTurn().type).toEqual(TurnType.INTERMEDIATE);
+        expect(game.getTurn().action).toEqual(expectedAction);
+        expect(game.getOldTurn()).toBe(turnSpy);
+    });
+
+    it('nextTurn should create a synchrone turn because both has moved', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
+        const whiteMove: Move = { from: [FenColumn.B, 2], to: [FenColumn.B, 4] };
+
+        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const expectedAction: SynchroneTurnAction = {};
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(turnSpy, 'type', {
+            value: TurnType.SYNCHRONE,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        game.load(fenBoardInit);
+
+        // When
+        game.nextTurnTest();
+        // Then
+        expect(game.getTurn().type).toEqual(TurnType.SYNCHRONE);
+        expect(game.getTurn().action).toEqual(expectedAction);
+        expect(game.getOldTurn()).toBe(turnSpy);
+    });
+
+    it('getIntermediateTurnPossiblePlays should return empty if no target', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const action: IntermediateTurnAction = { whiteTarget: null, blackTarget: null };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
+        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition];
+
+        game.load(fenBoardInit);
+
+        // When
+        const whiteResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(whitePossiblePlays, whitePosition);
+        const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(blackPossiblePlays, blackPosition);
+
+        // Then
+        expect(whiteResult).toEqual([]);
+        expect(blackResult).toEqual([]);
+    });
+
+    it('getIntermediateTurnPossiblePlays should return an array of plays targeting the target', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteTarget: FenCoordinate = [FenColumn.C, 5];
+        const blackTarget: FenCoordinate = [FenColumn.B, 4];
+        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
+        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2([Column.B, Row._5])];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2([Column.C, Row._4])];
+        const expectedBlackPossiblePlays: Array<Vec2> = [whitePosition];
+        const expectedWhitePossiblePlays: Array<Vec2> = [blackPosition];
+
+        game.load(fenBoardInit);
+
+        // When
+        const whiteResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(whitePossiblePlays, whitePosition);
+        const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(blackPossiblePlays, blackPosition);
+
+        // Then
+        expect(game.getOldTurn()).toEqual(undefined);
+        expect(whiteResult).toEqual(expectedWhitePossiblePlays);
+        expect(blackResult).toEqual(expectedBlackPossiblePlays);
+    });
+
+    it('getIntermediateTurnPossiblePlays should exclude the movement of last moved pieces', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteTarget: FenCoordinate = [FenColumn.C, 5];
+        const blackTarget: FenCoordinate = [FenColumn.B, 4];
+        const oldAction: SynchroneTurnAction = {
+            whiteMove: { from: [FenColumn.C, 2], to: blackTarget },
+            blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
+        };
+        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(oldTurnSpy, 'action', {
+            value: oldAction,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+        Object.defineProperty(game, 'oldTurn', {
+            value: oldTurnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
+        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2([Column.B, Row._5])];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2([Column.C, Row._4])];
+        const expectedBlackPossiblePlays: Array<Vec2> = [];
+        const expectedWhitePossiblePlays: Array<Vec2> = [];
+
+        game.load(fenBoardInit);
+
+        // When
+        const whiteResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(whitePossiblePlays, whitePosition);
+        const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(blackPossiblePlays, blackPosition);
+
+        // Then
+        expect(whiteResult).toEqual(expectedWhitePossiblePlays);
+        expect(blackResult).toEqual(expectedBlackPossiblePlays);
+    });
+
+    it('getIntermediateTurnPossiblePlays should return an array of plays targeting the target with skip turn', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteTarget: FenCoordinate = [FenColumn.C, 5];
+        const blackTarget: FenCoordinate = [FenColumn.B, 4];
+        const oldAction: SynchroneTurnAction = {
+            whiteMove: null,
+            blackMove: null
+        };
+        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+
+        Object.defineProperty(turnSpy, 'action', {
+            value: action,
+            writable: false
+        });
+        Object.defineProperty(oldTurnSpy, 'action', {
+            value: oldAction,
+            writable: false
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+        Object.defineProperty(game, 'oldTurn', {
+            value: oldTurnSpy,
+            writable: true
+        });
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
+        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2([Column.B, Row._5])];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2([Column.C, Row._4])];
+        const expectedBlackPossiblePlays: Array<Vec2> = [whitePosition];
+        const expectedWhitePossiblePlays: Array<Vec2> = [blackPosition];
+
+        game.load(fenBoardInit);
+
+        // When
+        const whiteResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(whitePossiblePlays, whitePosition);
+        const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlaysTest(blackPossiblePlays, blackPosition);
+
+        // Then
+        expect(whiteResult).toEqual(expectedWhitePossiblePlays);
+        expect(blackResult).toEqual(expectedBlackPossiblePlays);
     });
 });

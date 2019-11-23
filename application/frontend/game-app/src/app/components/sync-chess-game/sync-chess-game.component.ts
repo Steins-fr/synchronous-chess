@@ -8,6 +8,8 @@ import { RoomMessage } from 'src/app/classes/webrtc/messages/room-message';
 import SynchronousChessGameSessionBuilder from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
 import { RoomManager } from 'src/app/classes/room-manager/room-manager';
 import { Coordinate } from 'src/app/classes/chess/interfaces/CoordinateMove';
+import TurnType from 'src/app/classes/chess/turns/turn.types';
+import { PieceColor } from 'src/app/classes/chess/rules/chess-rules';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -57,5 +59,24 @@ export class SyncChessGameComponent implements OnInit {
 
     private resetHighlight(): void {
         this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
+    }
+
+    public turnType(): string {
+        switch (this.gameSession.game.getTurnType()) {
+            case TurnType.SYNCHRONE:
+                return 'Synchronisé';
+            case TurnType.INTERMEDIATE:
+                return 'Intermédiaire';
+            default:
+                return '';
+        }
+    }
+
+    public whiteHasPlayed(): boolean {
+        return this.gameSession.game.hasPlayed(PieceColor.WHITE);
+    }
+
+    public blackHasPlayed(): boolean {
+        return this.gameSession.game.hasPlayed(PieceColor.BLACK);
     }
 }

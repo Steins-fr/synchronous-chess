@@ -1,5 +1,6 @@
 enum TurnType {
-    SYNCHRONE = 'synchrone'
+    SYNCHRONE = 'synchrone',
+    INTERMEDIATE = 'intermediate'
 }
 
 export default TurnType;

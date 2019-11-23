@@ -86,7 +86,8 @@ export abstract class Negotiator {
                 }
                 break;
             case WebrtcConnectionState.CONNECTED:
-                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), 100); // Delay to assure that the canal is ready
+                // Todo: better connection detection
+                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), 1000); // Delay to assure that the canal is ready
                 break;
             case WebrtcConnectionState.DISCONNECTED:
                 this.pushEvent(NegotiatorEventType.DISCONNECTED);

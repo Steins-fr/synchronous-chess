@@ -10,7 +10,8 @@ export type MovementBoard = Array<Array<Array<PieceType>>>;
 
 export default abstract class ChessBoardHelper {
 
-    private static readonly fenBoardToSafeBoardCache: Map<FenBoard, SafeBoard> = new Map<FenBoard, SafeBoard>();
+    private static readonly fenBoardToSafeBoardCache: Map<string, SafeBoard> = new Map<string, SafeBoard>();
+    private static isCacheDisabled: boolean = false;
 
     private static readonly indexRowToFenRowMap: Map<Row, FenRow> = new Map([
         [Row._1, 1],
@@ -56,6 +57,8 @@ export default abstract class ChessBoardHelper {
         [FenColumn.H, Column.H],
     ]);
 
+    private constructor() { }
+
     public static createFenBoard(): FenBoard {
         return [
             [
@@ -98,6 +101,16 @@ export default abstract class ChessBoardHelper {
             Array(8).fill(value),
             Array(8).fill(value)
         ];
+    }
+
+    // Mandatory for Unit test concurrency
+    public static disableCache(): void {
+        ChessBoardHelper.isCacheDisabled = true;
+    }
+
+    // Mandatory for Unit test concurrency
+    public static enableCache(): void {
+        ChessBoardHelper.isCacheDisabled = false;
     }
 
     public static cloneBoard<T>(board: Array<Array<T>>): Array<Array<T>> {
@@ -222,9 +235,16 @@ export default abstract class ChessBoardHelper {
     }
 
 
-    public static fenBoardToSafeBoard(board: FenBoard, rules: ChessRules): SafeBoard {
-        if (ChessBoardHelper.fenBoardToSafeBoardCache.has(board)) {
-            return ChessBoardHelper.fenBoardToSafeBoardCache.get(board);
+    public static fenBoardToSafeBoard(board: FenBoard, rules: ChessRules, excludeFrom?: FenCoordinate): SafeBoard {
+        let cacheKey: string = board.toString() + rules.color;
+        let excludeFromCoordinate: Vec2;
+        if (excludeFrom !== undefined) {
+            cacheKey += excludeFrom.toString();
+            excludeFromCoordinate = ChessBoardHelper.fenCoordinateToVec2(excludeFrom);
+        }
+
+        if (ChessBoardHelper.fenBoardToSafeBoardCache.has(cacheKey) && ChessBoardHelper.isCacheDisabled === false) {
+            return ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey);
         }
 
         const safeBoard: SafeBoard = Array(8).fill([]).map(() => Array(8).fill(true));
@@ -233,6 +253,11 @@ export default abstract class ChessBoardHelper {
         board.forEach((row: Array<FenPiece>, y: number) => {
             row.forEach((piece: FenPiece, x: number) => {
                 const pieceType: PieceType = ChessBoardHelper.pieceType(piece);
+                // Exclude results for this piece
+                if (excludeFromCoordinate !== undefined && excludeFromCoordinate.equal(x, y)) {
+                    return;
+                }
+
                 if (pieceType !== PieceType.NONE && ChessBoardHelper.pieceColor(piece) === rules.color) {
                     protectionPlays = protectionPlays.concat(this.getProtectionPlays(new Vec2([x, y]), board, rules));
                 }
@@ -243,9 +268,14 @@ export default abstract class ChessBoardHelper {
             safeBoard[play.y][play.x] = false;
         });
 
-        ChessBoardHelper.fenBoardToSafeBoardCache.set(board, safeBoard);
+        ChessBoardHelper.fenBoardToSafeBoardCache.set(cacheKey, safeBoard);
 
         return safeBoard;
+    }
+
+    public static isSafe(safeBoard: SafeBoard, fenCoordinate: FenCoordinate): boolean {
+        const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
+        return safeBoard[coordinate[1]][coordinate[0]];
     }
 
     public static castlingRook(from: Vec2, to: Vec2): Column {

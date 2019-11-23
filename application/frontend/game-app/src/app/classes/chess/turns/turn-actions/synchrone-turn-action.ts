@@ -1,7 +1,5 @@
-import TurnAction from './turn-action';
-import Move from '../../interfaces/move';
+import MoveTurnAction from './move-turn-action';
 
-export default interface SynchroneTurnAction extends TurnAction {
-    whiteMove?: Move;
-    blackMove?: Move;
-}
+type SynchroneTurnAction = MoveTurnAction;
+
+export default SynchroneTurnAction;

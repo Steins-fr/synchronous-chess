@@ -1,9 +1,17 @@
 <div id="game">
     <div class="player">Joueur Noir : {{ gameSession.configuration.blackPlayer || 'En attente' }}</div>
-    <app-chess-board [fenBoard]="gameSession.board" [validPlayBoard]="validPlayBoard"
-        (piecePicked)="piecePicked($event)" (pieceDropped)="pieceDropped($event)" (pieceClicked)="pieceClicked($event)"
-        [grabColor]="gameSession.playingColor" [movePreview]="gameSession.movePreview">
-    </app-chess-board>
+    <div id="board-section">
+        <app-chess-board id="chess-board" [fenBoard]="gameSession.board" [validPlayBoard]="validPlayBoard"
+            (piecePicked)="piecePicked($event)" (pieceDropped)="pieceDropped($event)"
+            (pieceClicked)="pieceClicked($event)" [grabColor]="gameSession.playingColor"
+            [movePreview]="gameSession.movePreview">
+        </app-chess-board>
+        <div id="right-column">
+            <div>Noir : {{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
+            <div>Tour : {{ turnType() }}</div>
+            <div>Blanc : {{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
+        </div>
+    </div>
     <div class="player">Joueur Blanc : {{ gameSession.configuration.whitePlayer || 'En attente' }}</div>
     <div class="spectators">Spectateurs : {{ gameSession.spectatorNumber }}</div>
 </div>
