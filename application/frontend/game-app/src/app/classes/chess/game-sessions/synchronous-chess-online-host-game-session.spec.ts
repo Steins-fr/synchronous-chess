@@ -82,21 +82,26 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session2.configuration.whitePlayer = undefined;
         session2.configuration.blackPlayer = 'a';
         const session3: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, undefined);
-        session3.configuration.whitePlayer = 'a';
+        session3.configuration.whitePlayer = 'c';
         session3.configuration.blackPlayer = 'b';
+        const session4: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, undefined);
+        session4.configuration.whitePlayer = 'a';
+        session4.configuration.blackPlayer = 'b';
 
 
         // When
         roomServiceSpy.isReady.and.returnValue(true);
         const color1: PieceColor = session1.playingColor;
         const color2: PieceColor = session2.playingColor;
-        roomServiceSpy.isReady.and.returnValue(false);
         const color3: PieceColor = session3.playingColor;
+        roomServiceSpy.isReady.and.returnValue(false);
+        const color4: PieceColor = session4.playingColor;
 
         // Then
         expect(color1).toEqual(PieceColor.NONE);
         expect(color2).toEqual(PieceColor.NONE);
         expect(color3).toEqual(PieceColor.NONE);
+        expect(color4).toEqual(PieceColor.NONE);
     });
 
     it('should return true on valid play', () => {

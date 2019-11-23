@@ -8,6 +8,8 @@ import { DoNotApprocheMovementCondition } from '../movements/movement-conditions
 import { SafeMovementCondition } from '../movements/movement-conditions/safe-movement-condition';
 import Movement from '../movements/movement';
 import { Row } from '../interfaces/CoordinateMove';
+import ChessBoardHelper, { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
+import { FenCoordinate } from '../interfaces/move';
 
 export default class SynchronousChessRules extends ChessRules {
 
@@ -100,5 +102,10 @@ export default class SynchronousChessRules extends ChessRules {
 
     public isBlack(): boolean {
         return this.color === PieceColor.BLACK;
+    }
+
+    public getSafeBoard(board: FenBoard, excludeFrom?: FenCoordinate): SafeBoard {
+        const opponentRules: ChessRules = this.isBlack() ? SynchronousChessRules.whiteNoSafetyRules : SynchronousChessRules.blackNoSafetyRules;
+        return ChessBoardHelper.fenBoardToSafeBoard(board, opponentRules, excludeFrom);
     }
 }

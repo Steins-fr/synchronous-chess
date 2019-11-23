@@ -13,7 +13,7 @@ export default class SynchroneTurn extends Turn<SynchroneTurnAction> {
     }
 
     public canBeExecuted(): boolean {
-        return this.action.blackMove !== undefined && this.action.whiteMove !== undefined;
+        return this.isFilled(PieceColor.WHITE) && this.isFilled(PieceColor.BLACK);
     }
 
     public registerMove(move: Move, color: PieceColor): void {
@@ -31,6 +31,6 @@ export default class SynchroneTurn extends Turn<SynchroneTurnAction> {
             return this.action.blackMove !== undefined;
         }
 
-        return false;
+        return true;
     }
 }

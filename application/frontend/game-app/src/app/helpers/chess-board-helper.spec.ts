@@ -3,6 +3,7 @@ import Vec2 from 'vec2';
 import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rules';
 import { FenPiece, PieceColor, PieceType } from '../classes/chess/rules/chess-rules';
 import { Column, Row } from '../classes/chess/interfaces/CoordinateMove';
+import { FenCoordinate } from '../classes/chess/interfaces/move';
 
 describe('ChessHelper', () => {
 
@@ -441,6 +442,42 @@ describe('ChessHelper', () => {
         expect(resultLine).toEqual(safeBoardLine);
         expect(resultHop).toEqual(safeBoardHop);
         expect(resultPawn).toEqual(safeBoardPawn);
+    });
+
+    it('should return a safe board from the cache', () => {
+        // Given
+        const boardLine: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.BLACK_BISHOP, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY]
+        ];
+
+        const safeBoardLine: SafeBoard = [
+            [true, false, false, false, false, false, false, false],
+            [false, false, false, true, false, false, false, false],
+            [false, true, false, false, false, false, true, true],
+            [false, false, true, false, false, false, true, true],
+            [false, true, true, false, true, true, false, true],
+            [false, true, false, false, true, true, true, false],
+            [false, false, true, false, true, true, true, true],
+            [false, true, true, false, true, true, true, true]
+        ];
+
+        // When
+        ChessBoardHelper.enableCache();
+        const resultLine1: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, new SynchronousChessRules(PieceColor.BLACK, true, false, false));
+        const resultLine2: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(boardLine, new SynchronousChessRules(PieceColor.BLACK, true, false, false));
+        ChessBoardHelper.disableCache();
+
+        // Then
+        expect(resultLine1).toEqual(safeBoardLine);
+        expect(resultLine2).toEqual(safeBoardLine);
+        expect(resultLine1).toBe(resultLine2);
     });
 
     it('should indicates the rook targeted by the castling', () => {

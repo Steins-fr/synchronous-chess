@@ -1,5 +1,6 @@
 import Movement from '../movements/movement';
 import Vec2 from 'vec2';
+import { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
 
 export enum PieceColor {
     WHITE = 'w',
@@ -67,4 +68,6 @@ export default abstract class ChessRules {
             return [...movements, ...movement.possiblePlays(piecePosition, board)];
         }, []);
     }
+
+    public abstract getSafeBoard(board: FenBoard): SafeBoard;
 }
