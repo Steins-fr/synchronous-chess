@@ -14,25 +14,25 @@ export default abstract class ChessBoardHelper {
     private static isCacheDisabled: boolean = false;
 
     private static readonly indexRowToFenRowMap: Map<Row, FenRow> = new Map([
-        [Row._1, 1],
-        [Row._2, 2],
-        [Row._3, 3],
-        [Row._4, 4],
-        [Row._5, 5],
-        [Row._6, 6],
-        [Row._7, 7],
-        [Row._8, 8],
+        [Row._1, FenRow._1],
+        [Row._2, FenRow._2],
+        [Row._3, FenRow._3],
+        [Row._4, FenRow._4],
+        [Row._5, FenRow._5],
+        [Row._6, FenRow._6],
+        [Row._7, FenRow._7],
+        [Row._8, FenRow._8]
     ]);
 
     private static readonly fenRowToIndexRowMap: Map<FenRow, Row> = new Map([
-        [1, Row._1],
-        [2, Row._2],
-        [3, Row._3],
-        [4, Row._4],
-        [5, Row._5],
-        [6, Row._6],
-        [7, Row._7],
-        [8, Row._8],
+        [FenRow._1, Row._1],
+        [FenRow._2, Row._2],
+        [FenRow._3, Row._3],
+        [FenRow._4, Row._4],
+        [FenRow._5, Row._5],
+        [FenRow._6, Row._6],
+        [FenRow._7, Row._7],
+        [FenRow._8, Row._8]
     ]);
 
     private static readonly indexColumnToFenColumnMap: Map<Column, FenColumn> = new Map([
@@ -43,7 +43,7 @@ export default abstract class ChessBoardHelper {
         [Column.E, FenColumn.E],
         [Column.F, FenColumn.F],
         [Column.G, FenColumn.G],
-        [Column.H, FenColumn.H],
+        [Column.H, FenColumn.H]
     ]);
 
     private static readonly fenColumnToIndexColumnMap: Map<FenColumn, Column> = new Map([
@@ -54,12 +54,29 @@ export default abstract class ChessBoardHelper {
         [FenColumn.E, Column.E],
         [FenColumn.F, Column.F],
         [FenColumn.G, Column.G],
-        [FenColumn.H, Column.H],
+        [FenColumn.H, Column.H]
+    ]);
+
+    private static readonly fenPieceToPieceTypeMap: Map<FenPiece, PieceType> = new Map([
+        [FenPiece.BLACK_BISHOP, PieceType.BISHOP],
+        [FenPiece.WHITE_BISHOP, PieceType.BISHOP],
+        [FenPiece.BLACK_KING, PieceType.KING],
+        [FenPiece.WHITE_KING, PieceType.KING],
+        [FenPiece.BLACK_QUEEN, PieceType.QUEEN],
+        [FenPiece.WHITE_QUEEN, PieceType.QUEEN],
+        [FenPiece.BLACK_KNIGHT, PieceType.KNIGHT],
+        [FenPiece.WHITE_KNIGHT, PieceType.KNIGHT],
+        [FenPiece.BLACK_ROOK, PieceType.ROOK],
+        [FenPiece.WHITE_ROOK, PieceType.ROOK],
+        [FenPiece.BLACK_PAWN, PieceType.PAWN],
+        [FenPiece.WHITE_PAWN, PieceType.PAWN]
     ]);
 
     private constructor() { }
 
     public static createFenBoard(): FenBoard {
+        const rowSize: number = 8;
+
         return [
             [
                 FenPiece.BLACK_ROOK,
@@ -71,12 +88,12 @@ export default abstract class ChessBoardHelper {
                 FenPiece.BLACK_KNIGHT,
                 FenPiece.BLACK_ROOK
             ],
-            Array(8).fill(FenPiece.BLACK_PAWN),
-            Array(8).fill(FenPiece.EMPTY),
-            Array(8).fill(FenPiece.EMPTY),
-            Array(8).fill(FenPiece.EMPTY),
-            Array(8).fill(FenPiece.EMPTY),
-            Array(8).fill(FenPiece.WHITE_PAWN),
+            Array(rowSize).fill(FenPiece.BLACK_PAWN),
+            Array(rowSize).fill(FenPiece.EMPTY),
+            Array(rowSize).fill(FenPiece.EMPTY),
+            Array(rowSize).fill(FenPiece.EMPTY),
+            Array(rowSize).fill(FenPiece.EMPTY),
+            Array(rowSize).fill(FenPiece.WHITE_PAWN),
             [
                 FenPiece.WHITE_ROOK,
                 FenPiece.WHITE_KNIGHT,
@@ -91,15 +108,16 @@ export default abstract class ChessBoardHelper {
     }
 
     public static createFilledBoard<T>(value: T): Array<Array<T>> {
+        const rowSize: number = 8;
         return [
-            Array(8).fill(value),
-            Array(8).fill(value),
-            Array(8).fill(value),
-            Array(8).fill(value),
-            Array(8).fill(value),
-            Array(8).fill(value),
-            Array(8).fill(value),
-            Array(8).fill(value)
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value),
+            Array(rowSize).fill(value)
         ];
     }
 
@@ -133,28 +151,10 @@ export default abstract class ChessBoardHelper {
     }
 
     public static pieceType(fenPiece: FenPiece): PieceType {
-        switch (fenPiece) {
-            case FenPiece.BLACK_BISHOP:
-            case FenPiece.WHITE_BISHOP:
-                return PieceType.BISHOP;
-            case FenPiece.BLACK_KING:
-            case FenPiece.WHITE_KING:
-                return PieceType.KING;
-            case FenPiece.BLACK_QUEEN:
-            case FenPiece.WHITE_QUEEN:
-                return PieceType.QUEEN;
-            case FenPiece.BLACK_KNIGHT:
-            case FenPiece.WHITE_KNIGHT:
-                return PieceType.KNIGHT;
-            case FenPiece.BLACK_ROOK:
-            case FenPiece.WHITE_ROOK:
-                return PieceType.ROOK;
-            case FenPiece.BLACK_PAWN:
-            case FenPiece.WHITE_PAWN:
-                return PieceType.PAWN;
-            default:
-                return PieceType.NONE;
+        if (ChessBoardHelper.fenPieceToPieceTypeMap.has(fenPiece)) {
+            return ChessBoardHelper.fenPieceToPieceTypeMap.get(fenPiece);
         }
+        return PieceType.NONE;
     }
 
     /**
@@ -247,7 +247,8 @@ export default abstract class ChessBoardHelper {
             return ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey);
         }
 
-        const safeBoard: SafeBoard = Array(8).fill([]).map(() => Array(8).fill(true));
+        const size: number = 8;
+        const safeBoard: SafeBoard = Array(size).fill([]).map(() => Array(size).fill(true));
         let protectionPlays: Array<Vec2> = [];
 
         board.forEach((row: Array<FenPiece>, y: number) => {

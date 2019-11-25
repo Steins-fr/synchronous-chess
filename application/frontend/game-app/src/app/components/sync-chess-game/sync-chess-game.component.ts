@@ -1,15 +1,15 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
-import { RoomService, RoomServiceEventType } from 'src/app/services/room/room.service';
-import SynchronousChessGameSession from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session';
-import SynchronousChessLocalGameSession from 'src/app/classes/chess/game-sessions/synchronous-chess-local-game-session';
-import { RoomMessage } from 'src/app/classes/webrtc/messages/room-message';
-import SynchronousChessGameSessionBuilder from 'src/app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
-import { RoomManager } from 'src/app/classes/room-manager/room-manager';
-import { Coordinate } from 'src/app/classes/chess/interfaces/CoordinateMove';
-import TurnType from 'src/app/classes/chess/turns/turn.types';
-import { PieceColor } from 'src/app/classes/chess/rules/chess-rules';
+import ChessBoardHelper, { ValidPlayBoard } from '../../helpers/chess-board-helper';
+import { RoomService, RoomServiceEventType } from '../../services/room/room.service';
+import SynchronousChessGameSession from '../../classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessLocalGameSession from '../../classes/chess/game-sessions/synchronous-chess-local-game-session';
+import { RoomMessage } from '../../classes/webrtc/messages/room-message';
+import SynchronousChessGameSessionBuilder from '../../classes/chess/game-sessions/synchronous-chess-game-session-builder';
+import { RoomManager } from '../../classes/room-manager/room-manager';
+import { Coordinate } from '../../classes/chess/interfaces/CoordinateMove';
+import TurnType from '../../classes/chess/turns/turn.types';
+import { PieceColor } from '../../classes/chess/rules/chess-rules';
 
 @Component({
     selector: 'app-sync-chess-game',

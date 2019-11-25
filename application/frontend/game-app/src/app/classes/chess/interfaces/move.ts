@@ -9,7 +9,17 @@ export enum FenColumn {
     H = 'h'
 }
 
-export type FenRow = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export enum FenRow {
+    _1 = 1,
+    _2 = 2,
+    _3 = 3,
+    _4 = 4,
+    _5 = 5,
+    _6 = 6,
+    _7 = 7,
+    _8 = 8
+}
+
 export type FenCoordinate = [FenColumn, FenRow];
 
 export default interface Move {

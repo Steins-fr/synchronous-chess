@@ -1,5 +1,5 @@
 import SynchronousChessOnlineGameSession, { SCGameSessionType } from './synchronous-chess-online-game-session';
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { NgZone } from '@angular/core';
 import { Player } from '../../player/player';
 import { RoomManager } from '../../room-manager/room-manager';

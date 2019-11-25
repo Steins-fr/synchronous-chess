@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
 
-import { RoomApiService } from 'src/app/services/room-api/room-api.service';
+import { RoomApiService } from '../../services/room-api/room-api.service';
 
 import { Message } from '../webrtc/messages/message';
 import { RoomMessage } from '../webrtc/messages/room-message';

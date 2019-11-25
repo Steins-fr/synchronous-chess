@@ -1,4 +1,4 @@
-import ChessBoardHelper, { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard, SafeBoard } from '../../../helpers/chess-board-helper';
 import SynchronousChessRules from '../rules/synchronous-chess-rules';
 import Vec2 from 'vec2';
 import ChessRules, { PieceColor, FenPiece, PieceType } from '../rules/chess-rules';

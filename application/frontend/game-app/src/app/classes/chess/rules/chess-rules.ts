@@ -1,6 +1,6 @@
 import Movement from '../movements/movement';
 import Vec2 from 'vec2';
-import { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
+import { FenBoard, SafeBoard } from '../../../helpers/chess-board-helper';
 
 export enum PieceColor {
     WHITE = 'w',
@@ -47,20 +47,28 @@ export default abstract class ChessRules {
         public isKingSideCastleAvailable: boolean = true) { }
 
     public getPieceMovements(pieceType: PieceType): Array<Movement> {
+        let movements: Array<Movement>;
         switch (pieceType) {
             case PieceType.KING:
-                return this.kingMovement;
+                movements = this.kingMovement;
+                break;
             case PieceType.QUEEN:
-                return this.queenMovement;
+                movements = this.queenMovement;
+                break;
             case PieceType.BISHOP:
-                return this.bishopMovement;
+                movements = this.bishopMovement;
+                break;
             case PieceType.KNIGHT:
-                return this.knightMovement;
+                movements = this.knightMovement;
+                break;
             case PieceType.ROOK:
-                return this.rookMovement;
+                movements = this.rookMovement;
+                break;
             case PieceType.PAWN:
-                return this.pawnMovement;
+                movements = this.pawnMovement;
+                break;
         }
+        return movements;
     }
 
     public getPossiblePlays(pieceType: PieceType, piecePosition: Vec2, board: Array<Array<FenPiece>>): Array<Vec2> {

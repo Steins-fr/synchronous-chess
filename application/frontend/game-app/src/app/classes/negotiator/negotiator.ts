@@ -3,7 +3,7 @@ import { Subscription, Observable } from 'rxjs';
 import WebrtcStates from '../webrtc/webrtc-states';
 import { Webrtc, Signal, WebrtcConnectionState } from '../webrtc/webrtc';
 
-import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
+import SignalNotification from '../../services/room-api/notifications/signal-notification';
 import { PlayerType } from '../player/player';
 import Notifier, { NotifierFlow } from '../notifier/notifier';
 
@@ -17,6 +17,11 @@ export interface NegotiatorEvent {
 }
 
 export abstract class Negotiator {
+
+    private static readonly maxSignalTry: number = 3;
+    private static readonly checkingTimeout: number = 3000;
+    private static readonly timeoutAfter: number = 15000;
+    private static readonly connectedDelay: number = 1000;
     private readonly subs: Array<Subscription> = [];
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.DISCONNECTED;
     private signalTry: number = 0;
@@ -48,12 +53,12 @@ export abstract class Negotiator {
         this.timeoutId = setTimeout(() => {
             this.pushEvent(NegotiatorEventType.DISCONNECTED);
             this.timeoutId = undefined;
-        }, 15000);
+        }, Negotiator.timeoutAfter);
     }
 
     protected setupConnection(): void {
 
-        if (this.signalTry < 3 && this.connectionState !== WebrtcConnectionState.CONNECTED) {
+        if (this.signalTry < Negotiator.maxSignalTry && this.connectionState !== WebrtcConnectionState.CONNECTED) {
             this.subs.forEach((sub: Subscription) => sub.unsubscribe());
             this.webRTC.configure(this.isInitiator);
             if (this.isInitiator) {
@@ -82,12 +87,12 @@ export abstract class Negotiator {
         switch (this.connectionState) {
             case WebrtcConnectionState.CHECKING:
                 if (this.isInitiator) { // Timeout the connection temptation
-                    setTimeout(() => this.setupConnection(), 3000);
+                    setTimeout(() => this.setupConnection(), Negotiator.checkingTimeout);
                 }
                 break;
             case WebrtcConnectionState.CONNECTED:
                 // Todo: better connection detection
-                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), 1000); // Delay to assure that the canal is ready
+                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), Negotiator.connectedDelay); // Delay to assure that the canal is ready
                 break;
             case WebrtcConnectionState.DISCONNECTED:
                 this.pushEvent(NegotiatorEventType.DISCONNECTED);
