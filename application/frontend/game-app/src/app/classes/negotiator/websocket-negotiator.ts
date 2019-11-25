@@ -1,9 +1,9 @@
 import { Webrtc, Signal } from '../webrtc/webrtc';
 import { Negotiator, NegotiatorEventType } from './negotiator';
 
-import { RoomApiService, RoomApiNotificationType } from 'src/app/services/room-api/room-api.service';
-import SignalNotification from 'src/app/services/room-api/notifications/signal-notification';
-import FullNotification from 'src/app/services/room-api/notifications/full-notification';
+import { RoomApiService, RoomApiNotificationType } from '../../services/room-api/room-api.service';
+import SignalNotification from '../../services/room-api/notifications/signal-notification';
+import FullNotification from '../../services/room-api/notifications/full-notification';
 import { PlayerType } from '../player/player';
 
 export class WebsocketNegotiator extends Negotiator {

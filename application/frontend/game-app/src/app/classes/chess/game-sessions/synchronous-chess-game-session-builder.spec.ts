@@ -1,5 +1,5 @@
 import { RoomManager } from '../../room-manager/room-manager';
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { NotifierFlow } from '../../notifier/notifier';
 import SynchronousChessGameSession from './synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder from './synchronous-chess-game-session-builder';

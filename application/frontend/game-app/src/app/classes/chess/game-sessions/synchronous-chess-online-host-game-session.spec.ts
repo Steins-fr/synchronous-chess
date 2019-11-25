@@ -1,5 +1,5 @@
 import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-host-game-session';
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { RoomManager } from '../../room-manager/room-manager';
 import { NotifierFlow } from '../../notifier/notifier';
 import { PieceColor } from '../rules/chess-rules';
@@ -11,7 +11,7 @@ import { SessionConfiguration } from './synchronous-chess-game-session';
 import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
 import { SCGameSessionType, PlayMessage } from './synchronous-chess-online-game-session';
 import MessageOriginType from '../../webrtc/messages/message-origin.types';
-import ChessBoardHelper from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper from '../../../helpers/chess-board-helper';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
     public onMoveTest(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {

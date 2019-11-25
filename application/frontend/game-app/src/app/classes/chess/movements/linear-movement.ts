@@ -1,6 +1,6 @@
 import Movement, { MovementType } from './movement';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
 import { PieceColor, FenPiece } from '../rules/chess-rules';
 import MoveCondition from './movement-conditions/movement-condition';
 

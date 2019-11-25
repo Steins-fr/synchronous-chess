@@ -1,4 +1,4 @@
-import { Signal } from 'src/app/classes/webrtc/webrtc';
+import { Signal } from '../../../classes/webrtc/webrtc';
 
 export default interface SignalResponse {
     from: string;

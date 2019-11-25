@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnDestroy, NgZone } from '@angular/core';
-import { Player } from 'src/app/classes/player/player';
+import { Player } from '../../../classes/player/player';
 import { Subscription } from 'rxjs';
 
 @Component({

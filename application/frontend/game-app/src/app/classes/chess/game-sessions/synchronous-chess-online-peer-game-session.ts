@@ -1,5 +1,5 @@
 import SynchronousChessOnlineGameSession, { SCGameSessionType } from './synchronous-chess-online-game-session';
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { NgZone } from '@angular/core';
 import { RoomMessage } from '../../webrtc/messages/room-message';
 import { SessionConfiguration } from './synchronous-chess-game-session';
@@ -12,7 +12,8 @@ export default class SynchronousChessOnlinePeerGameSession extends SynchronousCh
     }
 
     private followRoomService(): void {
-        this.roomService.notifier.follow(SCGameSessionType.CONFIGURATION, this, (configurationMessage: RoomMessage<SessionConfiguration>) => this.onConfiguration(configurationMessage.payload));
+        this.roomService.notifier.follow(SCGameSessionType.CONFIGURATION, this,
+            (configurationMessage: RoomMessage<SessionConfiguration>) => this.onConfiguration(configurationMessage.payload));
     }
 
     public onConfiguration(configuration: SessionConfiguration): void {

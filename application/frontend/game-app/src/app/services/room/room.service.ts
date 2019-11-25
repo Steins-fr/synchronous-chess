@@ -1,25 +1,25 @@
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
-import MessageOriginType from 'src/app/classes/webrtc/messages/message-origin.types';
+import { RoomServiceMessage } from '../../classes/webrtc/messages/room-service-message';
+import MessageOriginType from '../../classes/webrtc/messages/message-origin.types';
 
-import { RoomManager } from 'src/app/classes/room-manager/room-manager';
-import { HostRoomManager } from 'src/app/classes/room-manager/host-room-manager';
-import { PeerRoomManager } from 'src/app/classes/room-manager/peer-room-manager';
+import { RoomManager } from '../../classes/room-manager/room-manager';
+import { HostRoomManager } from '../../classes/room-manager/host-room-manager';
+import { PeerRoomManager } from '../../classes/room-manager/peer-room-manager';
 
 import { RoomApiService } from '../room-api/room-api.service';
-import { RoomEventType } from 'src/app/classes/room-manager/events/room-event';
-import RoomPlayerAddEvent from 'src/app/classes/room-manager/events/room-player-add-event';
-import { Player } from 'src/app/classes/player/player';
-import RoomPlayerRemoveEvent from 'src/app/classes/room-manager/events/room-player-remove-event';
-import RoomQueueAddEvent from 'src/app/classes/room-manager/events/room-queue-add-event';
-import RoomQueueRemoveEvent from 'src/app/classes/room-manager/events/room-queue-remove-event';
+import { RoomEventType } from '../../classes/room-manager/events/room-event';
+import RoomPlayerAddEvent from '../../classes/room-manager/events/room-player-add-event';
+import { Player } from '../../classes/player/player';
+import RoomPlayerRemoveEvent from '../../classes/room-manager/events/room-player-remove-event';
+import RoomQueueAddEvent from '../../classes/room-manager/events/room-queue-add-event';
+import RoomQueueRemoveEvent from '../../classes/room-manager/events/room-queue-remove-event';
 import RoomCreateResponse from '../room-api/responses/room-create-response';
 import RoomJoinResponse from '../room-api/responses/room-join-response';
-import Notifier, { NotifierFlow } from 'src/app/classes/notifier/notifier';
-import { RoomMessage } from 'src/app/classes/webrtc/messages/room-message';
-import RoomReadyEvent from 'src/app/classes/room-manager/events/room-ready-event';
+import Notifier, { NotifierFlow } from '../../classes/notifier/notifier';
+import { RoomMessage } from '../../classes/webrtc/messages/room-message';
+import RoomReadyEvent from '../../classes/room-manager/events/room-ready-event';
 
 export enum RoomServiceEventType {
     IS_READY = 'RoomServiceIsReady',

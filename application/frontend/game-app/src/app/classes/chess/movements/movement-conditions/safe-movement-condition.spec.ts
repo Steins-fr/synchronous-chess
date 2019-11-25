@@ -1,6 +1,6 @@
 import { SafeMovementCondition } from './safe-movement-condition';
 import SynchronousChessRules from '../../rules/synchronous-chess-rules';
-import { FenBoard } from 'src/app/helpers/chess-board-helper';
+import { FenBoard } from '../../../../helpers/chess-board-helper';
 import { FenPiece, PieceColor } from '../../rules/chess-rules';
 import Vec2 from 'vec2';
 

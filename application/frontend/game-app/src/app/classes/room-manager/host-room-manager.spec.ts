@@ -1,5 +1,5 @@
 import { HostRoomManager } from './host-room-manager';
-import { RoomApiService } from 'src/app/services/room-api/room-api.service';
+import { RoomApiService } from '../../services/room-api/room-api.service';
 import { NotifierFlow } from '../notifier/notifier';
 
 describe('HostRoom', () => {

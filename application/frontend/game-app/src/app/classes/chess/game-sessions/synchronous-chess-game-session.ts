@@ -1,7 +1,7 @@
 import { NgZone } from '@angular/core';
 import { PieceColor } from '../rules/chess-rules';
 import SynchronousChessGame from '../games/synchronous-chess-game';
-import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
 import Vec2 from 'vec2';
 import Move from '../interfaces/move';
 import CoordinateMove, { Coordinate } from '../interfaces/CoordinateMove';

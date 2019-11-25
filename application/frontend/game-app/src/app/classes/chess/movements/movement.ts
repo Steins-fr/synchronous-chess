@@ -1,5 +1,5 @@
 import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
 import MoveCondition from './movement-conditions/movement-condition';
 import { FenPiece } from '../rules/chess-rules';
 

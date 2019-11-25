@@ -1,7 +1,7 @@
 import DestinationColorMovementCondition from './destination-color-movement-condition';
 import Vec2 from 'vec2';
 import { PieceColor, FenPiece } from '../../rules/chess-rules';
-import { FenBoard } from 'src/app/helpers/chess-board-helper';
+import { FenBoard } from '../../../../helpers/chess-board-helper';
 
 
 describe('DestinationColorMoveCondition', () => {
