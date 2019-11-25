@@ -1,6 +1,6 @@
 import SynchronousChessGame from './synchronous-chess-game';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
 import ChessRules, { FenPiece, PieceColor } from '../rules/chess-rules';
 import { Column, Row } from '../interfaces/CoordinateMove';
 import Move, { FenColumn, FenCoordinate } from '../interfaces/move';

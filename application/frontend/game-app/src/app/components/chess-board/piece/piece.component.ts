@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { FenPiece } from 'src/app/classes/chess/rules/chess-rules';
+import { FenPiece } from '../../../classes/chess/rules/chess-rules';
 
 @Component({
     selector: 'app-board-piece',

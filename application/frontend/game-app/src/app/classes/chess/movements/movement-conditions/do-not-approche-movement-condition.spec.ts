@@ -1,7 +1,7 @@
 import { DoNotApprocheMovementCondition } from './do-not-approche-movement-condition';
 import { FenPiece } from '../../rules/chess-rules';
 import Vec2 from 'vec2';
-import { FenBoard } from 'src/app/helpers/chess-board-helper';
+import { FenBoard } from '../../../../helpers/chess-board-helper';
 
 describe('DoNotApprocheMoveCondition', () => {
     it('should create an instance', () => {

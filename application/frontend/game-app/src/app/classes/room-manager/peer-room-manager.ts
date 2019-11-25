@@ -9,8 +9,8 @@ import { Webrtc } from '../webrtc/webrtc';
 import { Player, PlayerType } from '../player/player';
 import { RoomManager } from './room-manager';
 
-import RoomJoinResponse from 'src/app/services/room-api/responses/room-join-response';
-import SignalResponse from 'src/app/services/room-api/responses/signal-response';
+import RoomJoinResponse from '../../services/room-api/responses/room-join-response';
+import SignalResponse from '../../services/room-api/responses/signal-response';
 import { RoomEventType } from './events/room-event';
 import RoomReadyEvent from './events/room-ready-event';
 

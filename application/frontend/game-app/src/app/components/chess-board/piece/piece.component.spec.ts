@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PieceComponent } from './piece.component';
-import { FenPiece } from 'src/app/classes/chess/rules/chess-rules';
+import { FenPiece } from '../../../classes/chess/rules/chess-rules';
 
 describe('PieceComponent', () => {
     let component: PieceComponent;

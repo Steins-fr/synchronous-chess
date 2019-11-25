@@ -1,8 +1,8 @@
 import { Component, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
 import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard, ValidPlayBoard } from 'src/app/helpers/chess-board-helper';
-import { PieceColor } from 'src/app/classes/chess/rules/chess-rules';
-import CoordinateMove from 'src/app/classes/chess/interfaces/CoordinateMove';
+import ChessBoardHelper, { FenBoard, ValidPlayBoard } from '../../helpers/chess-board-helper';
+import { PieceColor } from '../../classes/chess/rules/chess-rules';
+import CoordinateMove from '../../classes/chess/interfaces/CoordinateMove';
 
 @Component({
     selector: 'app-chess-board',

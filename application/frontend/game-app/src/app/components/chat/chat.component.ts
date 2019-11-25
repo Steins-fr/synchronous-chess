@@ -1,9 +1,9 @@
 import { Component, OnDestroy, NgZone, ViewChild, OnInit, AfterViewInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { RoomServiceMessage } from 'src/app/classes/webrtc/messages/room-service-message';
+import { RoomServiceMessage } from '../../classes/webrtc/messages/room-service-message';
 
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../services/room/room.service';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 
 enum ChatMessageType {

@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ParticipantComponent } from './participant.component';
 import { MatChipsModule } from '@angular/material/chips';
-import { Player, PlayerType } from 'src/app/classes/player/player';
+import { Player, PlayerType } from '../../../classes/player/player';
 
 describe('ParticipantComponent', () => {
     let component: ParticipantComponent;

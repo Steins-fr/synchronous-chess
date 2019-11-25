@@ -16,7 +16,7 @@ export enum PlayerEventType {
     MESSAGE = 'message'
 }
 
-export interface PlayerEvent<T extends Message = any> {
+export interface PlayerEvent<T extends Message = Message> {
     type: PlayerEventType;
     name: string; // Player name
     message: T;
@@ -69,6 +69,7 @@ export class Player {
     }
 
     private pingInterval(): void {
+        const pingInterval: number = 2500;
         this.pingTimerId = setInterval(() => {
             const markId: string = this.markIdGenerator.next().value;
             window.performance.mark(`${Player.PING_MARK}-${markId}`);
@@ -80,7 +81,7 @@ export class Player {
             };
 
             this.sendData(pingMessage);
-        }, 2500);
+        }, pingInterval);
     }
 
     private pushEvent(type: PlayerEventType, message?: Message): void {

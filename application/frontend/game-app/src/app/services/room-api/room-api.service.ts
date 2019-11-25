@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { Subscription } from 'rxjs';
 
-import { Signal } from 'src/app/classes/webrtc/webrtc';
+import { Signal } from '../../classes/webrtc/webrtc';
 
 import RoomCreateRequest from './requests/room-create-request';
 import RoomJoinRequest from './requests/room-join-request';
@@ -24,7 +24,7 @@ import FullResponse from './responses/full-response';
 import FullNotification from './notifications/full-notification';
 import PlayersResponse from './responses/players-response';
 import PlayersRequest from './requests/players-request';
-import Notifier, { NotifierFlow } from 'src/app/classes/notifier/notifier';
+import Notifier, { NotifierFlow } from '../../classes/notifier/notifier';
 
 export interface PacketPayload extends SocketPayload {
     id: number;
@@ -100,12 +100,11 @@ export class RoomApiService {
     }
 
     private buildPacket(requestType: string, data: string): PacketPayload {
-        const payload: PacketPayload = {
+        return {
             type: requestType,
             data,
             id: RoomApiService.requestIdGenerator.next().value
         };
-        return payload;
     }
 
     public create(roomName: string, maxPlayer: number, playerName: string): Promise<RoomCreateResponse> {
@@ -180,6 +179,7 @@ export class RoomApiService {
     }
 
     private detectRequestTimeout(id: RequestId, sub: Subscription, reject: (err: string) => void): void {
+        const lambdaTimeout: number = 4000; // 3 seconds is the lambda AWS timeout, so add one more minute to it
         const timerId: NodeJS.Timer = setTimeout(() => {
 
             if (sub.closed === false) {
@@ -188,7 +188,7 @@ export class RoomApiService {
             this.requestTimers.delete(id);
             reject(`${RoomApiService.ERROR_REQUEST_TIMEOUT} ${id}`);
             console.error(`${RoomApiService.ERROR_REQUEST_TIMEOUT} ${id}`);
-        }, 4000); // 3 seconds is the lambda AWS timeout, so add one more minute to it
+        }, lambdaTimeout); // 3 seconds is the lambda AWS timeout, so add one more minute to it
 
         this.requestTimers.set(id, timerId);
     }

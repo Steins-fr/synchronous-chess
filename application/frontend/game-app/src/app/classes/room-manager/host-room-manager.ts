@@ -1,7 +1,7 @@
-import RoomCreateResponse from 'src/app/services/room-api/responses/room-create-response';
-import SignalResponse from 'src/app/services/room-api/responses/signal-response';
-import { RoomApiService, RoomApiNotificationType } from 'src/app/services/room-api/room-api.service';
-import JoinNotification from 'src/app/services/room-api/notifications/join-notification';
+import RoomCreateResponse from '../../services/room-api/responses/room-create-response';
+import SignalResponse from '../../services/room-api/responses/signal-response';
+import { RoomApiService, RoomApiNotificationType } from '../../services/room-api/room-api.service';
+import JoinNotification from '../../services/room-api/notifications/join-notification';
 
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { SignalPayload } from '../negotiator/webrtc-negotiator';
@@ -45,6 +45,7 @@ export class HostRoomManager extends RoomManager {
     }
 
     private enableRefresh(): void {
+        const refreshInterval: number = 360000; // 6 minutes
         this.refreshId = setInterval(async () => {
             try {
                 let serverPlayers: Array<string> = (await this.roomApi.allPlayers(this.roomName)).players;
@@ -65,7 +66,7 @@ export class HostRoomManager extends RoomManager {
             } catch (e) {
                 console.error(e);
             }
-        }, 360000); // 360000 => 6 minutes
+        }, refreshInterval);
     }
 
     private onJoinNotification(data: JoinNotification): void {

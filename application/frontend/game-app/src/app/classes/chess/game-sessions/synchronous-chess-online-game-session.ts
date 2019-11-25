@@ -1,4 +1,4 @@
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { NgZone } from '@angular/core';
 import { PieceColor } from '../rules/chess-rules';
 import SynchronousChessGameSession from './synchronous-chess-game-session';

@@ -1,5 +1,5 @@
 import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
-import { RoomService } from 'src/app/services/room/room.service';
+import { RoomService } from '../../../services/room/room.service';
 import { NotifierFlow } from '../../notifier/notifier';
 import { RoomManager } from '../../room-manager/room-manager';
 import { TestBed } from '@angular/core/testing';
@@ -8,7 +8,7 @@ import { SessionConfiguration } from './synchronous-chess-game-session';
 import { PieceColor } from '../rules/chess-rules';
 import { Coordinate, Column, Row } from '../interfaces/CoordinateMove';
 import SynchronousChessGame from '../games/synchronous-chess-game';
-import ChessBoardHelper from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper from '../../../helpers/chess-board-helper';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     public runMoveTest(color: PieceColor, from: Coordinate, to: Coordinate): boolean {

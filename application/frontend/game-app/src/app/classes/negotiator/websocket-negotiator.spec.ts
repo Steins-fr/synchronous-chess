@@ -1,8 +1,8 @@
 import { WebsocketNegotiator } from './websocket-negotiator';
 import { Webrtc } from '../webrtc/webrtc';
 import { TestBed } from '@angular/core/testing';
-import { RoomApiService } from 'src/app/services/room-api/room-api.service';
 import { PlayerType } from '../player/player';
+import { RoomApiService } from '../../services/room-api/room-api.service';
 
 describe('WebsocketNegotiator', () => {
 
