@@ -2,8 +2,8 @@ import ChessBoardHelper, { FenBoard, SafeBoard } from './chess-board-helper';
 import Vec2 from 'vec2';
 import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rules';
 import { FenPiece, PieceColor, PieceType } from '../classes/chess/rules/chess-rules';
-import { Column, Row } from '../classes/chess/interfaces/CoordinateMove';
-import { FenCoordinate } from '../classes/chess/interfaces/move';
+import CoordinateMove, { Column, Row } from '../classes/chess/interfaces/CoordinateMove';
+import Move, { FenCoordinate, FenColumn, FenRow } from '../classes/chess/interfaces/move';
 
 describe('ChessHelper', () => {
 
@@ -495,5 +495,25 @@ describe('ChessHelper', () => {
         // Then
         expect(resultH).toEqual(Column.H);
         expect(resultA).toEqual(Column.A);
+    });
+
+    it('should convert CoordinateMove to Move', () => {
+        // Given
+
+        const coordinateMove: CoordinateMove = {
+            from: [Column.B, Row._3],
+            to: [Column.C, Row._5]
+        };
+        const expectedMove: Move = {
+            from: [FenColumn.B, FenRow._3],
+            to: [FenColumn.C, FenRow._5]
+        };
+
+        // When
+
+        const move: Move = ChessBoardHelper.fromCoordinateMoveToMove(coordinateMove);
+
+        // Then
+        expect(move).toEqual(expectedMove);
     });
 });

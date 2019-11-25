@@ -9,10 +9,11 @@ import { PieceColor } from '../rules/chess-rules';
 import { Coordinate, Column, Row } from '../interfaces/CoordinateMove';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import ChessBoardHelper from '../../../helpers/chess-board-helper';
+import Move, { FenColumn, FenRow } from '../interfaces/move';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
-    public runMoveTest(color: PieceColor, from: Coordinate, to: Coordinate): boolean {
-        return this.runMove(color, from, to);
+    public runMoveTest(color: PieceColor, move: Move): boolean {
+        return this.runMove(color, move);
     }
 }
 
@@ -68,11 +69,13 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
 
         const color: PieceColor = PieceColor.BLACK;
-        const from: Coordinate = [Column.A, Row._1];
-        const to: Coordinate = [Column.A, Row._1];
+        const move: Move = {
+            from: [FenColumn.A, FenRow._1],
+            to: [FenColumn.A, FenRow._1]
+        };
 
         // When
-        const result: boolean = session.runMoveTest(color, from, to);
+        const result: boolean = session.runMoveTest(color, move);
 
         // Then
         expect(result).toBeFalsy();
@@ -93,11 +96,12 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         gameSpy.isMoveValid.and.returnValue(false);
         const color: PieceColor = PieceColor.BLACK;
-        const from: Coordinate = [Column.A, Row._7];
-        const to: Coordinate = [Column.A, Row._4];
-
+        const move: Move = {
+            from: [FenColumn.A, FenRow._7],
+            to: [FenColumn.A, FenRow._4]
+        };
         // When
-        const result: boolean = session.runMoveTest(color, from, to);
+        const result: boolean = session.runMoveTest(color, move);
 
         // Then
         expect(result).toBeFalsy();
@@ -123,14 +127,16 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
 
         const color: PieceColor = PieceColor.BLACK;
-        const from: Coordinate = [Column.A, Row._7];
-        const to: Coordinate = [Column.A, Row._4];
+        const move: Move = {
+            from: [FenColumn.A, FenRow._7],
+            to: [FenColumn.A, FenRow._4]
+        };
         session.movePreview = undefined;
         gameSpy.isMoveValid.and.returnValue(true);
         gameSpy.runTurn.and.returnValue(false);
 
         // When
-        const result: boolean = session.runMoveTest(color, from, to);
+        const result: boolean = session.runMoveTest(color, move);
 
         // Then
         expect(result).toBeTruthy();
@@ -159,14 +165,16 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
 
         const color: PieceColor = PieceColor.BLACK;
-        const from: Coordinate = [Column.A, Row._7];
-        const to: Coordinate = [Column.A, Row._4];
+        const move: Move = {
+            from: [FenColumn.A, FenRow._7],
+            to: [FenColumn.A, FenRow._4]
+        };
         session.movePreview = undefined;
         gameSpy.isMoveValid.and.returnValue(true);
         gameSpy.runTurn.and.returnValue(false);
 
         // When
-        const result: boolean = session.runMoveTest(color, from, to);
+        const result: boolean = session.runMoveTest(color, move);
 
         // Then
         expect(result).toBeTruthy();
@@ -197,12 +205,16 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         const color: PieceColor = PieceColor.BLACK;
         const from: Coordinate = [Column.A, Row._7];
         const to: Coordinate = [Column.A, Row._4];
+        const move: Move = {
+            from: [FenColumn.A, FenRow._7],
+            to: [FenColumn.A, FenRow._4]
+        };
         session.movePreview = { from, to };
         gameSpy.isMoveValid.and.returnValue(true);
         gameSpy.runTurn.and.returnValue(true);
 
         // When
-        const result: boolean = session.runMoveTest(color, from, to);
+        const result: boolean = session.runMoveTest(color, move);
 
         // Then
         expect(result).toBeTruthy();

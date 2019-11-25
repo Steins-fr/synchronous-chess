@@ -311,6 +311,10 @@ export default abstract class ChessBoardHelper {
         return { from: ChessBoardHelper.fenCoordinateToCoordinate(move.from), to: ChessBoardHelper.fenCoordinateToCoordinate(move.to) };
     }
 
+    public static fromCoordinateMoveToMove(move: CoordinateMove): Move {
+        return { from: ChessBoardHelper.coordinateToFenCoordinate(move.from), to: ChessBoardHelper.coordinateToFenCoordinate(move.to) };
+    }
+
     public static fenCoordinateToVec2(fenCoordinate: FenCoordinate): Vec2 {
         const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
         return new Vec2([coordinate[0], coordinate[1]]);

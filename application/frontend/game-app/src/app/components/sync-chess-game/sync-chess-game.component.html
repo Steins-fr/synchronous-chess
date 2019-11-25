@@ -7,9 +7,31 @@
             [movePreview]="gameSession.movePreview">
         </app-chess-board>
         <div id="right-column">
-            <div>Noir : {{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
+            <div class="player-information black-player">
+                <div class="player-identity">
+                    <app-board-piece [piece]="blackPiece"></app-board-piece>
+                </div>
+                <div>Dernier coup :</div>
+                <div>{{ blackLastMove() || 'aucun'}}</div>
+                <div>{{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
+                <button *ngIf="displayBlackSkipButton()" mat-stroked-button color="primary" class="skip-button"
+                    (click)="skip()">
+                    Passer
+                </button>
+            </div>
             <div>Tour : {{ turnType() }}</div>
-            <div>Blanc : {{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
+            <div class="player-information white-player">
+                <button *ngIf="displayWhiteSkipButton()" mat-stroked-button color="primary" class="skip-button"
+                    (click)="skip()">
+                    Passer
+                </button>
+                <div>{{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
+                <div>Dernier coup :</div>
+                <div>{{ whiteLastMove() || 'aucun'}}</div>
+                <div class="player-identity">
+                    <app-board-piece [piece]="whitePiece"></app-board-piece>
+                </div>
+            </div>
         </div>
     </div>
     <div class="player">Joueur Blanc : {{ gameSession.configuration.whitePlayer || 'En attente' }}</div>

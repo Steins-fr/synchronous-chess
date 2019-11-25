@@ -30,6 +30,10 @@ export default class SynchronousChessGame {
         this._fenBoard = ChessBoardHelper.cloneBoard(fenBoard);
     }
 
+    public lastMoveTurnAction(): MoveTurnAction | null {
+        return this.oldTurn ? this.oldTurn.action : null;
+    }
+
     public getTurnType(): TurnType {
         return this.turn.type;
     }
@@ -73,8 +77,8 @@ export default class SynchronousChessGame {
         return this.getPossiblePlays(from).some((posPlay: Vec2) => posPlay.equal(to.x, to.y));
     }
 
-    public registerMove(move: Move, color: PieceColor): boolean {
-        if (this.isMoveValid(move) === false) {
+    public registerMove(move: Move | null, color: PieceColor): boolean {
+        if (move !== null && this.isMoveValid(move) === false) {
             return false;
         }
 

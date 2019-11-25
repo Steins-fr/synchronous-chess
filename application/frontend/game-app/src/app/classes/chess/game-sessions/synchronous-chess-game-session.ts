@@ -33,22 +33,19 @@ export default abstract class SynchronousChessGameSession {
         return this.game.fenBoard;
     }
 
-    protected runMove(color: PieceColor, from: Coordinate, to: Coordinate): boolean {
-        if (ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPieceByVec(this.game.fenBoard, new Vec2(from))) !== color) {
-            return false;
-        }
+    protected runMove(color: PieceColor, move: Move | null): boolean {
+        if (move !== null) {
+            if (ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from)) !== color) {
+                return false;
+            }
 
-        const move: Move = {
-            from: ChessBoardHelper.coordinateToFenCoordinate(from),
-            to: ChessBoardHelper.coordinateToFenCoordinate(to)
-        };
+            if (this.game.isMoveValid(move) === false) {
+                return false;
+            }
 
-        if (this.game.isMoveValid(move) === false) {
-            return false;
-        }
-
-        if (color === this.myColor) {
-            this.movePreview = ChessBoardHelper.fromMoveToCoordinateMove(move);
+            if (color === this.myColor) {
+                this.movePreview = ChessBoardHelper.fromMoveToCoordinateMove(move);
+            }
         }
 
         this.game.registerMove(move, color);
@@ -59,5 +56,5 @@ export default abstract class SynchronousChessGameSession {
         return true;
     }
 
-    public abstract move(from: Coordinate, to: Coordinate): void;
+    public abstract move(move: Move | null): void;
 }

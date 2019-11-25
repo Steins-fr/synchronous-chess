@@ -5,6 +5,7 @@ import SynchronousChessGameSession from './synchronous-chess-game-session';
 import { RoomManager } from '../../room-manager/room-manager';
 import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
 import { Coordinate } from '../interfaces/CoordinateMove';
+import Move from '../interfaces/move';
 
 export enum SCGameSessionType {
     CONFIGURATION = 'SC_GS_configuration',
@@ -12,8 +13,7 @@ export enum SCGameSessionType {
 }
 
 export interface PlayMessage {
-    from: Coordinate;
-    to: Coordinate;
+    move: Move | null;
 }
 
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
@@ -64,14 +64,14 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
         const playMessage: PlayMessage = message.payload;
         // Call parent play to prevent re-emit
-        this.ngZone.run(() => this.runMove(this.playerColor(message.from), playMessage.from, playMessage.to));
+        this.ngZone.run(() => this.runMove(this.playerColor(message.from), playMessage.move));
     }
 
-    public move(from: Coordinate, to: Coordinate): void {
+    public move(move: Move | null): void {
         const playerName: string = this.roomService.localPlayer.name;
 
-        if (this.isPlaying(playerName) && this.runMove(this.playerColor(playerName), from, to)) {
-            const playMessage: PlayMessage = { from, to };
+        if (this.isPlaying(playerName) && this.runMove(this.playerColor(playerName), move)) {
+            const playMessage: PlayMessage = { move };
             this.roomService.transmitMessage(SCGameSessionType.PLAY, playMessage);
         }
     }
