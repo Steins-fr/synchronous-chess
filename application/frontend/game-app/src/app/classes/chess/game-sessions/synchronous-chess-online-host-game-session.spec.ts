@@ -12,6 +12,7 @@ import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
 import { SCGameSessionType, PlayMessage } from './synchronous-chess-online-game-session';
 import MessageOriginType from '../../webrtc/messages/message-origin.types';
 import ChessBoardHelper from '../../../helpers/chess-board-helper';
+import Move, { FenColumn, FenRow } from '../interfaces/move';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
     public onMoveTest(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
@@ -123,9 +124,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
+        const move: Move = {
+            from: [FenColumn.B, FenRow._7],
+            to: [FenColumn.B, FenRow._6]
+        };
 
         // When
-        session.move([1, 1], [1, 2]);
+        session.move(move);
 
         // Then
         expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(1);
@@ -153,9 +158,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
+        const move: Move = {
+            from: [FenColumn.B, FenRow._7],
+            to: [FenColumn.B, FenRow._2]
+        };
 
         // When
-        session.move([1, 1], [1, 6]);
+        session.move(move);
 
         // Then
         expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(0);
@@ -174,11 +183,15 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: runMoveSpy,
             writable: false
         });
+        const move: Move = {
+            from: [FenColumn.C, FenRow._6],
+            to: [FenColumn.C, FenRow._5]
+        };
         const message: RoomServiceMessage<SCGameSessionType, PlayMessage> = {
             from: 'a',
             origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
-            payload: { from: [2, 2], to: [2, 3] }
+            payload: { move }
         };
         // When
         session.onMoveTest(message);
@@ -197,11 +210,15 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: runMoveSpy,
             writable: false
         });
+        const move: Move = {
+            from: [FenColumn.C, FenRow._6],
+            to: [FenColumn.C, FenRow._5]
+        };
         const message: RoomServiceMessage<SCGameSessionType, PlayMessage> = {
             from: 'C',
             origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
-            payload: { from: [2, 2], to: [2, 3] }
+            payload: { move }
         };
         // When
         session.onMoveTest(message);

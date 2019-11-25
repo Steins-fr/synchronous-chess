@@ -12,4 +12,8 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
 
     }
 
+    public skip(): void {
+
+    }
+
 }

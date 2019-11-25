@@ -98,7 +98,7 @@ export abstract class RoomManager {
     }
 
     private subscribeOnDisconnected(player: Player): void {
-        player.notifier.follow(PlayerEventType.DISCONNECTED, this, (playerEvent: PlayerEvent<Message>) => {
+        player.notifier.follow(PlayerEventType.DISCONNECTED, this, (playerEvent: PlayerEvent) => {
             if (this.players.has(playerEvent.name)) {
                 const p: Player = this.players.get(playerEvent.name);
                 this.onPlayerDisconnected(p);

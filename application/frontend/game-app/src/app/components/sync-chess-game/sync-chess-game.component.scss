@@ -21,6 +21,27 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+
+            .player-information {
+                display: flex;
+                flex-direction: column;
+                height: 200px;
+                text-align: center;
+
+                .skip-button {
+                    margin-left: 0;
+                    margin-right: 0;
+                }
+
+                .player-identity {
+                    width: 90px;
+                    height: 90px;
+                }
+
+                &.white-player {
+                    justify-content: flex-end;
+                }
+            }
         }
     }
 }
