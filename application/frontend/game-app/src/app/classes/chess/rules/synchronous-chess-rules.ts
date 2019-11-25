@@ -8,7 +8,7 @@ import { DoNotApprocheMovementCondition } from '../movements/movement-conditions
 import { SafeMovementCondition } from '../movements/movement-conditions/safe-movement-condition';
 import Movement from '../movements/movement';
 import { Row } from '../interfaces/CoordinateMove';
-import ChessBoardHelper, { FenBoard, SafeBoard } from 'src/app/helpers/chess-board-helper';
+import ChessBoardHelper, { FenBoard, SafeBoard } from '../../../helpers/chess-board-helper';
 import { FenCoordinate } from '../interfaces/move';
 
 export default class SynchronousChessRules extends ChessRules {
