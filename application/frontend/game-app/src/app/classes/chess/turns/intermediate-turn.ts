@@ -6,7 +6,9 @@ import { PieceColor } from '../rules/chess-rules';
 
 export class IntermediateTurn extends Turn<IntermediateTurnAction> {
 
-    public constructor(public action: IntermediateTurnAction) {
+    public constructor(public action: IntermediateTurnAction,
+        public readonly lastWhiteMove: Move | null = null,
+        public readonly lastBlackMove: Move | null = null) {
         super(TurnType.INTERMEDIATE);
         if (this.action.blackTarget === null) {
             this.action.blackMove = null;

@@ -8,6 +8,7 @@ import Turn from '../turns/turn';
 import TurnType from '../turns/turn.types';
 import SynchroneTurnAction from '../turns/turn-actions/synchrone-turn-action';
 import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-action';
+import { IntermediateTurn } from '../turns/intermediate-turn';
 
 class ProtectedTest extends SynchronousChessGame {
     public runSynchroneTurnTest(): void {
@@ -1448,21 +1449,10 @@ describe('SynchronousChessGame', () => {
             blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
         };
         const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
 
-        Object.defineProperty(turnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(oldTurnSpy, 'action', {
-            value: oldAction,
-            writable: false
-        });
         Object.defineProperty(game, 'turn', {
-            value: turnSpy,
-            writable: true
-        });
-        Object.defineProperty(game, 'oldTurn', {
-            value: oldTurnSpy,
+            value: turn,
             writable: true
         });
 
