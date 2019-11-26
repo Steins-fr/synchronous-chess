@@ -11,7 +11,7 @@ describe('IntermediateTurn', () => {
         const turn: Turn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
 
         expect(turn).toBeTruthy();
-        expect(turn.type).toEqual(TurnType.INTERMEDIATE);
+        expect(turn.type).toEqual(TurnType.MOVE_INTERMEDIATE);
     });
 
     it('canBeExecuted should return false if the action is not filled', () => {

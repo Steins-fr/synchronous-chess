@@ -1,15 +1,15 @@
 import IntermediateTurnAction from './turn-actions/intermediate-turn-action';
-import Turn from './turn';
 import TurnType from './turn.types';
 import Move from '../interfaces/move';
 import { PieceColor } from '../rules/chess-rules';
+import MoveTurn from './move-turn';
 
-export class IntermediateTurn extends Turn<IntermediateTurnAction> {
+export class IntermediateTurn extends MoveTurn<IntermediateTurnAction> {
 
     public constructor(public action: IntermediateTurnAction,
         public readonly lastWhiteMove: Move | null = null,
         public readonly lastBlackMove: Move | null = null) {
-        super(TurnType.INTERMEDIATE);
+        super(TurnType.MOVE_INTERMEDIATE);
         if (this.action.blackTarget === null) {
             this.action.blackMove = null;
         }

@@ -11,7 +11,7 @@ describe('SynchroneTurn', () => {
         const turn: Turn = new SynchroneTurn();
 
         expect(turn).toBeTruthy();
-        expect(turn.type).toEqual(TurnType.SYNCHRONE);
+        expect(turn.type).toEqual(TurnType.MOVE_SYNCHRONE);
     });
 
     it('canBeExecuted should return false if the action is not filled', () => {

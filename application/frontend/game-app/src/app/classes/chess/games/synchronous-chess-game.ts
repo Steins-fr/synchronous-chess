@@ -6,10 +6,11 @@ import Move, { FenColumn, FenCoordinate } from '../interfaces/move';
 import { Column } from '../interfaces/CoordinateMove';
 import Turn from '../turns/turn';
 import SynchroneTurn from '../turns/synchrone-turn';
-import TurnType from '../turns/turn.types';
+import TurnType, { TurnCategory } from '../turns/turn.types';
 import MoveTurnAction from '../turns/turn-actions/move-turn-action';
 import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-action';
 import { IntermediateTurn } from '../turns/intermediate-turn';
+import MoveTurn from '../turns/move-turn';
 
 export default class SynchronousChessGame {
     private _fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
@@ -78,11 +79,16 @@ export default class SynchronousChessGame {
     }
 
     public registerMove(move: Move | null, color: PieceColor): boolean {
+        if (this.turn.category !== TurnCategory.MOVE) {
+            return false;
+        }
+        const moveTurn: MoveTurn = this.turn as MoveTurn;
+
         if (move !== null && this.isMoveValid(move) === false) {
             return false;
         }
 
-        this.turn.registerMove(move, color);
+        moveTurn.registerMove(move, color);
 
         return true;
     }
@@ -97,10 +103,10 @@ export default class SynchronousChessGame {
         }
 
         switch (this.turn.type) {
-            case TurnType.INTERMEDIATE:
+            case TurnType.MOVE_INTERMEDIATE:
                 this.runIntermediateTurn();
                 break;
-            case TurnType.SYNCHRONE:
+            case TurnType.MOVE_SYNCHRONE:
                 this.runSynchroneTurn();
                 break;
         }
@@ -126,7 +132,7 @@ export default class SynchronousChessGame {
 
         this.oldTurn = this.turn;
 
-        if (turnType === TurnType.SYNCHRONE || turnType === TurnType.INTERMEDIATE) {
+        if (turnType === TurnType.MOVE_SYNCHRONE || turnType === TurnType.MOVE_INTERMEDIATE) {
             const { whiteMove, blackMove }: MoveTurnAction = this.turn.action;
             const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard, blackMove ? blackMove.to : undefined);
             const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard, whiteMove ? whiteMove.to : undefined);
@@ -149,8 +155,8 @@ export default class SynchronousChessGame {
 
     protected isTurnValid(): boolean {
         switch (this.turn.type) {
-            case TurnType.INTERMEDIATE:
-            case TurnType.SYNCHRONE:
+            case TurnType.MOVE_INTERMEDIATE:
+            case TurnType.MOVE_SYNCHRONE:
                 const action: MoveTurnAction = this.turn.action;
                 const { whiteMove, blackMove }: MoveTurnAction = action;
                 return (whiteMove === null || this.isMoveValid(whiteMove)) &&
@@ -265,9 +271,9 @@ export default class SynchronousChessGame {
         const possiblePlays: Array<Vec2> = rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard));
 
         switch (this.turn.type) {
-            case TurnType.INTERMEDIATE:
+            case TurnType.MOVE_INTERMEDIATE:
                 return this.getIntermediateTurnPossiblePlays(possiblePlays, position);
-            case TurnType.SYNCHRONE:
+            case TurnType.MOVE_SYNCHRONE:
             default:
                 return possiblePlays;
         }
