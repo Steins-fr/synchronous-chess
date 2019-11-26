@@ -2,21 +2,25 @@ import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-ho
 import { RoomService } from '../../../services/room/room.service';
 import { RoomManager } from '../../room-manager/room-manager';
 import { NotifierFlow } from '../../notifier/notifier';
-import { PieceColor } from '../rules/chess-rules';
+import { PieceColor, PieceType } from '../rules/chess-rules';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import { NgZone } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Player, PlayerType } from '../../player/player';
 import { SessionConfiguration } from './synchronous-chess-game-session';
 import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
-import { SCGameSessionType, PlayMessage } from './synchronous-chess-online-game-session';
+import { SCGameSessionType, PlayMessage, PromotionMessage } from './synchronous-chess-online-game-session';
 import MessageOriginType from '../../webrtc/messages/message-origin.types';
 import ChessBoardHelper from '../../../helpers/chess-board-helper';
 import Move, { FenColumn, FenRow } from '../interfaces/move';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
-    public onMoveTest(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
-        this.onMove(message);
+    public onMove(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
+        super.onMove(message);
+    }
+
+    public onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
+        super.onPromotion(message);
     }
 }
 
@@ -105,7 +109,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         expect(color4).toEqual(PieceColor.NONE);
     });
 
-    it('should return true on valid play', () => {
+    it('move should return true on valid play', () => {
         // Given
         Object.defineProperty(roomServiceSpy, 'localPlayer', {
             value: { name: 'b' },
@@ -119,7 +123,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: gameSpy,
             writable: false
         });
-        gameSpy.isMoveValid.and.returnValue(true);
+        gameSpy.registerMove.and.returnValue(true);
         Object.defineProperty(gameSpy, 'fenBoard', {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
@@ -131,15 +135,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
         // When
         session.move(move);
-
         // Then
         expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(1);
-        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
     });
 
-    it('should return false on invalid move', () => {
+    it('move should return false on invalid move', () => {
         // Given
         Object.defineProperty(roomServiceSpy, 'localPlayer', {
             value: { name: 'b' },
@@ -153,7 +155,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: gameSpy,
             writable: false
         });
-        gameSpy.isMoveValid.and.returnValue(false);
+        gameSpy.registerMove.and.returnValue(false);
         Object.defineProperty(gameSpy, 'fenBoard', {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
@@ -168,8 +170,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
         // Then
         expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(0);
-        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
-        expect(gameSpy.registerMove.calls.count()).toEqual(0);
+        expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(0);
     });
 
@@ -194,7 +195,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             payload: { move }
         };
         // When
-        session.onMoveTest(message);
+        session.onMove(message);
 
         // Then
         expect(runMoveSpy.calls.count()).toEqual(1);
@@ -221,7 +222,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             payload: { move }
         };
         // When
-        session.onMoveTest(message);
+        session.onMove(message);
 
         // Then
         expect(runMoveSpy.calls.count()).toEqual(0);
@@ -299,5 +300,104 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         expect(inter1Configuration.spectatorNumber).toEqual(2);
         expect(inter2Configuration.spectatorNumber).toEqual(2);
         expect(endConfiguration.spectatorNumber).toEqual(0);
+    });
+
+    it('promote should return true on valid play', () => {
+        // Given
+        Object.defineProperty(roomServiceSpy, 'localPlayer', {
+            value: { name: 'b' },
+            writable: false
+        });
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, undefined);
+        session.configuration.whitePlayer = 'a';
+        session.configuration.blackPlayer = 'b';
+        Object.defineProperty(session, 'game', {
+            value: gameSpy,
+            writable: false
+        });
+        gameSpy.promote.and.returnValue(true);
+        const pieceType: PieceType = PieceType.QUEEN;
+
+        // When
+        session.promote(pieceType);
+        // Then
+        expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(1);
+        expect(gameSpy.promote.calls.count()).toEqual(1);
+        expect(gameSpy.runTurn.calls.count()).toEqual(1);
+    });
+
+    it('promote should return false on invalid move', () => {
+        // Given
+        Object.defineProperty(roomServiceSpy, 'localPlayer', {
+            value: { name: 'b' },
+            writable: false
+        });
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, undefined);
+        session.configuration.whitePlayer = 'a';
+        session.configuration.blackPlayer = 'b';
+        Object.defineProperty(session, 'game', {
+            value: gameSpy,
+            writable: false
+        });
+        gameSpy.promote.and.returnValue(false);
+        const pieceType: PieceType = PieceType.QUEEN;
+
+        // When
+        session.promote(pieceType);
+
+        // Then
+        expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(0);
+        expect(gameSpy.promote.calls.count()).toEqual(1);
+        expect(gameSpy.runTurn.calls.count()).toEqual(0);
+    });
+
+    it('should run promote from a remote playing player', () => {
+        // Given
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
+        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
+
+        Object.defineProperty(session, 'runPromotion', {
+            value: runPromotionSpy,
+            writable: false
+        });
+        const pieceType: PieceType = PieceType.QUEEN;
+        const message: RoomServiceMessage<SCGameSessionType, PromotionMessage> = {
+            from: 'a',
+            origin: MessageOriginType.ROOM_SERVICE,
+            type: SCGameSessionType.PLAY,
+            payload: { pieceType }
+        };
+        // When
+        session.onPromotion(message);
+
+        // Then
+        expect(runPromotionSpy.calls.count()).toEqual(1);
+    });
+
+    it('should not run promote from a remote spectator', () => {
+        // Given
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
+        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
+
+        Object.defineProperty(session, 'runPromotion', {
+            value: runPromotionSpy,
+            writable: false
+        });
+        const pieceType: PieceType = PieceType.QUEEN;
+        const message: RoomServiceMessage<SCGameSessionType, PromotionMessage> = {
+            from: 'C',
+            origin: MessageOriginType.ROOM_SERVICE,
+            type: SCGameSessionType.PLAY,
+            payload: { pieceType }
+        };
+        // When
+        session.onPromotion(message);
+
+        // Then
+        expect(runPromotionSpy.calls.count()).toEqual(0);
     });
 });

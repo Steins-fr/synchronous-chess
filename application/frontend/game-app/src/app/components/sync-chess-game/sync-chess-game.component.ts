@@ -8,7 +8,7 @@ import { RoomMessage } from '../../classes/webrtc/messages/room-message';
 import SynchronousChessGameSessionBuilder from '../../classes/chess/game-sessions/synchronous-chess-game-session-builder';
 import { RoomManager } from '../../classes/room-manager/room-manager';
 import CoordinateMove, { Coordinate } from '../../classes/chess/interfaces/CoordinateMove';
-import TurnType from '../../classes/chess/turns/turn.types';
+import TurnType, { TurnCategory } from '../../classes/chess/turns/turn.types';
 import { PieceColor, FenPiece } from '../../classes/chess/rules/chess-rules';
 import MoveTurnAction from 'src/app/classes/chess/turns/turn-actions/move-turn-action';
 import Move from 'src/app/classes/chess/interfaces/move';
@@ -25,6 +25,8 @@ export class SyncChessGameComponent implements OnInit {
     public validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
     public blackPiece: FenPiece = FenPiece.BLACK_KING;
     public whitePiece: FenPiece = FenPiece.WHITE_KING;
+    public whiteColor: PieceColor = PieceColor.WHITE;
+    public blackColor: PieceColor = PieceColor.BLACK;
 
     public constructor(
         public roomService: RoomService,
@@ -74,9 +76,23 @@ export class SyncChessGameComponent implements OnInit {
                 return 'Synchronisé';
             case TurnType.MOVE_INTERMEDIATE:
                 return 'Intermédiaire';
+            case TurnType.CHOICE_PROMOTION:
+                return 'Promotion';
             default:
                 return '';
         }
+    }
+
+    public isMoveTurn(): boolean {
+        return this.gameSession.game.getTurnCategory() === TurnCategory.MOVE;
+    }
+
+    public moveColor(): PieceColor {
+        return this.isMoveTurn() ? this.gameSession.playingColor : PieceColor.NONE;
+    }
+
+    public isPromotion(): boolean {
+        return this.gameSession.game.getTurnType() === TurnType.CHOICE_PROMOTION;
     }
 
     public whiteHasPlayed(): boolean {
@@ -107,11 +123,11 @@ export class SyncChessGameComponent implements OnInit {
         return action === null ? '' : this.formatLastMove(action.blackMove);
     }
 
-    public displayBlackSkipButton(): boolean {
+    public displayBlackInteractions(): boolean {
         return this.gameSession.playingColor === PieceColor.BLACK;
     }
 
-    public displayWhiteSkipButton(): boolean {
+    public displayWhiteInteractions(): boolean {
         return this.gameSession.playingColor === PieceColor.WHITE;
     }
 

@@ -5,15 +5,19 @@ import { RoomManager } from '../../room-manager/room-manager';
 import { TestBed } from '@angular/core/testing';
 import { NgZone } from '@angular/core';
 import { SessionConfiguration } from './synchronous-chess-game-session';
-import { PieceColor } from '../rules/chess-rules';
+import { PieceColor, PieceType } from '../rules/chess-rules';
 import { Coordinate, Column, Row } from '../interfaces/CoordinateMove';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import ChessBoardHelper from '../../../helpers/chess-board-helper';
 import Move, { FenColumn, FenRow } from '../interfaces/move';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
-    public runMoveTest(color: PieceColor, move: Move): boolean {
-        return this.runMove(color, move);
+    public runMove(color: PieceColor, move: Move): boolean {
+        return super.runMove(color, move);
+    }
+
+    public runPromotion(color: PieceColor, pieceType: PieceType): boolean {
+        return super.runPromotion(color, pieceType);
     }
 }
 
@@ -75,7 +79,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         };
 
         // When
-        const result: boolean = session.runMoveTest(color, move);
+        const result: boolean = session.runMove(color, move);
 
         // Then
         expect(result).toBeFalsy();
@@ -94,18 +98,18 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
 
-        gameSpy.isMoveValid.and.returnValue(false);
+        gameSpy.registerMove.and.returnValue(false);
         const color: PieceColor = PieceColor.BLACK;
         const move: Move = {
             from: [FenColumn.A, FenRow._7],
             to: [FenColumn.A, FenRow._4]
         };
         // When
-        const result: boolean = session.runMoveTest(color, move);
+        const result: boolean = session.runMove(color, move);
 
         // Then
         expect(result).toBeFalsy();
-        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
+        expect(gameSpy.registerMove.calls.count()).toEqual(1);
     });
 
     it('should set the preview if runMove register my valid move', () => {
@@ -132,15 +136,14 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             to: [FenColumn.A, FenRow._4]
         };
         session.movePreview = undefined;
-        gameSpy.isMoveValid.and.returnValue(true);
+        gameSpy.registerMove.and.returnValue(true);
         gameSpy.runTurn.and.returnValue(false);
 
         // When
-        const result: boolean = session.runMoveTest(color, move);
+        const result: boolean = session.runMove(color, move);
 
         // Then
         expect(result).toBeTruthy();
-        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
         expect(session.movePreview).not.toEqual(undefined);
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
@@ -170,15 +173,14 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             to: [FenColumn.A, FenRow._4]
         };
         session.movePreview = undefined;
-        gameSpy.isMoveValid.and.returnValue(true);
+        gameSpy.registerMove.and.returnValue(true);
         gameSpy.runTurn.and.returnValue(false);
 
         // When
-        const result: boolean = session.runMoveTest(color, move);
+        const result: boolean = session.runMove(color, move);
 
         // Then
         expect(result).toBeTruthy();
-        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
         expect(session.movePreview).toEqual(undefined);
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
@@ -210,17 +212,62 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             to: [FenColumn.A, FenRow._4]
         };
         session.movePreview = { from, to };
-        gameSpy.isMoveValid.and.returnValue(true);
+        gameSpy.registerMove.and.returnValue(true);
         gameSpy.runTurn.and.returnValue(true);
 
         // When
-        const result: boolean = session.runMoveTest(color, move);
+        const result: boolean = session.runMove(color, move);
 
         // Then
         expect(result).toBeTruthy();
-        expect(gameSpy.isMoveValid.calls.count()).toEqual(1);
         expect(session.movePreview).toEqual(undefined);
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
+    });
+
+    it('runPromotion should return false if promote failed', () => {
+        // Given
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
+        Object.defineProperty(gameSpy, 'fenBoard', {
+            value: ChessBoardHelper.createFenBoard(),
+            writable: false
+        });
+        gameSpy.promote.and.returnValue(false);
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        Object.defineProperty(session, 'game', {
+            value: gameSpy,
+            writable: false
+        });
+
+        const color: PieceColor = PieceColor.BLACK;
+        const pieceType: PieceType = PieceType.QUEEN;
+        // When
+        const result: boolean = session.runPromotion(color, pieceType);
+
+        // Then
+        expect(result).toBeFalsy();
+    });
+
+    it('runPromotion should return false if promote succeed', () => {
+        // Given
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
+        Object.defineProperty(gameSpy, 'fenBoard', {
+            value: ChessBoardHelper.createFenBoard(),
+            writable: false
+        });
+        gameSpy.promote.and.returnValue(true);
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        Object.defineProperty(session, 'game', {
+            value: gameSpy,
+            writable: false
+        });
+
+        const color: PieceColor = PieceColor.BLACK;
+        const pieceType: PieceType = PieceType.QUEEN;
+        // When
+        const result: boolean = session.runPromotion(color, pieceType);
+
+        // Then
+        expect(result).toBeTruthy();
     });
 });

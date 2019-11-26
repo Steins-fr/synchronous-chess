@@ -1,5 +1,5 @@
 import { NgZone } from '@angular/core';
-import { PieceColor } from '../rules/chess-rules';
+import { PieceColor, PieceType } from '../rules/chess-rules';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
 import Vec2 from 'vec2';
@@ -34,21 +34,18 @@ export default abstract class SynchronousChessGameSession {
     }
 
     protected runMove(color: PieceColor, move: Move | null): boolean {
-        if (move !== null) {
-            if (ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from)) !== color) {
-                return false;
-            }
-
-            if (this.game.isMoveValid(move) === false) {
-                return false;
-            }
-
-            if (color === this.myColor) {
-                this.movePreview = ChessBoardHelper.fromMoveToCoordinateMove(move);
-            }
+        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from)) !== color) {
+            return false;
         }
 
-        this.game.registerMove(move, color);
+        if (this.game.registerMove(move, color) === false) {
+            return false;
+        }
+
+        if (move !== null && color === this.myColor) {
+            this.movePreview = ChessBoardHelper.fromMoveToCoordinateMove(move);
+        }
+
         if (this.game.runTurn()) {
             this.movePreview = undefined;
         }
@@ -56,5 +53,16 @@ export default abstract class SynchronousChessGameSession {
         return true;
     }
 
+    protected runPromotion(color: PieceColor, pieceType: PieceType): boolean {
+
+        if (this.game.promote(pieceType, color) === false) {
+            return false;
+        }
+
+        this.game.runTurn();
+        return true;
+    }
+
     public abstract move(move: Move | null): void;
+    public abstract promote(pieceType: PieceType): void;
 }

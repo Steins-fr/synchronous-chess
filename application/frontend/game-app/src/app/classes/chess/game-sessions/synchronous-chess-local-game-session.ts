@@ -16,4 +16,8 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
 
     }
 
+    public promote(): void {
+
+    }
+
 }

@@ -21,9 +21,9 @@ export default class PromotionTurn extends ChoiceTurn<PromotionTurnAction> {
     }
 
     public registerChoice(piece: PieceType, color: PieceColor): void {
-        if (color === PieceColor.WHITE) {
+        if (color === PieceColor.WHITE && this.action.whiteFenCoordinate !== null) {
             this.action.whitePiece = piece;
-        } else if (color === PieceColor.BLACK) {
+        } else if (color === PieceColor.BLACK && this.action.blackFenCoordinate !== null) {
             this.action.blackPiece = piece;
         }
     }

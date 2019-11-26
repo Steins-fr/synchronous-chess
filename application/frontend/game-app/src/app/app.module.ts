@@ -31,6 +31,7 @@ import { SyncChessGameComponent } from './components/sync-chess-game/sync-chess-
 import { ChatPageComponent } from './pages/chat-page/chat-page.component';
 import { SynchronousChessPageComponent } from './pages/synchronous-chess-page/synchronous-chess-page.component';
 import { RoomLayoutComponent } from './layouts/room-layout/room-layout.component';
+import { PromotionComponent } from './components/chess/promotion/promotion.component';
 
 
 @NgModule({
@@ -48,7 +49,8 @@ import { RoomLayoutComponent } from './layouts/room-layout/room-layout.component
         SyncChessGameComponent,
         ChatPageComponent,
         SynchronousChessPageComponent,
-        RoomLayoutComponent
+        RoomLayoutComponent,
+        PromotionComponent
     ],
     imports: [
         BrowserModule,

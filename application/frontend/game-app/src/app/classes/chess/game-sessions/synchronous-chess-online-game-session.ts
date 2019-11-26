@@ -1,6 +1,6 @@
 import { RoomService } from '../../../services/room/room.service';
 import { NgZone } from '@angular/core';
-import { PieceColor } from '../rules/chess-rules';
+import { PieceColor, PieceType } from '../rules/chess-rules';
 import SynchronousChessGameSession from './synchronous-chess-game-session';
 import { RoomManager } from '../../room-manager/room-manager';
 import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
@@ -9,11 +9,16 @@ import Move from '../interfaces/move';
 
 export enum SCGameSessionType {
     CONFIGURATION = 'SC_GS_configuration',
-    PLAY = 'SC_GS_play'
+    PLAY = 'SC_GS_play',
+    PROMOTION = 'SC_GS_promotion'
 }
 
 export interface PlayMessage {
     move: Move | null;
+}
+
+export interface PromotionMessage {
+    pieceType: PieceType;
 }
 
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
@@ -21,6 +26,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     public constructor(protected readonly roomService: RoomService, protected readonly roomManager: RoomManager, ngZone: NgZone) {
         super(ngZone);
         this.roomService.notifier.follow(SCGameSessionType.PLAY, this, this.onMove.bind(this));
+        this.roomService.notifier.follow(SCGameSessionType.PROMOTION, this, this.onPromotion.bind(this));
     }
 
     public get myColor(): PieceColor {
@@ -73,6 +79,27 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         if (this.isPlaying(playerName) && this.runMove(this.playerColor(playerName), move)) {
             const playMessage: PlayMessage = { move };
             this.roomService.transmitMessage(SCGameSessionType.PLAY, playMessage);
+        }
+    }
+
+    protected onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
+        // Prevent reception of move from spectator
+        if (this.isPlaying(message.from) === false) {
+            return;
+        }
+
+        const promotionMessage: PromotionMessage = message.payload;
+
+        // Call parent play to prevent re-emit
+        this.ngZone.run(() => this.runPromotion(this.playerColor(message.from), promotionMessage.pieceType));
+    }
+
+    public promote(pieceType: PieceType): void {
+        const playerName: string = this.roomService.localPlayer.name;
+
+        if (this.isPlaying(playerName) && this.runPromotion(this.playerColor(playerName), pieceType)) {
+            const promotionMessage: PromotionMessage = { pieceType };
+            this.roomService.transmitMessage(SCGameSessionType.PROMOTION, promotionMessage);
         }
     }
 }
