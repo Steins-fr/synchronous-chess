@@ -137,7 +137,7 @@ export default class SynchronousChessGame {
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
-                this.turn = new IntermediateTurn(intermediateAction);
+                this.turn = new IntermediateTurn(intermediateAction, whiteMove, blackMove);
             }
         }
 
@@ -236,18 +236,18 @@ export default class SynchronousChessGame {
 
     protected getIntermediateTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
         const fenPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
-        const intermediateAction: IntermediateTurnAction = this.turn.action as IntermediateTurnAction;
+        const intermediateTurn: IntermediateTurn = this.turn as IntermediateTurn;
+        const intermediateAction: IntermediateTurnAction = intermediateTurn.action;
         const target: FenCoordinate = ChessBoardHelper.pieceColor(fenPiece) === PieceColor.WHITE ? intermediateAction.whiteTarget : intermediateAction.blackTarget;
 
-        if (this.oldTurn !== undefined) { // Piece that has moved at the previous turn can't move during intermediate turn!
-            const { whiteMove, blackMove }: MoveTurnAction = this.oldTurn.action;
-            const whiteLastMovedPiece: Vec2 | undefined = whiteMove ? ChessBoardHelper.fenCoordinateToVec2(whiteMove.to) : undefined;
-            const blackLastMovedPiece: Vec2 | undefined = blackMove ? ChessBoardHelper.fenCoordinateToVec2(blackMove.to) : undefined;
+        const lastWhiteMove: Move | null = intermediateTurn.lastWhiteMove;
+        const lastBlackMove: Move | null = intermediateTurn.lastBlackMove;
+        const whiteLastMovedPiece: Vec2 | null = lastWhiteMove ? ChessBoardHelper.fenCoordinateToVec2(lastWhiteMove.to) : null;
+        const blackLastMovedPiece: Vec2 | null = lastBlackMove ? ChessBoardHelper.fenCoordinateToVec2(lastBlackMove.to) : null;
 
-            if ((whiteLastMovedPiece && position.equal(whiteLastMovedPiece.x, whiteLastMovedPiece.y))
-                || (blackLastMovedPiece && position.equal(blackLastMovedPiece.x, blackLastMovedPiece.y))) {
-                return [];
-            }
+        if ((whiteLastMovedPiece && position.equal(whiteLastMovedPiece.x, whiteLastMovedPiece.y))
+            || (blackLastMovedPiece && position.equal(blackLastMovedPiece.x, blackLastMovedPiece.y))) {
+            return [];
         }
 
         if (target === null) {
