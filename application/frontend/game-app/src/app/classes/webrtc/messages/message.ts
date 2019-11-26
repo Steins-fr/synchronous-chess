@@ -1,3 +1,3 @@
-export interface Message<U = any> {
+export interface Message<U = unknown> {
     payload: U;
 }
