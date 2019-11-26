@@ -70,9 +70,9 @@ export class SyncChessGameComponent implements OnInit {
 
     public turnType(): string {
         switch (this.gameSession.game.getTurnType()) {
-            case TurnType.SYNCHRONE:
+            case TurnType.MOVE_SYNCHRONE:
                 return 'Synchronisé';
-            case TurnType.INTERMEDIATE:
+            case TurnType.MOVE_INTERMEDIATE:
                 return 'Intermédiaire';
             default:
                 return '';
