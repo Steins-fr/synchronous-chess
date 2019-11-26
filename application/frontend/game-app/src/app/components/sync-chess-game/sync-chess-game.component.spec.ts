@@ -7,6 +7,7 @@ import { RangePipe } from '../../pipes/range.pipe';
 import { Vector2dPipe } from '../../pipes/vector2d.pipe';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { PromotionComponent } from '../chess/promotion/promotion.component';
 
 describe('SyncChessGameComponent', () => {
     let component: SyncChessGameComponent;
@@ -18,6 +19,7 @@ describe('SyncChessGameComponent', () => {
                 SyncChessGameComponent,
                 ChessBoardComponent,
                 PieceComponent,
+                PromotionComponent,
                 RangePipe,
                 Vector2dPipe
             ],

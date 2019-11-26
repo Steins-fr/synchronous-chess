@@ -72,6 +72,20 @@ export default abstract class ChessBoardHelper {
         [FenPiece.WHITE_PAWN, PieceType.PAWN]
     ]);
 
+    private static readonly whitePromotionPieces: Map<PieceType, FenPiece> = new Map<PieceType, FenPiece>([
+        [PieceType.BISHOP, FenPiece.WHITE_BISHOP],
+        [PieceType.KNIGHT, FenPiece.WHITE_KNIGHT],
+        [PieceType.QUEEN, FenPiece.WHITE_QUEEN],
+        [PieceType.ROOK, FenPiece.WHITE_ROOK]
+    ]);
+
+    private static readonly blackPromotionPieces: Map<PieceType, FenPiece> = new Map<PieceType, FenPiece>([
+        [PieceType.BISHOP, FenPiece.BLACK_BISHOP],
+        [PieceType.KNIGHT, FenPiece.BLACK_KNIGHT],
+        [PieceType.QUEEN, FenPiece.BLACK_QUEEN],
+        [PieceType.ROOK, FenPiece.BLACK_ROOK]
+    ]);
+
     private constructor() { }
 
     public static createFenBoard(): FenBoard {
@@ -195,6 +209,16 @@ export default abstract class ChessBoardHelper {
         const board: FenBoard = ChessBoardHelper.cloneBoard(fenBoard);
         board[coordinate[1]][coordinate[0]] = piece;
         return board;
+    }
+
+    public static promote(fenBoard: FenBoard, fenCoordinate: FenCoordinate, pieceType: PieceType, pieceColor: PieceColor): FenBoard {
+        const pieceMap: Map<PieceType, FenPiece> = pieceColor === PieceColor.WHITE ? ChessBoardHelper.whitePromotionPieces : ChessBoardHelper.blackPromotionPieces;
+
+        if (pieceMap.has(pieceType) === false) {
+            return ChessBoardHelper.cloneBoard(fenBoard);
+        }
+        const piece: FenPiece = pieceMap.get(pieceType);
+        return ChessBoardHelper.setFenPiece(fenBoard, fenCoordinate, piece);
     }
 
     private static inverseColor(fenPiece: FenPiece): FenPiece {
