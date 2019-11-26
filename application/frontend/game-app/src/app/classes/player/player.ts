@@ -152,7 +152,7 @@ export class Player {
     private onPeerData(message: Message): void {
         const playerMessage: PlayerMessage = message as PlayerMessage;
         if (playerMessage.origin && playerMessage.origin === MessageOriginType.PLAYER) {
-            this.onPlayerMessage(playerMessage);
+            this.onPlayerMessage(playerMessage as PlayerMessage<string>);
             return;
         }
         this.pushEvent(PlayerEventType.MESSAGE, message);

@@ -1,5 +1,5 @@
 import { RoomMessage } from './room-message';
 
-export interface RoomServiceMessage<T = any, U = any> extends RoomMessage<U> {
+export interface RoomServiceMessage<T = string, U = unknown> extends RoomMessage<U> {
     type: T;
 }
