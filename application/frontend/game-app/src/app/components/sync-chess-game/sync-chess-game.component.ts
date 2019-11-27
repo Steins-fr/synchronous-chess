@@ -124,11 +124,11 @@ export class SyncChessGameComponent implements OnInit {
     }
 
     public displayBlackInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.BLACK;
+        return this.gameSession.playingColor === PieceColor.BLACK && this.gameSession.game.isCheckmate() === false;
     }
 
     public displayWhiteInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.WHITE;
+        return this.gameSession.playingColor === PieceColor.WHITE && this.gameSession.game.isCheckmate() === false;
     }
 
     public skip(): void {
