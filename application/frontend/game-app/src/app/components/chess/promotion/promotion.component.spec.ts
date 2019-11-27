@@ -2,6 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PromotionComponent } from './promotion.component';
 import { PieceComponent } from '../../chess-board/piece/piece.component';
+import { MatGridListModule } from '@angular/material/grid-list';
 
 describe('PromotionComponent', () => {
     let component: PromotionComponent;
@@ -9,7 +10,10 @@ describe('PromotionComponent', () => {
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [PromotionComponent, PieceComponent]
+            declarations: [PromotionComponent, PieceComponent],
+            imports: [
+                MatGridListModule
+            ]
         })
             .compileComponents();
     }));
