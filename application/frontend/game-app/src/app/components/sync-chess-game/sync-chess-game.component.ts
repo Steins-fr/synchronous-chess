@@ -10,8 +10,8 @@ import { RoomManager } from '../../classes/room-manager/room-manager';
 import CoordinateMove, { Coordinate } from '../../classes/chess/interfaces/CoordinateMove';
 import TurnType, { TurnCategory } from '../../classes/chess/turns/turn.types';
 import { PieceColor, FenPiece } from '../../classes/chess/rules/chess-rules';
-import MoveTurnAction from 'src/app/classes/chess/turns/turn-actions/move-turn-action';
-import Move from 'src/app/classes/chess/interfaces/move';
+import MoveTurnAction from '../../classes/chess/turns/turn-actions/move-turn-action';
+import Move from '../../classes/chess/interfaces/move';
 
 @Component({
     selector: 'app-sync-chess-game',
