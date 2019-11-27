@@ -2,15 +2,18 @@
     <div class="player">Joueur Noir : {{ gameSession.configuration.blackPlayer || 'En attente' }}</div>
     <div id="board-section">
         <div id="chess-board">
-            <div class="promotion-list black-player" *ngIf="isPromotion() && displayBlackInteractions()">
-                <app-chess-promotion [color]="blackColor" (pieceType)="gameSession.promote($event)">
-                </app-chess-promotion>
-            </div>
             <app-chess-board [fenBoard]="gameSession.board" [validPlayBoard]="validPlayBoard"
                 (piecePicked)="piecePicked($event)" (pieceDropped)="pieceDropped($event)"
                 (pieceClicked)="pieceClicked($event)" [grabColor]="moveColor()" [movePreview]="gameSession.movePreview">
             </app-chess-board>
-            <div class="promotion-list white-player" *ngIf="isPromotion()  && displayWhiteInteractions()">
+            <div id="promotion-title" *ngIf="isPromotion()">
+                <span>Promotion</span>
+            </div>
+            <div class="promotion-list black-player" *ngIf="isPromotion() && displayBlackInteractions()">
+                <app-chess-promotion [color]="blackColor" (pieceType)="gameSession.promote($event)">
+                </app-chess-promotion>
+            </div>
+            <div class="promotion-list white-player" *ngIf="isPromotion() && displayWhiteInteractions()">
                 <app-chess-promotion [color]="whiteColor" (pieceType)="gameSession.promote($event)">
                 </app-chess-promotion>
             </div>

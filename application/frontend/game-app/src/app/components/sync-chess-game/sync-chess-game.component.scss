@@ -13,6 +13,47 @@
 
         #chess-board {
             flex: auto;
+            position: relative;
+
+            #promotion-title {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 25px;
+                font-weight: bold;
+                color: white;
+                text-shadow: -1px 1px 0 black,
+                    1px 1px 0 black,
+                    1px -1px 0 black,
+                    -1px -1px 0 black,
+                    2px 2px 4px black;
+            }
+
+            .promotion-list {
+                width: calc(100% / 3);
+                position: absolute;
+                margin: auto;
+                left: 0;
+                right: 0;
+                background-color: black;
+                border: 1px solid black;
+                box-shadow: 0px 0px 12px 6px rgba(0, 0, 0, 0.75);
+                border-radius: 10%;
+                overflow: hidden;
+
+                &.white-player {
+                    bottom: 38px;
+                }
+
+                &.black-player {
+                    top: 40px;
+                }
+            }
         }
 
         #right-column {

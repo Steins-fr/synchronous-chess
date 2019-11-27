@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { PieceColor, PieceType, FenPiece } from 'src/app/classes/chess/rules/chess-rules';
+import { PieceColor, PieceType, FenPiece } from '../../../classes/chess/rules/chess-rules';
 
 @Component({
     selector: 'app-chess-promotion',
