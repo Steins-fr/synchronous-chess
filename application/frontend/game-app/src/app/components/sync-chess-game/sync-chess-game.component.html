@@ -23,23 +23,33 @@
                 <div class="player-identity">
                     <app-board-piece [piece]="blackPiece"></app-board-piece>
                 </div>
-                <div>Dernier coup :</div>
-                <div>{{ blackLastMove() || 'aucun'}}</div>
-                <div>{{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
-                <button *ngIf="displayBlackInteractions() && isMoveTurn()" mat-stroked-button color="primary"
-                    class="skip-button" (click)="skip()">
+                <ng-container *ngIf="!gameSession.game.isCheckmate()">
+                    <div>Dernier coup :</div>
+                    <div>{{ blackLastMove() || 'aucun'}}</div>
+                    <div>{{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
+                </ng-container>
+                <div class="check" *ngIf="gameSession.game.isBlackInCheck && !gameSession.game.isBlackInCheckmate">Échec
+                </div>
+                <div class="check" *ngIf="gameSession.game.isBlackInCheckmate">Échec et mat</div>
+                <button *ngIf="displayBlackInteractions() && isMoveTurn() && !gameSession.game.isBlackInCheck"
+                    mat-stroked-button color="primary" class="skip-button" (click)="skip()">
                     Passer
                 </button>
             </div>
             <div>Tour : {{ turnType() }}</div>
             <div class="player-information white-player">
-                <button *ngIf="displayWhiteInteractions() && isMoveTurn()" mat-stroked-button color="primary"
-                    class="skip-button" (click)="skip()">
+                <button *ngIf="displayWhiteInteractions() && isMoveTurn() && !gameSession.game.isWhiteInCheck"
+                    mat-stroked-button color="primary" class="skip-button" (click)="skip()">
                     Passer
                 </button>
-                <div>{{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
-                <div>Dernier coup :</div>
-                <div>{{ whiteLastMove() || 'aucun'}}</div>
+                <div class="check" *ngIf="gameSession.game.isWhiteInCheck && !gameSession.game.isWhiteInCheckmate">Échec
+                </div>
+                <div class="check" *ngIf="gameSession.game.isWhiteInCheckmate">Échec et mat</div>
+                <ng-container *ngIf="!gameSession.game.isCheckmate()">
+                    <div>{{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
+                    <div>Dernier coup :</div>
+                    <div>{{ whiteLastMove() || 'aucun'}}</div>
+                </ng-container>
                 <div class="player-identity">
                     <app-board-piece [piece]="whitePiece"></app-board-piece>
                 </div>

@@ -21,6 +21,10 @@ export default class SynchronousChessGame {
     public readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
     protected turn: Turn = new SynchroneTurn();
     protected oldTurn?: Turn;
+    public isWhiteInCheck: boolean = false;
+    public isWhiteInCheckmate: boolean = false;
+    public isBlackInCheck: boolean = false;
+    public isBlackInCheckmate: boolean = false;
 
     protected getRules(color: PieceColor): SynchronousChessRules {
         return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
@@ -32,6 +36,10 @@ export default class SynchronousChessGame {
 
     public load(fenBoard: FenBoard): void {
         this._fenBoard = ChessBoardHelper.cloneBoard(fenBoard);
+    }
+
+    public isCheckmate(): boolean {
+        return this.isBlackInCheckmate || this.isWhiteInCheckmate;
     }
 
     public lastMoveTurnAction(): MoveTurnAction | null {
@@ -94,6 +102,12 @@ export default class SynchronousChessGame {
         }
         const moveTurn: MoveTurn = this.turn as MoveTurn;
 
+        const isInCheck: boolean = color === PieceColor.WHITE ? this.isWhiteInCheck : this.isBlackInCheck;
+
+        if (isInCheck && move === null) {
+            return false;
+        }
+
         if (move !== null && this.isMoveValid(move) === false) {
             return false;
         }
@@ -118,6 +132,35 @@ export default class SynchronousChessGame {
         return this.turn.isFilled(color);
     }
 
+    public verifyCheck(): void {
+        this.isWhiteInCheck = false;
+        this.isBlackInCheck = false;
+
+        // Check can only exists during synchrone turn.
+        if (this.turn.type !== TurnType.MOVE_SYNCHRONE) {
+            return;
+        }
+
+        const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard);
+        const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard);
+        const whiteKingFenCoordinate: FenCoordinate = ChessBoardHelper.findKing(this._fenBoard, FenPiece.WHITE_KING);
+        const blackKingFenCoordinate: FenCoordinate = ChessBoardHelper.findKing(this._fenBoard, FenPiece.BLACK_KING);
+
+        if (ChessBoardHelper.isSafe(whiteSafeBoard, whiteKingFenCoordinate) === false) {
+            this.isWhiteInCheck = true;
+            if (this.getPossiblePlays(ChessBoardHelper.fenCoordinateToVec2(whiteKingFenCoordinate)).length === 0) {
+                this.isWhiteInCheckmate = true;
+            }
+        }
+
+        if (ChessBoardHelper.isSafe(blackSafeBoard, blackKingFenCoordinate) === false) {
+            this.isBlackInCheck = true;
+            if (this.getPossiblePlays(ChessBoardHelper.fenCoordinateToVec2(blackKingFenCoordinate)).length === 0) {
+                this.isBlackInCheckmate = true;
+            }
+        }
+    }
+
     public runTurn(): boolean {
         if (this.turn.canBeExecuted() === false) {
             return false;
@@ -138,6 +181,7 @@ export default class SynchronousChessGame {
         this.turn.isDone = true;
         this.nextTurn();
         this.checkPromotionTurn();
+        this.verifyCheck();
 
         return true;
     }
@@ -342,8 +386,21 @@ export default class SynchronousChessGame {
         return possiblePlays.filter((vec: Vec2) => vec.equal(targetVec.x, targetVec.y));
     }
 
+    protected getSynchronousTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
+        const fenPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
+        const pieceColor: PieceColor = ChessBoardHelper.pieceColor(fenPiece);
+        const pieceType: PieceType = ChessBoardHelper.pieceType(fenPiece);
+        const isInCheck: boolean = pieceColor === PieceColor.WHITE ? this.isWhiteInCheck : this.isBlackInCheck;
+
+        if (isInCheck && pieceType !== PieceType.KING) {
+            return [];
+        }
+
+        return possiblePlays;
+    }
+
     public getPossiblePlays(position: Vec2): Array<Vec2> {
-        if (this.turn.category !== TurnCategory.MOVE) {
+        if (this.turn.category !== TurnCategory.MOVE || this.isBlackInCheckmate || this.isWhiteInCheckmate) {
             return [];
         }
 
@@ -356,6 +413,7 @@ export default class SynchronousChessGame {
             case TurnType.MOVE_INTERMEDIATE:
                 return this.getIntermediateTurnPossiblePlays(possiblePlays, position);
             case TurnType.MOVE_SYNCHRONE:
+                return this.getSynchronousTurnPossiblePlays(possiblePlays, position);
             default:
                 return possiblePlays;
         }

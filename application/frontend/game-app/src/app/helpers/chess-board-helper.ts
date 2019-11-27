@@ -351,4 +351,21 @@ export default abstract class ChessBoardHelper {
     public static vec2ToCoordinate(vector: Vec2): Coordinate {
         return [vector.x, vector.y];
     }
+
+    public static findKing(fenBoard: FenBoard, king: FenPiece.BLACK_KING | FenPiece.WHITE_KING): FenCoordinate {
+        let kingCoordinate: Coordinate;
+        fenBoard.forEach((row: Array<FenPiece>, y: number) => {
+            row.forEach((piece: FenPiece, x: number) => {
+                if (piece === king) {
+                    kingCoordinate = [x, y];
+                }
+            });
+        });
+
+        if (kingCoordinate === undefined) {
+            throw new Error('No king on the board!');
+        }
+
+        return ChessBoardHelper.coordinateToFenCoordinate(kingCoordinate);
+    }
 }
