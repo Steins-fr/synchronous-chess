@@ -17,6 +17,7 @@ import ChoiceTurn from '../turns/choice-turn';
 
 export default class SynchronousChessGame {
     private _fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
+    private _oldFenBoard: FenBoard = this._fenBoard;
     public readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
     public readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
     protected turn: Turn = new SynchroneTurn();
@@ -166,6 +167,8 @@ export default class SynchronousChessGame {
             return false;
         }
 
+        this._oldFenBoard = ChessBoardHelper.cloneBoard(this._fenBoard);
+
         switch (this.turn.type) {
             case TurnType.MOVE_INTERMEDIATE:
                 this.runIntermediateTurn();
@@ -186,10 +189,11 @@ export default class SynchronousChessGame {
         return true;
     }
 
-    protected getNextTurnTarget(move: Move | undefined | null, safeBoard: SafeBoard): FenCoordinate | null {
+    protected getNextTurnTarget(move: Move | undefined | null, oldSafeBoard: SafeBoard, safeBoard: SafeBoard): FenCoordinate | null {
         if (move
             && ChessBoardHelper.getFenPiece(this._fenBoard, move.to) !== FenPiece.EMPTY // No double capture
-            && ChessBoardHelper.isSafe(safeBoard, move.to) === false) {
+            && ChessBoardHelper.isSafe(oldSafeBoard, move.to) === false
+            && ChessBoardHelper.isSafe(safeBoard, move.to) === false) { // We assure that the destination remains attacked or protected.
             return move.to;
         }
 
@@ -203,12 +207,17 @@ export default class SynchronousChessGame {
 
         if (turnCategory === TurnCategory.MOVE) {
             const { whiteMove, blackMove }: MoveTurnAction = this.turn.action;
-            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard, blackMove ? blackMove.to : undefined);
-            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard, whiteMove ? whiteMove.to : undefined);
+            const blackMoveDestination: FenCoordinate | undefined = blackMove ? blackMove.to : undefined;
+            const whiteMoveDestination: FenCoordinate | undefined = whiteMove ? whiteMove.to : undefined;
+
+            const whiteOldSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._oldFenBoard, blackMoveDestination);
+            const blackOldSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._oldFenBoard, whiteMoveDestination);
+            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard, blackMoveDestination);
+            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard, whiteMoveDestination);
 
             const intermediateAction: IntermediateTurnAction = {
-                whiteTarget: this.getNextTurnTarget(blackMove, blackSafeBoard),
-                blackTarget: this.getNextTurnTarget(whiteMove, whiteSafeBoard)
+                whiteTarget: this.getNextTurnTarget(blackMove, blackOldSafeBoard, blackSafeBoard),
+                blackTarget: this.getNextTurnTarget(whiteMove, whiteOldSafeBoard, whiteSafeBoard)
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
