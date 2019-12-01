@@ -1,6 +1,6 @@
 # **Synchronous Chess**
 
-This project will be an online chess board game. It will implements the chess variant called `Synchronous chess`. For more detail about the rules, see [this website](http://www.hexenspiel.de/engl/synchronous-chess/) 
+This project is an online chess board game. It implements the chess variant called `Synchronous chess`. For more detail about the rules, see [this website](http://www.hexenspiel.de/engl/synchronous-chess/) 
 
 ## **In progress - demo**
 
@@ -8,13 +8,21 @@ The app is currently in development. It is possible to try it out the testing ve
 
 **Important: The website is only in French for the moment!**
 
-The demo version has not a working chess board yet. The initial goal was to create a proof of concept about WebRTC networks. A minimal working chat has been developed. Follow this [link](https://sc-staging.steins.fr/simple-chat) for the demo. 
+In the demo, you can choose either to create a room or join an existing one. 
 
-In the demo, you can choose either to create a chat room or join an existing one. 
+The room creator is the host, if he leave the room, the participants can continue to interact but no-one can join anymore.
 
-The room creator is the host, if he leave the chat, the participants can continue to discuss but no-one can join anymore.
+### Synchronous Chess demo
 
-Other words: In the available demo, you have to click on the send button for sending the message. The `Enter` key is not supported.
+The host is the white player and the first joining participant is the black player. The others are just spectators. 
+
+Drag & Drop a piece to validate a move. The registered move will be displayed with two green cells: the origin and the destination. When both players has played, both moves will be played.
+
+For the Synchronous Chess rules, please refer to [this website](http://www.hexenspiel.de/engl/synchronous-chess/).
+
+### Chat demo
+
+A simple chat demo with ping displayed between peers. For the moment, you have to click on the send button for sending the message. The `Enter` key is not supported.
 The displayed errors are generics, this need some more works.
 
 ## **Application**
@@ -61,7 +69,7 @@ The synchronous chess board game with chat.
 
 **Required**: Backend Websocket API.
 
-**Technology**: Angular with rxjs.
+**Technology**: Angular 8.
 
 **Language**: Typescript.
 
