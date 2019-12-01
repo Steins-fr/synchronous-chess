@@ -58,4 +58,98 @@
     </div>
     <div class="player">Joueur Blanc : {{ gameSession.configuration.whitePlayer || 'En attente' }}</div>
     <div class="spectators">Spectateurs : {{ gameSession.spectatorNumber }}</div>
+    <div id="rules">
+        <h3>Règles</h3>
+
+        <h4>Joueurs</h4>
+
+        <div>Nombre de joueur : 2.</div>
+        <div>Blanc : Host de la partie.<br>
+            Noir : Premier participant à rejoindre la salle.</div>
+
+        <h4>Principe</h4>
+        <div>
+            Les deux joueurs jouent leur coup simultanément. Ils prennent donc la décision de leur mouvement chacun de
+            leur côté. Lorsque les deux joueurs ont fait leur choix, les deux mouvements sont appliqués selon les règles
+            détaillées ci-dessous.
+        </div>
+        <div>
+            Certaines règles ont été modifiées par rapport aux règles conventionnelles des Échecs.
+        </div>
+
+        <h4>Mouvement et capture</h4>
+        <div>Si pendant un tour synchrone ...</div>
+        <div>
+            a) ... une pièce bouge sur une case occupé par l'ennemie, et que cette dernière n'a pas bougée durant le
+            tour synchrone, celle-ci est capturée et retiré du plateau. La pièce ayant bougé occupe alors la case
+            libérée.
+        </div>
+        <div>
+            b) ... une pièce bouge sur une case occupé par l'ennemie, mais que cette dernière a bougé durant ce même
+            tour,
+            alors les deux pièces atteignent leur destination. Parfois, un tour synchrone peut se conclure sur
+            l'échange mutuel
+            de la position de deux pièces même si les mouvements se superposent.
+        </div>
+        <div>
+            c) ... les deux pièces bougent sur la même case, alors les deux pièces sont retirées du plateau.
+            Exception : Si l'une des deux pièces est un roi, alors le roi est avantagé et occupe la case ciblée.
+        </div>
+
+        <h4>Les tours</h4>
+        <div>
+            La partie se déroule avec un enchaînement de tour synchrone qui peuvent être entrelacés de tour
+            intermédiaire.
+        </div>
+        <div>
+            Après les mouvements d'un tour synchrone, un tour intermédiaire peut prendre place si au moins une des
+            pièces s'est
+            placée sur une case qui était attaquée ou protégée avant le tour.
+            Dans ce cas, l'ennemie a le droit d'effectuer un tour additionnel appelé "intermédiaire" afin de
+            capturer la pièce qui s'est mise en danger. Il peut passer ce tour s'il le souhaite.
+            Si les deux joueurs ont le droit à un tour additionnel, alors le tour intermédiaire est joué simultanément
+            comme un tour synchrone, à la différence qu'ils sont uniquement autorisés à capturer les pièces mise en
+            danger.
+        </div>
+        <div>
+            Un tour intermédiaire peut être suivi d'un nouveau tour intermédiaire si les conditions de déclenchement
+            d'un tour intermédiaire sont remplies. Sinon, le jeu reprend sur un tour synchrone.
+        </div>
+
+        <h4>Promotion</h4>
+        <div>Si au moins un des deux joueurs bouge un pion sur une position permettant une promotion, alors un tour
+            dédié à la promotion est mis en place afin d'effectuer le choix de la promotion. Le jeu reprend ensuite
+            le tour synchrone ou intermédiaire résultant des mouvements précédemment effectués.
+        </div>
+
+        <h4>Restrictions</h4>
+        <div>
+            La règle "en passant" n'existe pas dans cette variante.
+        </div>
+        <div>
+            Le roi n'est pas autorisé à se placer sur une case attaquée ou protégée par l'adversaire. Il est donc
+            inutile
+            d'essayer de prévoir la libération d'une case afin de pouvoir s'y mettre.
+        </div>
+        <div>
+            Si le roi est attaqué, en échec, au début du tour synchrone, alors le roi est obligé de bouger sur une case
+            actuellement non attaquée ou non protégée. Si il est dans l'impossibilité de bouger, c'est échec et mat.
+        </div>
+        <div>
+            Avec ces règles, il est alors possible :
+            <ul>
+                <li>Échec et mat des deux joueurs. C'est donc un match nul ;</li>
+                <li>Le roi peut être capturé avec l'exécution de seulement deux tours synchrones.</li>
+            </ul>
+        </div>
+
+        <div>
+            Règles qui ne sont pas encore implémentées pour le match nul :
+            <ul>
+                <li>3 répétition de la même séquence de mouvements ;</li>
+                <li>50 tours sans le mouvement d'un pion ou aucune capture ;</li>
+                <li>Et d'autres règles des échecs classique...</li>
+            </ul>
+        </div>
+    </div>
 </div>
