@@ -88,14 +88,17 @@ The connection table is used as a relation table. Given a connectionId, we can f
 
 The project is hosted on Amazon Web Services and uses Terraform to provision and manage the cloud infrastructure.
 
+![AWS diagram](documentation/resources/Synchronous-Chess-AWS.svg)
+
 #### Services:
- - S3: Stores the frontend files;
+ - S3: Stores the frontend files and their access logs;
  - CloudFront: Serves the frontend from S3 and manage the cache;
  - Lambda: Run the Room API designed for Websocket;
- - API Gateway: Manages Websocket connection and API calls, then transmits to the lambdas;
+ - API Gateway: Manages Websocket connection and API calls, then transmits calls to the lambdas;
  - DynamoDB: Stores the Rooms informations for the API;
  - Route 53: Manage the DNS records;
- - CloudWatch: Monitors and logs.
+ - CloudWatch: Monitors and logs;
+ - ACM: Manage the certificates.
 
  A data-source is used for the certificate from AWS Certificate Manager. I prefer creating manually the certificate, its more easier. 
 
@@ -113,7 +116,7 @@ The Terraform backend configuration variables:
 #### Terraform plan vars
 
 - stage: Stage name. Ex: 'dev';
-- acm_certificate_arn: AWS arn of the certificate that cloudfront have to serve.
+- acm_certificate_arn: AWS arn of the certificate that CloudFront have to serve.
 - main_domain_name: Domain name principal. As example, 'steins.fr'
 
 The app will be deployed by adding automatically sub-domains.
