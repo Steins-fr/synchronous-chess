@@ -12,7 +12,7 @@ resource "aws_dynamodb_table" "table" {
   range_key      = var.range-key
 
   server_side_encryption {
-    enabled = true
+    enabled = false
   }
 
   dynamic "attribute" {
