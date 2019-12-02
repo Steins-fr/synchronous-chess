@@ -16,6 +16,20 @@ export enum WebrtcConnectionState {
     CHECKING = 'checking'
 }
 
+enum PacketType {
+    MESSAGE = 'message',
+    ACK = 'ack'
+}
+
+type PacketId = number;
+
+interface Packet {
+    id: PacketId;
+    type: PacketType;
+    nbTry?: number;
+    message?: Message;
+}
+
 export class Webrtc {
     /**
     * Configuration of the PeerConnection. Use google stun server for the moment.
@@ -27,6 +41,15 @@ export class Webrtc {
             }
         ]
     };
+
+    private readonly packetIdGenerator: Generator = function* name(): Generator {
+        let id: PacketId = 0;
+        while (true) {
+            yield ++id;
+        }
+    }();
+
+    private readonly pendingAcknowledgement: Map<PacketId, NodeJS.Timer> = new Map<PacketId, NodeJS.Timer>();
 
     // WebRTC states observables
     private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>(new WebrtcStates());
@@ -113,16 +136,6 @@ export class Webrtc {
         }
     }
 
-    public sendMessage(message: Message): boolean {
-        if (this.sendChannel.readyState === 'open') {
-            if (this.sendChannel) {
-                this.sendChannel.send(JSON.stringify(message));
-            }
-            return true;
-        }
-        return false;
-    }
-
     public registerSignal(remoteSignal: Signal): boolean {
         try {
             if ((this.initiator && remoteSignal.sdp.type === 'answer')) {
@@ -172,8 +185,51 @@ export class Webrtc {
         }));
     }
 
+    private packetLost(packet: Packet): void {
+        console.error(`Packet lost: ${packet.id}`, packet);
+
+        if (packet.nbTry > 2) {
+            return;
+        }
+
+        this.sendPacket({ ...packet });
+    }
+
+    private sendPacket(packet: Packet): void {
+        if (packet.type !== PacketType.ACK) {
+            packet.nbTry = packet.nbTry !== undefined ? packet.nbTry + 1 : 1;
+            const timerId: NodeJS.Timer = setTimeout(() => this.packetLost(packet), 1000);
+            this.pendingAcknowledgement.set(packet.id, timerId);
+        }
+        console.log('send packet', packet);
+
+        if (this.sendChannel.readyState === 'open') {
+            this.sendChannel.send(JSON.stringify(packet));
+        }
+    }
+
+    public sendMessage(message: Message): void {
+        this.sendPacket({
+            id: this.packetIdGenerator.next().value,
+            type: PacketType.MESSAGE,
+            message
+        });
+    }
+
     private onReceiveMessage(event: MessageEvent): void {
-        this._data.next(JSON.parse(event.data));
+        const packet: Packet = JSON.parse(event.data);
+        console.log('received packet', packet);
+        switch (packet.type) {
+            case PacketType.MESSAGE:
+                this._data.next(packet.message);
+                this.sendPacket({ id: packet.id, type: PacketType.ACK });
+                break;
+            case PacketType.ACK:
+                if (this.pendingAcknowledgement.has(packet.id)) {
+                    clearTimeout(this.pendingAcknowledgement.get(packet.id));
+                }
+                break;
+        }
     }
 
     private onDataChannel(event: RTCDataChannelEvent): void {

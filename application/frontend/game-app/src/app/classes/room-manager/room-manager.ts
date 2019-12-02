@@ -47,7 +47,6 @@ export abstract class RoomManager {
     }
 
     public transmitMessage(message: RoomMessage): void {
-        console.log('send', message);
         this.players.forEach((player: Player) => {
             message.from = this.localPlayer.name;
             player.sendData(message);
@@ -91,7 +90,6 @@ export abstract class RoomManager {
             if (message.origin !== MessageOriginType.ROOM_SERVICE) {
                 this.onRoomMessage(message, playerEvent.name);
             } else {
-                console.log('receive', message);
                 this._onMessage(message);
             }
         });

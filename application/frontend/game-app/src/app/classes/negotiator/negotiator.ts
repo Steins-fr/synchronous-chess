@@ -21,7 +21,7 @@ export abstract class Negotiator {
     private static readonly maxSignalTry: number = 3;
     private static readonly checkingTimeout: number = 3000;
     private static readonly timeoutAfter: number = 15000;
-    private static readonly connectedDelay: number = 1000;
+    private static readonly connectedDelay: number = 0;
     private readonly subs: Array<Subscription> = [];
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.DISCONNECTED;
     private signalTry: number = 0;
@@ -91,8 +91,7 @@ export abstract class Negotiator {
                 }
                 break;
             case WebrtcConnectionState.CONNECTED:
-                // Todo: better connection detection
-                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), Negotiator.connectedDelay); // Delay to assure that the canal is ready
+                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), Negotiator.connectedDelay); // Fix for chrome - Delay to assure that the canal is ready
                 break;
             case WebrtcConnectionState.DISCONNECTED:
                 this.pushEvent(NegotiatorEventType.DISCONNECTED);
