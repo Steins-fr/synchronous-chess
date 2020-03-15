@@ -15,14 +15,14 @@ jobs:
           yarn install
 
       - name: Pull Angular cli Karma
-        run: docker pull trion/ng-cli-karma:8.3.2
+        run: docker pull trion/ng-cli-karma:9.0.6
 
       - name: Run Karma
         run: |
           docker run --rm \
             -w ${GITHUB_WORKSPACE}/application/frontend/game-app \
             -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
-            trion/ng-cli-karma:8.3.2 \
+            trion/ng-cli-karma:9.0.6 \
             ng test --code-coverage --progress false --watch false;
 
       - name: SonarQube Scan
