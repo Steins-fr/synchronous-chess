@@ -24,7 +24,7 @@ type ChatMessage = string;
 })
 export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
 
-    @ViewChild(CdkVirtualScrollViewport, { static: false }) public virtualScrollViewport?: CdkVirtualScrollViewport;
+    @ViewChild(CdkVirtualScrollViewport) public virtualScrollViewport?: CdkVirtualScrollViewport;
     private readonly subs: Array<Subscription> = [];
     public sendInput: string = '';
     public chat: Array<ChatEntry> = [];
