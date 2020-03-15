@@ -13,6 +13,6 @@ describe('WebsocketNegotiator', () => {
     });
 
     it('should create an instance', () => {
-        expect(new WebsocketNegotiator('', '', PlayerType.HOST, new Webrtc(), TestBed.get(RoomApiService))).toBeTruthy();
+        expect(new WebsocketNegotiator('', '', PlayerType.HOST, new Webrtc(), TestBed.inject(RoomApiService))).toBeTruthy();
     });
 });

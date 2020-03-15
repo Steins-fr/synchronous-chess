@@ -45,7 +45,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
     it('should set the configuration', () => {
         // Given
-        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         const configuration: SessionConfiguration = {
             whitePlayer: 'e',
             blackPlayer: 'd',
@@ -66,7 +66,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -92,7 +92,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -119,7 +119,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
@@ -156,7 +156,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
@@ -193,7 +193,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
@@ -233,7 +233,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
         gameSpy.promote.and.returnValue(false);
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -256,7 +256,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
         gameSpy.promote.and.returnValue(true);
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
