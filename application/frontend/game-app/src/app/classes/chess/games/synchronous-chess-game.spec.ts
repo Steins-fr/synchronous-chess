@@ -1723,31 +1723,6 @@ describe('SynchronousChessGame', () => {
         expect(game.getOldTurn()).toBe(choiceTurnSpy);
     });
 
-    it('nextTurn should set a default turn on unknown turn type', () => {
-        // Given
-        ChessBoardHelper.disableCache();
-        const game: ProtectedTest = new ProtectedTest();
-
-        Object.defineProperty(choiceTurnSpy, 'category', {
-            value: '',
-            writable: false
-        });
-
-        Object.defineProperty(choiceTurnSpy, 'isDone', {
-            value: true,
-        });
-
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy,
-            writable: true
-        });
-
-        // When
-        game.nextTurn();
-        // Then
-        expect(game.getTurn().type).toEqual(TurnType.MOVE_SYNCHRONE);
-    });
-
     it('getIntermediateTurnPossiblePlays should return empty if no target', () => {
         // Given
         ChessBoardHelper.disableCache();

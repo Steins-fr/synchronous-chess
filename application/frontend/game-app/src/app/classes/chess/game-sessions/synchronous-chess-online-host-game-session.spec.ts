@@ -176,7 +176,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should run move from a remote playing player', () => {
         // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -203,7 +203,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should not run move from a remote spectator', () => {
         // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -230,7 +230,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should set players on player add', () => {
         // Given
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         const defaultConfiguration: SessionConfiguration = { ...session.configuration };
         const player1: Player = new Player('robert', PlayerType.HOST);
         const player2: Player = new Player('mario', PlayerType.HOST);
@@ -276,7 +276,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should decrement spectators on player remove', () => {
         // Given
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         session.configuration = {
             whitePlayer: 'robert',
             blackPlayer: 'mario',
@@ -355,7 +355,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should run promote from a remote playing player', () => {
         // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -379,7 +379,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
     it('should not run promote from a remote spectator', () => {
         // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.get(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
         const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 

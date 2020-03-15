@@ -14,13 +14,13 @@ describe('WebsocketService', () => {
     });
 
     it('should be created', () => {
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         expect(service).toBeTruthy();
     });
 
     it('should throw Error on close() call if socket is undefined', () => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         // When
         const functionThrowError: () => void = (): void => service.close();
         // Then
@@ -30,7 +30,7 @@ describe('WebsocketService', () => {
 
     it('should throw Error on send() call if socket is undefined', () => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         // When
         //const functionThrowError: () => void = (): boolean => service.send('', '', '');
         // Then
@@ -40,7 +40,7 @@ describe('WebsocketService', () => {
 
     it('should define socket on connect() call', () => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         expect(service.socket).toBeUndefined();
         // When
         service.connect(socketSpy);
@@ -50,7 +50,7 @@ describe('WebsocketService', () => {
 
     it('should close the socket on close() call when socket is open', () => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         Object.defineProperty(socketSpy, 'readyState', {
             value: SocketState.OPEN,
             writable: false
@@ -64,7 +64,7 @@ describe('WebsocketService', () => {
 
     it('should not close a socket already closed on close() call', () => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         Object.defineProperty(socketSpy, 'readyState', {
             value: SocketState.CLOSED,
             writable: false
@@ -78,7 +78,7 @@ describe('WebsocketService', () => {
 
     it('should close older socket on new connect() call', () => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         service.connect(socketSpy);
         const otherSocketSpy: jasmine.SpyObj<WebSocket> = jasmine.createSpyObj('WebSocket', ['close']);
         // When
@@ -90,7 +90,7 @@ describe('WebsocketService', () => {
 
     it('should update the state observable on state changes', (done: DoneFn) => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         service.connect(socketSpy);
         const states: Array<SocketState> = [SocketState.CONNECTING, SocketState.OPEN, SocketState.CLOSED];
 
@@ -121,7 +121,7 @@ describe('WebsocketService', () => {
 
     it('should update the message observable on received message', (done: DoneFn) => {
         // Given
-        const service: WebSocketService = TestBed.get(WebSocketService);
+        const service: WebSocketService = TestBed.inject(WebSocketService);
         service.connect(socketSpy);
         const payload1: SocketPayload = { type: 'message', data: 'data1' };
         const payload2: SocketPayload = { type: 'message', data: 'data2' };
