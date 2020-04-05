@@ -334,7 +334,6 @@ describe('SynchronousChessGame', () => {
     it('should not execute the turn if not ready', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
-        const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: true

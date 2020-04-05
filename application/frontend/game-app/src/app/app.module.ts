@@ -7,7 +7,7 @@ import { AppComponent } from './app.component';
 import { WebrtcStatesComponent } from './components/shared/debug/webrtc-states/webrtc-states.component';
 import { ChatComponent } from './components/chat/chat.component';
 import { RoomService } from './services/room/room.service';
-import { RoomSetupComponent } from './components/shared/room-setup/room-setup/room-setup.component';
+import { RoomSetupComponent } from './components/shared/room-setup/room-setup.component';
 import { WebrtcDebugComponent } from './components/shared/debug/webrtc-debug/webrtc-debug.component';
 import { RoomApiService } from './services/room-api/room-api.service';
 import { WebSocketService } from './services/web-socket/web-socket.service';

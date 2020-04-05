@@ -64,6 +64,12 @@ type RequestId = number;
 })
 export class RoomApiService {
 
+    public constructor(private readonly webSocketService: WebSocketService) { }
+
+    public get notifier(): NotifierFlow<RoomApiNotificationType, RoomApiNotification> {
+        return this._notifier;
+    }
+
     private static readonly requestIdGenerator: Generator = function* name(): Generator {
         let id: RequestId = 0;
         while (true) {
@@ -80,14 +86,16 @@ export class RoomApiService {
     private readonly requestTimers: Map<RequestId, NodeJS.Timer> = new Map<RequestId, NodeJS.Timer>();
     private readonly subs: Array<Subscription> = [];
 
-    public constructor(private readonly webSocketService: WebSocketService) { }
-
-    public get notifier(): NotifierFlow<RoomApiNotificationType, RoomApiNotification> {
-        return this._notifier;
+    private static buildPacket(requestType: string, data: string): PacketPayload {
+        return {
+            type: requestType,
+            data,
+            id: RoomApiService.requestIdGenerator.next().value
+        };
     }
 
     public setup(): void {
-        this.webSocketService.connect(new WebSocket(environment.webSocketServer));
+        this.webSocketService.setup(environment.webSocketServer);
         this.subs.push(this.webSocketService.message.subscribe((payload: PacketPayload) => this.onMessage(payload)));
     }
 
@@ -99,54 +107,43 @@ export class RoomApiService {
         this._notifier.notify(type, JSON.parse(payload.data));
     }
 
-    private buildPacket(requestType: string, data: string): PacketPayload {
-        return {
-            type: requestType,
-            data,
-            id: RoomApiService.requestIdGenerator.next().value
-        };
-    }
-
     public create(roomName: string, maxPlayer: number, playerName: string): Promise<RoomCreateResponse> {
         const request: RoomCreateRequest = { roomName, maxPlayer, playerName };
-        return this.send(this.buildPacket(RoomApiRequestType.CREATE, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.CREATE, JSON.stringify(request)));
     }
 
     public join(roomName: string, playerName: string): Promise<RoomJoinResponse> {
         const request: RoomJoinRequest = { roomName, playerName };
-        return this.send(this.buildPacket(RoomApiRequestType.JOIN, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.JOIN, JSON.stringify(request)));
     }
 
     public allPlayers(roomName: string): Promise<PlayersResponse> {
         const request: PlayersRequest = { roomName };
-        return this.send(this.buildPacket(RoomApiRequestType.PLAYER_GET_ALL, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.PLAYER_GET_ALL, JSON.stringify(request)));
     }
 
     public addPlayer(roomName: string, playerName: string): Promise<PlayerResponse> {
         const request: PlayerRequest = { roomName, playerName };
-        return this.send(this.buildPacket(RoomApiRequestType.PLAYER_ADD, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.PLAYER_ADD, JSON.stringify(request)));
     }
 
     public removePlayer(roomName: string, playerName: string): Promise<PlayerResponse> {
         const request: PlayerRequest = { roomName, playerName };
-        return this.send(this.buildPacket(RoomApiRequestType.PLAYER_REMOVE, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.PLAYER_REMOVE, JSON.stringify(request)));
     }
 
     public signal(signal: Signal, to: string, roomName: string): Promise<SignalResponse> {
         const request: SignalRequest = { signal, to, roomName };
-        return this.send(this.buildPacket(RoomApiRequestType.SIGNAL, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.SIGNAL, JSON.stringify(request)));
     }
 
     public full(to: string, roomName: string): Promise<FullResponse> {
         const request: FullRequest = { to, roomName };
-        return this.send(this.buildPacket(RoomApiRequestType.FULL, JSON.stringify(request)));
+        return this.send(RoomApiService.buildPacket(RoomApiRequestType.FULL, JSON.stringify(request)));
     }
 
     private send<T>(payload: PacketPayload): Promise<T> {
-
-        if (this.webSocketService.send(RoomApiService.SOCKET_MESSAGE_KEY, JSON.stringify(payload)) === false) {
-            return Promise.reject(RoomApiService.ERROR_SEND);
-        }
+        this.webSocketService.send(RoomApiService.SOCKET_MESSAGE_KEY, JSON.stringify(payload));
         return this.followRequestResponse(payload.id);
     }
 
@@ -179,7 +176,7 @@ export class RoomApiService {
     }
 
     private detectRequestTimeout(id: RequestId, sub: Subscription, reject: (err: string) => void): void {
-        const lambdaTimeout: number = 4000; // 3 seconds is the lambda AWS timeout, so add one more minute to it
+        const lambdaTimeout: number = 5000; // 3 seconds is the lambda AWS timeout, so add two more seconds to it
         const timerId: NodeJS.Timer = setTimeout(() => {
 
             if (sub.closed === false) {
@@ -191,10 +188,6 @@ export class RoomApiService {
         }, lambdaTimeout); // 3 seconds is the lambda AWS timeout, so add one more minute to it
 
         this.requestTimers.set(id, timerId);
-    }
-
-    public isSocketOpen(): boolean {
-        return this.webSocketService.isOpen();
     }
 
     public close(): void {
