@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 
 export enum SocketState {
     CONNECTING = WebSocket.CONNECTING,
@@ -18,9 +18,10 @@ export interface SocketPayload {
 })
 export class WebSocketService {
 
-    public static readonly ERROR_MESSAGE_SOCKET_DOES_NOT_EXIST: string = 'Socket does not exist! Please call "connect(__url__)"';
+    public static readonly ERROR_MESSAGE_SOCKET_URL_IS_NOT_SETUP: string = 'Socket is not setup! Please call "setup(__url__)"';
 
     private webSocket: WebSocket;
+    private _serverUrl: string = '';
 
     // Socket state observables
     private readonly _state: BehaviorSubject<SocketState> = new BehaviorSubject<SocketState>(SocketState.CONNECTING);
@@ -29,33 +30,51 @@ export class WebSocketService {
     private readonly _message: Subject<SocketPayload> = new Subject<SocketPayload>();
     public message: Observable<SocketPayload> = this._message.asObservable();
 
-    public connect(webSocket: WebSocket): void {
+    public setup(serverUrl: string): void {
+        this._serverUrl = serverUrl;
+    }
+
+    private createSocket(): WebSocket {
+        return new WebSocket(this.serverUrl);
+    }
+
+    public connect(): void {
         if (this.webSocket) {
             this.close();
         }
 
-        this.webSocket = webSocket;
+        if (!this.serverUrl) {
+            throw new Error(WebSocketService.ERROR_MESSAGE_SOCKET_URL_IS_NOT_SETUP);
+        }
+
+        this.webSocket = this.createSocket();
         this.webSocket.onopen = (): void => this.onStateChange();
         this.webSocket.onclose = (): void => this.onStateChange();
         this.webSocket.onmessage = (ev: MessageEvent): void => this.onMessage(ev);
     }
 
     public close(): void {
-        this.checkSocketCreation();
-        if (this.webSocket.readyState !== SocketState.CLOSED) {
+        if (this.webSocket && this.webSocket.readyState !== SocketState.CLOSED) {
             this.webSocket.close();
         }
     }
 
-    public send(message: string, data: string): boolean {
-        this.checkSocketCreation();
+    public send(message: string, data: string): void {
+        if (!this.webSocket) {
+            this.connect();
+        }
+
         if (this.webSocket.readyState === SocketState.OPEN) {
             const packet: string = JSON.stringify({ message, data });
             this.webSocket.send(packet);
-            return true;
+        } else {
+            const sub: Subscription = this.state.subscribe((state: SocketState) => {
+                if (state === SocketState.OPEN) {
+                    this.send(message, data);
+                    sub.unsubscribe();
+                }
+            });
         }
-
-        return false;
     }
 
     public get stateValue(): SocketState {
@@ -66,10 +85,6 @@ export class WebSocketService {
         return this.webSocket;
     }
 
-    public isOpen(): boolean {
-        return this._state.getValue() === SocketState.OPEN;
-    }
-
     private onMessage(event: MessageEvent): void {
         this._message.next(JSON.parse(event.data));
     }
@@ -78,9 +93,7 @@ export class WebSocketService {
         this._state.next(this.webSocket.readyState);
     }
 
-    private checkSocketCreation(): void {
-        if (!this.webSocket) {
-            throw new Error(WebSocketService.ERROR_MESSAGE_SOCKET_DOES_NOT_EXIST);
-        }
+    public get serverUrl(): string {
+        return this._serverUrl;
     }
 }

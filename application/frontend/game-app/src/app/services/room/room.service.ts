@@ -137,11 +137,7 @@ export class RoomService {
         this.ngZone.run(() => this.queue = this.queue.filter((name: string) => name !== playerName));
     }
 
-    public waitingRoomInformation(): boolean {
-        return this.roomApi.isSocketOpen() && !this.roomIsSetup();
-    }
-
-    private roomIsSetup(): boolean {
+    public roomIsSetup(): boolean {
         return this.roomManager !== undefined && this.roomManager.isSetup;
     }
 
