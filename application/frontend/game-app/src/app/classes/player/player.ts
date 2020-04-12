@@ -6,6 +6,7 @@ import { Message } from '../webrtc/messages/message';
 import { PlayerMessage, PlayerMessageType } from '../webrtc/messages/player-message';
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import Notifier, { NotifierFlow } from '../notifier/notifier';
+import { RoomMessage } from '../webrtc/messages/room-message';
 
 export enum PlayerType {
     HOST, PEER
@@ -27,7 +28,7 @@ export class Player {
     private static readonly PING_MARK: string = 'pingMark';
     private static readonly PONG_MARK: string = 'pongMark';
 
-    private readonly subs: Array<Subscription> = [];
+    private readonly subs: Subscription[] = [];
 
     private readonly _notifier: Notifier<PlayerEventType, PlayerEvent> = new Notifier<PlayerEventType, PlayerEvent>();
 
@@ -48,7 +49,7 @@ export class Player {
         if (this.isLocal() === false) {
             this.states = webRTC.states;
             this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
-            this.subs.push(this.webRTC.data.subscribe((data: Message) => this.onPeerData(data)));
+            this.subs.push(this.webRTC.data.subscribe((data: RoomMessage) => this.onPeerData(data)));
 
             this.pingInterval();
         }
@@ -63,7 +64,7 @@ export class Player {
         if (this.webRTC) {
             this.webRTC.close();
         }
-        if (this.pingTimerId === undefined) {
+        if (this.pingTimerId !== undefined) {
             clearInterval(this.pingTimerId);
         }
     }
@@ -103,9 +104,12 @@ export class Player {
         }
     }
 
-    public sendData(message: Message): void {
+    public sendData(message: RoomMessage): void {
         if (this.webRTC) {
-            this.webRTC.sendMessage(message);
+            const id: number = this.webRTC.sendMessage(message);
+            if (message.origin !== MessageOriginType.PLAYER) {
+                console.log((new Date()).getTime().toString().substr(-5), id, `TO ${this.name}`, message['type'], message['payload'] ?? null);
+            }
         }
     }
 
@@ -128,7 +132,7 @@ export class Player {
         const measureName: string = `${pingMark}_${pongMark}`;
         window.performance.mark(pongMark);
         window.performance.measure(measureName, pingMark, pongMark);
-        const performances: Array<PerformanceEntry> = window.performance.getEntriesByName(measureName, 'measure');
+        const performances: PerformanceEntry[] = window.performance.getEntriesByName(measureName, 'measure');
         if (performances.length > 0) {
             const performance: PerformanceEntry = performances.shift();
             this.ping.next((performance.duration / 2.0).toFixed(1));
@@ -149,12 +153,14 @@ export class Player {
         }
     }
 
-    private onPeerData(message: Message): void {
+    private onPeerData(message: RoomMessage): void {
         const playerMessage: PlayerMessage = message as PlayerMessage;
         if (playerMessage.origin && playerMessage.origin === MessageOriginType.PLAYER) {
             this.onPlayerMessage(playerMessage as PlayerMessage<string>);
             return;
         }
+        message.from = this.name;
+        console.log((new Date()).getTime().toString().substr(-5), `FROM ${message.from}`, message['type'], message['payload'] ?? null);
         this.pushEvent(PlayerEventType.MESSAGE, message);
     }
 }
