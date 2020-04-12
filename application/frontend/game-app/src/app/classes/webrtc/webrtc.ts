@@ -32,8 +32,8 @@ interface Packet {
 
 export class Webrtc {
     /**
-    * Configuration of the PeerConnection. Use google stun server for the moment.
-    */
+     * Configuration of the PeerConnection. Use google stun server for the moment.
+     */
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
             {
@@ -75,7 +75,8 @@ export class Webrtc {
     //private webSocket: Websocket = null;
     private initiator: boolean;
 
-    public constructor() { }
+    public constructor() {
+    }
 
     public configure(initiator: boolean, peerConnectionConfig?: RTCConfiguration): void {
 
@@ -201,24 +202,25 @@ export class Webrtc {
             const timerId: NodeJS.Timer = setTimeout(() => this.packetLost(packet), 1000);
             this.pendingAcknowledgement.set(packet.id, timerId);
         }
-        console.log('send packet', packet);
 
         if (this.sendChannel.readyState === 'open') {
             this.sendChannel.send(JSON.stringify(packet));
         }
     }
 
-    public sendMessage(message: Message): void {
+    public sendMessage(message: Message): number {
+        const id: number = this.packetIdGenerator.next().value;
         this.sendPacket({
-            id: this.packetIdGenerator.next().value,
+            id,
             type: PacketType.MESSAGE,
             message
         });
+
+        return id;
     }
 
     private onReceiveMessage(event: MessageEvent): void {
         const packet: Packet = JSON.parse(event.data);
-        console.log('received packet', packet);
         switch (packet.type) {
             case PacketType.MESSAGE:
                 this._data.next(packet.message);

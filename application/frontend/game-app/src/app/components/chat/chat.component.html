@@ -38,9 +38,9 @@
 
     <div id="send-form">
         <mat-form-field>
-            <input matInput type="text" [(ngModel)]="sendInput" placeholder="Tape ton message" />
+            <input matInput type="text" [(ngModel)]="sendInput" placeholder="Tape ton message" [disabled]="isSending"/>
         </mat-form-field>
         <button mat-raised-button color="primary" id="send" (click)="sendMessage()"
-            [disabled]="(roomService.isActive | async) === false">Envoyer</button>
+            [disabled]="(roomService.isActive | async) === false || isSending">Envoyer</button>
     </div>
 </div>

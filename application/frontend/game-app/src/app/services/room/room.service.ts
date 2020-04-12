@@ -35,16 +35,16 @@ export class RoomService {
 
     public roomManager?: RoomManager;
 
-    private readonly _isActive: BehaviorSubject<boolean> = new BehaviorSubject(false);
+    protected readonly _isActive: BehaviorSubject<boolean> = new BehaviorSubject(false);
     public readonly isActive: Observable<boolean> = this._isActive.asObservable();
 
     public localPlayer?: Player;
     public players: Map<string, Player> = new Map<string, Player>();
     public queue: Array<string> = [];
 
-    private readonly _notifier: Notifier<RoomServiceNotificationType, RoomServiceNotification> = new Notifier<RoomServiceNotificationType, RoomServiceNotification>();
+    protected readonly _notifier: Notifier<RoomServiceNotificationType, RoomServiceNotification> = new Notifier<RoomServiceNotificationType, RoomServiceNotification>();
 
-    public constructor(private readonly ngZone: NgZone, private readonly roomApi: RoomApiService) {
+    public constructor(protected readonly ngZone: NgZone, protected readonly roomApi: RoomApiService) {
     }
 
     public get notifier(): NotifierFlow<RoomServiceNotificationType, RoomServiceNotification> {
@@ -63,9 +63,9 @@ export class RoomService {
         this.roomApi.setup();
     }
 
-    public transmitMessage<T, U>(type: T, message: U): void {
+    public transmitMessage<T>(type: string, message: T): void {
         if (this.isReady()) {
-            const roomServiceMessage: RoomServiceMessage<T, U> = {
+            const roomServiceMessage: RoomServiceMessage<string, T> = {
                 from: this.localPlayer.name,
                 type,
                 payload: message,
@@ -89,7 +89,7 @@ export class RoomService {
         return hostRoom.create(playerName, maxPlayer);
     }
 
-    private onMessage(message: RoomServiceMessage): void {
+    protected onMessage(message: RoomServiceMessage): void {
         this._notifier.notify(message.type, message);
     }
 

@@ -2,7 +2,7 @@
     "rules": {
         "array-type": [
             true,
-            "generic"
+            "array"
         ],
         "arrow-parens": false,
         "arrow-return-shorthand": true,

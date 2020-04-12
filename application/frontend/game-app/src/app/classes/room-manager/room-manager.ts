@@ -20,7 +20,6 @@ import RoomPlayerRemoveEvent from './events/room-player-remove-event';
 import RoomQueueRemoveEvent from './events/room-queue-remove-event';
 import Notifier, { NotifierFlow } from '../notifier/notifier';
 
-export type RoomEventPayload = string;
 type OnMessageCallback = (message: Message) => void;
 
 export abstract class RoomManager {
@@ -86,11 +85,8 @@ export abstract class RoomManager {
     protected subscribeData(player: Player): void {
         player.notifier.follow(PlayerEventType.MESSAGE, this, (playerEvent: PlayerEvent<RoomMessage>) => {
             const message: RoomMessage = playerEvent.message;
-            if (message.origin !== MessageOriginType.ROOM_SERVICE) {
-                this.onRoomMessage(message, playerEvent.name);
-            } else {
-                this._onMessage(message);
-            }
+            this.onRoomMessage(message, playerEvent.name);
+            this._onMessage(message);
         });
     }
 

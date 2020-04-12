@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { RoomService } from '../../services/room/room.service';
+import { BlockRoomService } from '../../services/room/block-room/block-room.service';
 
 @Component({
     selector: 'app-room-layout',
@@ -10,5 +11,5 @@ export class RoomLayoutComponent {
     @Input() public maxPlayer: number;
     @Input() public isDebugging: boolean = false;
 
-    public constructor(public roomService: RoomService) { }
+    public constructor(public roomService: BlockRoomService) { }
 }

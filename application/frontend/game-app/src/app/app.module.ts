@@ -32,6 +32,7 @@ import { ChatPageComponent } from './pages/chat-page/chat-page.component';
 import { SynchronousChessPageComponent } from './pages/synchronous-chess-page/synchronous-chess-page.component';
 import { RoomLayoutComponent } from './layouts/room-layout/room-layout.component';
 import { PromotionComponent } from './components/chess/promotion/promotion.component';
+import { BlockRoomService } from './services/room/block-room/block-room.service';
 
 
 @NgModule({
@@ -66,7 +67,7 @@ import { PromotionComponent } from './components/chess/promotion/promotion.compo
         MatGridListModule,
         DragDropModule
     ],
-    providers: [RoomService, RoomApiService, WebSocketService],
+    providers: [BlockRoomService, RoomService, RoomApiService, WebSocketService],
     bootstrap: [AppComponent]
 })
 export class AppModule { }
