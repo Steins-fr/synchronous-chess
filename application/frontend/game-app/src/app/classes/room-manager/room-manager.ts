@@ -24,7 +24,6 @@ export type RoomEventPayload = string;
 type OnMessageCallback = (message: Message) => void;
 
 export abstract class RoomManager {
-    protected negotiatorsSubs: Map<string, Array<Subscription>> = new Map<string, Array<Subscription>>();
 
     protected localPlayer?: Player;
     protected players: Map<string, Player> = new Map<string, Player>();
@@ -46,7 +45,7 @@ export abstract class RoomManager {
         this.isSetup = true;
     }
 
-    public transmitMessage(message: RoomMessage): void {
+    protected transmitMessage(message: RoomMessage): void {
         this.players.forEach((player: Player) => {
             message.from = this.localPlayer.name;
             player.sendData(message);
