@@ -4,14 +4,13 @@ import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-ho
 import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
 import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 import SynchronousChessGameSession from './synchronous-chess-game-session';
-import { RoomManager } from '../../room-manager/room-manager';
 
 export default abstract class SynchronousChessGameSessionBuilder {
-    public static buildOnline(roomService: RoomService, roomManager: RoomManager, ngZone: NgZone): SynchronousChessGameSession {
-        if (roomManager.initiator) {
-            return new SynchronousChessOnlineHostGameSession(roomService, roomManager, ngZone);
+    public static buildOnline(roomService: RoomService, ngZone: NgZone): SynchronousChessGameSession {
+        if (roomService.initiator) {
+            return new SynchronousChessOnlineHostGameSession(roomService, ngZone);
         }
-        return new SynchronousChessOnlinePeerGameSession(roomService, roomManager, ngZone);
+        return new SynchronousChessOnlinePeerGameSession(roomService, ngZone);
     }
 
     public static buildLocal(ngZone: NgZone): SynchronousChessGameSession {

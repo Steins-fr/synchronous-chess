@@ -2,9 +2,8 @@ import { NgZone } from '@angular/core';
 import { PieceColor, PieceType } from '../rules/chess-rules';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import Vec2 from 'vec2';
 import Move from '../interfaces/move';
-import CoordinateMove, { Coordinate } from '../interfaces/CoordinateMove';
+import CoordinateMove from '../interfaces/CoordinateMove';
 
 export interface SessionConfiguration {
     whitePlayer?: string;
