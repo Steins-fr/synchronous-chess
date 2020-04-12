@@ -35,12 +35,12 @@ export class SyncChessGameComponent implements OnInit {
     }
 
     public ngOnInit(): void {
-        this.roomService.notifier.follow(RoomServiceEventType.ROOM_MANAGER, this, (roomTypeMessage: RoomMessage<RoomManager>) => this.onRoomManager(roomTypeMessage.payload));
+        this.roomService.notifier.follow(RoomServiceEventType.IS_READY, this, () => this.onRoomReady());
     }
 
-    private onRoomManager(roomManager: RoomManager): void {
-        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, roomManager, this.ngZone);
-        this.roomService.notifier.unfollow(RoomServiceEventType.ROOM_MANAGER, this);
+    private onRoomReady(): void {
+        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, this.ngZone);
+        this.roomService.notifier.unfollow(RoomServiceEventType.IS_READY, this);
     }
 
     public piecePicked(cellPos: Vec2): void {

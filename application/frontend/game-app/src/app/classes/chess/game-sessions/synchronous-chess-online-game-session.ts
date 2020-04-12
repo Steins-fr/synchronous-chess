@@ -2,9 +2,7 @@ import { RoomService } from '../../../services/room/room.service';
 import { NgZone } from '@angular/core';
 import { PieceColor, PieceType } from '../rules/chess-rules';
 import SynchronousChessGameSession from './synchronous-chess-game-session';
-import { RoomManager } from '../../room-manager/room-manager';
 import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
-import { Coordinate } from '../interfaces/CoordinateMove';
 import Move from '../interfaces/move';
 
 export enum SCGameSessionType {
@@ -23,7 +21,7 @@ export interface PromotionMessage {
 
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
 
-    public constructor(protected readonly roomService: RoomService, protected readonly roomManager: RoomManager, ngZone: NgZone) {
+    public constructor(protected readonly roomService: RoomService, ngZone: NgZone) {
         super(ngZone);
         this.roomService.notifier.follow(SCGameSessionType.PLAY, this, this.onMove.bind(this));
         this.roomService.notifier.follow(SCGameSessionType.PROMOTION, this, this.onPromotion.bind(this));
