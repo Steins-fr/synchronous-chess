@@ -10,7 +10,7 @@
         "build": "rm -rf dist/* && tsc"
     },
     "dependencies": {
-        "aws-sdk": "^2.434.0"
+        "aws-sdk": "^2.814.0"
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.33",
