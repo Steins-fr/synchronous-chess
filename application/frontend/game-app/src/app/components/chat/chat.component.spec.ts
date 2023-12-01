@@ -1,6 +1,8 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RoomServiceMessage } from '@app/classes/webrtc/messages/room-service-message';
+import { BlockRoomService } from '@app/services/room/block-room/block-room.service';
 
-import { ChatComponent } from './chat.component';
+import { ChatComponent, ChatMessageType } from './chat.component';
 import { FormsModule } from '@angular/forms';
 import { RoomSetupComponent } from '../shared/room-setup/room-setup.component';
 import { WebrtcDebugComponent } from '../shared/debug/webrtc-debug/webrtc-debug.component';
@@ -13,20 +15,20 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { ParticipantComponent } from './participant/participant.component';
-import { RoomService } from '../../services/room/room.service';
-import Notifier from '../../classes/notifier/notifier';
+import { RoomService } from '@app/services/room/room.service';
+import Notifier from '@app/classes/notifier/notifier';
 
 describe('ChatComponent', () => {
     let component: ChatComponent;
     let fixture: ComponentFixture<ChatComponent>;
-    let roomServiceSpy: jasmine.SpyObj<RoomService>;
+    let roomServiceSpy: jasmine.SpyObj<BlockRoomService<RoomServiceMessage<ChatMessageType, string>>>;
 
-    beforeEach(async(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService>('RoomService',
-            ['isReady', 'notifier', 'clear', 'players']);
+    beforeEach(async () => {
+        roomServiceSpy = jasmine.createSpyObj<BlockRoomService<RoomServiceMessage<ChatMessageType, string>>>(
+            ['isReady', 'notifier', 'clear', 'players']
+        );
 
-        const notifierSpy: jasmine.SpyObj<Notifier<any, any>> = jasmine.createSpyObj<Notifier<any, any>>('Notifier',
-            ['follow', 'unfollow']);
+        const notifierSpy: jasmine.SpyObj<Notifier<any, any>> = jasmine.createSpyObj<Notifier<any, any>>(['follow', 'unfollow']);
         Object.defineProperty(roomServiceSpy, 'notifier', {
             value: notifierSpy,
             writable: false
@@ -36,7 +38,7 @@ describe('ChatComponent', () => {
             writable: false
         });
 
-        TestBed.configureTestingModule({
+        await TestBed.configureTestingModule({
             providers: [
                 { provide: RoomService, useValue: roomServiceSpy }
             ],
@@ -59,7 +61,7 @@ describe('ChatComponent', () => {
             ]
         })
             .compileComponents();
-    }));
+    });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(ChatComponent);

@@ -6,7 +6,7 @@ import SynchronousChessLocalGameSession from './synchronous-chess-local-game-ses
 import SynchronousChessGameSession from './synchronous-chess-game-session';
 
 export default abstract class SynchronousChessGameSessionBuilder {
-    public static buildOnline(roomService: RoomService, ngZone: NgZone): SynchronousChessGameSession {
+    public static buildOnline(roomService: RoomService<any>, ngZone: NgZone): SynchronousChessGameSession {
         if (roomService.initiator) {
             return new SynchronousChessOnlineHostGameSession(roomService, ngZone);
         }

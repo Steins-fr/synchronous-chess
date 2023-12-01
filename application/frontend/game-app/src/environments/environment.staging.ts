@@ -1,9 +1,7 @@
 import EnvironmentInterface from './environment.interface';
 
-class Environment implements EnvironmentInterface {
-    public production: boolean = true;
-    public iceServers: string[] = ['stun:stun.l.google.com:19302'];
-    public webSocketServer: string = 'wss://ss-wss-staging.steins.fr';
-}
-
-export const environment: Environment = new Environment();
+export const environment: EnvironmentInterface = {
+    production: true,
+    iceServers: ['stun:stun.l.google.com:19302'],
+    webSocketServer: 'wss://ss-wss-staging.steins.fr',
+};

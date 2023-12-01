@@ -7,7 +7,7 @@ export class WaitingQueue {
     private static readonly RATIO: number = 2.0 / 3.0;
     private readonly _queue: Map<string, WaitingBlock> = new Map<string, WaitingBlock>();
     private _participantNumber: number = 1;
-    private _localParticipant: Participant;
+    private _localParticipant?: Participant;
 
     public set participantNumber(nb: number) {
         this._participantNumber = nb;
@@ -17,21 +17,29 @@ export class WaitingQueue {
         this._localParticipant = localParticipant;
     }
 
+    public get localParticipant(): Participant {
+        if (!this._localParticipant) {
+            throw new Error('Local participant not set, please call isReady() first');
+        }
+
+        return this._localParticipant;
+    }
+
     public approveBlock(block: Block, participant: Participant): boolean {
-        let wb: WaitingBlock = this._queue.get(block.hash);
+        let wb: WaitingBlock | undefined = this._queue.get(block.hash);
 
         if (!wb) {
             wb = new WaitingBlock(block);
         }
 
-        for (const [_, waitingBlock] of this._queue) {
+        for (const waitingBlock of this._queue.values()) {
             if (waitingBlock.block.index === wb.block.index
                 && waitingBlock.block.hash !== wb.block.hash) {
-                if (waitingBlock.block.hash < wb.block.hash && !this.hasDeclined(wb, this._localParticipant)) {
-                    wb.declinedBy.push(this._localParticipant);
+                if (waitingBlock.block.hash < wb.block.hash && !this.hasDeclined(wb, this.localParticipant)) {
+                    wb.declinedBy.push(this.localParticipant);
                     break;
-                } else if (!this.hasDeclined(waitingBlock, this._localParticipant)) {
-                    waitingBlock.declinedBy.push(this._localParticipant);
+                } else if (!this.hasDeclined(waitingBlock, this.localParticipant)) {
+                    waitingBlock.declinedBy.push(this.localParticipant);
                     this._queue.set(waitingBlock.block.hash, waitingBlock);
                 }
             }
@@ -47,7 +55,7 @@ export class WaitingQueue {
     }
 
     public declineBlock(block: Block, participant: Participant): void {
-        let wb: WaitingBlock = this._queue.get(block.hash);
+        let wb: WaitingBlock | undefined = this._queue.get(block.hash);
 
         if (!wb) {
             wb = new WaitingBlock(block);
@@ -62,11 +70,13 @@ export class WaitingQueue {
     }
 
     public hasApprovedBlock(block: Block, participant: Participant): boolean {
-        if (this._queue.has(block.hash)) {
-            return this.hasApproved(this._queue.get(block.hash), participant);
+        const wb: WaitingBlock | undefined = this._queue.get(block.hash);
+
+        if (!wb) {
+            return false;
         }
 
-        return false;
+        return this.hasApproved(wb, participant);
     }
 
     private hasApproved(wb: WaitingBlock, participant: Participant): boolean {
@@ -74,11 +84,13 @@ export class WaitingQueue {
     }
 
     public hasDeclinedBlock(block: Block, participant: Participant): boolean {
-        if (this._queue.has(block.hash)) {
-            return this.hasDeclined(this._queue.get(block.hash), participant);
+        const wb: WaitingBlock | undefined = this._queue.get(block.hash);
+
+        if (!wb) {
+            return false;
         }
 
-        return false;
+        return this.hasDeclined(wb, participant);
     }
 
     private hasDeclined(wb: WaitingBlock, participant: Participant): boolean {
@@ -90,31 +102,33 @@ export class WaitingQueue {
     }
 
     public blockIsDeclined(block: Block): boolean {
-        if (this._queue.has(block.hash)) {
-            return this._queue.get(block.hash).declinedBy.length > this._participantNumber * WaitingQueue.RATIO;
+        const wb: WaitingBlock | undefined = this._queue.get(block.hash);
+
+        if (!wb) {
+            return false;
         }
 
-        return false;
+        return wb.declinedBy.length > this._participantNumber * WaitingQueue.RATIO;
     }
 
     public blockJustApproved(block: Block): boolean {
-        if (this._queue.has(block.hash)) {
-            const wb: WaitingBlock = this._queue.get(block.hash);
+        const wb: WaitingBlock | undefined = this._queue.get(block.hash);
 
-            if (this.blockIsDeclined(wb.block) || wb.isApproved) {
-                return false;
-            }
-
-            wb.isApproved = wb.approvedBy.length > this._participantNumber * WaitingQueue.RATIO;
-
-            return wb.isApproved;
+        if (!wb) {
+            return false;
         }
 
-        return false;
+        if (this.blockIsDeclined(wb.block) || wb.isApproved) {
+            return false;
+        }
+
+        wb.isApproved = wb.approvedBy.length > this._participantNumber * WaitingQueue.RATIO;
+
+        return wb.isApproved;
     }
 
     public blockIsApproved(block: Block): boolean {
-        return this._queue.has(block.hash) ? this._queue.get(block.hash).isApproved : false;
+        return this._queue.get(block.hash)?.isApproved ?? false;
     }
 
     public clearBlock(block: Block): void {

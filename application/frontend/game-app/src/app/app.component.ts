@@ -1,10 +1,14 @@
 import { Component } from '@angular/core';
-import { homePath, chatPath } from './app-routing.module';
+import { CommonModule } from '@angular/common';
+import { RouterOutlet, RouterModule } from '@angular/router';
+import { homePath, chatPath } from './app.routes';
 
 @Component({
     selector: 'app-root',
+    standalone: true,
+    imports: [CommonModule, RouterOutlet, RouterModule],
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    styleUrl: './app.component.scss'
 })
 export class AppComponent {
     public title: string = 'synchronous-chess';

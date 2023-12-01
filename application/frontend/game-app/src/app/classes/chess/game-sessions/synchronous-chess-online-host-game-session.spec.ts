@@ -14,34 +14,34 @@ import ChessBoardHelper from '../../../helpers/chess-board-helper';
 import Move, { FenColumn, FenRow } from '../interfaces/move';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
-    public onMove(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
+    public override onMove(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
         super.onMove(message);
     }
 
-    public onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
+    public override onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
         super.onPromotion(message);
     }
 }
 
 describe('SynchronousChessOnlineHostGameSession', () => {
 
-    let roomServiceSpy: jasmine.SpyObj<RoomService>;
+    let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
 
     beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService>('RoomService', ['notifier', 'localPlayer', 'isReady', 'transmitMessage', 'roomManagerNotifier']);
+        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['notifier', 'localPlayer', 'isReady', 'transmitMessage', 'roomManagerNotifier']);
         Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
         Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
         roomServiceSpy.isReady.and.returnValue(true);
     });
 
     it('should create an instance', () => {
-        expect(new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined)).toBeTruthy();
+        expect(new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone)).toBeTruthy();
     });
 
     it('should get the color of the playing player', () => {
@@ -50,13 +50,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: { name: 'a' },
             writable: false
         });
-        const sessionWhite: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const sessionWhite: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         sessionWhite.configuration.whitePlayer = 'a';
         sessionWhite.configuration.blackPlayer = 'b';
-        const sessionBlack: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const sessionBlack: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         sessionBlack.configuration.blackPlayer = 'a';
         sessionBlack.configuration.whitePlayer = 'b';
-        const sessionNone: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const sessionNone: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         sessionNone.configuration.blackPlayer = 'c';
         sessionNone.configuration.whitePlayer = 'b';
 
@@ -77,16 +77,16 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: { name: 'a' },
             writable: false
         });
-        const session1: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session1: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session1.configuration.whitePlayer = 'a';
         session1.configuration.blackPlayer = undefined;
-        const session2: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session2: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session2.configuration.whitePlayer = undefined;
         session2.configuration.blackPlayer = 'a';
-        const session3: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session3: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session3.configuration.whitePlayer = 'c';
         session3.configuration.blackPlayer = 'b';
-        const session4: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session4: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session4.configuration.whitePlayer = 'a';
         session4.configuration.blackPlayer = 'b';
 
@@ -113,7 +113,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -145,7 +145,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -306,7 +306,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -331,7 +331,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, undefined);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {

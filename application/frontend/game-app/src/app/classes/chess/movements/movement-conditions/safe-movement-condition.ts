@@ -1,16 +1,20 @@
-import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard, SafeBoard } from '../../../../helpers/chess-board-helper';
-import ChessRules from '../../rules/chess-rules';
-import MovementCondition from './movement-condition';
+import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
+import ChessRules from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import ChessBoardHelper, { FenBoard, SafeBoard } from '@app/helpers/chess-board-helper';
 
 export class SafeMovementCondition extends MovementCondition {
 
     public readonly andRelativeSafeCell?: Vec2;
 
-    public constructor(public readonly rules: ChessRules, public readonly preventRecursion: boolean, andRelativeSafeCell?: Array<number>) {
+    public constructor(
+        public readonly rules: ChessRules,
+        public readonly preventRecursion: boolean,
+        andRelativeSafeCell?: [number, number],
+    ) {
         super();
         if (andRelativeSafeCell !== undefined) {
-            this.andRelativeSafeCell = new Vec2(andRelativeSafeCell);
+            this.andRelativeSafeCell = Vec2.fromArray(andRelativeSafeCell);
         }
     }
 
@@ -21,8 +25,8 @@ export class SafeMovementCondition extends MovementCondition {
 
         const safeBoard: SafeBoard = ChessBoardHelper.fenBoardToSafeBoard(board, this.rules);
         if (this.andRelativeSafeCell !== undefined) {
-            const andSafeCell: Vec2 = oldPosition.add(this.andRelativeSafeCell, true);
-            if (ChessBoardHelper.isOutOfBoardByVec(andSafeCell) === false && safeBoard[andSafeCell.y][andSafeCell.x] === false) {
+            const andSafeCell: Vec2 = oldPosition.addVec(this.andRelativeSafeCell);
+            if (!ChessBoardHelper.isOutOfBoardByVec(andSafeCell) && !safeBoard[andSafeCell.y][andSafeCell.x]) {
                 return false;
             }
         }

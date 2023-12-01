@@ -1,44 +1,58 @@
 import { Injectable, NgZone } from '@angular/core';
+import Notifier, { NotifierFlow } from '@app/classes/notifier/notifier';
+import { Player } from '@app/classes/player/player';
+import { RoomEventType } from '@app/classes/room-manager/events/room-event';
+import RoomPlayerAddEvent from '@app/classes/room-manager/events/room-player-add-event';
+import RoomPlayerRemoveEvent from '@app/classes/room-manager/events/room-player-remove-event';
+import RoomQueueAddEvent from '@app/classes/room-manager/events/room-queue-add-event';
+import RoomQueueRemoveEvent from '@app/classes/room-manager/events/room-queue-remove-event';
+import RoomReadyEvent from '@app/classes/room-manager/events/room-ready-event';
+import { HostRoomManager } from '@app/classes/room-manager/host-room-manager';
+import { PeerRoomManager } from '@app/classes/room-manager/peer-room-manager';
+import { RoomManager } from '@app/classes/room-manager/room-manager';
+import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
+import { RoomServiceMessage } from '@app/classes/webrtc/messages/room-service-message';
 import { BehaviorSubject, Observable } from 'rxjs';
-
-import { RoomServiceMessage } from '../../classes/webrtc/messages/room-service-message';
-import MessageOriginType from '../../classes/webrtc/messages/message-origin.types';
-
-import { RoomManager } from '../../classes/room-manager/room-manager';
-import { HostRoomManager } from '../../classes/room-manager/host-room-manager';
-import { PeerRoomManager } from '../../classes/room-manager/peer-room-manager';
-
-import { RoomApiService } from '../room-api/room-api.service';
-import RoomEvent, { RoomEventType } from '../../classes/room-manager/events/room-event';
-import RoomPlayerAddEvent from '../../classes/room-manager/events/room-player-add-event';
-import { Player } from '../../classes/player/player';
-import RoomPlayerRemoveEvent from '../../classes/room-manager/events/room-player-remove-event';
-import RoomQueueAddEvent from '../../classes/room-manager/events/room-queue-add-event';
-import RoomQueueRemoveEvent from '../../classes/room-manager/events/room-queue-remove-event';
 import RoomCreateResponse from '../room-api/responses/room-create-response';
 import RoomJoinResponse from '../room-api/responses/room-join-response';
-import Notifier, { NotifierFlow } from '../../classes/notifier/notifier';
-import { RoomMessage } from '../../classes/webrtc/messages/room-message';
-import RoomReadyEvent from '../../classes/room-manager/events/room-ready-event';
+import { RoomApiService } from '../room-api/room-api.service';
 
 export enum RoomServiceEventType {
     IS_READY = 'RoomServiceIsReady'
 }
 
 type RoomServiceNotificationType = string;
-type RoomServiceNotification = RoomMessage;
 
+// TODO: rework factory of room service to remove @Injectable root for child classes
 @Injectable(
     { providedIn: 'root' }
 )
-export class RoomService {
+export class RoomService<RoomServiceNotification extends RoomServiceMessage> {
+    private _roomManager?: RoomManager<RoomServiceMessage>;
+    public get roomManager(): RoomManager<RoomServiceMessage> {
+        if (!this._roomManager) {
+            throw new Error('Room manager is not defined, please set it first');
+        }
 
-    public roomManager?: RoomManager;
+        return this._roomManager;
+    }
 
     protected readonly _isActive: BehaviorSubject<boolean> = new BehaviorSubject(false);
     public readonly isActive: Observable<boolean> = this._isActive.asObservable();
 
-    public localPlayer?: Player;
+    private _localPlayer?: Player;
+    public get localPlayer(): Player {
+        if (!this._localPlayer) {
+            throw new Error('Local player is not defined, please set it first');
+        }
+
+        return this._localPlayer;
+    }
+
+    public set localPlayer(value: Player) {
+        this._localPlayer = value;
+    }
+
     public players: Map<string, Player> = new Map<string, Player>();
     public queue: Array<string> = [];
 
@@ -47,11 +61,11 @@ export class RoomService {
     public constructor(protected readonly ngZone: NgZone, protected readonly roomApi: RoomApiService) {
     }
 
-    public get notifier(): NotifierFlow<RoomServiceNotificationType, RoomServiceNotification> {
+    public get notifier(): NotifierFlow<RoomServiceNotificationType> {
         return this._notifier;
     }
 
-    public get roomManagerNotifier(): NotifierFlow<RoomEventType, RoomEvent> {
+    public get roomManagerNotifier(): NotifierFlow<RoomEventType> {
         return this.roomManager.notifier;
     }
 
@@ -79,32 +93,32 @@ export class RoomService {
     }
 
     public isReady(): boolean {
-        return this.roomManager !== undefined;
+        return this._roomManager !== undefined;
     }
 
     public createRoom(roomName: string, playerName: string, maxPlayer: number): Promise<RoomCreateResponse> {
-        const hostRoom: HostRoomManager = new HostRoomManager(this.roomApi, roomName);
+        const hostRoom = new HostRoomManager<RoomServiceMessage>(this.roomApi, roomName, (message: RoomServiceMessage) => this.onMessage(message));
         this.followRoomManager(hostRoom);
-        hostRoom.setup((message: RoomServiceMessage) => this.onMessage(message));
         return hostRoom.create(playerName, maxPlayer);
     }
 
     protected onMessage(message: RoomServiceMessage): void {
-        this._notifier.notify(message.type, message);
+        // TODO: rework this type
+        this._notifier.notify(message.type, message as RoomServiceNotification);
     }
 
     public joinRoom(roomName: string, playerName: string): Promise<RoomJoinResponse> {
-        const peerRoom: PeerRoomManager = new PeerRoomManager(this.roomApi, roomName);
+        const peerRoom = new PeerRoomManager<RoomServiceMessage>(this.roomApi, roomName, (message: RoomServiceMessage) => this.onMessage(message));
         this.followRoomManager(peerRoom);
-        peerRoom.setup((message: RoomServiceMessage) => this.onMessage(message));
         return peerRoom.join(playerName);
     }
 
     private notify<T>(type: RoomServiceNotificationType, payload: T): void {
-        this._notifier.notify(type, { origin: MessageOriginType.ROOM_SERVICE, payload });
+        // TODO: rework this type
+        this._notifier.notify(type, { origin: MessageOriginType.ROOM_SERVICE, payload } as RoomServiceNotification);
     }
 
-    private followRoomManager(roomManager: RoomManager): void {
+    private followRoomManager(roomManager: RoomManager<RoomServiceMessage>): void {
         roomManager.notifier.follow(RoomEventType.READY, this, this.handleRoomManagerReadyEvent.bind(this));
         roomManager.notifier.follow(RoomEventType.PLAYER_ADD, this, this.handleRoomPlayerAddEvent.bind(this));
         roomManager.notifier.follow(RoomEventType.PLAYER_REMOVE, this, this.handleRoomPlayerRemoveEvent.bind(this));
@@ -117,8 +131,10 @@ export class RoomService {
     }
 
     protected handleRoomManagerReadyEvent(event: RoomReadyEvent): void {
-        this.roomManager = event.payload;
-        this.ngZone.run(() => this._isActive.next(true));
+        this._roomManager = event.payload;
+        this.ngZone.run(() => {
+            this._isActive.next(true);
+        });
         // Todo: remove one of notification
         this.notify<boolean>(RoomServiceEventType.IS_READY, true);
     }
@@ -126,7 +142,7 @@ export class RoomService {
     protected handleRoomPlayerAddEvent(event: RoomPlayerAddEvent): void {
         const player: Player = event.payload;
         if (player.isLocal()) {
-            this.localPlayer = player;
+            this._localPlayer = player;
         }
 
         this.ngZone.run(() => this.players.set(player.name, player));
@@ -149,13 +165,13 @@ export class RoomService {
     }
 
     public roomIsSetup(): boolean {
-        return this.roomManager !== undefined && this.roomManager.isSetup;
+        return this._roomManager !== undefined;
     }
 
     public clear(): void {
-        if (this.roomManager !== undefined) {
-            this.roomManager.clear();
-            this.roomManager = undefined;
+        if (this._roomManager !== undefined) {
+            this._roomManager.clear();
+            this._roomManager = undefined;
         }
 
         this.roomApi.close();

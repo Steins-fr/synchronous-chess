@@ -32,30 +32,34 @@ export class Player {
 
     private readonly _notifier: Notifier<PlayerEventType, PlayerEvent> = new Notifier<PlayerEventType, PlayerEvent>();
 
-    public states?: Observable<WebrtcStates>; // For external debugging
+    public readonly states: Observable<WebrtcStates>; // For external debugging
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.CONNECTED;
 
-    private pingTimerId?: NodeJS.Timer;
+    private pingTimerId?: ReturnType<typeof setInterval>;
     public ping: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
     private readonly markIdGenerator: Generator = function* generator(name: string): Generator {
         let id: number = 0;
         while (true) {
-            yield `${name}-${++id}`;
+            ++id;
+            yield `${ name }-${ id }`;
         }
     }(this.name);
 
     public constructor(public readonly name: string, public readonly type: PlayerType, private readonly webRTC?: Webrtc) {
-        if (this.isLocal() === false) {
-            this.states = webRTC.states;
+        // TODO: create a webRTC player class
+        if (this.webRTC) {
+            this.states = this.webRTC.states;
             this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
-            this.subs.push(this.webRTC.data.subscribe((data: RoomMessage) => this.onPeerData(data)));
+            this.subs.push(this.webRTC.data.subscribe((data: Message) => this.onPeerData(data as RoomMessage)));
 
             this.pingInterval();
+        } else {
+            this.states = new Observable<WebrtcStates>();
         }
     }
 
-    public get notifier(): NotifierFlow<PlayerEventType, PlayerEvent> {
+    public get notifier(): NotifierFlow<PlayerEventType> {
         return this._notifier;
     }
 
@@ -73,9 +77,10 @@ export class Player {
         const pingInterval: number = 2500;
         this.pingTimerId = setInterval(() => {
             const markId: string = this.markIdGenerator.next().value;
-            window.performance.mark(`${Player.PING_MARK}-${markId}`);
+            window.performance.mark(`${ Player.PING_MARK }-${ markId }`);
 
             const pingMessage: PlayerMessage<string> = {
+                from: '', // Filled by sendData, TODO: refactor
                 type: PlayerMessageType.PING,
                 origin: MessageOriginType.PLAYER,
                 payload: markId
@@ -85,7 +90,7 @@ export class Player {
         }, pingInterval);
     }
 
-    private pushEvent(type: PlayerEventType, message?: Message): void {
+    private pushEvent(type: PlayerEventType, message: Message): void {
         this._notifier.notify(type, {
             type,
             message,
@@ -94,21 +99,30 @@ export class Player {
     }
 
     private onPeerStates(states: WebrtcStates): void {
+        console.log('Peer states', states);
         if (this.connectionState === states.iceConnection) {
             return; // Do nothing, it's the same state
         }
         this.connectionState = states.iceConnection as WebrtcConnectionState;
 
         if (this.connectionState === WebrtcConnectionState.DISCONNECTED) {
-            this.pushEvent(PlayerEventType.DISCONNECTED);
+            this.pushEvent(PlayerEventType.DISCONNECTED, {} as Message);
         }
     }
 
     public sendData(message: RoomMessage): void {
         if (this.webRTC) {
             const id: number = this.webRTC.sendMessage(message);
-            if (message.origin !== MessageOriginType.PLAYER) {
-                console.log((new Date()).getTime().toString().substr(-5), id, `TO ${this.name}`, message['type'], message['payload'] ?? null);
+            const messageIsPingPong = 'type' in message && (message['type'] === PlayerMessageType.PING || message['type'] === PlayerMessageType.PONG);
+
+            if (message.origin !== MessageOriginType.PLAYER && !messageIsPingPong) {
+                console.log(
+                    (new Date()).getTime().toString().substr(-5),
+                    id,
+                    `TO ${ this.name }`,
+                    'type' in message ? message['type'] : null,
+                    message['payload'] ?? null,
+                );
             }
         }
     }
@@ -119,6 +133,7 @@ export class Player {
 
     private onPlayerPingMessage(playerMessage: PlayerMessage<string>): void {
         const message: PlayerMessage<string> = {
+            from: '', // Filled by sendData, TODO: refactor
             type: PlayerMessageType.PONG,
             origin: MessageOriginType.PLAYER,
             payload: playerMessage.payload
@@ -127,14 +142,15 @@ export class Player {
     }
 
     private onPlayerPongMessage(playerMessage: PlayerMessage<string>): void {
-        const pingMark: string = `${Player.PING_MARK}-${playerMessage.payload}`;
-        const pongMark: string = `${Player.PONG_MARK}-${playerMessage.payload}`;
-        const measureName: string = `${pingMark}_${pongMark}`;
+        const pingMark: string = `${ Player.PING_MARK }-${ playerMessage.payload }`;
+        const pongMark: string = `${ Player.PONG_MARK }-${ playerMessage.payload }`;
+        const measureName: string = `${ pingMark }_${ pongMark }`;
         window.performance.mark(pongMark);
         window.performance.measure(measureName, pingMark, pongMark);
         const performances: PerformanceEntry[] = window.performance.getEntriesByName(measureName, 'measure');
-        if (performances.length > 0) {
-            const performance: PerformanceEntry = performances.shift();
+        const performance: PerformanceEntry | undefined = performances.shift();
+
+        if (performance) {
             this.ping.next((performance.duration / 2.0).toFixed(1));
         }
         window.performance.clearMarks(pingMark);
@@ -160,7 +176,17 @@ export class Player {
             return;
         }
         message.from = this.name;
-        console.log((new Date()).getTime().toString().substr(-5), `FROM ${message.from}`, message['type'], message['payload'] ?? null);
+        const messageIsPingPong = 'type' in message && (message['type'] === PlayerMessageType.PING || message['type'] === PlayerMessageType.PONG);
+
+        if (!messageIsPingPong) {
+            console.log(
+                (new Date()).getTime().toString().substr(-5),
+                `FROM ${ message.from }`,
+                'type' in message ? message['type'] : null,
+                message['payload'] ?? null,
+            );
+        }
+
         this.pushEvent(PlayerEventType.MESSAGE, message);
     }
 }

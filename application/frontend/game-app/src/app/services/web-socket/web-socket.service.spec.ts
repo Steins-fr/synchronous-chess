@@ -100,7 +100,13 @@ describe('WebsocketService', () => {
 
         service.state.subscribe((state: SocketState) => {
             // Then
-            expect(state).toBe(states.shift());
+            const expectedState = states.shift();
+
+            if (expectedState === undefined) {
+                throw new Error('expectedState is undefined');
+            }
+
+            expect(state).toBe(expectedState);
             if (states.length === 0) {
                 done();
             }
@@ -110,6 +116,18 @@ describe('WebsocketService', () => {
             value: SocketState.OPEN,
             writable: false
         });
+
+        expect(service.socket.onopen).toBeDefined();
+        expect(service.socket.onclose).toBeDefined();
+
+        if (!service.socket.onopen) {
+            throw new Error('onopen is undefined');
+        }
+
+        if (!service.socket.onclose) {
+            throw new Error('onclose is undefined');
+        }
+
         service.socket.onopen(new Event(''));
         const stateEvent1: SocketState = service.stateValue;
         Object.defineProperty(socketSpy, 'readyState', {
@@ -137,11 +155,24 @@ describe('WebsocketService', () => {
 
         service.message.subscribe((payload: SocketPayload) => {
             // Then
-            expect(payload).toEqual(payloads.shift());
+            const expectedPayload = payloads.shift();
+
+            if (expectedPayload === undefined) {
+                throw new Error('expectedState is undefined');
+            }
+
+            expect(payload).toEqual(expectedPayload);
             if (payloads.length === 0) {
                 done();
             }
         });
+
+        expect(service.socket.onmessage).toBeDefined();
+
+        if (!service.socket.onmessage) {
+            throw new Error('onmessage is undefined');
+        }
+
         // When
         service.socket.onmessage(new MessageEvent('', { data: JSON.stringify(payload1) }));
         service.socket.onmessage(new MessageEvent('', { data: JSON.stringify(payload2) }));

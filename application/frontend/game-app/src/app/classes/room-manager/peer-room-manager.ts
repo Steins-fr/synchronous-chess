@@ -3,6 +3,7 @@ import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { Negotiator } from '../negotiator/negotiator';
 
 import { HostRoomMessage, HostRoomMessageType } from '../webrtc/messages/host-room-message';
+import { Message } from '../webrtc/messages/message';
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
 
@@ -10,7 +11,7 @@ import { Player, PlayerType } from '../player/player';
 import { RoomManager } from './room-manager';
 
 import RoomJoinResponse from '../../services/room-api/responses/room-join-response';
-import SignalResponse from '../../services/room-api/responses/signal-response';
+import RtcSignalResponse from '../../services/room-api/responses/rtc-signal-response';
 import { RoomEventType } from './events/room-event';
 import RoomReadyEvent from './events/room-ready-event';
 
@@ -18,7 +19,7 @@ export interface NewPlayerPayload {
     playerName: string;
 }
 
-export class PeerRoomManager extends RoomManager {
+export class PeerRoomManager<MessageType extends Message> extends RoomManager<MessageType> {
     public readonly initiator: boolean = false;
     protected hostPlayer?: Player;
 
@@ -48,7 +49,7 @@ export class PeerRoomManager extends RoomManager {
         }
     }
 
-    protected onRoomMessage(roomMessage: HostRoomMessage<SignalResponse> | HostRoomMessage<NewPlayerPayload>): void {
+    protected onRoomMessage(roomMessage: HostRoomMessage<RtcSignalResponse> | HostRoomMessage<NewPlayerPayload>): void {
         if (roomMessage.origin !== MessageOriginType.HOST_ROOM) {
             return;
         }
@@ -60,7 +61,7 @@ export class PeerRoomManager extends RoomManager {
                 this.onNewPlayer(newPlayerMessage.payload);
                 break;
             case HostRoomMessageType.REMOTE_SIGNAL:
-                const remoteMessage: HostRoomMessage<SignalResponse> = roomMessage as HostRoomMessage<SignalResponse>;
+                const remoteMessage: HostRoomMessage<RtcSignalResponse> = roomMessage as HostRoomMessage<RtcSignalResponse>;
                 this.onRemoteSignal(remoteMessage.payload);
                 break;
         }
@@ -83,17 +84,16 @@ export class PeerRoomManager extends RoomManager {
         this.addNegotiator(negotiator);
     }
 
-    private onRemoteSignal(remoteSignalPayload: SignalResponse): void {
+    private onRemoteSignal(remoteSignalPayload: RtcSignalResponse): void {
         if (this.hostPlayer === undefined) { // Do nothing if we don't have a host for transmitting negotiations
             return;
         }
 
-        let negotiator: Negotiator;
-        if (this.negotiators.has(remoteSignalPayload.from) === false) { // Create new negotiator
+        let negotiator: Negotiator | undefined = this.negotiators.get(remoteSignalPayload.from);
+
+        if (!negotiator) { // Create new negotiator
             negotiator = new WebrtcNegotiator(remoteSignalPayload.from, PlayerType.PEER, new Webrtc(), this.hostPlayer);
             this.addNegotiator(negotiator);
-        } else { // If exists, get the receiving negotiator.
-            negotiator = this.negotiators.get(remoteSignalPayload.from);
         }
 
         negotiator.negotiationMessage(remoteSignalPayload);

@@ -1,7 +1,7 @@
-import Vec2 from 'vec2';
-import ChessRules, { FenPiece, PieceType, PieceColor } from '../classes/chess/rules/chess-rules';
-import Move, { FenCoordinate, FenRow, FenColumn } from '../classes/chess/interfaces/move';
-import CoordinateMove, { Row, Column, Coordinate } from '../classes/chess/interfaces/CoordinateMove';
+import CoordinateMove, { Row, Column, Coordinate } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenCoordinate, FenRow, FenColumn } from '@app/classes/chess/interfaces/move';
+import ChessRules, { FenPiece, PieceType, PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
 
 export type FenBoard = Array<Array<FenPiece>>;
 export type SafeBoard = Array<Array<boolean>>;
@@ -157,7 +157,7 @@ export default abstract class ChessBoardHelper {
     }
 
     public static isOutOfBoard(coordinate: Coordinate): boolean {
-        return (coordinate[0] >= Column.A && coordinate[1] >= Row._8 && coordinate[0] <= Column.H && coordinate[1] <= Row._1) === false;
+        return !(coordinate[0] >= Column.A && coordinate[1] >= Row._8 && coordinate[0] <= Column.H && coordinate[1] <= Row._1);
     }
 
     public static isOutOfBoardByVec(vector: Vec2): boolean {
@@ -165,10 +165,7 @@ export default abstract class ChessBoardHelper {
     }
 
     public static pieceType(fenPiece: FenPiece): PieceType {
-        if (ChessBoardHelper.fenPieceToPieceTypeMap.has(fenPiece)) {
-            return ChessBoardHelper.fenPieceToPieceTypeMap.get(fenPiece);
-        }
-        return PieceType.NONE;
+        return ChessBoardHelper.fenPieceToPieceTypeMap.get(fenPiece) ?? PieceType.NONE;
     }
 
     /**
@@ -214,10 +211,12 @@ export default abstract class ChessBoardHelper {
     public static promote(fenBoard: FenBoard, fenCoordinate: FenCoordinate, pieceType: PieceType, pieceColor: PieceColor): FenBoard {
         const pieceMap: Map<PieceType, FenPiece> = pieceColor === PieceColor.WHITE ? ChessBoardHelper.whitePromotionPieces : ChessBoardHelper.blackPromotionPieces;
 
-        if (pieceMap.has(pieceType) === false) {
+        const piece: FenPiece | undefined = pieceMap.get(pieceType);
+
+        if (!piece) {
             return ChessBoardHelper.cloneBoard(fenBoard);
         }
-        const piece: FenPiece = pieceMap.get(pieceType);
+
         return ChessBoardHelper.setFenPiece(fenBoard, fenCoordinate, piece);
     }
 
@@ -226,7 +225,11 @@ export default abstract class ChessBoardHelper {
     }
 
     private static getProtectionPlays(position: Vec2, board: FenBoard, rules: ChessRules): Array<Vec2> {
-        const playedPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(board, position);
+        const playedPiece: FenPiece | null = ChessBoardHelper.getFenPieceByVec(board, position);
+
+        if (!playedPiece) {
+            return [];
+        }
 
         // Turn all pieces to the same color
         // This permits to simulate the protection of our piece.
@@ -241,13 +244,13 @@ export default abstract class ChessBoardHelper {
         // Pawn eat and movements are different. Place fake pieces to force eating over movement.
         if (this.pieceType(playedPiece) === PieceType.PAWN) {
             [
-                position.add(0, 1, true), position.add(0, -1, true),
-                position.add(1, 1, true), position.add(1, -1, true),
-                position.add(-1, 1, true), position.add(-1, -1, true)
+                position.add(0, 1), position.add(0, -1),
+                position.add(1, 1), position.add(1, -1),
+                position.add(-1, 1), position.add(-1, -1)
             ].forEach((fakePiecePosition: Vec2) => {
                 const coordinate: Coordinate = [fakePiecePosition.x, fakePiecePosition.y];
-                if (ChessBoardHelper.isOutOfBoard(coordinate) === false) {
-                    fakeBoard[fakePiecePosition.y][fakePiecePosition.x] = ChessBoardHelper.getFenPieceByVec(fakeBoard, position);
+                if (!ChessBoardHelper.isOutOfBoard(coordinate)) {
+                    fakeBoard[fakePiecePosition.y][fakePiecePosition.x] = ChessBoardHelper.getFenPieceByVec(fakeBoard, position) ?? FenPiece.EMPTY;
                 }
             });
         }
@@ -255,7 +258,7 @@ export default abstract class ChessBoardHelper {
         // Correct the color of the moving piece
         fakeBoard[position.y][position.x] = playedPiece;
 
-        return rules.getPossiblePlays(ChessBoardHelper.pieceType(ChessBoardHelper.getFenPieceByVec(fakeBoard, position)), position, fakeBoard);
+        return rules.getPossiblePlays(ChessBoardHelper.pieceType(ChessBoardHelper.getFenPieceByVec(fakeBoard, position) ?? FenPiece.EMPTY), position, fakeBoard);
     }
 
 
@@ -267,8 +270,8 @@ export default abstract class ChessBoardHelper {
             excludeFromCoordinate = ChessBoardHelper.fenCoordinateToVec2(excludeFrom);
         }
 
-        if (ChessBoardHelper.fenBoardToSafeBoardCache.has(cacheKey) && ChessBoardHelper.isCacheDisabled === false) {
-            return ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey);
+        if (ChessBoardHelper.fenBoardToSafeBoardCache.has(cacheKey) && !ChessBoardHelper.isCacheDisabled) {
+            return ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey) ?? [];
         }
 
         const size: number = 8;
@@ -279,12 +282,12 @@ export default abstract class ChessBoardHelper {
             row.forEach((piece: FenPiece, x: number) => {
                 const pieceType: PieceType = ChessBoardHelper.pieceType(piece);
                 // Exclude results for this piece
-                if (excludeFromCoordinate !== undefined && excludeFromCoordinate.equal(x, y)) {
+                if (excludeFromCoordinate?.equal(x, y)) {
                     return;
                 }
 
                 if (pieceType !== PieceType.NONE && ChessBoardHelper.pieceColor(piece) === rules.color) {
-                    protectionPlays = protectionPlays.concat(this.getProtectionPlays(new Vec2([x, y]), board, rules));
+                    protectionPlays = protectionPlays.concat(this.getProtectionPlays(new Vec2(x, y), board, rules));
                 }
             });
         });
@@ -304,15 +307,16 @@ export default abstract class ChessBoardHelper {
     }
 
     public static castlingRook(from: Vec2, to: Vec2): Column {
-        return to.subtract(from, true).x > 0 ? Column.H : Column.A;
+        return to.subVec(from).x > 0 ? Column.H : Column.A;
     }
 
     public static indexRowToFenRow(index: Row): FenRow {
-        return ChessBoardHelper.indexRowToFenRowMap.get(index);
+        return ChessBoardHelper.indexRowToFenRowMap.get(index) ?? FenRow._1;
     }
 
     public static indexColumnToFenColumn(index: Column): FenColumn {
-        return ChessBoardHelper.indexColumnToFenColumnMap.get(index);
+        // TODO: Replace map by object
+        return ChessBoardHelper.indexColumnToFenColumnMap.get(index) ?? FenColumn.A;
     }
 
     public static coordinateToFenCoordinate(coordinate: Coordinate): FenCoordinate {
@@ -320,11 +324,11 @@ export default abstract class ChessBoardHelper {
     }
 
     public static fenRowToIndexRow(fenRow: FenRow): Row {
-        return ChessBoardHelper.fenRowToIndexRowMap.get(fenRow);
+        return ChessBoardHelper.fenRowToIndexRowMap.get(fenRow) ?? Row._1;
     }
 
     public static fenColumnToIndexColumn(fenColumn: FenColumn): Column {
-        return ChessBoardHelper.fenColumnToIndexColumnMap.get(fenColumn);
+        return ChessBoardHelper.fenColumnToIndexColumnMap.get(fenColumn) ?? Column.A;
     }
 
     public static fenCoordinateToCoordinate(fenCoordinate: FenCoordinate): Coordinate {
@@ -341,7 +345,7 @@ export default abstract class ChessBoardHelper {
 
     public static fenCoordinateToVec2(fenCoordinate: FenCoordinate): Vec2 {
         const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
-        return new Vec2([coordinate[0], coordinate[1]]);
+        return new Vec2(coordinate[0], coordinate[1]);
     }
 
     public static vec2ToFenCoordinate(vector: Vec2): FenCoordinate {
@@ -353,7 +357,7 @@ export default abstract class ChessBoardHelper {
     }
 
     public static findKing(fenBoard: FenBoard, king: FenPiece.BLACK_KING | FenPiece.WHITE_KING): FenCoordinate {
-        let kingCoordinate: Coordinate;
+        let kingCoordinate: Coordinate | null = null;
         fenBoard.forEach((row: Array<FenPiece>, y: number) => {
             row.forEach((piece: FenPiece, x: number) => {
                 if (piece === king) {
@@ -362,7 +366,7 @@ export default abstract class ChessBoardHelper {
             });
         });
 
-        if (kingCoordinate === undefined) {
+        if (!kingCoordinate) {
             throw new Error('No king on the board!');
         }
 

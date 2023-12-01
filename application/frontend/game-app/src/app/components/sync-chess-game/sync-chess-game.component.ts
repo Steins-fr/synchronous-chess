@@ -1,22 +1,28 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, NgZone } from '@angular/core';
-import Vec2 from 'vec2';
-import ChessBoardHelper, { ValidPlayBoard } from '../../helpers/chess-board-helper';
-import { RoomService, RoomServiceEventType } from '../../services/room/room.service';
-import SynchronousChessGameSession from '../../classes/chess/game-sessions/synchronous-chess-game-session';
-import SynchronousChessLocalGameSession from '../../classes/chess/game-sessions/synchronous-chess-local-game-session';
-import { RoomMessage } from '../../classes/webrtc/messages/room-message';
-import SynchronousChessGameSessionBuilder from '../../classes/chess/game-sessions/synchronous-chess-game-session-builder';
-import { RoomManager } from '../../classes/room-manager/room-manager';
-import CoordinateMove, { Coordinate } from '../../classes/chess/interfaces/CoordinateMove';
-import TurnType, { TurnCategory } from '../../classes/chess/turns/turn.types';
-import { PieceColor, FenPiece } from '../../classes/chess/rules/chess-rules';
-import MoveTurnAction from '../../classes/chess/turns/turn-actions/move-turn-action';
-import Move from '../../classes/chess/interfaces/move';
+import { MatButtonModule } from '@angular/material/button';
+import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGameSessionBuilder
+    from '@app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
+import SynchronousChessLocalGameSession from '@app/classes/chess/game-sessions/synchronous-chess-local-game-session';
+import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
+import Move from '@app/classes/chess/interfaces/move';
+import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
+import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { ChessBoardComponent } from '@app/components/chess-board/chess-board.component';
+import { ChessBoardPieceComponent } from '@app/components/chess-board/piece/chess-board-piece.component';
+import { PromotionComponent } from '@app/components/chess/promotion/promotion.component';
+import ChessBoardHelper, { ValidPlayBoard } from '@app/helpers/chess-board-helper';
+import { RoomService, RoomServiceEventType } from '@app/services/room/room.service';
 
 @Component({
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
-    styleUrls: ['./sync-chess-game.component.scss']
+    styleUrls: ['./sync-chess-game.component.scss'],
+    standalone: true,
+    imports: [CommonModule, ChessBoardComponent, PromotionComponent, MatButtonModule, ChessBoardPieceComponent],
 })
 export class SyncChessGameComponent implements OnInit {
 
@@ -29,18 +35,13 @@ export class SyncChessGameComponent implements OnInit {
     public blackColor: PieceColor = PieceColor.BLACK;
 
     public constructor(
-        public roomService: RoomService,
+        public roomService: RoomService<never>,
         private readonly ngZone: NgZone) {
         this.gameSession = new SynchronousChessLocalGameSession(ngZone);
     }
 
     public ngOnInit(): void {
         this.roomService.notifier.follow(RoomServiceEventType.IS_READY, this, () => this.onRoomReady());
-    }
-
-    private onRoomReady(): void {
-        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, this.ngZone);
-        this.roomService.notifier.unfollow(RoomServiceEventType.IS_READY, this);
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -66,13 +67,9 @@ export class SyncChessGameComponent implements OnInit {
         this.playedPiece = new Vec2(-1, -1);
     }
 
-    private resetHighlight(): void {
-        this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
-    }
-
     public turnType(): string {
         switch (this.gameSession.game.getTurnType()) {
-            case TurnType.MOVE_SYNCHRONE:
+            case TurnType.MOVE_SYNC:
                 return 'Synchronisé';
             case TurnType.MOVE_INTERMEDIATE:
                 return 'Intermédiaire';
@@ -108,6 +105,32 @@ export class SyncChessGameComponent implements OnInit {
         return action === null ? '' : this.formatLastMove(action.whiteMove);
     }
 
+    public blackLastMove(): string {
+        const action: MoveTurnAction | null = this.gameSession.game.lastMoveTurnAction();
+        return action === null ? '' : this.formatLastMove(action.blackMove);
+    }
+
+    public displayBlackInteractions(): boolean {
+        return this.gameSession.playingColor === PieceColor.BLACK && !this.gameSession.game.isCheckmate();
+    }
+
+    public displayWhiteInteractions(): boolean {
+        return this.gameSession.playingColor === PieceColor.WHITE && !this.gameSession.game.isCheckmate();
+    }
+
+    public skip(): void {
+        this.gameSession.move(null);
+    }
+
+    private onRoomReady(): void {
+        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, this.ngZone);
+        this.roomService.notifier.unfollow(RoomServiceEventType.IS_READY, this);
+    }
+
+    private resetHighlight(): void {
+        this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
+    }
+
     private formatLastMove(move: Move | null): string {
         if (move === null) {
             return 'a passé';
@@ -116,22 +139,5 @@ export class SyncChessGameComponent implements OnInit {
         const to: string = `${move.to[0].toUpperCase()}${move.to[1]}`;
 
         return `${from} -> ${to}`;
-    }
-
-    public blackLastMove(): string {
-        const action: MoveTurnAction | null = this.gameSession.game.lastMoveTurnAction();
-        return action === null ? '' : this.formatLastMove(action.blackMove);
-    }
-
-    public displayBlackInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.BLACK && this.gameSession.game.isCheckmate() === false;
-    }
-
-    public displayWhiteInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.WHITE && this.gameSession.game.isCheckmate() === false;
-    }
-
-    public skip(): void {
-        this.gameSession.move(null);
     }
 }

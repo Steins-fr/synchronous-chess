@@ -21,7 +21,7 @@ export interface PromotionMessage {
 
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
 
-    public constructor(protected readonly roomService: RoomService, ngZone: NgZone) {
+    public constructor(protected readonly roomService: RoomService<any>, ngZone: NgZone) {
         super(ngZone);
         this.roomService.notifier.follow(SCGameSessionType.PLAY, this, this.onMove.bind(this));
         this.roomService.notifier.follow(SCGameSessionType.PROMOTION, this, this.onPromotion.bind(this));
@@ -32,13 +32,12 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     }
 
     public get playingColor(): PieceColor {
-        if (this.roomService.isReady() === false
-            || this.configuration.whitePlayer === undefined
+        if (!this.roomService.isReady() || this.configuration.whitePlayer === undefined
             || this.configuration.blackPlayer === undefined) {
             return PieceColor.NONE;
         }
 
-        if (this.game.colorHasPlayed(this.myColor) === false) {
+        if (!this.game.colorHasPlayed(this.myColor)) {
             return this.myColor;
         }
 
@@ -62,7 +61,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
     protected onMove(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
         // Prevent reception of move from spectator
-        if (this.isPlaying(message.from) === false) {
+        if (!this.isPlaying(message.from)) {
             return;
         }
 
@@ -82,7 +81,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
     protected onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
         // Prevent reception of move from spectator
-        if (this.isPlaying(message.from) === false) {
+        if (!this.isPlaying(message.from)) {
             return;
         }
 

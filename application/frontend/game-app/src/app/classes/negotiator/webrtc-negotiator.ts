@@ -1,13 +1,13 @@
 import { NegotiatorMessage, NegotiatorMessageType } from '../webrtc/messages/negotiator-message';
 import MessageOriginType from '../webrtc/messages/message-origin.types';
-import { Webrtc, Signal } from '../webrtc/webrtc';
+import { Webrtc, RtcSignal } from '../webrtc/webrtc';
 
 import { Negotiator } from './negotiator';
 import { Player, PlayerType } from '../player/player';
 
 export interface SignalPayload {
     to: string;
-    signal: Signal;
+    signal: RtcSignal;
 }
 
 export class WebrtcNegotiator extends Negotiator {
@@ -17,7 +17,7 @@ export class WebrtcNegotiator extends Negotiator {
         super(playerName, playerType, webRTC);
     }
 
-    protected handleSignal(signal: Signal): void {
+    protected handleSignal(signal: RtcSignal): void {
         const signalPayload: SignalPayload = {
             to: this.playerName,
             signal

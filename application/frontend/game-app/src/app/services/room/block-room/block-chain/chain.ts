@@ -9,16 +9,24 @@ export class Chain {
         this.reset().then();
     }
 
-    private chain: Block[];
+    private chain: Block[] = [];
 
     private static async createGenesisBlock(): Promise<Block> {
         const hash: string = await Chain.calculateHash({
             index: 0,
             timestamp: '',
-            data: null,
+            data: {
+                from: '',
+                type: '',
+                payload: null
+            },
             previousHash: ''
         });
-        return new Block(0, '', null, '', hash, '');
+        return new Block(0, '', {
+            from: '',
+            type: '',
+            payload: null
+        }, '', hash, '');
     }
 
     private static encodeMessage(message: string): Uint8Array {

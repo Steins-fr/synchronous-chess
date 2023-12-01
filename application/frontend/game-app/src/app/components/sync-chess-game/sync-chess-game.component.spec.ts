@@ -1,37 +1,31 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { SyncChessGameComponent } from './sync-chess-game.component';
-import { ChessBoardComponent } from '../chess-board/chess-board.component';
-import { PieceComponent } from '../chess-board/piece/piece.component';
-import { RangePipe } from '../../pipes/range.pipe';
-import { Vector2dPipe } from '../../pipes/vector2d.pipe';
-import { MatGridListModule } from '@angular/material/grid-list';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { PromotionComponent } from '../chess/promotion/promotion.component';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { ChessBoardComponent } from '@app/components/chess-board/chess-board.component';
+import { ChessBoardPieceComponent } from '@app/components/chess-board/piece/chess-board-piece.component';
+import { PromotionComponent } from '@app/components/chess/promotion/promotion.component';
+import { SyncChessGameComponent } from '@app/components/sync-chess-game/sync-chess-game.component';
+import { Vector2dPipe } from '@app/pipes/vector2d.pipe';
 
 describe('SyncChessGameComponent', () => {
     let component: SyncChessGameComponent;
     let fixture: ComponentFixture<SyncChessGameComponent>;
 
-    beforeEach(async(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [
                 SyncChessGameComponent,
                 ChessBoardComponent,
-                PieceComponent,
+                ChessBoardPieceComponent,
                 PromotionComponent,
-                RangePipe,
                 Vector2dPipe
             ],
             imports: [
                 MatGridListModule,
                 DragDropModule
             ]
-        })
-            .compileComponents();
-    }));
+        }).compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(SyncChessGameComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

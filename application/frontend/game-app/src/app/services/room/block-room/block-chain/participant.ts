@@ -1,9 +1,20 @@
-import { Player } from '../../../../classes/player/player';
-import { BlockChainMessage } from '../../../../classes/webrtc/messages/block-chain-message';
+import { Player } from '@app/classes/player/player';
+import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
 
 export class Participant {
+    public get publicKey(): CryptoKey {
+        if (!this._publicKey) {
+            throw new Error('Public key not set, please call isReady() first');
+        }
 
-    public publicKey?: CryptoKey;
+        return this._publicKey;
+    }
+
+    public set publicKey(value: CryptoKey) {
+        this._publicKey = value;
+    }
+
+    private _publicKey?: CryptoKey;
 
     public constructor(
         private readonly player: Player
@@ -11,7 +22,7 @@ export class Participant {
     }
 
     public isReady(): boolean {
-        return !!this.publicKey || this.isLocal();
+        return !!this._publicKey || this.isLocal();
     }
 
     public sendMessage(message: BlockChainMessage): void {

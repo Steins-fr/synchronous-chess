@@ -1,26 +1,26 @@
-import SynchroneTurn from './synchrone-turn';
+import SyncTurn from './sync-turn';
 import Turn from './turn';
 import TurnType from './turn.types';
 import Move, { FenColumn } from '../interfaces/move';
-import SynchroneTurnAction from './turn-actions/synchrone-turn-action';
+import SyncTurnAction from './turn-actions/sync-turn-action';
 import { PieceColor } from '../rules/chess-rules';
 
-describe('SynchroneTurn', () => {
+describe('SyncTurn', () => {
 
     it('should create an instance', () => {
-        const turn: Turn = new SynchroneTurn();
+        const turn: Turn = new SyncTurn();
 
         expect(turn).toBeTruthy();
-        expect(turn.type).toEqual(TurnType.MOVE_SYNCHRONE);
+        expect(turn.type).toEqual(TurnType.MOVE_SYNC);
     });
 
     it('canBeExecuted should return false if the action is not filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
-        const turnEmpty: SynchroneTurn = new SynchroneTurn();
-        const turnOnlyWhite: SynchroneTurn = new SynchroneTurn();
+        const turnEmpty: SyncTurn = new SyncTurn();
+        const turnOnlyWhite: SyncTurn = new SyncTurn();
         turnOnlyWhite.action.whiteMove = move;
-        const turnOnlyBlack: SynchroneTurn = new SynchroneTurn();
+        const turnOnlyBlack: SyncTurn = new SyncTurn();
         turnOnlyBlack.action.blackMove = move;
 
         // When
@@ -37,7 +37,7 @@ describe('SynchroneTurn', () => {
     it('canBeExecuted should return turn if the action is filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
-        const turn: SynchroneTurn = new SynchroneTurn();
+        const turn: SyncTurn = new SyncTurn();
         turn.action.blackMove = move;
         turn.action.whiteMove = move;
 
@@ -52,9 +52,9 @@ describe('SynchroneTurn', () => {
         // Given
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const blackMove: Move = { from: [FenColumn.A, 6], to: [FenColumn.B, 5] };
-        const turn: SynchroneTurn = new SynchroneTurn();
-        const initialAction: SynchroneTurnAction = { ...turn.action };
-        const expectedAction: SynchroneTurnAction = {
+        const turn: SyncTurn = new SyncTurn();
+        const initialAction: SyncTurnAction = { ...turn.action };
+        const expectedAction: SyncTurnAction = {
             whiteMove, blackMove
         };
 
