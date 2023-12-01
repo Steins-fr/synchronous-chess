@@ -1,25 +1,34 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, Input } from '@angular/core';
-import { BlockRoomService } from '../../../services/room/block-room/block-room.service';
+import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, ParamMap } from '@angular/router';
+import { BlockRoomService } from '@app/services/room/block-room/block-room.service';
 
 @Component({
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
-    styleUrls: ['./room-setup.component.scss']
+    styleUrls: ['./room-setup.component.scss'],
+    standalone: true,
+    imports: [CommonModule, MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatProgressSpinnerModule],
 }) export class RoomSetupComponent implements OnInit {
 
     private static readonly JOINING_ERROR: string = 'La salle est pleine ou elle n\'existe plus.';
     private static readonly CREATING_ERROR: string = 'La salle existe déjà.';
 
-    @Input() private readonly maxPlayer: number;
-    public roomName: string;
-    public playerName: string;
+    @Input({ required: true }) public maxPlayer!: number;
+
+    public roomName: string = '';
+    public playerName: string = '';
     public isLoading: boolean = false;
     public error: string = '';
 
     public constructor(
-        public roomService: BlockRoomService,
-        private route: ActivatedRoute
+        private readonly roomService: BlockRoomService<never>,
+        private readonly route: ActivatedRoute
     ) { }
 
     public ngOnInit(): void {
@@ -35,6 +44,10 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
                 setTimeout(() => this.enterRoom(false), 1000);
             }
         });
+    }
+
+    protected get canDisplay(): boolean {
+        return !this.roomService.roomIsSetup();
     }
 
     public hostRoom(): void {

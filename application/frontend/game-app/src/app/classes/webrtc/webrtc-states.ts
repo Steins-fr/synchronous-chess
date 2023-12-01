@@ -2,7 +2,6 @@
  * Interface for debugging Ice candidates.
  */
 export interface DebugRTCIceCandidate extends RTCIceCandidate {
-    address?: string; // This property is not described in RTCIceCandidate but present
     priorities?: string;
     elapsed?: string;
 }

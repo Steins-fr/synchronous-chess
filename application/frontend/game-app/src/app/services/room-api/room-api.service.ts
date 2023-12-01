@@ -1,30 +1,25 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { RtcSignal } from '@app/classes/webrtc/webrtc';
+import { environment } from '@environments/environment';
 import { Subscription } from 'rxjs';
-
-import { Signal } from '../../classes/webrtc/webrtc';
-
+import Notifier, { NotifierFlow } from '../../classes/notifier/notifier';
+import { WebSocketService, SocketPayload } from '../web-socket/web-socket.service';
+import FullNotification from './notifications/full-notification';
+import JoinNotification from './notifications/join-notification';
+import SignalNotification from './notifications/signal-notification';
+import FullRequest from './requests/full-request';
+import PlayerRequest from './requests/player-request';
+import PlayersRequest from './requests/players-request';
 import RoomCreateRequest from './requests/room-create-request';
 import RoomJoinRequest from './requests/room-join-request';
-import PlayerRequest from './requests/player-request';
 import SignalRequest from './requests/signal-request';
-
-import PlayerResponse from './responses/player-response';
-import SignalResponse from './responses/signal-response';
-import RoomJoinResponse from './responses/room-join-response';
-import RoomCreateResponse from './responses/room-create-response';
 import ErrorResponse from './responses/error-response';
-
-import SignalNotification from './notifications/signal-notification';
-import JoinNotification from './notifications/join-notification';
-
-import { WebSocketService, SocketPayload } from '../web-socket/web-socket.service';
-import FullRequest from './requests/full-request';
 import FullResponse from './responses/full-response';
-import FullNotification from './notifications/full-notification';
+import PlayerResponse from './responses/player-response';
 import PlayersResponse from './responses/players-response';
-import PlayersRequest from './requests/players-request';
-import Notifier, { NotifierFlow } from '../../classes/notifier/notifier';
+import RoomCreateResponse from './responses/room-create-response';
+import RoomJoinResponse from './responses/room-join-response';
+import RtcSignalResponse from './responses/rtc-signal-response';
 
 export interface PacketPayload extends SocketPayload {
     id: number;
@@ -66,14 +61,15 @@ export class RoomApiService {
 
     public constructor(private readonly webSocketService: WebSocketService) { }
 
-    public get notifier(): NotifierFlow<RoomApiNotificationType, RoomApiNotification> {
+    public get notifier(): NotifierFlow<RoomApiNotificationType> {
         return this._notifier;
     }
 
     private static readonly requestIdGenerator: Generator = function* name(): Generator {
         let id: RequestId = 0;
         while (true) {
-            yield ++id;
+            ++id;
+            yield id;
         }
     }();
 
@@ -81,9 +77,9 @@ export class RoomApiService {
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
     private static readonly ERROR_SEND: string = 'The message was not sent';
 
-    private readonly _notifier: Notifier<RoomApiNotificationType, RoomApiNotification> = new Notifier<RoomApiNotificationType, RoomApiNotification>();
+    private readonly _notifier = new Notifier<RoomApiNotificationType, RoomApiNotification>();
 
-    private readonly requestTimers: Map<RequestId, NodeJS.Timer> = new Map<RequestId, NodeJS.Timer>();
+    private readonly requestTimers = new Map<RequestId, ReturnType<typeof setTimeout>>();
     private readonly subs: Array<Subscription> = [];
 
     private static buildPacket(requestType: string, data: string): PacketPayload {
@@ -96,13 +92,15 @@ export class RoomApiService {
 
     public setup(): void {
         this.webSocketService.setup(environment.webSocketServer);
-        this.subs.push(this.webSocketService.message.subscribe((payload: PacketPayload) => this.onMessage(payload)));
+        this.subs.push(this.webSocketService.message.subscribe(payload => this.onMessage(payload)));
     }
 
-    private onMessage(payload: PacketPayload): void {
-        if (payload.id > 0) {
+    private onMessage(payload: SocketPayload): void {
+        if (this.isPacketPayload(payload) && payload.id > 0) {
+            console.log('onMessage return', payload);
             return;
         }
+
         const type: RoomApiNotificationType = payload.type as RoomApiNotificationType;
         this._notifier.notify(type, JSON.parse(payload.data));
     }
@@ -132,7 +130,7 @@ export class RoomApiService {
         return this.send(RoomApiService.buildPacket(RoomApiRequestType.PLAYER_REMOVE, JSON.stringify(request)));
     }
 
-    public signal(signal: Signal, to: string, roomName: string): Promise<SignalResponse> {
+    public signal(signal: RtcSignal, to: string, roomName: string): Promise<RtcSignalResponse> {
         const request: SignalRequest = { signal, to, roomName };
         return this.send(RoomApiService.buildPacket(RoomApiRequestType.SIGNAL, JSON.stringify(request)));
     }
@@ -147,11 +145,16 @@ export class RoomApiService {
         return this.followRequestResponse(payload.id);
     }
 
+    private isPacketPayload<T>(payload: PacketPayload | T): payload is PacketPayload {
+        return !!(payload as PacketPayload).id;
+    }
+
     private followRequestResponse<T>(id: number): Promise<T> {
         return new Promise(
             (resolve: (value: T) => void, reject: (err: string) => void): void => {
-                const sub: Subscription = this.webSocketService.message.subscribe((payload: PacketPayload) => {
-                    if (payload.id !== id) {
+                const sub: Subscription = this.webSocketService.message.subscribe(payload => {
+                    if (!this.isPacketPayload(payload) || payload.id !== id) {
+                        console.log('followRequestResponse return', payload);
                         return;
                     }
 
@@ -166,7 +169,7 @@ export class RoomApiService {
                         reject(error.message);
                     }
 
-                    if (sub.closed === false) {
+                    if (!sub.closed) {
                         sub.unsubscribe();
                     }
                 });
@@ -177,14 +180,14 @@ export class RoomApiService {
 
     private detectRequestTimeout(id: RequestId, sub: Subscription, reject: (err: string) => void): void {
         const lambdaTimeout: number = 5000; // 3 seconds is the lambda AWS timeout, so add two more seconds to it
-        const timerId: NodeJS.Timer = setTimeout(() => {
+        const timerId = setTimeout(() => {
 
-            if (sub.closed === false) {
+            if (!sub.closed) {
                 sub.unsubscribe();
             }
             this.requestTimers.delete(id);
-            reject(`${RoomApiService.ERROR_REQUEST_TIMEOUT} ${id}`);
-            console.error(`${RoomApiService.ERROR_REQUEST_TIMEOUT} ${id}`);
+            reject(`${ RoomApiService.ERROR_REQUEST_TIMEOUT } ${ id }`);
+            console.error(`${ RoomApiService.ERROR_REQUEST_TIMEOUT } ${ id }`);
         }, lambdaTimeout); // 3 seconds is the lambda AWS timeout, so add one more minute to it
 
         this.requestTimers.set(id, timerId);

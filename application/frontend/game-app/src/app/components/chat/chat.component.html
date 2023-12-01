@@ -5,7 +5,7 @@
         <div id="chat">
             <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
                 <div *cdkVirtualFor="let chatEntry of chat" class="chat-message">
-                    <span class="author" [ngClass]="{'my-message': chatEntry.author === roomService.localPlayer?.name}">
+                    <span class="author" [ngClass]="{'my-message': chatEntry.author === roomService.localPlayer.name}">
                         {{ chatEntry.author }} :</span>
                     {{ chatEntry.message }}
                 </div>
@@ -25,22 +25,24 @@
         </div>
         <div id="player-list">
             <h4 class="list-title">Participants</h4>
-            <mat-chip-list class="mat-chip-list-stacked">
-                <app-chat-participant *ngFor="let participant of roomService.players | keyvalue"
-                    [player]="participant.value"></app-chat-participant>
+            <mat-chip-set class="mat-chip-list-stacked">
+                <app-chat-participant
+                    *ngFor="let participant of roomService.players | keyvalue"
+                    [player]="participant.value"/>
                 <mat-chip *ngFor="let playerName of roomService.queue">
                     {{ playerName }}
                 </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
         </div>
     </div>
 
-
     <div id="send-form">
         <mat-form-field>
-            <input matInput type="text" [(ngModel)]="sendInput" placeholder="Tape ton message" [disabled]="isSending"/>
+            <input matInput type="text" [(ngModel)]="sendInput" placeholder="Tape ton message" [disabled]="isSending" />
         </mat-form-field>
-        <button mat-raised-button color="primary" id="send" (click)="sendMessage()"
-            [disabled]="(roomService.isActive | async) === false || isSending">Envoyer</button>
+        <button
+            mat-raised-button color="primary" id="send" (click)="sendMessage()"
+            [disabled]="(roomService.isActive | async) === false || isSending">Envoyer
+        </button>
     </div>
 </div>

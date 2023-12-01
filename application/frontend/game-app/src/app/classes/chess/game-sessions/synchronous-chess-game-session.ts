@@ -1,9 +1,9 @@
 import { NgZone } from '@angular/core';
-import { PieceColor, PieceType } from '../rules/chess-rules';
-import SynchronousChessGame from '../games/synchronous-chess-game';
 import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import Move from '../interfaces/move';
+import SynchronousChessGame from '../games/synchronous-chess-game';
 import CoordinateMove from '../interfaces/CoordinateMove';
+import Move from '../interfaces/move';
+import { PieceColor, PieceType, FenPiece } from '../rules/chess-rules';
 
 export interface SessionConfiguration {
     whitePlayer?: string;
@@ -33,11 +33,11 @@ export default abstract class SynchronousChessGameSession {
     }
 
     protected runMove(color: PieceColor, move: Move | null): boolean {
-        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from)) !== color) {
+        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from) ?? FenPiece.EMPTY) !== color) {
             return false;
         }
 
-        if (this.game.registerMove(move, color) === false) {
+        if (!this.game.registerMove(move, color)) {
             return false;
         }
 
@@ -54,7 +54,7 @@ export default abstract class SynchronousChessGameSession {
 
     protected runPromotion(color: PieceColor, pieceType: PieceType): boolean {
 
-        if (this.game.promote(pieceType, color) === false) {
+        if (!this.game.promote(pieceType, color)) {
             return false;
         }
 

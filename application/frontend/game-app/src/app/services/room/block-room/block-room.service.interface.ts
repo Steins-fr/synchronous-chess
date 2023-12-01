@@ -1,9 +1,11 @@
 import { Block } from './block-chain/block';
-import { Player } from '../../../classes/player/player';
+import { Player } from '@app/classes/player/player';
 
 export interface BlockRoomServiceInterface {
 
-    localPlayer?: Player;
+    get localPlayer(): Player;
+    set localPlayer(value: Player);
+
     players: Map<string, Player>;
 
     transmitMessage<T>(type: string, message: T): Promise<void>;

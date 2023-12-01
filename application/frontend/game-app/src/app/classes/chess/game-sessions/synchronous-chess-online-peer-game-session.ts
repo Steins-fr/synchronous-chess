@@ -5,7 +5,7 @@ import { RoomMessage } from '../../webrtc/messages/room-message';
 import { SessionConfiguration } from './synchronous-chess-game-session';
 
 export default class SynchronousChessOnlinePeerGameSession extends SynchronousChessOnlineGameSession {
-    public constructor(roomService: RoomService, ngZone: NgZone) {
+    public constructor(roomService: RoomService<any>, ngZone: NgZone) {
         super(roomService, ngZone);
         this.followRoomService();
     }

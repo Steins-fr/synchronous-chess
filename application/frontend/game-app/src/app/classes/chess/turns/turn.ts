@@ -7,7 +7,7 @@ export default abstract class Turn<T extends TurnAction = TurnAction> {
     public isDone: boolean = false;
     public abstract readonly action: T;
 
-    public constructor(public readonly type: TurnType, public readonly category: TurnCategory) { }
+    protected constructor(public readonly type: TurnType, public readonly category: TurnCategory) { }
 
     public abstract canBeExecuted(): boolean;
     public abstract isFilled(color: PieceColor): boolean;

@@ -1,10 +1,9 @@
-import { Webrtc, Signal } from '../webrtc/webrtc';
-import { Negotiator, NegotiatorEventType } from './negotiator';
-
-import { RoomApiService, RoomApiNotificationType } from '../../services/room-api/room-api.service';
-import SignalNotification from '../../services/room-api/notifications/signal-notification';
-import FullNotification from '../../services/room-api/notifications/full-notification';
-import { PlayerType } from '../player/player';
+import { Negotiator, NegotiatorEventType } from '@app/classes/negotiator/negotiator';
+import { PlayerType } from '@app/classes/player/player';
+import { Webrtc, RtcSignal } from '@app/classes/webrtc/webrtc';
+import FullNotification from '@app/services/room-api/notifications/full-notification';
+import SignalNotification from '@app/services/room-api/notifications/signal-notification';
+import { RoomApiService, RoomApiNotificationType } from '@app/services/room-api/room-api.service';
 
 export class WebsocketNegotiator extends Negotiator {
 
@@ -26,13 +25,13 @@ export class WebsocketNegotiator extends Negotiator {
         this.negotiationMessage(data);
     }
 
-    protected handleSignal(signal: Signal): void {
+    protected handleSignal(signal: RtcSignal): void {
         this.roomApi.signal(signal, this.playerName, this.roomName).then().catch((err: string) => {
             console.error(err);
         });
     }
 
-    public clear(): void {
+    public override clear(): void {
         this.roomApi.notifier.unfollow(RoomApiNotificationType.FULL, this);
         this.roomApi.notifier.unfollow(RoomApiNotificationType.REMOTE_SIGNAL, this);
         super.clear();

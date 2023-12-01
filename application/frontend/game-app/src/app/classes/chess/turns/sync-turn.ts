@@ -1,15 +1,18 @@
-import SynchroneTurnAction from './turn-actions/synchrone-turn-action';
+import SyncTurnAction from './turn-actions/sync-turn-action';
 import TurnType from './turn.types';
 import Move from '../interfaces/move';
 import { PieceColor } from '../rules/chess-rules';
 import MoveTurn from './move-turn';
 
-export default class SynchroneTurn extends MoveTurn<SynchroneTurnAction> {
+export default class SyncTurn extends MoveTurn<SyncTurnAction> {
 
-    public action: SynchroneTurnAction = {};
+    public action: SyncTurnAction = {
+        whiteMove: null,
+        blackMove: null,
+    };
 
     public constructor() {
-        super(TurnType.MOVE_SYNCHRONE);
+        super(TurnType.MOVE_SYNC);
     }
 
     public canBeExecuted(): boolean {

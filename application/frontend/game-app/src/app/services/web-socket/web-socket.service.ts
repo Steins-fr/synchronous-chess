@@ -20,7 +20,7 @@ export class WebSocketService {
 
     public static readonly ERROR_MESSAGE_SOCKET_URL_IS_NOT_SETUP: string = 'Socket is not setup! Please call "setup(__url__)"';
 
-    private webSocket: WebSocket;
+    private webSocket: WebSocket | null = null;
     private _serverUrl: string = '';
 
     // Socket state observables
@@ -64,9 +64,9 @@ export class WebSocketService {
             this.connect();
         }
 
-        if (this.webSocket.readyState === SocketState.OPEN) {
+        if (this.socket.readyState === SocketState.OPEN) {
             const packet: string = JSON.stringify({ message, data });
-            this.webSocket.send(packet);
+            this.socket.send(packet);
         } else {
             const sub: Subscription = this.state.subscribe((state: SocketState) => {
                 if (state === SocketState.OPEN) {
@@ -82,6 +82,10 @@ export class WebSocketService {
     }
 
     public get socket(): WebSocket {
+        if (!this.webSocket) {
+            throw new Error('Socket is not setup! Please call "connect()"');
+        }
+
         return this.webSocket;
     }
 
@@ -90,7 +94,7 @@ export class WebSocketService {
     }
 
     private onStateChange(): void {
-        this._state.next(this.webSocket.readyState);
+        this._state.next(this.socket.readyState);
     }
 
     public get serverUrl(): string {
