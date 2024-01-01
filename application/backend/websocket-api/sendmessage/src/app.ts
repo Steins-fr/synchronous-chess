@@ -44,7 +44,7 @@ export const handler: (event: APIGatewayProxyEvent) => Promise<Response> = async
 
     try {
         const body: string = event.body as string;
-        const payload: RequestPayload = JSON.parse(JSON.parse(body).data);
+        const payload: RequestPayload = JSON.parse(body).data;
 
         if (messageHandlers[payload.type]) {
             const messageHandler: MessageHandler = new messageHandlers[payload.type](apigwManagementApi, event, payload);

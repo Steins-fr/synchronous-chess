@@ -1,16 +1,15 @@
-import { NgZone } from '@angular/core';
-import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 import { PieceColor } from '../rules/chess-rules';
+import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 
 describe('SynchronousChessLocalGameSession', () => {
     it('should create an instance', () => {
-        expect(new SynchronousChessLocalGameSession(null as unknown as NgZone)).toBeTruthy();
+        expect(new SynchronousChessLocalGameSession()).toBeTruthy();
     });
 
     it('should get default none color', () => {
         // Given
 
-        const session: SynchronousChessLocalGameSession = new SynchronousChessLocalGameSession(null as unknown as NgZone);
+        const session: SynchronousChessLocalGameSession = new SynchronousChessLocalGameSession();
 
         // When
 

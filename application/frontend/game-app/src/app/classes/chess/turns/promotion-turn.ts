@@ -30,9 +30,9 @@ export default class PromotionTurn extends ChoiceTurn<PromotionTurnAction> {
 
     public isFilled(color: PieceColor): boolean {
         if (color === PieceColor.WHITE) {
-            return this.action.whitePiece !== undefined;
+            return !this.action.whiteFenCoordinate || this.action.whitePiece !== null;
         } else if (color === PieceColor.BLACK) {
-            return this.action.blackPiece !== undefined;
+            return !this.action.blackFenCoordinate || this.action.blackPiece !== null;
         }
 
         return true;

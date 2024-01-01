@@ -24,7 +24,7 @@ export default class SignalHandler extends MessageHandler {
         }
 
         try {
-            const data: SignalRequest = JSON.parse(this.payload.data);
+            const data: SignalRequest = this.payload.data;
             if (!data.roomName || !data.to || !data.signal) {
                 throw new BadRequestException(SignalHandler.ERROR_PARSING);
             }

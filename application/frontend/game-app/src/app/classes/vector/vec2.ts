@@ -1,6 +1,8 @@
+export type Vec2Array = [number, number];
+
 // Immutable 2D vector class
 export class Vec2 {
-    public static fromArray(array: [number, number]): Vec2 {
+    public static fromArray(array: Vec2Array): Vec2 {
         return new Vec2(array[0], array[1]);
     }
 

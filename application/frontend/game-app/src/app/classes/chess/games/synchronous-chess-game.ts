@@ -77,7 +77,7 @@ export default class SynchronousChessGame {
             const rookEmplacement: Vec2 = new Vec2(castlingRook, from.y);
             const rookNewEmplacement: Vec2 = from.addVec(to.subVec(from).div(2, 2));
 
-            this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookNewEmplacement, ChessBoardHelper.getFenPieceByVec(this._fenBoard, rookEmplacement) ?? FenPiece.EMPTY);
+            this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookNewEmplacement, ChessBoardHelper.getFenPieceByVec(this._fenBoard, rookEmplacement));
             this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookEmplacement, FenPiece.EMPTY);
         }
         rules.isQueenSideCastleAvailable = false;
@@ -299,7 +299,7 @@ export default class SynchronousChessGame {
 
     protected runPromotionTurn(): void {
         const promotionTurn: PromotionTurn = this.turn as PromotionTurn;
-        const { whiteFenCoordinate, whitePiece, blackFenCoordinate, blackPiece }: PromotionTurnAction = promotionTurn.action as PromotionTurnAction;
+        const { whiteFenCoordinate, whitePiece, blackFenCoordinate, blackPiece }: PromotionTurnAction = promotionTurn.action;
 
         if (whiteFenCoordinate !== null && whitePiece) { // White move
             this._fenBoard = ChessBoardHelper.promote(this._fenBoard, whiteFenCoordinate, whitePiece, PieceColor.WHITE);
@@ -327,11 +327,7 @@ export default class SynchronousChessGame {
     }
 
     protected applySingleMove(move: Move): void {
-        const piece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard, move.from);
-
-        if (!piece) {
-            throw new Error('Piece is undefined');
-        }
+        const piece = ChessBoardHelper.getFenPiece(this._fenBoard, move.from);
 
         this.updateCastling(move);
         this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, move.from, FenPiece.EMPTY);
@@ -400,11 +396,7 @@ export default class SynchronousChessGame {
     }
 
     protected getIntermediateTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
-        const fenPiece: FenPiece | null = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
-
-        if (!fenPiece) {
-            throw new Error('Piece is undefined');
-        }
+        const fenPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
 
         const intermediateTurn: IntermediateTurn = this.turn as IntermediateTurn;
         const intermediateAction: IntermediateTurnAction = intermediateTurn.action;
@@ -429,11 +421,7 @@ export default class SynchronousChessGame {
     }
 
     protected getSynchronousTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
-        const fenPiece: FenPiece | null = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
-
-        if (!fenPiece) {
-            throw new Error('Piece is undefined');
-        }
+        const fenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
 
         const pieceColor: PieceColor = ChessBoardHelper.pieceColor(fenPiece);
         const pieceType: PieceType = ChessBoardHelper.pieceType(fenPiece);
@@ -451,11 +439,7 @@ export default class SynchronousChessGame {
             return [];
         }
 
-        const fenPiece: FenPiece | null = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
-
-        if (!fenPiece) {
-            throw new Error('Piece is undefined');
-        }
+        const fenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
 
         const rules: SynchronousChessRules = this.getRules(ChessBoardHelper.pieceColor(fenPiece));
 

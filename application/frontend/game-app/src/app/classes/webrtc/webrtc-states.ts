@@ -7,11 +7,12 @@ export interface DebugRTCIceCandidate extends RTCIceCandidate {
 }
 
 export default class WebrtcStates {
-    public error: any = '';
-    public iceConnection: string = 'none';
-    public sendChannel: string = 'none';
-    public receiveChannel: string = 'none';
-    public iceGathering: string = 'none';
-    public signaling: string = 'none';
+    // FIXME: error type
+    public error: unknown = '';
+    public iceConnection: RTCIceConnectionState = 'new';
+    public sendChannel: RTCDataChannelState = 'connecting';
+    public receiveChannel: RTCDataChannelState = 'connecting';
+    public iceGathering: RTCIceGatheringState = 'new';
+    public signaling: RTCSignalingState = 'have-local-offer';
     public candidates: Array<DebugRTCIceCandidate> = [];  // Ice candidates (used for debugging)
 }

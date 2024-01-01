@@ -1,81 +1,53 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, ParamMap } from '@angular/router';
-import { BlockRoomService } from '@app/services/room/block-room/block-room.service';
+import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { map } from 'rxjs';
 
 @Component({
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
-    styleUrls: ['./room-setup.component.scss'],
     standalone: true,
     imports: [CommonModule, MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatProgressSpinnerModule],
-}) export class RoomSetupComponent implements OnInit {
-
-    private static readonly JOINING_ERROR: string = 'La salle est pleine ou elle n\'existe plus.';
-    private static readonly CREATING_ERROR: string = 'La salle existe déjà.';
+})
+export class RoomSetupComponent implements OnInit {
 
     @Input({ required: true }) public maxPlayer!: number;
 
     public roomName: string = '';
     public playerName: string = '';
-    public isLoading: boolean = false;
-    public error: string = '';
 
-    public constructor(
-        private readonly roomService: BlockRoomService<never>,
-        private readonly route: ActivatedRoute
-    ) { }
+    private readonly roomSetupService = inject(RoomSetupService);
+    private readonly route = inject(ActivatedRoute);
+    private readonly destroyRef = inject(DestroyRef);
+    protected readonly canDisplay = toSignal(this.roomSetupService.roomIsSetup$.pipe(map((roomIsSetup: boolean) => !roomIsSetup)));
+    protected readonly loading = toSignal(this.roomSetupService.loading$);
 
     public ngOnInit(): void {
-        this.roomService.setup();
-        this.route.queryParamMap.subscribe((params: ParamMap) => {
-            if(params.has('auto-create')) {
-                this.roomName = 'test';
-                this.playerName = `${Math.floor(Math.random() * 100000)}`;
-                this.enterRoom(true);
+        this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params: ParamMap) => {
+            if (params.has('auto-create')) {
+                this.roomName = params.get('room') ?? 'test';
+                this.playerName = `${ Math.floor(Math.random() * 100000) }`;
+                this.hostRoom();
             } else if (params.has('auto-join')) {
-                this.roomName = 'test';
-                this.playerName = `${Math.floor(Math.random() * 100000)}`;
-                setTimeout(() => this.enterRoom(false), 1000);
+                this.roomName = params.get('room') ?? 'test';
+                this.playerName = `${ Math.floor(Math.random() * 100000) }`;
+                setTimeout(() => this.joinRoom(), 1000);
             }
         });
     }
 
-    protected get canDisplay(): boolean {
-        return !this.roomService.roomIsSetup();
+    public async hostRoom(): Promise<void> {
+        this.roomSetupService.setup('create', this.roomName, this.playerName);
     }
 
-    public hostRoom(): void {
-        this.enterRoom(true);
-    }
-
-    private enterRoom(isHost: boolean): void {
-        this.error = '';
-        if (isHost) {
-            this.isLoading = true;
-            this.roomService.createRoom(this.roomName, this.playerName, this.maxPlayer)
-                .then(() => this.isLoading = false)
-                .catch(() => {
-                    this.isLoading = false;
-                    this.error = RoomSetupComponent.CREATING_ERROR;
-                });
-        } else {
-            this.isLoading = true;
-            this.roomService.joinRoom(this.roomName, this.playerName)
-                .then(() => this.isLoading = false)
-                .catch(() => {
-                    this.isLoading = false;
-                    this.error = RoomSetupComponent.JOINING_ERROR;
-                });
-        }
-    }
-
-    public joinRoom(): void {
-        this.enterRoom(false);
+    public async joinRoom(): Promise<void> {
+        this.roomSetupService.setup('join', this.roomName, this.playerName);
     }
 }

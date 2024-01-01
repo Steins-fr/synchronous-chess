@@ -1,14 +1,10 @@
-import SynchronousChessRules from './synchronous-chess-rules';
-import Vec2 from 'vec2';
-import { FenBoard } from '../../../helpers/chess-board-helper';
-import { PieceColor, PieceType, FenPiece } from './chess-rules';
-import Movement from '../movements/movement';
+import Movement from '@app/classes/chess/movements/movement';
+import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
 describe('SynchronousChessRules', () => {
-    it('should create an instance', () => {
-        expect(new SynchronousChessRules(PieceColor.BLACK)).toBeTruthy();
-    });
-
     it('should get the rules for a specific color', () => {
         // Given
         const blackColor: PieceColor = PieceColor.BLACK;
@@ -36,12 +32,12 @@ describe('SynchronousChessRules', () => {
         const pawnMovements: Array<Movement> = rules.getPieceMovements(PieceType.PAWN);
 
         // Then
-        expect(queenMovements).toEqual(rules.queenMovement);
-        expect(kingMovements).toEqual(rules.kingMovement);
-        expect(bishopMovements).toEqual(rules.bishopMovement);
-        expect(knightMovements).toEqual(rules.knightMovement);
-        expect(rookMovements).toEqual(rules.rookMovement);
-        expect(pawnMovements).toEqual(rules.pawnMovement);
+        expect(queenMovements).toEqual(rules['queenMovement']);
+        expect(kingMovements).toEqual(rules['kingMovement']);
+        expect(bishopMovements).toEqual(rules['bishopMovement']);
+        expect(knightMovements).toEqual(rules['knightMovement']);
+        expect(rookMovements).toEqual(rules['rookMovement']);
+        expect(pawnMovements).toEqual(rules['pawnMovement']);
     });
 
     it('should tell is the rules are for blacks or whites', () => {

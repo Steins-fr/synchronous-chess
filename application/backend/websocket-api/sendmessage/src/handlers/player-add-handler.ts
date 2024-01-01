@@ -24,7 +24,7 @@ export default class PlayerAddHandler extends MessageHandler {
         }
 
         try {
-            const data: PlayerRequest = JSON.parse(this.payload.data);
+            const data: PlayerRequest = this.payload.data;
             if (!data.playerName || !data.roomName) {
                 throw new BadRequestException(PlayerAddHandler.ERROR_PARSING);
             }

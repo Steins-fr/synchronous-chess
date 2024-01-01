@@ -1,0 +1,67 @@
+<div id="board">
+    <ng-container *ngTemplateOutlet="columnLabels" />
+    <div class="row">
+        <ng-container *ngTemplateOutlet="rowLabels" />
+        <div [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}" cdkDropListGroup id="board-grid">
+            <mat-grid-list cols="8">
+                <ng-container *ngFor="let row of fenBoard; let y = index;">
+                    <ng-container *ngFor="let piece of row; let x = index;">
+                        <mat-grid-tile
+                            *ngIf="[x, y] | vector2d as pos"
+                            [ngClass]="{
+                                'drag-hover': cellHovered.equal(pos.x, pos.y),
+                                'dragged': pieceDragged.equal(pos.x, pos.y),
+                                'valid-move': validPlayBoard[y][x],
+                                'move-preview': isMovePreview(pos)}">
+                            <div
+                                (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
+                                (cdkDropListEntered)="dragEntered(pos)" class="cell"
+                                cdkDropList>
+                                <app-chess-piece
+                                    *ngIf="piece"
+                                    (click)="pieceClicked.emit(pos)"
+                                    (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)"
+                                    [piece]="piece"
+                                    [ngClass]="{
+                                        'grabbing-cursor': !pieceDragged.equal(-1, -1),
+                                        'grab-available': canBeDragged(pos)
+                                    }"
+                                    [cdkDragDisabled]="!canBeDragged(pos)"
+                                    cdkDrag>
+                                    <div class="hidden-placeholder" *cdkDragPlaceholder></div>
+                                    <div class="piece-preview-block" *cdkDragPreview>
+                                        <div class="piece-preview">
+                                            <app-chess-piece [piece]="piece" />
+                                        </div>
+                                    </div>
+                                </app-chess-piece>
+                            </div>
+                        </mat-grid-tile>
+                    </ng-container>
+                </ng-container>
+            </mat-grid-list>
+        </div>
+        <ng-container *ngTemplateOutlet="rowLabels" />
+    </div>
+    <ng-container *ngTemplateOutlet="columnLabels" />
+</div>
+
+<ng-template #columnLabels>
+    <div class="row">
+        <div class="fake-column"></div>
+        <div class="column-labels">
+            <div *ngFor="let i of range">
+                <span class="full-center">{{ 'ABCDEFGH'.charAt(i)}}</span>
+            </div>
+        </div>
+        <div class="fake-column"></div>
+    </div>
+</ng-template>
+
+<ng-template #rowLabels>
+    <div class="row-labels">
+        <div *ngFor="let i of range;">
+            <span class="full-center">{{ 8 - i }}</span>
+        </div>
+    </div>
+</ng-template>

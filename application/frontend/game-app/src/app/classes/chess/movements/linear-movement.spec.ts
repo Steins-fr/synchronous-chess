@@ -1,7 +1,7 @@
-import LinearMovement from './linear-movement';
-import { FenBoard } from '../../../helpers/chess-board-helper';
-import Vec2 from 'vec2';
-import { FenPiece } from '../rules/chess-rules';
+import LinearMovement from '@app/classes/chess/movements/linear-movement';
+import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2, Vec2Array } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
 describe('LinearMove', () => {
     it('should create an instance', () => {
@@ -26,20 +26,19 @@ describe('LinearMove', () => {
 
     it('should create multiple instance', () => {
         // Given
-        const coordinate1: Array<number> = [1, 0];
-        const coordinate2: Array<number> = [1, 1];
+        const coordinate1: Vec2Array = [1, 0];
+        const coordinate2: Vec2Array = [1, 1];
         // When
         const moves: Array<LinearMovement> = LinearMovement.buildAll([coordinate1, coordinate2]);
 
         // Then
         expect(moves.length).toEqual(2);
-        expect(moves.every((move: LinearMovement) => move instanceof LinearMovement));
     });
 
     it('should initiate properties', () => {
 
         // Given
-        const coordinate: Array<number> = [1, 0];
+        const coordinate: Vec2Array = [1, 0];
 
         // When
         const move: LinearMovement = LinearMovement.build(coordinate);
@@ -51,7 +50,7 @@ describe('LinearMove', () => {
     it('should return all valid plays', () => {
 
         // Given
-        const coordinate: Array<number> = [1, 0];
+        const coordinate: Vec2Array = [1, 0];
 
         const position: Vec2 = new Vec2(0, 0);
 
@@ -85,7 +84,7 @@ describe('LinearMove', () => {
     it('should throw error if the position was not valid', () => {
 
         // Given
-        const coordinate: Array<number> = [1, 0];
+        const coordinate: Vec2Array = [1, 0];
 
         const position: Vec2 = new Vec2(0, 0);
         const badPosition: Vec2 = new Vec2(-1, -1);

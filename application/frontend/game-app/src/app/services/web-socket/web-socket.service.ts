@@ -1,103 +1,109 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { Zone } from '@app/interfaces/zone.interface';
+import { BehaviorSubject, Observable, Subject, filter, first } from 'rxjs';
 
 export enum SocketState {
     CONNECTING = WebSocket.CONNECTING,
+    OPEN = WebSocket.OPEN,
     CLOSED = WebSocket.CLOSED,
     CLOSING = WebSocket.CLOSING,
-    OPEN = WebSocket.OPEN
 }
 
-export interface SocketPayload {
-    type: string;
-    data: string;
-}
-
-@Injectable({
-    providedIn: 'root'
-})
 export class WebSocketService {
 
     public static readonly ERROR_MESSAGE_SOCKET_URL_IS_NOT_SETUP: string = 'Socket is not setup! Please call "setup(__url__)"';
 
     private webSocket: WebSocket | null = null;
-    private _serverUrl: string = '';
 
-    // Socket state observables
-    private readonly _state: BehaviorSubject<SocketState> = new BehaviorSubject<SocketState>(SocketState.CONNECTING);
-    public state: Observable<SocketState> = this._state.asObservable();
+    private readonly _state: BehaviorSubject<SocketState> = new BehaviorSubject<SocketState>(SocketState.CLOSED);
 
-    private readonly _message: Subject<SocketPayload> = new Subject<SocketPayload>();
-    public message: Observable<SocketPayload> = this._message.asObservable();
+    private readonly _message: Subject<string> = new Subject<string>();
+    public readonly message: Observable<string> = this._message.asObservable();
+    private readonly zone: Zone;
 
-    public setup(serverUrl: string): void {
-        this._serverUrl = serverUrl;
+    public constructor(private readonly _serverUrl: string, zone?: Zone) {
+        this.zone = zone ?? {
+            run: (callback: () => void): void => callback(),
+        };
     }
 
     private createSocket(): WebSocket {
-        return new WebSocket(this.serverUrl);
-    }
-
-    public connect(): void {
-        if (this.webSocket) {
-            this.close();
-        }
-
-        if (!this.serverUrl) {
+        if (!this._serverUrl) {
             throw new Error(WebSocketService.ERROR_MESSAGE_SOCKET_URL_IS_NOT_SETUP);
         }
 
-        this.webSocket = this.createSocket();
-        this.webSocket.onopen = (): void => this.onStateChange();
-        this.webSocket.onclose = (): void => this.onStateChange();
-        this.webSocket.onmessage = (ev: MessageEvent): void => this.onMessage(ev);
+        const webSocket = new WebSocket(this._serverUrl);
+        this.webSocket = webSocket;
+        webSocket.onopen = (): void => this._state.next(webSocket.readyState);
+        webSocket.onclose = (): void => this._state.next(webSocket.readyState);
+        webSocket.onmessage = (ev: MessageEvent): void => this.zone.run(() => this._message.next(ev.data));
+        return webSocket;
+    }
+
+    private getOrCreateSocket(): WebSocket {
+        if (this._state.getValue() === SocketState.OPEN && this.webSocket) {
+            return this.webSocket;
+        }
+
+        let webSocket: WebSocket | null = null;
+
+        switch (this._state.getValue()) {
+            case SocketState.CONNECTING:
+                webSocket = this.webSocket;
+                break;
+            case SocketState.CLOSED:
+            case SocketState.CLOSING:
+                webSocket = this.createSocket();
+                this._state.next(SocketState.CONNECTING);
+                break;
+            default:
+                throw new Error('Should not happen');
+        }
+
+        if (!webSocket) {
+            throw new Error('Socket connection failed');
+        }
+
+        return webSocket;
+    }
+
+    private async getConnection(): Promise<WebSocket> {
+        if (this._state.getValue() === SocketState.OPEN && this.webSocket) {
+            return this.webSocket;
+        }
+
+        const webSocket = this.getOrCreateSocket();
+
+        return new Promise<WebSocket>((resolve, reject) => {
+            this._state
+                .pipe(
+                    filter((state: SocketState) => state === SocketState.OPEN || state === SocketState.CLOSED),
+                    first()
+                )
+                .subscribe((state: SocketState) => {
+                    if (state === SocketState.OPEN) {
+                        resolve(webSocket);
+                    } else if (state === SocketState.CLOSED) {
+                        this.close();
+                        reject(new Error('Socket connection failed'));
+                    }
+                });
+        });
     }
 
     public close(): void {
         if (this.webSocket && this.webSocket.readyState !== SocketState.CLOSED) {
             this.webSocket.close();
         }
+
+        this.webSocket = null;
     }
 
-    public send(message: string, data: string): void {
-        if (!this.webSocket) {
-            this.connect();
-        }
+    public async send<Data>(message: string, data: Data): Promise<Data> {
+        const webSocket = await this.getConnection();
 
-        if (this.socket.readyState === SocketState.OPEN) {
-            const packet: string = JSON.stringify({ message, data });
-            this.socket.send(packet);
-        } else {
-            const sub: Subscription = this.state.subscribe((state: SocketState) => {
-                if (state === SocketState.OPEN) {
-                    this.send(message, data);
-                    sub.unsubscribe();
-                }
-            });
-        }
-    }
+        const packet: string = JSON.stringify({ message, data });
+        webSocket.send(packet);
 
-    public get stateValue(): SocketState {
-        return this._state.value;
-    }
-
-    public get socket(): WebSocket {
-        if (!this.webSocket) {
-            throw new Error('Socket is not setup! Please call "connect()"');
-        }
-
-        return this.webSocket;
-    }
-
-    private onMessage(event: MessageEvent): void {
-        this._message.next(JSON.parse(event.data));
-    }
-
-    private onStateChange(): void {
-        this._state.next(this.socket.readyState);
-    }
-
-    public get serverUrl(): string {
-        return this._serverUrl;
+        return data;
     }
 }

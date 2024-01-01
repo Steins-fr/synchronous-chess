@@ -32,6 +32,9 @@
             ],
             "@environments/*": [
                 "src/environments/*"
+            ],
+            "@testing/*": [
+                "src/testing/*"
             ]
         }
     },

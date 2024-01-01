@@ -1,14 +1,10 @@
 <div id="chat-app">
     <h3>Webrtc chat</h3>
-    <h4 *ngIf="roomService.isActive | async">Salle ({{ roomService.roomName }})</h4>
+    <h4 *ngIf="room">Salle ({{ roomName }})</h4>
     <div id="chat-container">
         <div id="chat">
             <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
-                <div *cdkVirtualFor="let chatEntry of chat" class="chat-message">
-                    <span class="author" [ngClass]="{'my-message': chatEntry.author === roomService.localPlayer.name}">
-                        {{ chatEntry.author }} :</span>
-                    {{ chatEntry.message }}
-                </div>
+                <app-chat-message *cdkVirtualFor="let chatMessage of chatMessages()" [message]="chatMessage" />
             </cdk-virtual-scroll-viewport>
             <div id="new-message-notification" class="chat-notification" *ngIf="newMessage > 0">
                 <button mat-flat-button color="primary" (click)="scrollDown(true)">
@@ -16,7 +12,7 @@
                     <span>Voir.</span>
                 </button>
             </div>
-            <div id="history-notification" class="chat-notification" *ngIf="viewingHistory">
+            <div id="history-notification" class="chat-notification" *ngIf="viewingHistory()">
                 <button mat-flat-button color="primary" (click)="scrollDown(true)">
                     <span>Tu es entrain de regarder des anciens messages.</span>
                     <span>Revenir aux messages les plus récents.</span>
@@ -27,9 +23,9 @@
             <h4 class="list-title">Participants</h4>
             <mat-chip-set class="mat-chip-list-stacked">
                 <app-chat-participant
-                    *ngFor="let participant of roomService.players | keyvalue"
-                    [player]="participant.value"/>
-                <mat-chip *ngFor="let playerName of roomService.queue">
+                    *ngFor="let participant of players()"
+                    [player]="participant" />
+                <mat-chip *ngFor="let playerName of queuingPlayers()">
                     {{ playerName }}
                 </mat-chip>
             </mat-chip-set>
@@ -42,7 +38,7 @@
         </mat-form-field>
         <button
             mat-raised-button color="primary" id="send" (click)="sendMessage()"
-            [disabled]="(roomService.isActive | async) === false || isSending">Envoyer
+            [disabled]="!room || isSending">Envoyer
         </button>
     </div>
 </div>

@@ -1,8 +1,8 @@
-import DestinationColorMovementCondition from './destination-color-movement-condition';
-import Vec2 from 'vec2';
-import { PieceColor, FenPiece } from '../../rules/chess-rules';
-import { FenBoard } from '../../../../helpers/chess-board-helper';
-
+import DestinationColorMovementCondition
+    from '@app/classes/chess/movements/movement-conditions/destination-color-movement-condition';
+import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
 describe('DestinationColorMoveCondition', () => {
     it('should create an instance', () => {
@@ -20,15 +20,15 @@ describe('DestinationColorMoveCondition', () => {
         ];
 
         // When
-        const blackResult1: boolean = condition1.canMove(undefined, new Vec2([0, 0]), board);
-        const whiteResult1: boolean = condition1.canMove(undefined, new Vec2([1, 0]), board);
-        const noneResult1: boolean = condition1.canMove(undefined, new Vec2([2, 0]), board);
-        const blackResult2: boolean = condition2.canMove(undefined, new Vec2([0, 0]), board);
-        const whiteResult2: boolean = condition2.canMove(undefined, new Vec2([1, 0]), board);
-        const noneResult2: boolean = condition2.canMove(undefined, new Vec2([2, 0]), board);
-        const blackResult3: boolean = condition3.canMove(undefined, new Vec2([0, 0]), board);
-        const whiteResult3: boolean = condition3.canMove(undefined, new Vec2([1, 0]), board);
-        const noneResult3: boolean = condition3.canMove(undefined, new Vec2([2, 0]), board);
+        const blackResult1: boolean = condition1.canMove(new Vec2(0, 0), new Vec2(0, 0), board);
+        const whiteResult1: boolean = condition1.canMove(new Vec2(0, 0), new Vec2(1, 0), board);
+        const noneResult1: boolean = condition1.canMove(new Vec2(0, 0), new Vec2(2, 0), board);
+        const blackResult2: boolean = condition2.canMove(new Vec2(0, 0), new Vec2(0, 0), board);
+        const whiteResult2: boolean = condition2.canMove(new Vec2(0, 0), new Vec2(1, 0), board);
+        const noneResult2: boolean = condition2.canMove(new Vec2(0, 0), new Vec2(2, 0), board);
+        const blackResult3: boolean = condition3.canMove(new Vec2(0, 0), new Vec2(0, 0), board);
+        const whiteResult3: boolean = condition3.canMove(new Vec2(0, 0), new Vec2(1, 0), board);
+        const noneResult3: boolean = condition3.canMove(new Vec2(0, 0), new Vec2(2, 0), board);
 
         // Then
         expect(blackResult1).toBeTruthy();

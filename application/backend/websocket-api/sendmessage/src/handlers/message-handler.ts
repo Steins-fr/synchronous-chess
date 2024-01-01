@@ -94,11 +94,11 @@ abstract class MessageHandler {
         return this.response(ResponsePayloadType.ERROR, response);
     }
 
-    protected response(type: ResponsePayloadType, data: any): ResponsePayload {
+    protected response(type: ResponsePayloadType, data: object): ResponsePayload {
         return {
             id: this.payload.id,
             type,
-            data: JSON.stringify(data)
+            data,
         };
     }
 }

@@ -1,0 +1,4 @@
+<app-room-layout [maxPlayer]="maxPlayer">
+    <app-chat [room]="room" />
+</app-room-layout>
+<app-debug-webrtc *ngIf="room" [room]="room"/>

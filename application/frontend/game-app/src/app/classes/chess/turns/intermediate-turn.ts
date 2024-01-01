@@ -32,9 +32,9 @@ export class IntermediateTurn extends MoveTurn<IntermediateTurnAction> {
 
     public isFilled(color: PieceColor): boolean {
         if (color === PieceColor.WHITE) {
-            return this.action.whiteTarget === null || this.action.whiteMove !== undefined;
+            return this.action.whiteTarget === null || this.action.whiteMove !== null;
         } else if (color === PieceColor.BLACK) {
-            return this.action.blackTarget === null || this.action.blackMove !== undefined;
+            return this.action.blackTarget === null || this.action.blackMove !== null;
         }
 
         return true;

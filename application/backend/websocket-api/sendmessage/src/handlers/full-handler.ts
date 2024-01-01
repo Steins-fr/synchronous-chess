@@ -24,7 +24,7 @@ export default class FullHandler extends MessageHandler {
         }
 
         try {
-            const data: FullRequest = JSON.parse(this.payload.data);
+            const data: FullRequest = this.payload.data;
             if (!data.roomName || !data.to) {
                 throw new BadRequestException(FullHandler.ERROR_PARSING);
             }

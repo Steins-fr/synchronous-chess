@@ -1,21 +1,21 @@
-import { Vec2 } from '../../vector/vec2';
-import SynchronousChessGame from './synchronous-chess-game';
-import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import ChessRules, { FenPiece, PieceColor, PieceType } from '../rules/chess-rules';
-import { Column, Row } from '../interfaces/CoordinateMove';
-import Move, { FenColumn, FenCoordinate, FenRow } from '../interfaces/move';
-import Turn from '../turns/turn';
-import TurnType, { TurnCategory } from '../turns/turn.types';
-import SyncTurnAction from '../turns/turn-actions/sync-turn-action';
-import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-action';
-import { IntermediateTurn } from '../turns/intermediate-turn';
-import MoveTurn from '../turns/move-turn';
-import ChoiceTurn from '../turns/choice-turn';
-import MoveTurnAction from '../turns/turn-actions/move-turn-action';
-import SyncTurn from '../turns/sync-turn';
-import PromotionTurn from '../turns/promotion-turn';
-import PromotionTurnAction from '../turns/turn-actions/promotion-turn-action';
-import SynchronousChessRules from '../rules/synchronous-chess-rules';
+import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
+import { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenColumn, FenCoordinate, FenRow } from '@app/classes/chess/interfaces/move';
+import ChessRules, { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
+import ChoiceTurn from '@app/classes/chess/turns/choice-turn';
+import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
+import MoveTurn from '@app/classes/chess/turns/move-turn';
+import PromotionTurn from '@app/classes/chess/turns/promotion-turn';
+import SyncTurn from '@app/classes/chess/turns/sync-turn';
+import Turn from '@app/classes/chess/turns/turn';
+import IntermediateTurnAction from '@app/classes/chess/turns/turn-actions/intermediate-turn-action';
+import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
+import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion-turn-action';
+import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
+import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
+import { Vec2 } from '@app/classes/vector/vec2';
+import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
 
 class ProtectedTest extends SynchronousChessGame {
     public override runSyncTurn(): void {
@@ -997,7 +997,12 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.D, 7] };
         const blackMove: Move = { from: [FenColumn.D, 5], to: [FenColumn.D, 7] };
 
-        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.from, blackTarget: blackMove.from };
+        const action: IntermediateTurnAction = {
+            whiteMove,
+            blackMove,
+            whiteTarget: whiteMove.from,
+            blackTarget: blackMove.from
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1051,7 +1056,12 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+        const action: IntermediateTurnAction = {
+            whiteMove,
+            blackMove,
+            whiteTarget: whiteMove.to,
+            blackTarget: blackMove.to
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1105,7 +1115,12 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: IntermediateTurnAction = { whiteMove: null, blackMove: null, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+        const action: IntermediateTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+            whiteTarget: whiteMove.to,
+            blackTarget: blackMove.to
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1397,7 +1412,12 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
 
         const action: SyncTurnAction = { whiteMove, blackMove };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: whiteMove.to };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: blackMove.to,
+            blackTarget: whiteMove.to,
+            blackMove: null,
+            whiteMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1422,7 +1442,6 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
-
 
         const newFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1460,7 +1479,12 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
 
         const action: SyncTurnAction = { whiteMove: null, blackMove };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: null, blackMove: null };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: blackMove.to,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1521,7 +1545,12 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
 
         const action: SyncTurnAction = { whiteMove, blackMove: null };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: null, blackTarget: whiteMove.to, whiteMove: null };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: null,
+            blackTarget: whiteMove.to,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1583,7 +1612,10 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.B, 2], to: [FenColumn.B, 4] };
 
         const action: SyncTurnAction = { whiteMove, blackMove };
-        const expectedAction: SyncTurnAction = {};
+        const expectedAction: SyncTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1645,7 +1677,10 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.E, 6], to: [FenColumn.E, 8] };
 
         const action: SyncTurnAction = { whiteMove, blackMove };
-        const expectedAction: SyncTurnAction = {};
+        const expectedAction: SyncTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1731,7 +1766,12 @@ describe('SynchronousChessGame', () => {
         ChessBoardHelper.disableCache();
         const game: ProtectedTest = new ProtectedTest();
 
-        const action: IntermediateTurnAction = { whiteTarget: null, blackTarget: null };
+        const action: IntermediateTurnAction = {
+            whiteTarget: null,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1776,7 +1816,12 @@ describe('SynchronousChessGame', () => {
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1828,7 +1873,12 @@ describe('SynchronousChessGame', () => {
             whiteMove: { from: [FenColumn.C, 2], to: blackTarget },
             blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
         };
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
         const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
 
         Object.defineProperty(game, 'turn', {
@@ -1876,7 +1926,12 @@ describe('SynchronousChessGame', () => {
             whiteMove: null,
             blackMove: null
         };
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,

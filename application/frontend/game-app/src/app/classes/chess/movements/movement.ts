@@ -6,6 +6,7 @@ import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
 export enum MovementType {
     LINEAR = 'linear',
     HOP = 'hop',
+    // FIXME: why is this not used?
     DOUBLE_HOP = 'double-hop',
     FEAR_HOP = 'fear-hop'
 }

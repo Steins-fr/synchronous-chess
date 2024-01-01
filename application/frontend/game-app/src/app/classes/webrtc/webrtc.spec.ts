@@ -1,12 +1,9 @@
+import { first } from 'rxjs';
 import { Webrtc } from './webrtc';
 import { skipWhile } from 'rxjs/operators';
 import WebrtcStates from './webrtc-states';
 
 describe('Webrtc', () => {
-    it('should create an instance', () => {
-        expect(new Webrtc()).toBeTruthy();
-    });
-
     it('should configure WebRTC connection', (done: DoneFn) => {
         const service: Webrtc = new Webrtc();
         service.configure(true);
@@ -23,7 +20,10 @@ describe('Webrtc', () => {
         service.createOffer();
         service.states.subscribe((states: WebrtcStates) => {
             expect(states.error).toBe('');
-            done();
+
+            if (states.iceGathering === 'complete') {
+                done();
+            }
         });
     });
 
@@ -38,7 +38,7 @@ describe('Webrtc', () => {
             ice: []
         });
 
-        service.states.pipe(skipWhile((states: WebrtcStates) => states.error === '')).subscribe((states: WebrtcStates) => {
+        service.states.pipe(skipWhile((states: WebrtcStates) => states.error === ''), first()).subscribe((states: WebrtcStates) => {
             expect(states.error).not.toBe('');
             done();
         });
@@ -58,7 +58,9 @@ describe('Webrtc', () => {
 
         service.states.subscribe((states: WebrtcStates) => {
             expect(states.error).toBe('');
-            done();
+            if (states.iceGathering === 'complete') {
+                done();
+            }
         });
     });
 
