@@ -1,14 +1,10 @@
-import { SafeMovementCondition } from './safe-movement-condition';
-import SynchronousChessRules from '../../rules/synchronous-chess-rules';
-import { FenBoard } from '../../../../helpers/chess-board-helper';
-import { FenPiece, PieceColor } from '../../rules/chess-rules';
-import Vec2 from 'vec2';
+import { SafeMovementCondition } from '@app/classes/chess/movements/movement-conditions/safe-movement-condition';
+import { FenPiece, PieceColor } from '@app/classes/chess/rules/chess-rules';
+import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
 describe('SafeMoveCondition', () => {
-    it('should create an instance', () => {
-        expect(new SafeMovementCondition(undefined, false)).toBeTruthy();
-    });
-
     it('should say if it can move', () => {
         // Given
         const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), false);
@@ -24,8 +20,8 @@ describe('SafeMoveCondition', () => {
         ];
 
         // When
-        const resultValidKingSafety: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([3, 0]), board);
-        const resultInvalidKingSafety: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([5, 0]), board);
+        const resultValidKingSafety: boolean = condition.canMove(new Vec2(4, 0), new Vec2(3, 0), board);
+        const resultInvalidKingSafety: boolean = condition.canMove(new Vec2(4, 0), new Vec2(5, 0), board);
 
         // Then
         expect(resultValidKingSafety).toBeTruthy();
@@ -47,8 +43,8 @@ describe('SafeMoveCondition', () => {
         ];
 
         // When
-        const resultValidKingSafety1: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([3, 0]), board);
-        const resultValidKingSafety2: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([5, 0]), board);
+        const resultValidKingSafety1: boolean = condition.canMove(new Vec2(4, 0), new Vec2(3, 0), board);
+        const resultValidKingSafety2: boolean = condition.canMove(new Vec2(4, 0), new Vec2(5, 0), board);
 
         // Then
         expect(resultValidKingSafety1).toBeTruthy();
@@ -70,8 +66,8 @@ describe('SafeMoveCondition', () => {
         ];
 
         // When
-        const resultValidKingSafety: boolean = condition.canMove(new Vec2([7, 1]), new Vec2([7, 2]), board);
-        const resultInvalidKingSafety: boolean = condition.canMove(new Vec2([4, 0]), new Vec2([6, 0]), board);
+        const resultValidKingSafety: boolean = condition.canMove(new Vec2(7, 1), new Vec2(7, 2), board);
+        const resultInvalidKingSafety: boolean = condition.canMove(new Vec2(4, 0), new Vec2(6, 0), board);
 
         // Then
         expect(resultValidKingSafety).toBeTruthy();

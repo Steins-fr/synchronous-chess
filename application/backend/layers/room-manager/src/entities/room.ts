@@ -5,6 +5,6 @@ export default interface Room {
     connectionId: string;
     hostPlayer: string;
     maxPlayer: number;
-    players: Array<Player>;
-    queue: Array<Player>;
+    players: Player[];
+    queue: Player[];
 }

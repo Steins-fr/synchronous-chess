@@ -32,7 +32,7 @@ describe('ChessHelper', () => {
     it('should create an initialized board of value', () => {
         // Given
 
-        const expectedBoard: Array<Array<string>> = [
+        const expectedBoard: Array<string[]> = [
             ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
             ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
             ['test', 'test', 'test', 'test', 'test', 'test', 'test', 'test'],
@@ -45,7 +45,7 @@ describe('ChessHelper', () => {
 
         // When
 
-        const board: Array<Array<string>> = ChessBoardHelper.createFilledBoard('test');
+        const board: Array<string[]> = ChessBoardHelper.createFilledBoard('test');
 
         // Then
         expect(board).toEqual(expectedBoard);
@@ -282,45 +282,33 @@ describe('ChessHelper', () => {
         ];
 
         // When
-        const resultRow1: boolean = fenBoard[0].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 0)) === FenPiece.BLACK_BISHOP
+        fenBoard[0].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 0)) === FenPiece.BLACK_BISHOP).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow2: boolean = fenBoard[1].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 1)) === FenPiece.BLACK_KING
+        fenBoard[1].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 1)) === FenPiece.BLACK_KING).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow3: boolean = fenBoard[2].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 2)) === FenPiece.BLACK_KNIGHT
+        fenBoard[2].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 2)) === FenPiece.BLACK_KNIGHT).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow4: boolean = fenBoard[3].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 3)) === FenPiece.EMPTY
+        fenBoard[3].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 3)) === FenPiece.EMPTY).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow5: boolean = fenBoard[4].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 4)) === FenPiece.EMPTY
+        fenBoard[4].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 4)) === FenPiece.EMPTY).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow6: boolean = fenBoard[5].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 5)) === FenPiece.BLACK_PAWN
+        fenBoard[5].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 5)) === FenPiece.BLACK_PAWN).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow7: boolean = fenBoard[6].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 6)) === FenPiece.BLACK_QUEEN
+        fenBoard[6].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 6)) === FenPiece.BLACK_QUEEN).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow8: boolean = fenBoard[7].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 7)) === FenPiece.BLACK_ROOK
+        fenBoard[7].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 7)) === FenPiece.BLACK_ROOK).withContext(`${x},0`).toBeTruthy()
         );
-
-        const resultOut: boolean = vecOutOfBound.every(
-            (vec: Vec2) => ChessBoardHelper.getFenPieceByVec(fenBoard, vec) === null
+        vecOutOfBound.forEach(
+            (vec: Vec2) => expect(() => ChessBoardHelper.getFenPieceByVec(fenBoard, vec)).withContext(`${vec.x},${vec.y}`).toThrowError()
         );
-
-        // Then
-        expect(resultRow1).toBeTruthy();
-        expect(resultRow2).toBeTruthy();
-        expect(resultRow3).toBeTruthy();
-        expect(resultRow4).toBeTruthy();
-        expect(resultRow5).toBeTruthy();
-        expect(resultRow6).toBeTruthy();
-        expect(resultRow7).toBeTruthy();
-        expect(resultRow8).toBeTruthy();
-        expect(resultOut).toBeTruthy();
     });
 
     it('should set value into a new board', () => {

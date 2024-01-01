@@ -1,62 +1,55 @@
-import { NgZone } from '@angular/core';
-import { RoomService } from '../../../services/room/room.service';
-import { NotifierFlow } from '../../notifier/notifier';
-import SynchronousChessGameSession from './synchronous-chess-game-session';
-import SynchronousChessGameSessionBuilder from './synchronous-chess-game-session-builder';
-import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-host-game-session';
-import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
-import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
+import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGameSessionBuilder
+    from '@app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
+import SynchronousChessLocalGameSession from '@app/classes/chess/game-sessions/synchronous-chess-local-game-session';
+import SynchronousChessOnlineHostGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-host-game-session';
+import SynchronousChessOnlinePeerGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-peer-game-session';
+import { NotifierFlow } from '@app/classes/notifier/notifier';
+import { Room } from '@app/services/room-manager/classes/room/room';
+import { Subject } from 'rxjs';
+import { getGetterSpy } from '@testing/test.helper';
 
 describe('SynchronousChessGameSessionBuilder', () => {
-    let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
+    let roomSpy: jasmine.SpyObj<Room<any>>;
 
     beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['notifier', 'roomManagerNotifier', 'initiator']);
-        Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
-            writable: false
-        });
-        Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
-            writable: false
-        });
+        roomSpy = jasmine.createSpyObj<Room<any>>(
+            'Room',
+            ['messenger'],
+            ['initiator', 'roomManagerNotifier']
+        );
+
+        getGetterSpy(roomSpy, 'roomManagerNotifier').and.returnValue(jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']));
+
+        // FIXME: better test this
+        roomSpy.messenger.and.returnValues(
+            (new Subject()).asObservable(),
+            (new Subject()).asObservable(),
+            (new Subject()).asObservable(),
+        );
     });
 
     it('should create an instance of SynchronousChessOnlineHostGameSession', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'initiator', {
-            value: true,
-            writable: false
-        });
+        getGetterSpy(roomSpy, 'initiator').and.returnValue(true);
 
-        // When
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomServiceSpy, null as unknown as NgZone);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy);
 
-        // Then
         expect(session instanceof SynchronousChessOnlineHostGameSession).toBeTruthy();
     });
 
     it('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'initiator', {
-            value: false,
-            writable: false
-        });
+        getGetterSpy(roomSpy, 'initiator').and.returnValue(false);
 
-        // When
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomServiceSpy, null as unknown as NgZone);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy);
 
-        // Then
         expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
     });
 
     it('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
-        // Given
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildLocal();
 
-        // When
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildLocal(null as unknown as NgZone);
-
-        // Then
         expect(session instanceof SynchronousChessLocalGameSession).toBeTruthy();
     });
 });

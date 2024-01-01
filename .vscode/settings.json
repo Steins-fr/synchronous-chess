@@ -1,8 +1,6 @@
 {
     "editor.detectIndentation": false,
-    "auto-close-tag.activationOnLanguage": [
-        "html"
-    ],
+    "auto-close-tag.activationOnLanguage": ["html"],
     "cSpell.ignoreWords": [
         "ondatachannel",
         "onicecandidate",
@@ -10,5 +8,10 @@
         "onicegatheringstatechange",
         "onsignalingstatechange",
         "sendmessage"
-    ]
+    ],
+    "eslint.format.enable": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[terraform]": {
+        "editor.defaultFormatter": "hashicorp.terraform"
+    }
 }

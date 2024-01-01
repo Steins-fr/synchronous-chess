@@ -1,8 +1,7 @@
-import CaseMovementCondition from './case-movement-condition';
-import Vec2 from 'vec2';
-import { FenPiece } from '../../rules/chess-rules';
-import { FenBoard } from '../../../../helpers/chess-board-helper';
-
+import CaseMovementCondition from '@app/classes/chess/movements/movement-conditions/case-movement-condition';
+import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
 describe('CaseMoveCondition', () => {
     it('should create an instance', () => {
@@ -20,9 +19,9 @@ describe('CaseMoveCondition', () => {
         ];
 
         // When
-        const resultNoValidPieces: boolean = conditionNoValidPieces.canMove(new Vec2([0, 0]), undefined, board);
-        const resultHasWhiteKing: boolean = conditionHasWhiteKing.canMove(new Vec2([0, 0]), undefined, board);
-        const resultNoWhiteKing: boolean = conditionNoWhiteKing.canMove(new Vec2([0, 0]), undefined, board);
+        const resultNoValidPieces: boolean = conditionNoValidPieces.canMove(new Vec2(0, 0), new Vec2(0, 0), board);
+        const resultHasWhiteKing: boolean = conditionHasWhiteKing.canMove(new Vec2(0, 0), new Vec2(0, 0), board);
+        const resultNoWhiteKing: boolean = conditionNoWhiteKing.canMove(new Vec2(0, 0), new Vec2(0, 0), board);
 
         // Then
         expect(resultNoValidPieces).toBeFalsy();

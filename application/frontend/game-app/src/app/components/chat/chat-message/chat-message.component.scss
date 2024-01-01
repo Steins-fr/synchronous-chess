@@ -1,0 +1,12 @@
+.chat-message {
+    height: 14px;
+    padding: 3px;
+
+    .author {
+        color: blue;
+
+        &.my-message {
+            color: green;
+        }
+    }
+}

@@ -69,7 +69,7 @@ The synchronous chess board game with chat.
 
 **Required**: Backend Websocket API.
 
-**Technology**: Angular 9.
+**Technology**: Angular 17+.
 
 **Language**: Typescript.
 

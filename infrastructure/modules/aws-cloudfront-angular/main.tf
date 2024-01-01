@@ -1,5 +1,6 @@
 locals {
-  name = "sc_${var.name}_${var.stage}"
+  name      = "sc_${var.name}_${var.stage}"
+  origin_id = "origin-bucket-${var.bucket.id}"
 }
 
 resource "aws_cloudfront_distribution" "website_cdn" {
@@ -12,17 +13,15 @@ resource "aws_cloudfront_distribution" "website_cdn" {
   aliases = ["${var.domain_name}"]
 
   origin {
-    origin_id   = "origin-bucket-${var.bucket.id}"
-    domain_name = var.bucket.bucket_regional_domain_name
-    s3_origin_config {
-      origin_access_identity = var.origin_access_identity
-    }
+    origin_id                = local.origin_id
+    domain_name              = var.bucket.bucket_regional_domain_name
+    origin_access_control_id = var.origin_access_control
   }
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "origin-bucket-${var.bucket.id}"
+    target_origin_id = local.origin_id
 
     forwarded_values {
       query_string = false

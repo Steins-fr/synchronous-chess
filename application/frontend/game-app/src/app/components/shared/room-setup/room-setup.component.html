@@ -1,4 +1,4 @@
-<div *ngIf="canDisplay" class="row">
+<div *ngIf="canDisplay()">
     <mat-form-field>
         <input
             [(ngModel)]="roomName" autocomplete="off"
@@ -17,14 +17,13 @@
             type="text" />
     </mat-form-field>
 
-    <div *ngIf="!isLoading" id="setup-buttons">
+    <div *ngIf="!loading()" class="d-flex align-items-center">
         <button (click)="hostRoom()" color="primary" mat-stroked-button>
             Nouvelle
         </button>
         <button (click)="joinRoom()" color="primary" mat-stroked-button>
             Rejoindre
         </button>
-        <div id="setup-error">{{ error }}</div>
     </div>
-    <mat-spinner *ngIf="isLoading" [diameter]="42" />
+    <mat-spinner *ngIf="loading()" [diameter]="42" />
 </div>

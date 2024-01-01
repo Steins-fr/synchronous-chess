@@ -1,14 +1,14 @@
-import * as AWS from 'aws-sdk';
-import RequestPayload from './interfaces/request-payload';
+import { ApiGatewayManagementApiClient } from '@aws-sdk/client-apigatewaymanagementapi';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import CreateHandler from './handlers/create-handler';
-import MessageHandler from './handlers/message-handler';
-import JoinHandler from './handlers/join-handler';
 import FullHandler from './handlers/full-handler';
-import SignalHandler from './handlers/signal-handler';
-import PlayerGetAllHandler from './handlers/player-get-all-handler';
+import JoinHandler from './handlers/join-handler';
+import MessageHandler from './handlers/message-handler';
 import PlayerAddHandler from './handlers/player-add-handler';
+import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
+import SignalHandler from './handlers/signal-handler';
+import { SocketPacketRequestPayload } from './types/socket-packet-payload.type';
 
 interface Response {
     statusCode: number;
@@ -35,24 +35,29 @@ const messageHandlers: MessageHandlers = {
     playerRemove: PlayerRemoveHandler
 };
 
-export const handler: (event: APIGatewayProxyEvent) => Promise<Response> = async function (event: APIGatewayProxyEvent): Promise<Response> {
-
-    const apigwManagementApi: AWS.ApiGatewayManagementApi = new AWS.ApiGatewayManagementApi({
-        apiVersion: '2018-11-29',
-        endpoint: event.requestContext.domainName
+export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {
+    const client = new ApiGatewayManagementApiClient({
+        endpoint: event.requestContext.domainName,
     });
 
     try {
         const body: string = event.body as string;
-        const payload: RequestPayload = JSON.parse(JSON.parse(body).data);
+        const connectionId = event.requestContext.connectionId;
+
+        if (!connectionId) {
+            return { statusCode: 401, body: 'Unauthorized request.' };
+        }
+
+        const payload: SocketPacketRequestPayload = JSON.parse(body).data;
 
         if (messageHandlers[payload.type]) {
-            const messageHandler: MessageHandler = new messageHandlers[payload.type](apigwManagementApi, event, payload);
+            const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload);
             await messageHandler.execute();
         } else {
             return { statusCode: 401, body: 'Operation not permitted.' };
         }
     } catch (e) {
+        console.error(e);
         return { statusCode: 500, body: 'Server error.' };
     }
 

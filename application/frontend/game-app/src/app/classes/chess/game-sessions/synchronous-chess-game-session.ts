@@ -1,4 +1,3 @@
-import { NgZone } from '@angular/core';
 import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import CoordinateMove from '../interfaces/CoordinateMove';
@@ -18,9 +17,6 @@ export default abstract class SynchronousChessGameSession {
     public configuration: SessionConfiguration = { spectatorNumber: 0 };
 
     public abstract myColor: PieceColor;
-
-    public constructor(protected readonly ngZone: NgZone) {
-    }
 
     public abstract get playingColor(): PieceColor;
 
@@ -64,4 +60,5 @@ export default abstract class SynchronousChessGameSession {
 
     public abstract move(move: Move | null): void;
     public abstract promote(pieceType: PieceType): void;
+    public abstract destroy(): void;
 }

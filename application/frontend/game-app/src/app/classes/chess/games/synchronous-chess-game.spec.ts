@@ -1,21 +1,20 @@
-import { Vec2 } from '../../vector/vec2';
-import SynchronousChessGame from './synchronous-chess-game';
-import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import ChessRules, { FenPiece, PieceColor, PieceType } from '../rules/chess-rules';
-import { Column, Row } from '../interfaces/CoordinateMove';
-import Move, { FenColumn, FenCoordinate, FenRow } from '../interfaces/move';
-import Turn from '../turns/turn';
-import TurnType, { TurnCategory } from '../turns/turn.types';
-import SyncTurnAction from '../turns/turn-actions/sync-turn-action';
-import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-action';
-import { IntermediateTurn } from '../turns/intermediate-turn';
-import MoveTurn from '../turns/move-turn';
-import ChoiceTurn from '../turns/choice-turn';
-import MoveTurnAction from '../turns/turn-actions/move-turn-action';
-import SyncTurn from '../turns/sync-turn';
-import PromotionTurn from '../turns/promotion-turn';
-import PromotionTurnAction from '../turns/turn-actions/promotion-turn-action';
-import SynchronousChessRules from '../rules/synchronous-chess-rules';
+import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
+import { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenColumn, FenCoordinate, FenRow } from '@app/classes/chess/interfaces/move';
+import ChessRules, { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
+import ChoiceTurn from '@app/classes/chess/turns/choice-turn';
+import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
+import MoveTurn from '@app/classes/chess/turns/move-turn';
+import PromotionTurn from '@app/classes/chess/turns/promotion-turn';
+import SyncTurn from '@app/classes/chess/turns/sync-turn';
+import Turn from '@app/classes/chess/turns/turn';
+import IntermediateTurnAction from '@app/classes/chess/turns/turn-actions/intermediate-turn-action';
+import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion-turn-action';
+import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
+import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
+import { Vec2 } from '@app/classes/vector/vec2';
+import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
 
 class ProtectedTest extends SynchronousChessGame {
     public override runSyncTurn(): void {
@@ -62,51 +61,12 @@ class ProtectedTest extends SynchronousChessGame {
         return this.turn;
     }
 
-    public getOldTurn(): Turn {
-        if (!this.oldTurn) {
-            throw new Error('No old turn');
-        }
-
+    public getOldTurn(): Turn | null {
         return this.oldTurn;
     }
 }
 
 describe('SynchronousChessGame', () => {
-
-    let moveTurnSpy: jasmine.SpyObj<MoveTurn>;
-    let choiceTurnSpy: jasmine.SpyObj<ChoiceTurn>;
-    let oldTurnSpy: jasmine.SpyObj<Turn>;
-
-    beforeEach(() => {
-        moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'type', 'isDone', 'action']);
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: {},
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'category', {
-            value: TurnCategory.MOVE,
-            writable: false
-        });
-        choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone', 'action']);
-        Object.defineProperty(choiceTurnSpy, 'action', {
-            value: {},
-            writable: false
-        });
-        Object.defineProperty(choiceTurnSpy, 'category', {
-            value: TurnCategory.CHOICE,
-            writable: false
-        });
-        oldTurnSpy = jasmine.createSpyObj<Turn>('Turn', ['canBeExecuted', 'type', 'isDone', 'action']);
-        Object.defineProperty(oldTurnSpy, 'action', {
-            value: {},
-            writable: false
-        });
-    });
-
-    it('should create an instance', () => {
-        expect(new SynchronousChessGame()).toBeTruthy();
-    });
-
     it('should get the rules for a specific color', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
@@ -123,29 +83,34 @@ describe('SynchronousChessGame', () => {
     });
 
     it('should get the last turn action of move category', () => {
-        // Given
         const gameUndefinedOldTurn: SynchronousChessGame = new SynchronousChessGame();
         Object.defineProperty(gameUndefinedOldTurn, 'oldTurn', {
             value: undefined,
+        });
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         const gameMoveTurn: SynchronousChessGame = new SynchronousChessGame();
         Object.defineProperty(gameMoveTurn, 'oldTurn', {
             value: moveTurnSpy,
         });
         const gameChoiceTurn: SynchronousChessGame = new SynchronousChessGame();
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+        });
         Object.defineProperty(gameChoiceTurn, 'oldTurn', {
             value: choiceTurnSpy,
         });
 
-        // When
-        const actionUndefinedOldTurn: MoveTurnAction | null = gameUndefinedOldTurn.lastMoveTurnAction();
-        const actionMoveTurn: MoveTurnAction | null = gameMoveTurn.lastMoveTurnAction();
-        const actionChoiceTurn: MoveTurnAction | null = gameChoiceTurn.lastMoveTurnAction();
-
-        // Then
-        expect(actionUndefinedOldTurn).toEqual(null);
-        expect(actionMoveTurn).toBe(moveTurnSpy.action);
-        expect(actionChoiceTurn).toEqual(null);
+        expect(gameUndefinedOldTurn.lastMoveTurnAction()).toEqual(null);
+        expect(gameMoveTurn.lastMoveTurnAction()).toBe(moveTurnSpy.action);
+        expect(gameChoiceTurn.lastMoveTurnAction()).toEqual(null);
     });
 
     it('getPossiblePlays should return the piece possible plays', () => {
@@ -169,6 +134,10 @@ describe('SynchronousChessGame', () => {
     it('getPossiblePlays should return empty during choice turn', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+        });
         Object.defineProperty(game, 'turn', {
             value: choiceTurnSpy
         });
@@ -187,6 +156,14 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
         const isMoveValidSpy: jasmine.Spy = jasmine.createSpy('isMoveValid');
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
+        });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: false
@@ -209,6 +186,14 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
         const isMoveValidSpy: jasmine.Spy = jasmine.createSpy('isMoveValid');
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
+        });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: false
@@ -245,6 +230,10 @@ describe('SynchronousChessGame', () => {
     it('should not register move if this is not a move turn', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+        });
         Object.defineProperty(game, 'turn', {
             value: choiceTurnSpy,
             writable: false
@@ -262,6 +251,14 @@ describe('SynchronousChessGame', () => {
     it('should not promote if this is not a promotion turn', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
+        });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: false
@@ -278,8 +275,10 @@ describe('SynchronousChessGame', () => {
     it('should promote if this is a promotion turn', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
-        Object.defineProperty(choiceTurnSpy, 'type', {
-            value: TurnType.CHOICE_PROMOTION
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+            type: TurnType.CHOICE_PROMOTION
         });
         Object.defineProperty(game, 'turn', {
             value: choiceTurnSpy,
@@ -298,6 +297,14 @@ describe('SynchronousChessGame', () => {
     it('isMoveValid should return false if origin is empty', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
+        });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: false
@@ -319,9 +326,13 @@ describe('SynchronousChessGame', () => {
             value: runSynchroneTurnSpy,
             writable: false
         });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: 'unknownType',
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: 'unknownType' as TurnType,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -338,6 +349,14 @@ describe('SynchronousChessGame', () => {
     it('should not execute the turn if not ready', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
+        });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: true
@@ -357,7 +376,7 @@ describe('SynchronousChessGame', () => {
     it('should execute runSynchroneTurn if ready', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
-        const runSynchroneTurnSpy: jasmine.Spy = jasmine.createSpy('runSynchroneTurn');
+        const runSyncTurnSpy: jasmine.Spy = jasmine.createSpy('runSynchroneTurn');
         const nextTurnSpy: jasmine.Spy = jasmine.createSpy('nextTurn');
         const checkPromotionTurnSpy: jasmine.Spy = jasmine.createSpy('checkPromotionTurn');
         const verifyCheckSpy: jasmine.Spy = jasmine.createSpy('verifyCheck');
@@ -370,12 +389,16 @@ describe('SynchronousChessGame', () => {
         Object.defineProperty(game, 'checkPromotionTurn', {
             value: checkPromotionTurnSpy
         });
-        Object.defineProperty(game, 'runSynchroneTurn', {
-            value: runSynchroneTurnSpy
+        Object.defineProperty(game, 'runSyncTurn', {
+            value: runSyncTurnSpy
         });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy
@@ -383,13 +406,11 @@ describe('SynchronousChessGame', () => {
         moveTurnSpy.canBeExecuted.and.returnValue(true);
         moveTurnSpy.isDone = false;
 
-        // When
         const result: boolean = game.runTurn();
 
-        // Then
         expect(result).toEqual(true);
         expect(moveTurnSpy.canBeExecuted.calls.count()).toEqual(1);
-        expect(runSynchroneTurnSpy.calls.count()).toEqual(1);
+        expect(runSyncTurnSpy.calls.count()).toEqual(1);
         expect(moveTurnSpy.isDone).toEqual(true);
     });
 
@@ -413,9 +434,13 @@ describe('SynchronousChessGame', () => {
             value: runIntermediateTurnSpy,
             writable: false
         });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_INTERMEDIATE,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.MOVE_INTERMEDIATE,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -454,9 +479,10 @@ describe('SynchronousChessGame', () => {
             value: runPromotionTurnSpy,
             writable: false
         });
-        Object.defineProperty(choiceTurnSpy, 'type', {
-            value: TurnType.CHOICE_PROMOTION,
-            writable: false
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+            type: TurnType.CHOICE_PROMOTION
         });
         Object.defineProperty(game, 'turn', {
             value: choiceTurnSpy,
@@ -487,9 +513,13 @@ describe('SynchronousChessGame', () => {
         Object.defineProperty(game, 'checkPromotionTurn', {
             value: checkPromotionTurnSpy
         });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: '',
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: '' as TurnType,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -522,13 +552,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove: move1, blackMove: move2 };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -576,13 +603,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -627,13 +651,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove: null, blackMove: null };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -681,12 +702,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy
@@ -733,13 +752,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -787,12 +803,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy
@@ -839,13 +853,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -892,13 +903,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove: null };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -945,13 +953,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove: null, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -997,15 +1002,17 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.D, 7] };
         const blackMove: Move = { from: [FenColumn.D, 5], to: [FenColumn.D, 7] };
 
-        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.from, blackTarget: blackMove.from };
+        const action: IntermediateTurnAction = {
+            whiteMove,
+            blackMove,
+            whiteTarget: whiteMove.from,
+            blackTarget: blackMove.from
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_INTERMEDIATE,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_INTERMEDIATE,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1051,15 +1058,17 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+        const action: IntermediateTurnAction = {
+            whiteMove,
+            blackMove,
+            whiteTarget: whiteMove.to,
+            blackTarget: blackMove.to
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_INTERMEDIATE,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_INTERMEDIATE,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1105,15 +1114,17 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: IntermediateTurnAction = { whiteMove: null, blackMove: null, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+        const action: IntermediateTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+            whiteTarget: whiteMove.to,
+            blackTarget: blackMove.to
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_INTERMEDIATE,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_INTERMEDIATE,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1160,13 +1171,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1219,13 +1227,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1278,13 +1283,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1337,13 +1339,10 @@ describe('SynchronousChessGame', () => {
 
         const action: SyncTurnAction = { whiteMove, blackMove };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1397,15 +1396,17 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
 
         const action: SyncTurnAction = { whiteMove, blackMove };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: whiteMove.to };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: blackMove.to,
+            blackTarget: whiteMove.to,
+            blackMove: null,
+            whiteMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1422,7 +1423,6 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
-
 
         const newFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1460,15 +1460,17 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
 
         const action: SyncTurnAction = { whiteMove: null, blackMove };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: null, blackMove: null };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: blackMove.to,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1521,15 +1523,11 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
 
         const action: SyncTurnAction = { whiteMove, blackMove: null };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: null, blackTarget: whiteMove.to, whiteMove: null };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1569,6 +1567,13 @@ describe('SynchronousChessGame', () => {
         // When
         game.nextTurn();
         // Then
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: null,
+            blackTarget: whiteMove.to,
+            whiteMove: null,
+            blackMove: null,
+        };
+
         expect(game.getTurn().type).toEqual(TurnType.MOVE_INTERMEDIATE);
         expect(game.getTurn().action).toEqual(expectedAction);
         expect(game.getOldTurn()).toBe(moveTurnSpy);
@@ -1583,15 +1588,15 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.B, 2], to: [FenColumn.B, 4] };
 
         const action: SyncTurnAction = { whiteMove, blackMove };
-        const expectedAction: SyncTurnAction = {};
+        const expectedAction: SyncTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1645,15 +1650,15 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.E, 6], to: [FenColumn.E, 8] };
 
         const action: SyncTurnAction = { whiteMove, blackMove };
-        const expectedAction: SyncTurnAction = {};
+        const expectedAction: SyncTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1705,13 +1710,11 @@ describe('SynchronousChessGame', () => {
 
         const synchroneTurn: SyncTurn = new SyncTurn();
 
-        Object.defineProperty(choiceTurnSpy, 'type', {
-            value: TurnType.CHOICE_PROMOTION,
-            writable: false
-        });
-        Object.defineProperty(choiceTurnSpy, 'nextTurn', {
-            value: synchroneTurn,
-            writable: false
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+            type: TurnType.CHOICE_PROMOTION,
+            nextTurn: synchroneTurn
         });
 
         Object.defineProperty(game, 'turn', {
@@ -1731,11 +1734,17 @@ describe('SynchronousChessGame', () => {
         ChessBoardHelper.disableCache();
         const game: ProtectedTest = new ProtectedTest();
 
-        const action: IntermediateTurnAction = { whiteTarget: null, blackTarget: null };
+        const action: IntermediateTurnAction = {
+            whiteTarget: null,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1776,11 +1785,17 @@ describe('SynchronousChessGame', () => {
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -1812,7 +1827,7 @@ describe('SynchronousChessGame', () => {
         const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlays(blackPossiblePlays, blackPosition);
 
         // Then
-        expect(game.getOldTurn()).toBeUndefined();
+        expect(game.getOldTurn()).toBeNull();
         expect(whiteResult).toEqual(expectedWhitePossiblePlays);
         expect(blackResult).toEqual(expectedBlackPossiblePlays);
     });
@@ -1828,7 +1843,12 @@ describe('SynchronousChessGame', () => {
             whiteMove: { from: [FenColumn.C, 2], to: blackTarget },
             blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
         };
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
         const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
 
         Object.defineProperty(game, 'turn', {
@@ -1876,19 +1896,25 @@ describe('SynchronousChessGame', () => {
             whiteMove: null,
             blackMove: null
         };
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
-        });
-        Object.defineProperty(oldTurnSpy, 'action', {
-            value: oldAction,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
             writable: true
+        });
+
+        const oldTurnSpy = jasmine.createSpyObj<Turn>('Turn', ['canBeExecuted', 'type', 'isDone'], {
+            action: oldAction,
         });
         Object.defineProperty(game, 'oldTurn', {
             value: oldTurnSpy,
@@ -1993,9 +2019,10 @@ describe('SynchronousChessGame', () => {
         const action: SyncTurnAction = { whiteMove, blackMove };
         const nextTurn: SyncTurn = new SyncTurn();
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'oldTurn', {
             value: moveTurnSpy,
@@ -2036,9 +2063,10 @@ describe('SynchronousChessGame', () => {
         const action: SyncTurnAction = { whiteMove, blackMove };
         const nextTurn: SyncTurn = new SyncTurn();
 
-        Object.defineProperty(moveTurnSpy, 'action', {
-            value: action,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action,
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'oldTurn', {
             value: moveTurnSpy,
@@ -2073,8 +2101,17 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action: {},
+            category: TurnCategory.CHOICE,
+        });
         Object.defineProperty(game, 'oldTurn', {
             value: choiceTurnSpy
+        });
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy
@@ -2099,9 +2136,9 @@ describe('SynchronousChessGame', () => {
             blackPiece: PieceType.QUEEN
         };
 
-        Object.defineProperty(choiceTurnSpy, 'action', {
-            value: action,
-            writable: false
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action,
+            category: TurnCategory.CHOICE,
         });
         Object.defineProperty(game, 'turn', {
             value: choiceTurnSpy
@@ -2151,9 +2188,9 @@ describe('SynchronousChessGame', () => {
             blackPiece: null
         };
 
-        Object.defineProperty(choiceTurnSpy, 'action', {
-            value: action,
-            writable: false
+        const choiceTurnSpy = jasmine.createSpyObj<ChoiceTurn>('Turn', ['registerChoice', 'canBeExecuted', 'type', 'isDone'], {
+            action,
+            category: TurnCategory.CHOICE,
         });
         Object.defineProperty(game, 'turn', {
             value: choiceTurnSpy
@@ -2195,9 +2232,10 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -2230,9 +2268,10 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -2265,9 +2304,10 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -2300,9 +2340,10 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_INTERMEDIATE,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: TurnType.MOVE_INTERMEDIATE,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy,
@@ -2334,9 +2375,10 @@ describe('SynchronousChessGame', () => {
     it('getPossiblePlays should only return king plays during check state', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNC,
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: TurnType.MOVE_SYNC,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy
@@ -2382,9 +2424,10 @@ describe('SynchronousChessGame', () => {
     it('getPossiblePlays should return plays without treatment if move type is unknown ', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
-        Object.defineProperty(moveTurnSpy, 'type', {
-            value: '',
-            writable: false
+        const moveTurnSpy = jasmine.createSpyObj<MoveTurn>('Turn', ['registerMove', 'canBeExecuted', 'isDone'], {
+            action: { whiteMove: null, blackMove: null },
+            type: '' as TurnType,
+            category: TurnCategory.MOVE,
         });
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy

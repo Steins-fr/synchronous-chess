@@ -1,21 +1,23 @@
-import SynchronousChessOnlineGameSession, { SCGameSessionType } from './synchronous-chess-online-game-session';
-import { RoomService } from '../../../services/room/room.service';
-import { NgZone } from '@angular/core';
-import { Player } from '../../player/player';
-import { RoomEventType } from '../../room-manager/events/room-event';
-import RoomPlayerAddEvent from '../../room-manager/events/room-player-add-event';
-import RoomPlayerRemoveEvent from '../../room-manager/events/room-player-remove-event';
+import SynchronousChessOnlineGameSession, {
+    SCGameSessionType
+} from '@app/classes/chess/game-sessions/synchronous-chess-online-game-session';
+import { Player } from '@app/classes/player/player';
+import { RoomNetworkEventType } from '@app/classes/room-network/events/room-network-event';
+import RoomNetworkPlayerAddEvent from '@app/classes/room-network/events/room-network-player-add-event';
+import RoomNetworkPlayerRemoveEvent from '@app/classes/room-network/events/room-network-player-remove-event';
+import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { Room } from '@app/services/room-manager/classes/room/room';
 
 export default class SynchronousChessOnlineHostGameSession extends SynchronousChessOnlineGameSession {
 
-    public constructor(roomService: RoomService<any>, ngZone: NgZone) {
-        super(roomService, ngZone);
+    public constructor(roomService: Room<RoomMessage>) {
+        super(roomService);
         this.followRoomManager();
     }
 
     private followRoomManager(): void {
-        this.roomService.roomManagerNotifier.follow(RoomEventType.PLAYER_ADD, this, (event: RoomPlayerAddEvent) => this.onPlayerAdd(event.payload));
-        this.roomService.roomManagerNotifier.follow(RoomEventType.PLAYER_REMOVE, this, (event: RoomPlayerRemoveEvent) => this.onPlayerRemove(event.payload));
+        this.roomService.roomManagerNotifier.follow(RoomNetworkEventType.PLAYER_ADD, this, (event: RoomNetworkPlayerAddEvent) => this.onPlayerAdd(event.payload));
+        this.roomService.roomManagerNotifier.follow(RoomNetworkEventType.PLAYER_REMOVE, this, (event: RoomNetworkPlayerRemoveEvent) => this.onPlayerRemove(event.payload));
     }
 
     public onPlayerAdd(player: Player): void {

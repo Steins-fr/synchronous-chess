@@ -1,7 +1,7 @@
 import Exception from './exception';
-import ExceptionType from './exception.types';
+import ExceptionTypeEnum from './exception-type.enum';
 
-export enum DynamoCrudAction {
+export enum DynamoCrudActionEnum {
     GET = 'get',
     PUT = 'put',
     UPDATE = 'update',
@@ -9,10 +9,9 @@ export enum DynamoCrudAction {
 }
 
 export default class DynamoException extends Exception {
+    public type: string = ExceptionTypeEnum.DYNAMO_DB;
 
-    public type: string = ExceptionType.DYNAMO_DB;
-
-    public constructor(public readonly action: DynamoCrudAction, message: string) {
+    public constructor(public readonly action: DynamoCrudActionEnum, message: string) {
         super(message);
     }
 }
