@@ -13,7 +13,7 @@ resource "aws_lambda_layer_version" "lambda_layer" {
   filename   = local.archive_path
   layer_name = local.layer_name
 
-  compatible_runtimes = ["nodejs10.x"]
+  compatible_runtimes = ["nodejs20.x"]
 
   source_code_hash = data.archive_file.archive.output_base64sha256
 }

@@ -1,7 +1,5 @@
-import { Message } from './message';
-import MessageOriginType from './message-origin.types';
+import { ToReworkMessage } from './to-rework-message';
 
-export interface RoomMessage<U = unknown> extends Message<U> {
-    from: string;
-    origin: MessageOriginType;
+export interface RoomMessage<T = string, U = unknown> extends ToReworkMessage<U> {
+    type: T;
 }

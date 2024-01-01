@@ -1,14 +1,17 @@
-import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
-import { RoomService } from '../../../services/room/room.service';
-import { NotifierFlow } from '../../notifier/notifier';
-import { TestBed } from '@angular/core/testing';
-import { NgZone } from '@angular/core';
-import { SessionConfiguration } from './synchronous-chess-game-session';
-import { PieceColor, PieceType } from '../rules/chess-rules';
-import { Coordinate, Column, Row } from '../interfaces/CoordinateMove';
-import SynchronousChessGame from '../games/synchronous-chess-game';
-import ChessBoardHelper from '../../../helpers/chess-board-helper';
-import Move, { FenColumn, FenRow } from '../interfaces/move';
+import { SessionConfiguration } from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessOnlinePeerGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-peer-game-session';
+import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
+import { Coordinate, Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
+import { PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
+import { NotifierFlow } from '@app/classes/notifier/notifier';
+import { LocalPlayer } from '@app/classes/player/local-player';
+import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
+import { ToReworkMessage } from '@app/classes/webrtc/messages/to-rework-message';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { Room } from '@app/services/room-manager/classes/room/room';
+import { Subject } from 'rxjs';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     public override runMove(color: PieceColor, move: Move): boolean {
@@ -20,50 +23,72 @@ class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     }
 }
 
+function generateConfigurationMessage(whitePlayer: string = 'e', blackPlayer: string = 'd', spectatorNumber: number = 3): ToReworkMessage<SessionConfiguration> {
+    return {
+        from: 'a',
+        // FIXME: value of origin
+        origin: MessageOriginType.HOST_ROOM,
+        payload: {
+            whitePlayer,
+            blackPlayer,
+            spectatorNumber,
+        }
+    };
+}
+
 describe('SynchronousChessOnlinePeerGameSession', () => {
-
-    let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
-
-    beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['notifier', 'roomManagerNotifier']);
-        Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
-            writable: false
+    it('should set configuration on messenger event', () => {
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow'])
         });
-        Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
-            writable: false
-        });
-    });
+        const messengerSubject = new Subject<ToReworkMessage<SessionConfiguration>>();
+        roomSpy.messenger.and.returnValue(messengerSubject);
 
-    it('should create an instance', () => {
-        expect(new SynchronousChessOnlinePeerGameSession(roomServiceSpy, null as unknown as NgZone)).toBeTruthy();
+        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomSpy);
+        const configuration = generateConfigurationMessage();
+
+        messengerSubject.next(configuration);
+
+        expect(session.configuration).toBe(configuration.payload);
     });
 
     it('should set the configuration', () => {
-        // Given
-        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomServiceSpy, TestBed.inject(NgZone));
-        const configuration: SessionConfiguration = {
-            whitePlayer: 'e',
-            blackPlayer: 'd',
-            spectatorNumber: 3
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow'])
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+
+        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomSpy);
+        const configuration: ToReworkMessage<SessionConfiguration> = {
+            from: 'a',
+            // FIXME: value of origin
+            origin: MessageOriginType.HOST_ROOM,
+            payload: {
+                whitePlayer: 'e',
+                blackPlayer: 'd',
+                spectatorNumber: 3,
+            }
         };
 
         // When
         session.onConfiguration(configuration);
 
         // Then
-        expect(session.configuration).toBe(configuration);
+        expect(session.configuration).toBe(configuration.payload);
     });
 
     it('should return false if runMove move a piece from another color', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
-            writable: false
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn'], {
+            fenBoard: ChessBoardHelper.createFenBoard()
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow'])
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -84,12 +109,16 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
     it('should return false if runMove try an invalid move', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
-            writable: false
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn'], {
+            fenBoard: ChessBoardHelper.createFenBoard(),
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow'])
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -111,19 +140,20 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
     it('should set the preview if runMove register my valid move', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
-            writable: false
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn'], {
+            fenBoard: ChessBoardHelper.createFenBoard(),
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'b' } as LocalPlayer,
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
-            writable: false
-        });
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'b' },
             writable: false
         });
 
@@ -148,19 +178,18 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
     it('should not set the preview if runMove register opponent valid move', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
-            writable: false
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn'], {
+            fenBoard: ChessBoardHelper.createFenBoard(),
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'a' } as LocalPlayer,
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
-            writable: false
-        });
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'a' },
             writable: false
         });
 
@@ -185,19 +214,18 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
     it('should unset the preview if runMove trigger runTurn === true', () => {
         // Given
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
-            writable: false
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn'], {
+            fenBoard: ChessBoardHelper.createFenBoard(),
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'a' } as LocalPlayer,
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
-            writable: false
-        });
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'a' },
             writable: false
         });
 
@@ -230,7 +258,13 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
         gameSpy.promote.and.returnValue(false);
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow'])
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -253,7 +287,13 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
         gameSpy.promote.and.returnValue(true);
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow'])
+        });
+        roomSpy.messenger.and.returnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false

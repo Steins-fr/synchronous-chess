@@ -1,7 +1,6 @@
-import LineMovementCondition from './line-movement-condition';
-import Vec2 from 'vec2';
-import { Row } from '../../interfaces/CoordinateMove';
-
+import { Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import LineMovementCondition from '@app/classes/chess/movements/movement-conditions/line-movement-condition';
+import { Vec2 } from '@app/classes/vector/vec2';
 
 describe('LineMoveCondition', () => {
     it('should create an instance', () => {
@@ -13,8 +12,8 @@ describe('LineMoveCondition', () => {
         const condition: LineMovementCondition = new LineMovementCondition(Row._4);
 
         // When
-        const resultValidLine: boolean = condition.canMove(new Vec2([0, Row._4]));
-        const resultInvalidLine: boolean = condition.canMove(new Vec2([0, Row._6]));
+        const resultValidLine: boolean = condition.canMove(new Vec2(0, Row._4));
+        const resultInvalidLine: boolean = condition.canMove(new Vec2(0, Row._6));
 
         // Then
         expect(resultValidLine).toBeTruthy();

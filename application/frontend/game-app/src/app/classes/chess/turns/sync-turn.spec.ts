@@ -1,9 +1,9 @@
-import SyncTurn from './sync-turn';
-import Turn from './turn';
-import TurnType from './turn.types';
-import Move, { FenColumn } from '../interfaces/move';
-import SyncTurnAction from './turn-actions/sync-turn-action';
-import { PieceColor } from '../rules/chess-rules';
+import Move, { FenColumn } from '@app/classes/chess/interfaces/move';
+import { PieceColor } from '@app/classes/chess/rules/chess-rules';
+import SyncTurn from '@app/classes/chess/turns/sync-turn';
+import Turn from '@app/classes/chess/turns/turn';
+import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
+import TurnType from '@app/classes/chess/turns/turn.types';
 
 describe('SyncTurn', () => {
 

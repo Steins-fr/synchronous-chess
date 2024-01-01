@@ -1,13 +1,13 @@
-import BaseRepository, { TableKey } from './base-repository';
 import Connection from '../entities/connection';
-import ConnectionDocument from '../schemas/connection-document';
+import { getConnectionsTableName } from '../helpers/environment.helper';
+import BaseRepository, { DocumentAttributes } from './base-repository';
 
-export default class ConnectionRepository extends BaseRepository<Connection, ConnectionDocument> {
+export default class ConnectionRepository extends BaseRepository<Connection> {
 
-    protected readonly tableName: string = process.env.TABLE_NAME_CONNECTIONS as string;
+    protected readonly tableName: string = getConnectionsTableName();
     protected readonly defaultProjection: string = 'connectionId, roomName';
 
-    protected getKey(item: Connection): TableKey {
-        return this.marshall({ connectionId: item.connectionId });
+    protected override getKey(item: Connection): DocumentAttributes {
+        return { connectionId: item.connectionId };
     }
 }

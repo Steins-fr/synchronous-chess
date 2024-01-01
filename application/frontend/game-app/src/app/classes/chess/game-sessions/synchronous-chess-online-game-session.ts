@@ -1,9 +1,9 @@
-import { RoomService } from '../../../services/room/room.service';
-import { NgZone } from '@angular/core';
-import { PieceColor, PieceType } from '../rules/chess-rules';
-import SynchronousChessGameSession from './synchronous-chess-game-session';
-import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
-import Move from '../interfaces/move';
+import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import Move from '@app/classes/chess/interfaces/move';
+import { PieceType, PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { Room } from '@app/services/room-manager/classes/room/room';
+import { Subject, takeUntil } from 'rxjs';
 
 export enum SCGameSessionType {
     CONFIGURATION = 'SC_GS_configuration',
@@ -20,11 +20,12 @@ export interface PromotionMessage {
 }
 
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
+    protected destroyRef = new Subject<void>();
 
-    public constructor(protected readonly roomService: RoomService<any>, ngZone: NgZone) {
-        super(ngZone);
-        this.roomService.notifier.follow(SCGameSessionType.PLAY, this, this.onMove.bind(this));
-        this.roomService.notifier.follow(SCGameSessionType.PROMOTION, this, this.onPromotion.bind(this));
+    protected constructor(protected readonly roomService: Room<any>) {
+        super();
+        this.roomService.messenger(SCGameSessionType.PLAY).pipe(takeUntil(this.destroyRef)).subscribe(this.onMove.bind(this));
+        this.roomService.messenger(SCGameSessionType.PROMOTION).pipe(takeUntil(this.destroyRef)).subscribe(this.onPromotion.bind(this));
     }
 
     public get myColor(): PieceColor {
@@ -32,8 +33,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     }
 
     public get playingColor(): PieceColor {
-        if (!this.roomService.isReady() || this.configuration.whitePlayer === undefined
-            || this.configuration.blackPlayer === undefined) {
+        if (this.configuration.whitePlayer === undefined || this.configuration.blackPlayer === undefined) {
             return PieceColor.NONE;
         }
 
@@ -55,11 +55,17 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         }
     }
 
+    public override destroy(): void {
+        this.destroyRef.next();
+        this.destroyRef.complete();
+        this.destroyRef = new Subject<void>();
+    }
+
     protected isPlaying(playerName: string): boolean {
         return this.playerColor(playerName) !== PieceColor.NONE;
     }
 
-    protected onMove(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
+    protected onMove(message: RoomMessage<SCGameSessionType, PlayMessage>): void {
         // Prevent reception of move from spectator
         if (!this.isPlaying(message.from)) {
             return;
@@ -67,7 +73,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
         const playMessage: PlayMessage = message.payload;
         // Call parent play to prevent re-emit
-        this.ngZone.run(() => this.runMove(this.playerColor(message.from), playMessage.move));
+        this.runMove(this.playerColor(message.from), playMessage.move);
     }
 
     public move(move: Move | null): void {
@@ -79,7 +85,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         }
     }
 
-    protected onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
+    protected onPromotion(message: RoomMessage<SCGameSessionType, PromotionMessage>): void {
         // Prevent reception of move from spectator
         if (!this.isPlaying(message.from)) {
             return;
@@ -88,7 +94,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         const promotionMessage: PromotionMessage = message.payload;
 
         // Call parent play to prevent re-emit
-        this.ngZone.run(() => this.runPromotion(this.playerColor(message.from), promotionMessage.pieceType));
+        this.runPromotion(this.playerColor(message.from), promotionMessage.pieceType);
     }
 
     public promote(pieceType: PieceType): void {
