@@ -1,4 +1,4 @@
 <mat-chip [color]="player.isLocal() ? 'primary' : 'accent'">
     {{ player.name }}
-    {{ player.isLocal() || ping === '' ? '' : ' - ping ' + ping }}
+    {{ player.isLocal() || ping() === '' ? '' : ' - ping ' + ping() }}
 </mat-chip>

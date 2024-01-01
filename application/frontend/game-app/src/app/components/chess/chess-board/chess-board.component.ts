@@ -5,7 +5,7 @@ import { MatGridListModule } from '@angular/material/grid-list';
 import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
 import { PieceColor } from '@app/classes/chess/rules/chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
-import { ChessBoardPieceComponent } from '@app/components/chess-board/piece/chess-board-piece.component';
+import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
 import ChessBoardHelper, { FenBoard, ValidPlayBoard } from '@app/helpers/chess-board-helper';
 import { Vector2dPipe } from '@app/pipes/vector2d.pipe';
 
@@ -14,7 +14,7 @@ import { Vector2dPipe } from '@app/pipes/vector2d.pipe';
     templateUrl: './chess-board.component.html',
     styleUrls: ['./chess-board.component.scss'],
     standalone: true,
-    imports: [CommonModule, MatGridListModule, DragDropModule, ChessBoardPieceComponent, Vector2dPipe],
+    imports: [CommonModule, MatGridListModule, DragDropModule, ChessPieceComponent, Vector2dPipe],
 })
 export class ChessBoardComponent implements OnChanges {
 

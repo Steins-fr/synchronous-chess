@@ -20,4 +20,7 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
 
     }
 
+    public override destroy(): void {
+        // Nothing to do
+    }
 }

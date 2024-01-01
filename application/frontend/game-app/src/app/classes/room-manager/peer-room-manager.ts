@@ -1,3 +1,5 @@
+import { Zone } from '@app/interfaces/zone.interface';
+import { RoomApiService } from '@app/services/room-api/room-api.service';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { Negotiator } from '../negotiator/negotiator';
@@ -8,7 +10,7 @@ import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
 
 import { Player, PlayerType } from '../player/player';
-import { RoomManager } from './room-manager';
+import { RoomManager, OnMessageCallback } from './room-manager';
 
 import RoomJoinResponse from '../../services/room-api/responses/room-join-response';
 import RtcSignalResponse from '../../services/room-api/responses/rtc-signal-response';
@@ -23,12 +25,21 @@ export class PeerRoomManager<MessageType extends Message> extends RoomManager<Me
     public readonly initiator: boolean = false;
     protected hostPlayer?: Player;
 
+    public constructor(
+        roomApi: RoomApiService,
+        roomName: string,
+        onMessage: OnMessageCallback<MessageType>,
+        private readonly zone?: Zone,
+    ) {
+        super(roomApi, roomName, onMessage);
+    }
+
     public async join(playerName: string): Promise<RoomJoinResponse> {
         try {
             const response: RoomJoinResponse = await this.roomApi.join(this.roomName, playerName);
             this._notifier.notify(RoomEventType.READY, new RoomReadyEvent(this));
             this.setLocalPlayer(playerName, PlayerType.PEER);
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, response.playerName, PlayerType.HOST, new Webrtc(), this.roomApi);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, response.playerName, PlayerType.HOST, new Webrtc(this.zone), this.roomApi);
             this.addNegotiator(negotiator);
             return response;
         } catch (err) {

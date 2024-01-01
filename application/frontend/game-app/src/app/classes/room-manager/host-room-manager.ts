@@ -1,3 +1,4 @@
+import { Zone } from '@app/interfaces/zone.interface';
 import RoomCreateResponse from '../../services/room-api/responses/room-create-response';
 import RtcSignalResponse from '../../services/room-api/responses/rtc-signal-response';
 import { RoomApiService, RoomApiNotificationType } from '../../services/room-api/room-api.service';
@@ -30,6 +31,7 @@ export class HostRoomManager<MessageType extends Message> extends RoomManager<Me
         roomApi: RoomApiService,
         roomName: string,
         onMessage: OnMessageCallback<MessageType>,
+        private readonly zone?: Zone,
     ) {
         super(roomApi, roomName, onMessage);
         this.roomApi.notifier.follow(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
@@ -45,7 +47,7 @@ export class HostRoomManager<MessageType extends Message> extends RoomManager<Me
             return response;
         } catch (err) {
             this.clear();
-            return Promise.reject(err);
+            throw err;
         }
     }
 
@@ -79,7 +81,7 @@ export class HostRoomManager<MessageType extends Message> extends RoomManager<Me
         if (nbPlayers >= this.maxPlayer) {
             this.roomApi.full(data.playerName, this.roomName).catch((err: string) => console.error(err));
         } else {
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(), this.roomApi);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(this.zone), this.roomApi);
             negotiator.initiate();
             this.addNegotiator(negotiator);
         }

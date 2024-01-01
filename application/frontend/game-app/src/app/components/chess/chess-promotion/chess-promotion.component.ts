@@ -2,16 +2,16 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
-import { ChessBoardPieceComponent } from '@app/components/chess-board/piece/chess-board-piece.component';
+import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
 
 @Component({
     selector: 'app-chess-promotion',
-    templateUrl: './promotion.component.html',
-    styleUrls: ['./promotion.component.scss'],
-    imports: [CommonModule, MatGridListModule, ChessBoardPieceComponent],
+    templateUrl: './chess-promotion.component.html',
+    styleUrls: ['./chess-promotion.component.scss'],
+    imports: [CommonModule, MatGridListModule, ChessPieceComponent],
     standalone: true,
 })
-export class PromotionComponent {
+export class ChessPromotionComponent {
 
     private static readonly whitePieces: Map<PieceType, FenPiece> = new Map<PieceType, FenPiece>([
         [PieceType.BISHOP, FenPiece.WHITE_BISHOP],
@@ -47,7 +47,7 @@ export class PromotionComponent {
     }
 
     public piece(pieceType: PieceType): FenPiece {
-        const pieceMap: Map<PieceType, FenPiece> = this.color === PieceColor.WHITE ? PromotionComponent.whitePieces : PromotionComponent.blackPieces;
+        const pieceMap: Map<PieceType, FenPiece> = this.color === PieceColor.WHITE ? ChessPromotionComponent.whitePieces : ChessPromotionComponent.blackPieces;
         return pieceMap.get(pieceType) ?? FenPiece.EMPTY;
     }
 

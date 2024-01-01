@@ -28,7 +28,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
 
     beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['notifier', 'localPlayer', 'isReady', 'transmitMessage', 'roomManagerNotifier']);
+        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['localPlayer', 'isReady', 'transmitMessage', 'roomManagerNotifier']);
         Object.defineProperty(roomServiceSpy, 'notifier', {
             value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false

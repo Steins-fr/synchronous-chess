@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, OnDestroy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder
@@ -11,20 +12,21 @@ import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
 import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
 import { Vec2 } from '@app/classes/vector/vec2';
-import { ChessBoardComponent } from '@app/components/chess-board/chess-board.component';
-import { ChessBoardPieceComponent } from '@app/components/chess-board/piece/chess-board-piece.component';
-import { PromotionComponent } from '@app/components/chess/promotion/promotion.component';
+import { ChessBoardComponent } from '@app/components/chess/chess-board/chess-board.component';
+import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
+import { ChessPromotionComponent } from '@app/components/chess/chess-promotion/chess-promotion.component';
 import ChessBoardHelper, { ValidPlayBoard } from '@app/helpers/chess-board-helper';
-import { RoomService, RoomServiceEventType } from '@app/services/room/room.service';
+import { RoomService } from '@app/services/room/room.service';
+import { first, filter } from 'rxjs';
 
 @Component({
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
     standalone: true,
-    imports: [CommonModule, ChessBoardComponent, PromotionComponent, MatButtonModule, ChessBoardPieceComponent],
+    imports: [CommonModule, ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
 })
-export class SyncChessGameComponent implements OnInit {
+export class SyncChessGameComponent implements OnInit, OnDestroy {
 
     public gameSession: SynchronousChessGameSession;
     public playedPiece: Vec2 = new Vec2(-1, -1);
@@ -34,14 +36,24 @@ export class SyncChessGameComponent implements OnInit {
     public whiteColor: PieceColor = PieceColor.WHITE;
     public blackColor: PieceColor = PieceColor.BLACK;
 
-    public constructor(
-        public roomService: RoomService<never>,
-        private readonly ngZone: NgZone) {
-        this.gameSession = new SynchronousChessLocalGameSession(ngZone);
+    private readonly destroyRef = inject(DestroyRef);
+
+    public constructor(public readonly roomService: RoomService<any>) {
+        this.gameSession = new SynchronousChessLocalGameSession();
     }
 
     public ngOnInit(): void {
-        this.roomService.notifier.follow(RoomServiceEventType.IS_READY, this, () => this.onRoomReady());
+        this.roomService.isActive.pipe(
+            filter(isActive => isActive),
+            first(),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => {
+            this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService);
+        });
+    }
+
+    public ngOnDestroy(): void {
+        this.gameSession.destroy();
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -122,11 +134,6 @@ export class SyncChessGameComponent implements OnInit {
         this.gameSession.move(null);
     }
 
-    private onRoomReady(): void {
-        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, this.ngZone);
-        this.roomService.notifier.unfollow(RoomServiceEventType.IS_READY, this);
-    }
-
     private resetHighlight(): void {
         this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
     }
@@ -135,9 +142,9 @@ export class SyncChessGameComponent implements OnInit {
         if (move === null) {
             return 'a passé';
         }
-        const from: string = `${move.from[0].toUpperCase()}${move.from[1]}`;
-        const to: string = `${move.to[0].toUpperCase()}${move.to[1]}`;
+        const from: string = `${ move.from[0].toUpperCase() }${ move.from[1] }`;
+        const to: string = `${ move.to[0].toUpperCase() }${ move.to[1] }`;
 
-        return `${from} -> ${to}`;
+        return `${ from } -> ${ to }`;
     }
 }

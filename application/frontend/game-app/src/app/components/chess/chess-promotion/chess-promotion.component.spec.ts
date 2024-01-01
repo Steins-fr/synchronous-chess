@@ -1,16 +1,16 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
 
-import { PromotionComponent } from './promotion.component';
-import { ChessBoardPieceComponent } from '../../chess-board/piece/chess-board-piece.component';
+import { ChessPromotionComponent } from './chess-promotion.component';
 import { MatGridListModule } from '@angular/material/grid-list';
 
-describe('PromotionComponent', () => {
-    let component: PromotionComponent;
-    let fixture: ComponentFixture<PromotionComponent>;
+describe('ChessPromotionComponent', () => {
+    let component: ChessPromotionComponent;
+    let fixture: ComponentFixture<ChessPromotionComponent>;
 
     beforeEach(async(() => {
         TestBed.configureTestingModule({
-            declarations: [PromotionComponent, ChessBoardPieceComponent],
+            declarations: [ChessPromotionComponent, ChessPieceComponent],
             imports: [
                 MatGridListModule
             ]
@@ -19,7 +19,7 @@ describe('PromotionComponent', () => {
     }));
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(PromotionComponent);
+        fixture = TestBed.createComponent(ChessPromotionComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

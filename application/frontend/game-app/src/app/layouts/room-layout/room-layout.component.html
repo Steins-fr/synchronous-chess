@@ -5,8 +5,8 @@
     <div id="page-content" class="container">
         <ng-content/>
     </div>
-    <div id="room-content-overlay" *ngIf="(isActive$ | async) === false"></div>
+    <div id="room-content-overlay" *ngIf="!isActive()"></div>
 </div>
-<div class="container">
-    <app-debug-webrtc *ngIf="isDebugging"/>
+<div *ngIf="isDebugging" class="container">
+    <app-debug-webrtc/>
 </div>

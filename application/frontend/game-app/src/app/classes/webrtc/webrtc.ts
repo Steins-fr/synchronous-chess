@@ -1,3 +1,4 @@
+import { Zone } from '@app/interfaces/zone.interface';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
 import WebrtcStates, { DebugRTCIceCandidate } from './webrtc-states';
@@ -117,6 +118,14 @@ export class Webrtc {
 
     //private webSocket: Websocket = null;
     private initiator: boolean = false;
+
+    private readonly zone: Zone;
+
+    public constructor(zone?: Zone) {
+        this.zone = zone ?? {
+            run: (callback: () => void): void => callback(),
+        };
+    }
 
     public configure(initiator: boolean, peerConnectionConfig?: RTCConfiguration): void {
 
@@ -268,7 +277,7 @@ export class Webrtc {
                     throw new Error('Message is undefined');
                 }
 
-                this._data.next(packet.message);
+                this.onNewMessage(packet.message);
                 this.sendPacket({ id: packet.id, type: PacketType.ACK, nbTry: 0 });
                 break;
             case PacketType.ACK:
@@ -277,6 +286,10 @@ export class Webrtc {
                 }
                 break;
         }
+    }
+
+    protected onNewMessage(message: Message): void {
+        this.zone.run(() => this._data.next(message));
     }
 
     private onDataChannel(event: RTCDataChannelEvent): void {

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -26,20 +27,19 @@ import { BlockRoomService } from '@app/services/room/block-room/block-room.servi
     public isLoading: boolean = false;
     public error: string = '';
 
-    public constructor(
-        private readonly roomService: BlockRoomService<never>,
-        private readonly route: ActivatedRoute
-    ) { }
+    private readonly roomService = inject(BlockRoomService<never>);
+    private readonly route = inject(ActivatedRoute);
+    private readonly destroyRef = inject(DestroyRef);
 
     public ngOnInit(): void {
         this.roomService.setup();
-        this.route.queryParamMap.subscribe((params: ParamMap) => {
+        this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params: ParamMap) => {
             if(params.has('auto-create')) {
-                this.roomName = 'test';
+                this.roomName = params.get('room') ?? 'test';
                 this.playerName = `${Math.floor(Math.random() * 100000)}`;
                 this.enterRoom(true);
             } else if (params.has('auto-join')) {
-                this.roomName = 'test';
+                this.roomName = params.get('room') ?? 'test';
                 this.playerName = `${Math.floor(Math.random() * 100000)}`;
                 setTimeout(() => this.enterRoom(false), 1000);
             }

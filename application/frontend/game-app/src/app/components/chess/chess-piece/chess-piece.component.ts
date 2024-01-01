@@ -4,13 +4,13 @@ import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 
 @Component({
     selector: 'app-chess-board-piece',
-    templateUrl: './chess-board-piece.component.html',
-    styleUrls: ['./chess-board-piece.component.scss'],
+    templateUrl: './chess-piece.component.html',
+    styleUrls: ['./chess-piece.component.scss'],
     standalone: true,
     imports: [CommonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChessBoardPieceComponent {
+export class ChessPieceComponent {
     private static readonly unicodePieces: Record<FenPiece, string> = {
         [FenPiece.BLACK_BISHOP]: '♝',
         [FenPiece.BLACK_KING]: '♚',
@@ -30,6 +30,6 @@ export class ChessBoardPieceComponent {
     @Input({ required: true }) public piece!: FenPiece;
 
     public render(): string {
-        return ChessBoardPieceComponent.unicodePieces[this.piece];
+        return ChessPieceComponent.unicodePieces[this.piece];
     }
 }

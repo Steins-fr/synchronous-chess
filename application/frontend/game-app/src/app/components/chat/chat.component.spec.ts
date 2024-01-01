@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RoomServiceMessage } from '@app/classes/webrtc/messages/room-service-message';
 import { BlockRoomService } from '@app/services/room/block-room/block-room.service';
 
-import { ChatComponent, ChatMessageType } from './chat.component';
+import { ChatComponent, ChatMessengerType } from './chat.component';
 import { FormsModule } from '@angular/forms';
 import { RoomSetupComponent } from '../shared/room-setup/room-setup.component';
 import { WebrtcDebugComponent } from '../shared/debug/webrtc-debug/webrtc-debug.component';
@@ -14,18 +14,18 @@ import { MatButtonModule } from '@angular/material/button';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { ParticipantComponent } from './participant/participant.component';
+import { ChatParticipantComponent } from '@app/components/chat/chat-participant/chat-participant.component';
 import { RoomService } from '@app/services/room/room.service';
 import Notifier from '@app/classes/notifier/notifier';
 
 describe('ChatComponent', () => {
     let component: ChatComponent;
     let fixture: ComponentFixture<ChatComponent>;
-    let roomServiceSpy: jasmine.SpyObj<BlockRoomService<RoomServiceMessage<ChatMessageType, string>>>;
+    let roomServiceSpy: jasmine.SpyObj<BlockRoomService<RoomServiceMessage<ChatMessengerType, string>>>;
 
     beforeEach(async () => {
-        roomServiceSpy = jasmine.createSpyObj<BlockRoomService<RoomServiceMessage<ChatMessageType, string>>>(
-            ['isReady', 'notifier', 'clear', 'players']
+        roomServiceSpy = jasmine.createSpyObj<BlockRoomService<RoomServiceMessage<ChatMessengerType, string>>>(
+            ['isReady', 'clear', 'players']
         );
 
         const notifierSpy: jasmine.SpyObj<Notifier<any, any>> = jasmine.createSpyObj<Notifier<any, any>>(['follow', 'unfollow']);
@@ -47,7 +47,7 @@ describe('ChatComponent', () => {
                 WebrtcDebugComponent,
                 WebrtcStatesComponent,
                 RoomSetupComponent,
-                ParticipantComponent
+                ChatParticipantComponent
             ],
             imports: [
                 FormsModule,

@@ -1,20 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ChessBoardPieceComponent } from './chess-board-piece.component';
+import { ChessPieceComponent } from './chess-piece.component';
 import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 
-describe('PieceComponent', () => {
-    let component: ChessBoardPieceComponent;
-    let fixture: ComponentFixture<ChessBoardPieceComponent>;
+describe('ChessPieceComponent', () => {
+    let component: ChessPieceComponent;
+    let fixture: ComponentFixture<ChessPieceComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ChessBoardPieceComponent]
+            declarations: [ChessPieceComponent]
         }).compileComponents();
     });
 
     beforeEach(() => {
-        fixture = TestBed.createComponent(ChessBoardPieceComponent);
+        fixture = TestBed.createComponent(ChessPieceComponent);
         component = fixture.componentInstance;
         component.piece = FenPiece.BLACK_PAWN;
         fixture.detectChanges();

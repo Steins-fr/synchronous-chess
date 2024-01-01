@@ -1,21 +1,21 @@
 import { Injectable, NgZone } from '@angular/core';
-import { RoomService } from '../room.service';
-import { RoomServiceMessage } from '../../../classes/webrtc/messages/room-service-message';
-import MessageOriginType from '../../../classes/webrtc/messages/message-origin.types';
-import RoomReadyEvent from '../../../classes/room-manager/events/room-ready-event';
+import { RoomServiceMessage } from '@app/classes/webrtc/messages/room-service-message';
+import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
+import RoomReadyEvent from '@app/classes/room-manager/events/room-ready-event';
+import { RoomApiService } from '@app/services/room-api/room-api.service';
+import { RoomService } from '@app/services/room/room.service';
 import { Block } from './block-chain/block';
-import { RoomApiService } from '../../room-api/room-api.service';
-import RoomPlayerAddEvent from '../../../classes/room-manager/events/room-player-add-event';
+import RoomPlayerAddEvent from '@app/classes/room-manager/events/room-player-add-event';
 import { BlockRoomServiceInterface } from './block-room.service.interface';
 import { DistributedBlockChain, BlockChainMessageTypes } from './block-chain/distributed-block-chain';
-import { BlockChainMessage } from '../../../classes/webrtc/messages/block-chain-message';
+import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
 
 @Injectable({
     providedIn: 'root'
 })
 export class BlockRoomService<RoomServiceNotification extends RoomServiceMessage> extends RoomService<RoomServiceNotification> implements BlockRoomServiceInterface {
 
-    private blockChain: DistributedBlockChain = new DistributedBlockChain(this);
+    private readonly blockChain: DistributedBlockChain = new DistributedBlockChain(this);
 
     public constructor(ngZone: NgZone, roomApi: RoomApiService) {
         super(ngZone, roomApi);
@@ -35,13 +35,15 @@ export class BlockRoomService<RoomServiceNotification extends RoomServiceMessage
     }
 
     public notifyMessage(block: Block): void {
+        console.log('notifyMessage', block);
         const roomServiceMessage: RoomServiceMessage = {
             ...block.data,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
         };
 
         // @ts-ignore
-        this._notifier.notify(roomServiceMessage.type, roomServiceMessage);
+        // TODO: rework types
+        this.publicMessenger$.next(roomServiceMessage as RoomServiceNotification);
     }
 
     protected override handleRoomManagerReadyEvent(event: RoomReadyEvent): void {

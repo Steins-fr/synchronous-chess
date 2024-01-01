@@ -1,15 +1,16 @@
-import SynchronousChessOnlineGameSession, { SCGameSessionType } from './synchronous-chess-online-game-session';
-import { RoomService } from '../../../services/room/room.service';
-import { NgZone } from '@angular/core';
-import { Player } from '../../player/player';
-import { RoomEventType } from '../../room-manager/events/room-event';
-import RoomPlayerAddEvent from '../../room-manager/events/room-player-add-event';
-import RoomPlayerRemoveEvent from '../../room-manager/events/room-player-remove-event';
+import SynchronousChessOnlineGameSession, {
+    SCGameSessionType
+} from '@app/classes/chess/game-sessions/synchronous-chess-online-game-session';
+import { Player } from '@app/classes/player/player';
+import { RoomEventType } from '@app/classes/room-manager/events/room-event';
+import RoomPlayerAddEvent from '@app/classes/room-manager/events/room-player-add-event';
+import RoomPlayerRemoveEvent from '@app/classes/room-manager/events/room-player-remove-event';
+import { RoomService } from '@app/services/room/room.service';
 
 export default class SynchronousChessOnlineHostGameSession extends SynchronousChessOnlineGameSession {
 
-    public constructor(roomService: RoomService<any>, ngZone: NgZone) {
-        super(roomService, ngZone);
+    public constructor(roomService: RoomService<any>) {
+        super(roomService);
         this.followRoomManager();
     }
 
