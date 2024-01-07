@@ -1,24 +1,19 @@
-import SynchronousChessOnlineGameSession, { SCGameSessionType } from './synchronous-chess-online-game-session';
-import { RoomService } from '../../../services/room/room.service';
-import { NgZone } from '@angular/core';
-import { RoomMessage } from '../../webrtc/messages/room-message';
-import { SessionConfiguration } from './synchronous-chess-game-session';
-import { RoomManager } from '../../room-manager/room-manager';
+import { SessionConfiguration } from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessOnlineGameSession, {
+    SCGameSessionType
+} from '@app/classes/chess/game-sessions/synchronous-chess-online-game-session';
+import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { RoomService } from '@app/services/room/room.service';
+import { takeUntil } from 'rxjs';
 
 export default class SynchronousChessOnlinePeerGameSession extends SynchronousChessOnlineGameSession {
-    public constructor(roomService: RoomService, roomManager: RoomManager, ngZone: NgZone) {
-        super(roomService, roomManager, ngZone);
-        this.followRoomService();
+    public constructor(roomService: RoomService<any>) {
+        super(roomService);
+        this.roomService.messenger(SCGameSessionType.CONFIGURATION).pipe(takeUntil(this.destroyRef)).subscribe(this.onConfiguration.bind(this));
     }
 
-    private followRoomService(): void {
-        this.roomService.notifier.follow(SCGameSessionType.CONFIGURATION, this,
-            (configurationMessage: RoomMessage<SessionConfiguration>) => this.onConfiguration(configurationMessage.payload));
-    }
-
-    public onConfiguration(configuration: SessionConfiguration): void {
-
+    public onConfiguration(configurationMessage: RoomMessage<SessionConfiguration>): void {
         // TODO: prevent reception from other than host
-        this.ngZone.run(() => this.configuration = configuration);
+        this.configuration = configurationMessage.payload;
     }
 }

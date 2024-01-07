@@ -1,44 +1,4 @@
 /* You can add global styles to this file, and also import other style files */
 
-html,
-body {
-    height: 100%;
-}
-
-body {
-    margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-    font-size: 14px;
-    color: #333;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-.chess-piece {
-    font-family: 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif;
-}
-
-.piece-preview-block {
-    .piece-preview {
-        position: relative;
-        transform: translate(-50%, -50%);
-    }
-}
-
-.mat-form-field {
-    margin: 5px 10px;
-}
-
-button.mat-stroked-button {
-    margin: 5px 10px;
-}
-
-.grabbing-cursor {
-    cursor: grabbing;
-}
-
-.container {
-    max-width: 1000px;
-    margin: auto;
-}
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

@@ -1,20 +1,20 @@
-import { RoomService } from '../../../services/room/room.service';
-import { NgZone } from '@angular/core';
-import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-host-game-session';
-import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
-import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
-import SynchronousChessGameSession from './synchronous-chess-game-session';
-import { RoomManager } from '../../room-manager/room-manager';
+import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessLocalGameSession from '@app/classes/chess/game-sessions/synchronous-chess-local-game-session';
+import SynchronousChessOnlineHostGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-host-game-session';
+import SynchronousChessOnlinePeerGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-peer-game-session';
+import { RoomService } from '@app/services/room/room.service';
 
 export default abstract class SynchronousChessGameSessionBuilder {
-    public static buildOnline(roomService: RoomService, roomManager: RoomManager, ngZone: NgZone): SynchronousChessGameSession {
-        if (roomManager.initiator) {
-            return new SynchronousChessOnlineHostGameSession(roomService, roomManager, ngZone);
+    public static buildOnline(roomService: RoomService<any>): SynchronousChessGameSession {
+        if (roomService.initiator) {
+            return new SynchronousChessOnlineHostGameSession(roomService);
         }
-        return new SynchronousChessOnlinePeerGameSession(roomService, roomManager, ngZone);
+        return new SynchronousChessOnlinePeerGameSession(roomService);
     }
 
-    public static buildLocal(ngZone: NgZone): SynchronousChessGameSession {
-        return new SynchronousChessLocalGameSession(ngZone);
+    public static buildLocal(): SynchronousChessGameSession {
+        return new SynchronousChessLocalGameSession();
     }
 }

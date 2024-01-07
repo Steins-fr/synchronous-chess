@@ -1,19 +1,19 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { RoomSetupComponent } from './room-setup.component';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+import { RoomSetupComponent } from './room-setup.component';
 
 describe('RoomSetupComponent', () => {
     let component: RoomSetupComponent;
     let fixture: ComponentFixture<RoomSetupComponent>;
 
-    beforeEach(async(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [RoomSetupComponent],
             imports: [
                 FormsModule,
@@ -23,11 +23,8 @@ describe('RoomSetupComponent', () => {
                 MatProgressSpinnerModule,
                 BrowserAnimationsModule
             ]
-        })
-            .compileComponents();
-    }));
+        }).compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(RoomSetupComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

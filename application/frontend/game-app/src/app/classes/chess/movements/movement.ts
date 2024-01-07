@@ -1,7 +1,7 @@
-import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import MoveCondition from './movement-conditions/movement-condition';
-import { FenPiece } from '../rules/chess-rules';
+import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
+import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
 
 export enum MovementType {
     LINEAR = 'linear',
@@ -11,7 +11,11 @@ export enum MovementType {
 }
 
 export default abstract class Movement {
-    public constructor(public readonly type: MovementType, public readonly vector: Vec2, public readonly conditions: Array<MoveCondition>) { }
+    protected constructor(
+        public readonly type: MovementType,
+        public readonly vector: Vec2,
+        public readonly conditions: Array<MovementCondition>
+    ) { }
 
     protected abstract _possiblePlays(position: Vec2, board: FenBoard): Array<Vec2>;
 
@@ -32,7 +36,7 @@ export default abstract class Movement {
         const possiblePlays: Array<Vec2> = this._possiblePlays(position, board);
         if (this.conditions.length > 0) {
             return possiblePlays.filter((newPosition: Vec2) =>
-                this.conditions.every((condition: MoveCondition) => condition.canMove(position, newPosition, board))
+                this.conditions.every((condition: MovementCondition) => condition.canMove(position, newPosition, board))
             );
         }
         return possiblePlays;

@@ -1,11 +1,12 @@
 import PromotionTurn from './promotion-turn';
 import { PieceType, PieceColor } from '../rules/chess-rules';
 import { FenColumn, FenRow, FenCoordinate } from '../interfaces/move';
+import Turn from './turn';
 import PromotionTurnAction from './turn-actions/promotion-turn-action';
 
 describe('PromotionTurn', () => {
     it('should create an instance', () => {
-        expect(new PromotionTurn({ whiteFenCoordinate: [FenColumn.A, FenRow._1], blackFenCoordinate: [FenColumn.A, FenRow._2] }, null)).toBeTruthy();
+        expect(new PromotionTurn({ whiteFenCoordinate: [FenColumn.A, FenRow._1], blackFenCoordinate: [FenColumn.A, FenRow._2] }, null as unknown as Turn)).toBeTruthy();
     });
 
     it('canBeExecuted should return false if the action is not filled', () => {
@@ -13,10 +14,10 @@ describe('PromotionTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
         const piece: PieceType = PieceType.QUEEN;
-        const turnEmpty: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null);
-        const turnOnlyWhite: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null);
+        const turnEmpty: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
+        const turnOnlyWhite: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
         turnOnlyWhite.action.whitePiece = piece;
-        const turnOnlyBlack: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null);
+        const turnOnlyBlack: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
         turnOnlyBlack.action.blackPiece = piece;
 
         // When
@@ -35,7 +36,7 @@ describe('PromotionTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
         const piece: PieceType = PieceType.QUEEN;
-        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null);
+        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
         turn.action.blackPiece = piece;
         turn.action.whitePiece = piece;
 
@@ -49,7 +50,7 @@ describe('PromotionTurn', () => {
     it('canBeExecuted should return true if no FenCoordinate', () => {
         // Given
 
-        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: null }, null);
+        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: null }, null as unknown as Turn);
 
         // When
         const result: boolean = turn.canBeExecuted();
@@ -60,7 +61,7 @@ describe('PromotionTurn', () => {
 
     it('isFilled should return true on unsupported color', () => {
         // Given
-        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: null }, null);
+        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: null }, null as unknown as Turn);
 
         // When
         const result: boolean = turn.isFilled(PieceColor.NONE);
@@ -73,8 +74,8 @@ describe('PromotionTurn', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
-        const turnWhite: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null }, null);
-        const turnBlack: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate }, null);
+        const turnWhite: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null }, null as unknown as Turn);
+        const turnBlack: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
 
         // When
         const resultWhite: boolean = turnWhite.isFilled(PieceColor.WHITE);
@@ -90,9 +91,9 @@ describe('PromotionTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
         const piece: PieceType = PieceType.QUEEN;
-        const turnWhite: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null }, null);
+        const turnWhite: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null }, null as unknown as Turn);
         turnWhite.action.whitePiece = piece;
-        const turnBlack: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate }, null);
+        const turnBlack: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
         turnBlack.action.blackPiece = piece;
 
         // When
@@ -113,7 +114,7 @@ describe('PromotionTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whitePiece: PieceType = PieceType.QUEEN;
         const blackPiece: PieceType = PieceType.QUEEN;
-        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null);
+        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
         const initialAction: PromotionTurnAction = { ...turn.action };
         const expectedAction: PromotionTurnAction = {
             whitePiece, blackPiece, whiteFenCoordinate: fenCoordinate, blackFenCoordinate: fenCoordinate
@@ -133,7 +134,7 @@ describe('PromotionTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whitePiece: PieceType = PieceType.QUEEN;
         const blackPiece: PieceType = PieceType.QUEEN;
-        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null }, null);
+        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null }, null as unknown as Turn);
         const initialAction: PromotionTurnAction = { ...turn.action };
         const expectedAction: PromotionTurnAction = {
             whitePiece, blackPiece: null, whiteFenCoordinate: fenCoordinate, blackFenCoordinate: null
@@ -153,7 +154,7 @@ describe('PromotionTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whitePiece: PieceType = PieceType.QUEEN;
         const blackPiece: PieceType = PieceType.QUEEN;
-        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate }, null);
+        const turn: PromotionTurn = new PromotionTurn({ whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate }, null as unknown as Turn);
         const initialAction: PromotionTurnAction = { ...turn.action };
         const expectedAction: PromotionTurnAction = {
             whitePiece: null, blackPiece, whiteFenCoordinate: null, blackFenCoordinate: fenCoordinate

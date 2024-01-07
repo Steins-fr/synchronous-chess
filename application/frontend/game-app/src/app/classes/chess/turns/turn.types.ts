@@ -1,5 +1,5 @@
 enum TurnType {
-    MOVE_SYNCHRONE = 'synchrone',
+    MOVE_SYNC = 'sync',
     MOVE_INTERMEDIATE = 'intermediate',
     CHOICE_PROMOTION = 'choicePromotion'
 }

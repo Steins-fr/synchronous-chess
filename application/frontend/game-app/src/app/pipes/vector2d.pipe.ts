@@ -1,13 +1,14 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import Vec2 from 'vec2';
+import { Vec2 } from '@app/classes/vector/vec2';
 
 @Pipe({
-    name: 'vector2d'
+    name: 'vector2d',
+    standalone: true,
 })
 export class Vector2dPipe implements PipeTransform {
 
-    public transform(value: Array<number>): Vec2 {
-        return new Vec2(value);
+    public transform(value: [number, number]): Vec2 {
+        return new Vec2(value[0], value[1]);
     }
 
 }

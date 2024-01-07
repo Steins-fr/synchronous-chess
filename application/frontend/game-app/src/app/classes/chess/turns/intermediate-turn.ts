@@ -22,7 +22,7 @@ export class IntermediateTurn extends MoveTurn<IntermediateTurnAction> {
         return this.isFilled(PieceColor.WHITE) && this.isFilled(PieceColor.BLACK);
     }
 
-    public registerMove(move: Move, color: PieceColor): void {
+    public override registerMove(move: Move | null, color: PieceColor): void {
         if (color === PieceColor.WHITE && this.action.whiteTarget !== null) {
             this.action.whiteMove = move;
         } else if (color === PieceColor.BLACK && this.action.blackTarget !== null) {

@@ -1,5 +1,6 @@
+import { Zone } from '@app/interfaces/zone.interface';
 import RoomCreateResponse from '../../services/room-api/responses/room-create-response';
-import SignalResponse from '../../services/room-api/responses/signal-response';
+import RtcSignalResponse from '../../services/room-api/responses/rtc-signal-response';
 import { RoomApiService, RoomApiNotificationType } from '../../services/room-api/room-api.service';
 import JoinNotification from '../../services/room-api/notifications/join-notification';
 
@@ -7,26 +8,32 @@ import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { SignalPayload } from '../negotiator/webrtc-negotiator';
 
 import { HostRoomMessage, HostRoomMessageType } from '../webrtc/messages/host-room-message';
+import { Message } from '../webrtc/messages/message';
 import { NegotiatorMessage, NegotiatorMessageType } from '../webrtc/messages/negotiator-message';
 import { RoomMessage } from '../webrtc/messages/room-message';
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import { Webrtc } from '../webrtc/webrtc';
 
-import { RoomManager } from './room-manager';
+import { RoomManager, OnMessageCallback } from './room-manager';
 import { Player, PlayerType } from '../player/player';
 import { NewPlayerPayload } from './peer-room-manager';
 import { RoomEventType } from './events/room-event';
 import RoomReadyEvent from './events/room-ready-event';
 
 
-export class HostRoomManager extends RoomManager {
+export class HostRoomManager<MessageType extends Message> extends RoomManager<MessageType> {
 
     public readonly initiator: boolean = true;
-    private maxPlayer?: number;
-    private refreshId?: NodeJS.Timer;
+    private maxPlayer: number = 0;
+    private refreshId?: ReturnType<typeof setInterval>;
 
-    public constructor(roomApi: RoomApiService, roomName: string) {
-        super(roomApi, roomName);
+    public constructor(
+        roomApi: RoomApiService,
+        roomName: string,
+        onMessage: OnMessageCallback<MessageType>,
+        private readonly zone?: Zone,
+    ) {
+        super(roomApi, roomName, onMessage);
         this.roomApi.notifier.follow(RoomApiNotificationType.JOIN_REQUEST, this, (data: JoinNotification) => this.onJoinNotification(data));
     }
 
@@ -40,7 +47,7 @@ export class HostRoomManager extends RoomManager {
             return response;
         } catch (err) {
             this.clear();
-            return Promise.reject(err);
+            throw err;
         }
     }
 
@@ -74,7 +81,7 @@ export class HostRoomManager extends RoomManager {
         if (nbPlayers >= this.maxPlayer) {
             this.roomApi.full(data.playerName, this.roomName).catch((err: string) => console.error(err));
         } else {
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(), this.roomApi);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(this.zone), this.roomApi);
             negotiator.initiate();
             this.addNegotiator(negotiator);
         }
@@ -114,17 +121,18 @@ export class HostRoomManager extends RoomManager {
 
         if (negotiatorMessage.type === NegotiatorMessageType.SIGNAL) {
             const signalPayload: SignalPayload = negotiatorMessage.payload;
-            if (this.players.has(signalPayload.to) === false) {
+            const player: Player | undefined = this.players.get(signalPayload.to);
+
+            if (!player) {
                 return;
             }
 
-            const player: Player = this.players.get(signalPayload.to);
-            const remoteSignalPayload: SignalResponse = {
+            const remoteSignalPayload: RtcSignalResponse = {
                 from: fromPlayer,
                 signal: signalPayload.signal
             };
 
-            const negotiationMessage: HostRoomMessage<SignalResponse> = {
+            const negotiationMessage: HostRoomMessage<RtcSignalResponse> = {
                 type: HostRoomMessageType.REMOTE_SIGNAL,
                 payload: remoteSignalPayload,
                 origin: MessageOriginType.HOST_ROOM,
@@ -135,7 +143,7 @@ export class HostRoomManager extends RoomManager {
         }
     }
 
-    public clear(): void {
+    public override clear(): void {
         this.roomApi.notifier.unfollow(RoomApiNotificationType.JOIN_REQUEST, this);
         if (this.refreshId !== undefined) {
             clearInterval(this.refreshId);

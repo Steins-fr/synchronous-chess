@@ -20,7 +20,7 @@ export enum Column {
     H = 7
 }
 
-export type Coordinate = Array<number>;
+export type Coordinate = [Column, Row];
 
 export default interface CoordinateMove {
     from: Coordinate;

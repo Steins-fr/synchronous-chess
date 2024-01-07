@@ -1,23 +1,30 @@
-<div class="row" *ngIf="!roomService.roomIsSetup()">
+<div *ngIf="canDisplay" class="row">
     <mat-form-field>
-        <input matInput type="text" name="room-name" [(ngModel)]="roomName" placeholder="Nom de la salle"
-            autocomplete="off" />
+        <input
+            [(ngModel)]="roomName" autocomplete="off"
+            matInput
+            name="room-name"
+            placeholder="Nom de la salle"
+            type="text" />
     </mat-form-field>
 
     <mat-form-field>
-        <input matInput type="text" name="player" [(ngModel)]="playerName" placeholder="Nom du joueur"
-            autocomplete="off" />
+        <input
+            [(ngModel)]="playerName" autocomplete="off"
+            matInput
+            name="player"
+            placeholder="Nom du joueur"
+            type="text" />
     </mat-form-field>
 
-    <div id="setup-buttons" *ngIf="isLoading === false">
-        <button mat-stroked-button color="primary" id="host-room" (click)="hostRoom()">
+    <div *ngIf="!isLoading" id="setup-buttons">
+        <button (click)="hostRoom()" color="primary" mat-stroked-button>
             Nouvelle
         </button>
-        <button mat-stroked-button color="primary" id="host-room" (click)="joinRoom()">
+        <button (click)="joinRoom()" color="primary" mat-stroked-button>
             Rejoindre
         </button>
         <div id="setup-error">{{ error }}</div>
     </div>
-    <mat-spinner [diameter]="42" *ngIf="isLoading">
-    </mat-spinner>
+    <mat-spinner *ngIf="isLoading" [diameter]="42" />
 </div>

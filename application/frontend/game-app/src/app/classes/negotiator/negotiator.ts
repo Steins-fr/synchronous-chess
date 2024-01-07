@@ -1,7 +1,7 @@
 import { Subscription, Observable } from 'rxjs';
 
 import WebrtcStates from '../webrtc/webrtc-states';
-import { Webrtc, Signal, WebrtcConnectionState } from '../webrtc/webrtc';
+import { Webrtc, RtcSignal, WebrtcConnectionState } from '../webrtc/webrtc';
 
 import SignalNotification from '../../services/room-api/notifications/signal-notification';
 import { PlayerType } from '../player/player';
@@ -21,15 +21,14 @@ export abstract class Negotiator {
     private static readonly maxSignalTry: number = 3;
     private static readonly checkingTimeout: number = 3000;
     private static readonly timeoutAfter: number = 15000;
-    private static readonly connectedDelay: number = 0;
     private readonly subs: Array<Subscription> = [];
     private connectionState: WebrtcConnectionState = WebrtcConnectionState.DISCONNECTED;
     private signalTry: number = 0;
-    private timeoutId?: NodeJS.Timer;
+    private timeoutId?: ReturnType<typeof setTimeout>;
 
     private readonly _notifier: Notifier<NegotiatorEventType, NegotiatorEvent> = new Notifier<NegotiatorEventType, NegotiatorEvent>();
 
-    public states?: Observable<WebrtcStates>; // For external debugging
+    public readonly states: Observable<WebrtcStates>; // For external debugging
     public isInitiator: boolean = false;
 
     public constructor(
@@ -40,7 +39,7 @@ export abstract class Negotiator {
         this.checkTimeout();
     }
 
-    public get notifier(): NotifierFlow<NegotiatorEventType, NegotiatorEvent> {
+    public get notifier(): NotifierFlow<NegotiatorEventType> {
         return this._notifier;
     }
 
@@ -65,7 +64,7 @@ export abstract class Negotiator {
                 this.webRTC.createOffer();
             }
 
-            this.subs.push(this.webRTC.signal.subscribe((signal: Signal) => this.onSignal(signal)));
+            this.subs.push(this.webRTC.rtcSignal$.subscribe((signal: RtcSignal) => this.onSignal(signal)));
             this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
         } else {
             this.pushEvent(NegotiatorEventType.DISCONNECTED);
@@ -82,29 +81,38 @@ export abstract class Negotiator {
         if (this.connectionState === states.iceConnection) {
             return; // Do nothing, it's the same state
         }
-        this.connectionState = states.iceConnection as WebrtcConnectionState;
+        const newConnectionState = states.iceConnection as WebrtcConnectionState;
 
-        switch (this.connectionState) {
+        switch (newConnectionState) {
             case WebrtcConnectionState.CHECKING:
+                if (newConnectionState === states.iceConnection) {
+                    break; // Do nothing, it's the same state
+                }
                 if (this.isInitiator) { // Timeout the connection temptation
                     setTimeout(() => this.setupConnection(), Negotiator.checkingTimeout);
                 }
                 break;
             case WebrtcConnectionState.CONNECTED:
-                setTimeout(() => this.pushEvent(NegotiatorEventType.CONNECTED), Negotiator.connectedDelay); // Fix for chrome - Delay to assure that the canal is ready
+                if (states.sendChannel as WebrtcConnectionState !== WebrtcConnectionState.OPEN || states.receiveChannel as WebrtcConnectionState !== WebrtcConnectionState.OPEN) {
+                    break; // The channel is not ready yet
+                }
+                this.pushEvent(NegotiatorEventType.CONNECTED);
                 break;
             case WebrtcConnectionState.DISCONNECTED:
+                if (newConnectionState === states.iceConnection) {
+                    break; // Do nothing, it's the same state
+                }
                 this.pushEvent(NegotiatorEventType.DISCONNECTED);
-
+                break;
         }
     }
 
-    protected onSignal(signal: Signal): void {
+    protected onSignal(signal: RtcSignal): void {
         this.signalTry++;
         this.handleSignal(signal);
     }
 
-    protected abstract handleSignal(signal: Signal): void;
+    protected abstract handleSignal(signal: RtcSignal): void;
 
     public negotiationMessage(payload: SignalNotification): void {
 
@@ -112,7 +120,7 @@ export abstract class Negotiator {
             return;
         }
 
-        if (this.isInitiator === false) {
+        if (!this.isInitiator) {
             this.setupConnection(); // Start/Restart the connection for new signal.
         }
 

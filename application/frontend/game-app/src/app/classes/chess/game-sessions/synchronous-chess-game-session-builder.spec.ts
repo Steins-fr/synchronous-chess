@@ -1,4 +1,4 @@
-import { RoomManager } from '../../room-manager/room-manager';
+import { NgZone } from '@angular/core';
 import { RoomService } from '../../../services/room/room.service';
 import { NotifierFlow } from '../../notifier/notifier';
 import SynchronousChessGameSession from './synchronous-chess-game-session';
@@ -8,31 +8,29 @@ import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-pe
 import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 
 describe('SynchronousChessGameSessionBuilder', () => {
-    let roomServiceSpy: jasmine.SpyObj<RoomService>;
-    let roomManagerSpy: jasmine.SpyObj<RoomManager>;
+    let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
 
     beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService>('RoomService', ['notifier']);
-        roomManagerSpy = jasmine.createSpyObj<RoomManager>('RoomManager', ['notifier']);
+        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['roomManagerNotifier', 'initiator']);
         Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
-        Object.defineProperty(roomManagerSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+        Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
     });
 
     it('should create an instance of SynchronousChessOnlineHostGameSession', () => {
         // Given
-        Object.defineProperty(roomManagerSpy, 'initiator', {
+        Object.defineProperty(roomServiceSpy, 'initiator', {
             value: true,
             writable: false
         });
 
         // When
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomServiceSpy, roomManagerSpy, undefined);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomServiceSpy, null as unknown as NgZone);
 
         // Then
         expect(session instanceof SynchronousChessOnlineHostGameSession).toBeTruthy();
@@ -40,13 +38,13 @@ describe('SynchronousChessGameSessionBuilder', () => {
 
     it('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
         // Given
-        Object.defineProperty(roomManagerSpy, 'initiator', {
+        Object.defineProperty(roomServiceSpy, 'initiator', {
             value: false,
             writable: false
         });
 
         // When
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomServiceSpy, roomManagerSpy, undefined);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomServiceSpy, null as unknown as NgZone);
 
         // Then
         expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
@@ -56,7 +54,7 @@ describe('SynchronousChessGameSessionBuilder', () => {
         // Given
 
         // When
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildLocal(undefined);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildLocal(null as unknown as NgZone);
 
         // Then
         expect(session instanceof SynchronousChessLocalGameSession).toBeTruthy();
