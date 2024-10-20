@@ -1,62 +1,65 @@
-import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
-import { RoomService } from '../../../services/room/room.service';
-import { NotifierFlow } from '../../notifier/notifier';
-import { RoomManager } from '../../room-manager/room-manager';
-import { TestBed } from '@angular/core/testing';
-import { NgZone } from '@angular/core';
-import { SessionConfiguration } from './synchronous-chess-game-session';
-import { PieceColor, PieceType } from '../rules/chess-rules';
-import { Coordinate, Column, Row } from '../interfaces/CoordinateMove';
-import SynchronousChessGame from '../games/synchronous-chess-game';
-import ChessBoardHelper from '../../../helpers/chess-board-helper';
-import Move, { FenColumn, FenRow } from '../interfaces/move';
+import { SessionConfiguration } from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessOnlinePeerGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-peer-game-session';
+import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
+import { Coordinate, Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
+import { PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
+import { NotifierFlow } from '@app/classes/notifier/notifier';
+import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
+import { ToReworkMessage } from '@app/classes/webrtc/messages/to-rework-message';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { Room } from '@app/services/room-manager/classes/room/room';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
-    public runMove(color: PieceColor, move: Move): boolean {
+    public override runMove(color: PieceColor, move: Move): boolean {
         return super.runMove(color, move);
     }
 
-    public runPromotion(color: PieceColor, pieceType: PieceType): boolean {
+    public override runPromotion(color: PieceColor, pieceType: PieceType): boolean {
         return super.runPromotion(color, pieceType);
     }
 }
 
 describe('SynchronousChessOnlinePeerGameSession', () => {
 
-    let roomServiceSpy: jasmine.SpyObj<RoomService>;
-    let roomManagerSpy: jasmine.SpyObj<RoomManager>;
+    let roomServiceSpy: jasmine.SpyObj<Room<any>>;
 
     beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService>('RoomService', ['notifier']);
-        roomManagerSpy = jasmine.createSpyObj<RoomManager>('RoomManager', ['notifier']);
+        roomServiceSpy = jasmine.createSpyObj<Room<any>>('RoomService', ['roomManagerNotifier']);
         Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
-        Object.defineProperty(roomManagerSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+        Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
     });
 
     it('should create an instance', () => {
-        expect(new SynchronousChessOnlinePeerGameSession(roomServiceSpy, roomManagerSpy, undefined)).toBeTruthy();
+        expect(new SynchronousChessOnlinePeerGameSession(roomServiceSpy)).toBeTruthy();
     });
 
     it('should set the configuration', () => {
         // Given
-        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
-        const configuration: SessionConfiguration = {
-            whitePlayer: 'e',
-            blackPlayer: 'd',
-            spectatorNumber: 3
+        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomServiceSpy);
+        const configuration: ToReworkMessage<SessionConfiguration> = {
+            from: 'a',
+            // FIXME: value of origin
+            origin: MessageOriginType.HOST_ROOM,
+            payload: {
+                whitePlayer: 'e',
+                blackPlayer: 'd',
+                spectatorNumber: 3,
+            }
         };
 
         // When
         session.onConfiguration(configuration);
 
         // Then
-        expect(session.configuration).toBe(configuration);
+        expect(session.configuration).toBe(configuration.payload);
     });
 
     it('should return false if runMove move a piece from another color', () => {
@@ -66,7 +69,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -92,7 +95,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -119,7 +122,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
@@ -156,7 +159,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
@@ -193,7 +196,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
         });
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
             value: gameSpy,
@@ -220,7 +223,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview).toEqual(undefined);
+        expect(session.movePreview).toBeUndefined();
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
     });
@@ -233,7 +236,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
         gameSpy.promote.and.returnValue(false);
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -256,7 +259,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             writable: false
         });
         gameSpy.promote.and.returnValue(true);
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, roomManagerSpy, TestBed.inject(NgZone));
+        const session: ProtectedTest = new ProtectedTest(roomServiceSpy);
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false

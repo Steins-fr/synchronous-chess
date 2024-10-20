@@ -1,19 +1,34 @@
-import { Webrtc, Signal } from '../webrtc/webrtc';
-import { Negotiator, NegotiatorEventType } from './negotiator';
-
-import { RoomApiService, RoomApiNotificationType } from '../../services/room-api/room-api.service';
-import SignalNotification from '../../services/room-api/notifications/signal-notification';
-import FullNotification from '../../services/room-api/notifications/full-notification';
-import { PlayerType } from '../player/player';
+import { Negotiator, NegotiatorEventType } from '@app/classes/negotiator/negotiator';
+import { PlayerType } from '@app/classes/player/player';
+import { Webrtc, RtcSignal } from '@app/classes/webrtc/webrtc';
+import FullNotification from '@app/services/room-api/notifications/full-notification';
+import SignalNotification from '@app/services/room-api/notifications/signal-notification';
+import {
+    RoomSocketApi,
+    RoomSocketApiNotificationEnum,
+    RoomApiRequestTypeEnum
+} from '@app/services/room-api/room-socket.api';
+import { Subject, takeUntil } from 'rxjs';
 
 export class WebsocketNegotiator extends Negotiator {
+    private destroyRef = new Subject<void>();
 
-    public constructor(private readonly roomName: string, playerName: string, playerType: PlayerType, webRTC: Webrtc,
-        private readonly roomApi: RoomApiService) {
+    public constructor(
+        private readonly roomName: string,
+        playerName: string,
+        playerType: PlayerType,
+        webRTC: Webrtc,
+        private readonly roomSocketApi: RoomSocketApi,
+    ) {
 
         super(playerName, playerType, webRTC);
-        this.roomApi.notifier.follow(RoomApiNotificationType.REMOTE_SIGNAL, this, (data: SignalNotification) => this.onRemoteSignal(data));
-        this.roomApi.notifier.follow(RoomApiNotificationType.FULL, this, (data: FullNotification) => this.onFull(data));
+        this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
+            if (notification.type === RoomSocketApiNotificationEnum.FULL) {
+                this.onFull(notification.data);
+            } else if (notification.type === RoomSocketApiNotificationEnum.REMOTE_SIGNAL) {
+                this.onRemoteSignal(notification.data);
+            }
+        });
     }
 
     private onFull(data: FullNotification): void {
@@ -23,18 +38,20 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     private onRemoteSignal(data: SignalNotification): void {
-        this.negotiationMessage(data);
+        this.negotiationMessage(data).then(() => console.debug('Negotiation message sent'));
     }
 
-    protected handleSignal(signal: Signal): void {
-        this.roomApi.signal(signal, this.playerName, this.roomName).then().catch((err: string) => {
+    protected handleSignal(signal: RtcSignal): void {
+        // FIXME: code
+        this.roomSocketApi.send(RoomApiRequestTypeEnum.SIGNAL, { signal, to: this.playerName, roomName: this.roomName }).then().catch((err: string) => {
             console.error(err);
         });
     }
 
-    public clear(): void {
-        this.roomApi.notifier.unfollow(RoomApiNotificationType.FULL, this);
-        this.roomApi.notifier.unfollow(RoomApiNotificationType.REMOTE_SIGNAL, this);
+    public override clear(): void {
+        this.destroyRef.next();
+        this.destroyRef.complete();
+        this.destroyRef = new Subject<void>();
         super.clear();
     }
 }

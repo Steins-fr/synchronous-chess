@@ -1,19 +1,13 @@
+import { Zone } from '@app/interfaces/zone.interface';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { environment } from '../../../environments/environment';
-
+import { environment } from '@environments/environment';
 import WebrtcStates, { DebugRTCIceCandidate } from './webrtc-states';
 
 import { Message } from './messages/message';
 
-export interface Signal {
+export interface RtcSignal {
     sdp: RTCSessionDescriptionInit;
     ice: Array<RTCIceCandidateInit>;
-}
-
-export enum WebrtcConnectionState {
-    CONNECTED = 'connected',
-    DISCONNECTED = 'disconnected',
-    CHECKING = 'checking'
 }
 
 enum PacketType {
@@ -26,14 +20,14 @@ type PacketId = number;
 interface Packet {
     id: PacketId;
     type: PacketType;
-    nbTry?: number;
+    nbTry: number;
     message?: Message;
 }
 
 export class Webrtc {
     /**
-    * Configuration of the PeerConnection. Use google stun server for the moment.
-    */
+     * Configuration of the PeerConnection. Use Google stun server for the moment.
+     */
     private static readonly defaultPeerConnectionConfig: RTCConfiguration = {
         iceServers: [
             {
@@ -45,11 +39,12 @@ export class Webrtc {
     private readonly packetIdGenerator: Generator = function* name(): Generator {
         let id: PacketId = 0;
         while (true) {
-            yield ++id;
+            ++id;
+            yield id;
         }
     }();
 
-    private readonly pendingAcknowledgement: Map<PacketId, NodeJS.Timer> = new Map<PacketId, NodeJS.Timer>();
+    private readonly pendingAcknowledgement = new Map<PacketId, ReturnType<typeof setTimeout>>();
 
     // WebRTC states observables
     private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>(new WebrtcStates());
@@ -60,30 +55,70 @@ export class Webrtc {
     public data: Observable<Message> = this._data.asObservable();
 
     // PeerConnection and full-duplex dataChannels
-    public peerConnection: RTCPeerConnection = undefined;
-    public sendChannel: RTCDataChannel = undefined;
-    public receiveChannel: RTCDataChannel = undefined;
+    // The peerConnection is created when the offer is created. It may be reset when retrying the connection
+    private _peerConnection?: RTCPeerConnection = undefined;
+    // The channel are created when the candidate gathering is complete
+    private _sendChannel?: RTCDataChannel = undefined;
+    private _receiveChannel?: RTCDataChannel = undefined;
+
+    public get peerConnection(): RTCPeerConnection {
+        if (!this._peerConnection) {
+            throw new Error('PeerConnection not initialized');
+        }
+
+        return this._peerConnection;
+    }
+
+    public get sendChannel(): RTCDataChannel {
+        if (!this._sendChannel) {
+            throw new Error('SendChannel not initialized');
+        }
+
+        return this._sendChannel;
+    }
+
+    public get receiveChannel(): RTCDataChannel {
+        if (!this._receiveChannel) {
+            throw new Error('ReceiveChannel not initialized');
+        }
+
+        return this._receiveChannel;
+    }
 
     // Signal variable and observables
-    private _signal: Signal;
-    private _signalSubject: Subject<Signal> = new Subject<Signal>();
-    public signal: Observable<Signal> = this._signalSubject.asObservable();
+    private _rtcSignal: RtcSignal = {
+        sdp: {
+            sdp: '',
+            type: 'offer',
+        },
+        ice: []
+    };
+    private _rtcSignalSubject: Subject<RtcSignal> = new Subject<RtcSignal>();
+    public rtcSignal$: Observable<RtcSignal> = this._rtcSignalSubject.asObservable();
 
     // Debug statistics, set at the beginning of ice gathering
-    private begin: number;
+    private begin: number = 0;
 
     //private webSocket: Websocket = null;
-    private initiator: boolean;
+    private initiator: boolean = false;
 
-    public constructor() { }
+    private readonly zone: Zone;
+
+    public constructor(zone?: Zone) {
+        this.zone = zone ?? {
+            run: (callback: () => void): void => callback(),
+        };
+    }
 
     public configure(initiator: boolean, peerConnectionConfig?: RTCConfiguration): void {
 
         this.initiator = initiator;
-        this.close();
+        if (this._peerConnection) {
+            this.close();
+        }
 
         // Create PeerConnection and bind events
-        this.peerConnection = new RTCPeerConnection(peerConnectionConfig || Webrtc.defaultPeerConnectionConfig);
+        this._peerConnection = new RTCPeerConnection(peerConnectionConfig ?? Webrtc.defaultPeerConnectionConfig);
         this.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent): void => this.gotIceCandidate(event);
         this.peerConnection.oniceconnectionstatechange = (): void => this.onIceConnectionStateChange();
         this.peerConnection.onicegatheringstatechange = (): void => this.onIceGatheringStateChange();
@@ -91,17 +126,20 @@ export class Webrtc {
         this.peerConnection.ondatachannel = (event: RTCDataChannelEvent): void => this.onDataChannel(event);
 
         // Create DataChannel for sending data and bind events
-        this.sendChannel = this.peerConnection.createDataChannel('sendDataChannel');
+        this._sendChannel = this.peerConnection.createDataChannel('sendDataChannel');
         this.sendChannel.onopen = (): void => this.onSendChannelStateChange();
         this.sendChannel.onclose = (): void => this.onSendChannelStateChange();
 
         // Reinitialize signal object
-        this._signal = {
-            sdp: null,
+        this._rtcSignal = {
+            sdp: {
+                sdp: '',
+                type: 'offer',
+            },
             ice: []
         };
-        this._signalSubject = new Subject<Signal>();
-        this.signal = this._signalSubject.asObservable();
+        this._rtcSignalSubject = new Subject<RtcSignal>();
+        this.rtcSignal$ = this._rtcSignalSubject.asObservable();
 
         this.updateState(new WebrtcStates());
 
@@ -112,54 +150,60 @@ export class Webrtc {
     }
 
     public close(): void {
-        if (this.peerConnection) {
-            this.peerConnection.close();
-        }
+        this.peerConnection.close();
     }
 
-    public createOffer(options?: RTCOfferOptions): void {
-        if (this.peerConnection) {
-            this.begin = window.performance.now();
-            this.peerConnection.createOffer(options)
-                .then((description: any): void => this.gotDescription(description));
-            this.initiator = true;
-        }
-    }
+    public async createOffer(options?: RTCOfferOptions): Promise<void> {
+        this.begin = window.performance.now();
+        this.initiator = true;
 
-    public createAnswer(): void {
-        if (this.peerConnection) {
-            this.begin = window.performance.now();
-            this.peerConnection.createAnswer()
-                .then((description: RTCSessionDescription) => this.gotDescription(description))
-                .catch((e: any) => this.createError(e));
-            this.initiator = false;
-        }
-    }
-
-    public registerSignal(remoteSignal: Signal): boolean {
         try {
-            if ((this.initiator && remoteSignal.sdp.type === 'answer')) {
-                this.registerRemoteSdp(remoteSignal.sdp);
-                this.registerRemoteIce(remoteSignal.ice);
-            } else if (!this.initiator && remoteSignal.sdp.type === 'offer') {
-                this.registerRemoteSdp(remoteSignal.sdp);
-                this.registerRemoteIce(remoteSignal.ice);
-                this.createAnswer();
-            }
-            return true;
+            const description = await this.peerConnection.createOffer(options);
+            this.gotDescription(description);
         } catch (e) {
-            return false;
+            if (e instanceof DOMException) {
+                this.createError(e);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public async createAnswer(): Promise<void> {
+        this.begin = window.performance.now();
+        this.initiator = false;
+
+        try {
+            const description = await this.peerConnection.createAnswer();
+            this.gotDescription(description);
+        } catch (e) {
+            if (e instanceof DOMException) {
+                this.createError(e);
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public async registerSignal(remoteSignal: RtcSignal): Promise<void> {
+        if ((this.initiator && remoteSignal.sdp.type === 'answer')) {
+            this.registerRemoteSdp(remoteSignal.sdp);
+            await this.registerRemoteIce(remoteSignal.ice);
+        } else if (!this.initiator && remoteSignal.sdp.type === 'offer') {
+            this.registerRemoteSdp(remoteSignal.sdp);
+            await this.registerRemoteIce(remoteSignal.ice);
+            await this.createAnswer();
         }
     }
 
     private registerRemoteSdp(sdp: RTCSessionDescriptionInit): void {
-        this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).catch((e: any) => this.createError(e.message));
+        this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).catch(e => this.createError(e.message));
     }
 
-    private registerRemoteIce(ice: Array<RTCIceCandidateInit>): void {
-        ice.forEach((iceCandidate: any): void => {
-            this.peerConnection.addIceCandidate(new RTCIceCandidate(iceCandidate));
-        });
+    private async registerRemoteIce(candidates: RTCIceCandidateInit[]): Promise<void> {
+        for (const candidate of candidates) {
+            await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        }
     }
 
     private onIceConnectionStateChange(): void {
@@ -197,32 +241,38 @@ export class Webrtc {
 
     private sendPacket(packet: Packet): void {
         if (packet.type !== PacketType.ACK) {
-            packet.nbTry = packet.nbTry !== undefined ? packet.nbTry + 1 : 1;
-            const timerId: NodeJS.Timer = setTimeout(() => this.packetLost(packet), 1000);
+            packet.nbTry = packet.nbTry + 1;
+            const timerId = setTimeout(() => this.packetLost(packet), 1000);
             this.pendingAcknowledgement.set(packet.id, timerId);
         }
-        console.log('send packet', packet);
 
         if (this.sendChannel.readyState === 'open') {
             this.sendChannel.send(JSON.stringify(packet));
         }
     }
 
-    public sendMessage(message: Message): void {
+    public sendMessage(message: Message): number {
+        const id: number = this.packetIdGenerator.next().value;
         this.sendPacket({
-            id: this.packetIdGenerator.next().value,
+            id,
             type: PacketType.MESSAGE,
+            nbTry: 0,
             message
         });
+
+        return id;
     }
 
     private onReceiveMessage(event: MessageEvent): void {
         const packet: Packet = JSON.parse(event.data);
-        console.log('received packet', packet);
         switch (packet.type) {
             case PacketType.MESSAGE:
-                this._data.next(packet.message);
-                this.sendPacket({ id: packet.id, type: PacketType.ACK });
+                if (!packet.message) {
+                    throw new Error('Message is undefined');
+                }
+
+                this.onNewMessage(packet.message);
+                this.sendPacket({ id: packet.id, type: PacketType.ACK, nbTry: 0 });
                 break;
             case PacketType.ACK:
                 if (this.pendingAcknowledgement.has(packet.id)) {
@@ -232,38 +282,48 @@ export class Webrtc {
         }
     }
 
+    protected onNewMessage(message: Message): void {
+        this.zone.run(() => this._data.next(message));
+    }
+
     private onDataChannel(event: RTCDataChannelEvent): void {
-        this.receiveChannel = event.channel;
+        this._receiveChannel = event.channel;
         this.receiveChannel.onmessage = (messageEvent: MessageEvent): void => this.onReceiveMessage(messageEvent);
         this.receiveChannel.onopen = (): void => this.onReceiveChannelStateChange();
         this.receiveChannel.onclose = (): void => this.onReceiveChannelStateChange();
     }
 
-    private createError(error: any): void {
+    private createError(error: DOMException): void {
         this.updateState({ error });
     }
 
-    private gotDescription(description: RTCSessionDescription): void {
+    private gotDescription(description: RTCSessionDescriptionInit): void {
         this.peerConnection.setLocalDescription(description).then(
             () => {
-                this._signal.sdp = description;
+                this._rtcSignal.sdp = description;
 
                 if (this.peerConnection.iceGatheringState === 'complete') {
                     this.onSignal();
                 }
             }
-        ).catch((e: any) => this.createError(e));
+        ).catch((e: unknown) => {
+            if (e instanceof DOMException) {
+                this.createError(e);
+            } else {
+                throw e;
+            }
+        });
     }
 
     private onSignal(): void {
-        this._signalSubject.next(this._signal);
+        this._rtcSignalSubject.next(this._rtcSignal);
     }
 
     private gotIceCandidate(event: RTCPeerConnectionIceEvent): void {
 
         if (event.candidate !== null) { // Gathering 'complete' send a null candidate
-            const candidate: DebugRTCIceCandidate = event.candidate;
-            this._signal.ice.push(event.candidate);
+            const candidate = event.candidate;
+            this._rtcSignal.ice.push(event.candidate);
 
             this._iceDebug({
                 ...candidate,
@@ -282,7 +342,11 @@ export class Webrtc {
     // Parse the uint32 PRIORITY field into its constituent parts from RFC 5245,
     // type preference, local preference, and (256 - component ID).
     // ex: 126 | 32252 | 255 (126 is host preference, 255 is component ID 1)
-    private _formatPriority(priority: number): string {
+    private _formatPriority(priority: number | null): string {
+        if (priority === null) {
+            return '';
+        }
+
         return [
             // tslint:disable-next-line: no-bitwise
             priority >> 24, (priority >> 8) & 0xFFFF, priority & 0xFF
@@ -290,9 +354,7 @@ export class Webrtc {
     }
 
     private _iceDebug(iceCandidate: DebugRTCIceCandidate): void {
-        const elapsed: string = ((window.performance.now() - this.begin) / 1000).toFixed(3);
-
-        iceCandidate.elapsed = elapsed;
+        iceCandidate.elapsed = ((window.performance.now() - this.begin) / 1000).toFixed(3);
         this.updateState({
             candidates: [...this._states.value.candidates, iceCandidate]
         });
@@ -304,10 +366,6 @@ export class Webrtc {
         if (this.peerConnection.iceGatheringState !== 'complete') {
             return;
         }
-
-        this._iceDebug({
-            relatedAddress: 'Done'
-        } as DebugRTCIceCandidate);
 
         this.onSignal();
     }

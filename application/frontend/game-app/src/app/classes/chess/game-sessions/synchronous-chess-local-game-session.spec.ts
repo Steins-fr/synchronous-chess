@@ -1,15 +1,15 @@
-import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 import { PieceColor } from '../rules/chess-rules';
+import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 
 describe('SynchronousChessLocalGameSession', () => {
     it('should create an instance', () => {
-        expect(new SynchronousChessLocalGameSession(undefined)).toBeTruthy();
+        expect(new SynchronousChessLocalGameSession()).toBeTruthy();
     });
 
     it('should get default none color', () => {
         // Given
 
-        const session: SynchronousChessLocalGameSession = new SynchronousChessLocalGameSession(undefined);
+        const session: SynchronousChessLocalGameSession = new SynchronousChessLocalGameSession();
 
         // When
 

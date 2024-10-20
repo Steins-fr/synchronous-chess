@@ -2,17 +2,17 @@
  * Interface for debugging Ice candidates.
  */
 export interface DebugRTCIceCandidate extends RTCIceCandidate {
-    address?: string; // This property is not described in RTCIceCandidate but present
     priorities?: string;
     elapsed?: string;
 }
 
 export default class WebrtcStates {
-    public error: any = '';
-    public iceConnection: string = 'none';
-    public sendChannel: string = 'none';
-    public receiveChannel: string = 'none';
-    public iceGathering: string = 'none';
-    public signaling: string = 'none';
+    // FIXME: error type
+    public error: unknown = '';
+    public iceConnection: RTCIceConnectionState = 'new';
+    public sendChannel: RTCDataChannelState = 'connecting';
+    public receiveChannel: RTCDataChannelState = 'connecting';
+    public iceGathering: RTCIceGatheringState = 'new';
+    public signaling: RTCSignalingState = 'have-local-offer';
     public candidates: Array<DebugRTCIceCandidate> = [];  // Ice candidates (used for debugging)
 }

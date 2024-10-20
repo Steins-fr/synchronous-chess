@@ -1,14 +1,19 @@
-import { IntermediateTurn } from './intermediate-turn';
-import Move, { FenColumn, FenCoordinate } from '../interfaces/move';
-import Turn from './turn';
-import TurnType from './turn.types';
-import { PieceColor } from '../rules/chess-rules';
-import IntermediateTurnAction from './turn-actions/intermediate-turn-action';
+import Move, { FenCoordinate, FenColumn } from '@app/classes/chess/interfaces/move';
+import { PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
+import Turn from '@app/classes/chess/turns/turn';
+import IntermediateTurnAction from '@app/classes/chess/turns/turn-actions/intermediate-turn-action';
+import TurnType from '@app/classes/chess/turns/turn.types';
 
 describe('IntermediateTurn', () => {
     it('should create an instance', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
-        const turn: Turn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
+        const turn: Turn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
 
         expect(turn).toBeTruthy();
         expect(turn.type).toEqual(TurnType.MOVE_INTERMEDIATE);
@@ -19,10 +24,25 @@ describe('IntermediateTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
-        const turnEmpty: IntermediateTurn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
-        const turnOnlyWhite: IntermediateTurn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
+        const turnEmpty: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
+        const turnOnlyWhite: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
         turnOnlyWhite.action.whiteMove = move;
-        const turnOnlyBlack: IntermediateTurn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
+        const turnOnlyBlack: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
         turnOnlyBlack.action.blackMove = move;
 
         // When
@@ -41,7 +61,12 @@ describe('IntermediateTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
-        const turn: IntermediateTurn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
         turn.action.blackMove = move;
         turn.action.whiteMove = move;
 
@@ -55,7 +80,12 @@ describe('IntermediateTurn', () => {
     it('canBeExecuted should return true if no target', () => {
         // Given
 
-        const turn: IntermediateTurn = new IntermediateTurn({ whiteTarget: null, blackTarget: null });
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: null,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        });
 
         // When
         const result: boolean = turn.canBeExecuted();
@@ -66,7 +96,12 @@ describe('IntermediateTurn', () => {
 
     it('isFilled should return true on unsupported color', () => {
         // Given
-        const turn: IntermediateTurn = new IntermediateTurn({ whiteTarget: null, blackTarget: null });
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: null,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        });
 
         // When
         const result: boolean = turn.isFilled(PieceColor.NONE);
@@ -78,8 +113,18 @@ describe('IntermediateTurn', () => {
     it('isFilled should return false if partially filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
-        const turnWhite: IntermediateTurn = new IntermediateTurn({ whiteTarget: move.to, blackTarget: null });
-        const turnBlack: IntermediateTurn = new IntermediateTurn({ whiteTarget: null, blackTarget: move.to });
+        const turnWhite: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: move.to,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        });
+        const turnBlack: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: null,
+            blackTarget: move.to,
+            whiteMove: null,
+            blackMove: null,
+        });
 
         // When
         const resultWhite: boolean = turnWhite.isFilled(PieceColor.WHITE);
@@ -93,9 +138,19 @@ describe('IntermediateTurn', () => {
     it('isFilled should return true if filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
-        const turnWhite: IntermediateTurn = new IntermediateTurn({ whiteTarget: move.to, blackTarget: null });
+        const turnWhite: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: move.to,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        });
         turnWhite.action.whiteMove = move;
-        const turnBlack: IntermediateTurn = new IntermediateTurn({ whiteTarget: null, blackTarget: move.to });
+        const turnBlack: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: null,
+            blackTarget: move.to,
+            whiteMove: null,
+            blackMove: null,
+        });
         turnBlack.action.blackMove = move;
 
         // When
@@ -116,7 +171,12 @@ describe('IntermediateTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const blackMove: Move = { from: [FenColumn.A, 6], to: [FenColumn.B, 5] };
-        const turn: IntermediateTurn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: fenCoordinate });
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
         const initialAction: IntermediateTurnAction = { ...turn.action };
         const expectedAction: IntermediateTurnAction = {
             whiteMove, blackMove, whiteTarget: fenCoordinate, blackTarget: fenCoordinate
@@ -136,7 +196,12 @@ describe('IntermediateTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const blackMove: Move = { from: [FenColumn.A, 6], to: [FenColumn.B, 5] };
-        const turn: IntermediateTurn = new IntermediateTurn({ whiteTarget: fenCoordinate, blackTarget: null });
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        });
         const initialAction: IntermediateTurnAction = { ...turn.action };
         const expectedAction: IntermediateTurnAction = {
             whiteMove, blackMove: null, whiteTarget: fenCoordinate, blackTarget: null
@@ -156,7 +221,12 @@ describe('IntermediateTurn', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const blackMove: Move = { from: [FenColumn.A, 6], to: [FenColumn.B, 5] };
-        const turn: IntermediateTurn = new IntermediateTurn({ whiteTarget: null, blackTarget: fenCoordinate });
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: null,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
         const initialAction: IntermediateTurnAction = { ...turn.action };
         const expectedAction: IntermediateTurnAction = {
             whiteMove: null, blackMove, whiteTarget: null, blackTarget: fenCoordinate

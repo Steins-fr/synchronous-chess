@@ -9,15 +9,18 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     }
 
     public move(): void {
-
+        // Nothing to do
     }
 
     public skip(): void {
-
+        // Nothing to do
     }
 
     public promote(): void {
-
+        // Nothing to do
     }
 
+    public override destroy(): void {
+        // Nothing to do
+    }
 }

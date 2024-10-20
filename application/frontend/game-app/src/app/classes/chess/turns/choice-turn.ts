@@ -5,9 +5,7 @@ import ChoiceTurnAction from './turn-actions/choice-turn-action';
 
 export default abstract class ChoiceTurn<T extends ChoiceTurnAction = ChoiceTurnAction> extends Turn<T> {
 
-    public abstract readonly action: T;
-
-    public constructor(public readonly type: TurnType, public readonly nextTurn: Turn) {
+    protected constructor(type: TurnType, public readonly nextTurn: Turn) {
         super(type, TurnCategory.CHOICE);
     }
 

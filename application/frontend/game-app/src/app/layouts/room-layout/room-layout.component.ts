@@ -1,14 +1,20 @@
-import { Component, Input } from '@angular/core';
-import { RoomService } from '../../services/room/room.service';
+import { CommonModule } from '@angular/common';
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RoomSetupComponent } from '@app/components/shared/room-setup/room-setup.component';
+import RoomSetupService from '@app/services/room-setup/room-setup.service';
 
 @Component({
     selector: 'app-room-layout',
     templateUrl: './room-layout.component.html',
-    styleUrls: ['./room-layout.component.scss']
+    styleUrls: ['./room-layout.component.scss'],
+    standalone: true,
+    imports: [CommonModule, RoomSetupComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoomLayoutComponent {
-    @Input() public maxPlayer: number;
-    @Input() public isDebugging: boolean = false;
+    @Input({ required: true }) public maxPlayer!: number;
 
-    public constructor(public roomService: RoomService) { }
+    private readonly roomSetupService = inject(RoomSetupService);
+    protected readonly isSetup = toSignal(this.roomSetupService.roomIsSetup$);
 }

@@ -9,7 +9,7 @@ resource "aws_s3_bucket" "site_logs" {
 }
 
 data "template_file" "bucket_static_policy" {
-  template = "${file("${path.module}/bucket_static_policy.json")}"
+  template = file("${path.module}/bucket_static_policy.json")
   vars = {
     origin_access_identity_arn = var.origin_access_identity_arn
     bucket                     = var.domain_name
@@ -32,7 +32,7 @@ resource "aws_s3_bucket" "sc_bucket_static" {
 }
 
 resource "aws_s3_bucket_public_access_block" "sc_bucket_static" {
-  bucket = "${aws_s3_bucket.sc_bucket_static.id}"
+  bucket = aws_s3_bucket.sc_bucket_static.id
 
   block_public_acls       = false
   block_public_policy     = false
@@ -49,7 +49,7 @@ resource "aws_s3_bucket_object" "js" {
   acl          = "public-read"
   content_type = "application/javascript"
 
-  etag = "${filemd5("${local.frontend_path}/${each.value}")}"
+  etag = filemd5("${local.frontend_path}/${each.value}")
 }
 
 resource "aws_s3_bucket_object" "css" {

@@ -1,6 +1,6 @@
-import { Signal } from '../../../classes/webrtc/webrtc';
+import { RtcSignal } from '@app/classes/webrtc/webrtc';
 
 export default interface SignalNotification {
     from: string;
-    signal: Signal;
+    signal: RtcSignal;
 }

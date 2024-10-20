@@ -1,60 +1,60 @@
-import SynchronousChessGame from './synchronous-chess-game';
-import Vec2 from 'vec2';
-import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import ChessRules, { FenPiece, PieceColor, PieceType } from '../rules/chess-rules';
-import { Column, Row } from '../interfaces/CoordinateMove';
-import Move, { FenColumn, FenCoordinate, FenRow } from '../interfaces/move';
-import Turn from '../turns/turn';
-import TurnType, { TurnCategory } from '../turns/turn.types';
-import SynchroneTurnAction from '../turns/turn-actions/synchrone-turn-action';
-import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-action';
-import { IntermediateTurn } from '../turns/intermediate-turn';
-import MoveTurn from '../turns/move-turn';
-import ChoiceTurn from '../turns/choice-turn';
-import MoveTurnAction from '../turns/turn-actions/move-turn-action';
-import SynchroneTurn from '../turns/synchrone-turn';
-import PromotionTurn from '../turns/promotion-turn';
-import PromotionTurnAction from '../turns/turn-actions/promotion-turn-action';
-import SynchronousChessRules from '../rules/synchronous-chess-rules';
+import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
+import { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenColumn, FenCoordinate, FenRow } from '@app/classes/chess/interfaces/move';
+import ChessRules, { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
+import ChoiceTurn from '@app/classes/chess/turns/choice-turn';
+import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
+import MoveTurn from '@app/classes/chess/turns/move-turn';
+import PromotionTurn from '@app/classes/chess/turns/promotion-turn';
+import SyncTurn from '@app/classes/chess/turns/sync-turn';
+import Turn from '@app/classes/chess/turns/turn';
+import IntermediateTurnAction from '@app/classes/chess/turns/turn-actions/intermediate-turn-action';
+import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
+import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion-turn-action';
+import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
+import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
+import { Vec2 } from '@app/classes/vector/vec2';
+import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
 
 class ProtectedTest extends SynchronousChessGame {
-    public runSynchroneTurn(): void {
-        super.runSynchroneTurn();
+    public override runSyncTurn(): void {
+        super.runSyncTurn();
     }
 
-    public runIntermediateTurn(): void {
+    public override runIntermediateTurn(): void {
         super.runIntermediateTurn();
     }
 
-    public nextTurn(): void {
+    public override nextTurn(): void {
         super.nextTurn();
     }
 
-    public getRules(color: PieceColor): SynchronousChessRules {
+    public override getRules(color: PieceColor): SynchronousChessRules {
         return super.getRules(color);
     }
 
-    public isTurnValid(): boolean {
+    public override isTurnValid(): boolean {
         return super.isTurnValid();
     }
 
-    public getIntermediateTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
+    public override getIntermediateTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
         return super.getIntermediateTurnPossiblePlays(possiblePlays, position);
     }
 
-    public canPromote(move: Move): boolean {
+    public override canPromote(move: Move | null): boolean {
         return super.canPromote(move);
     }
 
-    public checkPromotionTurn(): void {
+    public override checkPromotionTurn(): void {
         super.checkPromotionTurn();
     }
 
-    public runPromotionTurn(): void {
+    public override runPromotionTurn(): void {
         super.runPromotionTurn();
     }
 
-    public verifyCheck(): void {
+    public override verifyCheck(): void {
         super.verifyCheck();
     }
 
@@ -63,6 +63,10 @@ class ProtectedTest extends SynchronousChessGame {
     }
 
     public getOldTurn(): Turn {
+        if (!this.oldTurn) {
+            throw new Error('No old turn');
+        }
+
         return this.oldTurn;
     }
 }
@@ -370,7 +374,7 @@ describe('SynchronousChessGame', () => {
             value: runSynchroneTurnSpy
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -516,14 +520,14 @@ describe('SynchronousChessGame', () => {
         const move1: Move = { from: [FenColumn.B, 8], to: [FenColumn.D, 7] };
         const move2: Move = { from: [FenColumn.D, 5], to: [FenColumn.D, 7] };
 
-        const action: SynchroneTurnAction = { whiteMove: move1, blackMove: move2 };
+        const action: SyncTurnAction = { whiteMove: move1, blackMove: move2 };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -556,7 +560,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
 
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
@@ -570,14 +574,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -611,7 +615,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -621,14 +625,14 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
-        const action: SynchroneTurnAction = { whiteMove: null, blackMove: null };
+        const action: SyncTurnAction = { whiteMove: null, blackMove: null };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -662,7 +666,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -675,13 +679,13 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.A, 8], to: [FenColumn.A, 4] };
         const whiteMove: Move = { from: [FenColumn.A, 1], to: [FenColumn.A, 4] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -714,7 +718,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -727,14 +731,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.A, 5], to: [FenColumn.A, 4] };
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.A, 4] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -768,7 +772,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -781,13 +785,13 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.A, 5], to: [FenColumn.A, 4] };
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.A, 4] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -820,7 +824,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -833,14 +837,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.A, 8], to: [FenColumn.A, 1] };
         const whiteMove: Move = { from: [FenColumn.A, 1], to: [FenColumn.A, 8] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -874,7 +878,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -886,14 +890,14 @@ describe('SynchronousChessGame', () => {
 
         const whiteMove: Move = { from: [FenColumn.A, 1], to: [FenColumn.A, 8] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove: null };
+        const action: SyncTurnAction = { whiteMove, blackMove: null };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -927,7 +931,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -939,14 +943,14 @@ describe('SynchronousChessGame', () => {
 
         const blackMove: Move = { from: [FenColumn.A, 8], to: [FenColumn.A, 1] };
 
-        const action: SynchroneTurnAction = { whiteMove: null, blackMove };
+        const action: SyncTurnAction = { whiteMove: null, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -980,7 +984,7 @@ describe('SynchronousChessGame', () => {
 
         // When
         const initBoard: FenBoard = game.fenBoard;
-        game.runSynchroneTurn();
+        game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -993,7 +997,12 @@ describe('SynchronousChessGame', () => {
         const whiteMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.D, 7] };
         const blackMove: Move = { from: [FenColumn.D, 5], to: [FenColumn.D, 7] };
 
-        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.from, blackTarget: blackMove.from };
+        const action: IntermediateTurnAction = {
+            whiteMove,
+            blackMove,
+            whiteTarget: whiteMove.from,
+            blackTarget: blackMove.from
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1047,7 +1056,12 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: IntermediateTurnAction = { whiteMove, blackMove, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+        const action: IntermediateTurnAction = {
+            whiteMove,
+            blackMove,
+            whiteTarget: whiteMove.to,
+            blackTarget: blackMove.to
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1101,7 +1115,12 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.B, 8], to: [FenColumn.C, 6] };
         const whiteMove: Move = { from: [FenColumn.B, 1], to: [FenColumn.C, 3] };
 
-        const action: IntermediateTurnAction = { whiteMove: null, blackMove: null, whiteTarget: whiteMove.to, blackTarget: blackMove.to };
+        const action: IntermediateTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+            whiteTarget: whiteMove.to,
+            blackTarget: blackMove.to
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1154,14 +1173,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.E, 8], to: [FenColumn.E, 7] };
         const whiteMove: Move = { from: [FenColumn.E, 1], to: [FenColumn.E, 2] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1197,7 +1216,7 @@ describe('SynchronousChessGame', () => {
         const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
 
         // When
-        game.runSynchroneTurn();
+        game.runSyncTurn();
 
         // Then
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -1213,14 +1232,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.E, 8], to: [FenColumn.G, 8] };
         const whiteMove: Move = { from: [FenColumn.A, 2], to: [FenColumn.A, 3] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1256,7 +1275,7 @@ describe('SynchronousChessGame', () => {
         const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
 
         // When
-        game.runSynchroneTurn();
+        game.runSyncTurn();
 
         // Then
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -1272,14 +1291,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.H, 8], to: [FenColumn.H, 7] };
         const whiteMove: Move = { from: [FenColumn.A, 2], to: [FenColumn.A, 3] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1315,7 +1334,7 @@ describe('SynchronousChessGame', () => {
         const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
 
         // When
-        game.runSynchroneTurn();
+        game.runSyncTurn();
 
         // Then
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -1331,14 +1350,14 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.A, 8], to: [FenColumn.A, 7] };
         const whiteMove: Move = { from: [FenColumn.A, 2], to: [FenColumn.A, 3] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
+        const action: SyncTurnAction = { whiteMove, blackMove };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1374,7 +1393,7 @@ describe('SynchronousChessGame', () => {
         const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
 
         // When
-        game.runSynchroneTurn();
+        game.runSyncTurn();
 
         // Then
         expect(game.fenBoard).toEqual(expectedFenBoard);
@@ -1392,15 +1411,20 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
         const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: whiteMove.to };
+        const action: SyncTurnAction = { whiteMove, blackMove };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: blackMove.to,
+            blackTarget: whiteMove.to,
+            blackMove: null,
+            whiteMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1418,7 +1442,6 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
-
 
         const newFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1455,15 +1478,20 @@ describe('SynchronousChessGame', () => {
 
         const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
 
-        const action: SynchroneTurnAction = { whiteMove: null, blackMove };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: blackMove.to, blackTarget: null, blackMove: null };
+        const action: SyncTurnAction = { whiteMove: null, blackMove };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: blackMove.to,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1516,15 +1544,20 @@ describe('SynchronousChessGame', () => {
 
         const whiteMove: Move = { from: [FenColumn.F, 2], to: [FenColumn.F, 4] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove: null };
-        const expectedAction: IntermediateTurnAction = { whiteTarget: null, blackTarget: whiteMove.to, whiteMove: null };
+        const action: SyncTurnAction = { whiteMove, blackMove: null };
+        const expectedAction: IntermediateTurnAction = {
+            whiteTarget: null,
+            blackTarget: whiteMove.to,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1578,15 +1611,18 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.C, 7], to: [FenColumn.C, 5] };
         const whiteMove: Move = { from: [FenColumn.B, 2], to: [FenColumn.B, 4] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
-        const expectedAction: SynchroneTurnAction = {};
+        const action: SyncTurnAction = { whiteMove, blackMove };
+        const expectedAction: SyncTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1627,7 +1663,7 @@ describe('SynchronousChessGame', () => {
         // When
         game.nextTurn();
         // Then
-        expect(game.getTurn().type).toEqual(TurnType.MOVE_SYNCHRONE);
+        expect(game.getTurn().type).toEqual(TurnType.MOVE_SYNC);
         expect(game.getTurn().action).toEqual(expectedAction);
         expect(game.getOldTurn()).toBe(moveTurnSpy);
     });
@@ -1640,15 +1676,18 @@ describe('SynchronousChessGame', () => {
         const blackMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.A, 2] };
         const whiteMove: Move = { from: [FenColumn.E, 6], to: [FenColumn.E, 8] };
 
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
-        const expectedAction: SynchroneTurnAction = {};
+        const action: SyncTurnAction = { whiteMove, blackMove };
+        const expectedAction: SyncTurnAction = {
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
             writable: false
         });
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -1689,7 +1728,7 @@ describe('SynchronousChessGame', () => {
         // When
         game.nextTurn();
         // Then
-        expect(game.getTurn().type).toEqual(TurnType.MOVE_SYNCHRONE);
+        expect(game.getTurn().type).toEqual(TurnType.MOVE_SYNC);
         expect(game.getTurn().action).toEqual(expectedAction);
         expect(game.getOldTurn()).toBe(moveTurnSpy);
     });
@@ -1699,7 +1738,7 @@ describe('SynchronousChessGame', () => {
         ChessBoardHelper.disableCache();
         const game: ProtectedTest = new ProtectedTest();
 
-        const synchroneTurn: SynchroneTurn = new SynchroneTurn();
+        const synchroneTurn: SyncTurn = new SyncTurn();
 
         Object.defineProperty(choiceTurnSpy, 'type', {
             value: TurnType.CHOICE_PROMOTION,
@@ -1727,7 +1766,12 @@ describe('SynchronousChessGame', () => {
         ChessBoardHelper.disableCache();
         const game: ProtectedTest = new ProtectedTest();
 
-        const action: IntermediateTurnAction = { whiteTarget: null, blackTarget: null };
+        const action: IntermediateTurnAction = {
+            whiteTarget: null,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1749,8 +1793,8 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
-        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
+        const blackPosition: Vec2 = new Vec2(Column.C, Row._5);
+        const whitePosition: Vec2 = new Vec2(Column.B, Row._4);
         const blackPossiblePlays: Array<Vec2> = [whitePosition];
         const whitePossiblePlays: Array<Vec2> = [blackPosition];
 
@@ -1772,7 +1816,12 @@ describe('SynchronousChessGame', () => {
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1794,10 +1843,10 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
-        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
-        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2([Column.B, Row._5])];
-        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2([Column.C, Row._4])];
+        const blackPosition: Vec2 = new Vec2(Column.C, Row._5);
+        const whitePosition: Vec2 = new Vec2(Column.B, Row._4);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2(Column.B, Row._5)];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2(Column.C, Row._4)];
         const expectedBlackPossiblePlays: Array<Vec2> = [whitePosition];
         const expectedWhitePossiblePlays: Array<Vec2> = [blackPosition];
 
@@ -1808,7 +1857,7 @@ describe('SynchronousChessGame', () => {
         const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlays(blackPossiblePlays, blackPosition);
 
         // Then
-        expect(game.getOldTurn()).toEqual(undefined);
+        expect(game.getOldTurn()).toBeUndefined();
         expect(whiteResult).toEqual(expectedWhitePossiblePlays);
         expect(blackResult).toEqual(expectedBlackPossiblePlays);
     });
@@ -1820,11 +1869,16 @@ describe('SynchronousChessGame', () => {
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const oldAction: SynchroneTurnAction = {
+        const oldAction: SyncTurnAction = {
             whiteMove: { from: [FenColumn.C, 2], to: blackTarget },
             blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
         };
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
         const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
 
         Object.defineProperty(game, 'turn', {
@@ -1843,10 +1897,10 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
-        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
-        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2([Column.B, Row._5])];
-        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2([Column.C, Row._4])];
+        const blackPosition: Vec2 = new Vec2(Column.C, Row._5);
+        const whitePosition: Vec2 = new Vec2(Column.B, Row._4);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2(Column.B, Row._5)];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2(Column.C, Row._4)];
         const expectedBlackPossiblePlays: Array<Vec2> = [];
         const expectedWhitePossiblePlays: Array<Vec2> = [];
 
@@ -1868,11 +1922,16 @@ describe('SynchronousChessGame', () => {
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const oldAction: SynchroneTurnAction = {
+        const oldAction: SyncTurnAction = {
             whiteMove: null,
             blackMove: null
         };
-        const action: IntermediateTurnAction = { whiteTarget, blackTarget };
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -1902,10 +1961,10 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const blackPosition: Vec2 = new Vec2([Column.C, Row._5]);
-        const whitePosition: Vec2 = new Vec2([Column.B, Row._4]);
-        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2([Column.B, Row._5])];
-        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2([Column.C, Row._4])];
+        const blackPosition: Vec2 = new Vec2(Column.C, Row._5);
+        const whitePosition: Vec2 = new Vec2(Column.B, Row._4);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2(Column.B, Row._5)];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2(Column.C, Row._4)];
         const expectedBlackPossiblePlays: Array<Vec2> = [whitePosition];
         const expectedWhitePossiblePlays: Array<Vec2> = [blackPosition];
 
@@ -1986,8 +2045,8 @@ describe('SynchronousChessGame', () => {
 
         const whiteMove: Move = { from: [FenColumn.A, FenRow._7], to: [FenColumn.A, FenRow._8] };
         const blackMove: Move = { from: [FenColumn.A, FenRow._2], to: [FenColumn.A, FenRow._1] };
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
-        const nextTurn: SynchroneTurn = new SynchroneTurn();
+        const action: SyncTurnAction = { whiteMove, blackMove };
+        const nextTurn: SyncTurn = new SyncTurn();
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -2029,8 +2088,8 @@ describe('SynchronousChessGame', () => {
 
         const whiteMove: Move = { from: [FenColumn.A, FenRow._6], to: [FenColumn.A, FenRow._7] };
         const blackMove: Move = { from: [FenColumn.A, FenRow._3], to: [FenColumn.A, FenRow._2] };
-        const action: SynchroneTurnAction = { whiteMove, blackMove };
-        const nextTurn: SynchroneTurn = new SynchroneTurn();
+        const action: SyncTurnAction = { whiteMove, blackMove };
+        const nextTurn: SyncTurn = new SyncTurn();
 
         Object.defineProperty(moveTurnSpy, 'action', {
             value: action,
@@ -2192,7 +2251,7 @@ describe('SynchronousChessGame', () => {
         const game: ProtectedTest = new ProtectedTest();
 
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -2227,7 +2286,7 @@ describe('SynchronousChessGame', () => {
         const game: ProtectedTest = new ProtectedTest();
 
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -2262,7 +2321,7 @@ describe('SynchronousChessGame', () => {
         const game: ProtectedTest = new ProtectedTest();
 
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -2331,7 +2390,7 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
         Object.defineProperty(moveTurnSpy, 'type', {
-            value: TurnType.MOVE_SYNCHRONE,
+            value: TurnType.MOVE_SYNC,
             writable: false
         });
         Object.defineProperty(game, 'turn', {
@@ -2343,9 +2402,9 @@ describe('SynchronousChessGame', () => {
         const blackKing: Vec2 = new Vec2(Column.E, Row._8);
 
         const whitePawnExpectedPlays: Array<Vec2> = [];
-        const whiteKingExpectedPlays: Array<Vec2> = [new Vec2([Column.F, Row._2])];
+        const whiteKingExpectedPlays: Array<Vec2> = [new Vec2(Column.F, Row._2)];
         const blackPawnExpectedPlays: Array<Vec2> = [];
-        const blackKingExpectedPlays: Array<Vec2> = [new Vec2([Column.D, Row._7])];
+        const blackKingExpectedPlays: Array<Vec2> = [new Vec2(Column.D, Row._7)];
         game.isBlackInCheck = true;
         game.isWhiteInCheck = true;
 
@@ -2385,8 +2444,8 @@ describe('SynchronousChessGame', () => {
         Object.defineProperty(game, 'turn', {
             value: moveTurnSpy
         });
-        const whitePawnExpectedPlays: Array<Vec2> = [new Vec2([Column.B, Row._3]), new Vec2([Column.B, Row._4])];
-        const blackPawnExpectedPlays: Array<Vec2> = [new Vec2([Column.B, Row._6]), new Vec2([Column.B, Row._5])];
+        const whitePawnExpectedPlays: Array<Vec2> = [new Vec2(Column.B, Row._3), new Vec2(Column.B, Row._4)];
+        const blackPawnExpectedPlays: Array<Vec2> = [new Vec2(Column.B, Row._6), new Vec2(Column.B, Row._5)];
         const whitePawn: Vec2 = new Vec2(Column.B, Row._2);
         const blackPawn: Vec2 = new Vec2(Column.B, Row._7);
 

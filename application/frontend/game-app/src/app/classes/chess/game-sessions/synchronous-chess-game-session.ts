@@ -1,10 +1,8 @@
-import { NgZone } from '@angular/core';
-import { PieceColor, PieceType } from '../rules/chess-rules';
-import SynchronousChessGame from '../games/synchronous-chess-game';
 import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
-import Vec2 from 'vec2';
+import SynchronousChessGame from '../games/synchronous-chess-game';
+import CoordinateMove from '../interfaces/CoordinateMove';
 import Move from '../interfaces/move';
-import CoordinateMove, { Coordinate } from '../interfaces/CoordinateMove';
+import { PieceColor, PieceType, FenPiece } from '../rules/chess-rules';
 
 export interface SessionConfiguration {
     whitePlayer?: string;
@@ -20,9 +18,6 @@ export default abstract class SynchronousChessGameSession {
 
     public abstract myColor: PieceColor;
 
-    public constructor(protected readonly ngZone: NgZone) {
-    }
-
     public abstract get playingColor(): PieceColor;
 
     public get spectatorNumber(): number {
@@ -34,11 +29,11 @@ export default abstract class SynchronousChessGameSession {
     }
 
     protected runMove(color: PieceColor, move: Move | null): boolean {
-        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from)) !== color) {
+        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from) ?? FenPiece.EMPTY) !== color) {
             return false;
         }
 
-        if (this.game.registerMove(move, color) === false) {
+        if (!this.game.registerMove(move, color)) {
             return false;
         }
 
@@ -55,7 +50,7 @@ export default abstract class SynchronousChessGameSession {
 
     protected runPromotion(color: PieceColor, pieceType: PieceType): boolean {
 
-        if (this.game.promote(pieceType, color) === false) {
+        if (!this.game.promote(pieceType, color)) {
             return false;
         }
 
@@ -65,4 +60,5 @@ export default abstract class SynchronousChessGameSession {
 
     public abstract move(move: Move | null): void;
     public abstract promote(pieceType: PieceType): void;
+    public abstract destroy(): void;
 }

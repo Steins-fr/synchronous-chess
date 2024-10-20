@@ -6,11 +6,11 @@ import Turn from './turn';
 
 export default abstract class MoveTurn<T extends MoveTurnAction = MoveTurnAction> extends Turn<T> {
 
-    public abstract readonly action: T;
+    public abstract override readonly action: T;
 
-    public constructor(public readonly type: TurnType) {
+    protected constructor(type: TurnType) {
         super(type, TurnCategory.MOVE);
     }
 
-    public abstract registerMove(move: Move, color: PieceColor): void;
+    public abstract registerMove(move: Move | null, color: PieceColor): void;
 }

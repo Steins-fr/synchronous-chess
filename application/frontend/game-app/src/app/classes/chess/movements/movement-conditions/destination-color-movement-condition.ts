@@ -1,7 +1,7 @@
-import Vec2 from 'vec2';
-import { PieceColor } from '../../rules/chess-rules';
-import ChessBoardHelper, { FenBoard } from '../../../../helpers/chess-board-helper';
-import MovementCondition from './movement-condition';
+import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
+import { PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
 
 export default class DestinationColorMovementCondition extends MovementCondition {
 

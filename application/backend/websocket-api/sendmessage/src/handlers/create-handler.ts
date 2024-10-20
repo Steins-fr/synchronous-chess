@@ -26,7 +26,7 @@ export default class CreateHandler extends MessageHandler {
         }
 
         try {
-            const data: CreateRequest = JSON.parse(this.payload.data);
+            const data: CreateRequest = this.payload.data;
             if (!data.roomName || !data.maxPlayer || !data.playerName) {
                 throw new BadRequestException(CreateHandler.ERROR_PARSING);
             }

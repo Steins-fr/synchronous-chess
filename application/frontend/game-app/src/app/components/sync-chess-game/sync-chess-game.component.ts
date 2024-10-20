@@ -1,24 +1,32 @@
-import { Component, OnInit, NgZone } from '@angular/core';
-import Vec2 from 'vec2';
-import ChessBoardHelper, { ValidPlayBoard } from '../../helpers/chess-board-helper';
-import { RoomService, RoomServiceEventType } from '../../services/room/room.service';
-import SynchronousChessGameSession from '../../classes/chess/game-sessions/synchronous-chess-game-session';
-import SynchronousChessLocalGameSession from '../../classes/chess/game-sessions/synchronous-chess-local-game-session';
-import { RoomMessage } from '../../classes/webrtc/messages/room-message';
-import SynchronousChessGameSessionBuilder from '../../classes/chess/game-sessions/synchronous-chess-game-session-builder';
-import { RoomManager } from '../../classes/room-manager/room-manager';
-import CoordinateMove, { Coordinate } from '../../classes/chess/interfaces/CoordinateMove';
-import TurnType, { TurnCategory } from '../../classes/chess/turns/turn.types';
-import { PieceColor, FenPiece } from '../../classes/chess/rules/chess-rules';
-import MoveTurnAction from '../../classes/chess/turns/turn-actions/move-turn-action';
-import Move from '../../classes/chess/interfaces/move';
+import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGameSessionBuilder
+    from '@app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
+import SynchronousChessLocalGameSession from '@app/classes/chess/game-sessions/synchronous-chess-local-game-session';
+import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
+import Move from '@app/classes/chess/interfaces/move';
+import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
+import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { ChessBoardComponent } from '@app/components/chess/chess-board/chess-board.component';
+import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
+import { ChessPromotionComponent } from '@app/components/chess/chess-promotion/chess-promotion.component';
+import ChessBoardHelper, { ValidPlayBoard } from '@app/helpers/chess-board-helper';
+import { Room } from '@app/services/room-manager/classes/room/room';
 
 @Component({
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
-    styleUrls: ['./sync-chess-game.component.scss']
+    styleUrls: ['./sync-chess-game.component.scss'],
+    standalone: true,
+    imports: [CommonModule, ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
 })
-export class SyncChessGameComponent implements OnInit {
+export class SyncChessGameComponent implements OnChanges, OnDestroy {
+
+    @Input({ required: true }) room: Room<any> | undefined;
 
     public gameSession: SynchronousChessGameSession;
     public playedPiece: Vec2 = new Vec2(-1, -1);
@@ -28,19 +36,22 @@ export class SyncChessGameComponent implements OnInit {
     public whiteColor: PieceColor = PieceColor.WHITE;
     public blackColor: PieceColor = PieceColor.BLACK;
 
-    public constructor(
-        public roomService: RoomService,
-        private readonly ngZone: NgZone) {
-        this.gameSession = new SynchronousChessLocalGameSession(ngZone);
+    public constructor() {
+        this.gameSession = new SynchronousChessLocalGameSession();
     }
 
-    public ngOnInit(): void {
-        this.roomService.notifier.follow(RoomServiceEventType.ROOM_MANAGER, this, (roomTypeMessage: RoomMessage<RoomManager>) => this.onRoomManager(roomTypeMessage.payload));
+    public ngOnChanges(changes: SimpleChanges): void {
+        if (changes['room']) {
+            if (this.room) {
+                this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.room);
+            } else {
+                this.gameSession = new SynchronousChessLocalGameSession();
+            }
+        }
     }
 
-    private onRoomManager(roomManager: RoomManager): void {
-        this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.roomService, roomManager, this.ngZone);
-        this.roomService.notifier.unfollow(RoomServiceEventType.ROOM_MANAGER, this);
+    public ngOnDestroy(): void {
+        this.gameSession.destroy();
     }
 
     public piecePicked(cellPos: Vec2): void {
@@ -66,13 +77,9 @@ export class SyncChessGameComponent implements OnInit {
         this.playedPiece = new Vec2(-1, -1);
     }
 
-    private resetHighlight(): void {
-        this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
-    }
-
     public turnType(): string {
         switch (this.gameSession.game.getTurnType()) {
-            case TurnType.MOVE_SYNCHRONE:
+            case TurnType.MOVE_SYNC:
                 return 'Synchronisé';
             case TurnType.MOVE_INTERMEDIATE:
                 return 'Intermédiaire';
@@ -108,30 +115,34 @@ export class SyncChessGameComponent implements OnInit {
         return action === null ? '' : this.formatLastMove(action.whiteMove);
     }
 
-    private formatLastMove(move: Move | null): string {
-        if (move === null) {
-            return 'a passé';
-        }
-        const from: string = `${move.from[0].toUpperCase()}${move.from[1]}`;
-        const to: string = `${move.to[0].toUpperCase()}${move.to[1]}`;
-
-        return `${from} -> ${to}`;
-    }
-
     public blackLastMove(): string {
         const action: MoveTurnAction | null = this.gameSession.game.lastMoveTurnAction();
         return action === null ? '' : this.formatLastMove(action.blackMove);
     }
 
     public displayBlackInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.BLACK && this.gameSession.game.isCheckmate() === false;
+        return this.gameSession.playingColor === PieceColor.BLACK && !this.gameSession.game.isCheckmate();
     }
 
     public displayWhiteInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.WHITE && this.gameSession.game.isCheckmate() === false;
+        return this.gameSession.playingColor === PieceColor.WHITE && !this.gameSession.game.isCheckmate();
     }
 
     public skip(): void {
         this.gameSession.move(null);
+    }
+
+    private resetHighlight(): void {
+        this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
+    }
+
+    private formatLastMove(move: Move | null): string {
+        if (move === null) {
+            return 'a passé';
+        }
+        const from: string = `${ move.from[0].toUpperCase() }${ move.from[1] }`;
+        const to: string = `${ move.to[0].toUpperCase() }${ move.to[1] }`;
+
+        return `${ from } -> ${ to }`;
     }
 }

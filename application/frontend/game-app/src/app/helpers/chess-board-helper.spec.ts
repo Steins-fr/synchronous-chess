@@ -1,9 +1,9 @@
+import { Vec2 } from '@app/classes/vector/vec2';
 import ChessBoardHelper, { FenBoard, SafeBoard } from './chess-board-helper';
-import Vec2 from 'vec2';
-import SynchronousChessRules from '../classes/chess/rules/synchronous-chess-rules';
-import { FenPiece, PieceColor, PieceType } from '../classes/chess/rules/chess-rules';
-import CoordinateMove, { Column, Row } from '../classes/chess/interfaces/CoordinateMove';
-import Move, { FenCoordinate, FenColumn, FenRow } from '../classes/chess/interfaces/move';
+import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
+import { FenPiece, PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
+import CoordinateMove, { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import Move, { FenCoordinate, FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
 
 describe('ChessHelper', () => {
 
@@ -236,16 +236,16 @@ describe('ChessHelper', () => {
 
         // When
 
-        const resultFirstRow: boolean = positions[0].every((vec: Vec2) => ChessBoardHelper.isOutOfBoardByVec(vec) === true);
-        const resultLastRow: boolean = positions[9].every((vec: Vec2) => ChessBoardHelper.isOutOfBoardByVec(vec) === true);
-        const resultFirstColumn: boolean = positions.every((row: Array<Vec2>) => ChessBoardHelper.isOutOfBoardByVec(row[0]) === true);
-        const resultLastColumn: boolean = positions.every((row: Array<Vec2>) => ChessBoardHelper.isOutOfBoardByVec(row[9]) === true);
+        const resultFirstRow: boolean = positions[0].every((vec: Vec2) => ChessBoardHelper.isOutOfBoardByVec(vec));
+        const resultLastRow: boolean = positions[9].every((vec: Vec2) => ChessBoardHelper.isOutOfBoardByVec(vec));
+        const resultFirstColumn: boolean = positions.every((row: Array<Vec2>) => ChessBoardHelper.isOutOfBoardByVec(row[0]));
+        const resultLastColumn: boolean = positions.every((row: Array<Vec2>) => ChessBoardHelper.isOutOfBoardByVec(row[9]));
         const resultBoard: boolean = positions.every((row: Array<Vec2>, y: number) => row.every((vec: Vec2, x: number) => {
             if (x === 0 || y === 0 || x === 9 || y === 9) { // Remove cases tested above
                 return true;
             }
 
-            return ChessBoardHelper.isOutOfBoardByVec(vec) === false;
+            return !ChessBoardHelper.isOutOfBoardByVec(vec);
         }));
 
         // Then
@@ -282,52 +282,40 @@ describe('ChessHelper', () => {
         ];
 
         // When
-        const resultRow1: boolean = fenBoard[0].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 0])) === FenPiece.BLACK_BISHOP
+        fenBoard[0].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 0)) === FenPiece.BLACK_BISHOP).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow2: boolean = fenBoard[1].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 1])) === FenPiece.BLACK_KING
+        fenBoard[1].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 1)) === FenPiece.BLACK_KING).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow3: boolean = fenBoard[2].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 2])) === FenPiece.BLACK_KNIGHT
+        fenBoard[2].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 2)) === FenPiece.BLACK_KNIGHT).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow4: boolean = fenBoard[3].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 3])) === FenPiece.EMPTY
+        fenBoard[3].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 3)) === FenPiece.EMPTY).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow5: boolean = fenBoard[4].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 4])) === FenPiece.EMPTY
+        fenBoard[4].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 4)) === FenPiece.EMPTY).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow6: boolean = fenBoard[5].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 5])) === FenPiece.BLACK_PAWN
+        fenBoard[5].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 5)) === FenPiece.BLACK_PAWN).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow7: boolean = fenBoard[6].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 6])) === FenPiece.BLACK_QUEEN
+        fenBoard[6].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 6)) === FenPiece.BLACK_QUEEN).withContext(`${x},0`).toBeTruthy()
         );
-        const resultRow8: boolean = fenBoard[7].every(
-            (_: any, x: number) => ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2([x, 7])) === FenPiece.BLACK_ROOK
+        fenBoard[7].forEach(
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 7)) === FenPiece.BLACK_ROOK).withContext(`${x},0`).toBeTruthy()
         );
-
-        const resultOut: boolean = vecOutOfBound.every(
-            (vec: Vec2) => ChessBoardHelper.getFenPieceByVec(fenBoard, vec) === null
+        vecOutOfBound.forEach(
+            (vec: Vec2) => expect(() => ChessBoardHelper.getFenPieceByVec(fenBoard, vec)).withContext(`${vec.x},${vec.y}`).toThrowError()
         );
-
-        // Then
-        expect(resultRow1).toBeTruthy();
-        expect(resultRow2).toBeTruthy();
-        expect(resultRow3).toBeTruthy();
-        expect(resultRow4).toBeTruthy();
-        expect(resultRow5).toBeTruthy();
-        expect(resultRow6).toBeTruthy();
-        expect(resultRow7).toBeTruthy();
-        expect(resultRow8).toBeTruthy();
-        expect(resultOut).toBeTruthy();
     });
 
     it('should set value into a new board', () => {
         // Given
 
-        const validPosition: Vec2 = new Vec2([Column.B, Row._5]);
-        const invalidPosition: Vec2 = new Vec2([11, -1]);
+        const validPosition: Vec2 = new Vec2(Column.B, Row._5);
+        const invalidPosition: Vec2 = new Vec2(11, -1);
 
         const initialFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -559,9 +547,9 @@ describe('ChessHelper', () => {
     it('should indicates the rook targeted by the castling', () => {
         // Given
 
-        const positionFrom: Vec2 = new Vec2([4, 0]);
-        const positionTo1: Vec2 = new Vec2([6, 0]);
-        const positionTo2: Vec2 = new Vec2([2, 0]);
+        const positionFrom: Vec2 = new Vec2(4, 0);
+        const positionTo1: Vec2 = new Vec2(6, 0);
+        const positionTo2: Vec2 = new Vec2(2, 0);
 
         // When
 

@@ -27,7 +27,7 @@ export default class JoinHandler extends MessageHandler {
         }
 
         try {
-            const data: JoinRequest = JSON.parse(this.payload.data);
+            const data: JoinRequest = this.payload.data;
             if (!data.roomName || !data.playerName) {
                 throw new BadRequestException(JoinHandler.ERROR_PARSING);
             }
