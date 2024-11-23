@@ -1,4 +1,4 @@
-import { Room, BadRequestException, Player } from '/opt/nodejs/room-manager';
+import { Room, BadRequestException, Player } from '../../../../layers/room-manager/src/index';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '../types/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 
