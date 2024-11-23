@@ -1,4 +1,4 @@
-import { RoomService, ConnectionService, ExceptionTypeEnum, BadRequestException } from '/opt/nodejs/room-manager';
+import { RoomService, ConnectionService, ExceptionTypeEnum, BadRequestException } from '../../../../layers/room-manager/src/index';
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import {
     SocketPacketRequestPayload,
