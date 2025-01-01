@@ -8,6 +8,7 @@
         "watch": "ng build --watch --configuration development",
         "build:prod": "ng build --prod",
         "build:staging": "ng build --configuration staging",
+        "build:dev": "ng build --configuration development",
         "test": "ng test",
         "lint": "ng lint"
     },

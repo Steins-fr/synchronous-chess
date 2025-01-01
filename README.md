@@ -78,7 +78,7 @@ The synchronous chess board game with chat.
 
 #### Room Table
 
-- ID: Id of the room also the room name;
+- id: Id of the room also the room name;
 - connectionId: Websocket connection id of the host;
 - hostPlayer: Player name of the host;
 - maxPlayer: Maximum of player that can join the room;

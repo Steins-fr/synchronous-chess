@@ -1,4 +1,4 @@
-variable "domain" {
+variable "directory" {
   description = "Directory name of the API"
   type        = string
 }
@@ -12,13 +12,6 @@ variable "role" {
   description = "Role arn"
   type        = string
 }
-
-variable "layers" {
-  description = "Layers arn"
-  type        = list(string)
-  default     = []
-}
-
 
 variable "stage" {
   description = "Stage"

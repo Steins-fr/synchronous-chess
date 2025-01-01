@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ES2022",
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "esModuleInterop": true,
+        "declaration": false,
+        "moduleResolution": "node",
+        "baseUrl": "./",
+        "typeRoots": ["node_modules/@types"],
+        "types": ["node"],
+        "paths": {
+            "@exceptions/*": ["shared/exceptions/*"],
+            "@helpers/*": ["shared/helpers/*"],
+            "@models/*": ["shared/models/*"],
+            "@repositories/*": ["shared/repositories/*"],
+            "@services/*": ["shared/services/*"],
+        },
+    }
+}

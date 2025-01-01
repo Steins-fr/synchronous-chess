@@ -52,9 +52,8 @@ module "sc_database_rooms" {
   source = "./modules/aws-dynamodb"
 
   name       = "rooms"
-  hash-key   = "ID"
-  range-key  = "connectionId"
-  attributes = ["ID", "connectionId"]
+  hash-key   = "id"
+  attributes = ["id"]
 
   stage = var.stage
 }
@@ -97,18 +96,6 @@ module "sc_api_gateway_domain" {
 }
 
 /**
- * Layers
- */
-module "sc_layer_room_manager" {
-  source = "./modules/aws-lambda-layer"
-
-  name        = "room_manager"
-  domain      = "layers"
-  folder_name = "room-manager"
-  stage       = var.stage
-}
-
-/**
  * Lambdas
  */
 module "sc_role_lambda_basic" {
@@ -116,15 +103,6 @@ module "sc_role_lambda_basic" {
   name     = "sc_lambda_basic_${var.stage}"
   policies = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
   stage    = var.stage
-}
-
-module "sc_lambda_onconnect" {
-  source = "./modules/aws-lambda-api"
-
-  domain = "websocket-api"
-  name   = "onconnect"
-  role   = module.sc_role_lambda_basic.arn
-  stage  = var.stage
 }
 
 module "sc_database_policy" {
@@ -153,14 +131,22 @@ module "sc_role_lambda_dynamo" {
   stage = var.stage
 }
 
+module "sc_lambda_onconnect" {
+  source = "./modules/aws-lambda-api"
+
+  directory = "websocket-api"
+  name      = "onconnect"
+  role      = module.sc_role_lambda_basic.arn
+  stage     = var.stage
+}
+
 module "sc_lambda_ondisconnect" {
   source = "./modules/aws-lambda-api"
 
-  domain = "websocket-api"
-  name   = "ondisconnect"
-  role   = module.sc_role_lambda_dynamo.arn
-  layers = [module.sc_layer_room_manager.layer_arn]
-  stage  = var.stage
+  directory = "websocket-api"
+  name      = "ondisconnect"
+  role      = module.sc_role_lambda_dynamo.arn
+  stage     = var.stage
   environment = {
     TABLE_NAME_ROOMS       = module.sc_database_rooms.name
     TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
@@ -170,11 +156,10 @@ module "sc_lambda_ondisconnect" {
 module "sc_lambda_sendmessage" {
   source = "./modules/aws-lambda-api"
 
-  domain = "websocket-api"
-  name   = "sendmessage"
-  role   = module.sc_role_lambda_dynamo.arn
-  layers = [module.sc_layer_room_manager.layer_arn]
-  stage  = var.stage
+  directory = "websocket-api"
+  name      = "sendmessage"
+  role      = module.sc_role_lambda_dynamo.arn
+  stage     = var.stage
   environment = {
     TABLE_NAME_ROOMS       = module.sc_database_rooms.name
     TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
@@ -237,7 +222,7 @@ module "sc_bucket_angular" {
 
   domain      = "game-app"
   domain_name = local.front_domain_name
-  src_path    = "dist/synchronous-chess/browser"
+  src_path    = "dist/game-app/browser"
   stage       = var.stage
 }
 

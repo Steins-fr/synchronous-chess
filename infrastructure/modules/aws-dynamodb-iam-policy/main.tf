@@ -20,7 +20,8 @@ data "aws_iam_policy_document" "dynamodb_allows" {
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
       "dynamodb:Query",
-      "dynamodb:UpdateItem"
+      "dynamodb:UpdateItem",
+      "dynamodb:GetItem"
     ]
 
     resources = [
