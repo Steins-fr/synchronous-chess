@@ -18,13 +18,12 @@ data "aws_iam_policy_document" "allow_access_from_distribution" {
     ]
 
     resources = [
-      var.bucket_arn,
       "${var.bucket_arn}/*",
     ]
 
     condition {
       test     = "StringEquals"
-      variable = "aws:SourceOwner"
+      variable = "aws:SourceArn"
       values   = ["${var.distribution_arn}"]
     }
   }
