@@ -2,7 +2,6 @@ type NotifyCallback<Data> = (data: Data) => void;
 
 interface Follower {
     reference: object;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     notify: NotifyCallback<any>;
 }
 

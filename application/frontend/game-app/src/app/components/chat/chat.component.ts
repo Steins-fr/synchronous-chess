@@ -79,7 +79,7 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
             if (message) {
                 this.onChatMessage(message);
             }
-        }, { allowSignalWrites: true });
+        });
     }
 
     public ngOnInit(): void {
