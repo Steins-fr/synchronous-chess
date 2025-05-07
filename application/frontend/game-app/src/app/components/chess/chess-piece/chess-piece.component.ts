@@ -6,7 +6,6 @@ import { FenPiece } from '@app/classes/chess/rules/chess-rules';
     selector: 'app-chess-piece',
     templateUrl: './chess-piece.component.html',
     styleUrls: ['./chess-piece.component.scss'],
-    standalone: true,
     imports: [CommonModule],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })

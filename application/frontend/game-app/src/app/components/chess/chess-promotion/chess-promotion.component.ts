@@ -9,7 +9,6 @@ import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-pie
     templateUrl: './chess-promotion.component.html',
     styleUrls: ['./chess-promotion.component.scss'],
     imports: [CommonModule, MatGridListModule, ChessPieceComponent],
-    standalone: true,
 })
 export class ChessPromotionComponent {
 

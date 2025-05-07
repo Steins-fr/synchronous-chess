@@ -13,7 +13,6 @@ import { Vector2dPipe } from '@app/pipes/vector2d.pipe';
     selector: 'app-chess-board',
     templateUrl: './chess-board.component.html',
     styleUrls: ['./chess-board.component.scss'],
-    standalone: true,
     imports: [CommonModule, MatGridListModule, DragDropModule, ChessPieceComponent, Vector2dPipe],
 })
 export class ChessBoardComponent implements OnChanges {

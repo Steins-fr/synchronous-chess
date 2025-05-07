@@ -34,7 +34,6 @@ export enum ChatMessengerType {
 @Component({
     selector: 'app-chat',
     templateUrl: './chat.component.html',
-    standalone: true,
     imports: [
         CommonModule,
         ScrollingModule,

@@ -9,7 +9,6 @@ export interface ChatMessage {
 
 @Component({
     selector: 'app-chat-message',
-    standalone: true,
     imports: [
         CommonModule,
     ],
