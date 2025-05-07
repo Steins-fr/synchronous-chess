@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, Input, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef, input } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +17,7 @@ import { map } from 'rxjs';
 })
 export class RoomSetupComponent implements OnInit {
 
-    @Input({ required: true }) public maxPlayer!: number;
+    public readonly maxPlayer = input.required<number>();
 
     public roomName: string = '';
     public playerName: string = '';

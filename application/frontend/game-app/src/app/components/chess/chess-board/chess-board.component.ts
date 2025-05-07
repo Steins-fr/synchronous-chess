@@ -1,6 +1,6 @@
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { Component, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, input, model, output } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
 import { PieceColor } from '@app/classes/chess/rules/chess-rules';
@@ -19,13 +19,13 @@ export class ChessBoardComponent implements OnChanges {
 
     private static readonly defaultValidPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
 
-    @Output() public piecePicked: EventEmitter<Vec2> = new EventEmitter<Vec2>();
-    @Output() public pieceDropped: EventEmitter<Vec2> = new EventEmitter<Vec2>();
-    @Output() public pieceClicked: EventEmitter<Vec2> = new EventEmitter<Vec2>();
-    @Input({ required: true }) public fenBoard: FenBoard = [];
-    @Input({ required: true }) public validPlayBoard: ValidPlayBoard = ChessBoardComponent.defaultValidPlayBoard;
-    @Input({ required: true }) public grabColor: PieceColor = PieceColor.NONE;
-    @Input({ required: true }) public movePreview?: CoordinateMove;
+    public readonly piecePicked = output<Vec2>();
+    public readonly pieceDropped = output<Vec2>();
+    public readonly pieceClicked = output<Vec2>();
+    public readonly fenBoard = input.required<FenBoard>();
+    public readonly validPlayBoard = model.required<ValidPlayBoard>();
+    public readonly grabColor = input.required<PieceColor>();
+    public readonly movePreview = input.required<CoordinateMove | undefined>();
 
     public fromPreview: Vec2 | null = null;
     public toPreview: Vec2 | null = null;
@@ -34,13 +34,15 @@ export class ChessBoardComponent implements OnChanges {
     protected readonly range = [...Array(8).keys()];
 
     public ngOnChanges(changes: SimpleChanges): void {
+        // FIXME: Rework this to use signals
         // When the board changes, reset valid plays.
         if (changes['fenBoard']) {
-            this.validPlayBoard = ChessBoardComponent.defaultValidPlayBoard;
+            this.validPlayBoard.set(ChessBoardComponent.defaultValidPlayBoard);
         }
-        if (this.movePreview !== undefined) {
-            this.fromPreview = new Vec2(this.movePreview.from[0], this.movePreview.from[1]);
-            this.toPreview = new Vec2(this.movePreview.to[0], this.movePreview.to[1]);
+        const movePreview = this.movePreview();
+        if (movePreview !== undefined) {
+            this.fromPreview = new Vec2(movePreview.from[0], movePreview.from[1]);
+            this.toPreview = new Vec2(movePreview.to[0], movePreview.to[1]);
         } else {
             this.fromPreview = null;
             this.toPreview = null;
@@ -61,9 +63,9 @@ export class ChessBoardComponent implements OnChanges {
     }
 
     public canBeDragged(cellPos: Vec2): boolean {
-        const fenPiece = ChessBoardHelper.getFenPieceByVec(this.fenBoard, cellPos);
+        const fenPiece = ChessBoardHelper.getFenPieceByVec(this.fenBoard(), cellPos);
 
-        return ChessBoardHelper.pieceColor(fenPiece) === this.grabColor;
+        return ChessBoardHelper.pieceColor(fenPiece) === this.grabColor();
     }
 
     public isMovePreview(cellPos: Vec2): boolean {

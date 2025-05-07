@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import {
-    Component,
-    inject,
-    Signal,
-    computed,
-    signal,
-    WritableSignal,
-    effect,
-    DestroyRef,
-    ChangeDetectionStrategy,
-    Input,
-    OnInit
+  Component,
+  inject,
+  Signal,
+  computed,
+  signal,
+  WritableSignal,
+  effect,
+  DestroyRef,
+  ChangeDetectionStrategy,
+  OnInit,
+  input
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Negotiator } from '@app/classes/negotiator/negotiator';
@@ -31,7 +31,7 @@ import { Subscription } from 'rxjs';
 export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> implements OnInit {
     private readonly destroyRef = inject(DestroyRef);
 
-    @Input({ required: true }) room!: Room<RoomServiceNotification>;
+    public readonly room = input.required<Room<RoomServiceNotification>>();
 
     private readonly players: WritableSignal<Player[]> = signal([]);
     private readonly roomSocket: WritableSignal<RoomNetwork<RoomMessage> | undefined> = signal(undefined);
@@ -69,11 +69,11 @@ export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> i
     }
 
     public ngOnInit(): void {
-        this.room.players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
+        this.room().players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
             this.players.set(players);
         });
 
-        this.room.roomConnection$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((roomManager: RoomNetwork<RoomMessage> | undefined) => {
+        this.room().roomConnection$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((roomManager: RoomNetwork<RoomMessage> | undefined) => {
             this.roomSocket.set(roomManager);
         });
     }

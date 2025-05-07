@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 
 export interface ChatMessage {
     message: string;
@@ -17,5 +17,5 @@ export interface ChatMessage {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatMessageComponent {
-    @Input({ required: true }) public message!: ChatMessage;
+    public readonly message = input.required<ChatMessage>();
 }
