@@ -37,7 +37,6 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
         };
 
-        // @ts-ignore
         // TODO: rework types
         this.publicMessenger$.next(roomServiceMessage as RoomServiceNotification);
     }
