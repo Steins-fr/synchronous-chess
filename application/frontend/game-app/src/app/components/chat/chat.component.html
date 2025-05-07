@@ -1,6 +1,6 @@
 <div id="chat-app">
     <h3>Webrtc chat</h3>
-    <h4 *ngIf="room">Salle ({{ roomName }})</h4>
+    <h4 *ngIf="room()">Salle ({{ roomName }})</h4>
     <div id="chat-container">
         <div id="chat">
             <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
@@ -38,7 +38,7 @@
         </mat-form-field>
         <button
             mat-raised-button color="primary" id="send" (click)="sendMessage()"
-            [disabled]="!room || isSending">Envoyer
+            [disabled]="!room() || isSending">Envoyer
         </button>
     </div>
 </div>

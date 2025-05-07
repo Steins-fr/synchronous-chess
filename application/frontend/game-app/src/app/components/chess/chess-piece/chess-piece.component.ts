@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 
 @Component({
@@ -26,9 +26,9 @@ export class ChessPieceComponent {
         [FenPiece.EMPTY]: ''
     };
 
-    @Input({ required: true }) public piece!: FenPiece;
+    public readonly piece = input.required<FenPiece>();
 
     public render(): string {
-        return ChessPieceComponent.unicodePieces[this.piece];
+        return ChessPieceComponent.unicodePieces[this.piece()];
     }
 }

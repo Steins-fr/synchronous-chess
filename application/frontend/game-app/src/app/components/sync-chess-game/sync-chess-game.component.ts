@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnDestroy, OnChanges, SimpleChanges, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder
@@ -25,7 +25,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 })
 export class SyncChessGameComponent implements OnChanges, OnDestroy {
 
-    @Input({ required: true }) room: Room<any> | undefined;
+    public readonly room = input.required<Room<any> | undefined>();
 
     public gameSession: SynchronousChessGameSession;
     public playedPiece: Vec2 = new Vec2(-1, -1);
@@ -40,9 +40,11 @@ export class SyncChessGameComponent implements OnChanges, OnDestroy {
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
+        // FIXME: Rework this to use signals
         if (changes['room']) {
-            if (this.room) {
-                this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(this.room);
+            const room = this.room();
+            if (room) {
+                this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(room);
             } else {
                 this.gameSession = new SynchronousChessLocalGameSession();
             }
