@@ -13,7 +13,6 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
 @Component({
     selector: 'app-synchronous-chess-page',
     templateUrl: './synchronous-chess.page.html',
-    standalone: true,
     imports: [CommonModule, RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
 })

@@ -18,7 +18,6 @@ import { Subscription } from 'rxjs';
 @Component({
     selector: 'app-chat-participant',
     templateUrl: './chat-participant.component.html',
-    standalone: true,
     imports: [CommonModule, MatChipsModule],
     styleUrls: ['./chat-participant.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,

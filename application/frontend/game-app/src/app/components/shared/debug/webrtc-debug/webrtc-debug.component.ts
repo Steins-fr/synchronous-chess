@@ -25,7 +25,6 @@ import { Subscription } from 'rxjs';
 @Component({
     selector: 'app-debug-webrtc',
     templateUrl: './webrtc-debug.component.html',
-    standalone: true,
     imports: [CommonModule, WebrtcStatesComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })

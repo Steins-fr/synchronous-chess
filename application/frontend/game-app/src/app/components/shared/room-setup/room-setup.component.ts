@@ -13,7 +13,6 @@ import { map } from 'rxjs';
 @Component({
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
-    standalone: true,
     imports: [CommonModule, MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatProgressSpinnerModule],
 })
 export class RoomSetupComponent implements OnInit {

@@ -8,7 +8,6 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
     selector: 'app-room-layout',
     templateUrl: './room-layout.component.html',
     styleUrls: ['./room-layout.component.scss'],
-    standalone: true,
     imports: [CommonModule, RoomSetupComponent],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -12,7 +12,6 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
 @Component({
     selector: 'app-chat-page',
     templateUrl: './chat.page.html',
-    standalone: true,
     imports: [CommonModule, RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
 })

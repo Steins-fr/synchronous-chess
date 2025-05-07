@@ -21,7 +21,6 @@ import { Room } from '@app/services/room-manager/classes/room/room';
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
-    standalone: true,
     imports: [CommonModule, ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
 })
 export class SyncChessGameComponent implements OnChanges, OnDestroy {
