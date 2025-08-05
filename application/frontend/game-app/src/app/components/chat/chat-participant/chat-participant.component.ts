@@ -1,13 +1,12 @@
-import { CommonModule } from '@angular/common';
+
 import {
-  Component,
-  DestroyRef,
-  inject,
-  ChangeDetectionStrategy,
-  signal,
-  OnChanges,
-  SimpleChanges,
-  input
+    ChangeDetectionStrategy,
+    Component,
+    DestroyRef,
+    effect,
+    inject,
+    input,
+    signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatChipsModule } from '@angular/material/chips';
@@ -18,11 +17,11 @@ import { Subscription } from 'rxjs';
 @Component({
     selector: 'app-chat-participant',
     templateUrl: './chat-participant.component.html',
-    imports: [CommonModule, MatChipsModule],
+    imports: [MatChipsModule],
     styleUrls: ['./chat-participant.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChatParticipantComponent implements OnChanges {
+export class ChatParticipantComponent {
     public readonly player = input.required<Player>();
 
     protected ping = signal<string>('');
@@ -31,12 +30,12 @@ export class ChatParticipantComponent implements OnChanges {
 
     private readonly destroyRef = inject(DestroyRef);
 
-    public ngOnChanges(changes: SimpleChanges) {
-        // FIXME: Rework this to use signals
-        if (changes['player']) {
+    public constructor() {
+        effect(() => {
+            const player = this.player();
+
             this.pingSubscription?.unsubscribe();
             this.ping.set('');
-            const player = this.player();
             if (player instanceof WebRtcPlayer) {
                 this.isMe.set(false);
                 this.pingSubscription = player.ping.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(ping => {
@@ -45,6 +44,6 @@ export class ChatParticipantComponent implements OnChanges {
             } else {
                 this.isMe.set(true);
             }
-        }
+        });
     }
 }

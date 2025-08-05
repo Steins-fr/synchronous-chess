@@ -1,44 +1,50 @@
 <div id="chat-app">
     <h3>Webrtc chat</h3>
-    <h4 *ngIf="room()">Salle ({{ roomName }})</h4>
+    @if (room()) {
+    <h4>Salle ({{ roomName }})</h4>
+    }
     <div id="chat-container">
         <div id="chat">
             <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
                 <app-chat-message *cdkVirtualFor="let chatMessage of chatMessages()" [message]="chatMessage" />
             </cdk-virtual-scroll-viewport>
-            <div id="new-message-notification" class="chat-notification" *ngIf="newMessage > 0">
+            @if (newMessage > 0) {
+            <div id="new-message-notification" class="chat-notification">
                 <button mat-flat-button color="primary" (click)="scrollDown(true)">
                     <span>{{ newMessage }} nouveaux messages</span>
                     <span>Voir.</span>
                 </button>
             </div>
-            <div id="history-notification" class="chat-notification" *ngIf="viewingHistory()">
+            }
+            @if (viewingHistory()) {
+            <div id="history-notification" class="chat-notification">
                 <button mat-flat-button color="primary" (click)="scrollDown(true)">
                     <span>Tu es entrain de regarder des anciens messages.</span>
                     <span>Revenir aux messages les plus récents.</span>
                 </button>
             </div>
+            }
         </div>
         <div id="player-list">
             <h4 class="list-title">Participants</h4>
             <mat-chip-set class="mat-chip-list-stacked">
-                <app-chat-participant
-                    *ngFor="let participant of players()"
-                    [player]="participant" />
-                <mat-chip *ngFor="let playerName of queuingPlayers()">
-                    {{ playerName }}
-                </mat-chip>
+                @for (participant of players(); track participant) {
+                <app-chat-participant [player]="participant" />
+                }
+                @for (playerName of queuingPlayers(); track playerName) {
+                <mat-chip>{{ playerName }}</mat-chip>
+                }
             </mat-chip-set>
         </div>
     </div>
 
     <div id="send-form">
         <mat-form-field>
-            <input matInput type="text" [(ngModel)]="sendInput" placeholder="Tape ton message" [disabled]="isSending" />
+            <input matInput type="text" [formControl]="sendInput" placeholder="Tape ton message" />
         </mat-form-field>
         <button
             mat-raised-button color="primary" id="send" (click)="sendMessage()"
-            [disabled]="!room() || isSending">Envoyer
+            [disabled]="!room() || isSending()">Envoyer
         </button>
     </div>
 </div>

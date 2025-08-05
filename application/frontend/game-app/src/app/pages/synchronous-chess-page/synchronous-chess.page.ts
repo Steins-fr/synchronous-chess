@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, DestroyRef, OnInit, OnDestroy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
@@ -13,7 +13,7 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
 @Component({
     selector: 'app-synchronous-chess-page',
     templateUrl: './synchronous-chess.page.html',
-    imports: [CommonModule, RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent],
+    imports: [RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
 })
 export class SynchronousChessPage implements OnInit, OnDestroy {

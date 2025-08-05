@@ -1,4 +1,5 @@
-<div *ngIf="canDisplay()">
+@if (canDisplay()) {
+<div>
     <mat-form-field>
         <input
             [(ngModel)]="roomName" autocomplete="off"
@@ -7,7 +8,6 @@
             placeholder="Nom de la salle"
             type="text" />
     </mat-form-field>
-
     <mat-form-field>
         <input
             [(ngModel)]="playerName" autocomplete="off"
@@ -16,8 +16,8 @@
             placeholder="Nom du joueur"
             type="text" />
     </mat-form-field>
-
-    <div *ngIf="!loading()" class="d-flex align-items-center">
+    @if (!loading()) {
+    <div class="d-flex align-items-center">
         <button (click)="hostRoom()" color="primary" mat-stroked-button>
             Nouvelle
         </button>
@@ -25,5 +25,9 @@
             Rejoindre
         </button>
     </div>
-    <mat-spinner *ngIf="loading()" [diameter]="42" />
+    }
+    @if (loading()) {
+    <mat-spinner [diameter]="42" />
+    }
 </div>
+}

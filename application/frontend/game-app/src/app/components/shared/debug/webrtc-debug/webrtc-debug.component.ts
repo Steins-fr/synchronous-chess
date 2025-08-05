@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import {
-  Component,
-  inject,
-  Signal,
-  computed,
-  signal,
-  WritableSignal,
-  effect,
-  DestroyRef,
-  ChangeDetectionStrategy,
-  OnInit,
-  input
+    Component,
+    inject,
+    Signal,
+    computed,
+    signal,
+    WritableSignal,
+    effect,
+    DestroyRef,
+    ChangeDetectionStrategy,
+    OnInit,
+    input
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Negotiator } from '@app/classes/negotiator/negotiator';

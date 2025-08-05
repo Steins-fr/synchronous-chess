@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 
@@ -6,7 +6,7 @@ import { FenPiece } from '@app/classes/chess/rules/chess-rules';
     selector: 'app-chess-piece',
     templateUrl: './chess-piece.component.html',
     styleUrls: ['./chess-piece.component.scss'],
-    imports: [CommonModule],
+    imports: [],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChessPieceComponent {

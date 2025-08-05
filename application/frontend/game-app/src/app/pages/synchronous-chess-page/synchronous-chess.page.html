@@ -1,5 +1,7 @@
 <app-room-layout [maxPlayer]="maxPlayer">
-    <app-debug-webrtc *ngIf="room" [room]="room"/>
+    @if (room) {
+    <app-debug-webrtc [room]="room"/>
+    }
     <app-chat [room]="room" />
     <app-sync-chess-game [room]="room" />
 </app-room-layout>
