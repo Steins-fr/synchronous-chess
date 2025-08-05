@@ -1,4 +1,6 @@
 <mat-chip [color]="isMe() ? 'primary' : 'accent'">
     {{ player().name }}
-    <span *ngIf="ping(); let pingValue">{{ ' - ping ' + pingValue }}</span>
+    @if (ping(); as pingValue) {
+    <span>{{ ' - ping ' + pingValue }}</span>
+    }
 </mat-chip>

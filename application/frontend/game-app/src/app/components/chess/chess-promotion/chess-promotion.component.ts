@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, input, output } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
@@ -8,7 +8,7 @@ import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-pie
     selector: 'app-chess-promotion',
     templateUrl: './chess-promotion.component.html',
     styleUrls: ['./chess-promotion.component.scss'],
-    imports: [CommonModule, MatGridListModule, ChessPieceComponent],
+    imports: [MatGridListModule, ChessPieceComponent],
 })
 export class ChessPromotionComponent {
 

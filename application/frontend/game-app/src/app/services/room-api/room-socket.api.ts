@@ -1,4 +1,4 @@
-import { Injectable, Inject, NgZone } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { objectHasValue } from '@app/helpers/object.helper';
 import { ValuesOf } from '@app/types/values-of.type';
 import { Subject, takeUntil, filter, map, first, Observable, tap } from 'rxjs';
@@ -152,7 +152,10 @@ export class RoomSocketApi {
     private readonly webSocketService: WebSocketService;
     private destroyRef = new Subject<void>();
 
-    public constructor(@Inject(WEB_SOCKET_SERVER) webSocketServer: string, zone: NgZone) {
+    public constructor() {
+        const webSocketServer = inject<string>(WEB_SOCKET_SERVER as any);
+        const zone = inject(NgZone);
+
         this.webSocketService = new WebSocketService(webSocketServer, zone);
     }
 

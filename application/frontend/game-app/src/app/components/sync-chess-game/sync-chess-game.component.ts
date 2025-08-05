@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnDestroy, OnChanges, SimpleChanges, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
@@ -21,7 +21,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
-    imports: [CommonModule, ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
+    imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
 })
 export class SyncChessGameComponent implements OnChanges, OnDestroy {
 

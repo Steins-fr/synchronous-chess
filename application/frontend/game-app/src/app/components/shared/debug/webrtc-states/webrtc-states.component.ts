@@ -1,11 +1,11 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import WebrtcStates from '@app/classes/webrtc/webrtc-states';
 
 @Component({
     selector: 'app-debug-webrtc-states',
     templateUrl: './webrtc-states.component.html',
-    imports: [CommonModule],
+    imports: [],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WebrtcStatesComponent {

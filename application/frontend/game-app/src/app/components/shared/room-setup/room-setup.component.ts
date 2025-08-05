@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject, DestroyRef, input } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +13,7 @@ import { map } from 'rxjs';
 @Component({
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
-    imports: [CommonModule, MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatProgressSpinnerModule],
+    imports: [MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatProgressSpinnerModule],
 })
 export class RoomSetupComponent implements OnInit {
 
