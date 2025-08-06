@@ -1,16 +1,13 @@
 import { CommonModule } from '@angular/common';
 import {
     Component,
-    inject,
-    Signal,
-    computed,
-    signal,
-    WritableSignal,
-    effect,
     DestroyRef,
-    ChangeDetectionStrategy,
     OnInit,
-    input
+    computed,
+    effect,
+    inject,
+    input,
+    signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Negotiator } from '@app/classes/negotiator/negotiator';
@@ -26,7 +23,6 @@ import { Subscription } from 'rxjs';
     selector: 'app-debug-webrtc',
     templateUrl: './webrtc-debug.component.html',
     imports: [CommonModule, WebrtcStatesComponent],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> implements OnInit {
     private readonly destroyRef = inject(DestroyRef);

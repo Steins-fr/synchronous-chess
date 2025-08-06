@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 
 @Component({
@@ -7,7 +7,6 @@ import { FenPiece } from '@app/classes/chess/rules/chess-rules';
     templateUrl: './chess-piece.component.html',
     styleUrls: ['./chess-piece.component.scss'],
     imports: [],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChessPieceComponent {
     private static readonly unicodePieces: Record<FenPiece, string> = {

@@ -1,13 +1,12 @@
 
-import { Component, OnDestroy, input, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, computed, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
-import SynchronousChessGameSessionBuilder
-    from '@app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
+import SynchronousChessGameSessionBuilder from '@app/classes/chess/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/classes/chess/game-sessions/synchronous-chess-local-game-session';
 import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
 import Move from '@app/classes/chess/interfaces/move';
-import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece, PieceColor } from '@app/classes/chess/rules/chess-rules';
 import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
 import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
 import { Vec2 } from '@app/classes/vector/vec2';
@@ -22,7 +21,6 @@ import { Room } from '@app/services/room-manager/classes/room/room';
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
     imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SyncChessGameComponent implements OnDestroy {
     public readonly room = input.required<Room<any> | undefined>();
