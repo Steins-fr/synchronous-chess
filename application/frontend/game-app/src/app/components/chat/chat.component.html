@@ -27,8 +27,9 @@
         </div>
         <div id="player-list">
             <h4 class="list-title">Participants</h4>
+            {{ players().length }} participant(s) dans la salle
             <mat-chip-set class="mat-chip-list-stacked">
-                @for (participant of players(); track participant) {
+                @for (participant of players(); track participant.name) {
                 <app-chat-participant [player]="participant" />
                 }
                 @for (playerName of queuingPlayers(); track playerName) {

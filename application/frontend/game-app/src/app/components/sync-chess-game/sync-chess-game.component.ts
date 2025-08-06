@@ -1,5 +1,5 @@
 
-import { Component, OnDestroy, OnChanges, SimpleChanges, input } from '@angular/core';
+import { Component, OnDestroy, input, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder
@@ -22,64 +22,57 @@ import { Room } from '@app/services/room-manager/classes/room/room';
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
     imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SyncChessGameComponent implements OnChanges, OnDestroy {
-
+export class SyncChessGameComponent implements OnDestroy {
     public readonly room = input.required<Room<any> | undefined>();
 
-    public gameSession: SynchronousChessGameSession;
-    public playedPiece: Vec2 = new Vec2(-1, -1);
-    public validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
-    public blackPiece: FenPiece = FenPiece.BLACK_KING;
-    public whitePiece: FenPiece = FenPiece.WHITE_KING;
-    public whiteColor: PieceColor = PieceColor.WHITE;
-    public blackColor: PieceColor = PieceColor.BLACK;
+    protected readonly gameSession = computed<SynchronousChessGameSession>(() => {
+        const room = this.room();
 
-    public constructor() {
-        this.gameSession = new SynchronousChessLocalGameSession();
-    }
-
-    public ngOnChanges(changes: SimpleChanges): void {
-        // FIXME: Rework this to use signals
-        if (changes['room']) {
-            const room = this.room();
-            if (room) {
-                this.gameSession = SynchronousChessGameSessionBuilder.buildOnline(room);
-            } else {
-                this.gameSession = new SynchronousChessLocalGameSession();
-            }
+        if (room) {
+            return SynchronousChessGameSessionBuilder.buildOnline(room);
         }
-    }
+
+        return new SynchronousChessLocalGameSession();
+    });
+
+    private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
+    protected validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
+    protected blackPiece: FenPiece = FenPiece.BLACK_KING;
+    protected whitePiece: FenPiece = FenPiece.WHITE_KING;
+    protected whiteColor: PieceColor = PieceColor.WHITE;
+    protected blackColor: PieceColor = PieceColor.BLACK;
 
     public ngOnDestroy(): void {
-        this.gameSession.destroy();
+        this.gameSession().destroy();
     }
 
     public piecePicked(cellPos: Vec2): void {
-        this.playedPiece = cellPos;
+        this.playedPiece.set(cellPos);
         this.pieceClicked(cellPos);
     }
 
     public pieceClicked(cellPos: Vec2): void {
         this.resetHighlight();
-        this.gameSession.game.getPossiblePlays(cellPos).forEach((play: Vec2) => {
+        this.gameSession().game.getPossiblePlays(cellPos).forEach((play: Vec2) => {
             this.validPlayBoard[play.y][play.x] = true;
         });
     }
 
     public pieceDropped(cellPos: Vec2): void {
         const coordinateMove: CoordinateMove = {
-            from: this.playedPiece.toArray(),
+            from: this.playedPiece().toArray(),
             to: cellPos.toArray()
         };
 
-        this.gameSession.move(ChessBoardHelper.fromCoordinateMoveToMove(coordinateMove));
+        this.gameSession().move(ChessBoardHelper.fromCoordinateMoveToMove(coordinateMove));
         this.resetHighlight();
-        this.playedPiece = new Vec2(-1, -1);
+        this.playedPiece.set(new Vec2(-1, -1));
     }
 
     public turnType(): string {
-        switch (this.gameSession.game.getTurnType()) {
+        switch (this.gameSession().game.getTurnType()) {
             case TurnType.MOVE_SYNC:
                 return 'Synchronisé';
             case TurnType.MOVE_INTERMEDIATE:
@@ -92,45 +85,45 @@ export class SyncChessGameComponent implements OnChanges, OnDestroy {
     }
 
     public isMoveTurn(): boolean {
-        return this.gameSession.game.getTurnCategory() === TurnCategory.MOVE;
+        return this.gameSession().game.getTurnCategory() === TurnCategory.MOVE;
     }
 
     public moveColor(): PieceColor {
-        return this.isMoveTurn() ? this.gameSession.playingColor : PieceColor.NONE;
+        return this.isMoveTurn() ? this.gameSession().playingColor : PieceColor.NONE;
     }
 
     public isPromotion(): boolean {
-        return this.gameSession.game.getTurnType() === TurnType.CHOICE_PROMOTION;
+        return this.gameSession().game.getTurnType() === TurnType.CHOICE_PROMOTION;
     }
 
     public whiteHasPlayed(): boolean {
-        return this.gameSession.game.hasPlayed(PieceColor.WHITE);
+        return this.gameSession().game.hasPlayed(PieceColor.WHITE);
     }
 
     public blackHasPlayed(): boolean {
-        return this.gameSession.game.hasPlayed(PieceColor.BLACK);
+        return this.gameSession().game.hasPlayed(PieceColor.BLACK);
     }
 
     public whiteLastMove(): string {
-        const action: MoveTurnAction | null = this.gameSession.game.lastMoveTurnAction();
+        const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
         return action === null ? '' : this.formatLastMove(action.whiteMove);
     }
 
     public blackLastMove(): string {
-        const action: MoveTurnAction | null = this.gameSession.game.lastMoveTurnAction();
+        const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
         return action === null ? '' : this.formatLastMove(action.blackMove);
     }
 
     public displayBlackInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.BLACK && !this.gameSession.game.isCheckmate();
+        return this.gameSession().playingColor === PieceColor.BLACK && !this.gameSession().game.isCheckmate();
     }
 
     public displayWhiteInteractions(): boolean {
-        return this.gameSession.playingColor === PieceColor.WHITE && !this.gameSession.game.isCheckmate();
+        return this.gameSession().playingColor === PieceColor.WHITE && !this.gameSession().game.isCheckmate();
     }
 
     public skip(): void {
-        this.gameSession.move(null);
+        this.gameSession().move(null);
     }
 
     private resetHighlight(): void {

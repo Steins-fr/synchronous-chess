@@ -2,17 +2,18 @@
     <ng-container *ngTemplateOutlet="columnLabels" />
     <div class="row">
         <ng-container *ngTemplateOutlet="rowLabels" />
-        <div [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}" cdkDropListGroup id="board-grid">
+        <div [ngClass]="{'grabbing-cursor': !pieceDragged().equal(-1, -1)}" cdkDropListGroup id="board-grid">
             <mat-grid-list cols="8">
                 @for (row of fenBoard(); track row; let y = $index) {
                 @for (piece of row; track piece; let x = $index) {
                 @if ([x, y] | vector2d; as pos) {
                 <mat-grid-tile
                     [ngClass]="{
-                                'drag-hover': cellHovered.equal(pos.x, pos.y),
-                                'dragged': pieceDragged.equal(pos.x, pos.y),
-                                'valid-move': validPlayBoard()[y][x],
-                                'move-preview': isMovePreview(pos)}">
+                        'drag-hover': cellHovered().equal(pos.x, pos.y),
+                        'dragged': pieceDragged().equal(pos.x, pos.y),
+                        'valid-move': validPlayBoard()[y][x],
+                        'move-preview': isMovePreview(pos)
+                    }">
                     <div
                         (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
                         (cdkDropListEntered)="dragEntered(pos)" class="cell"
@@ -23,7 +24,7 @@
                             (cdkDragStarted)="piecePicked.emit(pos); dragStart(pos)"
                             [piece]="piece"
                             [ngClass]="{
-                                        'grabbing-cursor': !pieceDragged.equal(-1, -1),
+                                        'grabbing-cursor': !pieceDragged().equal(-1, -1),
                                         'grab-available': canBeDragged(pos)
                                     }"
                             [cdkDragDisabled]="!canBeDragged(pos)"

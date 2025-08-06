@@ -1,4 +1,3 @@
-import { NgZone } from '@angular/core';
 import RoomNetworkPlayerAddEvent from '@app/classes/room-network/events/room-network-player-add-event';
 import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
 import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
@@ -6,15 +5,15 @@ import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Block } from './block-chain/block';
-import { DistributedBlockChain, BlockChainMessageTypes } from './block-chain/distributed-block-chain';
+import { BlockChainMessageTypes, DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { BlockRoomInterface } from './block-room.interface';
 
 export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
 
     private readonly blockChain: DistributedBlockChain = new DistributedBlockChain(this);
 
-    public constructor(ngZone: NgZone, roomApi: RoomSocketApi) {
-        super(ngZone, roomApi);
+    public constructor(roomApi: RoomSocketApi) {
+        super(roomApi);
     }
 
     public override async transmitMessage<T>(type: string, message: T): Promise<void> {

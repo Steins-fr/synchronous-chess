@@ -1,7 +1,7 @@
-import { Injectable, NgZone, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { objectHasValue } from '@app/helpers/object.helper';
 import { ValuesOf } from '@app/types/values-of.type';
-import { Subject, takeUntil, filter, map, first, Observable, tap } from 'rxjs';
+import { filter, first, map, Observable, Subject, takeUntil, tap } from 'rxjs';
 import { WebSocketService } from '../web-socket/web-socket.service';
 import FullNotification from './notifications/full-notification';
 import JoinNotification from './notifications/join-notification';
@@ -154,9 +154,8 @@ export class RoomSocketApi {
 
     public constructor() {
         const webSocketServer = inject<string>(WEB_SOCKET_SERVER as any);
-        const zone = inject(NgZone);
 
-        this.webSocketService = new WebSocketService(webSocketServer, zone);
+        this.webSocketService = new WebSocketService(webSocketServer);
     }
 
     private static readonly requestIdGenerator: Generator = function* name(): Generator {
