@@ -1,6 +1,5 @@
 
 import {
-    ChangeDetectionStrategy,
     Component,
     DestroyRef,
     effect,
@@ -19,7 +18,6 @@ import { Subscription } from 'rxjs';
     templateUrl: './chat-participant.component.html',
     imports: [MatChipsModule],
     styleUrls: ['./chat-participant.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatParticipantComponent {
     public readonly player = input.required<Player>();

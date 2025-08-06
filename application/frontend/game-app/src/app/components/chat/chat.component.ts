@@ -1,7 +1,6 @@
 import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 
 import {
-    ChangeDetectionStrategy,
     Component,
     DestroyRef,
     WritableSignal,
@@ -45,7 +44,6 @@ export enum ChatMessengerType {
         ReactiveFormsModule,
     ],
     styleUrls: ['./chat.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatComponent {
     private readonly destroyRef = inject(DestroyRef);

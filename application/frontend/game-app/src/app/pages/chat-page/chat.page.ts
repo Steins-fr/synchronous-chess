@@ -1,5 +1,5 @@
 
-import { Component, inject, OnInit, DestroyRef, OnDestroy, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
 import { ChatComponent, ChatMessengerType } from '@app/components/chat/chat.component';
@@ -14,7 +14,6 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
     templateUrl: './chat.page.html',
     imports: [RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatPage implements OnInit, OnDestroy {
     public maxPlayer: number = 6;

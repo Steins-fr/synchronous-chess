@@ -1,7 +1,7 @@
 
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece, PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
 import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
 
 @Component({
@@ -9,7 +9,6 @@ import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-pie
     templateUrl: './chess-promotion.component.html',
     styleUrls: ['./chess-promotion.component.scss'],
     imports: [MatGridListModule, ChessPieceComponent],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChessPromotionComponent {
 

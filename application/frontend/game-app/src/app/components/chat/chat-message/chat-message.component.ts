@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 export interface ChatMessage {
     message: string;
@@ -12,7 +12,6 @@ export interface ChatMessage {
     imports: [],
     templateUrl: './chat-message.component.html',
     styleUrl: './chat-message.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatMessageComponent {
     public readonly message = input.required<ChatMessage>();
