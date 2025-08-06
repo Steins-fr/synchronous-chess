@@ -152,7 +152,6 @@ export class ChatComponent {
     }
 
     private onChatMessage(message: RoomMessage<ChatMessengerType, string>): void {
-        console.log('Received chat message:', message);
         this.newMessage += 1;
 
         if (this.currentRoom.localPlayer?.name === message.from) {

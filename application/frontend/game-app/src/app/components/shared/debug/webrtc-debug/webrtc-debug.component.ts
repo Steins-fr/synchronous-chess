@@ -33,11 +33,11 @@ export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> i
 
     public readonly room = input.required<Room<RoomServiceNotification>>();
 
-    private readonly players: WritableSignal<Player[]> = signal([]);
-    private readonly roomSocket: WritableSignal<RoomNetwork<RoomMessage> | undefined> = signal(undefined);
-    protected readonly negotiators: WritableSignal<Negotiator[]> = signal([]);
+    private readonly players = signal<Player[]>([]);
+    private readonly roomSocket = signal<RoomNetwork<RoomMessage> | undefined>(undefined);
+    protected readonly negotiators = signal<Negotiator[]>([]);
 
-    protected readonly webRtcPlayers: Signal<WebRtcPlayer[]> = computed(() => {
+    protected readonly webRtcPlayers = computed<WebRtcPlayer[]>(() => {
         const webRtcPlayers: WebRtcPlayer[] = [];
         const players = this.players();
 

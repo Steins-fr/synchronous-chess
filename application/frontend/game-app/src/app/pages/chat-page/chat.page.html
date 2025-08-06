@@ -1,6 +1,6 @@
 <app-room-layout [maxPlayer]="maxPlayer">
-    <app-chat [room]="room" />
+    <app-chat [room]="room()" />
 </app-room-layout>
-@if (room) {
-<app-debug-webrtc [room]="room"/>
+@if (room(); as myRoom) {
+<app-debug-webrtc [room]="myRoom"/>
 }

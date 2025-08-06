@@ -1,5 +1,5 @@
 
-import { Component, inject, OnInit, DestroyRef, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, OnDestroy, ChangeDetectionStrategy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
 import { ChatComponent, ChatMessengerType } from '@app/components/chat/chat.component';
@@ -14,10 +14,11 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
     templateUrl: './chat.page.html',
     imports: [RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatPage implements OnInit, OnDestroy {
     public maxPlayer: number = 6;
-    public room: Room<RoomMessage<ChatMessengerType, string>> | undefined = undefined;
+    public readonly room = signal<Room<RoomMessage<ChatMessengerType, string>> | undefined>(undefined);
 
     private readonly destroyRef = inject(DestroyRef);
     private readonly roomSetupService = inject(RoomSetupService);
@@ -25,13 +26,13 @@ export class ChatPage implements OnInit, OnDestroy {
 
     public ngOnInit(): void {
         this.roomSetupService.setup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async (setup) => {
-            this.room = await this.roomManagerService.buildBlockRoom<RoomMessage<ChatMessengerType, string>>(setup, this.maxPlayer);
+            this.room.set(await this.roomManagerService.buildBlockRoom<RoomMessage<ChatMessengerType, string>>(setup, this.maxPlayer));
 
             this.roomSetupService.roomIsSetup(true);
         });
     }
 
     public ngOnDestroy(): void {
-        this.room?.clear();
+        this.room()?.clear();
     }
 }
