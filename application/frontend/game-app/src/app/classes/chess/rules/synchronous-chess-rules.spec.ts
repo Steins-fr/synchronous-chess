@@ -3,9 +3,10 @@ import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-
 import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
 import { FenBoard } from '@app/helpers/chess-board-helper';
+import { describe, test, expect } from 'vitest';
 
 describe('SynchronousChessRules', () => {
-    it('should get the rules for a specific color', () => {
+    test('should get the rules for a specific color', () => {
         // Given
         const blackColor: PieceColor = PieceColor.BLACK;
         const whiteColor: PieceColor = PieceColor.WHITE;
@@ -19,7 +20,7 @@ describe('SynchronousChessRules', () => {
         expect(rulesWhite.color).toEqual(whiteColor);
     });
 
-    it('should get pieces movements', () => {
+    test('should get pieces movements', () => {
         // Given
         const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 
@@ -40,7 +41,7 @@ describe('SynchronousChessRules', () => {
         expect(pawnMovements).toEqual(rules['pawnMovement']);
     });
 
-    it('should tell is the rules are for blacks or whites', () => {
+    test('should tell is the rules are for blacks or whites', () => {
         // Given
         const rulesBlack: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
         const rulesWhite: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
@@ -58,7 +59,7 @@ describe('SynchronousChessRules', () => {
         expect(whiteIsNotBlack).toBeFalsy();
     });
 
-    it('should get pieces possible plays', () => {
+    test('should get pieces possible plays', () => {
         // Given
         const rules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
 

@@ -298,15 +298,13 @@ export class Webrtc {
     }
 
     private gotDescription(description: RTCSessionDescriptionInit): void {
-        this.peerConnection.setLocalDescription(description).then(
-            () => {
-                this._rtcSignal.sdp = description;
+        this.peerConnection.setLocalDescription(description).then(() => {
+            this._rtcSignal.sdp = description;
 
-                if (this.peerConnection.iceGatheringState === 'complete') {
-                    this.onSignal();
-                }
+            if (this.peerConnection.iceGatheringState === 'complete') {
+                this.onSignal();
             }
-        ).catch((e: unknown) => {
+        }).catch((e: unknown) => {
             if (e instanceof DOMException) {
                 this.createError(e);
             } else {

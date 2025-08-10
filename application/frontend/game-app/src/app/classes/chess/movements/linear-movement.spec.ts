@@ -2,20 +2,21 @@ import LinearMovement from '@app/classes/chess/movements/linear-movement';
 import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { Vec2, Vec2Array } from '@app/classes/vector/vec2';
 import { FenBoard } from '@app/helpers/chess-board-helper';
+import { describe, test, expect } from 'vitest';
 
 describe('LinearMove', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(LinearMovement.build([1, 1])).toBeTruthy();
     });
 
-    it('should throw vector error', () => {
+    test('should throw vector error', () => {
         expect(() => LinearMovement.build([0, 0])).toThrowError();
         expect(() => LinearMovement.build([1, 2])).toThrowError();
         expect(() => LinearMovement.build([2, 1])).toThrowError();
         expect(() => LinearMovement.build([-4, -4])).toThrowError();
     });
 
-    it('should not throw vector error', () => {
+    test('should not throw vector error', () => {
         expect(() => LinearMovement.build([0, 1])).not.toThrowError();
         expect(() => LinearMovement.build([1, 0])).not.toThrowError();
         expect(() => LinearMovement.build([1, 1])).not.toThrowError();
@@ -24,7 +25,7 @@ describe('LinearMove', () => {
         expect(() => LinearMovement.build([-1, -1])).not.toThrowError();
     });
 
-    it('should create multiple instance', () => {
+    test('should create multiple instance', () => {
         // Given
         const coordinate1: Vec2Array = [1, 0];
         const coordinate2: Vec2Array = [1, 1];
@@ -35,7 +36,7 @@ describe('LinearMove', () => {
         expect(moves.length).toEqual(2);
     });
 
-    it('should initiate properties', () => {
+    test('should initiate properties', () => {
 
         // Given
         const coordinate: Vec2Array = [1, 0];
@@ -47,7 +48,7 @@ describe('LinearMove', () => {
         expect(move.vector.equal(1, 0)).toBeTruthy();
     });
 
-    it('should return all valid plays', () => {
+    test('should return all valid plays', () => {
 
         // Given
         const coordinate: Vec2Array = [1, 0];
@@ -81,7 +82,7 @@ describe('LinearMove', () => {
         expect(boardEmptyPlays).toEqual(boardEmptyExpectedPlays);
     });
 
-    it('should throw error if the position was not valid', () => {
+    test('should throw error if the position was not valid', () => {
 
         // Given
         const coordinate: Vec2Array = [1, 0];

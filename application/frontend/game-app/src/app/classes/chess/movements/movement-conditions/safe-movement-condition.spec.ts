@@ -3,9 +3,10 @@ import { FenPiece, PieceColor } from '@app/classes/chess/rules/chess-rules';
 import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
 import { FenBoard } from '@app/helpers/chess-board-helper';
+import { describe, test, expect } from 'vitest';
 
 describe('SafeMoveCondition', () => {
-    it('should say if it can move', () => {
+    test('should say if it can move', () => {
         // Given
         const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), false);
         const board: FenBoard = [
@@ -28,7 +29,7 @@ describe('SafeMoveCondition', () => {
         expect(resultInvalidKingSafety).toBeFalsy();
     });
 
-    it('should say if it can move without safety', () => {
+    test('should say if it can move without safety', () => {
         // Given
         const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), true);
         const board: FenBoard = [
@@ -51,7 +52,7 @@ describe('SafeMoveCondition', () => {
         expect(resultValidKingSafety2).toBeTruthy();
     });
 
-    it('should say if it can move (with cell condition safety)', () => {
+    test('should say if it can move (with cell condition safety)', () => {
         // Given
         const condition: SafeMovementCondition = new SafeMovementCondition(new SynchronousChessRules(PieceColor.BLACK), false, [1, 0]);
         const board: FenBoard = [
