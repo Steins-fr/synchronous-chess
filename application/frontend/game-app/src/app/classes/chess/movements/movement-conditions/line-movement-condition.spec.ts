@@ -1,13 +1,14 @@
 import { Row } from '@app/classes/chess/interfaces/CoordinateMove';
 import LineMovementCondition from '@app/classes/chess/movements/movement-conditions/line-movement-condition';
 import { Vec2 } from '@app/classes/vector/vec2';
+import { describe, test, expect } from 'vitest';
 
 describe('LineMoveCondition', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new LineMovementCondition(Row._5)).toBeTruthy();
     });
 
-    it('should say if it can move', () => {
+    test('should say if it can move', () => {
         // Given
         const condition: LineMovementCondition = new LineMovementCondition(Row._4);
 

@@ -4,17 +4,18 @@ import SyncTurn from '@app/classes/chess/turns/sync-turn';
 import Turn from '@app/classes/chess/turns/turn';
 import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
 import TurnType from '@app/classes/chess/turns/turn.types';
+import { describe, test, expect } from 'vitest';
 
 describe('SyncTurn', () => {
 
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         const turn: Turn = new SyncTurn();
 
         expect(turn).toBeTruthy();
         expect(turn.type).toEqual(TurnType.MOVE_SYNC);
     });
 
-    it('canBeExecuted should return false if the action is not filled', () => {
+    test('canBeExecuted should return false if the action is not filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const turnEmpty: SyncTurn = new SyncTurn();
@@ -34,7 +35,7 @@ describe('SyncTurn', () => {
         expect(resultOnlyBlack).toBeFalsy();
     });
 
-    it('canBeExecuted should return turn if the action is filled', () => {
+    test('canBeExecuted should return turn if the action is filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const turn: SyncTurn = new SyncTurn();
@@ -48,7 +49,7 @@ describe('SyncTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('should fill the move in the right color', () => {
+    test('should fill the move in the right color', () => {
         // Given
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const blackMove: Move = { from: [FenColumn.A, 6], to: [FenColumn.B, 5] };

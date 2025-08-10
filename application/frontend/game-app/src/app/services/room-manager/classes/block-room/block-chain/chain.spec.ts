@@ -1,7 +1,8 @@
 import { Chain } from './chain';
+import { describe, test, expect } from 'vitest';
 
 describe('Chain', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new Chain()).toBeTruthy();
     });
 });

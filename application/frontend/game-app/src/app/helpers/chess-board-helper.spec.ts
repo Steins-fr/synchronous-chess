@@ -4,10 +4,10 @@ import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-ru
 import { FenPiece, PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
 import CoordinateMove, { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
 import Move, { FenCoordinate, FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
+import { describe, test, expect } from 'vitest';
 
 describe('ChessHelper', () => {
-
-    it('should create an initialized fen board', () => {
+    test('should create an initialized fen board', () => {
         // Given
 
         const expectedFenBoard: FenBoard = [
@@ -29,7 +29,7 @@ describe('ChessHelper', () => {
         expect(fenBoard).toEqual(expectedFenBoard);
     });
 
-    it('should create an initialized board of value', () => {
+    test('should create an initialized board of value', () => {
         // Given
 
         const expectedBoard: Array<string[]> = [
@@ -51,7 +51,7 @@ describe('ChessHelper', () => {
         expect(board).toEqual(expectedBoard);
     });
 
-    it('should clone a board', () => {
+    test('should clone a board', () => {
         // Given
 
         const board: FenBoard = [
@@ -117,7 +117,7 @@ describe('ChessHelper', () => {
         expect(simpleBoard).not.toBe(expectedSimpleBoard);
     });
 
-    it('should give us the piece color', () => {
+    test('should give us the piece color', () => {
         // Given
 
         const whitePiece1: FenPiece = FenPiece.WHITE_BISHOP;
@@ -172,7 +172,7 @@ describe('ChessHelper', () => {
         expect(resultEmpty).toEqual(PieceColor.NONE);
     });
 
-    it('should give us the piece type', () => {
+    test('should give us the piece type', () => {
         // Given
 
         const whitePiece1: FenPiece = FenPiece.WHITE_BISHOP;
@@ -227,7 +227,7 @@ describe('ChessHelper', () => {
         expect(resultEmpty).toEqual(PieceType.NONE);
     });
 
-    it('should indicates if a position is out of the board', () => {
+    test('should indicates if a position is out of the board', () => {
         // Given
 
         const positions: Array<Array<Vec2>> = Array(10).fill(null).map((_1: null, y: number) =>
@@ -256,7 +256,7 @@ describe('ChessHelper', () => {
         expect(resultBoard).toBeTruthy();
     });
 
-    it('should get the right FenPiece', () => {
+    test('should get the right FenPiece', () => {
         // Given
 
         const fenBoard: FenBoard = [
@@ -283,35 +283,35 @@ describe('ChessHelper', () => {
 
         // When
         fenBoard[0].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 0)) === FenPiece.BLACK_BISHOP).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 0)) === FenPiece.BLACK_BISHOP, `Failed with coordinates: ${x},0`).toBeTruthy()
         );
         fenBoard[1].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 1)) === FenPiece.BLACK_KING).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 1)) === FenPiece.BLACK_KING, `Failed with coordinates: ${x},1`).toBeTruthy()
         );
         fenBoard[2].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 2)) === FenPiece.BLACK_KNIGHT).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 2)) === FenPiece.BLACK_KNIGHT, `Failed with coordinates: ${x},2`).toBeTruthy()
         );
         fenBoard[3].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 3)) === FenPiece.EMPTY).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 3)) === FenPiece.EMPTY, `Failed with coordinates: ${x},3`).toBeTruthy()
         );
         fenBoard[4].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 4)) === FenPiece.EMPTY).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 4)) === FenPiece.EMPTY, `Failed with coordinates: ${x},4`).toBeTruthy()
         );
         fenBoard[5].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 5)) === FenPiece.BLACK_PAWN).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 5)) === FenPiece.BLACK_PAWN, `Failed with coordinates: ${x},5`).toBeTruthy()
         );
         fenBoard[6].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 6)) === FenPiece.BLACK_QUEEN).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 6)) === FenPiece.BLACK_QUEEN, `Failed with coordinates: ${x},6`).toBeTruthy()
         );
         fenBoard[7].forEach(
-            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 7)) === FenPiece.BLACK_ROOK).withContext(`${x},0`).toBeTruthy()
+            (_, x) => expect(ChessBoardHelper.getFenPieceByVec(fenBoard, new Vec2(x, 7)) === FenPiece.BLACK_ROOK, `Failed with coordinates: ${x},7`).toBeTruthy()
         );
         vecOutOfBound.forEach(
-            (vec: Vec2) => expect(() => ChessBoardHelper.getFenPieceByVec(fenBoard, vec)).withContext(`${vec.x},${vec.y}`).toThrowError()
+            (vec: Vec2) => expect(() => ChessBoardHelper.getFenPieceByVec(fenBoard, vec), `Failed with coordinates: ${vec.x},${vec.y}`).toThrowError()
         );
     });
 
-    it('should set value into a new board', () => {
+    test('should set value into a new board', () => {
         // Given
 
         const validPosition: Vec2 = new Vec2(Column.B, Row._5);
@@ -352,7 +352,7 @@ describe('ChessHelper', () => {
         expect(invalidCall).toThrowError();
     });
 
-    it('should promote a piece into a new board', () => {
+    test('should promote a piece into a new board', () => {
         // Given
         const whiteFenCoordinate: FenCoordinate = [FenColumn.A, FenRow._8];
         const blackFenCoordinate: FenCoordinate = [FenColumn.A, FenRow._1];
@@ -390,7 +390,7 @@ describe('ChessHelper', () => {
         expect(fenBoard).not.toBe(initialFenBoard);
     });
 
-    it('should not promote the piece type is not a promotion piece', () => {
+    test('should not promote the piece type is not a promotion piece', () => {
         // Given
         const whiteFenCoordinate: FenCoordinate = [FenColumn.A, FenRow._8];
         const blackFenCoordinate: FenCoordinate = [FenColumn.A, FenRow._1];
@@ -428,7 +428,7 @@ describe('ChessHelper', () => {
         expect(fenBoard).not.toBe(initialFenBoard);
     });
 
-    it('should build a safe board', () => {
+    test('should build a safe board', () => {
         // Given
         const boardLine: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -508,7 +508,7 @@ describe('ChessHelper', () => {
         expect(resultPawn).toEqual(safeBoardPawn);
     });
 
-    it('should return a safe board from the cache', () => {
+    test('should return a safe board from the cache', () => {
         // Given
         const boardLine: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -544,7 +544,7 @@ describe('ChessHelper', () => {
         expect(resultLine1).toBe(resultLine2);
     });
 
-    it('should indicates the rook targeted by the castling', () => {
+    test('should indicates the rook targeted by the castling', () => {
         // Given
 
         const positionFrom: Vec2 = new Vec2(4, 0);
@@ -561,7 +561,7 @@ describe('ChessHelper', () => {
         expect(resultA).toEqual(Column.A);
     });
 
-    it('should convert CoordinateMove to Move', () => {
+    test('should convert CoordinateMove to Move', () => {
         // Given
 
         const coordinateMove: CoordinateMove = {
@@ -581,7 +581,7 @@ describe('ChessHelper', () => {
         expect(move).toEqual(expectedMove);
     });
 
-    it('findKing should find both king', () => {
+    test('findKing should find both king', () => {
         // Given
         const fenBoard: FenBoard = [
             [FenPiece.WHITE_PAWN, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -604,7 +604,7 @@ describe('ChessHelper', () => {
         expect(blackKing).toEqual([FenColumn.E, FenRow._8]);
     });
 
-    it('findKing should throw error if no king', () => {
+    test('findKing should throw error if no king', () => {
         // Given
         const fenBoard: FenBoard = [
             [FenPiece.WHITE_PAWN, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
