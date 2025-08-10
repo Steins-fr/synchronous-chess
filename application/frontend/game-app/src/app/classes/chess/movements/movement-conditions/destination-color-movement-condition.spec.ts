@@ -3,13 +3,14 @@ import DestinationColorMovementCondition
 import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
 import { FenBoard } from '@app/helpers/chess-board-helper';
+import { describe, test, expect } from 'vitest';
 
 describe('DestinationColorMoveCondition', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new DestinationColorMovementCondition(PieceColor.BLACK)).toBeTruthy();
     });
 
-    it('should say if it can move', () => {
+    test('should say if it can move', () => {
         // Given
         const condition1: DestinationColorMovementCondition = new DestinationColorMovementCondition(PieceColor.BLACK);
         const condition2: DestinationColorMovementCondition = new DestinationColorMovementCondition(PieceColor.WHITE);

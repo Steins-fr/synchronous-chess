@@ -1,7 +1,8 @@
 import { Block } from './block';
+import { describe, test, expect } from 'vitest';
 
 describe('Block', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new Block(0, '', {
             from: '',
             type: '',

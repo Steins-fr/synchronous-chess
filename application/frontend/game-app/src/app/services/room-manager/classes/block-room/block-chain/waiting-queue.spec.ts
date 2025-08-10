@@ -1,7 +1,8 @@
 import { WaitingQueue } from './waiting-queue';
+import { describe, test, expect } from 'vitest';
 
 describe('WaitingQueue', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new WaitingQueue()).toBeTruthy();
     });
 });

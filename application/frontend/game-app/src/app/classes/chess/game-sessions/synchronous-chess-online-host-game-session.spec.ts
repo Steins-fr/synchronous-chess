@@ -20,7 +20,9 @@ import { Webrtc } from '@app/classes/webrtc/webrtc';
 import WebrtcStates from '@app/classes/webrtc/webrtc-states';
 import ChessBoardHelper from '@app/helpers/chess-board-helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
+import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
+import { vi, describe, test, expect } from 'vitest';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
     public override onMove(message: RoomMessage<SCGameSessionType, PlayMessage>): void {
@@ -33,12 +35,15 @@ class ProtectedTest extends SynchronousChessOnlineHostGameSession {
 }
 
 describe('SynchronousChessOnlineHostGameSession', () => {
-    it('should get the color of the playing player', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should get the color of the playing player', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
 
         const sessionWhite: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         sessionWhite.configuration.whitePlayer = 'a';
@@ -61,12 +66,15 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         expect(noneColor).toEqual(PieceColor.NONE);
     });
 
-    it('should get the none color', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should get the none color', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session1: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session1.configuration.whitePlayer = 'a';
         session1.configuration.blackPlayer = undefined;
@@ -84,25 +92,38 @@ describe('SynchronousChessOnlineHostGameSession', () => {
 
         const session4: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
 
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn', 'colorHasPlayed']);
+        const gameSpy = TestHelper.cast<SynchronousChessGame>({
+            registerMove: vi.fn(),
+            isMoveValid: vi.fn(),
+            runTurn: vi.fn(),
+            colorHasPlayed: vi.fn(),
+        });
         Object.defineProperty(session4, 'game', {
             value: gameSpy,
             writable: false
         });
-        gameSpy.colorHasPlayed.and.returnValue(true);
+        vi.mocked(gameSpy.colorHasPlayed).mockReturnValue(true);
 
         session4.configuration.whitePlayer = 'a';
         session4.configuration.blackPlayer = 'b';
         expect(session4.playingColor).toEqual(PieceColor.NONE);
     });
 
-    it('move should return true on valid play', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('move should return true on valid play', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            transmitMessage: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        const gameSpy = TestHelper.cast<SynchronousChessGame>({
+            registerMove: vi.fn(),
+            isMoveValid: vi.fn(),
+            runTurn: vi.fn(),
+        });
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
@@ -110,7 +131,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: gameSpy,
             writable: false
         });
-        gameSpy.registerMove.and.returnValue(true);
+        vi.mocked(gameSpy.registerMove).mockReturnValue(true);
         Object.defineProperty(gameSpy, 'fenBoard', {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
@@ -123,18 +144,26 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         // When
         session.move(move);
         // Then
-        expect(roomSpy.transmitMessage.calls.count()).toEqual(1);
-        expect(gameSpy.registerMove.calls.count()).toEqual(1);
-        expect(gameSpy.runTurn.calls.count()).toEqual(1);
+        expect(roomSpy.transmitMessage).toHaveBeenCalledTimes(1);
+        expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
+        expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });
 
-    it('move should return false on invalid move', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('move should return false on invalid move', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            transmitMessage: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        const gameSpy = TestHelper.cast<SynchronousChessGame>({
+            registerMove: vi.fn(),
+            isMoveValid: vi.fn(),
+            runTurn: vi.fn(),
+        });
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
@@ -142,7 +171,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: gameSpy,
             writable: false
         });
-        gameSpy.registerMove.and.returnValue(false);
+        vi.mocked(gameSpy.registerMove).mockReturnValue(false);
         Object.defineProperty(gameSpy, 'fenBoard', {
             value: ChessBoardHelper.createFenBoard(),
             writable: false
@@ -156,18 +185,21 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.move(move);
 
         // Then
-        expect(roomSpy.transmitMessage.calls.count()).toEqual(0);
-        expect(gameSpy.registerMove.calls.count()).toEqual(1);
-        expect(gameSpy.runTurn.calls.count()).toEqual(0);
+        expect(roomSpy.transmitMessage).toHaveBeenCalledTimes(0);
+        expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
+        expect(gameSpy.runTurn).toHaveBeenCalledTimes(0);
     });
 
-    it('should run move from a remote playing player', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should run move from a remote playing player', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
+        const runMoveSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
         Object.defineProperty(session, 'runMove', {
@@ -188,16 +220,19 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.onMove(message);
 
         // Then
-        expect(runMoveSpy.calls.count()).toEqual(1);
+        expect(runMoveSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should not run move from a remote spectator', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should not run move from a remote spectator', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
+        const runMoveSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
         Object.defineProperty(session, 'runMove', {
@@ -218,18 +253,23 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.onMove(message);
 
         // Then
-        expect(runMoveSpy.calls.count()).toEqual(0);
+        expect(runMoveSpy).toHaveBeenCalledTimes(0);
     });
 
-    it('should set players on player add', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should set players on player add', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            transmitMessage: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         const defaultConfiguration: SessionConfiguration = { ...session.configuration };
 
-        const webRtcSpy: jasmine.SpyObj<Webrtc> = jasmine.createSpyObj<Webrtc>('Webrtc', ['close'], {
+        const webRtcSpy = TestHelper.cast<Webrtc>({
+            close: vi.fn(),
             states: new Subject<WebrtcStates>(),
             data: new Subject<Message>(),
         });
@@ -276,18 +316,23 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         expect(endConfiguration).toEqual(expectedEndConfiguration);
     });
 
-    it('should decrement spectators on player remove', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should decrement spectators on player remove', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            transmitMessage: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration = {
             whitePlayer: 'robert',
             blackPlayer: 'mario',
             spectatorNumber: 2
         };
-        const webRtcSpy: jasmine.SpyObj<Webrtc> = jasmine.createSpyObj<Webrtc>('Webrtc', ['close'], {
+        const webRtcSpy = TestHelper.cast<Webrtc>({
+            close: vi.fn(),
             states: new Subject<WebrtcStates>(),
             data: new Subject<Message>(),
         });
@@ -312,13 +357,21 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         expect(endConfiguration.spectatorNumber).toEqual(0);
     });
 
-    it('promote should return true on valid play', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('promote should return true on valid play', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            transmitMessage: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        const gameSpy = TestHelper.cast<SynchronousChessGame>({
+            promote: vi.fn(),
+            isMoveValid: vi.fn(),
+            runTurn: vi.fn(),
+        });
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
@@ -326,24 +379,32 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: gameSpy,
             writable: false
         });
-        gameSpy.promote.and.returnValue(true);
+        vi.mocked(gameSpy.promote).mockReturnValue(true);
         const pieceType: PieceType = PieceType.QUEEN;
 
         // When
         session.promote(pieceType);
         // Then
-        expect(roomSpy.transmitMessage.calls.count()).toEqual(1);
-        expect(gameSpy.promote.calls.count()).toEqual(1);
-        expect(gameSpy.runTurn.calls.count()).toEqual(1);
+        expect(roomSpy.transmitMessage).toHaveBeenCalledTimes(1);
+        expect(gameSpy.promote).toHaveBeenCalledTimes(1);
+        expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });
 
-    it('promote should return false on invalid move', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('promote should return false on invalid move', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            transmitMessage: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
-        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        const gameSpy = TestHelper.cast<SynchronousChessGame>({
+            promote: vi.fn(),
+            isMoveValid: vi.fn(),
+            runTurn: vi.fn(),
+        });
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
@@ -351,25 +412,28 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             value: gameSpy,
             writable: false
         });
-        gameSpy.promote.and.returnValue(false);
+        vi.mocked(gameSpy.promote).mockReturnValue(false);
         const pieceType: PieceType = PieceType.QUEEN;
 
         // When
         session.promote(pieceType);
 
         // Then
-        expect(roomSpy.transmitMessage.calls.count()).toEqual(0);
-        expect(gameSpy.promote.calls.count()).toEqual(1);
-        expect(gameSpy.runTurn.calls.count()).toEqual(0);
+        expect(roomSpy.transmitMessage).toHaveBeenCalledTimes(0);
+        expect(gameSpy.promote).toHaveBeenCalledTimes(1);
+        expect(gameSpy.runTurn).toHaveBeenCalledTimes(0);
     });
 
-    it('should run promote from a remote playing player', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should run promote from a remote playing player', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
+        const runPromotionSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
         Object.defineProperty(session, 'runPromotion', {
@@ -387,16 +451,19 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.onPromotion(message);
 
         // Then
-        expect(runPromotionSpy.calls.count()).toEqual(1);
+        expect(runPromotionSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should not run promote from a remote spectator', () => {
-        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
-            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+    test('should not run promote from a remote spectator', () => {
+        const roomSpy = TestHelper.cast<Room<any>>({
+            messenger: vi.fn(),
+            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
+                follow: vi.fn(),
+            }),
         });
-        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
+        const runPromotionSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
         Object.defineProperty(session, 'runPromotion', {
@@ -414,6 +481,6 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.onPromotion(message);
 
         // Then
-        expect(runPromotionSpy.calls.count()).toEqual(0);
+        expect(runPromotionSpy).toHaveBeenCalledTimes(0);
     });
 });

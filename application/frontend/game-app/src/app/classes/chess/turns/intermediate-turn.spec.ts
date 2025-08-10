@@ -4,9 +4,10 @@ import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
 import Turn from '@app/classes/chess/turns/turn';
 import IntermediateTurnAction from '@app/classes/chess/turns/turn-actions/intermediate-turn-action';
 import TurnType from '@app/classes/chess/turns/turn.types';
+import { describe, test, expect } from 'vitest';
 
 describe('IntermediateTurn', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const turn: Turn = new IntermediateTurn({
             whiteTarget: fenCoordinate,
@@ -19,7 +20,7 @@ describe('IntermediateTurn', () => {
         expect(turn.type).toEqual(TurnType.MOVE_INTERMEDIATE);
     });
 
-    it('canBeExecuted should return false if the action is not filled', () => {
+    test('canBeExecuted should return false if the action is not filled', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
@@ -56,7 +57,7 @@ describe('IntermediateTurn', () => {
         expect(resultOnlyBlack).toBeFalsy();
     });
 
-    it('canBeExecuted should return true if the action is filled', () => {
+    test('canBeExecuted should return true if the action is filled', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
@@ -77,7 +78,7 @@ describe('IntermediateTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('canBeExecuted should return true if no target', () => {
+    test('canBeExecuted should return true if no target', () => {
         // Given
 
         const turn: IntermediateTurn = new IntermediateTurn({
@@ -94,7 +95,7 @@ describe('IntermediateTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('isFilled should return true on unsupported color', () => {
+    test('isFilled should return true on unsupported color', () => {
         // Given
         const turn: IntermediateTurn = new IntermediateTurn({
             whiteTarget: null,
@@ -110,7 +111,7 @@ describe('IntermediateTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('isFilled should return false if partially filled', () => {
+    test('isFilled should return false if partially filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const turnWhite: IntermediateTurn = new IntermediateTurn({
@@ -135,7 +136,7 @@ describe('IntermediateTurn', () => {
         expect(resultBlack).toBeFalsy();
     });
 
-    it('isFilled should return true if filled', () => {
+    test('isFilled should return true if filled', () => {
         // Given
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
         const turnWhite: IntermediateTurn = new IntermediateTurn({
@@ -166,7 +167,7 @@ describe('IntermediateTurn', () => {
         expect(resultBlackNoMove).toBeTruthy();
     });
 
-    it('should fill the move in the right color', () => {
+    test('should fill the move in the right color', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
@@ -191,7 +192,7 @@ describe('IntermediateTurn', () => {
         expect(turn.action).toEqual(expectedAction);
     });
 
-    it('should fill only the white move', () => {
+    test('should fill only the white move', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
@@ -216,7 +217,7 @@ describe('IntermediateTurn', () => {
         expect(turn.action).toEqual(expectedAction);
     });
 
-    it('should fill only the black move', () => {
+    test('should fill only the black move', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };

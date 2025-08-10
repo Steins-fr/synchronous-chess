@@ -3,9 +3,10 @@ import { PieceType, PieceColor } from '@app/classes/chess/rules/chess-rules';
 import PromotionTurn from '@app/classes/chess/turns/promotion-turn';
 import Turn from '@app/classes/chess/turns/turn';
 import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion-turn-action';
+import { describe, test, expect } from 'vitest';
 
 describe('PromotionTurn', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new PromotionTurn({
             whiteFenCoordinate: [FenColumn.A, FenRow._1],
             blackFenCoordinate: [FenColumn.A, FenRow._2],
@@ -17,7 +18,7 @@ describe('PromotionTurn', () => {
         ).toBeTruthy();
     });
 
-    it('canBeExecuted should return false if the action is not filled', () => {
+    test('canBeExecuted should return false if the action is not filled', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
@@ -51,7 +52,7 @@ describe('PromotionTurn', () => {
         expect(resultOnlyBlack).toBeFalsy();
     });
 
-    it('canBeExecuted should return true if the action is filled', () => {
+    test('canBeExecuted should return true if the action is filled', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
@@ -69,7 +70,7 @@ describe('PromotionTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('canBeExecuted should return true if no FenCoordinate', () => {
+    test('canBeExecuted should return true if no FenCoordinate', () => {
         // Given
 
         const turn: PromotionTurn = new PromotionTurn({
@@ -86,7 +87,7 @@ describe('PromotionTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('isFilled should return true on unsupported color', () => {
+    test('isFilled should return true on unsupported color', () => {
         // Given
         const turn: PromotionTurn = new PromotionTurn({
             whiteFenCoordinate: null,
@@ -102,7 +103,7 @@ describe('PromotionTurn', () => {
         expect(result).toBeTruthy();
     });
 
-    it('isFilled should return false if partially filled', () => {
+    test('isFilled should return false if partially filled', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
@@ -128,7 +129,7 @@ describe('PromotionTurn', () => {
         expect(resultBlack).toBeFalsy();
     });
 
-    it('isFilled should return true if filled', () => {
+    test('isFilled should return true if filled', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
 
@@ -158,7 +159,7 @@ describe('PromotionTurn', () => {
         expect(resultBlackNoPiece).toBeTruthy();
     });
 
-    it('should fill the PieceType in the right color', () => {
+    test('should fill the PieceType in the right color', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whitePiece: PieceType = PieceType.QUEEN;
@@ -183,7 +184,7 @@ describe('PromotionTurn', () => {
         expect(turn.action).toEqual(expectedAction);
     });
 
-    it('should fill only the white piece', () => {
+    test('should fill only the white piece', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whitePiece: PieceType = PieceType.QUEEN;
@@ -208,7 +209,7 @@ describe('PromotionTurn', () => {
         expect(turn.action).toEqual(expectedAction);
     });
 
-    it('should fill only the black piece', () => {
+    test('should fill only the black piece', () => {
         // Given
         const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
         const whitePiece: PieceType = PieceType.QUEEN;
