@@ -107,7 +107,11 @@
                     "options": {
                         "tsConfig": "tsconfig.spec.json",
                         "runner": "vitest",
-                        "buildTarget": "::testing"
+                        "buildTarget": "::testing",
+                        "codeCoverageReporters": [
+                            "html",
+                            "lcov"
+                        ]
                     }
                 },
                 "lint": {
