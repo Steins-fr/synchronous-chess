@@ -5,6 +5,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import { FlatCompat } from "@eslint/eslintrc";
+import stylistic from '@stylistic/eslint-plugin';
+import html from "@html-eslint/eslint-plugin";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,6 +28,7 @@ export default defineConfig([globalIgnores([
     plugins: {
         "rxjs-angular": rxjsAngular,
         rxjs,
+        '@stylistic': stylistic
     },
 }, {
     files: ["**/*.ts"],
@@ -86,9 +89,23 @@ export default defineConfig([globalIgnores([
         "no-console": ["error", {
             allow: ["warn", "debug", "error"],
         }],
+        '@stylistic/indent': ['error', 4],
     },
 }, {
     files: ["**/*.html"],
-    extends: compat.extends("plugin:@angular-eslint/template/recommended"),
-    rules: {},
+    plugins: {
+        html,
+    },
+    language: "html/html",
+    languageOptions: {
+        // This tells the parser to treat {{ ... }} as template syntax,
+        // so it won’t try to parse contents inside as regular HTML
+        templateEngineSyntax: {
+            "{{": "}}",
+        },
+    },
+    rules: {
+        "html/no-duplicate-class": "error",
+        "html/indent": ["error", 4],
+    }
 }]);

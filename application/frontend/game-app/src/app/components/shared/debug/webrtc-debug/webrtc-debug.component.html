@@ -1,12 +1,16 @@
-<section *ngFor="let remotePlayer of webRtcPlayers()">
+@for (remotePlayer of webRtcPlayers(); track remotePlayer) {
+<section>
     <h4>Debug connexion du joueur : {{ remotePlayer.name }}</h4>
     <app-debug-webrtc-states
         [states]="remotePlayer.states | async"
         [playerName]="remotePlayer.name" />
 </section>
-<section *ngFor="let negotiator of negotiators()">
+}
+@for (negotiator of negotiators(); track negotiator) {
+<section>
     <h4>Debug connexion du négociateur : {{ negotiator.playerName }}</h4>
     <app-debug-webrtc-states
         [states]="negotiator.states | async"
         [playerName]="negotiator.playerName" />
 </section>
+}

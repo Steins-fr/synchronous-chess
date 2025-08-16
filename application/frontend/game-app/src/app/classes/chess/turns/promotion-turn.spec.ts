@@ -7,13 +7,13 @@ import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion
 describe('PromotionTurn', () => {
     it('should create an instance', () => {
         expect(new PromotionTurn({
-                    whiteFenCoordinate: [FenColumn.A, FenRow._1],
-                    blackFenCoordinate: [FenColumn.A, FenRow._2],
-                    whitePiece: null,
-                    blackPiece: null,
-                },
-                null as unknown as Turn,
-            )
+            whiteFenCoordinate: [FenColumn.A, FenRow._1],
+            blackFenCoordinate: [FenColumn.A, FenRow._2],
+            whitePiece: null,
+            blackPiece: null,
+        },
+        null as unknown as Turn,
+        )
         ).toBeTruthy();
     });
 

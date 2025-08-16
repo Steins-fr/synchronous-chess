@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, OnInit, DestroyRef, OnDestroy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
@@ -12,7 +12,7 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
 @Component({
     selector: 'app-chat-page',
     templateUrl: './chat.page.html',
-    imports: [CommonModule, RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
+    imports: [RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
 })
 export class ChatPage implements OnInit, OnDestroy {

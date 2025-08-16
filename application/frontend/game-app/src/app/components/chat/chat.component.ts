@@ -1,29 +1,27 @@
 import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
-import { CommonModule } from '@angular/common';
+
 import {
-  Component,
-  NgZone,
-  OnInit,
-  AfterViewInit,
-  inject,
-  DestroyRef,
-  effect,
-  WritableSignal,
-  signal,
-  ChangeDetectionStrategy,
-  OnChanges, SimpleChanges,
-  input,
-  viewChild
+    ChangeDetectionStrategy,
+    Component,
+    DestroyRef,
+    WritableSignal,
+    afterEveryRender,
+    afterNextRender,
+    effect,
+    inject,
+    input,
+    signal,
+    viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
+import { MatChip, MatChipSet } from '@angular/material/chips';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 import { Player } from '@app/classes/player/player';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
-import { ChatMessageComponent, ChatMessage } from '@app/components/chat/chat-message/chat-message.component';
+import { ChatMessage, ChatMessageComponent } from '@app/components/chat/chat-message/chat-message.component';
 import { ChatParticipantComponent } from '@app/components/chat/chat-participant/chat-participant.component';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Subscription } from 'rxjs';
@@ -36,22 +34,21 @@ export enum ChatMessengerType {
     selector: 'app-chat',
     templateUrl: './chat.component.html',
     imports: [
-        CommonModule,
-        ScrollingModule,
-        MatButtonModule,
-        MatChipsModule,
-        FormsModule,
-        MatFormFieldModule,
-        MatInputModule,
         ChatParticipantComponent,
         ChatMessageComponent,
+        MatChip,
+        MatChipSet,
+        MatFormField,
+        MatInput,
+        MatButton,
+        ScrollingModule,
+        ReactiveFormsModule,
     ],
     styleUrls: ['./chat.component.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
+export class ChatComponent {
     private readonly destroyRef = inject(DestroyRef);
-    private readonly ngZone = inject(NgZone);
 
     public readonly room = input.required<Room<RoomMessage<ChatMessengerType, string>> | undefined>();
     public readonly virtualScrollViewport = viewChild.required(CdkVirtualScrollViewport);
@@ -65,9 +62,9 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
         return room;
     }
 
-    public sendInput: string = '';
+    protected readonly sendInput = new FormControl<string>('');
     protected newMessage: number = 0;
-    protected isSending: boolean = false;
+    protected readonly isSending: WritableSignal<boolean> = signal(false);
     protected readonly chatMessages: WritableSignal<ChatMessage[]> = signal([]);
     protected readonly viewingHistory: WritableSignal<boolean> = signal(false);
     protected readonly players: WritableSignal<Player[]> = signal([]);
@@ -82,23 +79,14 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
                 this.onChatMessage(message);
             }
         });
-    }
 
-    public ngOnInit(): void {
-        // FIXME: Rework with virtual scroll inversed
-        this.ngZone.onMicrotaskEmpty.asObservable()
-            .pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            this.scrollDown();
-        });
-    }
+        effect(() => {
+            const room = this.room();
 
-    public ngOnChanges(changes: SimpleChanges): void {
-        // FIXME: rewwrite to use signals
-        if (changes['room']) {
             this.roomSubscriptions.forEach(sub => sub.unsubscribe());
             this.roomSubscriptions = [];
 
-            if (this.room()) {
+            if (room) {
                 this.roomSubscriptions.push(
                     this.currentRoom.players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
                         this.players.set(players);
@@ -111,18 +99,35 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
                     })
                 );
             }
-        }
-    }
+        });
 
-    public ngAfterViewInit(): void {
-        this.scrollDown();
-
-        this.virtualScrollViewport().elementScrolled().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            const isViewingHistory: boolean = this.virtualScrollViewport().measureScrollOffset('bottom') > 0;
-            if (this.viewingHistory() !== isViewingHistory) {
-                this.newMessage = 0;
-                this.viewingHistory.set(isViewingHistory);
+        effect(() => {
+            const isSending = this.isSending();
+            if (isSending) {
+                this.sendInput.disable();
+            } else {
+                this.sendInput.enable();
             }
+        });
+
+        afterNextRender({
+            write: () => {
+                this.scrollDown();
+
+                this.virtualScrollViewport().elementScrolled().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+                    const isViewingHistory: boolean = this.virtualScrollViewport().measureScrollOffset('bottom') > 0;
+                    if (this.viewingHistory() !== isViewingHistory) {
+                        this.newMessage = 0;
+                        this.viewingHistory.set(isViewingHistory);
+                    }
+                });
+            },
+        });
+
+        afterEveryRender({
+            write: () => {
+                this.scrollDown();
+            },
         });
     }
 
@@ -142,16 +147,17 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
     }
 
     protected sendMessage(): void {
-        this.currentRoom.transmitMessage(ChatMessengerType.CHAT_MESSAGE, this.sendInput);
-        this.isSending = true;
+        this.currentRoom.transmitMessage(ChatMessengerType.CHAT_MESSAGE, this.sendInput.value);
+        this.isSending.set(true);
     }
 
     private onChatMessage(message: RoomMessage<ChatMessengerType, string>): void {
+        console.log('Received chat message:', message);
         this.newMessage += 1;
 
         if (this.currentRoom.localPlayer?.name === message.from) {
-            this.sendInput = '';
-            this.isSending = false;
+            this.sendInput.reset('');
+            this.isSending.set(false);
         }
 
         this.chatMessages.update(chatMessages => chatMessages.concat({

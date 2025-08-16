@@ -5,5 +5,7 @@
     <div id="page-content" class="container">
         <ng-content/>
     </div>
-    <div id="room-content-overlay" *ngIf="!isSetup()"></div>
+    @if (!isSetup()) {
+    <div id="room-content-overlay"></div>
+    }
 </div>
