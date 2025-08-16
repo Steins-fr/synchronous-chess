@@ -4,14 +4,14 @@
         <ng-container *ngTemplateOutlet="rowLabels" />
         <div [ngClass]="{'grabbing-cursor': !pieceDragged.equal(-1, -1)}" cdkDropListGroup id="board-grid">
             <mat-grid-list cols="8">
-                <ng-container *ngFor="let row of fenBoard; let y = index;">
+                <ng-container *ngFor="let row of fenBoard(); let y = index;">
                     <ng-container *ngFor="let piece of row; let x = index;">
                         <mat-grid-tile
                             *ngIf="[x, y] | vector2d as pos"
                             [ngClass]="{
                                 'drag-hover': cellHovered.equal(pos.x, pos.y),
                                 'dragged': pieceDragged.equal(pos.x, pos.y),
-                                'valid-move': validPlayBoard[y][x],
+                                'valid-move': validPlayBoard()[y][x],
                                 'move-preview': isMovePreview(pos)}">
                             <div
                                 (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"

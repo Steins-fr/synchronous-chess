@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
@@ -26,8 +26,8 @@ export class ChessPromotionComponent {
         [PieceType.ROOK, FenPiece.BLACK_ROOK]
     ]);
 
-    @Input({ required: true }) public color!: PieceColor;
-    @Output() public pieceType: EventEmitter<PieceType> = new EventEmitter();
+    public readonly color = input.required<PieceColor>();
+    public readonly pieceType = output<PieceType>();
 
     public get rookType(): PieceType {
         return PieceType.ROOK;
@@ -46,7 +46,7 @@ export class ChessPromotionComponent {
     }
 
     public piece(pieceType: PieceType): FenPiece {
-        const pieceMap: Map<PieceType, FenPiece> = this.color === PieceColor.WHITE ? ChessPromotionComponent.whitePieces : ChessPromotionComponent.blackPieces;
+        const pieceMap: Map<PieceType, FenPiece> = this.color() === PieceColor.WHITE ? ChessPromotionComponent.whitePieces : ChessPromotionComponent.blackPieces;
         return pieceMap.get(pieceType) ?? FenPiece.EMPTY;
     }
 

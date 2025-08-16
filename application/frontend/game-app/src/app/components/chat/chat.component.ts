@@ -1,18 +1,19 @@
 import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { CommonModule } from '@angular/common';
 import {
-    Component,
-    NgZone,
-    ViewChild,
-    OnInit,
-    AfterViewInit,
-    inject,
-    DestroyRef,
-    effect,
-    WritableSignal,
-    signal,
-    ChangeDetectionStrategy,
-    Input, OnChanges, SimpleChanges
+  Component,
+  NgZone,
+  OnInit,
+  AfterViewInit,
+  inject,
+  DestroyRef,
+  effect,
+  WritableSignal,
+  signal,
+  ChangeDetectionStrategy,
+  OnChanges, SimpleChanges,
+  input,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -52,17 +53,18 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
     private readonly destroyRef = inject(DestroyRef);
     private readonly ngZone = inject(NgZone);
 
-    @Input({ required: true }) room: Room<RoomMessage<ChatMessengerType, string>> | undefined;
+    public readonly room = input.required<Room<RoomMessage<ChatMessengerType, string>> | undefined>();
+    public readonly virtualScrollViewport = viewChild.required(CdkVirtualScrollViewport);
 
     protected get currentRoom(): Room<RoomMessage<ChatMessengerType, string>> {
-        if (!this.room) {
+        const room = this.room();
+        if (!room) {
             throw new Error('Room not found');
         }
 
-        return this.room;
+        return room;
     }
 
-    @ViewChild(CdkVirtualScrollViewport) public virtualScrollViewport!: CdkVirtualScrollViewport;
     public sendInput: string = '';
     protected newMessage: number = 0;
     protected isSending: boolean = false;
@@ -91,11 +93,12 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
+        // FIXME: rewwrite to use signals
         if (changes['room']) {
             this.roomSubscriptions.forEach(sub => sub.unsubscribe());
             this.roomSubscriptions = [];
 
-            if (this.room) {
+            if (this.room()) {
                 this.roomSubscriptions.push(
                     this.currentRoom.players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
                         this.players.set(players);
@@ -114,8 +117,8 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
     public ngAfterViewInit(): void {
         this.scrollDown();
 
-        this.virtualScrollViewport.elementScrolled().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-            const isViewingHistory: boolean = this.virtualScrollViewport.measureScrollOffset('bottom') > 0;
+        this.virtualScrollViewport().elementScrolled().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+            const isViewingHistory: boolean = this.virtualScrollViewport().measureScrollOffset('bottom') > 0;
             if (this.viewingHistory() !== isViewingHistory) {
                 this.newMessage = 0;
                 this.viewingHistory.set(isViewingHistory);
@@ -134,7 +137,7 @@ export class ChatComponent implements OnInit, OnChanges, AfterViewInit {
     protected scrollDown(forced: boolean = false): void {
         if ((this.newMessage && !this.viewingHistory()) || forced) {
             this.newMessage = 0;
-            this.virtualScrollViewport.scrollTo({ bottom: 0 });
+            this.virtualScrollViewport().scrollTo({ bottom: 0 });
         }
     }
 

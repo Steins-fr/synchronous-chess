@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RoomSetupComponent } from '@app/components/shared/room-setup/room-setup.component';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
@@ -12,7 +12,7 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoomLayoutComponent {
-    @Input({ required: true }) public maxPlayer!: number;
+    public readonly maxPlayer = input.required<number>();
 
     private readonly roomSetupService = inject(RoomSetupService);
     protected readonly isSetup = toSignal(this.roomSetupService.roomIsSetup$);

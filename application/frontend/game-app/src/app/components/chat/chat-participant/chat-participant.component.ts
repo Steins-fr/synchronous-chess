@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import {
-    Component,
-    Input,
-    DestroyRef,
-    inject,
-    ChangeDetectionStrategy,
-    signal,
-    OnChanges,
-    SimpleChanges,
+  Component,
+  DestroyRef,
+  inject,
+  ChangeDetectionStrategy,
+  signal,
+  OnChanges,
+  SimpleChanges,
+  input
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatChipsModule } from '@angular/material/chips';
@@ -23,7 +23,7 @@ import { Subscription } from 'rxjs';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChatParticipantComponent implements OnChanges {
-    @Input({ required: true }) public player!: Player;
+    public readonly player = input.required<Player>();
 
     protected ping = signal<string>('');
     protected isMe = signal<boolean>(false);
@@ -32,12 +32,14 @@ export class ChatParticipantComponent implements OnChanges {
     private readonly destroyRef = inject(DestroyRef);
 
     public ngOnChanges(changes: SimpleChanges) {
+        // FIXME: Rework this to use signals
         if (changes['player']) {
             this.pingSubscription?.unsubscribe();
             this.ping.set('');
-            if (this.player instanceof WebRtcPlayer) {
+            const player = this.player();
+            if (player instanceof WebRtcPlayer) {
                 this.isMe.set(false);
-                this.pingSubscription = this.player.ping.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(ping => {
+                this.pingSubscription = player.ping.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(ping => {
                     this.ping.set(ping);
                 });
             } else {

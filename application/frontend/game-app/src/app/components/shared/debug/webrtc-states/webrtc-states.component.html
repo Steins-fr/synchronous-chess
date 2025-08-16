@@ -1,36 +1,36 @@
-<ng-container *ngIf="states">
+<ng-container *ngIf="states(); let currentStates">
     <div class="row">
         <span>
-            RTC states of {{ playerName }}:
+            RTC states of {{ playerName() }}:
         </span>
     </div>
     <div class="row">
         <span>
-            ICE Connection: <span id="state-ice-connection">{{ states.iceConnection }}</span>
+            ICE Connection: <span id="state-ice-connection">{{ currentStates.iceConnection }}</span>
         </span>
     </div>
     <div class="row">
         <span>
-            ICE Gathering: <span id="state-ice-gathering">{{ states.iceGathering }}</span>
+            ICE Gathering: <span id="state-ice-gathering">{{ currentStates.iceGathering }}</span>
         </span>
     </div>
     <div class="row">
         <span>
-            Signaling: <span id="state-signaling">{{ states.signaling }}</span>
+            Signaling: <span id="state-signaling">{{ currentStates.signaling }}</span>
         </span>
     </div>
     <div class="row">
         <span>
-            Send channel: <span id="state-send-channel">{{ states.sendChannel }}</span>
+            Send channel: <span id="state-send-channel">{{ currentStates.sendChannel }}</span>
         </span>
     </div>
     <div class="row">
         <span>
-            Receive channel: <span id="state-receive-channel">{{ states.receiveChannel }}</span>
+            Receive channel: <span id="state-receive-channel">{{ currentStates.receiveChannel }}</span>
         </span>
     </div>
     <table id="candidates">
-        <caption>List of candidates of {{ playerName }}</caption>
+        <caption>List of candidates of {{ playerName() }}</caption>
         <thead id="candidatesHead">
             <tr>
                 <th scope="col">Time</th>
@@ -44,7 +44,7 @@
             </tr>
         </thead>
         <tbody id="candidatesBody">
-            <tr *ngFor="let candidate of states.candidates">
+            <tr *ngFor="let candidate of currentStates.candidates">
                 <td>{{ candidate.elapsed }}</td>
                 <td>{{ candidate.component }}</td>
                 <td>{{ candidate.type }}</td>

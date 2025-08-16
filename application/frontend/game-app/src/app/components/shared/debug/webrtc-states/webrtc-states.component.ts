@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 import WebrtcStates from '@app/classes/webrtc/webrtc-states';
 
 @Component({
@@ -9,6 +9,6 @@ import WebrtcStates from '@app/classes/webrtc/webrtc-states';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WebrtcStatesComponent {
-    @Input({ required: true }) public playerName!: string;
-    @Input({ required: true }) public states!: WebrtcStates | null;
+    public readonly playerName = input.required<string>();
+    public readonly states = input.required<WebrtcStates | null>();
 }
