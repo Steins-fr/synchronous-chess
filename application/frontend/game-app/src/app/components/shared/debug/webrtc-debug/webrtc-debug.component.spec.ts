@@ -1,23 +1,20 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component';
 
 import { WebrtcDebugComponent } from './webrtc-debug.component';
-import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component';
 
 describe('WebrtcDebugComponent', () => {
     let component: WebrtcDebugComponent;
     let fixture: ComponentFixture<WebrtcDebugComponent>;
 
-    beforeEach(async(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [
                 WebrtcDebugComponent,
                 WebrtcStatesComponent
             ]
-        })
-            .compileComponents();
-    }));
+        }).compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(WebrtcDebugComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

@@ -1,5 +1,5 @@
+import { Vec2 } from '@app/classes/vector/vec2';
 import { Vector2dPipe } from './vector2d.pipe';
-import Vec2 from 'vec2';
 
 describe('Vector2dPipe', () => {
     it('create an instance', () => {

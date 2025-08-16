@@ -1,16 +1,18 @@
-import { DoNotApprocheMovementCondition } from './do-not-approche-movement-condition';
-import { FenPiece } from '../../rules/chess-rules';
-import Vec2 from 'vec2';
-import { FenBoard } from '../../../../helpers/chess-board-helper';
+import {
+    DoNotApproachMovementCondition
+} from '@app/classes/chess/movements/movement-conditions/do-not-approach-movement-condition';
+import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
-describe('DoNotApprocheMoveCondition', () => {
+describe('DoNotApproachMoveCondition', () => {
     it('should create an instance', () => {
-        expect(new DoNotApprocheMovementCondition(FenPiece.BLACK_KING, 2)).toBeTruthy();
+        expect(new DoNotApproachMovementCondition(FenPiece.BLACK_KING, 2)).toBeTruthy();
     });
 
     it('should say if it can move', () => {
         // Given
-        const condition: DoNotApprocheMovementCondition = new DoNotApprocheMovementCondition(FenPiece.BLACK_KING, 2);
+        const condition: DoNotApproachMovementCondition = new DoNotApproachMovementCondition(FenPiece.BLACK_KING, 2);
         const board: FenBoard = [
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
@@ -23,8 +25,8 @@ describe('DoNotApprocheMoveCondition', () => {
         ];
 
         // When
-        const resultValidDistance: boolean = condition.canMove(new Vec2([0, 0]), new Vec2([0, 5]), board);
-        const resultInvalidDistance: boolean = condition.canMove(new Vec2([0, 0]), new Vec2([1, 1]), board);
+        const resultValidDistance: boolean = condition.canMove(new Vec2(0, 0), new Vec2(0, 5), board);
+        const resultInvalidDistance: boolean = condition.canMove(new Vec2(0, 0), new Vec2(1, 1), board);
 
         // Then
         expect(resultValidDistance).toBeTruthy();

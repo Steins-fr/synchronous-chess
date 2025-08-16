@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WebrtcStatesComponent } from './webrtc-states.component';
 
@@ -6,14 +6,11 @@ describe('WebrtcStatesComponent', () => {
     let component: WebrtcStatesComponent;
     let fixture: ComponentFixture<WebrtcStatesComponent>;
 
-    beforeEach(async(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [WebrtcStatesComponent]
-        })
-            .compileComponents();
-    }));
+        }).compileComponents();
 
-    beforeEach(() => {
         fixture = TestBed.createComponent(WebrtcStatesComponent);
         component = fixture.componentInstance;
         component.playerName = 'playerName';

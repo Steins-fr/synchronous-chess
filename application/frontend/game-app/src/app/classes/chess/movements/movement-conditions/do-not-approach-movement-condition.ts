@@ -1,9 +1,9 @@
-import { FenPiece } from '../../rules/chess-rules';
-import Vec2 from 'vec2';
-import { FenBoard } from '../../../../helpers/chess-board-helper';
-import MovementCondition from './movement-condition';
+import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
+import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2 } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
-export class DoNotApprocheMovementCondition extends MovementCondition {
+export class DoNotApproachMovementCondition extends MovementCondition {
     public constructor(public readonly fenPiece: FenPiece, public readonly distance: number) {
         super();
     }
@@ -22,6 +22,6 @@ export class DoNotApprocheMovementCondition extends MovementCondition {
 
     public canMove(_oldPosition: Vec2, newPosition: Vec2, board: FenBoard): boolean {
         const fearedPieces: Array<Vec2> = this.findFearedPieces(board);
-        return fearedPieces.some((fearedPiece: Vec2) => fearedPiece.distance(newPosition) < this.distance) === false;
+        return !fearedPieces.some((fearedPiece: Vec2) => fearedPiece.distanceVec(newPosition) < this.distance);
     }
 }

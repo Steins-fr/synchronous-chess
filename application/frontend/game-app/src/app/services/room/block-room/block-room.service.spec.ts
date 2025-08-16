@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { BlockRoomService } from './block-room.service';
 
 describe('BlockRoomService', () => {
-  let service: BlockRoomService;
+  let service: BlockRoomService<never>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});

@@ -11,33 +11,33 @@ import ChessBoardHelper from '../../../helpers/chess-board-helper';
 import Move, { FenColumn, FenRow } from '../interfaces/move';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
-    public runMove(color: PieceColor, move: Move): boolean {
+    public override runMove(color: PieceColor, move: Move): boolean {
         return super.runMove(color, move);
     }
 
-    public runPromotion(color: PieceColor, pieceType: PieceType): boolean {
+    public override runPromotion(color: PieceColor, pieceType: PieceType): boolean {
         return super.runPromotion(color, pieceType);
     }
 }
 
 describe('SynchronousChessOnlinePeerGameSession', () => {
 
-    let roomServiceSpy: jasmine.SpyObj<RoomService>;
+    let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
 
     beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService>('RoomService', ['notifier', 'roomManagerNotifier']);
+        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['notifier', 'roomManagerNotifier']);
         Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
         Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any, any>>('NotifierFlow<any,any>', ['follow']),
+            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
             writable: false
         });
     });
 
     it('should create an instance', () => {
-        expect(new SynchronousChessOnlinePeerGameSession(roomServiceSpy, undefined)).toBeTruthy();
+        expect(new SynchronousChessOnlinePeerGameSession(roomServiceSpy, null as unknown as NgZone)).toBeTruthy();
     });
 
     it('should set the configuration', () => {
@@ -217,7 +217,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview).toEqual(undefined);
+        expect(session.movePreview).toBeUndefined();
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
     });

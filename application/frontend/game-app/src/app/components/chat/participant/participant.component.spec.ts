@@ -1,20 +1,19 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ParticipantComponent } from './participant.component';
 import { MatChipsModule } from '@angular/material/chips';
-import { Player, PlayerType } from '../../../classes/player/player';
+import { Player, PlayerType } from '@app/classes/player/player';
 
 describe('ParticipantComponent', () => {
     let component: ParticipantComponent;
     let fixture: ComponentFixture<ParticipantComponent>;
 
-    beforeEach(async(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [ParticipantComponent],
             imports: [MatChipsModule]
-        })
-            .compileComponents();
-    }));
+        }).compileComponents();
+    });
 
     beforeEach(() => {
         fixture = TestBed.createComponent(ParticipantComponent);

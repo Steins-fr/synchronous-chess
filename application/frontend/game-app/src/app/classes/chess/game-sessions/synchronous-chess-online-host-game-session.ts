@@ -8,7 +8,7 @@ import RoomPlayerRemoveEvent from '../../room-manager/events/room-player-remove-
 
 export default class SynchronousChessOnlineHostGameSession extends SynchronousChessOnlineGameSession {
 
-    public constructor(roomService: RoomService, ngZone: NgZone) {
+    public constructor(roomService: RoomService<any>, ngZone: NgZone) {
         super(roomService, ngZone);
         this.followRoomManager();
     }

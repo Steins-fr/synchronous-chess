@@ -1,6 +1,6 @@
-import Vec2 from 'vec2';
-import MovementCondition from './movement-condition';
-import { Row } from '../../interfaces/CoordinateMove';
+import { Row } from '@app/classes/chess/interfaces/CoordinateMove';
+import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
+import { Vec2 } from '@app/classes/vector/vec2';
 
 export default class LineMovementCondition extends MovementCondition {
 

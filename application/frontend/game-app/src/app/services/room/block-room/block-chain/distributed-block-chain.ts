@@ -1,16 +1,14 @@
-import {
-    BlockRoomServiceInterface
-} from '../block-room.service.interface';
-import { Player } from '../../../../classes/player/player';
-import { BlockToHash, Chain } from './chain';
-import { RoomServiceMessage } from '../../../../classes/webrtc/messages/room-service-message';
-import { Block, PlayerData } from './block';
-import MessageOriginType from '../../../../classes/webrtc/messages/message-origin.types';
-import { Participant } from './participant';
-import { BlockChainMessage } from '../../../../classes/webrtc/messages/block-chain-message';
-import { keyPairAlgorithm } from './block-chain.constants';
-import { WaitingQueue } from './waiting-queue';
 import { DefaultUrlSerializer, UrlTree } from '@angular/router';
+import { Player } from '@app/classes/player/player';
+import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
+import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
+import { RoomServiceMessage } from '@app/classes/webrtc/messages/room-service-message';
+import { BlockRoomServiceInterface } from '../block-room.service.interface';
+import { Block, PlayerData } from './block';
+import { keyPairAlgorithm } from './block-chain.constants';
+import { BlockToHash, Chain } from './chain';
+import { Participant } from './participant';
+import { WaitingQueue } from './waiting-queue';
 
 export enum BlockChainMessageType {
     NEW_BLOCK_APPROVED = 'newBlockApproved',
@@ -40,17 +38,26 @@ export enum BlockChainState {
 }
 
 type MessageHandlers = {
-    [key in BlockChainMessageType]: (message: BlockChainMessage) => Promise<BlockChainState>;
+    [BlockChainMessageType.NEW_BLOCK_APPROVED]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
+    [BlockChainMessageType.NEW_BLOCK_DECLINED]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
+    [BlockChainMessageType.NEGOTIATION_REQUEST]: (message: BlockChainMessage<void>) => Promise<BlockChainState>;
+    [BlockChainMessageType.NEGOTIATION_RESPONSE]: (message: BlockChainMessage<NegotiationPayload>) => Promise<BlockChainState>;
+    [BlockChainMessageType.GET_LAST_BLOCK_REQUEST]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
+    [BlockChainMessageType.GET_LAST_BLOCK_RESPONSE]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
+    [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message: BlockChainMessage<BlockInterval>) => Promise<BlockChainState>;
+    [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message: BlockChainMessage<Block[]>) => Promise<BlockChainState>;
 };
+
+export type BlockChainMessageTypes = BlockChainMessage<Block> & BlockChainMessage<void> & BlockChainMessage<NegotiationPayload> & BlockChainMessage<BlockInterval> & BlockChainMessage<Block[]>;
 
 export class DistributedBlockChain {
 
     private state: BlockChainState = BlockChainState.INITIALISING;
-    private blockChain?: Chain;
-    private myKeyPair: CryptoKeyPair;
+    private readonly blockChain: Chain;
+    private myKeyPair!: CryptoKeyPair;
     private readonly participants: Map<string, Participant> = new Map();
-    private localParticipant: Participant;
-    private localBlock: Block;
+    private localParticipant?: Participant;
+    private localBlock?: Block;
     private readonly blocksToValidate: WaitingQueue = new WaitingQueue();
 
     private readonly messageHandler: MessageHandlers = {
@@ -69,9 +76,11 @@ export class DistributedBlockChain {
             .then((keyPair: CryptoKeyPair) => {
                 this.myKeyPair = keyPair;
             });
+
+        this.blockChain = new Chain();
     }
 
-    public handle(message: BlockChainMessage): void {
+    public handle(message: BlockChainMessageTypes): void {
         this.messageHandler[message.type](message).then((state: BlockChainState) => this.updateState(state));
     }
 
@@ -80,10 +89,6 @@ export class DistributedBlockChain {
     }
 
     public initiate(): void {
-        if (!this.blockChain) {
-            this.blockChain = new Chain();
-        }
-
         if (this.state === BlockChainState.OUTDATED) {
             for (const participant of this.participants.values()) {
                 if (!participant.isLocal()) {
@@ -98,6 +103,10 @@ export class DistributedBlockChain {
     public async transmitMessage<T>(type: string, message: T): Promise<void> {
         if (this.blockRoomService.isReady()) {
 
+            if (!this.blockRoomService.localPlayer) {
+                return;
+            }
+
             const playerData: PlayerData = {
                 from: this.blockRoomService.localPlayer.name,
                 type,
@@ -110,9 +119,10 @@ export class DistributedBlockChain {
 
     private async transmitLocalBlock(playerData?: PlayerData): Promise<void> {
         const lastBlock: Block = this.blockChain.getLatestBlock();
+        const data = playerData ?? this.localBlock?.data;
 
-        if (!playerData && !this.localBlock) {
-            console.log('return');
+        if (!data || !this.localParticipant) {
+            console.trace('return', data, this.localParticipant);
             return;
         }
 
@@ -120,7 +130,7 @@ export class DistributedBlockChain {
             index: lastBlock.index + 1,
             previousHash: lastBlock.hash,
             timestamp: '',
-            data: playerData ?? this.localBlock.data
+            data,
         };
 
         const hash: string = await Chain.calculateHash(blockToHash);
@@ -140,6 +150,7 @@ export class DistributedBlockChain {
     private sendBlock(block: Block, type: BlockChainMessageType): void {
         const roomServiceMessage: BlockChainMessage<Block> = {
             type,
+            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             payload: block,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
         };
@@ -148,9 +159,10 @@ export class DistributedBlockChain {
         const urlSerializer: DefaultUrlSerializer = new DefaultUrlSerializer();
         const url: UrlTree = urlSerializer.parse(`/${currentSearchString}`);
 
-        if (url.queryParams.latency) {
+        const latencyString = url.queryParamMap.get('latency');
+        if (latencyString) {
             // console.log(`Will send block declined after ${url.queryParams.latency}ms`, roomServiceMessage.payload);
-            setTimeout(() => this.sendMessage(roomServiceMessage), parseInt(url.queryParams.latency, 10));
+            setTimeout(() => this.sendMessage(roomServiceMessage), parseInt(latencyString, 10));
         } else {
             this.sendMessage(roomServiceMessage);
         }
@@ -164,7 +176,7 @@ export class DistributedBlockChain {
         this.sendBlock(block, BlockChainMessageType.NEW_BLOCK_DECLINED);
     }
 
-    public onMessage(message: BlockChainMessage): void {
+    public onMessage(message: BlockChainMessageTypes): void {
         if (this.support(message)) {
             this.handle(message);
         }
@@ -183,6 +195,7 @@ export class DistributedBlockChain {
     private async onNegotiationRequest(message: BlockChainMessage<void>): Promise<BlockChainState> {
 
         const response: BlockChainMessage<NegotiationPayload> = {
+            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.NEGOTIATION_RESPONSE,
             payload: {
                 nbParticipants: this.participants.size,
@@ -200,7 +213,7 @@ export class DistributedBlockChain {
 
         const negotiationPayload: NegotiationPayload = message.payload;
 
-        const participant: Participant = this.participants.get(message.from);
+        const participant: Participant | undefined = this.participants.get(message.from);
 
         if (participant) {
             participant.publicKey = await crypto.subtle.importKey(
@@ -226,6 +239,9 @@ export class DistributedBlockChain {
     }
 
     private async approveBlockFor(block: Block, participant: Participant): Promise<void> {
+        if (!this.localParticipant) {
+            throw new Error('Local participant is not defined');
+        }
 
         if (!await this.blockChain.canAddBlockAsync(block)) {
             if (block.hash === this.localBlock?.hash) {
@@ -268,6 +284,9 @@ export class DistributedBlockChain {
     }
 
     private async declineBlockFor(block: Block, participant: Participant): Promise<void> {
+        if (!this.localParticipant) {
+            throw new Error('Local participant is not defined');
+        }
 
         if (!this.blocksToValidate.hasBlock(block)) {
             if (this.blocksToValidate.approveBlock(block, this.localParticipant)) {
@@ -281,7 +300,11 @@ export class DistributedBlockChain {
     }
 
     private async validateMessage(message: BlockChainMessage<Block>): Promise<void> {
-        const blockFrom: Participant = this.participants.get(message.payload.data.from);
+        const blockFrom: Participant | undefined = this.participants.get(message.payload.data.from);
+
+        if (!blockFrom) {
+            throw new Error('Unknown participant');
+        }
 
         if (!await Chain.verifyMessage(message.payload.signature, message.payload.hash, blockFrom.publicKey)) {
             throw new Error('Someone try to play as another player');
@@ -290,8 +313,8 @@ export class DistributedBlockChain {
 
     private async onNewBlockApproved(message: BlockChainMessage<Block>): Promise<BlockChainState> {
 
-        const blockFrom: Participant = this.participants.get(message.payload.data.from);
-        const blockApprovedBy: Participant = this.participants.get(message.from);
+        const blockFrom: Participant | undefined = this.participants.get(message.payload.data.from);
+        const blockApprovedBy: Participant | undefined = this.participants.get(message.from);
 
         if (blockFrom && blockApprovedBy) {
             await this.validateMessage(message);
@@ -303,8 +326,8 @@ export class DistributedBlockChain {
 
     private async onNewBlockDeclined(message: BlockChainMessage<Block>): Promise<BlockChainState> {
 
-        const blockFrom: Participant = this.participants.get(message.payload.data.from);
-        const blockDeclinedBy: Participant = this.participants.get(message.from);
+        const blockFrom: Participant | undefined = this.participants.get(message.payload.data.from);
+        const blockDeclinedBy: Participant | undefined = this.participants.get(message.from);
 
         if (blockFrom && blockDeclinedBy) {
             await this.validateMessage(message);
@@ -317,6 +340,7 @@ export class DistributedBlockChain {
     private async onGetLastBlockRequest(message: RoomServiceMessage): Promise<BlockChainState> {
 
         const roomServiceMessage: BlockChainMessage<Block> = {
+            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.GET_LAST_BLOCK_RESPONSE,
             payload: this.blockChain.getLatestBlock(),
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -334,6 +358,7 @@ export class DistributedBlockChain {
 
         if (block.hash !== lastBlock.hash && block.index > lastBlock.index) {
             const roomServiceMessage: BlockChainMessage<BlockInterval> = {
+                from: '', // Will be set by the participant/player, TODO: Simplify the interface
                 type: BlockChainMessageType.GET_BLOCKS_REQUEST,
                 payload: { from: lastBlock.index + 1, to: block.index },
                 origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -358,6 +383,7 @@ export class DistributedBlockChain {
         }
 
         const roomServiceMessage: BlockChainMessage<Block[]> = {
+            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.GET_BLOCKS_RESPONSE,
             payload: blocks,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -395,7 +421,7 @@ export class DistributedBlockChain {
 
     protected sendToParticipant(playerName: string, message: BlockChainMessage): void {
         message.from = this.blockRoomService.localPlayer.name;
-        const participant: Participant | null = this.participants.get(playerName);
+        const participant: Participant | undefined = this.participants.get(playerName);
 
         if (participant) {
             participant.sendMessage(message);
@@ -408,6 +434,11 @@ export class DistributedBlockChain {
             this.sendNegotiation(player.name);
         } else {
             this.localParticipant = this.participants.get(player.name);
+
+            if (!this.localParticipant) {
+                throw new Error('Local participant is not defined');
+            }
+
             this.localParticipant.publicKey = this.myKeyPair.publicKey;
             this.blocksToValidate.localParticipant = this.localParticipant;
         }
@@ -415,6 +446,7 @@ export class DistributedBlockChain {
 
     public sendNegotiation(participantName: string): void {
         const roomServiceMessage: BlockChainMessage = {
+            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.NEGOTIATION_REQUEST,
             payload: null,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -425,11 +457,21 @@ export class DistributedBlockChain {
 
     private getParticipantLastBlock(participantName: string): void {
         const roomServiceMessage: BlockChainMessage = {
+            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
             payload: null,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
         };
 
         this.sendToParticipant(participantName, roomServiceMessage);
+    }
+
+    public clear(): void {
+        this.participants.clear();
+        this.blocksToValidate.clear();
+        this.localParticipant = undefined;
+        this.localBlock = undefined;
+        this.state = BlockChainState.INITIALISING;
+        this.blockChain.reset();
     }
 }
