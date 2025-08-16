@@ -3,7 +3,6 @@ import { CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrollin
 import {
     Component,
     DestroyRef,
-    WritableSignal,
     afterEveryRender,
     afterNextRender,
     effect,
@@ -61,13 +60,13 @@ export class ChatComponent {
     }
 
     protected readonly sendInput = new FormControl<string>('');
-    protected newMessage: number = 0;
-    protected readonly isSending: WritableSignal<boolean> = signal(false);
-    protected readonly chatMessages: WritableSignal<ChatMessage[]> = signal([]);
-    protected readonly viewingHistory: WritableSignal<boolean> = signal(false);
-    protected readonly players: WritableSignal<Player[]> = signal([]);
-    protected readonly queuingPlayers: WritableSignal<string[]> = signal([]);
-    private readonly messengerSignal: WritableSignal<RoomMessage<ChatMessengerType, string> | null> = signal(null);
+    protected readonly newMessage = signal<number>(0);
+    protected readonly isSending = signal<boolean>(false);
+    protected readonly chatMessages = signal<ChatMessage[]>([]);
+    protected readonly viewingHistory = signal<boolean>(false);
+    protected readonly players = signal<Player[]>([]);
+    protected readonly queuingPlayers = signal<string[]>([]);
+    private readonly messengerSignal = signal<RoomMessage<ChatMessengerType, string> | null>(null);
     private roomSubscriptions: Subscription[] = [];
 
     public constructor() {
@@ -115,7 +114,7 @@ export class ChatComponent {
                 this.virtualScrollViewport().elementScrolled().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                     const isViewingHistory: boolean = this.virtualScrollViewport().measureScrollOffset('bottom') > 0;
                     if (this.viewingHistory() !== isViewingHistory) {
-                        this.newMessage = 0;
+                        this.newMessage.set(0);
                         this.viewingHistory.set(isViewingHistory);
                     }
                 });
@@ -138,8 +137,8 @@ export class ChatComponent {
     }
 
     protected scrollDown(forced: boolean = false): void {
-        if ((this.newMessage && !this.viewingHistory()) || forced) {
-            this.newMessage = 0;
+        if ((this.newMessage() && !this.viewingHistory()) || forced) {
+            this.newMessage.set(0);
             this.virtualScrollViewport().scrollTo({ bottom: 0 });
         }
     }
@@ -150,7 +149,7 @@ export class ChatComponent {
     }
 
     private onChatMessage(message: RoomMessage<ChatMessengerType, string>): void {
-        this.newMessage += 1;
+        this.newMessage.update(value => value + 1);
 
         if (this.currentRoom.localPlayer?.name === message.from) {
             this.sendInput.reset('');

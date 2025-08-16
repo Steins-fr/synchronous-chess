@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute } from '@angular/router';
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { map } from 'rxjs';
 
@@ -30,11 +31,11 @@ export class RoomSetupComponent implements OnInit {
         const params = this.route.snapshot.queryParamMap;
         if (params.has('auto-create')) {
             this.roomName = params.get('room') ?? 'test';
-            this.playerName = `${ Math.floor(Math.random() * 100000) }`;
+            this.playerName = `${ CryptoHelper.randomNumber(100000, 999999) }`;
             this.hostRoom();
         } else if (params.has('auto-join')) {
             this.roomName = params.get('room') ?? 'test';
-            this.playerName = `${ Math.floor(Math.random() * 100000) }`;
+            this.playerName = `${ CryptoHelper.randomNumber(100000, 999999) }`;
             setTimeout(() => this.joinRoom(), 1000);
         }
     }

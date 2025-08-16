@@ -10,6 +10,7 @@ import { keyPairAlgorithm } from './block-chain.constants';
 import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
 import { WaitingQueue } from './waiting-queue';
+import { TimedLogger } from '@app/helpers/timed-logger.helper';
 
 export enum BlockChainMessageType {
     NEW_BLOCK_APPROVED = 'newBlockApproved',
@@ -99,7 +100,7 @@ export class DistributedBlockChain {
         if (this.state === BlockChainState.OUTDATED) {
             for (const participant of this.participants.values()) {
                 if (!participant.isLocal) {
-                    console.log('getLastBlock');
+                    TimedLogger.log('getLastBlock');
                     this.getParticipantLastBlock(participant.name);
                     break;
                 }
@@ -126,7 +127,7 @@ export class DistributedBlockChain {
         const data = playerData ?? this.localBlock?.data;
 
         if (!data || !this.localParticipant) {
-            console.trace('return', data, this.localParticipant);
+            TimedLogger.trace('return', data, this.localParticipant);
             return;
         }
 
@@ -165,7 +166,7 @@ export class DistributedBlockChain {
 
         const latencyString = url.queryParamMap.get('latency');
         if (latencyString) {
-            // console.log(`Will send block declined after ${url.queryParams.latency}ms`, roomServiceMessage.payload);
+            // TimedLogger.log(`Will send block declined after ${url.queryParams.latency}ms`, roomServiceMessage.payload);
             setTimeout(() => this.sendMessage(roomServiceMessage), parseInt(latencyString, 10));
         } else {
             this.sendMessage(roomServiceMessage);
@@ -187,11 +188,10 @@ export class DistributedBlockChain {
     }
 
     private updateState(state: BlockChainState): void {
-        // console.log(state);
-        // console.log(this);
+        // TimedLogger.log(state);
         if (this.state !== state) {
             this.state = state;
-            // console.log('initiate');
+            // TimedLogger.log('initiate');
             this.initiate();
         }
     }
@@ -233,7 +233,7 @@ export class DistributedBlockChain {
             this.blocksToValidate.participantNumber = nbReady;
 
             if (nbReady >= negotiationPayload.nbParticipants * 2.0 / 3.0) {
-                console.log('getLastBlock');
+                TimedLogger.log('getLastBlock');
                 this.getParticipantLastBlock(message.from);
                 return BlockChainState.UP_TO_DATE;
             }
@@ -255,10 +255,10 @@ export class DistributedBlockChain {
                 this.blocksToValidate.declineBlock(block, this.localParticipant);
                 this.sendDeclineBlock(block);
             }
-            console.log('decline', block);
+            TimedLogger.log('decline', block);
             return;
         }
-        // console.log(block);
+        // TimedLogger.log(block);
 
         if (!this.blocksToValidate.hasBlock(block)) {
             if (this.blocksToValidate.approveBlock(block, this.localParticipant)) {
@@ -275,14 +275,14 @@ export class DistributedBlockChain {
                 if (this.localBlock?.hash === block.hash) {
                     this.localBlock = undefined;
                 } else if (this.localBlock) {
-                    console.log('transmit local');
+                    TimedLogger.log('transmit local');
 
                     this.transmitLocalBlock();
                 }
                 this.blocksToValidate.clearOldBlock(block.index);
                 this.blockRoomService.notifyMessage(block);
             }).catch((reason: unknown) => {
-                console.log(reason);
+                TimedLogger.log(reason);
             });
         }
     }
@@ -404,9 +404,9 @@ export class DistributedBlockChain {
 
         try {
             for (const block of blocks) {
-                console.log(await this.blockChain.canAddBlockAsync(block), block);
+                TimedLogger.log(await this.blockChain.canAddBlockAsync(block), block);
                 if (!await this.blockChain.canAddBlockAsync(block)) {
-                    console.error('break');
+                    TimedLogger.error('break');
                     break;
                 }
 
@@ -414,10 +414,10 @@ export class DistributedBlockChain {
                 this.blockRoomService.notifyMessage(block);
             }
         } catch (reason) {
-            console.error('Multiple response will arrive at the same time, the last one will trigger errors. Task: Distributed retrieval', reason);
+            TimedLogger.error('Multiple response will arrive at the same time, the last one will trigger errors. Task: Distributed retrieval', reason);
         }
 
-        console.log('getLastBlock');
+        TimedLogger.log('getLastBlock');
         this.getParticipantLastBlock(message.from);
 
         return BlockChainState.OUTDATED;

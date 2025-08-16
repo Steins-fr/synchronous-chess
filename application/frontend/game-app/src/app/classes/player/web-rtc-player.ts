@@ -8,6 +8,7 @@ import { PlayerMessage, PlayerMessageType } from '../webrtc/messages/player-mess
 import MessageOriginType from '../webrtc/messages/message-origin.types';
 import Notifier, { NotifierFlow } from '../notifier/notifier';
 import { ToReworkMessage } from '../webrtc/messages/to-rework-message';
+import { TimedLogger } from '@app/helpers/timed-logger.helper';
 
 export enum PlayerEventType {
     DISCONNECTED = 'disconnected',
@@ -64,7 +65,7 @@ export class WebRtcPlayer extends Player {
         const messageIsPingPong = 'type' in message && (message['type'] === PlayerMessageType.PING || message['type'] === PlayerMessageType.PONG);
 
         if (message.origin !== MessageOriginType.PLAYER && !messageIsPingPong) {
-            console.log(
+            TimedLogger.log(
                 (new Date()).getTime().toString().substr(-5),
                 id,
                 `TO ${ this.name }`,
@@ -104,7 +105,6 @@ export class WebRtcPlayer extends Player {
     }
 
     private onPeerStates(states: WebrtcStates): void {
-        console.log('Peer states', states);
         if (this.connectionState === states.iceConnection) {
             return; // Do nothing, it's the same state
         }
@@ -163,7 +163,7 @@ export class WebRtcPlayer extends Player {
         const messageIsPingPong = 'type' in message && (message['type'] === PlayerMessageType.PING || message['type'] === PlayerMessageType.PONG);
 
         if (!messageIsPingPong) {
-            console.log(
+            TimedLogger.log(
                 (new Date()).getTime().toString().substr(-5),
                 `FROM ${ message.from }`,
                 'type' in message ? message['type'] : null,
