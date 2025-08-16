@@ -1,6 +1,8 @@
 {
     "editor.detectIndentation": false,
-    "auto-close-tag.activationOnLanguage": ["html"],
+    "auto-close-tag.activationOnLanguage": [
+        "html"
+    ],
     "eslint.format.enable": true,
     "[terraform]": {
         "editor.defaultFormatter": "hashicorp.terraform"
@@ -10,5 +12,9 @@
     },
     "[html]": {
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "sonarlint.connectedMode.project": {
+        "connectionId": "Steins orga",
+        "projectKey": "Steins-fr_synchronous-chess"
     }
 }
