@@ -1,145 +1,133 @@
-import * as AWS from 'aws-sdk';
-import { PutItemInputAttributeMap } from 'aws-sdk/clients/dynamodb';
-import Exception from '../exceptions/exception';
-import DynamoException, { DynamoCrudAction } from '../exceptions/dynamo-exception';
+import { DynamoDBClient, DynamoDBServiceException } from '@aws-sdk/client-dynamodb';
+import {
+    DynamoDBDocumentClient,
+    QueryCommandInput,
+    QueryCommand,
+    UpdateCommand,
+    UpdateCommandInput,
+    PutCommand,
+    DeleteCommand,
+    GetCommand
+} from '@aws-sdk/lib-dynamodb';
+import DynamoException, { DynamoCrudActionEnum } from '../exceptions/dynamo-exception';
 
-export type TableKey = AWS.DynamoDB.Key;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DocumentAttributes = Record<string, any>;
 
-export default abstract class BaseRepository<T, U> {
+export default abstract class BaseRepository<Resource extends DocumentAttributes> {
 
-    protected readonly ddb: AWS.DynamoDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
+    private readonly client = new DynamoDBClient();
+    private readonly ddb = DynamoDBDocumentClient.from(this.client);
     protected readonly abstract tableName: string;
     protected readonly abstract defaultProjection: string;
 
-    protected abstract getKey(item: Partial<T>): TableKey;
+    protected abstract getKey(item: Partial<Resource>): DocumentAttributes;
 
-    public create(item: T): Promise<AWS.DynamoDB.PutItemOutput> {
-        return this.createOrUpdate(item);
-    }
-
-    private createOrUpdate(item: T): Promise<AWS.DynamoDB.PutItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.PutItemOutput) => void, reject: (value: Exception) => void): void => {
-
-            const document: PutItemInputAttributeMap = this.marshall(item);
-
-            const putParams: AWS.DynamoDB.PutItemInput = {
-                TableName: this.tableName,
-                Item: document
-            };
-
-            this.ddb.putItem(putParams, this.genPutItemCallback(resolve, reject));
+    public async put(item: Resource): Promise<Resource> {
+        const command = new PutCommand({
+            TableName: this.tableName,
+            Item: item,
+            ReturnValues: 'ALL_NEW',
         });
+
+        try {
+            const data = await this.ddb.send(command);
+            return data.Attributes as Resource;
+        } catch (err) {
+            if (err instanceof DynamoDBServiceException) {
+                throw new DynamoException(DynamoCrudActionEnum.PUT, err.message);
+            }
+
+            throw err;
+        }
     }
 
-    public update(item: T): Promise<AWS.DynamoDB.PutItemOutput> {
-        return this.createOrUpdate(item);
-    }
-
-
-    public delete(item: T): Promise<AWS.DynamoDB.DeleteItemOutput> {
-        return new Promise((resolve: (value: AWS.DynamoDB.DeleteItemOutput) => void, reject: (value: Exception) => void): void => {
-
-            const deleteParams: AWS.DynamoDB.DeleteItemInput = {
-                TableName: this.tableName,
-                Key: this.getKey(item)
-            };
-
-            this.ddb.deleteItem(deleteParams, this.genDeleteItemCallback(resolve, reject));
-        });
-    }
-
-    public get(item: Partial<T>): Promise<T> {
-        return new Promise((resolve: (value: T) => void, reject: (value: Exception) => void): void => {
-            const params: AWS.DynamoDB.GetItemInput = {
-                TableName: this.tableName,
-                Key: this.getKey(item),
-                ProjectionExpression: this.defaultProjection
-            };
-
-            this.ddb.getItem(params, (err: AWS.AWSError, connectionData: AWS.DynamoDB.GetItemOutput) => {
-                if (err) {
-                    reject(new DynamoException(DynamoCrudAction.GET, err.message));
-                    return;
-                }
-
-                const data: T = AWS.DynamoDB.Converter.unmarshall(connectionData.Item || {}) as T;
-
-                resolve(data);
-            });
-        });
-    }
-
-    public query(keys: string, paramValues: AWS.DynamoDB.ExpressionAttributeValueMap, limit: number = 1): Promise<T | null> {
-        return new Promise((resolve: (value: T | null) => void, reject: (value: Exception) => void): void => {
-            const params: AWS.DynamoDB.QueryInput = {
-                TableName: this.tableName,
-                KeyConditionExpression: keys,
-                ExpressionAttributeValues: paramValues,
-                ProjectionExpression: this.defaultProjection,
-                Limit: limit
-            };
-
-            this.ddb.query(params, (err: AWS.AWSError, roomData: AWS.DynamoDB.QueryOutput) => {
-                if (err) {
-                    reject(new DynamoException(DynamoCrudAction.GET, err.message));
-                    return;
-                }
-
-                if (roomData.Count === 0 || roomData === undefined || roomData.Items === undefined) {
-                    resolve(null);
-                } else {
-                    const document: AWS.DynamoDB.AttributeMap = roomData.Items.shift() || {};
-                    resolve(AWS.DynamoDB.Converter.unmarshall(document) as T);
-                }
-            });
-        });
-    }
-
-    protected genUpdateInput(item: T,
-        updateExpression: AWS.DynamoDB.UpdateExpression,
-        expressionValues?: AWS.DynamoDB.ExpressionAttributeValueMap): AWS.DynamoDB.UpdateItemInput {
-        return {
+    public async delete(item: Resource): Promise<void> {
+        const command = new DeleteCommand({
             TableName: this.tableName,
             Key: this.getKey(item),
-            UpdateExpression: updateExpression,
-            ExpressionAttributeValues: expressionValues
-        };
-    }
+        });
 
-    protected genUpdateItemCallback(resolve: (value: AWS.DynamoDB.UpdateItemOutput) => void,
-        reject: (value: Exception) => void): (err: AWS.AWSError, output: AWS.DynamoDB.UpdateItemOutput) => void {
-        return (err: AWS.AWSError, output: AWS.DynamoDB.UpdateItemOutput): void => {
-            if (err) {
-                reject(new DynamoException(DynamoCrudAction.UPDATE, err.message));
-                return;
+        try {
+            await this.ddb.send(command);
+        } catch (err) {
+            if (err instanceof DynamoDBServiceException) {
+                throw new DynamoException(DynamoCrudActionEnum.DELETE, err.message);
             }
-            resolve(output);
-        };
+
+            throw err;
+        }
     }
 
-    protected genPutItemCallback(resolve: (value: AWS.DynamoDB.PutItemOutput) => void,
-        reject: (value: Exception) => void): (err: AWS.AWSError, output: AWS.DynamoDB.PutItemOutput) => void {
-        return (err: AWS.AWSError, output: AWS.DynamoDB.PutItemOutput): void => {
-            if (err) {
-                reject(new DynamoException(DynamoCrudAction.PUT, err.message));
-                return;
+    public async get(item: Partial<Resource>): Promise<Resource | null> {
+        const command = new GetCommand({
+            TableName: this.tableName,
+            Key: this.getKey(item),
+            ProjectionExpression: this.defaultProjection,
+        });
+
+        try {
+            const data = await this.ddb.send(command);
+
+            if (!data.Item) {
+                return null;
             }
-            resolve(output);
-        };
-    }
 
-    protected genDeleteItemCallback(resolve: (value: AWS.DynamoDB.DeleteItemOutput) => void,
-        reject: (value: Exception) => void): (err: AWS.AWSError, output: AWS.DynamoDB.DeleteItemOutput) => void {
-        return (err: AWS.AWSError, output: AWS.DynamoDB.DeleteItemOutput): void => {
-            if (err) {
-                reject(new DynamoException(DynamoCrudAction.DELETE, err.message));
-                return;
+            return data.Item as Resource;
+        } catch (err) {
+            if (err instanceof DynamoDBServiceException) {
+                throw new DynamoException(DynamoCrudActionEnum.GET, err.message);
             }
-            resolve(output);
-        };
+
+            throw err;
+        }
     }
 
-    protected marshall(data: Partial<T>): U & AWS.DynamoDB.AttributeMap {
-        return (AWS.DynamoDB.Converter.marshall(data) as any);
+    public async findOneBy(expression: QueryCommandInput['KeyConditionExpression'], paramValues: QueryCommandInput['ExpressionAttributeValues']): Promise<Resource | null> {
+        const command = new QueryCommand({
+            TableName: this.tableName,
+            KeyConditionExpression: expression,
+            ExpressionAttributeValues: paramValues,
+            ProjectionExpression: this.defaultProjection,
+            ConsistentRead: true,
+            Limit: 1
+        });
+
+        try {
+            const data = await this.ddb.send(command);
+
+            if (data.Count === 0 || data.Items === undefined) {
+                return null;
+            } else {
+                return data.Items.shift() as Resource;
+            }
+        } catch (err) {
+            if (err instanceof DynamoDBServiceException) {
+                throw new DynamoException(DynamoCrudActionEnum.GET, err.message);
+            }
+
+            throw err;
+        }
+    }
+
+    public async updateItem(item: Resource, expression: UpdateCommandInput['UpdateExpression'], attributeValues?: UpdateCommandInput['ExpressionAttributeValues']): Promise<Resource> {
+        const command = new UpdateCommand({
+            TableName: this.tableName,
+            Key: this.getKey(item),
+            UpdateExpression: expression,
+            ExpressionAttributeValues: attributeValues,
+            ReturnValues: 'ALL_NEW',
+        });
+
+        try {
+            const data = await this.ddb.send(command);
+            return data.Attributes as Resource;
+        } catch (err) {
+            if (err instanceof DynamoDBServiceException) {
+                throw new DynamoException(DynamoCrudActionEnum.UPDATE, err.message);
+            }
+
+            throw err;
+        }
     }
 }

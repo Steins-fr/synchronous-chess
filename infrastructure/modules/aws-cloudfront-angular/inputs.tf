@@ -9,9 +9,9 @@ variable "domain_name" {
   description = "Domain name of the website"
 }
 
-variable "origin_access_identity" {
+variable "origin_access_control" {
   type        = string
-  description = "Path of the cloudfront identity"
+  description = "Id of the cloudfront origin access control"
 }
 
 variable "acm_certificate_arn" {

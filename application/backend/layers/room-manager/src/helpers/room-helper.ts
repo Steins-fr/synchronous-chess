@@ -3,26 +3,26 @@ import Room from '../entities/room';
 
 export default abstract class RoomHelper {
 
-    public static findPlayerWith(players: Array<Player>, test: (player: Player) => boolean): Player | null {
+    public static findPlayerWith(players: Player[], compareFn: (player: Player) => boolean): Player | null {
         if (players === undefined) {
             return null;
         }
 
-        for (let i: number = 0; i < players.length; ++i) {
+        for (let i = 0; i < players.length; ++i) {
             const player: Player = players[i];
-            if (test(player)) {
+            if (compareFn(player)) {
                 return player;
             }
         }
         return null;
     }
 
-    public static findPlayerByName(players: Array<Player>, playerName: string): Player | null {
+    public static findPlayerByName(players: Player[], playerName: string): Player | null {
         const playerNameTest: (player: Player) => boolean = (player: Player): boolean => player.playerName === playerName;
         return RoomHelper.findPlayerWith(players, playerNameTest);
     }
 
-    public static findPlayerConnectionId(players: Array<Player>, connectionId: string): Player | null {
+    public static findPlayerConnectionId(players: Player[], connectionId: string): Player | null {
         const connectionIdTest: (player: Player) => boolean = (player: Player): boolean =>
             player.connectionId !== undefined && player.connectionId === connectionId;
         return RoomHelper.findPlayerWith(players, connectionIdTest);

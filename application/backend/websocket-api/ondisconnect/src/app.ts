@@ -1,4 +1,5 @@
 import { RoomService, Room, Connection, ConnectionService } from '/opt/nodejs/room-manager';
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 interface Response {
     statusCode: number;
@@ -8,13 +9,17 @@ interface Response {
 const ddb: RoomService = new RoomService();
 const connectionService: ConnectionService = new ConnectionService();
 
-export const handler: (event: any) => Promise<Response> = async function (event: any): Promise<Response> {
+export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {
 
-    const connectionId: string = event.requestContext.connectionId;
+    const connectionId: string | undefined = event.requestContext.connectionId;
+
+    if (connectionId === undefined) {
+        return { statusCode: 500, body: 'Undefined connection' };
+    }
 
     try {
-        const connection: Connection = await connectionService.get(connectionId);
-        if (connection.connectionId === undefined) {
+        const connection = await connectionService.get(connectionId);
+        if (connection?.connectionId === undefined) {
             return { statusCode: 500, body: 'Undefined connection' };
         }
 
@@ -29,7 +34,6 @@ export const handler: (event: any) => Promise<Response> = async function (event:
         console.error(e);
         return { statusCode: 500, body: 'Internal server error' };
     }
-
 
     return { statusCode: 200, body: 'Closed' };
 };

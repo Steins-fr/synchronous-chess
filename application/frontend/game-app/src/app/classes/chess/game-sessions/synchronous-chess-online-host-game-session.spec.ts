@@ -1,62 +1,52 @@
-import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-host-game-session';
-import { RoomService } from '../../../services/room/room.service';
-import { NotifierFlow } from '../../notifier/notifier';
-import { PieceColor, PieceType } from '../rules/chess-rules';
-import SynchronousChessGame from '../games/synchronous-chess-game';
-import { NgZone } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
-import { Player, PlayerType } from '../../player/player';
-import { SessionConfiguration } from './synchronous-chess-game-session';
-import { RoomServiceMessage } from '../../webrtc/messages/room-service-message';
-import { SCGameSessionType, PlayMessage, PromotionMessage } from './synchronous-chess-online-game-session';
-import MessageOriginType from '../../webrtc/messages/message-origin.types';
-import ChessBoardHelper from '../../../helpers/chess-board-helper';
-import Move, { FenColumn, FenRow } from '../interfaces/move';
+import { SessionConfiguration } from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
+import {
+    SCGameSessionType,
+    PlayMessage,
+    PromotionMessage
+} from '@app/classes/chess/game-sessions/synchronous-chess-online-game-session';
+import SynchronousChessOnlineHostGameSession
+    from '@app/classes/chess/game-sessions/synchronous-chess-online-host-game-session';
+import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
+import Move, { FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
+import { PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
+import { NotifierFlow } from '@app/classes/notifier/notifier';
+import { LocalPlayer } from '@app/classes/player/local-player';
+import { Player, PlayerType } from '@app/classes/player/player';
+import { WebRtcPlayer } from '@app/classes/player/web-rtc-player';
+import { Message } from '@app/classes/webrtc/messages/message';
+import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
+import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { Webrtc } from '@app/classes/webrtc/webrtc';
+import WebrtcStates from '@app/classes/webrtc/webrtc-states';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { Room } from '@app/services/room-manager/classes/room/room';
+import { Subject } from 'rxjs';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
-    public override onMove(message: RoomServiceMessage<SCGameSessionType, PlayMessage>): void {
+    public override onMove(message: RoomMessage<SCGameSessionType, PlayMessage>): void {
         super.onMove(message);
     }
 
-    public override onPromotion(message: RoomServiceMessage<SCGameSessionType, PromotionMessage>): void {
+    public override onPromotion(message: RoomMessage<SCGameSessionType, PromotionMessage>): void {
         super.onPromotion(message);
     }
 }
 
 describe('SynchronousChessOnlineHostGameSession', () => {
-
-    let roomServiceSpy: jasmine.SpyObj<RoomService<any>>;
-
-    beforeEach(() => {
-        roomServiceSpy = jasmine.createSpyObj<RoomService<any>>('RoomService', ['notifier', 'localPlayer', 'isReady', 'transmitMessage', 'roomManagerNotifier']);
-        Object.defineProperty(roomServiceSpy, 'notifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
-            writable: false
-        });
-        Object.defineProperty(roomServiceSpy, 'roomManagerNotifier', {
-            value: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
-            writable: false
-        });
-        roomServiceSpy.isReady.and.returnValue(true);
-    });
-
-    it('should create an instance', () => {
-        expect(new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone)).toBeTruthy();
-    });
-
     it('should get the color of the playing player', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'a' },
-            writable: false
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'a' } as LocalPlayer,
         });
-        const sessionWhite: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+
+        const sessionWhite: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         sessionWhite.configuration.whitePlayer = 'a';
         sessionWhite.configuration.blackPlayer = 'b';
-        const sessionBlack: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        const sessionBlack: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         sessionBlack.configuration.blackPlayer = 'a';
         sessionBlack.configuration.whitePlayer = 'b';
-        const sessionNone: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        const sessionNone: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         sessionNone.configuration.blackPlayer = 'c';
         sessionNone.configuration.whitePlayer = 'b';
 
@@ -72,48 +62,48 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     it('should get the none color', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'a' },
-            writable: false
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'a' } as LocalPlayer,
         });
-        const session1: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session1: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session1.configuration.whitePlayer = 'a';
         session1.configuration.blackPlayer = undefined;
-        const session2: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        expect(session1.playingColor).toEqual(PieceColor.NONE);
+
+        const session2: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session2.configuration.whitePlayer = undefined;
         session2.configuration.blackPlayer = 'a';
-        const session3: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        expect(session2.playingColor).toEqual(PieceColor.NONE);
+
+        const session3: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session3.configuration.whitePlayer = 'c';
         session3.configuration.blackPlayer = 'b';
-        const session4: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        expect(session3.playingColor).toEqual(PieceColor.NONE);
+
+        const session4: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
+
+        const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn', 'colorHasPlayed']);
+        Object.defineProperty(session4, 'game', {
+            value: gameSpy,
+            writable: false
+        });
+        gameSpy.colorHasPlayed.and.returnValue(true);
+
         session4.configuration.whitePlayer = 'a';
         session4.configuration.blackPlayer = 'b';
-
-
-        // When
-        roomServiceSpy.isReady.and.returnValue(true);
-        const color1: PieceColor = session1.playingColor;
-        const color2: PieceColor = session2.playingColor;
-        const color3: PieceColor = session3.playingColor;
-        roomServiceSpy.isReady.and.returnValue(false);
-        const color4: PieceColor = session4.playingColor;
-
-        // Then
-        expect(color1).toEqual(PieceColor.NONE);
-        expect(color2).toEqual(PieceColor.NONE);
-        expect(color3).toEqual(PieceColor.NONE);
-        expect(color4).toEqual(PieceColor.NONE);
+        expect(session4.playingColor).toEqual(PieceColor.NONE);
     });
 
     it('move should return true on valid play', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'b' },
-            writable: false
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -133,19 +123,19 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         // When
         session.move(move);
         // Then
-        expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(1);
+        expect(roomSpy.transmitMessage.calls.count()).toEqual(1);
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
     });
 
     it('move should return false on invalid move', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'b' },
-            writable: false
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['registerMove', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -166,14 +156,17 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.move(move);
 
         // Then
-        expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(0);
+        expect(roomSpy.transmitMessage.calls.count()).toEqual(0);
         expect(gameSpy.registerMove.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(0);
     });
 
     it('should run move from a remote playing player', () => {
-        // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+        });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -185,7 +178,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             from: [FenColumn.C, FenRow._6],
             to: [FenColumn.C, FenRow._5]
         };
-        const message: RoomServiceMessage<SCGameSessionType, PlayMessage> = {
+        const message: RoomMessage<SCGameSessionType, PlayMessage> = {
             from: 'a',
             origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
@@ -199,8 +192,11 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     it('should not run move from a remote spectator', () => {
-        // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+        });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runMoveSpy: jasmine.Spy = jasmine.createSpy('runMove');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -212,7 +208,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             from: [FenColumn.C, FenRow._6],
             to: [FenColumn.C, FenRow._5]
         };
-        const message: RoomServiceMessage<SCGameSessionType, PlayMessage> = {
+        const message: RoomMessage<SCGameSessionType, PlayMessage> = {
             from: 'C',
             origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
@@ -226,13 +222,22 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     it('should set players on player add', () => {
-        // Given
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+        });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         const defaultConfiguration: SessionConfiguration = { ...session.configuration };
-        const player1: Player = new Player('robert', PlayerType.HOST);
-        const player2: Player = new Player('mario', PlayerType.HOST);
-        const player3: Player = new Player('bertrand', PlayerType.HOST);
-        const player4: Player = new Player('romain', PlayerType.HOST);
+
+        const webRtcSpy: jasmine.SpyObj<Webrtc> = jasmine.createSpyObj<Webrtc>('Webrtc', ['close'], {
+            states: new Subject<WebrtcStates>(),
+            data: new Subject<Message>(),
+        });
+
+        const player1: Player = new WebRtcPlayer('robert', PlayerType.HOST, webRtcSpy);
+        const player2: Player = new WebRtcPlayer('mario', PlayerType.HOST, webRtcSpy);
+        const player3: Player = new WebRtcPlayer('bertrand', PlayerType.HOST, webRtcSpy);
+        const player4: Player = new WebRtcPlayer('romain', PlayerType.HOST, webRtcSpy);
 
         const expectedDefaultConfiguration: SessionConfiguration = {
             spectatorNumber: 0
@@ -272,17 +277,25 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     it('should decrement spectators on player remove', () => {
-        // Given
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+        });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration = {
             whitePlayer: 'robert',
             blackPlayer: 'mario',
             spectatorNumber: 2
         };
-        const player1: Player = new Player('robert', PlayerType.HOST);
-        const player2: Player = new Player('mario', PlayerType.HOST);
-        const player3: Player = new Player('bertrand', PlayerType.HOST);
-        const player4: Player = new Player('romain', PlayerType.HOST);
+        const webRtcSpy: jasmine.SpyObj<Webrtc> = jasmine.createSpyObj<Webrtc>('Webrtc', ['close'], {
+            states: new Subject<WebrtcStates>(),
+            data: new Subject<Message>(),
+        });
+
+        const player1: Player = new WebRtcPlayer('robert', PlayerType.HOST, webRtcSpy);
+        const player2: Player = new WebRtcPlayer('mario', PlayerType.HOST, webRtcSpy);
+        const player3: Player = new WebRtcPlayer('bertrand', PlayerType.HOST, webRtcSpy);
+        const player4: Player = new WebRtcPlayer('romain', PlayerType.HOST, webRtcSpy);
 
         // When
         session.onPlayerRemove(player1);
@@ -300,13 +313,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     it('promote should return true on valid play', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'b' },
-            writable: false
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -319,19 +332,19 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         // When
         session.promote(pieceType);
         // Then
-        expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(1);
+        expect(roomSpy.transmitMessage.calls.count()).toEqual(1);
         expect(gameSpy.promote.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(1);
     });
 
     it('promote should return false on invalid move', () => {
-        // Given
-        Object.defineProperty(roomServiceSpy, 'localPlayer', {
-            value: { name: 'b' },
-            writable: false
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger', 'transmitMessage'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
         const gameSpy: jasmine.SpyObj<SynchronousChessGame> = jasmine.createSpyObj<SynchronousChessGame>('SynchronousChessGame', ['promote', 'isMoveValid', 'runTurn']);
-        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomServiceSpy, null as unknown as NgZone);
+        const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration.whitePlayer = 'a';
         session.configuration.blackPlayer = 'b';
         Object.defineProperty(session, 'game', {
@@ -345,14 +358,17 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         session.promote(pieceType);
 
         // Then
-        expect(roomServiceSpy.transmitMessage.calls.count()).toEqual(0);
+        expect(roomSpy.transmitMessage.calls.count()).toEqual(0);
         expect(gameSpy.promote.calls.count()).toEqual(1);
         expect(gameSpy.runTurn.calls.count()).toEqual(0);
     });
 
     it('should run promote from a remote playing player', () => {
-        // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+        });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -361,7 +377,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const pieceType: PieceType = PieceType.QUEEN;
-        const message: RoomServiceMessage<SCGameSessionType, PromotionMessage> = {
+        const message: RoomMessage<SCGameSessionType, PromotionMessage> = {
             from: 'a',
             origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
@@ -375,8 +391,11 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     it('should not run promote from a remote spectator', () => {
-        // Given
-        const session: ProtectedTest = new ProtectedTest(roomServiceSpy, TestBed.inject(NgZone));
+        const roomSpy = jasmine.createSpyObj<Room<any>>('Room', ['messenger'], {
+            roomManagerNotifier: jasmine.createSpyObj<NotifierFlow<any>>('NotifierFlow<any,any>', ['follow']),
+        });
+        roomSpy.messenger.and.returnValue(new Subject<RoomMessage>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runPromotionSpy: jasmine.Spy = jasmine.createSpy('runPromotion');
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
 
@@ -385,7 +404,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const pieceType: PieceType = PieceType.QUEEN;
-        const message: RoomServiceMessage<SCGameSessionType, PromotionMessage> = {
+        const message: RoomMessage<SCGameSessionType, PromotionMessage> = {
             from: 'C',
             origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,

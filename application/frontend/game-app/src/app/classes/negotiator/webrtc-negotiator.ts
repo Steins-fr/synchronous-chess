@@ -30,6 +30,8 @@ export class WebrtcNegotiator extends Negotiator {
             from: this.playerName
         };
 
+        // FIXME: send webrtc negotiator, why ???
+
         this.peer.sendData(message);
     }
 }

@@ -1,10 +1,8 @@
-import Player from '../entities/player';
-import Room from '../entities/room';
 import Connection from '../entities/connection';
+import Room from '../entities/room';
 import RoomRepository from '../repositories/room-repository';
 
 export default class RoomService {
-
     private readonly roomRepository: RoomRepository = new RoomRepository();
 
     public async removeConnectionFromRoom(room: Room, connection: Connection): Promise<void> {
@@ -15,11 +13,11 @@ export default class RoomService {
         }
     }
 
-    public getRoomByName(roomName: string): Promise<Room> {
+    public async getRoomByName(roomName: string): Promise<Room> {
         return this.roomRepository.getByName(roomName);
     }
 
-    public getRoomByKeys(connectionId: string, roomName: string): Promise<Room> {
+    public async getRoomByKeys(connectionId: string, roomName: string): Promise<Room> {
         return this.roomRepository.getByKeys(connectionId, roomName);
     }
 
@@ -27,7 +25,7 @@ export default class RoomService {
         try {
             await this.getRoomByName(roomName);
             return true;
-        } catch (e) {
+        } catch (_e) {
             return false;
         }
     }
@@ -49,7 +47,7 @@ export default class RoomService {
     }
 
     public async create(roomName: string, connectionId: string, playerName: string, maxPlayer: number): Promise<void> {
-        await this.roomRepository.create({
+        await this.roomRepository.put({
             ID: roomName,
             connectionId,
             hostPlayer: playerName,

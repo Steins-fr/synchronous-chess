@@ -14,10 +14,11 @@ resource "aws_lambda_function" "lambda" {
   function_name = local.lambda_name
   role          = var.role
   handler       = "app.handler"
+  architectures = ["arm64"]
 
   source_code_hash = data.archive_file.archive.output_base64sha256
 
-  runtime = "nodejs10.x"
+  runtime = "nodejs20.x"
 
   layers = var.layers
 

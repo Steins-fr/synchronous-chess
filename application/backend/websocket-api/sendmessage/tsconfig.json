@@ -1,9 +1,17 @@
 {
     "compilerOptions": {
-        "target": "es2017",
-        "module": "commonjs",
+        "target": "ES2022",
+        "module": "ES2022",
         "outDir": "./dist",
+        "forceConsistentCasingInFileNames": true,
         "strict": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "esModuleInterop": true,
+        "declaration": false,
+        "moduleResolution": "node",
         "baseUrl": "./",
         "typeRoots": [
             "node_modules/@types"
@@ -11,12 +19,10 @@
         "types": [
             "node"
         ],
-        "esModuleInterop": true,
-        "inlineSourceMap": true,
         "paths": {
             "/opt/nodejs/room-manager": [
                 "../../layers/room-manager/dist/nodejs/room-manager/index"
-            ]
+            ],
         }
     }
 }

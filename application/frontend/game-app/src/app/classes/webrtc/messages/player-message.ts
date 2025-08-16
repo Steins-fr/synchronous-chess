@@ -1,10 +1,10 @@
-import { RoomMessage } from './room-message';
+import { ToReworkMessage } from './to-rework-message';
 
 export enum PlayerMessageType {
     PING = 'ping',
     PONG = 'pong'
 }
 
-export interface PlayerMessage<U = unknown> extends RoomMessage<U> {
+export interface PlayerMessage<U = unknown> extends ToReworkMessage<U> {
     type: PlayerMessageType;
 }

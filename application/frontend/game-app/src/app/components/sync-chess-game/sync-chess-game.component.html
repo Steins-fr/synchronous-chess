@@ -23,7 +23,7 @@
         <div id="right-column">
             <div class="player-information black-player">
                 <div class="player-identity">
-                    <app-chess-board-piece [piece]="blackPiece"/>
+                    <app-chess-piece [piece]="blackPiece"/>
                 </div>
                 <ng-container *ngIf="!gameSession.game.isCheckmate()">
                     <div>Dernier coup :</div>
@@ -63,7 +63,7 @@
                     <div>{{ whiteLastMove() || 'aucun'}}</div>
                 </ng-container>
                 <div class="player-identity">
-                    <app-chess-board-piece [piece]="whitePiece" />
+                    <app-chess-piece [piece]="whitePiece" />
                 </div>
             </div>
         </div>

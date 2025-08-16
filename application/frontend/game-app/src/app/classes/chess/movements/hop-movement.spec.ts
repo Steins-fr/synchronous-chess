@@ -1,7 +1,7 @@
-import HopMovement from './hop-movement';
-import Vec2 from 'vec2';
-import { FenBoard } from '../../../helpers/chess-board-helper';
-import { FenPiece } from '../rules/chess-rules';
+import HopMovement from '@app/classes/chess/movements/hop-movement';
+import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { Vec2, Vec2Array } from '@app/classes/vector/vec2';
+import { FenBoard } from '@app/helpers/chess-board-helper';
 
 describe('HopMove', () => {
     it('should create an instance', () => {
@@ -23,20 +23,19 @@ describe('HopMove', () => {
 
     it('should create multiple instance', () => {
         // Given
-        const coordinate1: Array<number> = [2, 2];
-        const coordinate2: Array<number> = [1, 1];
+        const coordinate1: Vec2Array = [2, 2];
+        const coordinate2: Vec2Array = [1, 1];
         // When
         const moves: Array<HopMovement> = HopMovement.buildAll([coordinate1, coordinate2]);
 
         // Then
         expect(moves.length).toEqual(2);
-        expect(moves.every((move: HopMovement) => move instanceof HopMovement));
     });
 
     it('should initiate properties', () => {
 
         // Given
-        const coordinate: Array<number> = [34, 4];
+        const coordinate: Vec2Array = [34, 4];
 
         // When
         const move: HopMovement = HopMovement.build(coordinate);
@@ -48,8 +47,8 @@ describe('HopMove', () => {
     it('should return all valid plays', () => {
 
         // Given
-        const coordinate: Array<number> = [1, 2];
-        const outCoordinate: Array<number> = [-10, -10];
+        const coordinate: Vec2Array = [1, 2];
+        const outCoordinate: Vec2Array = [-10, -10];
 
         const position: Vec2 = new Vec2(0, 0);
 
@@ -91,7 +90,7 @@ describe('HopMove', () => {
     it('should throw error if the position was not valid', () => {
 
         // Given
-        const coordinate: Array<number> = [1, 2];
+        const coordinate: Vec2Array = [1, 2];
 
         const position: Vec2 = new Vec2(0, 0);
         const badPosition: Vec2 = new Vec2(-1, -1);

@@ -6,4 +6,4 @@ export { default as Room } from './entities/room';
 export { default as Connection } from './entities/connection';
 export { default as DynamoException } from './exceptions/dynamo-exception';
 export { default as BadRequestException } from './exceptions/bad-request-exception';
-export { default as ExceptionType } from './exceptions/exception.types';
+export { default as ExceptionTypeEnum } from './exceptions/exception-type.enum';

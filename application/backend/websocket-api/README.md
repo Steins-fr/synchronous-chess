@@ -4,7 +4,7 @@
 
 Required: Room Manager Layer build artefacts because the lambdas imports build types from the `dist/` layer folder.
 
-For each lambdas, go into the lambda repository then run `yarn build` to build the project. The build artifacts will be stored in the `dist/` directory. 
+For each lambdas, go into the lambda repository then run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory. 
 
 ## Development server
 
