@@ -9,7 +9,7 @@ import { HostRoomManager } from '../../classes/room-manager/host-room-manager';
 import { PeerRoomManager } from '../../classes/room-manager/peer-room-manager';
 
 import { RoomApiService } from '../room-api/room-api.service';
-import { RoomEventType } from '../../classes/room-manager/events/room-event';
+import RoomEvent, { RoomEventType } from '../../classes/room-manager/events/room-event';
 import RoomPlayerAddEvent from '../../classes/room-manager/events/room-player-add-event';
 import { Player } from '../../classes/player/player';
 import RoomPlayerRemoveEvent from '../../classes/room-manager/events/room-player-remove-event';
@@ -22,8 +22,7 @@ import { RoomMessage } from '../../classes/webrtc/messages/room-message';
 import RoomReadyEvent from '../../classes/room-manager/events/room-ready-event';
 
 export enum RoomServiceEventType {
-    IS_READY = 'RoomServiceIsReady',
-    ROOM_MANAGER = 'RoomServiceRoomManager'
+    IS_READY = 'RoomServiceIsReady'
 }
 
 type RoomServiceNotificationType = string;
@@ -45,10 +44,19 @@ export class RoomService {
 
     private readonly _notifier: Notifier<RoomServiceNotificationType, RoomServiceNotification> = new Notifier<RoomServiceNotificationType, RoomServiceNotification>();
 
-    public constructor(private readonly ngZone: NgZone, private readonly roomApi: RoomApiService) { }
+    public constructor(private readonly ngZone: NgZone, private readonly roomApi: RoomApiService) {
+    }
 
     public get notifier(): NotifierFlow<RoomServiceNotificationType, RoomServiceNotification> {
         return this._notifier;
+    }
+
+    public get roomManagerNotifier(): NotifierFlow<RoomEventType, RoomEvent> {
+        return this.roomManager.notifier;
+    }
+
+    public get initiator(): boolean {
+        return this.roomManager.initiator;
     }
 
     public setup(): void {
@@ -58,11 +66,15 @@ export class RoomService {
     public transmitMessage<T, U>(type: T, message: U): void {
         if (this.isReady()) {
             const roomServiceMessage: RoomServiceMessage<T, U> = {
+                from: this.localPlayer.name,
                 type,
                 payload: message,
                 origin: MessageOriginType.ROOM_SERVICE
             };
-            this.roomManager.transmitMessage(roomServiceMessage);
+
+            this.players.forEach((player: Player) => {
+                player.sendData(roomServiceMessage);
+            });
         }
     }
 
@@ -104,15 +116,14 @@ export class RoomService {
         return this.roomManager.roomName;
     }
 
-    private handleRoomManagerReadyEvent(event: RoomReadyEvent): void {
-        const roomManager: RoomManager = event.payload;
-        this.roomManager = roomManager;
+    protected handleRoomManagerReadyEvent(event: RoomReadyEvent): void {
+        this.roomManager = event.payload;
         this.ngZone.run(() => this._isActive.next(true));
-
-        this.notify<RoomManager>(RoomServiceEventType.ROOM_MANAGER, roomManager);
+        // Todo: remove one of notification
+        this.notify<boolean>(RoomServiceEventType.IS_READY, true);
     }
 
-    private handleRoomPlayerAddEvent(event: RoomPlayerAddEvent): void {
+    protected handleRoomPlayerAddEvent(event: RoomPlayerAddEvent): void {
         const player: Player = event.payload;
         if (player.isLocal()) {
             this.localPlayer = player;
@@ -121,18 +132,18 @@ export class RoomService {
         this.ngZone.run(() => this.players.set(player.name, player));
     }
 
-    private handleRoomPlayerRemoveEvent(event: RoomPlayerRemoveEvent): void {
+    protected handleRoomPlayerRemoveEvent(event: RoomPlayerRemoveEvent): void {
         const player: Player = event.payload;
 
         this.ngZone.run(() => this.players.delete(player.name));
     }
 
-    private handleRoomQueueAddEvent(event: RoomQueueAddEvent): void {
+    protected handleRoomQueueAddEvent(event: RoomQueueAddEvent): void {
         const playerName: string = event.payload;
         this.ngZone.run(() => this.queue.push(playerName));
     }
 
-    private handleRoomQueueRemoveEvent(event: RoomQueueRemoveEvent): void {
+    protected handleRoomQueueRemoveEvent(event: RoomQueueRemoveEvent): void {
         const playerName: string = event.payload;
         this.ngZone.run(() => this.queue = this.queue.filter((name: string) => name !== playerName));
     }

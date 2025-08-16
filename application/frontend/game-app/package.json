@@ -24,6 +24,7 @@
     "@angular/platform-browser-dynamic": "~9.0.6",
     "@angular/router": "~9.0.6",
     "rxjs": "~6.5.4",
+    "ts-toolbelt": "^6.4.2",
     "tslib": "^1.10.0",
     "vec2": "^1.6.1",
     "zone.js": "~0.10.2"
