@@ -65,7 +65,7 @@ export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> i
                     this.negotiators.set(negotiators);
                 });
             }
-        }, { allowSignalWrites: true });
+        });
     }
 
     public ngOnInit(): void {

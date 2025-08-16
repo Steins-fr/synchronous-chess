@@ -7,7 +7,7 @@ import {
     ChangeDetectionStrategy,
     signal,
     OnChanges,
-    SimpleChanges, NgZone
+    SimpleChanges,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatChipsModule } from '@angular/material/chips';
