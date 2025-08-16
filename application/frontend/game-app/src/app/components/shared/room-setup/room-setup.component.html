@@ -1,4 +1,4 @@
-<div class="row" *ngIf="roomService.waitingRoomInformation()">
+<div class="row" *ngIf="!roomService.roomIsSetup()">
     <mat-form-field>
         <input matInput type="text" name="room-name" [(ngModel)]="roomName" placeholder="Nom de la salle"
             autocomplete="off" />

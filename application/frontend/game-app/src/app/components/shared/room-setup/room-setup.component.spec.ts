@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('RoomSetupComponent', () => {
     let component: RoomSetupComponent;
@@ -19,7 +20,8 @@ describe('RoomSetupComponent', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                MatProgressSpinnerModule
+                MatProgressSpinnerModule,
+                BrowserAnimationsModule
             ]
         })
             .compileComponents();
