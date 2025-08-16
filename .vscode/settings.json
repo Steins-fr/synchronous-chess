@@ -13,5 +13,8 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "[terraform]": {
         "editor.defaultFormatter": "hashicorp.terraform"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     }
 }

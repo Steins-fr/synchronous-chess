@@ -5,22 +5,20 @@ locals {
 
 data "archive_file" "archive" {
   type        = "zip"
+  source_file = "${path.module}/../../../application/backend/${var.directory}/dist/${var.name}.mjs"
   output_path = local.archive_path
-  source_dir  = "${path.module}/../../../application/backend/${var.domain}/${var.name}/dist"
 }
 
 resource "aws_lambda_function" "lambda" {
   filename      = local.archive_path
   function_name = local.lambda_name
   role          = var.role
-  handler       = "app.handler"
+  handler       = "${var.name}.handler"
   architectures = ["arm64"]
 
   source_code_hash = data.archive_file.archive.output_base64sha256
 
-  runtime = "nodejs20.x"
-
-  layers = var.layers
+  runtime = "nodejs22.x"
 
   environment {
     variables = merge(var.environment, { FUNCTION_NAME = local.lambda_name })

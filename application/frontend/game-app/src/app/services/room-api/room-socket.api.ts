@@ -200,7 +200,7 @@ export class RoomSocketApi {
     }
 
     private isPacketPayload(payload: object): payload is SocketPacketAllPayload {
-        const isPacketPayload = 'id' in payload;
+        const isPacketPayload = 'type' in payload;
 
         if (!isPacketPayload) {
             console.error('Received payload is not a packet', payload);
@@ -214,7 +214,7 @@ export class RoomSocketApi {
     }
 
     private isSocketPacketResponsePayload(payload: SocketPacketAllPayload): payload is SocketPacketResponsePayload {
-        return objectHasValue(RoomApiResponseTypeEnum, payload.type);
+        return 'id' in payload && objectHasValue(RoomApiResponseTypeEnum, payload.type);
     }
 
     private isSocketPacketErrorResponse(
