@@ -8,7 +8,7 @@ export interface BlockRoomInterface {
 
     players: Map<string, Player>;
 
-    transmitMessage<T>(type: string, message: T): Promise<void>;
+    transmitMessage<T>(type: string, message: T): void;
 
     notifyMessage(block: Block): void;
 
