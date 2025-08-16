@@ -1,33 +1,29 @@
+import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
 import { AppComponent } from './app.component';
+import { MockBuilder } from 'ng-mocks';
 
 describe('AppComponent', () => {
-    beforeEach(async () => {
-        await TestBed.configureTestingModule({
-            imports: [
-                RouterTestingModule,
-                AppComponent,
-            ],
-        }).compileComponents();
+    beforeEach(() => {
+        return MockBuilder(AppComponent).provide(provideZonelessChangeDetection());
     });
 
     it('should create the app', () => {
         const fixture: ComponentFixture<AppComponent> = TestBed.createComponent(AppComponent);
-        const app: any = fixture.debugElement.componentInstance;
+        const app = fixture.componentInstance;
         expect(app).toBeTruthy();
     });
 
     it('should have as title \'synchronous-chess\'', () => {
         const fixture: ComponentFixture<AppComponent> = TestBed.createComponent(AppComponent);
-        const app: any = fixture.debugElement.componentInstance;
-        expect(app.title).toEqual('synchronous-chess');
+        const app= fixture.componentInstance;
+        expect(app['title']).toEqual('synchronous-chess');
     });
 
     it('should render title', () => {
         const fixture: ComponentFixture<AppComponent> = TestBed.createComponent(AppComponent);
         fixture.detectChanges();
-        const compiled: any = fixture.debugElement.nativeElement;
+        const compiled = fixture.nativeElement;
         expect(compiled.querySelector('nav').textContent).not.toContain('synchronous-chess app is running!');
     });
 });
