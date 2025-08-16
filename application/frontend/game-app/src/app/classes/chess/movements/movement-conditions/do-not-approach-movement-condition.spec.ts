@@ -4,13 +4,14 @@ import {
 import { FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
 import { FenBoard } from '@app/helpers/chess-board-helper';
+import { describe, test, expect } from 'vitest';
 
 describe('DoNotApproachMoveCondition', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new DoNotApproachMovementCondition(FenPiece.BLACK_KING, 2)).toBeTruthy();
     });
 
-    it('should say if it can move', () => {
+    test('should say if it can move', () => {
         // Given
         const condition: DoNotApproachMovementCondition = new DoNotApproachMovementCondition(FenPiece.BLACK_KING, 2);
         const board: FenBoard = [

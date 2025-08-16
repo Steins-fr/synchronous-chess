@@ -46,13 +46,9 @@
         "eslint": "^9.26.0",
         "eslint-plugin-rxjs-angular-updated": "^1.0.44",
         "eslint-plugin-rxjs-updated": "^1.0.44",
-        "jasmine-core": "~5.1.0",
-        "karma": "~6.4.0",
-        "karma-chrome-launcher": "~3.2.0",
-        "karma-coverage": "~2.2.0",
-        "karma-jasmine": "~5.1.0",
-        "karma-jasmine-html-reporter": "~2.1.0",
+        "jsdom": "^26.1.0",
         "ng-mocks": "^14.13.5",
-        "typescript": "~5.8.3"
+        "typescript": "~5.8.3",
+        "vitest": "^3.2.4"
     }
 }

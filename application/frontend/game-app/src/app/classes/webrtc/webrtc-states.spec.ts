@@ -1,7 +1,8 @@
 import WebrtcStates from './webrtc-states';
+import { describe, test, expect } from 'vitest';
 
 describe('WebrtcState', () => {
-    it('should create an instance', () => {
+    test('should create an instance', () => {
         expect(new WebrtcStates()).toBeTruthy();
     });
 });
