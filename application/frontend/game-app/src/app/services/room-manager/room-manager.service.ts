@@ -1,4 +1,4 @@
-import { Injectable, inject, NgZone } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom } from '@app/services/room-manager/classes/block-room/block-room';
@@ -8,14 +8,13 @@ import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service'
     providedIn: 'root'
 })
 export default class RoomManagerService {
-    private readonly ngZone = inject(NgZone);
     private readonly roomApiService = inject(RoomSocketApi);
 
     public async buildBlockRoom<RoomServiceNotification extends RoomMessage>(
         setup: RoomSetupInterface,
         maxPlayer: number,
     ): Promise<BlockRoom<RoomServiceNotification>> {
-        const room = new BlockRoom<RoomServiceNotification>(this.ngZone, this.roomApiService);
+        const room = new BlockRoom<RoomServiceNotification>(this.roomApiService);
 
         try {
             if (setup.type === 'create') {

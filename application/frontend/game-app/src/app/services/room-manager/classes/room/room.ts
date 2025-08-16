@@ -1,4 +1,3 @@
-import { NgZone } from '@angular/core';
 import { NotifierFlow } from '@app/classes/notifier/notifier';
 import { LocalPlayer } from '@app/classes/player/local-player';
 import { Player } from '@app/classes/player/player';
@@ -41,11 +40,7 @@ export class Room<RoomServiceNotification extends RoomMessage> {
 
     protected readonly publicMessenger$ = new Subject<RoomServiceNotification>();
 
-    protected constructor(
-        protected readonly ngZone: NgZone,
-        protected readonly roomApi: RoomSocketApi,
-    ) {
-    }
+    protected constructor(protected readonly roomApi: RoomSocketApi) {}
 
     // FIXME: rework messenger to be strict typed
     public messenger(messageType: string[] | string): Observable<RoomServiceNotification> {
@@ -89,7 +84,7 @@ export class Room<RoomServiceNotification extends RoomMessage> {
     }
 
     public async createRoom(roomName: string, localPlayerName: string, maxPlayer: number): Promise<void> {
-        this._roomConnection = await HostRoomNetwork.create<RoomMessage>(this.roomApi, roomName, maxPlayer, localPlayerName, (message: RoomMessage) => this.onMessage(message), this.ngZone);
+        this._roomConnection = await HostRoomNetwork.create<RoomMessage>(this.roomApi, roomName, maxPlayer, localPlayerName, (message: RoomMessage) => this.onMessage(message));
         this._roomConnection$.next(this._roomConnection);
         this.followRoomManager();
 
@@ -97,7 +92,7 @@ export class Room<RoomServiceNotification extends RoomMessage> {
     }
 
     public async joinRoom(roomName: string, playerName: string): Promise<void> {
-        this._roomConnection = await PeerRoomNetwork.create<RoomMessage>(this.roomApi, roomName, playerName, (message: RoomMessage) => this.onMessage(message), this.ngZone);
+        this._roomConnection = await PeerRoomNetwork.create<RoomMessage>(this.roomApi, roomName, playerName, (message: RoomMessage) => this.onMessage(message));
         this._roomConnection$.next(this._roomConnection);
         this.followRoomManager();
 
@@ -124,28 +119,24 @@ export class Room<RoomServiceNotification extends RoomMessage> {
     protected handleRoomPlayerAddEvent(event: RoomNetworkPlayerAddEvent): void {
         const player: Player = event.payload;
 
-        this.ngZone.run(() => {
-            this.addPlayer(player);
-        });
+        this.addPlayer(player);
     }
 
     protected handleRoomPlayerRemoveEvent(event: RoomNetworkPlayerRemoveEvent): void {
         const player: Player = event.payload;
 
-        this.ngZone.run(() => {
-            this.players.delete(player.name);
-            this._players$.next(Array.from(this.players.values()));
-        });
+        this.players.delete(player.name);
+        this._players$.next(Array.from(this.players.values()));
     }
 
     protected handleRoomQueueAddEvent(event: RoomNetworkQueueAddEvent): void {
         const playerName: string = event.payload;
-        this.ngZone.run(() => this._queue$.next(this._queue$.getValue().concat(playerName)));
+        this._queue$.next(this._queue$.getValue().concat(playerName));
     }
 
     protected handleRoomQueueRemoveEvent(event: RoomNetworkQueueRemoveEvent): void {
         const playerName: string = event.payload;
-        this.ngZone.run(() => this._queue$.next(this._queue$.getValue().filter((name: string) => name !== playerName)));
+        this._queue$.next(this._queue$.getValue().filter((name: string) => name !== playerName));
     }
 
     public clear(): void {

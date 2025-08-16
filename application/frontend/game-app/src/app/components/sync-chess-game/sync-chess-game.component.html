@@ -1,13 +1,13 @@
 <div id="game">
-    <div class="player">Joueur Noir : {{ gameSession.configuration.blackPlayer || 'En attente' }}</div>
+    <div class="player">Joueur Noir : {{ gameSession().configuration.blackPlayer || 'En attente' }}</div>
     <div id="board-section">
         <div id="chess-board">
             <app-chess-board
                 (pieceClicked)="pieceClicked($event)"
                 (pieceDropped)="pieceDropped($event)"
                 (piecePicked)="piecePicked($event)"
-                [fenBoard]="gameSession.board"
-                [movePreview]="gameSession.movePreview"
+                [fenBoard]="gameSession().board"
+                [movePreview]="gameSession().movePreview"
                 [validPlayBoard]="validPlayBoard"
                 [grabColor]="moveColor()" />
             @if (isPromotion()) {
@@ -17,12 +17,12 @@
             }
             @if (isPromotion() && displayBlackInteractions()) {
             <div class="promotion-list black-player">
-                <app-chess-promotion (pieceType)="gameSession.promote($event)" [color]="blackColor" />
+                <app-chess-promotion (pieceType)="gameSession().promote($event)" [color]="blackColor" />
             </div>
             }
             @if (isPromotion() && displayWhiteInteractions()) {
             <div class="promotion-list white-player">
-                <app-chess-promotion (pieceType)="gameSession.promote($event)" [color]="whiteColor" />
+                <app-chess-promotion (pieceType)="gameSession().promote($event)" [color]="whiteColor" />
             </div>
             }
         </div>
@@ -31,20 +31,20 @@
                 <div class="player-identity">
                     <app-chess-piece [piece]="blackPiece"/>
                 </div>
-                @if (!gameSession.game.isCheckmate()) {
+                @if (!gameSession().game.isCheckmate()) {
                 <div>Dernier coup :</div>
                 <div>{{ blackLastMove() || 'aucun'}}</div>
                 <div>{{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
                 }
-                @if (gameSession.game.isBlackInCheck && !gameSession.game.isBlackInCheckmate) {
+                @if (gameSession().game.isBlackInCheck && !gameSession().game.isBlackInCheckmate) {
                 <div class="check">
                     Échec
                 </div>
                 }
-                @if (gameSession.game.isBlackInCheckmate) {
+                @if (gameSession().game.isBlackInCheckmate) {
                 <div class="check">Échec et mat</div>
                 }
-                @if (displayBlackInteractions() && isMoveTurn() && !gameSession.game.isBlackInCheck) {
+                @if (displayBlackInteractions() && isMoveTurn() && !gameSession().game.isBlackInCheck) {
                 <button
                     (click)="skip()"
                     class="skip-button"
@@ -56,7 +56,7 @@
             </div>
             <div>Tour : {{ turnType() }}</div>
             <div class="player-information white-player">
-                @if (displayWhiteInteractions() && isMoveTurn() && !gameSession.game.isWhiteInCheck) {
+                @if (displayWhiteInteractions() && isMoveTurn() && !gameSession().game.isWhiteInCheck) {
                 <button
                     (click)="skip()"
                     class="skip-button"
@@ -65,15 +65,15 @@
                     Passer
                 </button>
                 }
-                @if (gameSession.game.isWhiteInCheck && !gameSession.game.isWhiteInCheckmate) {
+                @if (gameSession().game.isWhiteInCheck && !gameSession().game.isWhiteInCheckmate) {
                 <div class="check">
                     Échec
                 </div>
                 }
-                @if (gameSession.game.isWhiteInCheckmate) {
+                @if (gameSession().game.isWhiteInCheckmate) {
                 <div class="check">Échec et mat</div>
                 }
-                @if (!gameSession.game.isCheckmate()) {
+                @if (!gameSession().game.isCheckmate()) {
                 <div>{{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
                 <div>Dernier coup :</div>
                 <div>{{ whiteLastMove() || 'aucun'}}</div>
@@ -84,8 +84,8 @@
             </div>
         </div>
     </div>
-    <div class="player">Joueur Blanc : {{ gameSession.configuration.whitePlayer || 'En attente' }}</div>
-    <div class="spectators">Spectateurs : {{ gameSession.spectatorNumber }}</div>
+    <div class="player">Joueur Blanc : {{ gameSession().configuration.whitePlayer || 'En attente' }}</div>
+    <div class="spectators">Spectateurs : {{ gameSession().spectatorNumber }}</div>
     <div id="rules">
         <h3>Règles</h3>
 

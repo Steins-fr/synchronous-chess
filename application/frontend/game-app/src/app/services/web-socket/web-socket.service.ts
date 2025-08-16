@@ -1,4 +1,3 @@
-import { Zone } from '@app/interfaces/zone.interface';
 import { BehaviorSubject, Observable, Subject, filter, first } from 'rxjs';
 
 export enum SocketState {
@@ -18,13 +17,8 @@ export class WebSocketService {
 
     private readonly _message: Subject<string> = new Subject<string>();
     public readonly message: Observable<string> = this._message.asObservable();
-    private readonly zone: Zone;
 
-    public constructor(private readonly _serverUrl: string, zone?: Zone) {
-        this.zone = zone ?? {
-            run: (callback: () => void): void => callback(),
-        };
-    }
+    public constructor(private readonly _serverUrl: string) {}
 
     private createSocket(): WebSocket {
         if (!this._serverUrl) {
@@ -35,7 +29,7 @@ export class WebSocketService {
         this.webSocket = webSocket;
         webSocket.onopen = (): void => this._state.next(webSocket.readyState);
         webSocket.onclose = (): void => this._state.next(webSocket.readyState);
-        webSocket.onmessage = (ev: MessageEvent): void => this.zone.run(() => this._message.next(ev.data));
+        webSocket.onmessage = (ev: MessageEvent): void => this._message.next(ev.data);
         return webSocket;
     }
 

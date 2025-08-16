@@ -1,5 +1,5 @@
 
-import { Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
@@ -9,6 +9,7 @@ import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-pie
     templateUrl: './chess-promotion.component.html',
     styleUrls: ['./chess-promotion.component.scss'],
     imports: [MatGridListModule, ChessPieceComponent],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChessPromotionComponent {
 
@@ -29,28 +30,17 @@ export class ChessPromotionComponent {
     public readonly color = input.required<PieceColor>();
     public readonly pieceType = output<PieceType>();
 
-    public get rookType(): PieceType {
-        return PieceType.ROOK;
-    }
+    protected readonly rookType: PieceType = PieceType.ROOK;
+    protected readonly knightType: PieceType = PieceType.KNIGHT;
+    protected readonly bishopType: PieceType = PieceType.BISHOP;
+    protected readonly queenType: PieceType = PieceType.QUEEN;
 
-    public get knightType(): PieceType {
-        return PieceType.KNIGHT;
-    }
-
-    public get bishopType(): PieceType {
-        return PieceType.BISHOP;
-    }
-
-    public get queenType(): PieceType {
-        return PieceType.QUEEN;
-    }
-
-    public piece(pieceType: PieceType): FenPiece {
+    protected piece(pieceType: PieceType): FenPiece {
         const pieceMap: Map<PieceType, FenPiece> = this.color() === PieceColor.WHITE ? ChessPromotionComponent.whitePieces : ChessPromotionComponent.blackPieces;
         return pieceMap.get(pieceType) ?? FenPiece.EMPTY;
     }
 
-    public onClick(pieceType: PieceType): void {
+    protected onClick(pieceType: PieceType): void {
         this.pieceType.emit(pieceType);
     }
 }
