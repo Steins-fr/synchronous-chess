@@ -7,6 +7,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { Block } from './block-chain/block';
 import { BlockChainMessageTypes, DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { BlockRoomInterface } from './block-room.interface';
+import { TimedLogger } from '@app/helpers/timed-logger.helper';
 
 export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
 
@@ -16,8 +17,8 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
         super(roomApi);
     }
 
-    public override async transmitMessage<T>(type: string, message: T): Promise<void> {
-        await this.blockChain.transmitMessage(type, message);
+    public override transmitMessage<T>(type: string, message: T): void {
+        void this.blockChain.transmitMessage(type, message);
     }
 
     protected override onMessage(message: BlockChainMessage): void {
@@ -30,11 +31,11 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
     }
 
     public notifyMessage(block: Block): void {
-        console.log('notifyMessage', block);
         const roomServiceMessage: RoomMessage = {
             ...block.data,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
         };
+        TimedLogger.log(roomServiceMessage);
 
         // TODO: rework types
         this.publicMessenger$.next(roomServiceMessage as RoomServiceNotification);

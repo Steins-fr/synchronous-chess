@@ -75,16 +75,22 @@ jobs:
             - name: Run Test
               run: npm run test:ci
 
+            # Fix "Could not resolve 85 file paths in [/home/runner/work/synchronous-chess/synchronous-chess/application/frontend/game-app/coverage/lcov.info]"
+            # First unresolved path: dist/test-out/20250816T145544923Z-17187c64/src/app/app.routes.ts
+            - name: Fix "Could not resolve 85 file paths in lcov.info"
+              run: |
+                  sed -i 's|SF:dist/test-out/[^/]*/|SF:|g' coverage/lcov.info
+
             - name: SonarQube Scan
               uses: SonarSource/sonarqube-scan-action@v5 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               with:
+                  projectBaseDir: application/frontend/game-app
                   args: >
-                      -Dsonar.exclusions=**/node_modules/**
                       -Dsonar.typescript.tsconfigPath=tsconfig.json
                       -Dsonar.sources=src/app
-                      -Dsonar.exclusions=**/*.spec.ts
+                      -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts
                       -Dsonar.tests=src/app
                       -Dsonar.test.inclusions=**/*.spec.ts
                       -Dsonar.sourceEncoding=UTF-8

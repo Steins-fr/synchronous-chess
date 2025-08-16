@@ -8,10 +8,10 @@
             <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
                 <app-chat-message *cdkVirtualFor="let chatMessage of chatMessages()" [message]="chatMessage" />
             </cdk-virtual-scroll-viewport>
-            @if (newMessage > 0) {
+            @if (newMessage() > 0) {
             <div id="new-message-notification" class="chat-notification">
                 <button mat-flat-button color="primary" (click)="scrollDown(true)">
-                    <span>{{ newMessage }} nouveaux messages</span>
+                    <span>{{ newMessage() }} nouveaux messages</span>
                     <span>Voir.</span>
                 </button>
             </div>
