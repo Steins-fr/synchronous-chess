@@ -1,5 +1,5 @@
 
-import { Component, inject, DestroyRef, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
 import { ChatComponent, ChatMessengerType } from '@app/components/chat/chat.component';
@@ -15,7 +15,6 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
     templateUrl: './synchronous-chess.page.html',
     imports: [RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent],
     providers: [RoomSetupService],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SynchronousChessPage implements OnInit, OnDestroy {
     protected readonly maxPlayer: number = 4;

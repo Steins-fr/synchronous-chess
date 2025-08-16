@@ -1,6 +1,6 @@
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, input, model, output, signal } from '@angular/core';
+import { Component, effect, input, model, output, signal } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
 import { PieceColor } from '@app/classes/chess/rules/chess-rules';
@@ -14,7 +14,6 @@ import { Vector2dPipe } from '@app/pipes/vector2d.pipe';
     templateUrl: './chess-board.component.html',
     styleUrls: ['./chess-board.component.scss'],
     imports: [CommonModule, MatGridListModule, DragDropModule, ChessPieceComponent, Vector2dPipe],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChessBoardComponent {
     private static readonly defaultValidPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);

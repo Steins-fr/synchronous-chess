@@ -1,5 +1,5 @@
 
-import { ChangeDetectionStrategy, Component, OnInit, inject, input } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,7 +14,6 @@ import { map } from 'rxjs';
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
     imports: [MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatProgressSpinnerModule],
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoomSetupComponent implements OnInit {
     public readonly maxPlayer = input.required<number>();
