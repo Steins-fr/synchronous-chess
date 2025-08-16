@@ -3,8 +3,9 @@ import { Subscription } from 'rxjs';
 
 import { RoomServiceMessage } from '../../classes/webrtc/messages/room-service-message';
 
-import { RoomService } from '../../services/room/room.service';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { BlockRoomService } from '../../services/room/block-room/block-room.service';
+import { RoomService } from '../../services/room/room.service';
 
 enum ChatMessageType {
     CHAT = 'chat'
@@ -25,14 +26,15 @@ type ChatMessage = string;
 export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
 
     @ViewChild(CdkVirtualScrollViewport) public virtualScrollViewport?: CdkVirtualScrollViewport;
-    private readonly subs: Array<Subscription> = [];
+    private readonly subs: Subscription[] = [];
     public sendInput: string = '';
-    public chat: Array<ChatEntry> = [];
+    public chat: ChatEntry[] = [];
     public newMessage: number = 0;
     public viewingHistory: boolean = false;
+    public isSending: boolean = false;
 
     public constructor(
-        public roomService: RoomService,
+        public roomService: BlockRoomService,
         private readonly ngZone: NgZone) {
     }
 
@@ -71,17 +73,18 @@ export class ChatComponent implements OnDestroy, OnInit, AfterViewInit {
     public sendMessage(): void {
         if (this.roomService.isReady()) {
             this.roomService.transmitMessage(ChatMessageType.CHAT, this.sendInput);
-            this.newMessage += 1;
-            this.chat = [...this.chat, {
-                author: this.roomService.localPlayer.name,
-                message: this.sendInput
-            }];
-            this.sendInput = '';
+            this.isSending = true;
         }
     }
 
     private onChatMessage(message: RoomServiceMessage<ChatMessageType, ChatMessage>): void {
         this.newMessage += 1;
+
+        if (this.roomService.localPlayer.name === message.from) {
+            this.sendInput = '';
+            this.isSending = false;
+        }
+
         this.ngZone.run(() => this.chat = [...this.chat, {
             author: message.from,
             message: message.payload

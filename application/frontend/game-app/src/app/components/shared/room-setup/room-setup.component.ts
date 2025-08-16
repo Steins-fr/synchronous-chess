@@ -1,5 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { RoomService } from '../../../services/room/room.service';
+import { BlockRoomService } from '../../../services/room/block-room/block-room.service';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 
 @Component({
     selector: 'app-room-setup',
@@ -16,10 +17,24 @@ import { RoomService } from '../../../services/room/room.service';
     public isLoading: boolean = false;
     public error: string = '';
 
-    public constructor(public roomService: RoomService) { }
+    public constructor(
+        public roomService: BlockRoomService,
+        private route: ActivatedRoute
+    ) { }
 
     public ngOnInit(): void {
         this.roomService.setup();
+        this.route.queryParamMap.subscribe((params: ParamMap) => {
+            if(params.has('auto-create')) {
+                this.roomName = 'test';
+                this.playerName = `${Math.floor(Math.random() * 100000)}`;
+                this.enterRoom(true);
+            } else if (params.has('auto-join')) {
+                this.roomName = 'test';
+                this.playerName = `${Math.floor(Math.random() * 100000)}`;
+                setTimeout(() => this.enterRoom(false), 1000);
+            }
+        });
     }
 
     public hostRoom(): void {
