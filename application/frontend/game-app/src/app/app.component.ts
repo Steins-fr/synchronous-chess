@@ -5,7 +5,6 @@ import { homePath, chatPath } from './app.routes';
 
 @Component({
     selector: 'app-root',
-    standalone: true,
     imports: [CommonModule, RouterOutlet, RouterModule],
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
