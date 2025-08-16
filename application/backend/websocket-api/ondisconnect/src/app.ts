@@ -1,4 +1,4 @@
-import { RoomService, Room, Connection, ConnectionService } from '/opt/nodejs/room-manager';
+import { RoomService, Room, Connection, ConnectionService } from '../../../layers/room-manager/src/index';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
 interface Response {
