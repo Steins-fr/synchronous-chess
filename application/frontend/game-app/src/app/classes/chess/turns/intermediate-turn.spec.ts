@@ -1,10 +1,10 @@
 import Move, { FenCoordinate, FenColumn } from '@app/classes/chess/interfaces/move';
-import { PieceColor } from '@app/classes/chess/rules/chess-rules';
 import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
 import Turn from '@app/classes/chess/turns/turn';
 import IntermediateTurnAction from '@app/classes/chess/turns/turn-actions/intermediate-turn-action';
 import TurnType from '@app/classes/chess/turns/turn.types';
 import { describe, test, expect } from 'vitest';
+import { PieceColor } from '../enums/piece-color.enum';
 
 describe('IntermediateTurn', () => {
     test('should create an instance', () => {

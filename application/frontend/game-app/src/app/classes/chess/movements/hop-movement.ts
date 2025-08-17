@@ -1,8 +1,10 @@
 import Movement, { MovementType } from '@app/classes/chess/movements/movement';
 import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
-import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { Vec2, Vec2Array } from '@app/classes/vector/vec2';
-import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { FenPiece } from '../enums/fen-piece.enum';
+import { PieceColor } from '../enums/piece-color.enum';
 
 export default class HopMovement extends Movement {
     private constructor(vector: Vec2, conditions: Array<MovementCondition>) {

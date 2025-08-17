@@ -1,9 +1,10 @@
 import SynchronousChessGameSession from '@app/classes/chess/game-sessions/synchronous-chess-game-session';
 import Move from '@app/classes/chess/interfaces/move';
-import { PieceType, PieceColor } from '@app/classes/chess/rules/chess-rules';
 import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Subject, takeUntil } from 'rxjs';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 export enum SCGameSessionType {
     CONFIGURATION = 'SC_GS_configuration',

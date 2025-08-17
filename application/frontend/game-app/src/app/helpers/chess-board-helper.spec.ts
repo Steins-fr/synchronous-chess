@@ -1,10 +1,14 @@
 import { Vec2 } from '@app/classes/vector/vec2';
-import ChessBoardHelper, { FenBoard, SafeBoard } from './chess-board-helper';
+import ChessBoardHelper from './chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { SafeBoard } from '@app/classes/chess/types/safe-board';
 import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
-import { FenPiece, PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
 import CoordinateMove, { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
 import Move, { FenCoordinate, FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
 import { describe, test, expect } from 'vitest';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
+import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
 
 describe('ChessHelper', () => {
     test('should create an initialized fen board', () => {

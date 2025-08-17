@@ -1,6 +1,6 @@
 
 import { Component, input } from '@angular/core';
-import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
 
 @Component({
     selector: 'app-chess-piece',

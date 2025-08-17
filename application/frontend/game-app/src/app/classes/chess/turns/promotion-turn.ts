@@ -1,8 +1,9 @@
 import ChoiceTurn from './choice-turn';
 import PromotionTurnAction from './turn-actions/promotion-turn-action';
 import TurnType from './turn.types';
-import { PieceColor, PieceType } from '../rules/chess-rules';
 import Turn from './turn';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 export default class PromotionTurn extends ChoiceTurn<PromotionTurnAction> {
 

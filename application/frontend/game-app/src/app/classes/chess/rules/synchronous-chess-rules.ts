@@ -1,4 +1,4 @@
-import ChessRules, { PieceColor, FenPiece, PieceType } from './chess-rules';
+import ChessRules from './chess-rules';
 import LinearMove from '../movements/linear-movement';
 import HopMove from '../movements/hop-movement';
 import DestinationColorMovementCondition from '../movements/movement-conditions/destination-color-movement-condition';
@@ -8,8 +8,13 @@ import { DoNotApproachMovementCondition } from '../movements/movement-conditions
 import { SafeMovementCondition } from '../movements/movement-conditions/safe-movement-condition';
 import Movement from '../movements/movement';
 import { Row } from '../interfaces/CoordinateMove';
-import ChessBoardHelper, { FenBoard, SafeBoard } from '../../../helpers/chess-board-helper';
+import ChessBoardHelper from '../../../helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { SafeBoard } from '@app/classes/chess/types/safe-board';
 import { FenCoordinate } from '../interfaces/move';
+import { FenPiece } from '../enums/fen-piece.enum';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 // TODO: rewrite all this file
 export default class SynchronousChessRules extends ChessRules {

@@ -1,9 +1,10 @@
 import { FenColumn, FenRow, FenCoordinate } from '@app/classes/chess/interfaces/move';
-import { PieceType, PieceColor } from '@app/classes/chess/rules/chess-rules';
 import PromotionTurn from '@app/classes/chess/turns/promotion-turn';
 import Turn from '@app/classes/chess/turns/turn';
 import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion-turn-action';
 import { describe, test, expect } from 'vitest';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 describe('PromotionTurn', () => {
     test('should create an instance', () => {

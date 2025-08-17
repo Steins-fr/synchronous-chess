@@ -1,7 +1,9 @@
 
 import { Component, input, output } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { FenPiece, PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
+import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
 import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
 
 @Component({

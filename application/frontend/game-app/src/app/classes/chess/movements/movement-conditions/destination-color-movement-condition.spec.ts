@@ -1,9 +1,10 @@
 import DestinationColorMovementCondition
     from '@app/classes/chess/movements/movement-conditions/destination-color-movement-condition';
-import { PieceColor, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
-import { FenBoard } from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 import { describe, test, expect } from 'vitest';
+import { FenPiece } from '../../enums/fen-piece.enum';
+import { PieceColor } from '../../enums/piece-color.enum';
 
 describe('DestinationColorMoveCondition', () => {
     test('should create an instance', () => {

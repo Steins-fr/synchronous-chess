@@ -1,9 +1,11 @@
 import Movement from '@app/classes/chess/movements/movement';
-import { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
 import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
-import { FenBoard } from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 import { describe, test, expect } from 'vitest';
+import { FenPiece } from '../enums/fen-piece.enum';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 describe('SynchronousChessRules', () => {
     test('should get the rules for a specific color', () => {

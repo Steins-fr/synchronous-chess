@@ -1,7 +1,8 @@
 import MovementCondition from '@app/classes/chess/movements/movement-conditions/movement-condition';
-import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
 import { Vec2 } from '@app/classes/vector/vec2';
-import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 
 export enum MovementType {
     LINEAR = 'linear',

@@ -1,18 +1,14 @@
 import CoordinateMove, { Row, Column, Coordinate } from '@app/classes/chess/interfaces/CoordinateMove';
 import Move, { FenCoordinate, FenRow, FenColumn } from '@app/classes/chess/interfaces/move';
-import ChessRules, { FenPiece, PieceType, PieceColor } from '@app/classes/chess/rules/chess-rules';
+import ChessRules from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
+import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
 import { Vec2 } from '@app/classes/vector/vec2';
-
-export type FenBoard = Array<Array<FenPiece>>;
-export type SafeBoard = Array<Array<boolean>>;
-export type ValidPlayBoard = Array<Array<boolean>>;
-export type MovementBoard = Array<Array<Array<PieceType>>>;
-
-export class InvalidFenCoordinateError extends Error {
-    public constructor(type: 'column' | 'row', index: number | string) {
-        super(`Invalid ${type} index: ${index}`);
-    }
-}
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { SafeBoard } from '@app/classes/chess/types/safe-board';
+// ValidPlayBoard and MovementBoard were moved to their own files but are not used here.
+import { InvalidFenCoordinateError } from '@app/classes/chess/types/invalid-fen-coordinate-error';
 
 export default abstract class ChessBoardHelper {
 
