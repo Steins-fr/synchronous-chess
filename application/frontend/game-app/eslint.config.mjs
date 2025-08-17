@@ -55,10 +55,6 @@ export default defineConfig([globalIgnores([
             avoidEscape: true,
         }],
 
-        "@angular-eslint/component-class-suffix": [1, {
-            suffixes: ["Component", "Dialog", "Page"],
-        }],
-
         "@angular-eslint/component-selector": ["error", {
             prefix: "app",
             style: "kebab-case",

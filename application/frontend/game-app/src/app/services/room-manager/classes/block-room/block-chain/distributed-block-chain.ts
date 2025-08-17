@@ -1,9 +1,7 @@
 import { DefaultUrlSerializer, UrlTree } from '@angular/router';
-import { Player } from '@app/classes/player/player';
-import { WebRtcPlayer } from '@app/classes/player/web-rtc-player';
-import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
-import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
+import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { BlockRoomInterface } from '../block-room.interface';
 import { Block, PlayerData } from './block';
 import { keyPairAlgorithm } from './block-chain.constants';
@@ -11,6 +9,8 @@ import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
 import { WaitingQueue } from './waiting-queue';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { Player } from '../../player/player';
+import { WebRtcPlayer } from '../../player/web-rtc-player';
 
 export enum BlockChainMessageType {
     NEW_BLOCK_APPROVED = 'newBlockApproved',

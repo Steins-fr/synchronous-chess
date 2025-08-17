@@ -1,18 +1,18 @@
-import { NotifierFlow } from '@app/classes/notifier/notifier';
-import { LocalPlayer } from '@app/classes/player/local-player';
-import { Player } from '@app/classes/player/player';
-import { RoomNetworkEventType } from '@app/classes/room-network/events/room-network-event';
-import RoomNetworkPlayerAddEvent from '@app/classes/room-network/events/room-network-player-add-event';
-import RoomNetworkPlayerRemoveEvent from '@app/classes/room-network/events/room-network-player-remove-event';
-import RoomNetworkQueueAddEvent from '@app/classes/room-network/events/room-network-queue-add-event';
-import RoomNetworkQueueRemoveEvent from '@app/classes/room-network/events/room-network-queue-remove-event';
-import { HostRoomNetwork } from '@app/classes/room-network/host-room-network';
-import { PeerRoomNetwork } from '@app/classes/room-network/peer-room-network';
-import { RoomNetwork } from '@app/classes/room-network/room-network';
-import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { NotifierFlow } from '@app/deprecated/notifier/notifier';
+import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
+import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BehaviorSubject, Observable, Subject, filter } from 'rxjs';
+import { RoomNetworkEventType } from '../room-network/events/room-network-event';
+import RoomNetworkPlayerAddEvent from '../room-network/events/room-network-player-add-event';
+import RoomNetworkPlayerRemoveEvent from '../room-network/events/room-network-player-remove-event';
+import RoomNetworkQueueAddEvent from '../room-network/events/room-network-queue-add-event';
+import RoomNetworkQueueRemoveEvent from '../room-network/events/room-network-queue-remove-event';
+import { HostRoomNetwork } from '../room-network/host-room-network';
+import { PeerRoomNetwork } from '../room-network/peer-room-network';
+import { RoomNetwork } from '../room-network/room-network';
+import { LocalPlayer } from '../player/local-player';
+import { Player } from '../player/player';
 
 export class Room<RoomServiceNotification extends RoomMessage> {
     private _roomConnection?: RoomNetwork<RoomMessage>;

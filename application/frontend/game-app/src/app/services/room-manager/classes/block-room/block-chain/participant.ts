@@ -1,5 +1,5 @@
-import { Player } from '@app/classes/player/player';
-import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
+import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { Player } from '../../player/player';
 
 export class Participant {
     public get publicKey(): CryptoKey {

@@ -1,5 +1,5 @@
+import { Player } from '../player/player';
 import { Block } from './block-chain/block';
-import { Player } from '@app/classes/player/player';
 
 export interface BlockRoomInterface {
 
