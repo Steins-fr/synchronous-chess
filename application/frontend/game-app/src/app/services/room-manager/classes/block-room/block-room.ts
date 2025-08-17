@@ -1,13 +1,13 @@
-import RoomNetworkPlayerAddEvent from '@app/classes/room-network/events/room-network-player-add-event';
-import { BlockChainMessage } from '@app/classes/webrtc/messages/block-chain-message';
-import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/classes/webrtc/messages/room-message';
+import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
+import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Block } from './block-chain/block';
 import { BlockChainMessageTypes, DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { BlockRoomInterface } from './block-room.interface';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import RoomNetworkPlayerAddEvent from '../room-network/events/room-network-player-add-event';
 
 export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
 
