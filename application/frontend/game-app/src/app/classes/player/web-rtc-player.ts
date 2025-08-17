@@ -28,7 +28,7 @@ export class WebRtcPlayer extends Player {
 
     private readonly subs: Subscription[] = [];
 
-    private readonly _notifier: Notifier<PlayerEventType, PlayerEvent> = new Notifier<PlayerEventType, PlayerEvent>();
+    private readonly _notifier = new Notifier<PlayerEventType, PlayerEvent>();
 
     public readonly states: Observable<WebrtcStates>; // For external debugging
     private connectionState: RTCIceConnectionState = 'connected';

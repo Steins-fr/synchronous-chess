@@ -7,16 +7,16 @@ import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
 import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
 
 export default abstract class ChessRules {
-    protected abstract readonly pieceMovement: Record<PieceType, () => Array<Movement>>;
+    protected abstract pieceMovement: Record<PieceType, ReadonlyArray<Movement>>;
 
     protected constructor(
         public readonly color: PieceColor,
-        public isQueenSideCastleAvailable: boolean = true,
-        public isKingSideCastleAvailable: boolean = true,
+        private _isQueenSideCastleAvailable: boolean = true,
+        private _isKingSideCastleAvailable: boolean = true,
     ) { }
 
-    public getPieceMovements(pieceType: PieceType): Array<Movement> {
-        return this.pieceMovement[pieceType]();
+    public getPieceMovements(pieceType: PieceType): ReadonlyArray<Movement> {
+        return this.pieceMovement[pieceType];
     }
 
     public getPossiblePlays(pieceType: PieceType, piecePosition: Vec2, board: Array<Array<FenPiece>>): Array<Vec2> {
@@ -33,5 +33,25 @@ export default abstract class ChessRules {
         return this.color === PieceColor.BLACK;
     }
 
+
+    public setQueenSideCastleAvailable(isAvailable: boolean): void {
+        this._isQueenSideCastleAvailable = isAvailable;
+        this.updatePieceMovement(this._isQueenSideCastleAvailable, this._isKingSideCastleAvailable);
+    }
+
+    public setKingSideCastleAvailable(isAvailable: boolean): void {
+        this._isKingSideCastleAvailable = isAvailable;
+        this.updatePieceMovement(this._isQueenSideCastleAvailable, this._isKingSideCastleAvailable);
+    }
+
+    public isQueenSideCastleAvailable(): boolean {
+        return this._isQueenSideCastleAvailable;
+    }
+
+    public isKingSideCastleAvailable(): boolean {
+        return this._isKingSideCastleAvailable;
+    }
+
+    protected abstract updatePieceMovement(isQueenSideCastleAvailable: boolean, isKingSideCastleAvailable: boolean): void;
     public abstract getSafeBoard(board: FenBoard): SafeBoard;
 }
