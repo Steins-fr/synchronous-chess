@@ -1,0 +1,5 @@
+{
+    "sonarCloudOrganization": "steins-sonar-key",
+    "projectKey": "Steins-fr_synchronous-chess",
+    "region": "EU"
+}

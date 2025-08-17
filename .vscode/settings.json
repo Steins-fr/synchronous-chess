@@ -13,8 +13,21 @@
     "[html]": {
         "editor.defaultFormatter": "dbaeumer.vscode-eslint"
     },
+    "[yaml]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[github-actions-workflow]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "files.insertFinalNewline": true,
     "sonarlint.connectedMode.project": {
         "connectionId": "Steins orga",
         "projectKey": "Steins-fr_synchronous-chess"
-    }
+    },
 }
