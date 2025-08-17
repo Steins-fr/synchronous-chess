@@ -47,9 +47,8 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     }
 
     protected onPlayerConnected(player: Player): void {
-        if (this.hostPlayer === undefined) {
-            this.hostPlayer = player;
-        }
+        // FIXME: improve host player assignment logic
+        this.hostPlayer ??= player;
     }
 
     protected onPlayerDisconnected(player: Player): void {

@@ -1,6 +1,6 @@
 import ChessRules from './chess-rules';
-import LinearMove from '../movements/linear-movement';
-import HopMove from '../movements/hop-movement';
+import LinearMovement from '../movements/linear-movement';
+import HopMovement from '../movements/hop-movement';
 import DestinationColorMovementCondition from '../movements/movement-conditions/destination-color-movement-condition';
 import LineMovementCondition from '../movements/movement-conditions/line-movement-condition';
 import CaseMovementCondition from '../movements/movement-conditions/case-movement-condition';
@@ -16,100 +16,98 @@ import { FenPiece } from '../enums/fen-piece.enum';
 import { PieceColor } from '../enums/piece-color.enum';
 import { PieceType } from '../enums/piece-type.enum';
 
-// TODO: rewrite all this file
 export default class SynchronousChessRules extends ChessRules {
 
     private static readonly whiteNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE, true, false, false);
     private static readonly blackNoSafetyRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK, true, false, false);
 
-    protected readonly pieceMovement: Record<PieceType, () => Array<Movement>> = {
-        [PieceType.KING]: () => this.kingMovement,
-        [PieceType.QUEEN]: () => this.queenMovement,
-        [PieceType.BISHOP]: () => this.bishopMovement,
-        [PieceType.KNIGHT]: () => this.knightMovement,
-        [PieceType.ROOK]: () => this.rookMovement,
-        [PieceType.PAWN]: () => this.pawnMovement,
-        [PieceType.NONE]: () => []
-    };
+    protected pieceMovement: Record<PieceType, ReadonlyArray<Movement>>;
 
-    public constructor(color: PieceColor,
+    public constructor(
+        color: PieceColor,
         private readonly isForCheckSafety: boolean = false,
         isQueenSideCastleAvailable: boolean = true,
-        isKingSideCastleAvailable: boolean = true) {
+        isKingSideCastleAvailable: boolean = true
+    ) {
         super(color, isQueenSideCastleAvailable, isKingSideCastleAvailable);
-        const direction: number = this.isBlack() ? 1 : -1;
 
-        this.pawnMovement = [
-            HopMove.build([0, direction], [
-                new DestinationColorMovementCondition(PieceColor.NONE)
-            ]),
-            HopMove.build([0, 2 * direction], [
-                new LineMovementCondition(this.isBlack() ? Row._7 : Row._2),
-                new CaseMovementCondition([0, direction], [FenPiece.EMPTY]),
-                new CaseMovementCondition([0, 2 * direction], [FenPiece.EMPTY]),
-            ]),
-            ...HopMove.buildAll([[-1, direction], [1, direction]], [
-                new DestinationColorMovementCondition(this.isBlack() ? PieceColor.WHITE : PieceColor.BLACK)
-            ])
-        ];
+        this.pieceMovement = SynchronousChessRules.generatePieceMovement(this.isBlack(), isQueenSideCastleAvailable, isKingSideCastleAvailable, this.isForCheckSafety);
     }
 
-    private readonly queenMovement: Array<Movement> = LinearMove.buildAll([
-        [0, 1], [0, -1], [1, 0], [-1, 0],
-        [1, 1], [-1, -1], [1, -1], [-1, 1]
-    ]);
+    protected updatePieceMovement(isQueenSideCastleAvailable: boolean, isKingSideCastleAvailable: boolean): void {
+        this.pieceMovement = SynchronousChessRules.generatePieceMovement(this.isBlack(), isQueenSideCastleAvailable, isKingSideCastleAvailable, this.isForCheckSafety);
+    }
 
-    private readonly bishopMovement: Array<Movement> = LinearMove.buildAll([
-        [1, 1], [-1, -1], [1, -1], [-1, 1]
-    ]);
+    private static generatePieceMovement(
+        isBlack: boolean,
+        isQueenSideCastleAvailable: boolean,
+        isKingSideCastleAvailable: boolean,
+        isForCheckSafety: boolean,
+    ): Record<PieceType, ReadonlyArray<Movement>> {
+        const pawnDirection: number = isBlack ? 1 : -1;
+        const opponentRules: ChessRules = isBlack ? SynchronousChessRules.whiteNoSafetyRules : SynchronousChessRules.blackNoSafetyRules;
 
-    private readonly knightMovement: Array<Movement> = HopMove.buildAll([
-        [1, 2], [2, 1],
-        [-1, 2], [2, -1],
-        [1, -2], [-2, 1],
-        [-1, -2], [-2, -1]
-    ]);
-
-    private readonly rookMovement: Array<Movement> = LinearMove.buildAll([
-        [0, 1], [0, -1], [1, 0], [-1, 0]
-    ]);
-
-    private readonly pawnMovement: Array<Movement>;
-
-    private castlingMovement(opponentRules: ChessRules): Array<Movement> {
         const castlingMoves: Array<Movement> = [];
 
-        if (this.isKingSideCastleAvailable) {
-            castlingMoves.push(HopMove.build([2, 0], [
+        if (isKingSideCastleAvailable) {
+            castlingMoves.push(HopMovement.build([2, 0], [
                 new CaseMovementCondition([1, 0], [FenPiece.EMPTY]),
                 new CaseMovementCondition([2, 0], [FenPiece.EMPTY]),
-                new SafeMovementCondition(opponentRules, this.isForCheckSafety, [1, 0])
+                new SafeMovementCondition(opponentRules, isForCheckSafety, [1, 0])
             ]));
         }
-        if (this.isQueenSideCastleAvailable) {
-            castlingMoves.push(HopMove.build([-2, 0], [
+        if (isQueenSideCastleAvailable) {
+            castlingMoves.push(HopMovement.build([-2, 0], [
                 new CaseMovementCondition([-1, 0], [FenPiece.EMPTY]),
                 new CaseMovementCondition([-2, 0], [FenPiece.EMPTY]),
                 new CaseMovementCondition([-3, 0], [FenPiece.EMPTY]),
-                new SafeMovementCondition(opponentRules, this.isForCheckSafety, [-1, 0])
+                new SafeMovementCondition(opponentRules, isForCheckSafety, [-1, 0])
             ]));
         }
-        return castlingMoves;
-    }
 
-    private get kingMovement(): Array<Movement> {
-        const opponentRules: ChessRules = this.isBlack() ? SynchronousChessRules.whiteNoSafetyRules : SynchronousChessRules.blackNoSafetyRules;
 
-        return [
-            ...HopMove.buildAll([
+        return {
+            [PieceType.KING]: [
+                ...HopMovement.buildAll([
+                    [0, 1], [0, -1], [1, 0], [-1, 0],
+                    [1, 1], [-1, -1], [1, -1], [-1, 1]
+                ], [
+                    new DoNotApproachMovementCondition(isBlack ? FenPiece.WHITE_KING : FenPiece.BLACK_KING, 2),
+                    new SafeMovementCondition(opponentRules, isForCheckSafety)
+                ]),
+                ...castlingMoves
+            ],
+            [PieceType.QUEEN]: LinearMovement.buildAll([
                 [0, 1], [0, -1], [1, 0], [-1, 0],
                 [1, 1], [-1, -1], [1, -1], [-1, 1]
-            ], [
-                new DoNotApproachMovementCondition(this.isBlack() ? FenPiece.WHITE_KING : FenPiece.BLACK_KING, 2),
-                new SafeMovementCondition(opponentRules, this.isForCheckSafety)
             ]),
-            ...this.castlingMovement(opponentRules)
-        ];
+            [PieceType.BISHOP]: LinearMovement.buildAll([
+                [1, 1], [-1, -1], [1, -1], [-1, 1]
+            ]),
+            [PieceType.KNIGHT]: HopMovement.buildAll([
+                [1, 2], [2, 1],
+                [-1, 2], [2, -1],
+                [1, -2], [-2, 1],
+                [-1, -2], [-2, -1]
+            ]),
+            [PieceType.ROOK]: LinearMovement.buildAll([
+                [0, 1], [0, -1], [1, 0], [-1, 0]
+            ]),
+            [PieceType.PAWN]: [
+                HopMovement.build([0, pawnDirection], [
+                    new DestinationColorMovementCondition(PieceColor.NONE)
+                ]),
+                HopMovement.build([0, 2 * pawnDirection], [
+                    new LineMovementCondition(isBlack ? Row._7 : Row._2),
+                    new CaseMovementCondition([0, pawnDirection], [FenPiece.EMPTY]),
+                    new CaseMovementCondition([0, 2 * pawnDirection], [FenPiece.EMPTY]),
+                ]),
+                ...HopMovement.buildAll([[-1, pawnDirection], [1, pawnDirection]], [
+                    new DestinationColorMovementCondition(isBlack ? PieceColor.WHITE : PieceColor.BLACK)
+                ])
+            ],
+            [PieceType.NONE]: []
+        };
     }
 
     public getSafeBoard(board: FenBoard, excludeFrom?: FenCoordinate): SafeBoard {

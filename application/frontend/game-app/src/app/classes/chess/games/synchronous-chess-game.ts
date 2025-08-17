@@ -79,17 +79,17 @@ export default class SynchronousChessGame {
             this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookNewEmplacement, ChessBoardHelper.getFenPieceByVec(this._fenBoard, rookEmplacement));
             this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookEmplacement, FenPiece.EMPTY);
         }
-        rules.isQueenSideCastleAvailable = false;
-        rules.isKingSideCastleAvailable = false;
+        rules.setQueenSideCastleAvailable(false);
+        rules.setKingSideCastleAvailable(false);
     }
 
     private rookMoved(move: Move, rules: ChessRules): void {
         switch (move.from[0]) {
             case FenColumn.A:
-                rules.isQueenSideCastleAvailable = false;
+                rules.setQueenSideCastleAvailable(false);
                 break;
             case FenColumn.H:
-                rules.isKingSideCastleAvailable = false;
+                rules.setKingSideCastleAvailable(false);
                 break;
         }
     }

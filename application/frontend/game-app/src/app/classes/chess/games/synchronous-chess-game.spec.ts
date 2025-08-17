@@ -1348,8 +1348,8 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.EMPTY, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable;
-        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
+        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable();
+        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable();
 
         // When
         game.runSyncTurn();
@@ -1358,8 +1358,8 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
-        expect(game.blackRules.isKingSideCastleAvailable).toBeFalsy();
-        expect(game.blackRules.isQueenSideCastleAvailable).toBeFalsy();
+        expect(game.blackRules.isKingSideCastleAvailable()).toBeFalsy();
+        expect(game.blackRules.isQueenSideCastleAvailable()).toBeFalsy();
     });
 
     test('should apply king castling', () => {
@@ -1408,8 +1408,8 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable;
-        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
+        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable();
+        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable();
 
         // When
         game.runSyncTurn();
@@ -1418,8 +1418,8 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
-        expect(game.blackRules.isKingSideCastleAvailable).toBeFalsy();
-        expect(game.blackRules.isQueenSideCastleAvailable).toBeFalsy();
+        expect(game.blackRules.isKingSideCastleAvailable()).toBeFalsy();
+        expect(game.blackRules.isQueenSideCastleAvailable()).toBeFalsy();
     });
 
     test('should disable king side castling', () => {
@@ -1468,8 +1468,8 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable;
-        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
+        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable();
+        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable();
 
         // When
         game.runSyncTurn();
@@ -1478,8 +1478,8 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
-        expect(game.blackRules.isKingSideCastleAvailable).toBeFalsy();
-        expect(game.blackRules.isQueenSideCastleAvailable).toBeTruthy();
+        expect(game.blackRules.isKingSideCastleAvailable()).toBeFalsy();
+        expect(game.blackRules.isQueenSideCastleAvailable()).toBeTruthy();
     });
 
     test('should disable queen side castling', () => {
@@ -1528,8 +1528,8 @@ describe('SynchronousChessGame', () => {
             [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
         ];
 
-        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable;
-        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable;
+        const castlingQueen: boolean = game.blackRules.isQueenSideCastleAvailable();
+        const castlingKing: boolean = game.blackRules.isKingSideCastleAvailable();
 
         // When
         game.runSyncTurn();
@@ -1538,8 +1538,8 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
-        expect(game.blackRules.isKingSideCastleAvailable).toBeTruthy();
-        expect(game.blackRules.isQueenSideCastleAvailable).toBeFalsy();
+        expect(game.blackRules.isKingSideCastleAvailable()).toBeTruthy();
+        expect(game.blackRules.isQueenSideCastleAvailable()).toBeFalsy();
     });
 
     test('nextTurn should create an intermediate turn', () => {
