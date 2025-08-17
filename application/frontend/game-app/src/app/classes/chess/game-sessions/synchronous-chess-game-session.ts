@@ -1,8 +1,11 @@
-import ChessBoardHelper, { FenBoard } from '../../../helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import CoordinateMove from '../interfaces/CoordinateMove';
 import Move from '../interfaces/move';
-import { PieceColor, PieceType, FenPiece } from '../rules/chess-rules';
+import { PieceColor } from '../enums/piece-color.enum';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { PieceType } from '../enums/piece-type.enum';
+import { FenPiece } from '../enums/fen-piece.enum';
 
 export interface SessionConfiguration {
     whitePlayer?: string;

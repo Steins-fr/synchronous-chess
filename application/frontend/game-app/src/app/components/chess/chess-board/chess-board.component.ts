@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Component, effect, input, model, output, signal } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
-import { PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
 import { Vec2 } from '@app/classes/vector/vec2';
 import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
-import ChessBoardHelper, { FenBoard, ValidPlayBoard } from '@app/helpers/chess-board-helper';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { ValidPlayBoard } from '@app/classes/chess/types/valid-play-board';
 import { Vector2dPipe } from '@app/pipes/vector2d.pipe';
 
 @Component({

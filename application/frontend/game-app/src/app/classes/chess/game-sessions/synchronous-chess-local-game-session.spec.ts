@@ -1,4 +1,4 @@
-import { PieceColor } from '../rules/chess-rules';
+import { PieceColor } from '../enums/piece-color.enum';
 import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 import { describe, test, expect } from 'vitest';
 

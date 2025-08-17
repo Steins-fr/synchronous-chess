@@ -1,38 +1,10 @@
 import Movement from '@app/classes/chess/movements/movement';
 import { Vec2 } from '@app/classes/vector/vec2';
-import { FenBoard, SafeBoard } from '@app/helpers/chess-board-helper';
-
-export enum PieceColor {
-    WHITE = 'w',
-    BLACK = 'b',
-    NONE = 'none'
-}
-
-export enum PieceType {
-    KING = 'k',
-    QUEEN = 'q',
-    BISHOP = 'b',
-    KNIGHT = 'n',
-    ROOK = 'r',
-    PAWN = 'p',
-    NONE = 'none'
-}
-
-export enum FenPiece {
-    BLACK_KING = 'k',
-    BLACK_QUEEN = 'q',
-    BLACK_BISHOP = 'b',
-    BLACK_KNIGHT = 'n',
-    BLACK_ROOK = 'r',
-    BLACK_PAWN = 'p',
-    WHITE_KING = 'K',
-    WHITE_QUEEN = 'Q',
-    WHITE_BISHOP = 'B',
-    WHITE_KNIGHT = 'N',
-    WHITE_ROOK = 'R',
-    WHITE_PAWN = 'P',
-    EMPTY = ''
-}
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { SafeBoard } from '@app/classes/chess/types/safe-board';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
+import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
 
 export default abstract class ChessRules {
     protected abstract readonly pieceMovement: Record<PieceType, () => Array<Movement>>;

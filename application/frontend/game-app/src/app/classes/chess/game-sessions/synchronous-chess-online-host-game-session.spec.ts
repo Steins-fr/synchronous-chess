@@ -8,7 +8,8 @@ import SynchronousChessOnlineHostGameSession
     from '@app/classes/chess/game-sessions/synchronous-chess-online-host-game-session';
 import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
 import Move, { FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
-import { PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
+import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
 import { NotifierFlow } from '@app/classes/notifier/notifier';
 import { LocalPlayer } from '@app/classes/player/local-player';
 import { Player, PlayerType } from '@app/classes/player/player';

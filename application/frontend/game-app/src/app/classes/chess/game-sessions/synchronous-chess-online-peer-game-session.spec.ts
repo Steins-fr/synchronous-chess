@@ -4,7 +4,6 @@ import SynchronousChessOnlinePeerGameSession
 import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
 import { Coordinate, Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
 import Move, { FenColumn, FenRow } from '@app/classes/chess/interfaces/move';
-import { PieceColor, PieceType } from '@app/classes/chess/rules/chess-rules';
 import { NotifierFlow } from '@app/classes/notifier/notifier';
 import { LocalPlayer } from '@app/classes/player/local-player';
 import MessageOriginType from '@app/classes/webrtc/messages/message-origin.types';
@@ -14,6 +13,8 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
 import { vi, describe, test, expect } from 'vitest';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     public override runMove(color: PieceColor, move: Move): boolean {

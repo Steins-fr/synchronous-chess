@@ -1,6 +1,6 @@
 import TurnType, { TurnCategory } from './turn.types';
 import TurnAction from './turn-actions/turn-action';
-import { PieceColor } from '../rules/chess-rules';
+import { PieceColor } from '../enums/piece-color.enum';
 
 export default abstract class Turn<T extends TurnAction = TurnAction> {
 

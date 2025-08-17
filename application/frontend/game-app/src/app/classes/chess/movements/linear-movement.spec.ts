@@ -1,7 +1,7 @@
 import LinearMovement from '@app/classes/chess/movements/linear-movement';
-import { FenPiece } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
 import { Vec2, Vec2Array } from '@app/classes/vector/vec2';
-import { FenBoard } from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 import { describe, test, expect } from 'vitest';
 
 describe('LinearMove', () => {

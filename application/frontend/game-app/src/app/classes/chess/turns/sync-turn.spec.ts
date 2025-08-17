@@ -1,10 +1,10 @@
 import Move, { FenColumn } from '@app/classes/chess/interfaces/move';
-import { PieceColor } from '@app/classes/chess/rules/chess-rules';
 import SyncTurn from '@app/classes/chess/turns/sync-turn';
 import Turn from '@app/classes/chess/turns/turn';
 import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
 import TurnType from '@app/classes/chess/turns/turn.types';
 import { describe, test, expect } from 'vitest';
+import { PieceColor } from '../enums/piece-color.enum';
 
 describe('SyncTurn', () => {
 

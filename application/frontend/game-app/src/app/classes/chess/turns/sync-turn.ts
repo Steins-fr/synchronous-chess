@@ -1,8 +1,8 @@
 import SyncTurnAction from './turn-actions/sync-turn-action';
 import TurnType from './turn.types';
 import Move from '../interfaces/move';
-import { PieceColor } from '../rules/chess-rules';
 import MoveTurn from './move-turn';
+import { PieceColor } from '../enums/piece-color.enum';
 
 export default class SyncTurn extends MoveTurn<SyncTurnAction> {
 

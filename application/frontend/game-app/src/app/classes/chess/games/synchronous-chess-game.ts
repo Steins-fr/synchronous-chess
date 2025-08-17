@@ -1,8 +1,10 @@
-import ChessBoardHelper, { FenBoard, SafeBoard } from '../../../helpers/chess-board-helper';
+import ChessBoardHelper from '../../../helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
+import { SafeBoard } from '@app/classes/chess/types/safe-board';
 import { Vec2 } from '../../vector/vec2';
 import { Column } from '../interfaces/CoordinateMove';
 import Move, { FenColumn, FenCoordinate, FenRow } from '../interfaces/move';
-import ChessRules, { PieceColor, FenPiece, PieceType } from '../rules/chess-rules';
+import ChessRules from '../rules/chess-rules';
 import SynchronousChessRules from '../rules/synchronous-chess-rules';
 import ChoiceTurn from '../turns/choice-turn';
 import { IntermediateTurn } from '../turns/intermediate-turn';
@@ -14,6 +16,9 @@ import IntermediateTurnAction from '../turns/turn-actions/intermediate-turn-acti
 import MoveTurnAction from '../turns/turn-actions/move-turn-action';
 import PromotionTurnAction from '../turns/turn-actions/promotion-turn-action';
 import TurnType, { TurnCategory } from '../turns/turn.types';
+import { FenPiece } from '../enums/fen-piece.enum';
+import { PieceColor } from '../enums/piece-color.enum';
+import { PieceType } from '../enums/piece-type.enum';
 
 export default class SynchronousChessGame {
     private _fenBoard: FenBoard = ChessBoardHelper.createFenBoard();

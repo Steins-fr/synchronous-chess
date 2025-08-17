@@ -1,8 +1,9 @@
 import { SafeMovementCondition } from '@app/classes/chess/movements/movement-conditions/safe-movement-condition';
-import { FenPiece, PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
 import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
 import { Vec2 } from '@app/classes/vector/vec2';
-import { FenBoard } from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 import { describe, test, expect } from 'vitest';
 
 describe('SafeMoveCondition', () => {

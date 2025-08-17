@@ -2,7 +2,10 @@ import { vi, describe, test, expect } from 'vitest';
 import SynchronousChessGame from '@app/classes/chess/games/synchronous-chess-game';
 import { Column, Row } from '@app/classes/chess/interfaces/CoordinateMove';
 import Move, { FenColumn, FenCoordinate, FenRow } from '@app/classes/chess/interfaces/move';
-import ChessRules, { PieceColor, PieceType, FenPiece } from '@app/classes/chess/rules/chess-rules';
+import ChessRules from '@app/classes/chess/rules/chess-rules';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
+import { PieceType } from '@app/classes/chess/enums/piece-type.enum';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
 import SynchronousChessRules from '@app/classes/chess/rules/synchronous-chess-rules';
 import ChoiceTurn from '@app/classes/chess/turns/choice-turn';
 import { IntermediateTurn } from '@app/classes/chess/turns/intermediate-turn';
@@ -15,7 +18,8 @@ import PromotionTurnAction from '@app/classes/chess/turns/turn-actions/promotion
 import SyncTurnAction from '@app/classes/chess/turns/turn-actions/sync-turn-action';
 import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
 import { Vec2 } from '@app/classes/vector/vec2';
-import ChessBoardHelper, { FenBoard } from '@app/helpers/chess-board-helper';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { FenBoard } from '@app/classes/chess/types/fen-board';
 import { TestHelper } from '@testing/test.helper';
 
 class ProtectedTest extends SynchronousChessGame {

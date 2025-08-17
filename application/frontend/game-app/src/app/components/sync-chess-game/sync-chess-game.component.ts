@@ -6,14 +6,16 @@ import SynchronousChessGameSessionBuilder from '@app/classes/chess/game-sessions
 import SynchronousChessLocalGameSession from '@app/classes/chess/game-sessions/synchronous-chess-local-game-session';
 import CoordinateMove from '@app/classes/chess/interfaces/CoordinateMove';
 import Move from '@app/classes/chess/interfaces/move';
-import { FenPiece, PieceColor } from '@app/classes/chess/rules/chess-rules';
+import { FenPiece } from '@app/classes/chess/enums/fen-piece.enum';
+import { PieceColor } from '@app/classes/chess/enums/piece-color.enum';
 import MoveTurnAction from '@app/classes/chess/turns/turn-actions/move-turn-action';
 import TurnType, { TurnCategory } from '@app/classes/chess/turns/turn.types';
 import { Vec2 } from '@app/classes/vector/vec2';
 import { ChessBoardComponent } from '@app/components/chess/chess-board/chess-board.component';
 import { ChessPieceComponent } from '@app/components/chess/chess-piece/chess-piece.component';
 import { ChessPromotionComponent } from '@app/components/chess/chess-promotion/chess-promotion.component';
-import ChessBoardHelper, { ValidPlayBoard } from '@app/helpers/chess-board-helper';
+import ChessBoardHelper from '@app/helpers/chess-board-helper';
+import { ValidPlayBoard } from '@app/classes/chess/types/valid-play-board';
 import { Room } from '@app/services/room-manager/classes/room/room';
 
 @Component({
