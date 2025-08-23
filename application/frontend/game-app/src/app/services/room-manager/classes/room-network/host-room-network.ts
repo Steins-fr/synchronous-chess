@@ -14,7 +14,7 @@ import {
 } from '@app/services/room-api/room-socket.api';
 import { Subject, takeUntil } from 'rxjs';
 import { NewPlayerPayload } from './peer-room-network';
-import { RoomNetwork, OnMessageCallback } from './room-network';
+import { RoomNetwork } from './room-network';
 import { SignalPayload } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { PlayerType, Player } from '../player/player';
@@ -30,7 +30,6 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         roomName: string,
         maxPlayer: number,
         localPlayerName: string,
-        onMessage: OnMessageCallback<MessageType>,
     ): Promise<HostRoomNetwork<MessageType>> {
         const response: RoomCreateResponse = await roomApi.send(RoomApiRequestTypeEnum.CREATE, { roomName, maxPlayer, playerName: localPlayerName });
 
@@ -38,7 +37,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
             throw new Error('Room creation failed, mismatched parameters');
         }
 
-        const roomManager = new HostRoomNetwork<MessageType>(roomApi, roomName, maxPlayer, localPlayerName, onMessage);
+        const roomManager = new HostRoomNetwork<MessageType>(roomApi, roomName, maxPlayer, localPlayerName);
 
         try {
             roomManager.enableMatchmakingStateRefresh();
@@ -55,9 +54,8 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         roomName: string,
         private readonly maxPlayer: number,
         localPlayerName: string,
-        onMessage: OnMessageCallback<MessageType>,
     ) {
-        super(roomApi, roomName, localPlayerName, onMessage);
+        super(roomApi, roomName, localPlayerName);
         this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
             if (notification.type === RoomSocketApiNotificationEnum.JOIN_REQUEST) {
                 this.onJoinNotification(notification.data);

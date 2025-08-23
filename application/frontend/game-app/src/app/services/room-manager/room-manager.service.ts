@@ -1,8 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { BlockRoom } from '@app/services/room-manager/classes/block-room/block-room';
+import { BlockRoom } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
+import { HostRoomNetwork } from './classes/room-network/host-room-network';
+import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
+import { RoomNetwork } from './classes/room-network/room-network';
 
 @Injectable({
     providedIn: 'root'
@@ -14,14 +17,30 @@ export default class RoomManagerService {
         setup: RoomSetupInterface,
         maxPlayer: number,
     ): Promise<BlockRoom<RoomServiceNotification>> {
-        const room = await BlockRoom.create<RoomServiceNotification>(this.roomApiService);
-
         try {
+            const keyPair = await BlockRoom.createKeyPair();
+            let roomConnection: RoomNetwork<RoomMessage>;
+
             if (setup.type === 'create') {
-                await room.createRoom(setup.roomName, setup.playerName, maxPlayer);
+                roomConnection = await HostRoomNetwork.create<RoomMessage>(
+                    this.roomApiService,
+                    setup.roomName,
+                    maxPlayer,
+                    setup.playerName,
+                );
             } else {
-                await room.joinRoom(setup.roomName, setup.playerName);
+                roomConnection = await PeerRoomNetwork.create<RoomMessage>(
+                    this.roomApiService,
+                    setup.roomName,
+                    setup.playerName,
+                );
             }
+
+            return new BlockRoom(
+                this.roomApiService,
+                roomConnection,
+                keyPair,
+            );
         } catch (e) {
             if (setup.type === 'create') {
                 // TODO: snackbar
@@ -32,7 +51,5 @@ export default class RoomManagerService {
 
             throw e;
         }
-
-        return room;
     }
 }

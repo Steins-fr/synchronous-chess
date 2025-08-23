@@ -30,7 +30,6 @@ export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> i
     public readonly room = input.required<Room<RoomServiceNotification>>();
 
     private readonly players = signal<Player[]>([]);
-    private readonly roomSocket = signal<RoomNetwork<RoomMessage> | undefined>(undefined);
     protected readonly negotiators = signal<Negotiator[]>([]);
 
     protected readonly webRtcPlayers = computed<WebRtcPlayer[]>(() => {
@@ -50,27 +49,21 @@ export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> i
 
     public constructor() {
         effect(() => {
-            const roomSocket = this.roomSocket();
+            const roomSocket = this.room().roomConnection;
 
             this.negotiators.set([]);
             this.negotiatorsSubscription?.unsubscribe();
             this.negotiatorsSubscription = undefined;
 
-            if (roomSocket) {
-                this.negotiatorsSubscription = roomSocket.negotiators$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(negotiators => {
-                    this.negotiators.set(negotiators);
-                });
-            }
+            this.negotiatorsSubscription = roomSocket.negotiators$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(negotiators => {
+                this.negotiators.set(negotiators);
+            });
         });
     }
 
     public ngOnInit(): void {
         this.room().players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
             this.players.set(players);
-        });
-
-        this.room().roomConnection$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((roomManager: RoomNetwork<RoomMessage> | undefined) => {
-            this.roomSocket.set(roomManager);
         });
     }
 }

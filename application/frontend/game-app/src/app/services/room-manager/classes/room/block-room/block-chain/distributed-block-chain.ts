@@ -9,8 +9,8 @@ import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
 import { WaitingQueue } from './waiting-queue';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
-import { Player } from '../../player/player';
-import { WebRtcPlayer } from '../../player/web-rtc-player';
+import { Player } from '../../../player/player';
+import { WebRtcPlayer } from '../../../player/web-rtc-player';
 
 export enum BlockChainMessageType {
     NEW_BLOCK_APPROVED = 'newBlockApproved',
@@ -180,6 +180,10 @@ export class DistributedBlockChain {
     }
 
     public onMessage(message: BlockChainMessageTypes): void {
+        if (message.origin !== MessageOriginType.BLOCK_ROOM_SERVICE) {
+            return;
+        }
+
         if (this.support(message)) {
             this.handle(message);
         }
