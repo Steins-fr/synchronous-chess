@@ -7,35 +7,39 @@ import { Block } from './block-chain/block';
 import { BlockChainMessageTypes, DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { BlockRoomInterface } from './block-room.interface';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
-import RoomNetworkPlayerAddEvent from '../room-network/events/room-network-player-add-event';
+import RoomNetworkPlayerAddEvent from '../../room-network/events/room-network-player-add-event';
+import { RoomNetwork } from '../../room-network/room-network';
 
 export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
 
     private readonly blockChain: DistributedBlockChain;
 
-    public static async create<RoomServiceNotification extends RoomMessage>(roomApi: RoomSocketApi): Promise<BlockRoom<RoomServiceNotification>> {
-        const keyPair = await DistributedBlockChain.createKeyPair();
-
-        return new BlockRoom(roomApi, keyPair);
+    public static async createKeyPair(): Promise<CryptoKeyPair> {
+        return await DistributedBlockChain.createKeyPair();
     }
 
-    protected constructor(
+    public constructor(
         roomApi: RoomSocketApi,
+        roomConnection: RoomNetwork<RoomMessage>,
         keyPair: CryptoKeyPair,
     ) {
-        super(roomApi);
+        super(roomApi, roomConnection);
         this.blockChain = new DistributedBlockChain(this, keyPair);
+        this.blockChain.initiate();
+        this.blockChain.onNewPlayer(this.localPlayer);
+    }
+
+    public override clear(): void {
+        super.clear();
+        this.blockChain.clear();
     }
 
     public override transmitMessage<T>(type: string, message: T): void {
+        // Do not await, there is no need to handle the result
         void this.blockChain.transmitMessage(type, message);
     }
 
     protected override onMessage(message: BlockChainMessage): void {
-        if (message.origin !== MessageOriginType.BLOCK_ROOM_SERVICE) {
-            return;
-        }
-
         // TODO: rework types
         this.blockChain.onMessage(message as BlockChainMessageTypes);
     }
@@ -51,21 +55,9 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
         this.publicMessenger$.next(roomServiceMessage as RoomServiceNotification);
     }
 
-    protected override postSetupRoom(): void {
-        this.blockChain.initiate();
-        this.blockChain.onNewPlayer(this.localPlayer);
-
-        super.postSetupRoom();
-    }
-
     protected override handleRoomPlayerAddEvent(event: RoomNetworkPlayerAddEvent): void {
         super.handleRoomPlayerAddEvent(event);
 
         this.blockChain.onNewPlayer(event.payload);
-    }
-
-    public override clear(): void {
-        this.blockChain.clear();
-        super.clear();
     }
 }

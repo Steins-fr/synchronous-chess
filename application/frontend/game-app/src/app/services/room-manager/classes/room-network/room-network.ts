@@ -1,5 +1,5 @@
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import RoomNetworkEvent, { RoomNetworkEventType } from './events/room-network-event';
 import RoomNetworkPlayerAddEvent from './events/room-network-player-add-event';
 import RoomNetworkPlayerRemoveEvent from './events/room-network-player-remove-event';
@@ -12,8 +12,6 @@ import { Negotiator, NegotiatorEventType, NegotiatorEvent } from '../negotiator/
 import { LocalPlayer } from '../player/local-player';
 import { Player, PlayerEventType, PlayerEvent } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
-
-export type OnMessageCallback<MessageType extends Message> = (message: MessageType) => void;
 
 export abstract class RoomNetwork<MessageType extends Message> {
     private readonly _localPlayer: LocalPlayer;
@@ -28,13 +26,14 @@ export abstract class RoomNetwork<MessageType extends Message> {
     public readonly negotiators$: BehaviorSubject<Negotiator[]> = this._negotiators$;
     public abstract readonly initiator: boolean;
 
-    protected readonly _notifier: Notifier<RoomNetworkEventType, RoomNetworkEvent> = new Notifier<RoomNetworkEventType, RoomNetworkEvent>();
+    protected readonly _notifier = new Notifier<RoomNetworkEventType, RoomNetworkEvent>();
+    private readonly onMessageSubject = new Subject<MessageType>();
+    public readonly onMessage$ = this.onMessageSubject.asObservable();
 
     protected constructor(
         protected readonly roomSocketApi: RoomSocketApi,
         public readonly roomName: string,
         localPlayerName: string,
-        private readonly _onMessage: OnMessageCallback<MessageType>,
     ) {
         this._localPlayer = new LocalPlayer(localPlayerName);
         this.players.set(this._localPlayer.name, this._localPlayer);
@@ -80,7 +79,7 @@ export abstract class RoomNetwork<MessageType extends Message> {
         player.notifier.follow(PlayerEventType.MESSAGE, this, (playerEvent: PlayerEvent<MessageType>) => {
             const message = playerEvent.message;
             this.onRoomMessage(message, playerEvent.name);
-            this._onMessage(message);
+            this.onMessageSubject.next(message);
         });
     }
 
