@@ -58,14 +58,17 @@ export type BlockChainMessageTypes =
     & BlockChainMessage<Block[]>;
 
 export class DistributedBlockChain {
+    public static async createKeyPair(): Promise<CryptoKeyPair> {
+        return await window.crypto.subtle.generateKey(keyPairAlgorithm, true, ['sign', 'verify']);
+    }
+
+    private readonly blockChain = new Chain();
+    private readonly participants: Map<string, Participant> = new Map();
+    private readonly blocksToValidate: WaitingQueue = new WaitingQueue();
 
     private state: BlockChainState = BlockChainState.INITIALISING;
-    private readonly blockChain: Chain;
-    private myKeyPair!: CryptoKeyPair;
-    private readonly participants: Map<string, Participant> = new Map();
     private localParticipant?: Participant;
     private localBlock?: Block;
-    private readonly blocksToValidate: WaitingQueue = new WaitingQueue();
 
     private readonly messageHandler: MessageHandlers = {
         [BlockChainMessageType.NEW_BLOCK_APPROVED]: (message: BlockChainMessage<Block>): Promise<BlockChainState> => this.onNewBlockApproved(message),
@@ -78,15 +81,10 @@ export class DistributedBlockChain {
         [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message: BlockChainMessage<Block[]>): Promise<BlockChainState> => this.onGetBlocksResponse(message)
     };
 
-    public constructor(protected blockRoomService: BlockRoomInterface) {
-        // FIXME: async
-        window.crypto.subtle.generateKey(keyPairAlgorithm, true, ['sign', 'verify'])
-            .then((keyPair: CryptoKeyPair) => {
-                this.myKeyPair = keyPair;
-            });
-
-        this.blockChain = new Chain();
-    }
+    public constructor(
+        private readonly blockRoomService: BlockRoomInterface,
+        private readonly myKeyPair: CryptoKeyPair,
+    ) {}
 
     public handle(message: BlockChainMessageTypes): void {
         this.messageHandler[message.type](message).then((state: BlockChainState) => this.updateState(state));

@@ -11,10 +11,20 @@ import RoomNetworkPlayerAddEvent from '../room-network/events/room-network-playe
 
 export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
 
-    private readonly blockChain: DistributedBlockChain = new DistributedBlockChain(this);
+    private readonly blockChain: DistributedBlockChain;
 
-    public constructor(roomApi: RoomSocketApi) {
+    public static async create<RoomServiceNotification extends RoomMessage>(roomApi: RoomSocketApi): Promise<BlockRoom<RoomServiceNotification>> {
+        const keyPair = await DistributedBlockChain.createKeyPair();
+
+        return new BlockRoom(roomApi, keyPair);
+    }
+
+    protected constructor(
+        roomApi: RoomSocketApi,
+        keyPair: CryptoKeyPair,
+    ) {
         super(roomApi);
+        this.blockChain = new DistributedBlockChain(this, keyPair);
     }
 
     public override transmitMessage<T>(type: string, message: T): void {

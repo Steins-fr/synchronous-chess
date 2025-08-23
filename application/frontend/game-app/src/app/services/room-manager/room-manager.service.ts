@@ -14,7 +14,7 @@ export default class RoomManagerService {
         setup: RoomSetupInterface,
         maxPlayer: number,
     ): Promise<BlockRoom<RoomServiceNotification>> {
-        const room = new BlockRoom<RoomServiceNotification>(this.roomApiService);
+        const room = await BlockRoom.create<RoomServiceNotification>(this.roomApiService);
 
         try {
             if (setup.type === 'create') {
