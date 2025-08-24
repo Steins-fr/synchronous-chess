@@ -39,6 +39,7 @@ export class Room<RoomServiceNotification extends RoomMessage> {
 
         this.roomConnectionSubscription = this._roomConnection.onMessage$.subscribe((message) => this.onMessage(message));
 
+        // FIXME: rework this like blockChain
         this._roomConnection.notifier.follow(RoomNetworkEventType.PLAYER_ADD, this, this.handleRoomPlayerAddEvent.bind(this));
         this._roomConnection.notifier.follow(RoomNetworkEventType.PLAYER_REMOVE, this, this.handleRoomPlayerRemoveEvent.bind(this));
         this._roomConnection.notifier.follow(RoomNetworkEventType.QUEUE_ADD, this, this.handleRoomQueueAddEvent.bind(this));

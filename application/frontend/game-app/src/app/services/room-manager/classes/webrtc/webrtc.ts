@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
-import WebrtcStates, { DebugRTCIceCandidate } from './webrtc-states';
+import WebrtcStates, { DebugRTCIceCandidate, defaultWebrtcStates } from './webrtc-states';
 
 import { Message } from './messages/message';
 
@@ -46,12 +46,12 @@ export class Webrtc {
     private readonly pendingAcknowledgement = new Map<PacketId, ReturnType<typeof setTimeout>>();
 
     // WebRTC states observables
-    private readonly _states: BehaviorSubject<WebrtcStates> = new BehaviorSubject<WebrtcStates>(new WebrtcStates());
-    public states: Observable<WebrtcStates> = this._states.asObservable();
+    private readonly _states = new BehaviorSubject<Readonly<WebrtcStates>>(defaultWebrtcStates);
+    public readonly states = this._states.asObservable();
 
     // Observables for data received by DataChannel
     private readonly _data: Subject<Message> = new Subject<Message>();
-    public data: Observable<Message> = this._data.asObservable();
+    public readonly data: Observable<Message> = this._data.asObservable();
 
     // PeerConnection and full-duplex dataChannels
     // The peerConnection is created when the offer is created. It may be reset when retrying the connection
@@ -132,7 +132,7 @@ export class Webrtc {
         this._rtcSignalSubject = new Subject<RtcSignal>();
         this.rtcSignal$ = this._rtcSignalSubject.asObservable();
 
-        this.updateState(new WebrtcStates());
+        this.updateState(defaultWebrtcStates);
 
         // Manually get states information
         this.onIceConnectionStateChange();
@@ -150,13 +150,9 @@ export class Webrtc {
 
         try {
             const description = await this.peerConnection.createOffer(options);
-            this.gotDescription(description);
-        } catch (e) {
-            if (e instanceof DOMException) {
-                this.createError(e);
-            } else {
-                throw e;
-            }
+            await this.gotDescription(description);
+        } catch (e: unknown) {
+            this.createError(e);
         }
     }
 
@@ -164,16 +160,8 @@ export class Webrtc {
         this.begin = window.performance.now();
         this.initiator = false;
 
-        try {
-            const description = await this.peerConnection.createAnswer();
-            this.gotDescription(description);
-        } catch (e) {
-            if (e instanceof DOMException) {
-                this.createError(e);
-            } else {
-                throw e;
-            }
-        }
+        const description = await this.peerConnection.createAnswer();
+        await this.gotDescription(description);
     }
 
     public async registerSignal(remoteSignal: RtcSignal): Promise<void> {
@@ -214,10 +202,10 @@ export class Webrtc {
     }
 
     private updateState(newState: Partial<WebrtcStates>): void {
-        this._states.next(Object.assign(new WebrtcStates(), { // Immutability for changesDetection
+        this._states.next({
             ...this._states.getValue(),
             ...newState
-        }));
+        });
     }
 
     private packetLost(packet: Packet): void {
@@ -284,24 +272,20 @@ export class Webrtc {
         this.receiveChannel.onclose = (): void => this.onReceiveChannelStateChange();
     }
 
-    private createError(error: DOMException): void {
-        this.updateState({ error });
+    private createError(error: unknown): void {
+        console.error('WebRTC error', error);
+
+        this.updateState({ error: String(error) });
     }
 
-    private gotDescription(description: RTCSessionDescriptionInit): void {
-        this.peerConnection.setLocalDescription(description).then(() => {
-            this._rtcSignal.sdp = description;
+    private async gotDescription(description: RTCSessionDescriptionInit): Promise<void> {
+        await this.peerConnection.setLocalDescription(description);
 
-            if (this.peerConnection.iceGatheringState === 'complete') {
-                this.onSignal();
-            }
-        }).catch((e: unknown) => {
-            if (e instanceof DOMException) {
-                this.createError(e);
-            } else {
-                throw e;
-            }
-        });
+        this._rtcSignal.sdp = description;
+
+        if (this.peerConnection.iceGatheringState === 'complete') {
+            this.onSignal();
+        }
     }
 
     private onSignal(): void {
