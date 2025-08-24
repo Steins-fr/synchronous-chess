@@ -61,16 +61,16 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         switch (roomMessage.type) {
             case HostRoomMessageType.NEW_PLAYER:
                 const newPlayerMessage: HostRoomMessage<NewPlayerPayload> = roomMessage as HostRoomMessage<NewPlayerPayload>;
-                this.onNewPlayer(newPlayerMessage.payload);
+                void this.onNewPlayer(newPlayerMessage.payload);
                 break;
             case HostRoomMessageType.REMOTE_SIGNAL:
                 const remoteMessage: HostRoomMessage<RtcSignalResponse> = roomMessage as HostRoomMessage<RtcSignalResponse>;
-                this.onRemoteSignal(remoteMessage.payload);
+                void this.onRemoteSignal(remoteMessage.payload);
                 break;
         }
     }
 
-    private onNewPlayer(newPlayerPayload: NewPlayerPayload): void {
+    private async onNewPlayer(newPlayerPayload: NewPlayerPayload): Promise<void> {
         if (this.localPlayer.name === newPlayerPayload.playerName) { // I am notified that I joined the room => close the socket
             this.roomSocketApi.close();
         }
@@ -83,11 +83,11 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
             return;
         }
         const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, PlayerType.PEER, new Webrtc(), this.hostPlayer);
-        negotiator.initiate();
+        await negotiator.initiate();
         this.addNegotiator(negotiator);
     }
 
-    private onRemoteSignal(remoteSignalPayload: RtcSignalResponse): void {
+    private async onRemoteSignal(remoteSignalPayload: RtcSignalResponse): Promise<void> {
         if (this.hostPlayer === undefined) { // Do nothing if we don't have a host for transmitting negotiations
             return;
         }
@@ -99,6 +99,7 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
             this.addNegotiator(negotiator);
         }
 
-        negotiator.negotiationMessage(remoteSignalPayload).then(() => console.debug('Negotiation message sent'));
+        await negotiator.negotiationMessage(remoteSignalPayload);
+        console.debug('Negotiation message sent');
     }
 }

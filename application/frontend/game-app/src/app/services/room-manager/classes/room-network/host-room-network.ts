@@ -58,7 +58,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         super(roomApi, roomName, localPlayerName);
         this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
             if (notification.type === RoomSocketApiNotificationEnum.JOIN_REQUEST) {
-                this.onJoinNotification(notification.data);
+                void this.onJoinNotification(notification.data);
             }
         });
     }
@@ -100,7 +100,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         }, refreshInterval);
     }
 
-    private onJoinNotification(data: JoinNotification): void {
+    private async onJoinNotification(data: JoinNotification): Promise<void> {
         const nbPlayers: number = this.players.size + this.negotiators.size;
         if (nbPlayers >= this.maxPlayer) {
             this.roomSocketApi
@@ -108,7 +108,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
                 .catch((err: string) => console.error(err));
         } else {
             const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(), this.roomSocketApi);
-            negotiator.initiate();
+            await negotiator.initiate();
             this.addNegotiator(negotiator);
         }
     }

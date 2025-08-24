@@ -6,13 +6,22 @@ export interface DebugRTCIceCandidate extends RTCIceCandidate {
     elapsed?: string;
 }
 
-export default class WebrtcStates {
-    // FIXME: error type
-    public error: unknown = '';
-    public iceConnection: RTCIceConnectionState = 'new';
-    public sendChannel: RTCDataChannelState = 'connecting';
-    public receiveChannel: RTCDataChannelState = 'connecting';
-    public iceGathering: RTCIceGatheringState = 'new';
-    public signaling: RTCSignalingState = 'have-local-offer';
-    public candidates: Array<DebugRTCIceCandidate> = [];  // Ice candidates (used for debugging)
+export default interface WebrtcStates {
+    error: string;
+    iceConnection: RTCIceConnectionState;
+    sendChannel: RTCDataChannelState;
+    receiveChannel: RTCDataChannelState;
+    iceGathering: RTCIceGatheringState;
+    signaling: RTCSignalingState;
+    candidates: Array<DebugRTCIceCandidate>;
 }
+
+export const defaultWebrtcStates: Readonly<WebrtcStates> = {
+    error: '',
+    iceConnection: 'new',
+    sendChannel: 'connecting',
+    receiveChannel: 'connecting',
+    iceGathering: 'new',
+    signaling: 'have-local-offer',
+    candidates: []
+};
