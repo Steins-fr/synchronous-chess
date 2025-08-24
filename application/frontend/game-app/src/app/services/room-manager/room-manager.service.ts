@@ -1,17 +1,22 @@
 import { inject, Injectable } from '@angular/core';
 import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomApiRequestTypeEnum, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
 import { RoomNetwork } from './classes/room-network/room-network';
+import RoomJoinResponse from '../room-api/responses/room-join-response';
+import RoomCreateResponse from '../room-api/responses/room-create-response';
+import { NotificationService } from '../notification/notification.service';
 
+// FIXME: remove root provider
 @Injectable({
     providedIn: 'root'
 })
 export default class RoomManagerService {
     private readonly roomApiService = inject(RoomSocketApi);
+    private readonly notificationService = inject(NotificationService);
 
     public async buildBlockRoom<RoomServiceNotification extends RoomMessage>(
         setup: RoomSetupInterface,
@@ -22,18 +27,17 @@ export default class RoomManagerService {
             let roomConnection: RoomNetwork<RoomMessage>;
 
             if (setup.type === 'create') {
-                roomConnection = await HostRoomNetwork.create<RoomMessage>(
-                    this.roomApiService,
-                    setup.roomName,
-                    maxPlayer,
-                    setup.playerName,
-                );
+                const response: RoomCreateResponse = await this.roomApiService.send(RoomApiRequestTypeEnum.CREATE, { roomName: setup.roomName, maxPlayer, playerName: setup.playerName });
+
+                if (response.playerName !== setup.playerName || response.roomName !== setup.roomName || response.maxPlayer !== maxPlayer) {
+                    throw new Error('Room creation failed, mismatched parameters');
+                }
+
+                roomConnection = new HostRoomNetwork<RoomMessage>(this.roomApiService, setup.roomName, maxPlayer, setup.playerName);
             } else {
-                roomConnection = await PeerRoomNetwork.create<RoomMessage>(
-                    this.roomApiService,
-                    setup.roomName,
-                    setup.playerName,
-                );
+                const response: RoomJoinResponse = await this.roomApiService.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
+
+                roomConnection = new PeerRoomNetwork<RoomMessage>(this.roomApiService, setup.roomName, setup.playerName, response.playerName);
             }
 
             return new BlockRoom(
@@ -43,10 +47,9 @@ export default class RoomManagerService {
             );
         } catch (e) {
             if (setup.type === 'create') {
-                // TODO: snackbar
-                console.error('La salle existe déjà');
+                this.notificationService.error('La salle existe déjà');
             } else {
-                console.error('La salle est pleine ou elle n\'existe plus.');
+                this.notificationService.error('La salle est pleine ou elle n\'existe plus.');
             }
 
             throw e;

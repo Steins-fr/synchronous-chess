@@ -1,23 +1,22 @@
+import JoinNotification from '@app/services/room-api/notifications/join-notification';
+import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
+import {
+    RoomApiRequestTypeEnum,
+    RoomSocketApi,
+    RoomSocketApiNotificationEnum
+} from '@app/services/room-api/room-socket.api';
 import { HostRoomMessage, HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessage, NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
-import JoinNotification from '@app/services/room-api/notifications/join-notification';
-import RoomCreateResponse from '@app/services/room-api/responses/room-create-response';
-import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
-import {
-    RoomSocketApi,
-    RoomSocketApiNotificationEnum,
-    RoomApiRequestTypeEnum
-} from '@app/services/room-api/room-socket.api';
 import { Subject, takeUntil } from 'rxjs';
-import { NewPlayerPayload } from './peer-room-network';
-import { RoomNetwork } from './room-network';
 import { SignalPayload } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
-import { PlayerType, Player } from '../player/player';
+import { Player, PlayerType } from '../player/player';
+import { NewPlayerPayload } from './peer-room-network';
+import { RoomNetwork } from './room-network';
 
 export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<MessageType> {
 
@@ -25,31 +24,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     private refreshId?: ReturnType<typeof setInterval>;
     private destroyRef = new Subject<void>();
 
-    public static async create<MessageType extends Message>(
-        roomApi: RoomSocketApi,
-        roomName: string,
-        maxPlayer: number,
-        localPlayerName: string,
-    ): Promise<HostRoomNetwork<MessageType>> {
-        const response: RoomCreateResponse = await roomApi.send(RoomApiRequestTypeEnum.CREATE, { roomName, maxPlayer, playerName: localPlayerName });
-
-        if (response.playerName !== localPlayerName || response.roomName !== roomName || response.maxPlayer !== maxPlayer) {
-            throw new Error('Room creation failed, mismatched parameters');
-        }
-
-        const roomManager = new HostRoomNetwork<MessageType>(roomApi, roomName, maxPlayer, localPlayerName);
-
-        try {
-            roomManager.enableMatchmakingStateRefresh();
-        } catch (e) {
-            roomManager.clear();
-            throw e;
-        }
-
-        return roomManager;
-    }
-
-    protected constructor(
+    public constructor(
         roomApi: RoomSocketApi,
         roomName: string,
         private readonly maxPlayer: number,
@@ -61,6 +36,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
                 void this.onJoinNotification(notification.data);
             }
         });
+        this.enableMatchmakingStateRefresh();
     }
 
     private enableMatchmakingStateRefresh(): void {
