@@ -1,15 +1,14 @@
+import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessage, HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
-import RoomJoinResponse from '@app/services/room-api/responses/room-join-response';
-import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
-import { RoomSocketApi, RoomApiRequestTypeEnum } from '@app/services/room-api/room-socket.api';
-import { RoomNetwork } from './room-network';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player, PlayerType } from '../player/player';
+import { RoomNetwork } from './room-network';
 
 export interface NewPlayerPayload {
     playerName: string;
@@ -18,16 +17,6 @@ export interface NewPlayerPayload {
 export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<MessageType> {
     public readonly initiator: boolean = false;
     protected hostPlayer?: Player;
-
-    public static async create<MessageType extends Message>(
-        roomApi: RoomSocketApi,
-        roomName: string,
-        localPlayerName: string,
-    ): Promise<PeerRoomNetwork<MessageType>> {
-        const response: RoomJoinResponse = await roomApi.send(RoomApiRequestTypeEnum.JOIN, { roomName, playerName: localPlayerName });
-
-        return new PeerRoomNetwork<MessageType>(roomApi, roomName, localPlayerName, response.playerName);
-    }
 
     public constructor(
         roomApi: RoomSocketApi,
