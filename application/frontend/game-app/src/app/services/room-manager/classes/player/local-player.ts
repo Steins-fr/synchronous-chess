@@ -1,9 +1,9 @@
-import { Player, PlayerType } from './player';
+import { Player } from './player';
 
 export class LocalPlayer extends Player {
 
     public constructor(name: string) {
-        super(name, PlayerType.HOST);
+        super(name);
     }
 
     public override clear(): void {

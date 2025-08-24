@@ -14,7 +14,7 @@ import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { Subject, takeUntil } from 'rxjs';
 import { SignalPayload } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
-import { Player, PlayerType } from '../player/player';
+import { Player } from '../player/player';
 import { NewPlayerPayload } from './peer-room-network';
 import { RoomNetwork } from './room-network';
 
@@ -77,13 +77,13 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     }
 
     private async onJoinNotification(data: JoinNotification): Promise<void> {
-        const nbPlayers: number = this.players.size + this.negotiators.size;
+        const nbPlayers: number = this.players.size + this.getNegotiatorSize();
         if (nbPlayers >= this.maxPlayer) {
             this.roomSocketApi
                 .send(RoomApiRequestTypeEnum.FULL, { to: data.playerName, roomName: this.roomName })
                 .catch((err: string) => console.error(err));
         } else {
-            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, PlayerType.PEER, new Webrtc(), this.roomSocketApi);
+            const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, data.playerName, new Webrtc(), this.roomSocketApi);
             await negotiator.initiate();
             this.addNegotiator(negotiator);
         }
@@ -101,19 +101,11 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     }
 
     protected onPlayerConnected(player: Player): void {
-        // FIXME: code
-        this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: this.roomName, playerName: player.name }).then(() => {
-            this.transmitNewPlayer(player.name);
-        }).catch((err: string) => {
-            console.error(err);
-        });
+        void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: this.roomName, playerName: player.name });
     }
 
     protected onPlayerDisconnected(player: Player): void {
-        // FIXME: code
-        this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.roomName, playerName: player.name }).then().catch((err: string) => {
-            console.error(err);
-        });
+        void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.roomName, playerName: player.name });
     }
 
     protected onRoomMessage(roomMessage: ToReworkMessage<SignalPayload>, fromPlayer: string): void {

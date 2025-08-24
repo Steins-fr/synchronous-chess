@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import {
     Component,
     DestroyRef,
-    OnInit,
     computed,
     effect,
     inject,
@@ -10,11 +9,11 @@ import {
     signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Negotiator } from '@app/services/room-manager/classes/negotiator/negotiator';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { Room } from '@app/services/room-manager/classes/room/room';
+import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Subscription } from 'rxjs';
 import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component';
 
@@ -23,7 +22,7 @@ import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component'
     templateUrl: './webrtc-debug.component.html',
     imports: [CommonModule, WebrtcStatesComponent],
 })
-export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> implements OnInit {
+export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage>  {
     private readonly destroyRef = inject(DestroyRef);
 
     public readonly room = input.required<Room<RoomServiceNotification>>();
@@ -45,24 +44,28 @@ export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage> i
     });
 
     private negotiatorsSubscription: Subscription | undefined;
+    private playersSubscription: Subscription | undefined;
 
     public constructor() {
         effect(() => {
-            const roomSocket = this.room().roomConnection;
+            const room = this.room();
+            const roomNetwork = room.roomConnection;
 
             this.negotiators.set([]);
             this.negotiatorsSubscription?.unsubscribe();
             this.negotiatorsSubscription = undefined;
 
-            this.negotiatorsSubscription = roomSocket.negotiators$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(negotiators => {
-                this.negotiators.set(negotiators);
+            this.negotiatorsSubscription = roomNetwork.negotiators$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(negotiators => {
+                this.negotiators.set(Array.from(negotiators.values()));
             });
-        });
-    }
 
-    public ngOnInit(): void {
-        this.room().players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
-            this.players.set(players);
+            this.players.set([]);
+            this.playersSubscription?.unsubscribe();
+            this.playersSubscription = undefined;
+
+            this.playersSubscription = room.players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(players => {
+                this.players.set(Array.from(players.values()));
+            });
         });
     }
 }

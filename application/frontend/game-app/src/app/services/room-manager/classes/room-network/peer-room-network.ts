@@ -7,7 +7,7 @@ import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
-import { Player, PlayerType } from '../player/player';
+import { Player } from '../player/player';
 import { RoomNetwork } from './room-network';
 
 export interface NewPlayerPayload {
@@ -26,11 +26,12 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     ) {
         super(roomApi, roomName, localPlayerName);
 
-        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, hostPlayerName, PlayerType.HOST, new Webrtc(), roomApi);
+        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, hostPlayerName, new Webrtc(), roomApi);
         this.addNegotiator(negotiator);
     }
 
     protected onPlayerConnected(player: Player): void {
+        console.log(`Set host player: ${player.name}`);
         // FIXME: improve host player assignment logic
         this.hostPlayer ??= player;
     }
@@ -68,10 +69,10 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
             return;
         }
 
-        if (this.players.has(newPlayerPayload.playerName) || this.negotiators.has(newPlayerPayload.playerName)) {
+        if (this.isPlayerNameAlreadyInRoom(newPlayerPayload.playerName)) {
             return;
         }
-        const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, PlayerType.PEER, new Webrtc(), this.hostPlayer);
+        const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, new Webrtc(), this.hostPlayer);
         await negotiator.initiate();
         this.addNegotiator(negotiator);
     }
@@ -81,10 +82,10 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
             return;
         }
 
-        let negotiator: Negotiator | undefined = this.negotiators.get(remoteSignalPayload.from);
+        let negotiator = this.getNegotiator(remoteSignalPayload.from);
 
         if (!negotiator) { // Create new negotiator
-            negotiator = new WebrtcNegotiator(remoteSignalPayload.from, PlayerType.PEER, new Webrtc(), this.hostPlayer);
+            negotiator = new WebrtcNegotiator(remoteSignalPayload.from, new Webrtc(), this.hostPlayer);
             this.addNegotiator(negotiator);
         }
 
