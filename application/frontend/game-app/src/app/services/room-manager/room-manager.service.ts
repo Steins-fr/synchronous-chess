@@ -15,7 +15,7 @@ import { NotificationService } from '../notification/notification.service';
     providedIn: 'root'
 })
 export default class RoomManagerService {
-    private readonly roomApiService = inject(RoomSocketApi);
+    private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);
 
     public async buildBlockRoom<RoomServiceNotification extends RoomMessage>(
@@ -27,21 +27,21 @@ export default class RoomManagerService {
             let roomConnection: RoomNetwork<RoomMessage>;
 
             if (setup.type === 'create') {
-                const response: RoomCreateResponse = await this.roomApiService.send(RoomApiRequestTypeEnum.CREATE, { roomName: setup.roomName, maxPlayer, playerName: setup.playerName });
+                const response: RoomCreateResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.CREATE, { roomName: setup.roomName, maxPlayer, playerName: setup.playerName });
 
                 if (response.playerName !== setup.playerName || response.roomName !== setup.roomName || response.maxPlayer !== maxPlayer) {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                roomConnection = new HostRoomNetwork<RoomMessage>(this.roomApiService, setup.roomName, maxPlayer, setup.playerName);
+                roomConnection = new HostRoomNetwork<RoomMessage>(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName);
             } else {
-                const response: RoomJoinResponse = await this.roomApiService.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
+                const response: RoomJoinResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
 
-                roomConnection = new PeerRoomNetwork<RoomMessage>(this.roomApiService, setup.roomName, setup.playerName, response.playerName);
+                roomConnection = new PeerRoomNetwork<RoomMessage>(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName);
             }
 
             return new BlockRoom(
-                this.roomApiService,
+                this.roomSocketApi,
                 roomConnection,
                 keyPair,
             );

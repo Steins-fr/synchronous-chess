@@ -1,13 +1,13 @@
-import { Observable, Subscription, BehaviorSubject } from 'rxjs';
+import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { PlayerMessageType, PlayerMessage } from '@app/services/room-manager/classes/webrtc/messages/player-message';
+import { PlayerMessage, PlayerMessageType } from '@app/services/room-manager/classes/webrtc/messages/player-message';
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
-import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
-import { Player, PlayerType } from './player';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { Player } from './player';
 
 export enum PlayerEventType {
     DISCONNECTED = 'disconnected',
@@ -35,8 +35,8 @@ export class WebRtcPlayer extends Player {
     private pingTimerId?: ReturnType<typeof setInterval>;
     public ping: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
-    public constructor(name: string, type: PlayerType, private readonly webRTC: Webrtc) {
-        super(name, type);
+    public constructor(name: string, private readonly webRTC: Webrtc) {
+        super(name);
 
         this.states = this.webRTC.states;
         this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));

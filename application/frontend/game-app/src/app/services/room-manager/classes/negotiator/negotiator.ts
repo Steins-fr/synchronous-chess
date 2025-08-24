@@ -1,9 +1,8 @@
-import { Webrtc, RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
-import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
 import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
 import SignalNotification from '@app/services/room-api/notifications/signal-notification';
-import { Subscription, Observable } from 'rxjs';
-import { PlayerType } from '../player/player';
+import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
+import { Observable, Subscription } from 'rxjs';
 
 export enum NegotiatorEventType {
     CONNECTED = 'connected',
@@ -29,11 +28,7 @@ export abstract class Negotiator {
     public readonly states: Observable<WebrtcStates>; // For external debugging
     public isInitiator: boolean = false;
 
-    public constructor(
-        public readonly playerName: string,
-        // FIXME: see how playerType is used
-        public readonly playerType: PlayerType,
-        public readonly webRTC: Webrtc) {
+    public constructor(public readonly playerName: string, public readonly webRTC: Webrtc) {
         this.states = webRTC.states;
         this.checkTimeout();
     }
@@ -58,6 +53,9 @@ export abstract class Negotiator {
 
         // FIXME: rework this
         if (this.signalTry < Negotiator.maxSignalTry && this.connectionState !== 'connected') {
+            if (this.signalTry > 0) {
+                console.error('Signal retry, may need debugging, if this error is not shown, remove signal retry logic');
+            }
             this.subs.forEach((sub: Subscription) => sub.unsubscribe());
             this.webRTC.configure(this.isInitiator);
 

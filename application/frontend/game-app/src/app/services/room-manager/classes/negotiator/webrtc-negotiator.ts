@@ -1,8 +1,8 @@
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessage, NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
 import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { Player } from '../player/player';
 import { Negotiator } from './negotiator';
-import { PlayerType, Player } from '../player/player';
 
 export interface SignalPayload {
     to: string;
@@ -11,9 +11,8 @@ export interface SignalPayload {
 
 export class WebrtcNegotiator extends Negotiator {
 
-    public constructor(playerName: string, playerType: PlayerType, webRTC: Webrtc,
-        private readonly peer: Player) {
-        super(playerName, playerType, webRTC);
+    public constructor(playerName: string, webRTC: Webrtc, private readonly peer: Player) {
+        super(playerName, webRTC);
     }
 
     protected handleSignal(signal: RtcSignal): void {

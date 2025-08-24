@@ -1,17 +1,17 @@
+import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
+import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { Negotiator, NegotiatorEvent, NegotiatorEventType } from '../negotiator/negotiator';
+import { LocalPlayer } from '../player/local-player';
+import { Player, PlayerEvent, PlayerEventType } from '../player/player';
+import { WebRtcPlayer } from '../player/web-rtc-player';
 import RoomNetworkEvent, { RoomNetworkEventType } from './events/room-network-event';
 import RoomNetworkPlayerAddEvent from './events/room-network-player-add-event';
 import RoomNetworkPlayerRemoveEvent from './events/room-network-player-remove-event';
 import RoomNetworkQueueAddEvent from './events/room-network-queue-add-event';
 import RoomNetworkQueueRemoveEvent from './events/room-network-queue-remove-event';
-import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
-import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
-import { Negotiator, NegotiatorEventType, NegotiatorEvent } from '../negotiator/negotiator';
-import { LocalPlayer } from '../player/local-player';
-import { Player, PlayerEventType, PlayerEvent } from '../player/player';
-import { WebRtcPlayer } from '../player/web-rtc-player';
 
 export abstract class RoomNetwork<MessageType extends Message> {
     private readonly _localPlayer: LocalPlayer;
@@ -21,9 +21,8 @@ export abstract class RoomNetwork<MessageType extends Message> {
     }
 
     protected players: Map<string, Player> = new Map<string, Player>();
-    public negotiators: Map<string, Negotiator> = new Map<string, Negotiator>();
-    private readonly _negotiators$ = new BehaviorSubject<Negotiator[]>([]);
-    public readonly negotiators$: BehaviorSubject<Negotiator[]> = this._negotiators$;
+    private readonly negotiators = new BehaviorSubject<ReadonlyMap<string, Negotiator>>(new Map());
+    public readonly negotiators$ = this.negotiators.asObservable();
     public abstract readonly initiator: boolean;
 
     protected readonly _notifier = new Notifier<RoomNetworkEventType, RoomNetworkEvent>();
@@ -52,6 +51,11 @@ export abstract class RoomNetwork<MessageType extends Message> {
         });
     }
 
+    protected isPlayerNameAlreadyInRoom(playerName: string): boolean {
+        const negotiators = this.negotiators.getValue();
+        return this.players.has(playerName) || negotiators.has(playerName);
+    }
+
     private pushEvent(event: RoomNetworkEvent): void {
         this._notifier.notify(event.type, event);
     }
@@ -59,10 +63,16 @@ export abstract class RoomNetwork<MessageType extends Message> {
     // Remote player creation
 
     protected addNegotiator(negotiator: Negotiator): void {
-        this.negotiators.set(negotiator.playerName, negotiator);
+        const current = new Map(this.negotiators.getValue());
+        current.set(negotiator.playerName, negotiator);
+        this.negotiators.next(current);
         this.subscribeNegotiatorConnected(negotiator);
         this.subscribeNegotiatorDisconnected(negotiator);
         this.pushEvent(new RoomNetworkQueueAddEvent(negotiator.playerName));
+    }
+
+    protected getNegotiator(playerName: string): Negotiator | undefined {
+        return this.negotiators.getValue().get(playerName);
     }
 
     protected addPlayer(player: WebRtcPlayer): void {
@@ -113,14 +123,14 @@ export abstract class RoomNetwork<MessageType extends Message> {
 
     private subscribeNegotiatorConnected(negotiator: Negotiator): void {
         negotiator.notifier.follow(NegotiatorEventType.CONNECTED, this, (negotiatorEvent: NegotiatorEvent) => {
-            if (this.negotiators.has(negotiatorEvent.playerName)) {
-                const n: Negotiator | undefined = this.negotiators.get(negotiatorEvent.playerName);
-
-                if (!n) {
+            const negotiators = this.negotiators.getValue();
+            if (negotiators.has(negotiatorEvent.playerName)) {
+                const negotiator = negotiators.get(negotiatorEvent.playerName);
+                if (!negotiator) {
                     throw new Error('Negotiator is not defined');
                 }
 
-                const player = new WebRtcPlayer(n.playerName, negotiator.playerType, n.webRTC);
+                const player = new WebRtcPlayer(negotiator.playerName, negotiator.webRTC);
                 this.removeNegotiator(negotiatorEvent.playerName);
                 this.addPlayer(player);
                 this.onPlayerConnected(player);
@@ -135,26 +145,26 @@ export abstract class RoomNetwork<MessageType extends Message> {
     }
 
     private removeNegotiator(playerName: string): void {
-        if (this.negotiators.has(playerName)) {
+        const current = new Map(this.negotiators.getValue());
+        const negotiator = current.get(playerName);
+
+        if (negotiator) {
             this.pushEvent(new RoomNetworkQueueRemoveEvent(playerName));
-            const negotiator: Negotiator | undefined = this.negotiators.get(playerName);
-
-            if (!negotiator) {
-                throw new Error('Negotiator is not defined');
-            }
-
-            this.negotiators.delete(playerName);
+            current.delete(playerName);
+            this.negotiators.next(current);
             negotiator.clear();
         }
     }
 
-    // Cleaning
+    protected getNegotiatorSize(): number {
+        return this.negotiators.getValue().size;
+    }
 
     public clear(): void {
         this.players.forEach((player: Player) => {
             player.clear();
         });
-        this.negotiators.forEach((negotiator: Negotiator) => {
+        this.negotiators.getValue().forEach((negotiator: Negotiator) => {
             negotiator.clear();
         });
     }

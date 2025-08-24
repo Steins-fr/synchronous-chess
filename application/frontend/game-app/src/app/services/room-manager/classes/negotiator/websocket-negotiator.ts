@@ -1,14 +1,13 @@
-import { Webrtc, RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
 import FullNotification from '@app/services/room-api/notifications/full-notification';
 import SignalNotification from '@app/services/room-api/notifications/signal-notification';
 import {
+    RoomApiRequestTypeEnum,
     RoomSocketApi,
-    RoomSocketApiNotificationEnum,
-    RoomApiRequestTypeEnum
+    RoomSocketApiNotificationEnum
 } from '@app/services/room-api/room-socket.api';
+import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { Subject, takeUntil } from 'rxjs';
 import { Negotiator, NegotiatorEventType } from './negotiator';
-import { PlayerType } from '../player/player';
 
 export class WebsocketNegotiator extends Negotiator {
     private destroyRef = new Subject<void>();
@@ -16,12 +15,11 @@ export class WebsocketNegotiator extends Negotiator {
     public constructor(
         private readonly roomName: string,
         playerName: string,
-        playerType: PlayerType,
         webRTC: Webrtc,
         private readonly roomSocketApi: RoomSocketApi,
     ) {
 
-        super(playerName, playerType, webRTC);
+        super(playerName, webRTC);
         this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
             if (notification.type === RoomSocketApiNotificationEnum.FULL) {
                 this.onFull(notification.data);

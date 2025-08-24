@@ -1,10 +1,6 @@
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 
-export enum PlayerType {
-    HOST, PEER
-}
-
 export enum PlayerEventType {
     DISCONNECTED = 'disconnected',
     MESSAGE = 'message'
@@ -26,7 +22,7 @@ export abstract class Player {
         }
     }(this.name);
 
-    protected constructor(public readonly name: string, public readonly type: PlayerType) {}
+    protected constructor(public readonly name: string) {}
 
     public abstract clear(): void;
 
