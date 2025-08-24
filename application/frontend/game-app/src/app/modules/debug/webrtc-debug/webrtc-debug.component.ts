@@ -14,7 +14,6 @@ import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/
 import { Negotiator } from '@app/services/room-manager/classes/negotiator/negotiator';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
-import { RoomNetwork } from '@app/services/room-manager/classes/room-network/room-network';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Subscription } from 'rxjs';
 import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component';

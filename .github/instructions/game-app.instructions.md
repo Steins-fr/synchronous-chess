@@ -14,9 +14,11 @@ This is an Angular TypeScript project with the following characteristics:
 
 ## Code Conventions
 
+- Zoneless, so use `signal` for all reactive variables used in templates
 - Inject dependencies using `inject()` function
 - Use `takeUntilDestroyed()` for subscription cleanup
-- Input/Output uses `input()`, `model()` and `output()` signal function
+- Input/Output uses `input()`, `model()` and `output()` signal function with `readonly` modifier
+- Use `viewChild()`, `contentChild()`, `viewChildren()`, `contentChildren()` signal functions
 - Follow Angular style guide naming conventions
 - Use protected/private access modifiers appropriately
 - Strict typing everywhere
