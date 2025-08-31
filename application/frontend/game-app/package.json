@@ -29,11 +29,6 @@
         "tslib": "^2.3.0"
     },
     "devDependencies": {
-        "@angular-eslint/builder": "^20.1.1",
-        "@angular-eslint/eslint-plugin": "^20.1.1",
-        "@angular-eslint/eslint-plugin-template": "^20.1.1",
-        "@angular-eslint/schematics": "^20.1.1",
-        "@angular-eslint/template-parser": "^20.1.1",
         "@angular/build": "^20.1.4",
         "@angular/cli": "^20.1.4",
         "@angular/compiler-cli": "^20.1.4",
@@ -42,15 +37,15 @@
         "@html-eslint/eslint-plugin": "^0.44.0",
         "@stylistic/eslint-plugin": "^5.2.2",
         "@types/jasmine": "~5.1.0",
-        "@typescript-eslint/eslint-plugin": "^8.22.0",
-        "@typescript-eslint/parser": "^8.22.0",
         "@vitest/coverage-v8": "^3.2.4",
-        "eslint": "^9.26.0",
+        "angular-eslint": "20.2.0",
+        "eslint": "^9.33.0",
         "eslint-plugin-rxjs-angular-updated": "^1.0.44",
         "eslint-plugin-rxjs-updated": "^1.0.44",
         "jsdom": "^26.1.0",
         "ng-mocks": "^14.13.5",
-        "typescript": "~5.8.3",
+        "typescript": "~5.9.2",
+        "typescript-eslint": "8.40.0",
         "vitest": "^3.2.4"
     }
 }
