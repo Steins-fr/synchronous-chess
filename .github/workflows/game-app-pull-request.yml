@@ -82,7 +82,7 @@ jobs:
                   sed -i 's|SF:dist/test-out/[^/]*/|SF:|g' coverage/lcov.info
 
             - name: SonarQube Scan
-              uses: SonarSource/sonarqube-scan-action@v5 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+              uses: SonarSource/sonarqube-scan-action@v6 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               with:
