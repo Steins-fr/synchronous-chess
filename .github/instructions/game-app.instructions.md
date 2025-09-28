@@ -11,6 +11,7 @@ This is an Angular TypeScript project with the following characteristics:
 - TypeScript
 - RxJS
 - Angular Material
+- Tailwind CSS v4
 
 ## Code Conventions
 

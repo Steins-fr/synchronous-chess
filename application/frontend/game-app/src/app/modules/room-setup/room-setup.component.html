@@ -1,23 +1,25 @@
 @if (canDisplay()) {
-<div>
-    <mat-form-field>
-        <input
-            [(ngModel)]="roomName" autocomplete="off"
-            matInput
-            name="room-name"
-            placeholder="Nom de la salle"
-            type="text" />
-    </mat-form-field>
-    <mat-form-field>
-        <input
-            [(ngModel)]="playerName" autocomplete="off"
-            matInput
-            name="player"
-            placeholder="Nom du joueur"
-            type="text" />
-    </mat-form-field>
+<div class="flex flex-col p-4 gap-4">
+    <div class="flex gap-4">
+        <mat-form-field>
+            <input
+                [(ngModel)]="roomName" autocomplete="off"
+                matInput
+                name="room-name"
+                placeholder="Nom de la salle"
+                type="text" />
+        </mat-form-field>
+        <mat-form-field>
+            <input
+                [(ngModel)]="playerName" autocomplete="off"
+                matInput
+                name="player"
+                placeholder="Nom du joueur"
+                type="text" />
+        </mat-form-field>
+    </div>
     @if (!loading()) {
-    <div class="d-flex align-items-center">
+    <div class="flex items-center gap-4">
         <button (click)="hostRoom()" color="primary" mat-stroked-button>
             Nouvelle
         </button>

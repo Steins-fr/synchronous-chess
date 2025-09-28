@@ -6,6 +6,7 @@ export type BlockToHash = Omit<Block, 'hash' | 'signature'>;
 export class Chain {
 
     public constructor() {
+        // FIXME: async void
         this.reset().then();
     }
 
@@ -29,7 +30,7 @@ export class Chain {
         }, '', hash, '');
     }
 
-    private static encodeMessage(message: string): Uint8Array {
+    private static encodeMessage(message: string): Uint8Array<ArrayBuffer> {
         const encoder: TextEncoder = new TextEncoder();
         return encoder.encode(message);
     }
@@ -40,7 +41,7 @@ export class Chain {
         return hashArray.map((b: number) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
     }
 
-    private static hexStringToArray(hexString: string): Uint8Array {
+    private static hexStringToArray(hexString: string): Uint8Array<ArrayBuffer> {
 
         const buffer: number[] = [];
 
@@ -54,7 +55,7 @@ export class Chain {
     }
 
     public static async calculateHash(block: BlockToHash): Promise<string> {
-        const data: Uint8Array = this.encodeMessage(`${block.index} ${block.previousHash} ${block.timestamp} ${JSON.stringify(block.data)}`);
+        const data = this.encodeMessage(`${block.index} ${block.previousHash} ${block.timestamp} ${JSON.stringify(block.data)}`);
         const hashBuffer: ArrayBuffer = await crypto.subtle.digest('SHA-256', data);
         return this.arrayToHexString(new Uint8Array(hashBuffer));
     }
