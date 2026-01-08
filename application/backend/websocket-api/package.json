@@ -5,8 +5,8 @@
         "lint": "eslint"
     },
     "dependencies": {
-        "@aws-sdk/client-apigatewaymanagementapi": "^3.682.0",
-        "@aws-sdk/client-dynamodb": "^3.682.0",
+        "@aws-sdk/client-apigatewaymanagementapi": "^3.965.0",
+        "@aws-sdk/client-dynamodb": "^3.965.0",
         "@aws-sdk/lib-dynamodb": "^3.685.0"
     },
     "devDependencies": {
