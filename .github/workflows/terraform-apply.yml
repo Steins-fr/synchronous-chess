@@ -23,15 +23,15 @@ permissions:
 
 jobs:
     apply:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         environment: ${{ inputs.stage }}
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
 
             # ── Restore build artifacts from plan run ──────────────────────
             - name: Download Terraform plan artifact
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v6
               with:
                   name: terraform-plan-${{ inputs.stage }}-${{ inputs.plan_run_id }}
                   path: infrastructure/
@@ -39,7 +39,7 @@ jobs:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Download backend dist artifact
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v6
               with:
                   name: backend-dist-${{ inputs.stage }}-${{ inputs.plan_run_id }}
                   path: application/backend/websocket-api/dist/
@@ -47,7 +47,7 @@ jobs:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Download frontend dist artifact
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v6
               with:
                   name: frontend-dist-${{ inputs.stage }}-${{ inputs.plan_run_id }}
                   path: application/frontend/game-app/dist/synchronous-chess/
@@ -56,10 +56,10 @@ jobs:
 
             # ── Terraform ──────────────────────────────────────────────────
             - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
+              uses: hashicorp/setup-terraform@v4
 
             - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
+              uses: aws-actions/configure-aws-credentials@v6
               with:
                   role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                   aws-region: eu-west-1

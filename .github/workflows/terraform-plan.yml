@@ -22,16 +22,16 @@ permissions:
 
 jobs:
     build-and-plan:
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
             # ── Backend build ──────────────────────────────────────────────
             - name: Setup Node.js
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
-                  node-version: 22
+                  node-version: 24
 
             - name: Get npm cache directory
               id: npm-cache-dir
@@ -39,7 +39,7 @@ jobs:
               run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
             - name: Cache backend npm dependencies
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       ${{ steps.npm-cache-dir.outputs.dir }}
@@ -58,7 +58,7 @@ jobs:
 
             # ── Frontend build ─────────────────────────────────────────────
             - name: Cache frontend npm dependencies
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       ${{ steps.npm-cache-dir.outputs.dir }}
@@ -77,10 +77,10 @@ jobs:
 
             # ── Terraform ──────────────────────────────────────────────────
             - name: Setup Terraform
-              uses: hashicorp/setup-terraform@v3
+              uses: hashicorp/setup-terraform@v4
 
             - name: Configure AWS credentials
-              uses: aws-actions/configure-aws-credentials@v4
+              uses: aws-actions/configure-aws-credentials@v6
               with:
                   role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                   aws-region: eu-west-1
@@ -129,7 +129,7 @@ jobs:
 
             # ── Artifacts ──────────────────────────────────────────────────
             - name: Upload Terraform plan artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: terraform-plan-${{ inputs.stage }}-${{ github.run_id }}
                   path: |
@@ -138,14 +138,14 @@ jobs:
                   retention-days: 7
 
             - name: Upload backend dist artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: backend-dist-${{ inputs.stage }}-${{ github.run_id }}
                   path: application/backend/websocket-api/dist/
                   retention-days: 7
 
             - name: Upload frontend dist artifact
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v6
               with:
                   name: frontend-dist-${{ inputs.stage }}-${{ github.run_id }}
                   path: application/frontend/game-app/dist/synchronous-chess/

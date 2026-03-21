@@ -9,37 +9,27 @@ const mockSetRemoteDescription = vi.fn();
 const mockCreateOffer = vi.fn();
 const mockCreateAnswer = vi.fn();
 
-const rtcPeerConnection = vi.fn(() => {
-    return {
-        createOffer: mockCreateOffer,
-        createAnswer: mockCreateAnswer,
-        setLocalDescription: mockSetLocalDescription,
-        setRemoteDescription: mockSetRemoteDescription,
-        addIceCandidate: vi.fn(),
-        getStats: vi.fn(),
-        onicecandidate: vi.fn(),
-        ontrack: vi.fn(),
-        createDataChannel: mockDataChannel,
-    };
-});
+class MockRTCPeerConnection {
+    createOffer = mockCreateOffer;
+    createAnswer = mockCreateAnswer;
+    setLocalDescription = mockSetLocalDescription;
+    setRemoteDescription = mockSetRemoteDescription;
+    addIceCandidate = vi.fn();
+    getStats = vi.fn();
+    onicecandidate = vi.fn();
+    ontrack = vi.fn();
+    createDataChannel = mockDataChannel;
+}
 
-vi.stubGlobal('RTCPeerConnection', rtcPeerConnection);
+vi.stubGlobal('RTCPeerConnection', MockRTCPeerConnection);
 
-const rtcRemoteDescription = vi.fn(() => {
-    return {
+class MockRTCSessionDescription {}
 
-    };
-});
+vi.stubGlobal('RTCSessionDescription', MockRTCSessionDescription);
 
-vi.stubGlobal('RTCSessionDescription', rtcRemoteDescription);
+class MockRTCIceCandidate {}
 
-const rtcIceCandidate = vi.fn(() => {
-    return {
-
-    };
-});
-
-vi.stubGlobal('RTCIceCandidate', rtcIceCandidate);
+vi.stubGlobal('RTCIceCandidate', MockRTCIceCandidate);
 
 describe('Webrtc', () => {
     beforeEach(() => {

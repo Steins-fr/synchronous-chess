@@ -45,7 +45,7 @@ export default defineConfig([globalIgnores([
         sourceType: "script",
 
         parserOptions: {
-            project: ["tsconfig.json"],
+            projectService: true,
             createDefaultProgram: true,
         },
     },
