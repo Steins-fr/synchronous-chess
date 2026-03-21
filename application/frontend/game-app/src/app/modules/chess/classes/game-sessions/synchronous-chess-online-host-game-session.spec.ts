@@ -11,9 +11,6 @@ import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import { PieceType } from '@app/modules/chess/enums/piece-type.enum';
 import { NotifierFlow } from '@app/deprecated/notifier/notifier';
-import { LocalPlayer } from '@app/classes/player/local-player';
-import { Player, PlayerType } from '@app/classes/player/player';
-import { WebRtcPlayer } from '@app/classes/player/web-rtc-player';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
@@ -24,6 +21,9 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
 import { vi, describe, test, expect } from 'vitest';
+import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
+import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
+import { Player } from '@app/services/room-manager/classes/player/player';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
     public override onMove(message: RoomMessage<SCGameSessionType, PlayMessage>): void {
@@ -275,10 +275,10 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             data: new Subject<Message>(),
         });
 
-        const player1: Player = new WebRtcPlayer('robert', PlayerType.HOST, webRtcSpy);
-        const player2: Player = new WebRtcPlayer('mario', PlayerType.HOST, webRtcSpy);
-        const player3: Player = new WebRtcPlayer('bertrand', PlayerType.HOST, webRtcSpy);
-        const player4: Player = new WebRtcPlayer('romain', PlayerType.HOST, webRtcSpy);
+        const player1: Player = new WebRtcPlayer('robert', webRtcSpy);
+        const player2: Player = new WebRtcPlayer('mario', webRtcSpy);
+        const player3: Player = new WebRtcPlayer('bertrand', webRtcSpy);
+        const player4: Player = new WebRtcPlayer('romain', webRtcSpy);
 
         const expectedDefaultConfiguration: SessionConfiguration = {
             spectatorNumber: 0
@@ -338,10 +338,10 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             data: new Subject<Message>(),
         });
 
-        const player1: Player = new WebRtcPlayer('robert', PlayerType.HOST, webRtcSpy);
-        const player2: Player = new WebRtcPlayer('mario', PlayerType.HOST, webRtcSpy);
-        const player3: Player = new WebRtcPlayer('bertrand', PlayerType.HOST, webRtcSpy);
-        const player4: Player = new WebRtcPlayer('romain', PlayerType.HOST, webRtcSpy);
+        const player1: Player = new WebRtcPlayer('robert', webRtcSpy);
+        const player2: Player = new WebRtcPlayer('mario', webRtcSpy);
+        const player3: Player = new WebRtcPlayer('bertrand', webRtcSpy);
+        const player4: Player = new WebRtcPlayer('romain', webRtcSpy);
 
         // When
         session.onPlayerRemove(player1);

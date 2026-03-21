@@ -5,7 +5,6 @@ import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-c
 import { Coordinate, Column, Row } from '@app/modules/chess/interfaces/CoordinateMove';
 import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
 import { NotifierFlow } from '@app/deprecated/notifier/notifier';
-import { LocalPlayer } from '@app/classes/player/local-player';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
@@ -15,6 +14,7 @@ import { Subject } from 'rxjs';
 import { vi, describe, test, expect } from 'vitest';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
+import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     public override runMove(color: PieceColor, move: Move): boolean {

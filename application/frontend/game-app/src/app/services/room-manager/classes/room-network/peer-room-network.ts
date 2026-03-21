@@ -31,7 +31,7 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     }
 
     protected onPlayerConnected(player: Player): void {
-        console.log(`Set host player: ${player.name}`);
+        // console.log(`Set host player: ${player.name}`);
         // FIXME: improve host player assignment logic
         this.hostPlayer ??= player;
     }
