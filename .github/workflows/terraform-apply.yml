@@ -1,0 +1,94 @@
+name: Terraform Apply
+
+on:
+    workflow_dispatch:
+        inputs:
+            plan_run_id:
+                description: "Run ID of the Terraform Plan workflow to apply (see plan job summary)"
+                required: true
+                type: string
+            stage:
+                description: "Deployment stage (must match the stage used in the plan run)"
+                required: true
+                type: choice
+                options:
+                    - production
+                    - staging
+                    - development
+
+permissions:
+    id-token: write
+    contents: read
+    actions: read
+
+jobs:
+    apply:
+        runs-on: ubuntu-22.04
+        environment: ${{ inputs.stage }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            # ── Restore build artifacts from plan run ──────────────────────
+            - name: Download Terraform plan artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: terraform-plan-${{ inputs.stage }}-${{ inputs.plan_run_id }}
+                  path: infrastructure/
+                  run-id: ${{ inputs.plan_run_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Download backend dist artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: backend-dist-${{ inputs.stage }}-${{ inputs.plan_run_id }}
+                  path: application/backend/websocket-api/dist/
+                  run-id: ${{ inputs.plan_run_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Download frontend dist artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: frontend-dist-${{ inputs.stage }}-${{ inputs.plan_run_id }}
+                  path: application/frontend/game-app/dist/synchronous-chess/
+                  run-id: ${{ inputs.plan_run_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+
+            # ── Terraform ──────────────────────────────────────────────────
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                  aws-region: eu-west-1
+
+            - name: Terraform Init
+              working-directory: infrastructure
+              run: |
+                  terraform init \
+                    -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+                    -backend-config="key=${{ inputs.stage }}/terraform.tfstate" \
+                    -backend-config="region=eu-west-1"
+
+            # ── Show plan before applying ──────────────────────────────────
+            - name: Show plan report
+              working-directory: infrastructure
+              run: |
+                  echo "## Terraform Apply — \`${{ inputs.stage }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Input | Value |" >> $GITHUB_STEP_SUMMARY
+                  echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+                  echo "| Stage | \`${{ inputs.stage }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Plan run ID | \`${{ inputs.plan_run_id }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| State bucket | \`${{ vars.TF_STATE_BUCKET }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### Plan that will be applied" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  cat plan-report.txt >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+
+            - name: Terraform Apply
+              working-directory: infrastructure
+              run: terraform apply -auto-approve tfplan
