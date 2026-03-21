@@ -1,0 +1,152 @@
+name: Terraform Plan
+
+on:
+    workflow_dispatch:
+        inputs:
+            stage:
+                description: "Deployment stage"
+                required: true
+                type: choice
+                options:
+                    - production
+                    - staging
+                    - development
+            main_domain_name:
+                description: "Main domain name (e.g. example.com)"
+                required: true
+                type: string
+
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    build-and-plan:
+        runs-on: ubuntu-24.04
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            # ── Backend build ──────────────────────────────────────────────
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+
+            - name: Get npm cache directory
+              id: npm-cache-dir
+              shell: bash
+              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+            - name: Cache backend npm dependencies
+              uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      application/backend/websocket-api/node_modules
+                  key: ${{ runner.os }}-npm-backend-${{ hashFiles('application/backend/websocket-api/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-npm-backend-
+
+            - name: Install backend dependencies
+              working-directory: application/backend/websocket-api
+              run: npm ci
+
+            - name: Build backend lambdas
+              working-directory: application/backend/websocket-api
+              run: npm run build
+
+            # ── Frontend build ─────────────────────────────────────────────
+            - name: Cache frontend npm dependencies
+              uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      application/frontend/game-app/node_modules
+                  key: ${{ runner.os }}-npm-frontend-${{ hashFiles('application/frontend/game-app/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-npm-frontend-
+
+            - name: Install frontend dependencies
+              working-directory: application/frontend/game-app
+              run: npm ci
+
+            - name: Build frontend
+              working-directory: application/frontend/game-app
+              run: npm run build -- --configuration=${{ inputs.stage }}
+
+            # ── Terraform ──────────────────────────────────────────────────
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v6
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                  aws-region: eu-west-1
+
+            - name: Terraform Init
+              working-directory: infrastructure
+              run: |
+                  terraform init \
+                    -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}" \
+                    -backend-config="key=${{ inputs.stage }}/terraform.tfstate" \
+                    -backend-config="region=eu-west-1"
+
+            - name: Terraform Validate
+              working-directory: infrastructure
+              run: terraform validate
+
+            - name: Terraform Plan
+              working-directory: infrastructure
+              run: |
+                  terraform plan \
+                    -var="stage=${{ inputs.stage }}" \
+                    -var="main_domain_name=${{ inputs.main_domain_name }}" \
+                    -out=tfplan
+
+            - name: Generate plan report
+              working-directory: infrastructure
+              run: terraform show -no-color tfplan > plan-report.txt
+
+            # ── Job Summary ────────────────────────────────────────────────
+            - name: Write plan report to job summary
+              working-directory: infrastructure
+              run: |
+                  echo "## Terraform Plan — \`${{ inputs.stage }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "| Input | Value |" >> $GITHUB_STEP_SUMMARY
+                  echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+                  echo "| Stage | \`${{ inputs.stage }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Domain | \`${{ inputs.main_domain_name }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| State bucket | \`${{ vars.TF_STATE_BUCKET }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Run ID | \`${{ github.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### Plan output" >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+                  cat plan-report.txt >> $GITHUB_STEP_SUMMARY
+                  echo '```' >> $GITHUB_STEP_SUMMARY
+
+            # ── Artifacts ──────────────────────────────────────────────────
+            - name: Upload Terraform plan artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: terraform-plan-${{ inputs.stage }}-${{ github.run_id }}
+                  path: |
+                      infrastructure/tfplan
+                      infrastructure/plan-report.txt
+                  retention-days: 7
+
+            - name: Upload backend dist artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: backend-dist-${{ inputs.stage }}-${{ github.run_id }}
+                  path: application/backend/websocket-api/dist/
+                  retention-days: 7
+
+            - name: Upload frontend dist artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: frontend-dist-${{ inputs.stage }}-${{ github.run_id }}
+                  path: application/frontend/game-app/dist/synchronous-chess/
+                  retention-days: 7

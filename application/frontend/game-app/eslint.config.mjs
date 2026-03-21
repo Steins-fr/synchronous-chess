@@ -45,7 +45,7 @@ export default defineConfig([globalIgnores([
         sourceType: "script",
 
         parserOptions: {
-            project: ["tsconfig.json"],
+            projectService: true,
             createDefaultProgram: true,
         },
     },
@@ -53,10 +53,6 @@ export default defineConfig([globalIgnores([
     rules: {
         quotes: ["error", "single", {
             avoidEscape: true,
-        }],
-
-        "@angular-eslint/component-class-suffix": [1, {
-            suffixes: ["Component", "Dialog", "Page"],
         }],
 
         "@angular-eslint/component-selector": ["error", {

@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-import { ChatPage } from '@app/pages/chat-page/chat.page';
-import { SynchronousChessPage } from '@app/pages/synchronous-chess-page/synchronous-chess.page';
+import { ChatPage } from '@app/modules/chat-page/chat.page';
+import { SynchronousChess } from '@app/modules/chess/pages/synchronous-chess/synchronous-chess';
 
 export const homePath: string = '';
 export const chatPath: string = 'simple-chat';
 
 export const routes: Routes = [
-    { path: homePath, component: SynchronousChessPage },
+    { path: homePath, component: SynchronousChess },
     { path: chatPath, component: ChatPage }
 ];

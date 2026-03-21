@@ -13,21 +13,21 @@ jobs:
     angular-lint:
         if: github.event.pull_request.draft == false
         timeout-minutes: 5
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-24.04
         steps:
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
-                  node-version: 22
+                  node-version: 24
 
             - name: Get npm cache directory
               id: npm-cache-dir
               shell: bash
               run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
-            - uses: actions/cache@v4
+            - uses: actions/cache@v5
               with:
                   path: |
                       ${{ steps.npm-cache-dir.outputs.dir }}
@@ -42,25 +42,25 @@ jobs:
             - name: Run Angular lint
               run: npm run lint
 
-    angular-test-karma:
-        runs-on: ubuntu-latest
+    angular-test:
+        runs-on: ubuntu-24.04
         needs: [angular-lint]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   # Disabling shallow clones is recommended for improving the relevancy of reporting
                   fetch-depth: 0
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
-                  node-version: 22
+                  node-version: 24
 
             - name: Get npm cache directory
               id: npm-cache-dir
               shell: bash
               run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
 
-            - uses: actions/cache@v4
+            - uses: actions/cache@v5
               with:
                   path: |
                       ${{ steps.npm-cache-dir.outputs.dir }}
@@ -75,23 +75,19 @@ jobs:
             - name: Run Test
               run: npm run test:ci
 
-            # Fix "Could not resolve 85 file paths in [/home/runner/work/synchronous-chess/synchronous-chess/application/frontend/game-app/coverage/lcov.info]"
-            # First unresolved path: dist/test-out/20250816T145544923Z-17187c64/src/app/app.routes.ts
-            - name: Fix "Could not resolve 85 file paths in lcov.info"
-              run: |
-                  sed -i 's|SF:dist/test-out/[^/]*/|SF:|g' coverage/lcov.info
-
             - name: SonarQube Scan
-              uses: SonarSource/sonarqube-scan-action@v6 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+              uses: SonarSource/sonarqube-scan-action@v7 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               with:
                   projectBaseDir: application/frontend/game-app
                   args: >
+                      -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+                      -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
                       -Dsonar.typescript.tsconfigPath=tsconfig.json
                       -Dsonar.sources=src/app
                       -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts
                       -Dsonar.tests=src/app
                       -Dsonar.test.inclusions=**/*.spec.ts
                       -Dsonar.sourceEncoding=UTF-8
-                      -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+                      -Dsonar.typescript.lcov.reportPaths=coverage/game-app/lcov.info
