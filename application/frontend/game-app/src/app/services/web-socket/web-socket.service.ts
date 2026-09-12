@@ -38,7 +38,7 @@ export class WebSocketService {
             return this.webSocket;
         }
 
-        let webSocket: WebSocket | null = null;
+        let webSocket: WebSocket | null;
 
         switch (this._state.getValue()) {
             case SocketState.CONNECTING:

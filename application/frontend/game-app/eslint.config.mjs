@@ -1,20 +1,11 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import rxjsAngular from "eslint-plugin-rxjs-angular-updated";
-import rxjs from "eslint-plugin-rxjs-updated";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import rxjsAngular from "eslint-plugin-rxjs-angular-x";
+import rxjs from "eslint-plugin-rxjs-x";
 import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
+import tseslint from "typescript-eslint";
+import angular from "angular-eslint";
 import stylistic from '@stylistic/eslint-plugin';
 import html from "@html-eslint/eslint-plugin";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
-});
 
 export default defineConfig([globalIgnores([
     "projects/**/*",
@@ -33,12 +24,13 @@ export default defineConfig([globalIgnores([
 }, {
     files: ["**/*.ts"],
 
-    extends: compat.extends(
-        "plugin:@angular-eslint/recommended",
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@angular-eslint/template/process-inline-templates",
-    ),
+    extends: [
+        js.configs.recommended,
+        ...tseslint.configs.recommended,
+        ...angular.configs.tsRecommended,
+    ],
+
+    processor: angular.processInlineTemplates,
 
     languageOptions: {
         ecmaVersion: 5,
