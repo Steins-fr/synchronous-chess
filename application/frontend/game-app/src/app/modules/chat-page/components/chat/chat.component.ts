@@ -12,7 +12,7 @@ import {
     signal,
     viewChild
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
@@ -21,7 +21,7 @@ import { MatInput } from '@angular/material/input';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
-import { Subscription } from 'rxjs';
+import { EMPTY, switchMap } from 'rxjs';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatMessage, ChatMessageComponent } from './chat-message/chat-message.component';
 
@@ -73,31 +73,13 @@ export class ChatComponent {
     protected readonly viewingHistory = signal<boolean>(false);
     protected readonly players = computed<ReadonlyArray<Readonly<Player>>>(() => this.room()?.players() ?? []);
     protected readonly queuingPlayers = computed<ReadonlyArray<string>>(() => this.room()?.queue() ?? []);
-    private readonly messengerSignal = signal<ChatRoomMessage | null>(null);
-    private roomSubscriptions: Subscription[] = [];
 
     public constructor() {
-        effect(() => {
-            const message = this.messengerSignal();
-            if (message) {
-                this.onChatMessage(message);
-            }
-        });
-
-        effect(() => {
-            const room = this.room();
-
-            this.roomSubscriptions.forEach(sub => sub.unsubscribe());
-            this.roomSubscriptions = [];
-
-            if (room) {
-                this.roomSubscriptions.push(
-                    this.currentRoom.messenger(ChatMessengerType.CHAT_MESSAGE).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message: ChatRoomMessage) => {
-                        this.messengerSignal.set(message);
-                    })
-                );
-            }
-        });
+        // Handled in the subscription, a signal would only keep the last of several messages received in a row
+        toObservable(this.room).pipe(
+            switchMap(room => room?.messenger(ChatMessengerType.CHAT_MESSAGE) ?? EMPTY),
+            takeUntilDestroyed(this.destroyRef),
+        ).subscribe((message: ChatRoomMessage) => this.onChatMessage(message));
 
         effect(() => {
             const isSending = this.isSending();
