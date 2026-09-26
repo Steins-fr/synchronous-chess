@@ -60,7 +60,10 @@ export class DistributedBlockChain {
 
     public handle<K extends BlockChainMessageType>(message: ReceivedBlockChainMessage<K>): void {
         const handler: MessageHandlers[K] = this.messageHandler[message.type];
-        handler(message).then((state: BlockChainState) => this.updateState(state));
+        // Only the envelope is validated on reception, the payload may still make the handler throw
+        handler(message)
+            .then((state: BlockChainState) => this.updateState(state))
+            .catch((reason: unknown) => TimedLogger.error(`Failed to handle ${ message.type } from ${ message.from }`, reason));
     }
 
     public initiate(): void {
