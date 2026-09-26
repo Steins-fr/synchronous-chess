@@ -75,12 +75,14 @@ export class Room<M extends object> {
             origin: MessageOriginType.ROOM_SERVICE
         };
 
-        // TODO: players include the local player, whose sendData() throws. Unreached today as only BlockRoom
-        //  (which overrides this method) is instantiated. Skip local players, and decide whether the sender
-        //  should receive its own message (BlockRoom does, through notifyMessage).
         this._players().forEach((player: Readonly<Player>) => {
-            player.sendData(roomServiceMessage);
+            if (!player.isLocal) {
+                player.sendData(roomServiceMessage);
+            }
         });
+
+        // The sender receives its own message, as BlockRoom does
+        this.publicMessenger$.next({ from: this.localPlayer.name, type, payload });
     }
 
     protected onMessage(message: ReceivedMessage): void {
