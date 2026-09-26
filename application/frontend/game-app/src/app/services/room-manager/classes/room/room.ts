@@ -33,6 +33,8 @@ export class Room<M extends object> {
         private readonly _roomConnection: RoomNetwork
     ) {
         this._players.set([this.localPlayer]);
+        // Negotiators added before this room subscribed (e.g. the host, on a peer) have already been notified
+        this._queue.set([...this._roomConnection.negotiators().keys()]);
 
         this._roomConnection.onMessage$.pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onMessage(message));
         this._roomConnection.playerAdded$.pipe(takeUntil(this.destroyRef)).subscribe((player) => this.handleRoomPlayerAdd(player));
@@ -104,7 +106,7 @@ export class Room<M extends object> {
     }
 
     protected handleRoomQueueAdd(playerName: string): void {
-        this._queue.update(queue => queue.concat(playerName));
+        this._queue.update(queue => queue.includes(playerName) ? queue : queue.concat(playerName));
     }
 
     protected handleRoomQueueRemove(playerName: string): void {
