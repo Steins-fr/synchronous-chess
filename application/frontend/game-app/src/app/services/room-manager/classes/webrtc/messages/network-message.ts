@@ -17,7 +17,10 @@ const knownTypes: Readonly<Record<Exclude<MessageOriginType, MessageOriginType.R
     [MessageOriginType.HOST_ROOM]: Object.values(HostRoomMessageType),
     [MessageOriginType.BLOCK_ROOM_SERVICE]: Object.values(BlockChainMessageType),
 };
-const knownTypesByOrigin: ReadonlyMap<string, ReadonlyArray<string>> = new Map(Object.entries(knownTypes));
+
+function isKnownOrigin(origin: string): origin is keyof typeof knownTypes {
+    return Object.hasOwn(knownTypes, origin);
+}
 
 /** Validates the envelope of data received from a peer. The payload is trusted. */
 export function isNetworkMessage(data: unknown): data is NetworkMessage {
@@ -30,5 +33,5 @@ export function isNetworkMessage(data: unknown): data is NetworkMessage {
         return false;
     }
 
-    return origin === MessageOriginType.ROOM_SERVICE || (knownTypesByOrigin.get(origin)?.includes(type) ?? false);
+    return origin === MessageOriginType.ROOM_SERVICE || (isKnownOrigin(origin) && knownTypes[origin].includes(type));
 }
