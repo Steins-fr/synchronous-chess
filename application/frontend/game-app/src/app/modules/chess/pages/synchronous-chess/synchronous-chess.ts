@@ -1,5 +1,5 @@
 
-import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import { SyncChessGameComponent } from '@app/modules/chess/components/sync-chess-game/sync-chess-game.component';
@@ -19,7 +19,7 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
 export class SynchronousChess implements OnInit, OnDestroy {
     protected readonly maxPlayer: number = 4;
 
-    protected room: Room<ChatPayloads & ChessPayloads> | undefined = undefined;
+    protected readonly room = signal<Room<ChatPayloads & ChessPayloads> | undefined>(undefined);
 
     private readonly destroyRef = inject(DestroyRef);
     private readonly roomSetupService = inject(RoomSetupService);
@@ -27,13 +27,13 @@ export class SynchronousChess implements OnInit, OnDestroy {
 
     public ngOnInit(): void {
         this.roomSetupService.setup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async (setup) => {
-            this.room = await this.roomManagerService.buildBlockRoom<ChatPayloads & ChessPayloads>(setup, this.maxPlayer);
+            this.room.set(await this.roomManagerService.buildBlockRoom<ChatPayloads & ChessPayloads>(setup, this.maxPlayer));
 
             this.roomSetupService.roomIsSetup(true);
         });
     }
 
     public ngOnDestroy(): void {
-        this.room?.clear();
+        this.room()?.clear();
     }
 }
