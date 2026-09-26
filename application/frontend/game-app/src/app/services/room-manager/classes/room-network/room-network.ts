@@ -66,7 +66,10 @@ export abstract class RoomNetwork {
     }
 
     protected addPlayer(player: WebRtcPlayer): void {
+        // A replaced player's disconnection is ignored, so it has to be cleared here
+        const replaced = this.players.get(player.name);
         this.players.set(player.name, player);
+        replaced?.clear();
         this.subscribeData(player);
         this.subscribeOnDisconnected(player);
         this.playerAddedSubject.next(player);
