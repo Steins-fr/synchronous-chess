@@ -1,5 +1,6 @@
 import { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import {
+    ChessPayloads,
     SCGameSessionType,
     PlayMessage,
     PromotionMessage
@@ -11,8 +12,7 @@ import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import { PieceType } from '@app/modules/chess/enums/piece-type.enum';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
-import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { AppMessage, AppMessagesOf } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
@@ -25,24 +25,24 @@ import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-
 import { Player } from '@app/services/room-manager/classes/player/player';
 
 class ProtectedTest extends SynchronousChessOnlineHostGameSession {
-    public override onMove(message: RoomMessage<SCGameSessionType, PlayMessage>): void {
+    public override onMove(message: AppMessage<SCGameSessionType.PLAY, PlayMessage>): void {
         super.onMove(message);
     }
 
-    public override onPromotion(message: RoomMessage<SCGameSessionType, PromotionMessage>): void {
+    public override onPromotion(message: AppMessage<SCGameSessionType.PROMOTION, PromotionMessage>): void {
         super.onPromotion(message);
     }
 }
 
 describe('SynchronousChessOnlineHostGameSession', () => {
     test('should get the color of the playing player', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
 
         const sessionWhite: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         sessionWhite.configuration.whitePlayer = 'a';
@@ -66,13 +66,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should get the none color', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session1: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session1.configuration.whitePlayer = 'a';
         session1.configuration.blackPlayer = undefined;
@@ -108,14 +108,14 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('move should return true on valid play', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const gameSpy = TestHelper.cast<SynchronousChessGame>({
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
@@ -147,14 +147,14 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('move should return false on invalid move', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const gameSpy = TestHelper.cast<SynchronousChessGame>({
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
@@ -187,12 +187,12 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should run move from a remote playing player', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runMoveSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
@@ -205,9 +205,8 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             from: [FenColumn.C, FenRow._6],
             to: [FenColumn.C, FenRow._5]
         };
-        const message: RoomMessage<SCGameSessionType, PlayMessage> = {
+        const message: AppMessage<SCGameSessionType.PLAY, PlayMessage> = {
             from: 'a',
-            origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
             payload: { move }
         };
@@ -219,12 +218,12 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should not run move from a remote spectator', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runMoveSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
@@ -237,9 +236,8 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             from: [FenColumn.C, FenRow._6],
             to: [FenColumn.C, FenRow._5]
         };
-        const message: RoomMessage<SCGameSessionType, PlayMessage> = {
+        const message: AppMessage<SCGameSessionType.PLAY, PlayMessage> = {
             from: 'C',
-            origin: MessageOriginType.ROOM_SERVICE,
             type: SCGameSessionType.PLAY,
             payload: { move }
         };
@@ -251,13 +249,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should set players on player add', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         const defaultConfiguration: SessionConfiguration = { ...session.configuration };
 
@@ -310,13 +308,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should decrement spectators on player remove', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         session.configuration = {
             whitePlayer: 'robert',
@@ -350,14 +348,14 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('promote should return true on valid play', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const gameSpy = TestHelper.cast<SynchronousChessGame>({
             promote: vi.fn(),
             isMoveValid: vi.fn(),
@@ -382,14 +380,14 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('promote should return false on invalid move', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const gameSpy = TestHelper.cast<SynchronousChessGame>({
             promote: vi.fn(),
             isMoveValid: vi.fn(),
@@ -415,12 +413,12 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should run promote from a remote playing player', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runPromotionSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
@@ -430,10 +428,9 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const pieceType: PieceType = PieceType.QUEEN;
-        const message: RoomMessage<SCGameSessionType, PromotionMessage> = {
+        const message: AppMessage<SCGameSessionType.PROMOTION, PromotionMessage> = {
             from: 'a',
-            origin: MessageOriginType.ROOM_SERVICE,
-            type: SCGameSessionType.PLAY,
+            type: SCGameSessionType.PROMOTION,
             payload: { pieceType }
         };
         // When
@@ -444,12 +441,12 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     });
 
     test('should not run promote from a remote spectator', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         const runPromotionSpy = vi.fn();
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
@@ -459,10 +456,9 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             writable: false
         });
         const pieceType: PieceType = PieceType.QUEEN;
-        const message: RoomMessage<SCGameSessionType, PromotionMessage> = {
+        const message: AppMessage<SCGameSessionType.PROMOTION, PromotionMessage> = {
             from: 'C',
-            origin: MessageOriginType.ROOM_SERVICE,
-            type: SCGameSessionType.PLAY,
+            type: SCGameSessionType.PROMOTION,
             payload: { pieceType }
         };
         // When
@@ -475,13 +471,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
     test('should update the configuration on room player streams until destroyed', () => {
         const playerAdded$ = new Subject<Player>();
         const playerRemoved$ = new Subject<Player>();
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             transmitMessage: vi.fn(),
             playerAdded$,
             playerRemoved$,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<RoomMessage>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
 
         // When

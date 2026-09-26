@@ -1,8 +1,8 @@
 import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { HostRoomMessage, HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
-import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
+import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
+import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
@@ -10,11 +10,7 @@ import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { RoomNetwork } from './room-network';
 
-export interface NewPlayerPayload {
-    playerName: string;
-}
-
-export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<MessageType> {
+export class PeerRoomNetwork extends RoomNetwork {
     public readonly initiator: boolean = false;
     protected hostPlayer?: Player;
 
@@ -42,20 +38,17 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         }
     }
 
-    protected onRoomMessage(roomMessage: HostRoomMessage<RtcSignalResponse> | HostRoomMessage<NewPlayerPayload>): void {
-        if (roomMessage.origin !== MessageOriginType.HOST_ROOM) {
+    protected onRoomMessage(message: ReceivedMessage): void {
+        if (message.origin !== MessageOriginType.HOST_ROOM) {
             return;
         }
 
-        // FIXME: better casting
-        switch (roomMessage.type) {
+        switch (message.type) {
             case HostRoomMessageType.NEW_PLAYER:
-                const newPlayerMessage: HostRoomMessage<NewPlayerPayload> = roomMessage as HostRoomMessage<NewPlayerPayload>;
-                void this.onNewPlayer(newPlayerMessage.payload);
+                void this.onNewPlayer(message.payload);
                 break;
             case HostRoomMessageType.REMOTE_SIGNAL:
-                const remoteMessage: HostRoomMessage<RtcSignalResponse> = roomMessage as HostRoomMessage<RtcSignalResponse>;
-                void this.onRemoteSignal(remoteMessage.payload);
+                void this.onRemoteSignal(message.payload);
                 break;
         }
     }

@@ -1,14 +1,13 @@
 import { signal } from '@angular/core';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
+import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Subject } from 'rxjs';
 import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
 import { LocalPlayer } from '../player/local-player';
 import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
 
-export abstract class RoomNetwork<MessageType extends Message> {
+export abstract class RoomNetwork {
     private readonly _localPlayer: LocalPlayer;
 
     public get localPlayer(): LocalPlayer {
@@ -20,7 +19,7 @@ export abstract class RoomNetwork<MessageType extends Message> {
     public readonly negotiators = this._negotiators.asReadonly();
     public abstract readonly initiator: boolean;
 
-    private readonly onMessageSubject = new Subject<MessageType>();
+    private readonly onMessageSubject = new Subject<ReceivedMessage>();
     public readonly onMessage$ = this.onMessageSubject.asObservable();
     private readonly playerAddedSubject = new Subject<Player>();
     public readonly playerAdded$ = this.playerAddedSubject.asObservable();
@@ -40,10 +39,9 @@ export abstract class RoomNetwork<MessageType extends Message> {
         this.players.set(this._localPlayer.name, this._localPlayer);
     }
 
-    protected transmitMessage(message: ToReworkMessage): void {
+    protected transmitMessage(message: NetworkMessage): void {
         this.players.forEach((player: Player) => {
             if (!player.isLocal) {
-                message.from = this.localPlayer.name;
                 player.sendData(message);
             }
         });
@@ -72,13 +70,13 @@ export abstract class RoomNetwork<MessageType extends Message> {
         this.playerAddedSubject.next(player);
     }
 
-    protected abstract onRoomMessage(message: Message, fromPlayer: string): void;
+    protected abstract onRoomMessage(message: ReceivedMessage): void;
 
     // Player events
     protected subscribeData(player: WebRtcPlayer): void {
-        player.message$.subscribe((message: Message) => {
-            this.onRoomMessage(message, player.name);
-            this.onMessageSubject.next(message as MessageType);
+        player.message$.subscribe((message: ReceivedMessage) => {
+            this.onRoomMessage(message);
+            this.onMessageSubject.next(message);
         });
     }
 

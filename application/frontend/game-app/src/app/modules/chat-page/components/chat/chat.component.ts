@@ -18,7 +18,7 @@ import { MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Subscription } from 'rxjs';
@@ -28,6 +28,12 @@ import { ChatMessage, ChatMessageComponent } from './chat-message/chat-message.c
 export enum ChatMessengerType {
     CHAT_MESSAGE = 'chatMessage',
 }
+
+export interface ChatPayloads {
+    [ChatMessengerType.CHAT_MESSAGE]: string;
+}
+
+type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, string>;
 
 @Component({
     selector: 'app-chat',
@@ -48,10 +54,10 @@ export enum ChatMessengerType {
 export class ChatComponent {
     private readonly destroyRef = inject(DestroyRef);
 
-    public readonly room = input.required<Room<RoomMessage<ChatMessengerType, string>> | undefined>();
+    public readonly room = input.required<Room<ChatPayloads> | undefined>();
     public readonly virtualScrollViewport = viewChild.required(CdkVirtualScrollViewport);
 
-    protected get currentRoom(): Room<RoomMessage<ChatMessengerType, string>> {
+    protected get currentRoom(): Room<ChatPayloads> {
         const room = this.room();
         if (!room) {
             throw new Error('Room not found');
@@ -60,14 +66,14 @@ export class ChatComponent {
         return room;
     }
 
-    protected readonly sendInput = new FormControl<string>('');
+    protected readonly sendInput = new FormControl<string>('', { nonNullable: true });
     protected readonly newMessage = signal<number>(0);
     protected readonly isSending = signal<boolean>(false);
     protected readonly chatMessages = signal<ReadonlyArray<Readonly<ChatMessage>>>([]);
     protected readonly viewingHistory = signal<boolean>(false);
     protected readonly players = computed<ReadonlyArray<Readonly<Player>>>(() => this.room()?.players() ?? []);
     protected readonly queuingPlayers = computed<ReadonlyArray<string>>(() => this.room()?.queue() ?? []);
-    private readonly messengerSignal = signal<RoomMessage<ChatMessengerType, string> | null>(null);
+    private readonly messengerSignal = signal<ChatRoomMessage | null>(null);
     private roomSubscriptions: Subscription[] = [];
 
     public constructor() {
@@ -86,7 +92,7 @@ export class ChatComponent {
 
             if (room) {
                 this.roomSubscriptions.push(
-                    this.currentRoom.messenger(ChatMessengerType.CHAT_MESSAGE).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message: RoomMessage<ChatMessengerType, string>) => {
+                    this.currentRoom.messenger(ChatMessengerType.CHAT_MESSAGE).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message: ChatRoomMessage) => {
                         this.messengerSignal.set(message);
                     })
                 );
@@ -143,7 +149,7 @@ export class ChatComponent {
         this.isSending.set(true);
     }
 
-    private onChatMessage(message: RoomMessage<ChatMessengerType, string>): void {
+    private onChatMessage(message: ChatRoomMessage): void {
         this.newMessage.update(value => value + 1);
 
         if (this.currentRoom.localPlayer?.name === message.from) {

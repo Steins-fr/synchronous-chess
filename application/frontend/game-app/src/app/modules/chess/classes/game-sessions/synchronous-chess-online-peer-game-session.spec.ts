@@ -4,8 +4,8 @@ import SynchronousChessOnlinePeerGameSession
 import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-chess-game';
 import { Coordinate, Column, Row } from '@app/modules/chess/interfaces/CoordinateMove';
 import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
-import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
+import { ChessPayloads, SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
+import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { TestHelper } from '@testing/test.helper';
@@ -14,6 +14,8 @@ import { vi, describe, test, expect } from 'vitest';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
+
+type ConfigurationMessage = AppMessage<SCGameSessionType.CONFIGURATION, SessionConfiguration>;
 
 class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     public override runMove(color: PieceColor, move: Move): boolean {
@@ -25,11 +27,10 @@ class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
     }
 }
 
-function generateConfigurationMessage(whitePlayer: string = 'e', blackPlayer: string = 'd', spectatorNumber: number = 3): ToReworkMessage<SessionConfiguration> {
+function generateConfigurationMessage(whitePlayer: string = 'e', blackPlayer: string = 'd', spectatorNumber: number = 3): ConfigurationMessage {
     return {
         from: 'a',
-        // FIXME: value of origin
-        origin: MessageOriginType.HOST_ROOM,
+        type: SCGameSessionType.CONFIGURATION,
         payload: {
             whitePlayer,
             blackPlayer,
@@ -40,10 +41,10 @@ function generateConfigurationMessage(whitePlayer: string = 'e', blackPlayer: st
 
 describe('SynchronousChessOnlinePeerGameSession', () => {
     test('should set configuration on messenger event', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
         });
-        const messengerSubject = new Subject<ToReworkMessage<SessionConfiguration>>();
+        const messengerSubject = new Subject<ConfigurationMessage>();
         vi.mocked(roomSpy.messenger).mockReturnValue(messengerSubject);
 
         const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomSpy);
@@ -55,16 +56,15 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
     });
 
     test('should set the configuration', () => {
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomSpy);
-        const configuration: ToReworkMessage<SessionConfiguration> = {
+        const configuration: ConfigurationMessage = {
             from: 'a',
-            // FIXME: value of origin
-            origin: MessageOriginType.HOST_ROOM,
+            type: SCGameSessionType.CONFIGURATION,
             payload: {
                 whitePlayer: 'e',
                 blackPlayer: 'd',
@@ -88,10 +88,10 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             fenBoard: ChessBoardHelper.createFenBoard(),
         });
 
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
@@ -121,10 +121,10 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             fenBoard: ChessBoardHelper.createFenBoard(),
         });
 
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
@@ -155,11 +155,11 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             fenBoard: ChessBoardHelper.createFenBoard(),
         });
 
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
@@ -195,11 +195,11 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             runTurn: vi.fn(),
             fenBoard: ChessBoardHelper.createFenBoard(),
         });
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
@@ -234,11 +234,11 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             runTurn: vi.fn(),
             fenBoard: ChessBoardHelper.createFenBoard(),
         });
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
         Object.defineProperty(session, 'game', {
@@ -280,10 +280,10 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
         vi.mocked(gameSpy.promote).mockReturnValue(false);
 
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {
@@ -313,10 +313,10 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
         vi.mocked(gameSpy.promote).mockReturnValue(true);
 
-        const roomSpy = TestHelper.cast<Room<any>>({
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
         });
-        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: ProtectedTest = new ProtectedTest(roomSpy);
         Object.defineProperty(session, 'game', {

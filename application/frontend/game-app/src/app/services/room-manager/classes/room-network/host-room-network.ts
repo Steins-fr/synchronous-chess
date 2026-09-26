@@ -6,19 +6,16 @@ import {
     RoomSocketApiNotificationEnum
 } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessage, HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
-import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { NegotiatorMessage, NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
+import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
+import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { Subject, takeUntil } from 'rxjs';
-import { SignalPayload } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
-import { NewPlayerPayload } from './peer-room-network';
 import { RoomNetwork } from './room-network';
 
-export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<MessageType> {
+export class HostRoomNetwork extends RoomNetwork {
 
     public readonly initiator: boolean = true;
     private refreshId?: ReturnType<typeof setInterval>;
@@ -90,11 +87,10 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
     }
 
     protected transmitNewPlayer(playerName: string): void {
-        const message: HostRoomMessage<NewPlayerPayload> = {
+        const message: HostRoomMessage = {
             type: HostRoomMessageType.NEW_PLAYER,
             payload: { playerName },
             origin: MessageOriginType.HOST_ROOM,
-            from: this.localPlayer.name
         };
 
         this.transmitMessage(message);
@@ -108,34 +104,29 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.roomName, playerName: player.name });
     }
 
-    protected onRoomMessage(roomMessage: ToReworkMessage<SignalPayload>, fromPlayer: string): void {
-        if (roomMessage.origin !== MessageOriginType.NEGOTIATOR) {
-            console.warn('HostRoom: no message', roomMessage);
+    protected onRoomMessage(message: ReceivedMessage): void {
+        if (message.origin !== MessageOriginType.NEGOTIATOR) {
+            console.warn('HostRoom: no message', message);
             return;
         }
-        console.warn('HostRoom: onRoomMessage', roomMessage);
+        console.warn('HostRoom: onRoomMessage', message);
 
-        // TODO: Better casting
-        const negotiatorMessage: NegotiatorMessage<SignalPayload> = roomMessage as NegotiatorMessage<SignalPayload>;
-
-        if (negotiatorMessage.type === NegotiatorMessageType.SIGNAL) {
-            const signalPayload: SignalPayload = negotiatorMessage.payload;
-            const player: Player | undefined = this.players.get(signalPayload.to);
+        if (message.type === NegotiatorMessageType.SIGNAL) {
+            const player: Player | undefined = this.players.get(message.payload.to);
 
             if (!player) {
                 return;
             }
 
             const remoteSignalPayload: RtcSignalResponse = {
-                from: fromPlayer,
-                signal: signalPayload.signal
+                from: message.from,
+                signal: message.payload.signal
             };
 
-            const negotiationMessage: HostRoomMessage<RtcSignalResponse> = {
+            const negotiationMessage: HostRoomMessage = {
                 type: HostRoomMessageType.REMOTE_SIGNAL,
                 payload: remoteSignalPayload,
                 origin: MessageOriginType.HOST_ROOM,
-                from: this.localPlayer.name
             };
 
             player.sendData(negotiationMessage);

@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
+import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import CoordinateMove from '@app/modules/chess/interfaces/CoordinateMove';
 import Move from '@app/modules/chess/interfaces/move';
 import { FenPiece } from '@app/modules/chess/enums/fen-piece.enum';
@@ -25,7 +26,7 @@ import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component'
     imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
 })
 export class SyncChessGameComponent implements OnDestroy {
-    public readonly room = input.required<Room<any> | undefined>();
+    public readonly room = input.required<Room<ChessPayloads> | undefined>();
 
     protected readonly gameSession = computed<SynchronousChessGameSession>(() => {
         const room = this.room();

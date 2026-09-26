@@ -7,7 +7,6 @@ import {
 import { Negotiator } from '@app/services/room-manager/classes/negotiator/negotiator';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { Room } from '@app/services/room-manager/classes/room/room';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component';
 
 @Component({
@@ -15,8 +14,8 @@ import { WebrtcStatesComponent } from '../webrtc-states/webrtc-states.component'
     templateUrl: './webrtc-debug.component.html',
     imports: [CommonModule, WebrtcStatesComponent],
 })
-export class WebrtcDebugComponent<RoomServiceNotification extends RoomMessage>  {
-    public readonly room = input.required<Room<RoomServiceNotification>>();
+export class WebrtcDebugComponent<M extends object> {
+    public readonly room = input.required<Room<M>>();
 
     protected readonly negotiators = computed<ReadonlyArray<Readonly<Negotiator>>>(() => Array.from(this.room().roomConnection.negotiators().values()));
 

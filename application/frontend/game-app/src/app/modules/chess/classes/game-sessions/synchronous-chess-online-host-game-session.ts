@@ -1,14 +1,14 @@
 import SynchronousChessOnlineGameSession, {
+    ChessPayloads,
     SCGameSessionType
 } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { takeUntil } from 'rxjs';
 
 export default class SynchronousChessOnlineHostGameSession extends SynchronousChessOnlineGameSession {
 
-    public constructor(roomService: Room<RoomMessage>) {
+    public constructor(roomService: Room<ChessPayloads>) {
         super(roomService);
         this.followRoomManager();
     }

@@ -1,10 +1,18 @@
-import { ToReworkMessage } from './to-rework-message';
+import { RtcSignal } from '../webrtc';
+import { EnvelopesOf } from './envelope';
+import MessageOriginType from './message-origin.types';
 
 export enum NegotiatorMessageType {
-    SIGNAL = 'signal',
-    REMOTE_SIGNAL = 'remoteSignal'
+    SIGNAL = 'signal'
 }
 
-export interface NegotiatorMessage<U> extends ToReworkMessage<U> {
-    type: NegotiatorMessageType;
+export interface SignalPayload {
+    to: string;
+    signal: RtcSignal;
 }
+
+export interface NegotiatorPayloads {
+    [NegotiatorMessageType.SIGNAL]: SignalPayload;
+}
+
+export type NegotiatorMessage = EnvelopesOf<MessageOriginType.NEGOTIATOR, NegotiatorPayloads>;

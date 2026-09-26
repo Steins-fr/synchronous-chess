@@ -1,6 +1,7 @@
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
+import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import SynchronousChessOnlineHostGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-host-game-session';
 import SynchronousChessOnlinePeerGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-peer-game-session';
 import { Player } from '@app/services/room-manager/classes/player/player';
@@ -10,7 +11,7 @@ import { Subject } from 'rxjs';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 
 describe('SynchronousChessGameSessionBuilder', () => {
-    let roomSpy: any; // Room<any>
+    let roomSpy: any; // Room<ChessPayloads>
     let initiatorGetterSpy: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
@@ -34,7 +35,7 @@ describe('SynchronousChessGameSessionBuilder', () => {
     test('should create an instance of SynchronousChessOnlineHostGameSession', () => {
         initiatorGetterSpy.mockReturnValue(true);
 
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<any>);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<ChessPayloads>);
 
         expect(session instanceof SynchronousChessOnlineHostGameSession).toBeTruthy();
     });
@@ -42,7 +43,7 @@ describe('SynchronousChessGameSessionBuilder', () => {
     test('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
         initiatorGetterSpy.mockReturnValue(false);
 
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<any>);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<ChessPayloads>);
 
         expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
     });

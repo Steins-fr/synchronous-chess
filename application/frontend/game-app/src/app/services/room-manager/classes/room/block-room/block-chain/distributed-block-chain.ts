@@ -1,9 +1,16 @@
 import { DefaultUrlSerializer, UrlTree } from '@angular/router';
-import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import {
+    BlockChainMessage,
+    BlockChainMessageType,
+    BlockInterval,
+    NegotiationPayload,
+    ReceivedBlockChainMessage
+} from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
+import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { BlockRoomInterface } from '../block-room.interface';
-import { Block, PlayerData } from './block';
+import { Block } from './block';
 import { keyPairAlgorithm } from './block-chain.constants';
 import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
@@ -12,27 +19,6 @@ import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Player } from '../../../player/player';
 import { WebRtcPlayer } from '../../../player/web-rtc-player';
 
-export enum BlockChainMessageType {
-    NEW_BLOCK_APPROVED = 'newBlockApproved',
-    NEW_BLOCK_DECLINED = 'newBlockDeclined',
-    NEGOTIATION_REQUEST = 'getPublicKeyRequest',
-    NEGOTIATION_RESPONSE = 'getPublicKeyResponse',
-    GET_LAST_BLOCK_REQUEST = 'getLastBlockRequest',
-    GET_LAST_BLOCK_RESPONSE = 'getLastBlockResponse',
-    GET_BLOCKS_REQUEST = 'getBlocksRequest',
-    GET_BLOCKS_RESPONSE = 'getBlocksResponse',
-}
-
-interface BlockInterval {
-    from: number;
-    to: number;
-}
-
-interface NegotiationPayload {
-    publicKey: JsonWebKey;
-    nbParticipants: number;
-}
-
 export enum BlockChainState {
     INITIALISING = 'initialising',
     UP_TO_DATE = 'upToDate',
@@ -40,22 +26,8 @@ export enum BlockChainState {
 }
 
 type MessageHandlers = {
-    [BlockChainMessageType.NEW_BLOCK_APPROVED]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
-    [BlockChainMessageType.NEW_BLOCK_DECLINED]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
-    [BlockChainMessageType.NEGOTIATION_REQUEST]: (message: BlockChainMessage<void>) => Promise<BlockChainState>;
-    [BlockChainMessageType.NEGOTIATION_RESPONSE]: (message: BlockChainMessage<NegotiationPayload>) => Promise<BlockChainState>;
-    [BlockChainMessageType.GET_LAST_BLOCK_REQUEST]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
-    [BlockChainMessageType.GET_LAST_BLOCK_RESPONSE]: (message: BlockChainMessage<Block>) => Promise<BlockChainState>;
-    [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message: BlockChainMessage<BlockInterval>) => Promise<BlockChainState>;
-    [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message: BlockChainMessage<Block[]>) => Promise<BlockChainState>;
+    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>) => Promise<BlockChainState>;
 };
-
-export type BlockChainMessageTypes =
-    BlockChainMessage<Block>
-    & BlockChainMessage<void>
-    & BlockChainMessage<NegotiationPayload>
-    & BlockChainMessage<BlockInterval>
-    & BlockChainMessage<Block[]>;
 
 export class DistributedBlockChain {
     public static async createKeyPair(): Promise<CryptoKeyPair> {
@@ -71,14 +43,14 @@ export class DistributedBlockChain {
     private localBlock?: Block;
 
     private readonly messageHandler: MessageHandlers = {
-        [BlockChainMessageType.NEW_BLOCK_APPROVED]: (message: BlockChainMessage<Block>): Promise<BlockChainState> => this.onNewBlockApproved(message),
-        [BlockChainMessageType.NEW_BLOCK_DECLINED]: (message: BlockChainMessage<Block>): Promise<BlockChainState> => this.onNewBlockDeclined(message),
-        [BlockChainMessageType.NEGOTIATION_REQUEST]: (message: BlockChainMessage<void>): Promise<BlockChainState> => this.onNegotiationRequest(message),
-        [BlockChainMessageType.NEGOTIATION_RESPONSE]: (message: BlockChainMessage<NegotiationPayload>): Promise<BlockChainState> => this.onNegotiationResponse(message),
-        [BlockChainMessageType.GET_LAST_BLOCK_REQUEST]: (message: BlockChainMessage<Block>): Promise<BlockChainState> => this.onGetLastBlockRequest(message),
-        [BlockChainMessageType.GET_LAST_BLOCK_RESPONSE]: (message: BlockChainMessage<Block>): Promise<BlockChainState> => this.onGetLastBlockResponse(message),
-        [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message: BlockChainMessage<BlockInterval>): Promise<BlockChainState> => this.onGetBlocksRequest(message),
-        [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message: BlockChainMessage<Block[]>): Promise<BlockChainState> => this.onGetBlocksResponse(message)
+        [BlockChainMessageType.NEW_BLOCK_APPROVED]: (message) => this.onNewBlockApproved(message),
+        [BlockChainMessageType.NEW_BLOCK_DECLINED]: (message) => this.onNewBlockDeclined(message),
+        [BlockChainMessageType.NEGOTIATION_REQUEST]: (message) => this.onNegotiationRequest(message),
+        [BlockChainMessageType.NEGOTIATION_RESPONSE]: (message) => this.onNegotiationResponse(message),
+        [BlockChainMessageType.GET_LAST_BLOCK_REQUEST]: (message) => this.onGetLastBlockRequest(message),
+        [BlockChainMessageType.GET_LAST_BLOCK_RESPONSE]: (message) => this.onGetLastBlockResponse(message),
+        [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message) => this.onGetBlocksRequest(message),
+        [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message) => this.onGetBlocksResponse(message)
     };
 
     public constructor(
@@ -86,12 +58,9 @@ export class DistributedBlockChain {
         private readonly myKeyPair: CryptoKeyPair,
     ) {}
 
-    public handle(message: BlockChainMessageTypes): void {
-        this.messageHandler[message.type](message).then((state: BlockChainState) => this.updateState(state));
-    }
-
-    public support(message: BlockChainMessage): boolean {
-        return this.messageHandler[message.type] !== undefined;
+    public handle<K extends BlockChainMessageType>(message: ReceivedBlockChainMessage<K>): void {
+        const handler: MessageHandlers[K] = this.messageHandler[message.type];
+        handler(message).then((state: BlockChainState) => this.updateState(state));
     }
 
     public initiate(): void {
@@ -106,21 +75,21 @@ export class DistributedBlockChain {
         }
     }
 
-    public async transmitMessage<T>(type: string, message: T): Promise<void> {
+    public async transmitMessage(type: string, payload: unknown): Promise<void> {
         if (!this.blockRoomService.localPlayer) {
             return;
         }
 
-        const playerData: PlayerData = {
+        const playerData: AppMessage = {
             from: this.blockRoomService.localPlayer.name,
             type,
-            payload: message
+            payload
         };
 
         await this.transmitLocalBlock(playerData);
     }
 
-    private async transmitLocalBlock(playerData?: PlayerData): Promise<void> {
+    private async transmitLocalBlock(playerData?: AppMessage): Promise<void> {
         const lastBlock: Block = this.blockChain.getLatestBlock();
         const data = playerData ?? this.localBlock?.data;
 
@@ -144,16 +113,15 @@ export class DistributedBlockChain {
         await this.approveBlockFor(this.localBlock, this.localParticipant);
     }
 
-    private sendMessage(roomServiceMessage: BlockChainMessage<Block>): void {
+    private sendMessage(roomServiceMessage: BlockChainMessage): void {
         this.participants.forEach((participant: Participant) => {
             participant.sendMessage(roomServiceMessage);
         });
     }
 
-    private sendBlock(block: Block, type: BlockChainMessageType): void {
-        const roomServiceMessage: BlockChainMessage<Block> = {
+    private sendBlock(block: Block, type: BlockChainMessageType.NEW_BLOCK_APPROVED | BlockChainMessageType.NEW_BLOCK_DECLINED): void {
+        const roomServiceMessage: BlockChainMessage = {
             type,
-            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             payload: block,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
         };
@@ -179,12 +147,8 @@ export class DistributedBlockChain {
         this.sendBlock(block, BlockChainMessageType.NEW_BLOCK_DECLINED);
     }
 
-    public onMessage(message: BlockChainMessageTypes): void {
-        if (message.origin !== MessageOriginType.BLOCK_ROOM_SERVICE) {
-            return;
-        }
-
-        if (this.support(message)) {
+    public onMessage(message: ReceivedMessage): void {
+        if (message.origin === MessageOriginType.BLOCK_ROOM_SERVICE) {
             this.handle(message);
         }
     }
@@ -198,10 +162,9 @@ export class DistributedBlockChain {
         }
     }
 
-    private async onNegotiationRequest(message: BlockChainMessage<void>): Promise<BlockChainState> {
+    private async onNegotiationRequest(message: ReceivedBlockChainMessage<BlockChainMessageType.NEGOTIATION_REQUEST>): Promise<BlockChainState> {
 
-        const response: BlockChainMessage<NegotiationPayload> = {
-            from: '', // Will be set by the participant/player, TODO: Simplify the interface
+        const response: BlockChainMessage = {
             type: BlockChainMessageType.NEGOTIATION_RESPONSE,
             payload: {
                 nbParticipants: this.participants.size,
@@ -215,7 +178,7 @@ export class DistributedBlockChain {
         return this.state;
     }
 
-    private async onNegotiationResponse(message: BlockChainMessage<NegotiationPayload>): Promise<BlockChainState> {
+    private async onNegotiationResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.NEGOTIATION_RESPONSE>): Promise<BlockChainState> {
 
         const negotiationPayload: NegotiationPayload = message.payload;
 
@@ -305,48 +268,47 @@ export class DistributedBlockChain {
         this.blocksToValidate.declineBlock(block, participant);
     }
 
-    private async validateMessage(message: BlockChainMessage<Block>): Promise<void> {
-        const blockFrom: Participant | undefined = this.participants.get(message.payload.data.from);
+    private async validateBlock(block: Block): Promise<void> {
+        const blockFrom: Participant | undefined = this.participants.get(block.data.from);
 
         if (!blockFrom) {
             throw new Error('Unknown participant');
         }
 
-        if (!await Chain.verifyMessage(message.payload.signature, message.payload.hash, blockFrom.publicKey)) {
+        if (!await Chain.verifyMessage(block.signature, block.hash, blockFrom.publicKey)) {
             throw new Error('Someone try to play as another player');
         }
     }
 
-    private async onNewBlockApproved(message: BlockChainMessage<Block>): Promise<BlockChainState> {
+    private async onNewBlockApproved(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK_APPROVED>): Promise<BlockChainState> {
 
         const blockFrom: Participant | undefined = this.participants.get(message.payload.data.from);
         const blockApprovedBy: Participant | undefined = this.participants.get(message.from);
 
         if (blockFrom && blockApprovedBy) {
-            await this.validateMessage(message);
+            await this.validateBlock(message.payload);
             await this.approveBlockFor(message.payload, blockApprovedBy);
         }
 
         return BlockChainState.UP_TO_DATE;
     }
 
-    private async onNewBlockDeclined(message: BlockChainMessage<Block>): Promise<BlockChainState> {
+    private async onNewBlockDeclined(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK_DECLINED>): Promise<BlockChainState> {
 
         const blockFrom: Participant | undefined = this.participants.get(message.payload.data.from);
         const blockDeclinedBy: Participant | undefined = this.participants.get(message.from);
 
         if (blockFrom && blockDeclinedBy) {
-            await this.validateMessage(message);
+            await this.validateBlock(message.payload);
             await this.declineBlockFor(message.payload, blockDeclinedBy);
         }
 
         return BlockChainState.UP_TO_DATE;
     }
 
-    private async onGetLastBlockRequest(message: RoomMessage): Promise<BlockChainState> {
+    private async onGetLastBlockRequest(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_LAST_BLOCK_REQUEST>): Promise<BlockChainState> {
 
-        const roomServiceMessage: BlockChainMessage<Block> = {
-            from: '', // Will be set by the participant/player, TODO: Simplify the interface
+        const roomServiceMessage: BlockChainMessage = {
             type: BlockChainMessageType.GET_LAST_BLOCK_RESPONSE,
             payload: this.blockChain.getLatestBlock(),
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -357,14 +319,13 @@ export class DistributedBlockChain {
         return this.state;
     }
 
-    private async onGetLastBlockResponse(message: BlockChainMessage<Block>): Promise<BlockChainState> {
+    private async onGetLastBlockResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_LAST_BLOCK_RESPONSE>): Promise<BlockChainState> {
 
         const block: Block = message.payload;
         const lastBlock: Block = this.blockChain.getLatestBlock();
 
         if (block.hash !== lastBlock.hash && block.index > lastBlock.index) {
-            const roomServiceMessage: BlockChainMessage<BlockInterval> = {
-                from: '', // Will be set by the participant/player, TODO: Simplify the interface
+            const roomServiceMessage: BlockChainMessage = {
                 type: BlockChainMessageType.GET_BLOCKS_REQUEST,
                 payload: { from: lastBlock.index + 1, to: block.index },
                 origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -378,7 +339,7 @@ export class DistributedBlockChain {
         return BlockChainState.UP_TO_DATE;
     }
 
-    private async onGetBlocksRequest(message: BlockChainMessage<BlockInterval>): Promise<BlockChainState> {
+    private async onGetBlocksRequest(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_REQUEST>): Promise<BlockChainState> {
         // Answer can't do response
         const interval: BlockInterval = message.payload;
 
@@ -388,8 +349,7 @@ export class DistributedBlockChain {
             blocks.push(this.blockChain.getBlock(i));
         }
 
-        const roomServiceMessage: BlockChainMessage<Block[]> = {
-            from: '', // Will be set by the participant/player, TODO: Simplify the interface
+        const roomServiceMessage: BlockChainMessage = {
             type: BlockChainMessageType.GET_BLOCKS_RESPONSE,
             payload: blocks,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -400,9 +360,9 @@ export class DistributedBlockChain {
         return this.state;
     }
 
-    private async onGetBlocksResponse(message: BlockChainMessage<Block[]>): Promise<BlockChainState> {
+    private async onGetBlocksResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_RESPONSE>): Promise<BlockChainState> {
 
-        const blocks: Block[] = message.payload;
+        const blocks: ReadonlyArray<Block> = message.payload;
 
         try {
             for (const block of blocks) {
@@ -426,7 +386,6 @@ export class DistributedBlockChain {
     }
 
     protected sendToParticipant(playerName: string, message: BlockChainMessage): void {
-        message.from = this.blockRoomService.localPlayer.name;
         const participant: Participant | undefined = this.participants.get(playerName);
 
         if (participant) {
@@ -452,7 +411,6 @@ export class DistributedBlockChain {
 
     public sendNegotiation(participantName: string): void {
         const roomServiceMessage: BlockChainMessage = {
-            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.NEGOTIATION_REQUEST,
             payload: null,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE
@@ -463,7 +421,6 @@ export class DistributedBlockChain {
 
     private getParticipantLastBlock(participantName: string): void {
         const roomServiceMessage: BlockChainMessage = {
-            from: '', // Will be set by the participant/player, TODO: Simplify the interface
             type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
             payload: null,
             origin: MessageOriginType.BLOCK_ROOM_SERVICE

@@ -1,8 +1,8 @@
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
+import { isNetworkMessage, NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { PlayerMessage, PlayerMessageType } from '@app/services/room-manager/classes/webrtc/messages/player-message';
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
@@ -15,7 +15,7 @@ export class WebRtcPlayer extends Player {
 
     private readonly subs: Subscription[] = [];
 
-    private readonly messageSubject = new Subject<ToReworkMessage>();
+    private readonly messageSubject = new Subject<ReceivedMessage>();
     public readonly message$ = this.messageSubject.asObservable();
     private readonly disconnectedSubject = new Subject<void>();
     public readonly disconnected$ = this.disconnectedSubject.asObservable();
@@ -31,7 +31,7 @@ export class WebRtcPlayer extends Player {
 
         this.states = this.webRTC.states;
         this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
-        this.subs.push(this.webRTC.data.subscribe((data: Message) => this.onPeerData(data as ToReworkMessage)));
+        this.subs.push(this.webRTC.data.subscribe((data: Message) => this.onPeerData(data)));
 
         this.pingInterval();
     }
@@ -48,17 +48,16 @@ export class WebRtcPlayer extends Player {
         this.disconnectedSubject.complete();
     }
 
-    public override sendData(message: ToReworkMessage): void {
+    public override sendData(message: NetworkMessage): void {
         const id: number = this.webRTC.sendMessage(message);
-        const messageIsPingPong = 'type' in message && (message['type'] === PlayerMessageType.PING || message['type'] === PlayerMessageType.PONG);
 
-        if (message.origin !== MessageOriginType.PLAYER && !messageIsPingPong) {
+        if (message.origin !== MessageOriginType.PLAYER) {
             TimedLogger.log(
                 (new Date()).getTime().toString().substr(-5),
                 id,
                 `TO ${ this.name }`,
-                'type' in message ? message['type'] : null,
-                message['payload'] ?? null,
+                message.type,
+                message.payload,
             );
         }
     }
@@ -73,8 +72,7 @@ export class WebRtcPlayer extends Player {
             const markId: string = this.markIdGenerator.next().value;
             window.performance.mark(`${ WebRtcPlayer.PING_MARK }-${ markId }`);
 
-            const pingMessage: PlayerMessage<string> = {
-                from: '', // Filled by sendData, TODO: refactor
+            const pingMessage: PlayerMessage = {
                 type: PlayerMessageType.PING,
                 origin: MessageOriginType.PLAYER,
                 payload: markId
@@ -95,9 +93,8 @@ export class WebRtcPlayer extends Player {
         }
     }
 
-    private onPlayerPingMessage(playerMessage: PlayerMessage<string>): void {
-        const message: PlayerMessage<string> = {
-            from: '', // Filled by sendData, TODO: refactor
+    private onPlayerPingMessage(playerMessage: PlayerMessage): void {
+        const message: PlayerMessage = {
             type: PlayerMessageType.PONG,
             origin: MessageOriginType.PLAYER,
             payload: playerMessage.payload
@@ -105,7 +102,7 @@ export class WebRtcPlayer extends Player {
         this.sendData(message);
     }
 
-    private onPlayerPongMessage(playerMessage: PlayerMessage<string>): void {
+    private onPlayerPongMessage(playerMessage: PlayerMessage): void {
         const pingMark: string = `${ WebRtcPlayer.PING_MARK }-${ playerMessage.payload }`;
         const pongMark: string = `${ WebRtcPlayer.PONG_MARK }-${ playerMessage.payload }`;
         const measureName: string = `${ pingMark }_${ pongMark }`;
@@ -122,7 +119,7 @@ export class WebRtcPlayer extends Player {
         window.performance.clearMeasures(measureName);
     }
 
-    private onPlayerMessage(playerMessage: PlayerMessage<string>): void {
+    private onPlayerMessage(playerMessage: PlayerMessage): void {
         switch (playerMessage.type) {
             case PlayerMessageType.PING:
                 this.onPlayerPingMessage(playerMessage);
@@ -133,23 +130,25 @@ export class WebRtcPlayer extends Player {
         }
     }
 
-    private onPeerData(message: ToReworkMessage): void {
-        const playerMessage: PlayerMessage = message as PlayerMessage;
-        if (playerMessage.origin && playerMessage.origin === MessageOriginType.PLAYER) {
-            this.onPlayerMessage(playerMessage as PlayerMessage<string>);
+    private onPeerData(data: Message): void {
+        if (!isNetworkMessage(data)) {
+            console.warn(`Invalid message from ${ this.name }`, data);
             return;
         }
-        message.from = this.name;
-        const messageIsPingPong = 'type' in message && (message['type'] === PlayerMessageType.PING || message['type'] === PlayerMessageType.PONG);
 
-        if (!messageIsPingPong) {
-            TimedLogger.log(
-                (new Date()).getTime().toString().substr(-5),
-                `FROM ${ message.from }`,
-                'type' in message ? message['type'] : null,
-                message['payload'] ?? null,
-            );
+        if (data.origin === MessageOriginType.PLAYER) {
+            this.onPlayerMessage(data);
+            return;
         }
+
+        const message: ReceivedMessage = { ...data, from: this.name };
+
+        TimedLogger.log(
+            (new Date()).getTime().toString().substr(-5),
+            `FROM ${ message.from }`,
+            message.type,
+            message.payload,
+        );
 
         this.messageSubject.next(message);
     }

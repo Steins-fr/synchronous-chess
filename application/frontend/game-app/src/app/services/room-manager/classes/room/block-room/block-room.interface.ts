@@ -9,8 +9,6 @@ export interface BlockRoomInterface {
 
     readonly players: Signal<ReadonlyArray<Readonly<Player>>>;
 
-    transmitMessage<T>(type: string, message: T): void;
-
     notifyMessage(block: Block): void;
 
     clear(): void;

@@ -1,16 +1,14 @@
-import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
-import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Block } from './block-chain/block';
-import { BlockChainMessageTypes, DistributedBlockChain } from './block-chain/distributed-block-chain';
+import { DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { BlockRoomInterface } from './block-room.interface';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Player } from '../../player/player';
 import { RoomNetwork } from '../../room-network/room-network';
 
-export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
+export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInterface {
 
     private readonly blockChain: DistributedBlockChain;
 
@@ -20,7 +18,7 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
 
     public constructor(
         roomApi: RoomSocketApi,
-        roomConnection: RoomNetwork<RoomMessage>,
+        roomConnection: RoomNetwork,
         keyPair: CryptoKeyPair,
     ) {
         super(roomApi, roomConnection);
@@ -34,25 +32,19 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
         this.blockChain.clear();
     }
 
-    public override transmitMessage<T>(type: string, message: T): void {
+    public override transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {
         // Do not await, there is no need to handle the result
-        void this.blockChain.transmitMessage(type, message);
+        void this.blockChain.transmitMessage(type, payload);
     }
 
-    protected override onMessage(message: BlockChainMessage): void {
-        // TODO: rework types
-        this.blockChain.onMessage(message as BlockChainMessageTypes);
+    protected override onMessage(message: ReceivedMessage): void {
+        this.blockChain.onMessage(message);
     }
 
     public notifyMessage(block: Block): void {
-        const roomServiceMessage: RoomMessage = {
-            ...block.data,
-            origin: MessageOriginType.BLOCK_ROOM_SERVICE
-        };
-        TimedLogger.log(roomServiceMessage);
+        TimedLogger.log(block.data);
 
-        // TODO: rework types
-        this.publicMessenger$.next(roomServiceMessage as RoomServiceNotification);
+        this.publicMessenger$.next(block.data);
     }
 
     protected override handleRoomPlayerAdd(player: Player): void {

@@ -1,13 +1,17 @@
 import { signal } from '@angular/core';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
+import { AppMessage, AppMessagesOf, RoomServiceMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Observable, Subject, filter, takeUntil } from 'rxjs';
 import { RoomNetwork } from '../room-network/room-network';
 import { LocalPlayer } from '../player/local-player';
 import { Player } from '../player/player';
 
-export class Room<RoomServiceNotification extends RoomMessage> {
+/**
+ * @template M map of the application message types to their payload
+ */
+export class Room<M extends object> {
     public get localPlayer(): LocalPlayer {
         return this._roomConnection.localPlayer;
     }
@@ -17,16 +21,16 @@ export class Room<RoomServiceNotification extends RoomMessage> {
     private readonly _queue = signal<ReadonlyArray<string>>([]);
     public readonly queue = this._queue.asReadonly();
 
-    protected readonly publicMessenger$ = new Subject<RoomServiceNotification>();
+    protected readonly publicMessenger$ = new Subject<AppMessage>();
     protected readonly destroyRef = new Subject<void>();
 
-    public get roomConnection(): RoomNetwork<RoomMessage> {
+    public get roomConnection(): RoomNetwork {
         return this._roomConnection;
     }
 
     public constructor(
         protected readonly roomApi: RoomSocketApi,
-        private readonly _roomConnection: RoomNetwork<RoomMessage>
+        private readonly _roomConnection: RoomNetwork
     ) {
         this._players.set([this.localPlayer]);
 
@@ -45,15 +49,11 @@ export class Room<RoomServiceNotification extends RoomMessage> {
         this.roomApi.close();
     }
 
-    // FIXME: rework messenger to be strict typed
-    public messenger(messageType: string[] | string): Observable<RoomServiceNotification> {
-        return this.publicMessenger$.asObservable().pipe(filter((message: RoomServiceNotification) => {
-            if (Array.isArray(messageType)) {
-                return messageType.includes(message.type);
-            }
-
-            return message.type === messageType;
-        }));
+    // The payload is trusted to match its type, as peers run the same application
+    public messenger<K extends keyof M & string>(messageType: K): Observable<AppMessagesOf<M, K>> {
+        return this.publicMessenger$.asObservable().pipe(
+            filter((message: AppMessage): message is AppMessagesOf<M, K> => message.type === messageType)
+        );
     }
 
     public get playerAdded$(): Observable<Player> {
@@ -68,22 +68,25 @@ export class Room<RoomServiceNotification extends RoomMessage> {
         return this._roomConnection.initiator;
     }
 
-    public transmitMessage<T>(type: string, message: T): void {
-        const roomServiceMessage: RoomMessage<string, T> = {
-            from: this.localPlayer.name,
+    public transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {
+        const roomServiceMessage: RoomServiceMessage = {
             type,
-            payload: message,
+            payload,
             origin: MessageOriginType.ROOM_SERVICE
         };
 
+        // TODO: players include the local player, whose sendData() throws. Unreached today as only BlockRoom
+        //  (which overrides this method) is instantiated. Skip local players, and decide whether the sender
+        //  should receive its own message (BlockRoom does, through notifyMessage).
         this._players().forEach((player: Readonly<Player>) => {
             player.sendData(roomServiceMessage);
         });
     }
 
-    protected onMessage(message: RoomMessage): void {
-        // TODO: rework this type
-        this.publicMessenger$.next(message as RoomServiceNotification);
+    protected onMessage(message: ReceivedMessage): void {
+        if (message.origin === MessageOriginType.ROOM_SERVICE) {
+            this.publicMessenger$.next(message);
+        }
     }
 
     public get roomName(): string {

@@ -1,4 +1,4 @@
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
+import { NetworkMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 
 export abstract class Player {
 
@@ -14,7 +14,7 @@ export abstract class Player {
 
     public abstract clear(): void;
 
-    public abstract sendData(message: ToReworkMessage): void;
+    public abstract sendData(message: NetworkMessage): void;
 
     public abstract get isLocal(): boolean;
 }
