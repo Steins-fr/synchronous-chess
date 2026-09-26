@@ -1,13 +1,8 @@
-import { NotifierFlow } from '@app/deprecated/notifier/notifier';
+import { signal } from '@angular/core';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { BehaviorSubject, Observable, Subject, Subscription, filter } from 'rxjs';
-import { RoomNetworkEventType } from '../room-network/events/room-network-event';
-import RoomNetworkPlayerAddEvent from '../room-network/events/room-network-player-add-event';
-import RoomNetworkPlayerRemoveEvent from '../room-network/events/room-network-player-remove-event';
-import RoomNetworkQueueAddEvent from '../room-network/events/room-network-queue-add-event';
-import RoomNetworkQueueRemoveEvent from '../room-network/events/room-network-queue-remove-event';
+import { Observable, Subject, filter, takeUntil } from 'rxjs';
 import { RoomNetwork } from '../room-network/room-network';
 import { LocalPlayer } from '../player/local-player';
 import { Player } from '../player/player';
@@ -17,41 +12,34 @@ export class Room<RoomServiceNotification extends RoomMessage> {
         return this._roomConnection.localPlayer;
     }
 
-    public players: Map<string, Player> = new Map<string, Player>();
-    private readonly _players$ = new BehaviorSubject<Player[]>([]);
-    public readonly players$: Observable<Player[]> = this._players$.asObservable();
-    private readonly _queue$ = new BehaviorSubject<string[]>([]);
-    public readonly queue$: Observable<string[]> = this._queue$.asObservable();
+    private readonly _players = signal<ReadonlyArray<Readonly<Player>>>([]);
+    public readonly players = this._players.asReadonly();
+    private readonly _queue = signal<ReadonlyArray<string>>([]);
+    public readonly queue = this._queue.asReadonly();
 
     protected readonly publicMessenger$ = new Subject<RoomServiceNotification>();
+    protected readonly destroyRef = new Subject<void>();
 
     public get roomConnection(): RoomNetwork<RoomMessage> {
         return this._roomConnection;
     }
 
-    private readonly roomConnectionSubscription: Subscription;
-
     public constructor(
         protected readonly roomApi: RoomSocketApi,
         private readonly _roomConnection: RoomNetwork<RoomMessage>
     ) {
-        this.addPlayer(this.localPlayer);
+        this._players.set([this.localPlayer]);
 
-        this.roomConnectionSubscription = this._roomConnection.onMessage$.subscribe((message) => this.onMessage(message));
-
-        // FIXME: rework this like blockChain
-        this._roomConnection.notifier.follow(RoomNetworkEventType.PLAYER_ADD, this, this.handleRoomPlayerAddEvent.bind(this));
-        this._roomConnection.notifier.follow(RoomNetworkEventType.PLAYER_REMOVE, this, this.handleRoomPlayerRemoveEvent.bind(this));
-        this._roomConnection.notifier.follow(RoomNetworkEventType.QUEUE_ADD, this, this.handleRoomQueueAddEvent.bind(this));
-        this._roomConnection.notifier.follow(RoomNetworkEventType.QUEUE_REMOVE, this, this.handleRoomQueueRemoveEvent.bind(this));
+        this._roomConnection.onMessage$.pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onMessage(message));
+        this._roomConnection.playerAdded$.pipe(takeUntil(this.destroyRef)).subscribe((player) => this.handleRoomPlayerAdd(player));
+        this._roomConnection.playerRemoved$.pipe(takeUntil(this.destroyRef)).subscribe((player) => this.handleRoomPlayerRemove(player));
+        this._roomConnection.queueAdded$.pipe(takeUntil(this.destroyRef)).subscribe((playerName) => this.handleRoomQueueAdd(playerName));
+        this._roomConnection.queueRemoved$.pipe(takeUntil(this.destroyRef)).subscribe((playerName) => this.handleRoomQueueRemove(playerName));
     }
 
     public clear(): void {
-        this.roomConnectionSubscription.unsubscribe();
-        this._roomConnection.notifier.unfollow(RoomNetworkEventType.PLAYER_ADD, this);
-        this._roomConnection.notifier.unfollow(RoomNetworkEventType.PLAYER_REMOVE, this);
-        this._roomConnection.notifier.unfollow(RoomNetworkEventType.QUEUE_ADD, this);
-        this._roomConnection.notifier.unfollow(RoomNetworkEventType.QUEUE_REMOVE, this);
+        this.destroyRef.next();
+        this.destroyRef.complete();
         this._roomConnection.clear();
 
         this.roomApi.close();
@@ -68,8 +56,12 @@ export class Room<RoomServiceNotification extends RoomMessage> {
         }));
     }
 
-    public get roomManagerNotifier(): NotifierFlow<RoomNetworkEventType> {
-        return this._roomConnection.notifier;
+    public get playerAdded$(): Observable<Player> {
+        return this._roomConnection.playerAdded$;
+    }
+
+    public get playerRemoved$(): Observable<Player> {
+        return this._roomConnection.playerRemoved$;
     }
 
     public get initiator(): boolean {
@@ -84,14 +76,9 @@ export class Room<RoomServiceNotification extends RoomMessage> {
             origin: MessageOriginType.ROOM_SERVICE
         };
 
-        this.players.forEach((player: Player) => {
+        this._players().forEach((player: Readonly<Player>) => {
             player.sendData(roomServiceMessage);
         });
-    }
-
-    protected addPlayer(player: Player): void {
-        this.players.set(player.name, player);
-        this._players$.next(Array.from(this.players.values()));
     }
 
     protected onMessage(message: RoomMessage): void {
@@ -103,26 +90,19 @@ export class Room<RoomServiceNotification extends RoomMessage> {
         return this._roomConnection.roomName;
     }
 
-    protected handleRoomPlayerAddEvent(event: RoomNetworkPlayerAddEvent): void {
-        const player: Player = event.payload;
-
-        this.addPlayer(player);
+    protected handleRoomPlayerAdd(player: Player): void {
+        this._players.update(players => players.filter(p => p.name !== player.name).concat(player));
     }
 
-    protected handleRoomPlayerRemoveEvent(event: RoomNetworkPlayerRemoveEvent): void {
-        const player: Player = event.payload;
-
-        this.players.delete(player.name);
-        this._players$.next(Array.from(this.players.values()));
+    protected handleRoomPlayerRemove(player: Player): void {
+        this._players.update(players => players.filter(p => p.name !== player.name));
     }
 
-    protected handleRoomQueueAddEvent(event: RoomNetworkQueueAddEvent): void {
-        const playerName: string = event.payload;
-        this._queue$.next(this._queue$.getValue().concat(playerName));
+    protected handleRoomQueueAdd(playerName: string): void {
+        this._queue.update(queue => queue.concat(playerName));
     }
 
-    protected handleRoomQueueRemoveEvent(event: RoomNetworkQueueRemoveEvent): void {
-        const playerName: string = event.payload;
-        this._queue$.next(this._queue$.getValue().filter((name: string) => name !== playerName));
+    protected handleRoomQueueRemove(playerName: string): void {
+        this._queue.update(queue => queue.filter((name: string) => name !== playerName));
     }
 }

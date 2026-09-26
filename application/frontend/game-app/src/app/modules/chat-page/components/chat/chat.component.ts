@@ -5,6 +5,7 @@ import {
     DestroyRef,
     afterEveryRender,
     afterNextRender,
+    computed,
     effect,
     inject,
     input,
@@ -62,10 +63,10 @@ export class ChatComponent {
     protected readonly sendInput = new FormControl<string>('');
     protected readonly newMessage = signal<number>(0);
     protected readonly isSending = signal<boolean>(false);
-    protected readonly chatMessages = signal<ChatMessage[]>([]);
+    protected readonly chatMessages = signal<ReadonlyArray<Readonly<ChatMessage>>>([]);
     protected readonly viewingHistory = signal<boolean>(false);
-    protected readonly players = signal<Player[]>([]);
-    protected readonly queuingPlayers = signal<string[]>([]);
+    protected readonly players = computed<ReadonlyArray<Readonly<Player>>>(() => this.room()?.players() ?? []);
+    protected readonly queuingPlayers = computed<ReadonlyArray<string>>(() => this.room()?.queue() ?? []);
     private readonly messengerSignal = signal<RoomMessage<ChatMessengerType, string> | null>(null);
     private roomSubscriptions: Subscription[] = [];
 
@@ -85,12 +86,6 @@ export class ChatComponent {
 
             if (room) {
                 this.roomSubscriptions.push(
-                    this.currentRoom.players$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((players: Player[]) => {
-                        this.players.set(players);
-                    }),
-                    this.currentRoom.queue$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((queue: string[]) => {
-                        this.queuingPlayers.set(queue);
-                    }),
                     this.currentRoom.messenger(ChatMessengerType.CHAT_MESSAGE).pipe(takeUntilDestroyed(this.destroyRef)).subscribe((message: RoomMessage<ChatMessengerType, string>) => {
                         this.messengerSignal.set(message);
                     })

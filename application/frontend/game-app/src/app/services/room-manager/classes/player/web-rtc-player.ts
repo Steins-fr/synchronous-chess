@@ -1,4 +1,3 @@
-import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
@@ -6,19 +5,8 @@ import { PlayerMessage, PlayerMessageType } from '@app/services/room-manager/cla
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { Player } from './player';
-
-export enum PlayerEventType {
-    DISCONNECTED = 'disconnected',
-    MESSAGE = 'message'
-}
-
-export interface PlayerEvent<T extends Message = Message> {
-    type: PlayerEventType;
-    name: string; // Player name
-    message: T;
-}
 
 export class WebRtcPlayer extends Player {
 
@@ -27,7 +15,10 @@ export class WebRtcPlayer extends Player {
 
     private readonly subs: Subscription[] = [];
 
-    private readonly _notifier = new Notifier<PlayerEventType, PlayerEvent>();
+    private readonly messageSubject = new Subject<ToReworkMessage>();
+    public readonly message$ = this.messageSubject.asObservable();
+    private readonly disconnectedSubject = new Subject<void>();
+    public readonly disconnected$ = this.disconnectedSubject.asObservable();
 
     public readonly states: Observable<WebrtcStates>; // For external debugging
     private connectionState: RTCIceConnectionState = 'connected';
@@ -45,10 +36,6 @@ export class WebRtcPlayer extends Player {
         this.pingInterval();
     }
 
-    public get notifier(): NotifierFlow<PlayerEventType> {
-        return this._notifier;
-    }
-
     public override clear(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
         if (this.webRTC) {
@@ -57,6 +44,8 @@ export class WebRtcPlayer extends Player {
         if (this.pingTimerId !== undefined) {
             clearInterval(this.pingTimerId);
         }
+        this.messageSubject.complete();
+        this.disconnectedSubject.complete();
     }
 
     public override sendData(message: ToReworkMessage): void {
@@ -95,14 +84,6 @@ export class WebRtcPlayer extends Player {
         }, pingInterval);
     }
 
-    private pushEvent(type: PlayerEventType, message: Message): void {
-        this._notifier.notify(type, {
-            type,
-            message,
-            name: this.name
-        });
-    }
-
     private onPeerStates(states: WebrtcStates): void {
         if (this.connectionState === states.iceConnection) {
             return; // Do nothing, it's the same state
@@ -110,7 +91,7 @@ export class WebRtcPlayer extends Player {
         this.connectionState = states.iceConnection;
 
         if (this.connectionState === 'disconnected') {
-            this.pushEvent(PlayerEventType.DISCONNECTED, {} as Message);
+            this.disconnectedSubject.next();
         }
     }
 
@@ -170,6 +151,6 @@ export class WebRtcPlayer extends Player {
             );
         }
 
-        this.pushEvent(PlayerEventType.MESSAGE, message);
+        this.messageSubject.next(message);
     }
 }

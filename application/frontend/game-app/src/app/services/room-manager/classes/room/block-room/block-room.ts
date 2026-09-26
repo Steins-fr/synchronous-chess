@@ -7,7 +7,7 @@ import { Block } from './block-chain/block';
 import { BlockChainMessageTypes, DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { BlockRoomInterface } from './block-room.interface';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
-import RoomNetworkPlayerAddEvent from '../../room-network/events/room-network-player-add-event';
+import { Player } from '../../player/player';
 import { RoomNetwork } from '../../room-network/room-network';
 
 export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room<RoomServiceNotification> implements BlockRoomInterface {
@@ -55,9 +55,9 @@ export class BlockRoom<RoomServiceNotification extends RoomMessage> extends Room
         this.publicMessenger$.next(roomServiceMessage as RoomServiceNotification);
     }
 
-    protected override handleRoomPlayerAddEvent(event: RoomNetworkPlayerAddEvent): void {
-        super.handleRoomPlayerAddEvent(event);
+    protected override handleRoomPlayerAdd(player: Player): void {
+        super.handleRoomPlayerAdd(player);
 
-        this.blockChain.onNewPlayer(event.payload);
+        this.blockChain.onNewPlayer(player);
     }
 }

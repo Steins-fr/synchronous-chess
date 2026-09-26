@@ -16,6 +16,7 @@ This is an Angular TypeScript project with the following characteristics:
 ## Code Conventions
 
 - Zoneless, so use `signal` for all reactive variables used in templates
+- Type `signal` / `computed` generics as readonly: `ReadonlyArray<Readonly<T>>` for arrays, `ReadonlyMap<K, Readonly<V>>` for maps (`Readonly<>` is omitted for primitives, e.g. `ReadonlyArray<string>`)
 - Inject dependencies using `inject()` function
 - Use `takeUntilDestroyed()` for subscription cleanup
 - Input/Output uses `input()`, `model()` and `output()` signal function with `readonly` modifier

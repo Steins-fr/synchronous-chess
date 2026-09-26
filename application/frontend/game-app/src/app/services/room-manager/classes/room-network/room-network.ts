@@ -1,17 +1,12 @@
-import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
+import { signal } from '@angular/core';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { Negotiator, NegotiatorEvent, NegotiatorEventType } from '../negotiator/negotiator';
+import { Subject } from 'rxjs';
+import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
 import { LocalPlayer } from '../player/local-player';
-import { Player, PlayerEvent, PlayerEventType } from '../player/player';
+import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
-import RoomNetworkEvent, { RoomNetworkEventType } from './events/room-network-event';
-import RoomNetworkPlayerAddEvent from './events/room-network-player-add-event';
-import RoomNetworkPlayerRemoveEvent from './events/room-network-player-remove-event';
-import RoomNetworkQueueAddEvent from './events/room-network-queue-add-event';
-import RoomNetworkQueueRemoveEvent from './events/room-network-queue-remove-event';
 
 export abstract class RoomNetwork<MessageType extends Message> {
     private readonly _localPlayer: LocalPlayer;
@@ -21,13 +16,20 @@ export abstract class RoomNetwork<MessageType extends Message> {
     }
 
     protected players: Map<string, Player> = new Map<string, Player>();
-    private readonly negotiators = new BehaviorSubject<ReadonlyMap<string, Negotiator>>(new Map());
-    public readonly negotiators$ = this.negotiators.asObservable();
+    private readonly _negotiators = signal<ReadonlyMap<string, Readonly<Negotiator>>>(new Map());
+    public readonly negotiators = this._negotiators.asReadonly();
     public abstract readonly initiator: boolean;
 
-    protected readonly _notifier = new Notifier<RoomNetworkEventType, RoomNetworkEvent>();
     private readonly onMessageSubject = new Subject<MessageType>();
     public readonly onMessage$ = this.onMessageSubject.asObservable();
+    private readonly playerAddedSubject = new Subject<Player>();
+    public readonly playerAdded$ = this.playerAddedSubject.asObservable();
+    private readonly playerRemovedSubject = new Subject<Player>();
+    public readonly playerRemoved$ = this.playerRemovedSubject.asObservable();
+    private readonly queueAddedSubject = new Subject<string>();
+    public readonly queueAdded$ = this.queueAddedSubject.asObservable();
+    private readonly queueRemovedSubject = new Subject<string>();
+    public readonly queueRemoved$ = this.queueRemovedSubject.asObservable();
 
     protected constructor(
         protected readonly roomSocketApi: RoomSocketApi,
@@ -36,10 +38,6 @@ export abstract class RoomNetwork<MessageType extends Message> {
     ) {
         this._localPlayer = new LocalPlayer(localPlayerName);
         this.players.set(this._localPlayer.name, this._localPlayer);
-    }
-
-    public get notifier(): NotifierFlow<RoomNetworkEventType> {
-        return this._notifier;
     }
 
     protected transmitMessage(message: ToReworkMessage): void {
@@ -52,58 +50,43 @@ export abstract class RoomNetwork<MessageType extends Message> {
     }
 
     protected isPlayerNameAlreadyInRoom(playerName: string): boolean {
-        const negotiators = this.negotiators.getValue();
-        return this.players.has(playerName) || negotiators.has(playerName);
-    }
-
-    private pushEvent(event: RoomNetworkEvent): void {
-        this._notifier.notify(event.type, event);
+        return this.players.has(playerName) || this._negotiators().has(playerName);
     }
 
     // Remote player creation
 
     protected addNegotiator(negotiator: Negotiator): void {
-        const current = new Map(this.negotiators.getValue());
-        current.set(negotiator.playerName, negotiator);
-        this.negotiators.next(current);
-        this.subscribeNegotiatorConnected(negotiator);
-        this.subscribeNegotiatorDisconnected(negotiator);
-        this.pushEvent(new RoomNetworkQueueAddEvent(negotiator.playerName));
+        this._negotiators.update(negotiators => new Map(negotiators).set(negotiator.playerName, negotiator));
+        this.subscribeNegotiatorConnectionState(negotiator);
+        this.queueAddedSubject.next(negotiator.playerName);
     }
 
-    protected getNegotiator(playerName: string): Negotiator | undefined {
-        return this.negotiators.getValue().get(playerName);
+    protected getNegotiator(playerName: string): Readonly<Negotiator> | undefined {
+        return this._negotiators().get(playerName);
     }
 
     protected addPlayer(player: WebRtcPlayer): void {
         this.players.set(player.name, player);
         this.subscribeData(player);
         this.subscribeOnDisconnected(player);
-        this.pushEvent(new RoomNetworkPlayerAddEvent(player));
+        this.playerAddedSubject.next(player);
     }
 
     protected abstract onRoomMessage(message: Message, fromPlayer: string): void;
 
     // Player events
     protected subscribeData(player: WebRtcPlayer): void {
-        player.notifier.follow(PlayerEventType.MESSAGE, this, (playerEvent: PlayerEvent<MessageType>) => {
-            const message = playerEvent.message;
-            this.onRoomMessage(message, playerEvent.name);
-            this.onMessageSubject.next(message);
+        player.message$.subscribe((message: Message) => {
+            this.onRoomMessage(message, player.name);
+            this.onMessageSubject.next(message as MessageType);
         });
     }
 
     private subscribeOnDisconnected(player: WebRtcPlayer): void {
-        player.notifier.follow(PlayerEventType.DISCONNECTED, this, (playerEvent: PlayerEvent) => {
-            if (this.players.has(playerEvent.name)) {
-                const p: Player | undefined = this.players.get(playerEvent.name);
-
-                if (!p) {
-                    throw new Error('Player is not defined');
-                }
-
-                this.onPlayerDisconnected(p);
-                this.removePlayer(p);
+        player.disconnected$.subscribe(() => {
+            if (this.players.get(player.name) === player) {
+                this.onPlayerDisconnected(player);
+                this.removePlayer(player);
             }
         });
     }
@@ -113,7 +96,7 @@ export abstract class RoomNetwork<MessageType extends Message> {
 
     private removePlayer(player: Player): void {
         if (this.players.has(player.name)) {
-            this.pushEvent(new RoomNetworkPlayerRemoveEvent(player));
+            this.playerRemovedSubject.next(player);
             this.players.delete(player.name);
             player.clear();
         }
@@ -121,51 +104,59 @@ export abstract class RoomNetwork<MessageType extends Message> {
 
     // Negotiator events
 
-    private subscribeNegotiatorConnected(negotiator: Negotiator): void {
-        negotiator.notifier.follow(NegotiatorEventType.CONNECTED, this, (negotiatorEvent: NegotiatorEvent) => {
-            const negotiators = this.negotiators.getValue();
-            if (negotiators.has(negotiatorEvent.playerName)) {
-                const negotiator = negotiators.get(negotiatorEvent.playerName);
-                if (!negotiator) {
-                    throw new Error('Negotiator is not defined');
-                }
-
-                const player = new WebRtcPlayer(negotiator.playerName, negotiator.webRTC);
-                this.removeNegotiator(negotiatorEvent.playerName);
-                this.addPlayer(player);
-                this.onPlayerConnected(player);
+    private subscribeNegotiatorConnectionState(negotiator: Negotiator): void {
+        negotiator.connectionState$.subscribe((connectionState: NegotiatorConnectionState) => {
+            switch (connectionState) {
+                case NegotiatorConnectionState.CONNECTED:
+                    this.onNegotiatorConnected(negotiator);
+                    break;
+                case NegotiatorConnectionState.DISCONNECTED:
+                    this.removeNegotiator(negotiator.playerName);
+                    break;
             }
         });
     }
 
-    private subscribeNegotiatorDisconnected(negotiator: Negotiator): void {
-        negotiator.notifier.follow(NegotiatorEventType.DISCONNECTED, this, (negotiatorEvent: NegotiatorEvent) => {
-            this.removeNegotiator(negotiatorEvent.playerName);
-        });
+    private onNegotiatorConnected(negotiator: Negotiator): void {
+        if (this._negotiators().get(negotiator.playerName) !== negotiator) {
+            return;
+        }
+
+        const player = new WebRtcPlayer(negotiator.playerName, negotiator.webRTC);
+        this.removeNegotiator(negotiator.playerName);
+        this.addPlayer(player);
+        this.onPlayerConnected(player);
     }
 
     private removeNegotiator(playerName: string): void {
-        const current = new Map(this.negotiators.getValue());
-        const negotiator = current.get(playerName);
+        const negotiator = this._negotiators().get(playerName);
 
         if (negotiator) {
-            this.pushEvent(new RoomNetworkQueueRemoveEvent(playerName));
-            current.delete(playerName);
-            this.negotiators.next(current);
+            this.queueRemovedSubject.next(playerName);
+            this._negotiators.update(negotiators => {
+                const current = new Map(negotiators);
+                current.delete(playerName);
+                return current;
+            });
             negotiator.clear();
         }
     }
 
     protected getNegotiatorSize(): number {
-        return this.negotiators.getValue().size;
+        return this._negotiators().size;
     }
 
     public clear(): void {
         this.players.forEach((player: Player) => {
             player.clear();
         });
-        this.negotiators.getValue().forEach((negotiator: Negotiator) => {
+        this._negotiators().forEach((negotiator: Readonly<Negotiator>) => {
             negotiator.clear();
         });
+        this.onMessageSubject.complete();
+        this.playerAddedSubject.complete();
+        this.playerRemovedSubject.complete();
+        this.queueAddedSubject.complete();
+        this.queueRemovedSubject.complete();
     }
 }

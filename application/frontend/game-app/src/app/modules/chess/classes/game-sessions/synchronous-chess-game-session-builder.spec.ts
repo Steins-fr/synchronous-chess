@@ -3,7 +3,7 @@ import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
 import SynchronousChessOnlineHostGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-host-game-session';
 import SynchronousChessOnlinePeerGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-peer-game-session';
-import { NotifierFlow } from '@app/deprecated/notifier/notifier';
+import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
@@ -14,20 +14,13 @@ describe('SynchronousChessGameSessionBuilder', () => {
     let initiatorGetterSpy: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
-        // Base spy object with method spies
+        // Base spy object with method spies and player streams
         roomSpy = {
             messenger: vi.fn(),
+            playerAdded$: new Subject<Player>(),
+            playerRemoved$: new Subject<Player>(),
         };
 
-        // roomManagerNotifier getter providing follow & unfollow spies
-        TestHelper.defineGetterSpy(
-            roomSpy,
-            'roomManagerNotifier',
-            {
-                follow: vi.fn(),
-                unfollow: vi.fn(),
-            } as NotifierFlow<any>
-        );
         // initiator getter (value overridden in individual tests)
         initiatorGetterSpy = TestHelper.defineGetterSpy(roomSpy, 'initiator', false);
 

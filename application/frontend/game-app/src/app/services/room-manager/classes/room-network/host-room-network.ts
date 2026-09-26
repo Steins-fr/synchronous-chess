@@ -115,7 +115,7 @@ export class HostRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         }
         console.warn('HostRoom: onRoomMessage', roomMessage);
 
-        // TODO: Better casting, notifier ?
+        // TODO: Better casting
         const negotiatorMessage: NegotiatorMessage<SignalPayload> = roomMessage as NegotiatorMessage<SignalPayload>;
 
         if (negotiatorMessage.type === NegotiatorMessageType.SIGNAL) {

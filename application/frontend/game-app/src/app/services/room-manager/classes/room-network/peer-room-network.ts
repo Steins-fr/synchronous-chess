@@ -47,7 +47,7 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
             return;
         }
 
-        // FIXME: better casting, notifier ?
+        // FIXME: better casting
         switch (roomMessage.type) {
             case HostRoomMessageType.NEW_PLAYER:
                 const newPlayerMessage: HostRoomMessage<NewPlayerPayload> = roomMessage as HostRoomMessage<NewPlayerPayload>;
@@ -85,8 +85,9 @@ export class PeerRoomNetwork<MessageType extends Message> extends RoomNetwork<Me
         let negotiator = this.getNegotiator(remoteSignalPayload.from);
 
         if (!negotiator) { // Create new negotiator
-            negotiator = new WebrtcNegotiator(remoteSignalPayload.from, new Webrtc(), this.hostPlayer);
-            this.addNegotiator(negotiator);
+            const newNegotiator = new WebrtcNegotiator(remoteSignalPayload.from, new Webrtc(), this.hostPlayer);
+            this.addNegotiator(newNegotiator);
+            negotiator = newNegotiator;
         }
 
         await negotiator.negotiationMessage(remoteSignalPayload);

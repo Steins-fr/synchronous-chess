@@ -1,16 +1,11 @@
-import Notifier, { NotifierFlow } from '@app/deprecated/notifier/notifier';
 import SignalNotification from '@app/services/room-api/notifications/signal-notification';
 import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 
-export enum NegotiatorEventType {
+export enum NegotiatorConnectionState {
     CONNECTED = 'connected',
     DISCONNECTED = 'disconnected'
-}
-
-export interface NegotiatorEvent {
-    playerName: string;
 }
 
 export abstract class Negotiator {
@@ -19,11 +14,12 @@ export abstract class Negotiator {
     private static readonly checkingTimeout: number = 3000;
     private static readonly timeoutAfter: number = 15000;
     private readonly subs: Array<Subscription> = [];
-    private connectionState: RTCIceConnectionState = 'disconnected';
+    private iceConnectionState: RTCIceConnectionState = 'disconnected';
     private signalTry: number = 0;
     private timeoutId?: ReturnType<typeof setTimeout>;
 
-    private readonly _notifier: Notifier<NegotiatorEventType, NegotiatorEvent> = new Notifier<NegotiatorEventType, NegotiatorEvent>();
+    private readonly connectionStateSubject = new Subject<NegotiatorConnectionState>();
+    public readonly connectionState$ = this.connectionStateSubject.asObservable();
 
     public readonly states: Observable<WebrtcStates>; // For external debugging
     public isInitiator: boolean = false;
@@ -33,10 +29,6 @@ export abstract class Negotiator {
         this.checkTimeout();
     }
 
-    public get notifier(): NotifierFlow<NegotiatorEventType> {
-        return this._notifier;
-    }
-
     public async initiate(): Promise<void> {
         this.isInitiator = true;
         await this.setupConnection();
@@ -44,7 +36,7 @@ export abstract class Negotiator {
 
     private checkTimeout(): void {
         this.timeoutId = setTimeout(() => {
-            this.pushEvent(NegotiatorEventType.DISCONNECTED);
+            this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
             this.timeoutId = undefined;
         }, Negotiator.timeoutAfter);
     }
@@ -52,7 +44,7 @@ export abstract class Negotiator {
     protected async setupConnection(): Promise<void> {
 
         // FIXME: rework this
-        if (this.signalTry < Negotiator.maxSignalTry && this.connectionState !== 'connected') {
+        if (this.signalTry < Negotiator.maxSignalTry && this.iceConnectionState !== 'connected') {
             if (this.signalTry > 0) {
                 console.error('Signal retry, may need debugging, if this error is not shown, remove signal retry logic');
             }
@@ -66,18 +58,16 @@ export abstract class Negotiator {
                 await this.webRTC.createOffer();
             }
         } else {
-            this.pushEvent(NegotiatorEventType.DISCONNECTED);
+            this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
         }
     }
 
-    protected pushEvent(type: NegotiatorEventType): void {
-        this._notifier.notify(type, {
-            playerName: this.playerName
-        });
+    protected setConnectionState(state: NegotiatorConnectionState): void {
+        this.connectionStateSubject.next(state);
     }
 
     protected onPeerStates(states: WebrtcStates): void {
-        if (this.connectionState === states.iceConnection) {
+        if (this.iceConnectionState === states.iceConnection) {
             return; // Do nothing, it's the same state
         }
         const newConnectionState = states.iceConnection;
@@ -95,17 +85,17 @@ export abstract class Negotiator {
                 if (states.sendChannel !== 'open' || states.receiveChannel !== 'open') {
                     return; // The channel is not ready yet
                 }
-                this.pushEvent(NegotiatorEventType.CONNECTED);
+                this.setConnectionState(NegotiatorConnectionState.CONNECTED);
                 break;
             case 'disconnected':
                 if (newConnectionState === states.iceConnection) {
                     break; // Do nothing, it's the same state
                 }
-                this.pushEvent(NegotiatorEventType.DISCONNECTED);
+                this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
                 break;
         }
 
-        this.connectionState = newConnectionState;
+        this.iceConnectionState = newConnectionState;
     }
 
     protected onSignal(signal: RtcSignal): void {
@@ -134,5 +124,6 @@ export abstract class Negotiator {
             clearTimeout(this.timeoutId);
         }
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
+        this.connectionStateSubject.complete();
     }
 }

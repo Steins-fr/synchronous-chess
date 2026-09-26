@@ -4,7 +4,6 @@ import SynchronousChessOnlinePeerGameSession
 import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-chess-game';
 import { Coordinate, Column, Row } from '@app/modules/chess/interfaces/CoordinateMove';
 import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
-import { NotifierFlow } from '@app/deprecated/notifier/notifier';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
@@ -43,9 +42,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
     test('should set configuration on messenger event', () => {
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
         });
         const messengerSubject = new Subject<ToReworkMessage<SessionConfiguration>>();
         vi.mocked(roomSpy.messenger).mockReturnValue(messengerSubject);
@@ -61,9 +57,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
     test('should set the configuration', () => {
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
 
@@ -97,9 +90,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
 
@@ -133,9 +123,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
 
@@ -170,9 +157,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
             localPlayer: { name: 'b' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
@@ -213,9 +197,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
@@ -255,9 +236,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
             localPlayer: { name: 'a' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
@@ -304,9 +282,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
 
@@ -340,9 +315,6 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         const roomSpy = TestHelper.cast<Room<any>>({
             messenger: vi.fn(),
-            roomManagerNotifier: TestHelper.cast<NotifierFlow<any>>({
-                follow: vi.fn(),
-            }),
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ToReworkMessage<SessionConfiguration>>());
 
