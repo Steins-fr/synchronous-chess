@@ -54,7 +54,9 @@ export abstract class RoomNetwork {
     // Remote player creation
 
     protected addNegotiator(negotiator: Negotiator): void {
+        const replaced = this._negotiators().get(negotiator.playerName);
         this._negotiators.update(negotiators => new Map(negotiators).set(negotiator.playerName, negotiator));
+        replaced?.clear();
         this.subscribeNegotiatorConnectionState(negotiator);
         this.queueAddedSubject.next(negotiator.playerName);
     }
@@ -109,7 +111,7 @@ export abstract class RoomNetwork {
                     this.onNegotiatorConnected(negotiator);
                     break;
                 case NegotiatorConnectionState.DISCONNECTED:
-                    this.removeNegotiator(negotiator.playerName);
+                    this.removeNegotiator(negotiator);
                     break;
             }
         });
@@ -121,15 +123,16 @@ export abstract class RoomNetwork {
         }
 
         const player = new WebRtcPlayer(negotiator.playerName, negotiator.webRTC);
-        this.removeNegotiator(negotiator.playerName);
+        this.removeNegotiator(negotiator);
         this.addPlayer(player);
         this.onPlayerConnected(player);
     }
 
-    private removeNegotiator(playerName: string): void {
-        const negotiator = this._negotiators().get(playerName);
+    // A replaced negotiator is no longer registered, its events must not remove its successor
+    private removeNegotiator(negotiator: Negotiator): void {
+        const playerName = negotiator.playerName;
 
-        if (negotiator) {
+        if (this._negotiators().get(playerName) === negotiator) {
             this.queueRemovedSubject.next(playerName);
             this._negotiators.update(negotiators => {
                 const current = new Map(negotiators);
