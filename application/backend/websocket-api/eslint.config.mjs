@@ -1,8 +1,7 @@
-import _import from "eslint-plugin-import";
+import importX from "eslint-plugin-import-x";
 import jsdoc from "eslint-plugin-jsdoc";
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import stylistic from "@stylistic/eslint-plugin";
-import { fixupPluginRules } from "@eslint/compat";
 import globals from "globals";
 import tsParser from "@typescript-eslint/parser";
 
@@ -12,7 +11,7 @@ export default [
     },
     {
         plugins: {
-            import: fixupPluginRules(_import),
+            import: importX,
             jsdoc,
             "@typescript-eslint": typescriptEslint,
             "@stylistic": stylistic,

@@ -1,11 +1,11 @@
 import { Provider, EnvironmentProviders, provideZonelessChangeDetection } from '@angular/core';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 
 const testProviders: (Provider | EnvironmentProviders)[] = [
     provideZonelessChangeDetection(),
-    provideHttpClient(),
+    provideHttpClient(withXhr()),
     provideHttpClientTesting(),
     provideRouter([]),
 ];

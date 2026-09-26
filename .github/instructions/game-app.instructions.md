@@ -7,7 +7,7 @@ This is an Angular TypeScript project with the following characteristics:
 
 ## Technology Stack
 
-- Angular 20
+- Angular 22
 - TypeScript
 - RxJS
 - Angular Material

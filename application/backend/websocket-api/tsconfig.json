@@ -10,16 +10,15 @@
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
         "declaration": false,
-        "moduleResolution": "node",
-        "baseUrl": "./",
+        "moduleResolution": "bundler",
         "typeRoots": ["node_modules/@types"],
         "types": ["node"],
         "paths": {
-            "@exceptions/*": ["shared/exceptions/*"],
-            "@helpers/*": ["shared/helpers/*"],
-            "@models/*": ["shared/models/*"],
-            "@repositories/*": ["shared/repositories/*"],
-            "@services/*": ["shared/services/*"],
+            "@exceptions/*": ["./shared/exceptions/*"],
+            "@helpers/*": ["./shared/helpers/*"],
+            "@models/*": ["./shared/models/*"],
+            "@repositories/*": ["./shared/repositories/*"],
+            "@services/*": ["./shared/services/*"],
         },
     }
 }
