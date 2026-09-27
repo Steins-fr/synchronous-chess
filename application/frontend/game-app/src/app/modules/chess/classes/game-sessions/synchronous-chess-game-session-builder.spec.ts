@@ -48,7 +48,14 @@ describe('SynchronousChessGameSessionBuilder', () => {
         expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
     });
 
-    test('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
+    test('should create an instance of SynchronousChessOnlinePeerGameSession by default', () => {
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<ChessPayloads>);
+
+        expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
+        expect(initiatorGetterSpy).toHaveBeenCalled();
+    });
+
+    test('should create an instance of SynchronousChessLocalGameSession', () => {
         const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildLocal();
 
         expect(session instanceof SynchronousChessLocalGameSession).toBeTruthy();

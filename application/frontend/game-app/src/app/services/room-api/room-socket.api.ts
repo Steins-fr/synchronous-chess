@@ -243,11 +243,8 @@ export class RoomSocketApi {
 
                 const lambdaTimeout: number = 5000; // 3 seconds is the lambda AWS timeout, so add two more seconds to it
                 const timerId = setTimeout(() => {
-
-                    if (!closeSub.closed) {
-                        closeSub.next();
-                        closeSub.complete();
-                    }
+                    closeSub.next();
+                    closeSub.complete();
                     reject(new Error(`${ RoomSocketApi.ERROR_REQUEST_TIMEOUT } ${ id }`));
                     console.error(`${ RoomSocketApi.ERROR_REQUEST_TIMEOUT } ${ id }`);
                 }, lambdaTimeout); // 3 seconds is the lambda AWS timeout, so add one more minute to it
@@ -274,10 +271,8 @@ export class RoomSocketApi {
                             reject(new Error('Unexpected response type'));
                         }
 
-                        if (!closeSub.closed) {
-                            closeSub.next();
-                            closeSub.complete();
-                        }
+                        closeSub.next();
+                        closeSub.complete();
                     });
             });
     }

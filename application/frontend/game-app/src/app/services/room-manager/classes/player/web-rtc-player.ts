@@ -24,7 +24,7 @@ export class WebRtcPlayer extends Player {
     public readonly states: Observable<WebrtcStates>; // For external debugging
     private connectionState: RTCIceConnectionState = 'connected';
 
-    private pingTimerId?: ReturnType<typeof setInterval>;
+    private readonly pingTimerId: ReturnType<typeof setInterval>;
     public ping: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
     public constructor(name: string, private readonly webRTC: Webrtc) {
@@ -34,17 +34,13 @@ export class WebRtcPlayer extends Player {
         this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
         this.subs.push(this.webRTC.data.subscribe((data: Message) => this.onPeerData(data)));
 
-        this.pingInterval();
+        this.pingTimerId = this.pingInterval();
     }
 
     public override clear(): void {
         this.subs.forEach((sub: Subscription) => sub.unsubscribe());
-        if (this.webRTC) {
-            this.webRTC.close();
-        }
-        if (this.pingTimerId !== undefined) {
-            clearInterval(this.pingTimerId);
-        }
+        this.webRTC.close();
+        clearInterval(this.pingTimerId);
         this.messageSubject.complete();
         this.disconnectedSubject.complete();
     }
@@ -67,9 +63,9 @@ export class WebRtcPlayer extends Player {
         return false;
     }
 
-    private pingInterval(): void {
+    private pingInterval(): ReturnType<typeof setInterval> {
         const pingInterval: number = 2500;
-        this.pingTimerId = setInterval(() => {
+        return setInterval(() => {
             const markId: string = this.markIdGenerator.next().value;
             window.performance.mark(`${ WebRtcPlayer.PING_MARK }-${ markId }`);
 

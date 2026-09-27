@@ -67,4 +67,17 @@ describe('SyncTurn', () => {
         expect(turn.action).not.toEqual(initialAction);
         expect(turn.action).toEqual(expectedAction);
     });
+
+    test('registerMove should ignore a move without color', () => {
+        // Given
+        const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
+        const turn: SyncTurn = new SyncTurn();
+
+        // When
+        turn.registerMove(move, PieceColor.NONE);
+
+        // Then
+        expect(turn.action).toEqual({ whiteMove: null, blackMove: null });
+        expect(turn.isFilled(PieceColor.NONE)).toEqual(true);
+    });
 });

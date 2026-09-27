@@ -35,10 +35,6 @@ export class WebSocketService {
     }
 
     private getOrCreateSocket(): WebSocket {
-        if (this._state.getValue() === SocketState.OPEN && this.webSocket) {
-            return this.webSocket;
-        }
-
         let webSocket: WebSocket | null;
         const state: SocketState = this._state.getValue();
 
@@ -79,7 +75,7 @@ export class WebSocketService {
                 .subscribe((state: SocketState) => {
                     if (state === SocketState.OPEN) {
                         resolve(webSocket);
-                    } else if (state === SocketState.CLOSED) {
+                    } else {
                         this.close();
                         reject(new Error('Socket connection failed'));
                     }

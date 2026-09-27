@@ -101,19 +101,13 @@ export class DialogService {
         return new Promise<DialogContentResult | void>((resolve) => {
             const mainSubscription = new Subscription();
 
-            // Result emission if exists and subscribable
-            if (
-                wrapperRef.instance.result instanceof EventEmitter ||
-        wrapperRef.instance.result instanceof OutputEmitterRef
-            ) {
-                mainSubscription.add(
-                    wrapperRef.instance.result.subscribe((value: DialogContentResult) => {
-                        resolve(value);
-                        mainSubscription.unsubscribe();
-                        overlayRef.dispose();
-                    })
-                );
-            }
+            // Result emission, the wrapper propagates the result of its child
+            const resultSubscription = wrapperRef.instance.result.subscribe((value: DialogContentResult) => {
+                resolve(value);
+                mainSubscription.unsubscribe();
+                overlayRef.dispose();
+            });
+            mainSubscription.add(() => resultSubscription.unsubscribe());
 
             // Close interactions only if dialog is closable
             if (closable) {

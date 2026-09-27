@@ -63,6 +63,10 @@ class ProtectedTest extends SynchronousChessGame {
         super.verifyCheck();
     }
 
+    public override updateCastling(move: Move): void {
+        super.updateCastling(move);
+    }
+
     public getTurn(): Turn {
         return this.turn;
     }
@@ -2731,5 +2735,145 @@ describe('SynchronousChessGame', () => {
         // Then
         expect(whitePawnPlays).toEqual(whitePawnExpectedPlays);
         expect(blackPawnPlays).toEqual(blackPawnExpectedPlays);
+    });
+
+    test('isCheckmate should indicate if one of the players is checkmate', () => {
+        // Given
+        const noCheckmateGame: SynchronousChessGame = new SynchronousChessGame();
+        const whiteCheckmateGame: SynchronousChessGame = new SynchronousChessGame();
+        whiteCheckmateGame.isWhiteInCheckmate = true;
+        const blackCheckmateGame: SynchronousChessGame = new SynchronousChessGame();
+        blackCheckmateGame.isBlackInCheckmate = true;
+
+        // When
+        const noCheckmate: boolean = noCheckmateGame.isCheckmate();
+        const whiteCheckmate: boolean = whiteCheckmateGame.isCheckmate();
+        const blackCheckmate: boolean = blackCheckmateGame.isCheckmate();
+
+        // Then
+        expect(noCheckmate).toEqual(false);
+        expect(whiteCheckmate).toEqual(true);
+        expect(blackCheckmate).toEqual(true);
+    });
+
+    test('should expose the current turn type and category', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+
+        // When
+        const turnType: TurnType = game.getTurnType();
+        const turnCategory: TurnCategory = game.getTurnCategory();
+
+        // Then
+        expect(turnType).toEqual(TurnType.MOVE_SYNC);
+        expect(turnCategory).toEqual(TurnCategory.MOVE);
+    });
+
+    test('hasPlayed should indicate if the color filled the turn', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+        const move: Move = { from: [FenColumn.A, FenRow._2], to: [FenColumn.A, FenRow._3] };
+        game.registerMove(move, PieceColor.WHITE);
+
+        // When
+        const whiteHasPlayed: boolean = game.hasPlayed(PieceColor.WHITE);
+        const blackHasPlayed: boolean = game.hasPlayed(PieceColor.BLACK);
+
+        // Then
+        expect(whiteHasPlayed).toEqual(true);
+        expect(blackHasPlayed).toEqual(false);
+    });
+
+    test('runTurn should throw if the turn type is unknown', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+        const turnSpy = TestHelper.cast<Turn>({
+            canBeExecuted: vi.fn().mockReturnValue(true),
+            type: 'unknownType' as TurnType,
+            category: TurnCategory.MOVE,
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        // When
+        const call = (): boolean => game.runTurn();
+
+        // Then
+        expect(call).toThrow('Unhandled switch case: unknownType');
+    });
+
+    test('getPossiblePlays should throw if the turn type is unknown', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+        const turnSpy = TestHelper.cast<Turn>({
+            type: 'unknownType' as TurnType,
+            category: TurnCategory.MOVE,
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        // When
+        const call = (): Array<Vec2> => game.getPossiblePlays(new Vec2(0, 6));
+
+        // Then
+        expect(call).toThrow('Unhandled switch case: unknownType');
+    });
+
+    test('nextTurn should create a synchrone turn if the turn category is unknown', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+        const turnSpy = TestHelper.cast<Turn>({
+            type: TurnType.MOVE_SYNC,
+            category: 'unknownCategory' as TurnCategory,
+            isDone: true,
+        });
+        Object.defineProperty(game, 'turn', {
+            value: turnSpy,
+            writable: true
+        });
+
+        // When
+        game.nextTurn();
+
+        // Then
+        expect(game.getTurn()).toBeInstanceOf(SyncTurn);
+        expect(game.getOldTurn()).toBe(turnSpy);
+    });
+
+    test('runSyncTurn should throw if a moved piece is missing', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+        const turn: SyncTurn = new SyncTurn();
+        turn.action.whiteMove = { from: [FenColumn.A, FenRow._4], to: [FenColumn.A, FenRow._5] };
+        turn.action.blackMove = { from: [FenColumn.A, FenRow._7], to: [FenColumn.A, FenRow._6] };
+        Object.defineProperty(game, 'turn', {
+            value: turn,
+            writable: true
+        });
+        Object.defineProperty(game, 'isTurnValid', {
+            value: vi.fn().mockReturnValue(true)
+        });
+
+        // When
+        const call = (): void => game.runSyncTurn();
+
+        // Then
+        expect(call).toThrow('Piece is undefined');
+    });
+
+    test('updateCastling should throw if the moved piece is missing', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+        const move: Move = { from: [FenColumn.A, FenRow._4], to: [FenColumn.A, FenRow._5] };
+
+        // When
+        const call = (): void => game.updateCastling(move);
+
+        // Then
+        expect(call).toThrow('Piece is undefined');
     });
 });

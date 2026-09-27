@@ -5,7 +5,6 @@ import Move from '../../interfaces/move';
 import { PieceColor } from '../../enums/piece-color.enum';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { PieceType } from '../../enums/piece-type.enum';
-import { FenPiece } from '../../enums/fen-piece.enum';
 
 export interface SessionConfiguration {
     whitePlayer?: string;
@@ -32,7 +31,7 @@ export default abstract class SynchronousChessGameSession {
     }
 
     protected runMove(color: PieceColor, move: Move | null): boolean {
-        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from) ?? FenPiece.EMPTY) !== color) {
+        if (move !== null && ChessBoardHelper.pieceColor(ChessBoardHelper.getFenPiece(this.game.fenBoard, move.from)) !== color) {
             return false;
         }
 

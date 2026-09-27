@@ -18,7 +18,7 @@ import { RoomNetwork } from './room-network';
 export class HostRoomNetwork extends RoomNetwork {
 
     public readonly initiator: boolean = true;
-    private refreshId?: ReturnType<typeof setInterval>;
+    private readonly refreshId: ReturnType<typeof setInterval>;
     private destroyRef = new Subject<void>();
 
     public constructor(
@@ -33,12 +33,12 @@ export class HostRoomNetwork extends RoomNetwork {
                 void this.onJoinNotification(notification.data);
             }
         });
-        this.enableMatchmakingStateRefresh();
+        this.refreshId = this.enableMatchmakingStateRefresh();
     }
 
-    private enableMatchmakingStateRefresh(): void {
+    private enableMatchmakingStateRefresh(): ReturnType<typeof setInterval> {
         const refreshInterval: number = 360000; // 6 minutes
-        this.refreshId = setInterval(async () => {
+        return setInterval(async () => {
             try {
                 const roomName: string = this.roomName;
                 const serverPlayers: string[] = (await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName })).players;
@@ -137,9 +137,7 @@ export class HostRoomNetwork extends RoomNetwork {
         this.destroyRef.next();
         this.destroyRef.complete();
         this.destroyRef = new Subject<void>();
-        if (this.refreshId !== undefined) {
-            clearInterval(this.refreshId);
-        }
+        clearInterval(this.refreshId);
         super.clear();
     }
 }

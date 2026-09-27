@@ -88,8 +88,6 @@ export default abstract class ChessBoardHelper {
         [PieceType.ROOK, FenPiece.BLACK_ROOK]
     ]);
 
-    private constructor() { }
-
     public static createFenBoard(): FenBoard {
         const rowSize: number = 8;
 
@@ -202,10 +200,6 @@ export default abstract class ChessBoardHelper {
      */
     public static setFenPiece(fenBoard: FenBoard, fenCoordinate: FenCoordinate, piece: FenPiece): FenBoard {
         const coordinate: Coordinate = ChessBoardHelper.fenCoordinateToCoordinate(fenCoordinate);
-        if (ChessBoardHelper.isOutOfBoard(coordinate)) {
-            throw new Error(`Updated piece is out of board: ${coordinate.toString()}`);
-        }
-
         const board: FenBoard = ChessBoardHelper.cloneBoard(fenBoard);
         board[coordinate[1]][coordinate[0]] = piece;
         return board;
@@ -240,7 +234,7 @@ export default abstract class ChessBoardHelper {
             return ChessBoardHelper.inverseColor(piece);
         }));
 
-        const fakeBoardPiece = !ChessBoardHelper.isOutOfBoardByVec(position) ? ChessBoardHelper.getFenPieceByVec(fakeBoard, position) : FenPiece.EMPTY;
+        const fakeBoardPiece = ChessBoardHelper.getFenPieceByVec(fakeBoard, position);
 
         // Pawn eat and movements are different. Place fake pieces to force eating over movement.
         if (this.pieceType(playedPiece) === PieceType.PAWN) {
@@ -271,8 +265,9 @@ export default abstract class ChessBoardHelper {
             excludeFromCoordinate = ChessBoardHelper.fenCoordinateToVec2(excludeFrom);
         }
 
-        if (ChessBoardHelper.fenBoardToSafeBoardCache.has(cacheKey) && !ChessBoardHelper.isCacheDisabled) {
-            return ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey) ?? [];
+        const cachedSafeBoard: SafeBoard | undefined = ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey);
+        if (cachedSafeBoard !== undefined && !ChessBoardHelper.isCacheDisabled) {
+            return cachedSafeBoard;
         }
 
         const size: number = 8;

@@ -253,7 +253,7 @@ export default class SynchronousChessGame {
         }
 
         const fenCoordinate: FenCoordinate = move.to;
-        const piece: FenPiece = ChessBoardHelper.getFenPiece(this._fenBoard, fenCoordinate) ?? FenPiece.EMPTY;
+        const piece: FenPiece = ChessBoardHelper.getFenPiece(this._fenBoard, fenCoordinate);
         const color: PieceColor = ChessBoardHelper.pieceColor(piece);
         const row: FenRow = color === PieceColor.WHITE ? FenRow._8 : FenRow._1;
 

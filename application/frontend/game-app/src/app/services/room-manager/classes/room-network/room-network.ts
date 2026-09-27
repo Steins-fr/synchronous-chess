@@ -99,11 +99,9 @@ export abstract class RoomNetwork {
     protected abstract onPlayerDisconnected(player: Player): void;
 
     private removePlayer(player: Player): void {
-        if (this.players.has(player.name)) {
-            this.playerRemovedSubject.next(player);
-            this.players.delete(player.name);
-            player.clear();
-        }
+        this.playerRemovedSubject.next(player);
+        this.players.delete(player.name);
+        player.clear();
     }
 
     // Negotiator events

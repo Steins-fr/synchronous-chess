@@ -134,7 +134,7 @@ export class ChatComponent {
     private onChatMessage(message: ChatRoomMessage): void {
         this.newMessage.update(value => value + 1);
 
-        if (this.currentRoom.localPlayer?.name === message.from) {
+        if (this.currentRoom.localPlayer.name === message.from) {
             this.sendInput.reset('');
             this.isSending.set(false);
         }

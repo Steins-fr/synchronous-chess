@@ -11,7 +11,6 @@ export enum NegotiatorConnectionState {
 export abstract class Negotiator {
 
     private static readonly maxSignalTry: number = 3;
-    private static readonly checkingTimeout: number = 3000;
     private static readonly timeoutAfter: number = 15000;
     private readonly subs: Array<Subscription> = [];
     private iceConnectionState: RTCIceConnectionState = 'disconnected';
@@ -70,32 +69,15 @@ export abstract class Negotiator {
         if (this.iceConnectionState === states.iceConnection) {
             return; // Do nothing, it's the same state
         }
-        const newConnectionState = states.iceConnection;
 
-        switch (newConnectionState) {
-            case 'checking':
-                if (newConnectionState === states.iceConnection) {
-                    break; // Do nothing, it's the same state
-                }
-                if (this.isInitiator) { // Timeout the connection temptation
-                    setTimeout(() => this.setupConnection(), Negotiator.checkingTimeout);
-                }
-                break;
-            case 'connected':
-                if (states.sendChannel !== 'open' || states.receiveChannel !== 'open') {
-                    return; // The channel is not ready yet
-                }
-                this.setConnectionState(NegotiatorConnectionState.CONNECTED);
-                break;
-            case 'disconnected':
-                if (newConnectionState === states.iceConnection) {
-                    break; // Do nothing, it's the same state
-                }
-                this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
-                break;
+        if (states.iceConnection === 'connected') {
+            if (states.sendChannel !== 'open' || states.receiveChannel !== 'open') {
+                return; // The channel is not ready yet
+            }
+            this.setConnectionState(NegotiatorConnectionState.CONNECTED);
         }
 
-        this.iceConnectionState = newConnectionState;
+        this.iceConnectionState = states.iceConnection;
     }
 
     protected onSignal(signal: RtcSignal): void {

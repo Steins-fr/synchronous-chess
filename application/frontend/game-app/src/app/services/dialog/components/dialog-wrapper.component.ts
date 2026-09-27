@@ -66,7 +66,7 @@ export class DialogWrapperComponent<TChild, TResult = void> implements OnInit {
         const vcr = this.container();
 
         const bindings: Binding[] = [];
-        Object.entries(this.childInputs() || {}).forEach(([key, value]) => {
+        Object.entries(this.childInputs()).forEach(([key, value]) => {
             bindings.push(inputBinding(key, signal(value)));
         });
 
@@ -78,9 +78,9 @@ export class DialogWrapperComponent<TChild, TResult = void> implements OnInit {
         // Apply inputs
 
         // Propagate child result output if it exists
-        const maybeChild: any = componentRef.instance;
-        if (maybeChild?.result && (maybeChild?.result instanceof EventEmitter || maybeChild?.result instanceof OutputEmitterRef)) {
-            const sub = maybeChild.result.subscribe((value: TResult) =>
+        const childResult: unknown = (componentRef.instance as { result?: unknown }).result;
+        if (childResult instanceof EventEmitter || childResult instanceof OutputEmitterRef) {
+            const sub = (childResult as OutputEmitterRef<TResult>).subscribe((value: TResult) =>
                 this.result.emit(value)
             );
             componentRef.onDestroy(() => sub.unsubscribe());

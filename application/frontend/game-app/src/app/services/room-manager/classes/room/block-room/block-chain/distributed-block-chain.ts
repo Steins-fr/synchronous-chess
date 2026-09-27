@@ -271,13 +271,7 @@ export class DistributedBlockChain {
         this.blocksToValidate.declineBlock(block, participant);
     }
 
-    private async validateBlock(block: Block): Promise<void> {
-        const blockFrom: Participant | undefined = this.participants.get(block.data.from);
-
-        if (!blockFrom) {
-            throw new Error('Unknown participant');
-        }
-
+    private async validateBlock(block: Block, blockFrom: Participant): Promise<void> {
         if (!await Chain.verifyMessage(block.signature, block.hash, blockFrom.publicKey)) {
             throw new Error('Someone try to play as another player');
         }
@@ -289,7 +283,7 @@ export class DistributedBlockChain {
         const blockApprovedBy: Participant | undefined = this.participants.get(message.from);
 
         if (blockFrom && blockApprovedBy) {
-            await this.validateBlock(message.payload);
+            await this.validateBlock(message.payload, blockFrom);
             await this.approveBlockFor(message.payload, blockApprovedBy);
         }
 
@@ -302,7 +296,7 @@ export class DistributedBlockChain {
         const blockDeclinedBy: Participant | undefined = this.participants.get(message.from);
 
         if (blockFrom && blockDeclinedBy) {
-            await this.validateBlock(message.payload);
+            await this.validateBlock(message.payload, blockFrom);
             await this.declineBlockFor(message.payload, blockDeclinedBy);
         }
 
@@ -397,18 +391,14 @@ export class DistributedBlockChain {
     }
 
     public onNewPlayer(player: Player): void {
-        this.participants.set(player.name, new Participant(player));
+        const participant: Participant = new Participant(player);
+        this.participants.set(player.name, participant);
         if (player instanceof WebRtcPlayer) {
             this.sendNegotiation(player.name);
         } else {
-            this.localParticipant = this.participants.get(player.name);
-
-            if (!this.localParticipant) {
-                throw new Error('Local participant is not defined');
-            }
-
-            this.localParticipant.publicKey = this.myKeyPair.publicKey;
-            this.blocksToValidate.localParticipant = this.localParticipant;
+            participant.publicKey = this.myKeyPair.publicKey;
+            this.localParticipant = participant;
+            this.blocksToValidate.localParticipant = participant;
         }
     }
 

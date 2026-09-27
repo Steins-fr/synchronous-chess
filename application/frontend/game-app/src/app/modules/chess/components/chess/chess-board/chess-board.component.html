@@ -6,7 +6,7 @@
             <mat-grid-list cols="8">
                 @for (row of fenBoard(); track row; let y = $index) {
                 @for (piece of row; track piece; let x = $index) {
-                @if ([x, y] | vector2d; as pos) {
+                @let pos = [x, y] | vector2d;
                 <mat-grid-tile
                     [ngClass]="{
                         'drag-hover': cellHovered().equal(pos.x, pos.y),
@@ -39,7 +39,6 @@
                         }
                     </div>
                 </mat-grid-tile>
-                }
                 }
                 }
             </mat-grid-list>
