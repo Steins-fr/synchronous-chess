@@ -15,6 +15,6 @@ export default class CaseMovementCondition extends MovementCondition {
 
     public override canMove(oldPosition: Vec2, _newPosition: Vec2, board: FenBoard): boolean {
         const piece = ChessBoardHelper.getFenPieceByVec(board, oldPosition.addVec(this.relativePosition));
-        return this.validPieces.some((validPiece: FenPiece) => piece === validPiece);
+        return this.validPieces.includes(piece);
     }
 }

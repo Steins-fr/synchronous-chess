@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, InjectionToken } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { objectHasValue } from '@app/helpers/object.helper';
 import { ValuesOf } from '@app/types/values-of.type';
@@ -139,7 +139,7 @@ const notificationAndResponseHasCommonKeys: NotificationAndResponseHasCommonKeys
 type SocketPacketAllPayload = SocketPacketResponsePayload | SocketPacketNotificationPayloads;
 
 // Injection token for WebSocketServer
-export const WEB_SOCKET_SERVER = 'WebSocketServer';
+export const WEB_SOCKET_SERVER = new InjectionToken<string>('WebSocketServer');
 
 @Injectable({
     providedIn: 'root'
@@ -152,7 +152,7 @@ export class RoomSocketApi {
     private destroyRef = new Subject<void>();
 
     public constructor() {
-        const webSocketServer = inject<string>(WEB_SOCKET_SERVER as any);
+        const webSocketServer: string = inject(WEB_SOCKET_SERVER);
 
         this.webSocketService = new WebSocketService(webSocketServer);
     }

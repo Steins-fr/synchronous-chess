@@ -79,6 +79,25 @@ describe('TimedLogger', () => {
         expect(debugSpy).toHaveBeenCalledWith(expect.stringMatching(TIME_PATTERN), '', 'message');
     });
 
+    test.each([
+        ['    at myFunction (main.js:10:42', '[anonymous:42]'],
+        ['myFunction@http://localhost/main.js:10:42', '[myFunction:42]'],
+        ['    at myFunction (native)', ''],
+        ['    at main.js:42', ''],
+        ['    at myFunction (main.js:line:42)', ''],
+        ['    at myFunction (main.js:10:column)', ''],
+    ])('should parse the caller line "%s" as "%s"', (callerLine: string, expectedCaller: string) => {
+        // Given
+        const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+        stubCallerLine(callerLine);
+
+        // When
+        TimedLogger.log('message');
+
+        // Then
+        expect(debugSpy).toHaveBeenCalledWith(expect.stringMatching(TIME_PATTERN), expectedCaller, 'message');
+    });
+
     test('should omit the caller if the stack is too short', () => {
         // Given
         const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined);

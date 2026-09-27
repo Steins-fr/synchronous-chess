@@ -16,10 +16,8 @@ enum PacketType {
     ACK = 'ack'
 }
 
-type PacketId = number;
-
 interface Packet {
-    id: PacketId;
+    id: number;
     type: PacketType;
     nbTry: number;
     message?: Message;
@@ -37,9 +35,9 @@ export class Webrtc {
         ]
     };
 
-    private readonly packetIdGenerator: Generator<PacketId, never> = idGenerator();
+    private readonly packetIdGenerator: Generator<number, never> = idGenerator();
 
-    private readonly pendingAcknowledgement = new Map<PacketId, ReturnType<typeof setTimeout>>();
+    private readonly pendingAcknowledgement = new Map<number, ReturnType<typeof setTimeout>>();
 
     // WebRTC states observables
     private readonly _states = new BehaviorSubject<Readonly<WebrtcStates>>(defaultWebrtcStates);
@@ -308,7 +306,6 @@ export class Webrtc {
             });
         }
     }
-
 
     // Parse the uint32 PRIORITY field into its constituent parts from RFC 5245,
     // type preference, local preference, and (256 - component ID).

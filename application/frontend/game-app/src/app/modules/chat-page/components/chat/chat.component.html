@@ -41,7 +41,8 @@
 
     <div id="send-form">
         <mat-form-field>
-            <input matInput type="text" [formControl]="sendInput" placeholder="Tape ton message" />
+            <mat-label>Tape ton message</mat-label>
+            <input matInput type="text" [formControl]="sendInput" />
         </mat-form-field>
         <button
             mat-raised-button color="primary" id="send" (click)="sendMessage()"

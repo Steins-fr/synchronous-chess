@@ -16,7 +16,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
@@ -44,6 +44,7 @@ type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, string>;
         MatChip,
         MatChipSet,
         MatFormField,
+        MatLabel,
         MatInput,
         MatButton,
         ScrollingModule,
