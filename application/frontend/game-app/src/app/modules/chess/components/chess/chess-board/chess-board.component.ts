@@ -32,7 +32,7 @@ export class ChessBoardComponent {
     public readonly toPreview = signal<Vec2 | null>(null);
     public readonly pieceDragged = signal<Vec2>(new Vec2(-1, -1));
     public readonly cellHovered = signal<Vec2>(new Vec2(-1, -1));
-    protected readonly range = [...Array(8).keys()];
+    protected readonly range = [...new Array(8).keys()];
 
     public constructor() {
         // When fenBoard changes, reset valid plays.

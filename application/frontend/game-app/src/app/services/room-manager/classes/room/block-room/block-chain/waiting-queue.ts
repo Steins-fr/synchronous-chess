@@ -26,11 +26,7 @@ export class WaitingQueue {
     }
 
     public approveBlock(block: Block, participant: Participant): boolean {
-        let wb: WaitingBlock | undefined = this._queue.get(block.hash);
-
-        if (!wb) {
-            wb = new WaitingBlock(block);
-        }
+        const wb: WaitingBlock = this._queue.get(block.hash) ?? new WaitingBlock(block);
 
         for (const waitingBlock of this._queue.values()) {
             if (waitingBlock.block.index === wb.block.index
@@ -55,11 +51,7 @@ export class WaitingQueue {
     }
 
     public declineBlock(block: Block, participant: Participant): void {
-        let wb: WaitingBlock | undefined = this._queue.get(block.hash);
-
-        if (!wb) {
-            wb = new WaitingBlock(block);
-        }
+        const wb: WaitingBlock = this._queue.get(block.hash) ?? new WaitingBlock(block);
 
         if (!this.hasDeclined(wb, participant)) {
             wb.declinedBy.push(participant);
@@ -80,7 +72,7 @@ export class WaitingQueue {
     }
 
     private hasApproved(wb: WaitingBlock, participant: Participant): boolean {
-        return !!wb.approvedBy.find((p: Participant) => p.name === participant.name);
+        return wb.approvedBy.some((p: Participant) => p.name === participant.name);
     }
 
     public hasDeclinedBlock(block: Block, participant: Participant): boolean {
@@ -94,7 +86,7 @@ export class WaitingQueue {
     }
 
     private hasDeclined(wb: WaitingBlock, participant: Participant): boolean {
-        return !!wb.declinedBy.find((p: Participant) => p.name === participant.name);
+        return wb.declinedBy.some((p: Participant) => p.name === participant.name);
     }
 
     public hasBlock(block: Block): boolean {

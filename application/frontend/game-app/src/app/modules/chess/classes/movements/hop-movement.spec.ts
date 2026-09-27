@@ -30,7 +30,7 @@ describe('HopMove', () => {
         const moves: Array<HopMovement> = HopMovement.buildAll([coordinate1, coordinate2]);
 
         // Then
-        expect(moves.length).toEqual(2);
+        expect(moves).toHaveLength(2);
     });
 
     test('should initiate properties', () => {

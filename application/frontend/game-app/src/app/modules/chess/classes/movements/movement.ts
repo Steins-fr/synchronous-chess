@@ -7,9 +7,6 @@ import { FenBoard } from '@app/modules/chess/types/fen-board';
 export enum MovementType {
     LINEAR = 'linear',
     HOP = 'hop',
-    // FIXME: why is this not used?
-    DOUBLE_HOP = 'double-hop',
-    FEAR_HOP = 'fear-hop'
 }
 
 export default abstract class Movement {
@@ -30,7 +27,7 @@ export default abstract class Movement {
     protected validPosition(position: Vec2, board: FenBoard): void {
         if (ChessBoardHelper.isOutOfBoardByVec(position)
             || ChessBoardHelper.getFenPieceByVec(board, position) === FenPiece.EMPTY) {
-            throw Error('The movement origin have to be valid.');
+            throw new Error('The movement origin have to be valid.');
         }
     }
 

@@ -33,7 +33,7 @@ describe('LinearMove', () => {
         const moves: Array<LinearMovement> = LinearMovement.buildAll([coordinate1, coordinate2]);
 
         // Then
-        expect(moves.length).toEqual(2);
+        expect(moves).toHaveLength(2);
     });
 
     test('should initiate properties', () => {
