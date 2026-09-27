@@ -32,7 +32,7 @@ export class Chain {
 
         hexString.split('').forEach((c: string, index: number) => {
             if (index % 2 === 0) {
-                buffer.push(parseInt(c + hexString[index + 1], 16));
+                buffer.push(Number.parseInt(c + hexString[index + 1], 16));
             }
         });
 
@@ -65,7 +65,13 @@ export class Chain {
     }
 
     public getLatestBlock(): Block {
-        return this.chain[this.chain.length - 1];
+        const latestBlock: Block | undefined = this.chain.at(-1);
+
+        if (latestBlock === undefined) {
+            throw new Error('Chain has no genesis block');
+        }
+
+        return latestBlock;
     }
 
     public async addBlock(newBlock: Block): Promise<void> {

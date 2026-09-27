@@ -67,9 +67,15 @@ describe('PeerRoomNetwork', () => {
         expect(network.negotiators().get('host')).toBeInstanceOf(WebsocketNegotiator);
     });
 
-    test('should keep the first connected player as host', () => {
+    test('should only take the player named as host as host', () => {
         // Given
         const other = TestHelper.cast<Player>({ name: 'other' });
+
+        // When
+        network.onPlayerConnected(other);
+
+        // Then
+        expect(network.host).toBeUndefined();
 
         // When
         network.onPlayerDisconnected(hostPlayer);

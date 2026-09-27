@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { idGenerator } from '@app/helpers/id-generator.helper';
 import { objectHasValue } from '@app/helpers/object.helper';
 import { ValuesOf } from '@app/types/values-of.type';
 import { filter, first, map, Observable, Subject, takeUntil, tap } from 'rxjs';
@@ -19,8 +20,6 @@ import PlayersResponse from './responses/players-response';
 import RoomCreateResponse from './responses/room-create-response';
 import RoomJoinResponse from './responses/room-join-response';
 import RtcSignalResponse from './responses/rtc-signal-response';
-
-type RequestId = number;
 
 interface SocketPacketPayload<Type, Data> {
     id: number; // Positive number are reserved for followed messages, request and response share the same id, -1 is reserved for notifications
@@ -158,13 +157,7 @@ export class RoomSocketApi {
         this.webSocketService = new WebSocketService(webSocketServer);
     }
 
-    private static readonly requestIdGenerator: Generator = function* name(): Generator {
-        let id: RequestId = 0;
-        while (true) {
-            ++id;
-            yield id;
-        }
-    }();
+    private static readonly requestIdGenerator: Generator<number, never> = idGenerator();
 
     private static buildPacket<RequestType extends RoomApiRequestTypeEnum>(
         requestType: RequestType,
@@ -232,7 +225,7 @@ export class RoomSocketApi {
         return payload.type === type;
     }
 
-    private isRequestResponse(payload: SocketPacketResponsePayload, id: RequestId): boolean {
+    private isRequestResponse(payload: SocketPacketResponsePayload, id: number): boolean {
         return payload.id === id;
     }
 

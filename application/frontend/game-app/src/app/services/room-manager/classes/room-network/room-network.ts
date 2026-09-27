@@ -19,6 +19,7 @@ export abstract class RoomNetwork {
     private readonly _negotiators = signal<ReadonlyMap<string, Readonly<Negotiator>>>(new Map());
     public readonly negotiators = this._negotiators.asReadonly();
     public abstract readonly initiator: boolean;
+    public abstract readonly hostName: string;
 
     private readonly onMessageSubject = new Subject<ReceivedMessage>();
     public readonly onMessage$ = this.onMessageSubject.asObservable();

@@ -1,5 +1,6 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
+import { idGenerator } from '@app/helpers/id-generator.helper';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import WebrtcStates, { DebugRTCIceCandidate, defaultWebrtcStates } from './webrtc-states';
 
@@ -36,13 +37,7 @@ export class Webrtc {
         ]
     };
 
-    private readonly packetIdGenerator: Generator = function* name(): Generator {
-        let id: PacketId = 0;
-        while (true) {
-            ++id;
-            yield id;
-        }
-    }();
+    private readonly packetIdGenerator: Generator<PacketId, never> = idGenerator();
 
     private readonly pendingAcknowledgement = new Map<PacketId, ReturnType<typeof setTimeout>>();
 

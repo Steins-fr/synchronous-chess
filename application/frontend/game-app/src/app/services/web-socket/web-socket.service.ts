@@ -1,11 +1,12 @@
 import { BehaviorSubject, Observable, Subject, filter, first } from 'rxjs';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
+// Values mirror the WebSocket readyState constants
 export enum SocketState {
-    CONNECTING = WebSocket.CONNECTING,
-    OPEN = WebSocket.OPEN,
-    CLOSED = WebSocket.CLOSED,
-    CLOSING = WebSocket.CLOSING,
+    CONNECTING = 0,
+    OPEN = 1,
+    CLOSING = 2,
+    CLOSED = 3,
 }
 
 export class WebSocketService {

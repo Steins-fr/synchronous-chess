@@ -136,7 +136,7 @@ export class DistributedBlockChain {
         const latencyString = url.queryParamMap.get('latency');
         if (latencyString) {
             // TimedLogger.log(`Will send block declined after ${url.queryParams.latency}ms`, roomServiceMessage.payload);
-            setTimeout(() => this.sendMessage(roomServiceMessage), parseInt(latencyString, 10));
+            setTimeout(() => this.sendMessage(roomServiceMessage), Number.parseInt(latencyString, 10));
         } else {
             this.sendMessage(roomServiceMessage);
         }

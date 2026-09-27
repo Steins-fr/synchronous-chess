@@ -97,6 +97,10 @@ export class Room<M extends object> {
         return this._roomConnection.roomName;
     }
 
+    public get hostName(): string {
+        return this._roomConnection.hostName;
+    }
+
     protected handleRoomPlayerAdd(player: Player): void {
         this._players.update(players => players.filter(p => p.name !== player.name).concat(player));
     }

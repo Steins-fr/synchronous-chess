@@ -14,3 +14,7 @@ export default abstract class MoveTurn<T extends MoveTurnAction = MoveTurnAction
 
     public abstract registerMove(move: Move | null, color: PieceColor): void;
 }
+
+export function isMoveTurn(turn: Turn | null): turn is MoveTurn {
+    return turn?.category === TurnCategory.MOVE;
+}

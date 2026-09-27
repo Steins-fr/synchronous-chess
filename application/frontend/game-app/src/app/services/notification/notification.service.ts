@@ -59,12 +59,11 @@ export class NotificationService {
     }
 
     private pushToQueueIfNotExists(openedItem: SnackBarQueueItem, item: SnackBarQueueItem): void {
-        if (!this.queue.find((queueItem: SnackBarQueueItem) => this.itemsAreEqual(queueItem, item)) && !this.itemsAreEqual(openedItem, item)) {
+        if (!this.queue.some((queueItem: SnackBarQueueItem) => this.itemsAreEqual(queueItem, item)) && !this.itemsAreEqual(openedItem, item)) {
             this.queue.push(item);
         }
     }
 
-    // TODO: color of snackbar
     public error(content: string, duration: number = this.duration): void {
         this.openSnackBar(content, SnackBarTypeEnum.ERROR, duration);
     }

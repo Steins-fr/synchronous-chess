@@ -18,6 +18,11 @@ import { RoomNetwork } from './room-network';
 export class HostRoomNetwork extends RoomNetwork {
 
     public readonly initiator: boolean = true;
+
+    public get hostName(): string {
+        return this.localPlayer.name;
+    }
+
     private readonly refreshId: ReturnType<typeof setInterval>;
     private destroyRef = new Subject<void>();
 
@@ -42,7 +47,7 @@ export class HostRoomNetwork extends RoomNetwork {
             try {
                 const roomName: string = this.roomName;
                 const serverPlayers: string[] = (await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName })).players;
-                const localPlayers: string[] = Array.from(this.players.keys());
+                const localPlayers: ReadonlySet<string> = new Set(this.players.keys());
                 const missingPlayers: string[] = [];
                 const playersToRemove: string[] = [];
 
@@ -55,7 +60,7 @@ export class HostRoomNetwork extends RoomNetwork {
 
                 // Check if the server has more players than the local
                 for (const playerName of serverPlayers) {
-                    if (!localPlayers.includes(playerName)) {
+                    if (!localPlayers.has(playerName)) {
                         playersToRemove.push(playerName);
                     }
                 }

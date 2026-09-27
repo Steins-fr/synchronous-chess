@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 class TestRoomNetwork extends RoomNetwork {
     public readonly initiator: boolean = false;
+    public readonly hostName: string = 'host';
     public readonly onRoomMessageSpy = vi.fn();
     public readonly onPlayerConnectedSpy = vi.fn();
     public readonly onPlayerDisconnectedSpy = vi.fn();

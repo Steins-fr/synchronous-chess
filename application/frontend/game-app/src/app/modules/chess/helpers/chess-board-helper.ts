@@ -102,12 +102,12 @@ export default abstract class ChessBoardHelper {
                 FenPiece.BLACK_KNIGHT,
                 FenPiece.BLACK_ROOK
             ],
-            Array(rowSize).fill(FenPiece.BLACK_PAWN),
-            Array(rowSize).fill(FenPiece.EMPTY),
-            Array(rowSize).fill(FenPiece.EMPTY),
-            Array(rowSize).fill(FenPiece.EMPTY),
-            Array(rowSize).fill(FenPiece.EMPTY),
-            Array(rowSize).fill(FenPiece.WHITE_PAWN),
+            new Array(rowSize).fill(FenPiece.BLACK_PAWN),
+            new Array(rowSize).fill(FenPiece.EMPTY),
+            new Array(rowSize).fill(FenPiece.EMPTY),
+            new Array(rowSize).fill(FenPiece.EMPTY),
+            new Array(rowSize).fill(FenPiece.EMPTY),
+            new Array(rowSize).fill(FenPiece.WHITE_PAWN),
             [
                 FenPiece.WHITE_ROOK,
                 FenPiece.WHITE_KNIGHT,
@@ -124,14 +124,14 @@ export default abstract class ChessBoardHelper {
     public static createFilledBoard<T>(value: T): Array<Array<T>> {
         const rowSize: number = 8;
         return [
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value),
-            Array(rowSize).fill(value)
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value),
+            new Array(rowSize).fill(value)
         ];
     }
 
@@ -271,7 +271,7 @@ export default abstract class ChessBoardHelper {
         }
 
         const size: number = 8;
-        const safeBoard: SafeBoard = Array(size).fill([]).map(() => Array(size).fill(true));
+        const safeBoard: SafeBoard = new Array(size).fill([]).map(() => new Array(size).fill(true));
         let protectionPlays: Array<Vec2> = [];
 
         board.forEach((row: Array<FenPiece>, y: number) => {
@@ -329,7 +329,6 @@ export default abstract class ChessBoardHelper {
             throw new InvalidFenCoordinateError('column', index);
         }
 
-        // TODO: Replace map by object
         return column;
     }
 

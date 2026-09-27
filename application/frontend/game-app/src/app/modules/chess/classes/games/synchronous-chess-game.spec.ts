@@ -130,9 +130,9 @@ describe('SynchronousChessGame', () => {
         } as ChoiceTurn;
         gameState(gameChoiceTurn)._oldTurn.set(choiceTurnSpy);
 
-        expect(gameUndefinedOldTurn.lastMoveTurnAction()).toEqual(null);
+        expect(gameUndefinedOldTurn.lastMoveTurnAction()).toBeNull();
         expect(gameMoveTurn.lastMoveTurnAction()).toBe(moveTurnSpy.action);
-        expect(gameChoiceTurn.lastMoveTurnAction()).toEqual(null);
+        expect(gameChoiceTurn.lastMoveTurnAction()).toBeNull();
     });
 
     test('getPossiblePlays should return the piece possible plays', () => {

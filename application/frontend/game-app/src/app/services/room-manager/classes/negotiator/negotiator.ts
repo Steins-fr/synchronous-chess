@@ -42,7 +42,6 @@ export abstract class Negotiator {
 
     protected async setupConnection(): Promise<void> {
 
-        // FIXME: rework this
         if (this.signalTry < Negotiator.maxSignalTry && this.iceConnectionState !== 'connected') {
             if (this.signalTry > 0) {
                 console.error('Signal retry, may need debugging, if this error is not shown, remove signal retry logic');
@@ -50,8 +49,10 @@ export abstract class Negotiator {
             this.subs.forEach((sub: Subscription) => sub.unsubscribe());
             this.webRTC.configure(this.isInitiator);
 
-            this.subs.push(this.webRTC.rtcSignal$.subscribe((signal: RtcSignal) => this.onSignal(signal)));
-            this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
+            this.subs.push(
+                this.webRTC.rtcSignal$.subscribe((signal: RtcSignal) => this.onSignal(signal)),
+                this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)),
+            );
 
             if (this.isInitiator) {
                 await this.webRTC.createOffer();

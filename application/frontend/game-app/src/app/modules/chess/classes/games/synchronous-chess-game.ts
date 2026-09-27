@@ -9,7 +9,7 @@ import ChessRules from '../rules/chess-rules';
 import SynchronousChessRules from '../rules/synchronous-chess-rules';
 import ChoiceTurn from '../turns/choice-turn';
 import { IntermediateTurn } from '../turns/intermediate-turn';
-import MoveTurn from '../turns/move-turn';
+import MoveTurn, { isMoveTurn } from '../turns/move-turn';
 import PromotionTurn from '../turns/promotion-turn';
 import SyncTurn from '../turns/sync-turn';
 import Turn from '../turns/turn';
@@ -62,12 +62,11 @@ export default class SynchronousChessGame {
 
     public lastMoveTurnAction(): MoveTurnAction | null {
         const oldTurn: Turn | null = this.oldTurn();
-        if (!oldTurn || oldTurn.category !== TurnCategory.MOVE) {
+        if (!isMoveTurn(oldTurn)) {
             return null;
         }
 
-        // FIXME: types
-        return oldTurn.action as MoveTurnAction;
+        return oldTurn.action;
     }
 
     public getTurnType(): TurnType {
@@ -277,7 +276,7 @@ export default class SynchronousChessGame {
 
     protected checkPromotionTurn(): void {
         const oldTurn: Turn | null = this.oldTurn();
-        if (oldTurn?.category !== TurnCategory.MOVE) {
+        if (!isMoveTurn(oldTurn)) {
             return;
         }
 
@@ -287,8 +286,7 @@ export default class SynchronousChessGame {
             whitePiece: null,
             blackPiece: null,
         };
-        // TODO: better type checking
-        const { whiteMove, blackMove }: MoveTurnAction = oldTurn.action as MoveTurnAction;
+        const { whiteMove, blackMove }: MoveTurnAction = oldTurn.action;
         if (this.canPromote(whiteMove) && whiteMove) {
             promotionAction.whiteFenCoordinate = whiteMove.to;
         }

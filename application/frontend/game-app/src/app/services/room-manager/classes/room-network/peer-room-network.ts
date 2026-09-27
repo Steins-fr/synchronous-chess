@@ -19,22 +19,22 @@ export class PeerRoomNetwork extends RoomNetwork {
         roomApi: RoomSocketApi,
         roomName: string,
         localPlayerName: string,
-        hostPlayerName: string,
+        public readonly hostName: string,
     ) {
         super(roomApi, roomName, localPlayerName);
 
-        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, hostPlayerName, new Webrtc(), roomApi);
+        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, hostName, new Webrtc(), roomApi);
         this.addNegotiator(negotiator);
     }
 
     protected onPlayerConnected(player: Player): void {
-        // console.log(`Set host player: ${player.name}`);
-        // FIXME: improve host player assignment logic
-        this.hostPlayer ??= player;
+        if (player.name === this.hostName) {
+            this.hostPlayer = player;
+        }
     }
 
     protected onPlayerDisconnected(player: Player): void {
-        if (this.hostPlayer !== undefined && this.hostPlayer.name === player.name) {
+        if (this.hostPlayer?.name === player.name) {
             this.hostPlayer = undefined;
         }
     }

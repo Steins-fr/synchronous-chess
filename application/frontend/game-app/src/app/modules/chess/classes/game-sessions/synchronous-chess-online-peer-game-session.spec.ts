@@ -31,7 +31,7 @@ class ProtectedTest extends SynchronousChessOnlinePeerGameSession {
 
 function generateConfigurationMessage(whitePlayer: string = 'e', blackPlayer: string = 'd', spectatorNumber: number = 3): ConfigurationMessage {
     return {
-        from: 'a',
+        from: 'host',
         type: SCGameSessionType.CONFIGURATION,
         payload: {
             whitePlayer,
@@ -45,6 +45,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
     test('should set configuration on messenger event', () => {
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
+            hostName: 'host',
         });
         const messengerSubject = new Subject<ConfigurationMessage>();
         vi.mocked(roomSpy.messenger).mockReturnValue(messengerSubject);
@@ -60,12 +61,13 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
     test('should set the configuration', () => {
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
+            hostName: 'host',
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomSpy);
         const configuration: ConfigurationMessage = {
-            from: 'a',
+            from: 'host',
             type: SCGameSessionType.CONFIGURATION,
             payload: {
                 whitePlayer: 'e',
@@ -79,6 +81,23 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(session.configuration()).toBe(configuration.payload);
+    });
+
+    test('should ignore a configuration which does not come from the host', () => {
+        // Given
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
+            messenger: vi.fn(),
+            hostName: 'host',
+        });
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
+        const session: SynchronousChessOnlinePeerGameSession = new SynchronousChessOnlinePeerGameSession(roomSpy);
+        const defaultConfiguration: SessionConfiguration = session.configuration();
+
+        // When
+        session.onConfiguration({ ...generateConfigurationMessage(), from: 'intruder' });
+
+        // Then
+        expect(session.configuration()).toBe(defaultConfiguration);
     });
 
     test('should return false if runMove move a piece from another color', () => {
@@ -184,7 +203,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview()).not.toEqual(undefined);
+        expect(session.movePreview()).toBeDefined();
         expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
         expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });
@@ -223,7 +242,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview()).toEqual(undefined);
+        expect(session.movePreview()).toBeUndefined();
         expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
         expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });

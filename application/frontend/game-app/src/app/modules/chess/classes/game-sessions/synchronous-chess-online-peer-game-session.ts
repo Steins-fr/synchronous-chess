@@ -14,7 +14,10 @@ export default class SynchronousChessOnlinePeerGameSession extends SynchronousCh
     }
 
     public onConfiguration(configurationMessage: AppMessage<SCGameSessionType.CONFIGURATION, SessionConfiguration>): void {
-        // FIXME: prevent reception from other than host
+        if (configurationMessage.from !== this.roomService.hostName) {
+            return;
+        }
+
         this.setConfiguration(configurationMessage.payload);
     }
 }

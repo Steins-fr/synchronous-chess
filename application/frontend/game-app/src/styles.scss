@@ -8,3 +8,16 @@ body {
     margin: 0;
     font-family: Roboto, "Helvetica Neue", sans-serif;
 }
+
+// Snack bar colors, keyed by the panelClass NotificationService sets (SnackBarTypeEnum), info keeps the theme default
+.mat-mdc-snack-bar-container {
+    &.success {
+        --mat-snack-bar-container-color: #2e7d32;
+        --mat-snack-bar-supporting-text-color: #fff;
+    }
+
+    &.error {
+        --mat-snack-bar-container-color: #c62828;
+        --mat-snack-bar-supporting-text-color: #fff;
+    }
+}

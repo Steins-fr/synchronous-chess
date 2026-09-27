@@ -31,8 +31,10 @@ export class WebRtcPlayer extends Player {
         super(name);
 
         this.states = this.webRTC.states;
-        this.subs.push(this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)));
-        this.subs.push(this.webRTC.data.subscribe((data: Message) => this.onPeerData(data)));
+        this.subs.push(
+            this.webRTC.states.subscribe((states: WebrtcStates) => this.onPeerStates(states)),
+            this.webRTC.data.subscribe((data: Message) => this.onPeerData(data)),
+        );
 
         this.pingTimerId = this.pingInterval();
     }
@@ -50,7 +52,7 @@ export class WebRtcPlayer extends Player {
 
         if (message.origin !== MessageOriginType.PLAYER) {
             TimedLogger.log(
-                (new Date()).getTime().toString().substr(-5),
+                Date.now().toString().slice(-5),
                 id,
                 `TO ${ this.name }`,
                 message.type,
@@ -143,7 +145,7 @@ export class WebRtcPlayer extends Player {
         const message: ReceivedMessage = { ...data, from: this.name };
 
         TimedLogger.log(
-            (new Date()).getTime().toString().substr(-5),
+            Date.now().toString().slice(-5),
             `FROM ${ message.from }`,
             message.type,
             message.payload,

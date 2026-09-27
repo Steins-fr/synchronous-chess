@@ -40,8 +40,7 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     protected handleSignal(signal: RtcSignal): void {
-        // FIXME: code
-        this.roomSocketApi.send(RoomApiRequestTypeEnum.SIGNAL, { signal, to: this.playerName, roomName: this.roomName }).then().catch((err: string) => {
+        this.roomSocketApi.send(RoomApiRequestTypeEnum.SIGNAL, { signal, to: this.playerName, roomName: this.roomName }).catch((err: string) => {
             console.error(err);
         });
     }
