@@ -1,16 +1,11 @@
 import { Block } from './block';
 import { BlockToHash, Chain } from './chain';
-import { keyPairAlgorithm } from './block-chain.constants';
+import { genesisHash, keyPairAlgorithm } from './block-chain.constants';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { describe, test, expect } from 'vitest';
 
 const data: AppMessage = { from: 'a', type: 'move', payload: 1 };
 
-async function createChain(): Promise<Chain> {
-    const chain: Chain = new Chain();
-    await chain.reset();
-    return chain;
-}
 
 async function createNextBlock(previous: Block, blockData: AppMessage = data): Promise<Block> {
     const blockToHash: BlockToHash = { index: previous.index + 1, previousHash: previous.hash, timestamp: '', data: blockData };
@@ -24,20 +19,34 @@ describe('Chain', () => {
 
     test('should start with the genesis block', async () => {
         // Given
-        const chain: Chain = await createChain();
+        const chain: Chain = new Chain();
 
         // When
         const genesis: Block = chain.getLatestBlock();
 
         // Then
         expect(genesis.index).toEqual(0);
-        expect(genesis.hash).toMatch(/^[0-9a-f]{64}$/);
+        expect(genesis.hash).toEqual(genesisHash);
+        expect(await Chain.calculateHash(genesis)).toEqual(genesisHash);
         expect(chain.getBlock(0)).toBe(genesis);
+    });
+
+    test('reset should only keep the genesis block', async () => {
+        // Given
+        const chain: Chain = new Chain();
+        await chain.addBlock(await createNextBlock(chain.getLatestBlock()));
+
+        // When
+        chain.reset();
+
+        // Then
+        expect(chain.getLatestBlock().index).toEqual(0);
+        expect(chain.getLatestBlock().hash).toEqual(genesisHash);
     });
 
     test('should add a valid block', async () => {
         // Given
-        const chain: Chain = await createChain();
+        const chain: Chain = new Chain();
         const block: Block = await createNextBlock(chain.getLatestBlock());
 
         // When
@@ -52,7 +61,7 @@ describe('Chain', () => {
 
     test('should refuse invalid blocks', async () => {
         // Given
-        const chain: Chain = await createChain();
+        const chain: Chain = new Chain();
         const genesis: Block = chain.getLatestBlock();
         const valid: Block = await createNextBlock(genesis);
         const tooFar: Block = new Block(5, '', data, genesis.hash, valid.hash, '');
@@ -68,9 +77,9 @@ describe('Chain', () => {
         await expect(chain.addBlock(wrongHash)).rejects.toThrow('Block not valid');
     });
 
-    test('getBlock should throw for an unknown index', async () => {
+    test('getBlock should throw for an unknown index', () => {
         // Given
-        const chain: Chain = await createChain();
+        const chain: Chain = new Chain();
 
         // When
         const call = (): Block => chain.getBlock(1);
@@ -81,7 +90,7 @@ describe('Chain', () => {
 
     test('isChainValid should detect a tampered hash', async () => {
         // Given
-        const chain: Chain = await createChain();
+        const chain: Chain = new Chain();
         const block: Block = await createNextBlock(chain.getLatestBlock());
         const tampered: Block = new Block(block.index, block.timestamp, { ...data, payload: 2 }, block.previousHash, block.hash, '');
         (chain as unknown as { chain: Block[] }).chain.push(tampered);
@@ -95,7 +104,7 @@ describe('Chain', () => {
 
     test('isChainValid should detect a broken link', async () => {
         // Given
-        const chain: Chain = await createChain();
+        const chain: Chain = new Chain();
         const orphanPrevious: Block = new Block(0, '', data, '', 'orphan', '');
         const orphan: Block = await createNextBlock(orphanPrevious);
         (chain as unknown as { chain: Block[] }).chain.push(orphan);

@@ -86,7 +86,6 @@ async function createNode(options: { withLocal?: boolean; withLocalPlayer?: bool
     const room = { localPlayer: withLocalPlayer ? localPlayer : undefined, notifyMessage: vi.fn(), clear: vi.fn() };
     const chain: DistributedBlockChain = new DistributedBlockChain(TestHelper.cast<BlockRoomInterface>(room), localKeyPair);
     const internals: DistributedBlockChainInternals = internalsOf(chain);
-    await internals.blockChain.reset();
 
     if (withLocal) {
         chain.onNewPlayer(localPlayer);
@@ -563,7 +562,7 @@ describe('DistributedBlockChain', () => {
         chain.clear();
 
         // Then
-        await vi.waitFor(() => expect(internals.blockChain.getLatestBlock().index).toEqual(0));
+        expect(internals.blockChain.getLatestBlock().index).toEqual(0);
         expect(internals.participants.size).toEqual(0);
         expect(internals.state).toEqual(BlockChainState.INITIALISING);
         expect(internals.localBlock).toBeUndefined();

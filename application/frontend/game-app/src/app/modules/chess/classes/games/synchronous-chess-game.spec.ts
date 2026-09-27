@@ -2705,4 +2705,29 @@ describe('SynchronousChessGame', () => {
         // Then
         expect(call).toThrow('A synchronous turn can not be skipped');
     });
+
+    test('should run an intermediate turn skipped by both players', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+        const board: FenBoard = game.fenBoard();
+        gameState(game)._turn.set(new IntermediateTurn({
+            whiteTarget: [FenColumn.E, FenRow._5],
+            blackTarget: [FenColumn.E, FenRow._4],
+            whiteMove: null,
+            blackMove: null,
+        }));
+
+        // When
+        const whiteRegistered: boolean = game.registerMove(null, PieceColor.WHITE);
+        const blackRegistered: boolean = game.registerMove(null, PieceColor.BLACK);
+        const executed: boolean = game.runTurn();
+
+        // Then
+        expect(whiteRegistered).toEqual(true);
+        expect(blackRegistered).toEqual(true);
+        expect(executed).toEqual(true);
+        expect(game.fenBoard()).toEqual(board);
+        expect(game.getTurnType()).toEqual(TurnType.MOVE_SYNC);
+        expect(game.lastMoveTurnAction()).toEqual(expect.objectContaining({ whiteMove: null, blackMove: null }));
+    });
 });

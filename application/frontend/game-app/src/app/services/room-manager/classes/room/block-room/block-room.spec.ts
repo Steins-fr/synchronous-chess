@@ -1,6 +1,5 @@
 import { BlockRoom } from './block-room';
 import { Block } from './block-chain/block';
-import { Chain } from './block-chain/chain';
 import { DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
@@ -44,8 +43,6 @@ describe('BlockRoom', () => {
         const room: BlockRoom<TestPayloads> = new BlockRoom<TestPayloads>(roomApi, network.roomNetwork, keyPair);
         const moves: AppMessage[] = [];
         room.messenger('move').subscribe((message: AppMessage) => moves.push(message));
-        const chain: Chain = TestHelper.cast<{ blockChain: { blockChain: Chain } }>(room).blockChain.blockChain;
-        await vi.waitFor(() => expect(chain.getLatestBlock()).toBeDefined());
 
         // When
         room.transmitMessage('move', 'e4');

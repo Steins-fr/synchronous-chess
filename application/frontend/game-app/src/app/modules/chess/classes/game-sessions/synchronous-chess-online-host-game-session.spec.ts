@@ -193,6 +193,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
@@ -224,6 +225,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
@@ -419,6 +421,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
@@ -447,6 +450,7 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             messenger: vi.fn(),
             playerAdded$: new Subject<Player>(),
             playerRemoved$: new Subject<Player>(),
+            localPlayer: { name: 'b' } as LocalPlayer,
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
@@ -504,5 +508,30 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         // Then
         expect(session.configuration().spectatorNumber).toEqual(0);
         expect(roomSpy.transmitMessage).toHaveBeenCalledTimes(3);
+    });
+
+    test('should ignore its own moves and promotions echoed by the room', () => {
+        // Given
+        const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
+            messenger: vi.fn(),
+            playerAdded$: new Subject<Player>(),
+            playerRemoved$: new Subject<Player>(),
+            localPlayer: { name: 'a' } as LocalPlayer,
+        });
+        vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<AppMessagesOf<ChessPayloads>>());
+        const session: ProtectedTest = new ProtectedTest(roomSpy);
+        sessionState(session).setConfiguration({ whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 });
+        const runMoveSpy = vi.fn();
+        const runPromotionSpy = vi.fn();
+        Object.defineProperty(session, 'runMove', { value: runMoveSpy });
+        Object.defineProperty(session, 'runPromotion', { value: runPromotionSpy });
+
+        // When
+        session.onMove({ from: 'a', type: SCGameSessionType.PLAY, payload: { move: null } });
+        session.onPromotion({ from: 'a', type: SCGameSessionType.PROMOTION, payload: { pieceType: PieceType.QUEEN } });
+
+        // Then
+        expect(runMoveSpy).not.toHaveBeenCalled();
+        expect(runPromotionSpy).not.toHaveBeenCalled();
     });
 });

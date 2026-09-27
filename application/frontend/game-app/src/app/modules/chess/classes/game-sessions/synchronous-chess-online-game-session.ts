@@ -72,9 +72,14 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         return this.playerColor(playerName) !== PieceColor.NONE;
     }
 
+    // The room echoes messages to their sender, local moves and promotions are already run by move() and promote()
+    private isRemotePlaying(playerName: string): boolean {
+        return this.isPlaying(playerName) && playerName !== this.roomService.localPlayer.name;
+    }
+
     protected onMove(message: AppMessage<SCGameSessionType.PLAY, PlayMessage>): void {
-        // Prevent reception of move from spectator
-        if (!this.isPlaying(message.from)) {
+        // Prevent reception of move from spectator or from myself
+        if (!this.isRemotePlaying(message.from)) {
             return;
         }
 
@@ -93,8 +98,8 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     }
 
     protected onPromotion(message: AppMessage<SCGameSessionType.PROMOTION, PromotionMessage>): void {
-        // Prevent reception of move from spectator
-        if (!this.isPlaying(message.from)) {
+        // Prevent reception of promotion from spectator or from myself
+        if (!this.isRemotePlaying(message.from)) {
             return;
         }
 

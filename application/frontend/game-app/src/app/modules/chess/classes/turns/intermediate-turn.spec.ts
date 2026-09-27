@@ -241,4 +241,63 @@ describe('IntermediateTurn', () => {
         expect(turn.action).not.toEqual(initialAction);
         expect(turn.action).toEqual(expectedAction);
     });
+
+    test('should count a pass as a played move', () => {
+        // Given
+        const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: fenCoordinate,
+            whiteMove: null,
+            blackMove: null,
+        });
+
+        // When
+        turn.registerMove(null, PieceColor.WHITE);
+        turn.registerMove(null, PieceColor.BLACK);
+
+        // Then
+        expect(turn.isFilled(PieceColor.WHITE)).toEqual(true);
+        expect(turn.isFilled(PieceColor.BLACK)).toEqual(true);
+        expect(turn.canBeExecuted()).toEqual(true);
+        expect(turn.action.whiteMove).toBeNull();
+        expect(turn.action.blackMove).toBeNull();
+    });
+
+    test('should replace a pass by a move', () => {
+        // Given
+        const fenCoordinate: FenCoordinate = [FenColumn.A, 3];
+        const whiteMove: Move = { from: [FenColumn.A, 3], to: [FenColumn.B, 4] };
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: fenCoordinate,
+            blackTarget: null,
+            whiteMove: null,
+            blackMove: null,
+        });
+        turn.registerMove(null, PieceColor.WHITE);
+
+        // When
+        turn.registerMove(whiteMove, PieceColor.WHITE);
+
+        // Then
+        expect(turn.action.whiteMove).toEqual(whiteMove);
+        expect(turn.isFilled(PieceColor.WHITE)).toEqual(true);
+    });
+
+    test('should ignore a pass without target', () => {
+        // Given
+        const turn: IntermediateTurn = new IntermediateTurn({
+            whiteTarget: null,
+            blackTarget: [FenColumn.A, 3],
+            whiteMove: null,
+            blackMove: null,
+        });
+
+        // When
+        turn.registerMove(null, PieceColor.WHITE);
+
+        // Then
+        expect(turn.isFilled(PieceColor.BLACK)).toEqual(false);
+        expect(turn.canBeExecuted()).toEqual(false);
+    });
 });

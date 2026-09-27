@@ -171,17 +171,19 @@ describe('SyncChessGameComponent', () => {
     test('should skip an intermediate turn', async () => {
         // Given
         await createOnlineGame();
-        const moveSpy = vi.spyOn(session(), 'move').mockImplementation(() => undefined);
+        setTurn(new IntermediateTurn({ whiteTarget: [FenColumn.E, FenRow._4], blackTarget: null, whiteMove: null, blackMove: null }));
+        await refresh();
 
         // When
-        setTurn(intermediateTurn());
-        await refresh();
         skipButton('white')?.click();
+        await refresh();
 
         // Then
-        expect(component.canSkip()).toEqual(true);
         expect(skipButton('black')).toBeNull();
-        expect(moveSpy).toHaveBeenCalledWith(null);
+        expect(component.turnType()).toEqual('Synchronisé');
+        expect(component.whiteLastMove()).toEqual('a passé');
+        expect(text('.player-information.white-player')).toContain('a passé');
+        expect(component.canSkip()).toEqual(false);
     });
 
     test('should not be able to skip a synchronous turn', async () => {

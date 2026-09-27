@@ -1,33 +1,18 @@
 import { Block } from './block';
-import { signatureAlgorithm } from './block-chain.constants';
+import { genesisHash, signatureAlgorithm } from './block-chain.constants';
 
 export type BlockToHash = Omit<Block, 'hash' | 'signature'>;
 
 export class Chain {
 
-    public constructor() {
-        // FIXME: async void
-        this.reset().then();
-    }
+    private chain: Block[] = [Chain.createGenesisBlock()];
 
-    private chain: Block[] = [];
-
-    private static async createGenesisBlock(): Promise<Block> {
-        const hash: string = await Chain.calculateHash({
-            index: 0,
-            timestamp: '',
-            data: {
-                from: '',
-                type: '',
-                payload: null
-            },
-            previousHash: ''
-        });
+    private static createGenesisBlock(): Block {
         return new Block(0, '', {
             from: '',
             type: '',
             payload: null
-        }, '', hash, '');
+        }, '', genesisHash, '');
     }
 
     private static encodeMessage(message: string): Uint8Array<ArrayBuffer> {
@@ -128,7 +113,7 @@ export class Chain {
         return true;
     }
 
-    public async reset(): Promise<void> {
-        this.chain = [await Chain.createGenesisBlock()];
+    public reset(): void {
+        this.chain = [Chain.createGenesisBlock()];
     }
 }
