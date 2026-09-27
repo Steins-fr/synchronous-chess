@@ -56,5 +56,6 @@ npm run lint         # ESLint
 ## CI
 
 `.github/workflows/game-app-pull-request.yml` runs lint, then tests with coverage and a SonarCloud
-scan, on PRs touching `application/frontend/game-app/**`. Terraform workflows cover
-`infrastructure`. Keep `npm run lint` and `npm run test:ci` green before pushing.
+scan, on PRs touching `application/frontend/game-app/**`. `game-app-main.yml` runs the tests and
+the SonarCloud scan on `main` (pushes touching the app, or manually) for the README badges.
+Terraform workflows cover `infrastructure`. Keep `npm run lint` and `npm run test:ci` green before pushing.

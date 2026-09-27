@@ -12,7 +12,7 @@ import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.compone
     selector: 'app-chat-page',
     templateUrl: './chat.page.html',
     imports: [RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
-    providers: [RoomSetupService],
+    providers: [RoomSetupService, RoomManagerService],
 })
 export class ChatPage implements OnInit, OnDestroy {
     public maxPlayer: number = 6;

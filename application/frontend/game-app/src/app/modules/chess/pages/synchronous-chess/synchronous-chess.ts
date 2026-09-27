@@ -14,7 +14,7 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
     selector: 'app-synchronous-chess',
     templateUrl: './synchronous-chess.html',
     imports: [RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent],
-    providers: [RoomSetupService],
+    providers: [RoomSetupService, RoomManagerService],
 })
 export class SynchronousChess implements OnInit, OnDestroy {
     protected readonly maxPlayer: number = 4;

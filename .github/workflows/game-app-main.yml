@@ -1,0 +1,64 @@
+name: Angular CI Main Game App
+
+# Analyse main so SonarCloud tracks its quality (README badges) and pull requests compare against it
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "application/frontend/game-app/**"
+    workflow_dispatch:
+
+defaults:
+    run:
+        working-directory: application/frontend/game-app
+
+jobs:
+    angular-test:
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  # Disabling shallow clones is recommended for improving the relevancy of reporting
+                  fetch-depth: 0
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+
+            - name: Get npm cache directory
+              id: npm-cache-dir
+              shell: bash
+              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+            - uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      **/node_modules
+                  key: ${{ runner.os }}-npm-${{ hashFiles('application/frontend/game-app/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-npm-
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run Test
+              run: npm run test:ci
+
+            - name: SonarQube Scan
+              uses: SonarSource/sonarqube-scan-action@v7 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              with:
+                  projectBaseDir: application/frontend/game-app
+                  args: >
+                      -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+                      -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+                      -Dsonar.typescript.tsconfigPath=tsconfig.json
+                      -Dsonar.sources=src/app
+                      -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts
+                      -Dsonar.tests=src/app
+                      -Dsonar.test.inclusions=**/*.spec.ts
+                      -Dsonar.sourceEncoding=UTF-8
+                      -Dsonar.typescript.lcov.reportPaths=coverage/game-app/lcov.info

@@ -9,10 +9,7 @@ import RoomJoinResponse from '../room-api/responses/room-join-response';
 import RoomCreateResponse from '../room-api/responses/room-create-response';
 import { NotificationService } from '../notification/notification.service';
 
-// TODO: remove providedIn root to allow for more flexible injection
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable()
 export default class RoomManagerService {
     private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);

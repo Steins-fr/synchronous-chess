@@ -26,6 +26,7 @@ describe('RoomManagerService', () => {
 
         TestBed.configureTestingModule({
             providers: [
+                RoomManagerService,
                 { provide: RoomSocketApi, useValue: roomSocketApi },
                 { provide: NotificationService, useValue: notificationService },
             ],
