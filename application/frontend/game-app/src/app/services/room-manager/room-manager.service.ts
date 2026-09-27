@@ -9,7 +9,7 @@ import RoomJoinResponse from '../room-api/responses/room-join-response';
 import RoomCreateResponse from '../room-api/responses/room-create-response';
 import { NotificationService } from '../notification/notification.service';
 
-// FIXME: remove providedIn root to allow for more flexible injection
+// TODO: remove providedIn root to allow for more flexible injection
 @Injectable({
     providedIn: 'root'
 })

@@ -37,6 +37,7 @@ describe('Room', () => {
         expect(room.playerRemoved$).toBe(network.playerRemoved$);
         expect(room.initiator).toEqual(true);
         expect(room.roomName).toEqual('room');
+        expect(room.hostName).toEqual('host');
         expect(room.players()).toEqual([network.localPlayer]);
         expect(room.queue()).toEqual(['pending']);
     });

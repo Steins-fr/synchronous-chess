@@ -2,6 +2,7 @@ import { Block } from './block';
 import { BlockToHash, Chain } from './chain';
 import { genesisHash, keyPairAlgorithm } from './block-chain.constants';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { TestHelper } from '@testing/test.helper';
 import { describe, test, expect } from 'vitest';
 
 const data: AppMessage = { from: 'a', type: 'move', payload: 1 };
@@ -86,6 +87,18 @@ describe('Chain', () => {
 
         // Then
         expect(call).toThrow('Unexpected chain index');
+    });
+
+    test('getLatestBlock should throw when the genesis block is missing', () => {
+        // Given
+        const chain: Chain = new Chain();
+        TestHelper.cast<{ chain: Block[] }>(chain).chain = [];
+
+        // When
+        const call = (): Block => chain.getLatestBlock();
+
+        // Then
+        expect(call).toThrow('Chain has no genesis block');
     });
 
     test('isChainValid should detect a tampered hash', async () => {

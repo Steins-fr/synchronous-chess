@@ -74,8 +74,13 @@ describe('HostRoomNetwork', () => {
         vi.restoreAllMocks();
     });
 
-    test('should be the initiator', () => {
-        expect(createNetwork().initiator).toEqual(true);
+    test('should be the initiator and the host', () => {
+        // When
+        const hostNetwork: TestHostRoomNetwork = createNetwork();
+
+        // Then
+        expect(hostNetwork.initiator).toEqual(true);
+        expect(hostNetwork.hostName).toEqual('host');
     });
 
     test('should negotiate with a joining player', async () => {
