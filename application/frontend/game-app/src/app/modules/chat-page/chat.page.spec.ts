@@ -20,8 +20,10 @@ describe('ChatPage', () => {
 
         await TestBed.configureTestingModule({
             imports: [ChatPage],
-            providers: [{ provide: RoomManagerService, useValue: roomManagerService }],
-        }).compileComponents();
+        })
+            // Provided by the page itself, so override it rather than providing it to the testing module
+            .overrideProvider(RoomManagerService, { useValue: roomManagerService })
+            .compileComponents();
 
         fixture = TestBed.createComponent(ChatPage);
         await fixture.whenStable();

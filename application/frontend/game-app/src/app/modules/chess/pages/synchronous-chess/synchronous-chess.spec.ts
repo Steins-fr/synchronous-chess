@@ -20,8 +20,10 @@ describe('SynchronousChess', () => {
 
         await TestBed.configureTestingModule({
             imports: [SynchronousChess],
-            providers: [{ provide: RoomManagerService, useValue: roomManagerService }],
-        }).compileComponents();
+        })
+            // Provided by the page itself, so override it rather than providing it to the testing module
+            .overrideProvider(RoomManagerService, { useValue: roomManagerService })
+            .compileComponents();
 
         fixture = TestBed.createComponent(SynchronousChess);
         await fixture.whenStable();
