@@ -1,10 +1,12 @@
 import { BehaviorSubject, Observable, Subject, filter, first } from 'rxjs';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
+// Values mirror the WebSocket readyState constants
 export enum SocketState {
-    CONNECTING = WebSocket.CONNECTING,
-    OPEN = WebSocket.OPEN,
-    CLOSED = WebSocket.CLOSED,
-    CLOSING = WebSocket.CLOSING,
+    CONNECTING = 0,
+    OPEN = 1,
+    CLOSING = 2,
+    CLOSED = 3,
 }
 
 export class WebSocketService {
@@ -34,14 +36,12 @@ export class WebSocketService {
     }
 
     private getOrCreateSocket(): WebSocket {
-        if (this._state.getValue() === SocketState.OPEN && this.webSocket) {
-            return this.webSocket;
-        }
-
         let webSocket: WebSocket | null;
+        const state: SocketState = this._state.getValue();
 
-        switch (this._state.getValue()) {
+        switch (state) {
             case SocketState.CONNECTING:
+            case SocketState.OPEN:
                 webSocket = this.webSocket;
                 break;
             case SocketState.CLOSED:
@@ -50,7 +50,7 @@ export class WebSocketService {
                 this._state.next(SocketState.CONNECTING);
                 break;
             default:
-                throw new Error('Should not happen');
+                return switchExhaustivenessGuard(state);
         }
 
         if (!webSocket) {
@@ -76,7 +76,7 @@ export class WebSocketService {
                 .subscribe((state: SocketState) => {
                     if (state === SocketState.OPEN) {
                         resolve(webSocket);
-                    } else if (state === SocketState.CLOSED) {
+                    } else {
                         this.close();
                         reject(new Error('Socket connection failed'));
                     }

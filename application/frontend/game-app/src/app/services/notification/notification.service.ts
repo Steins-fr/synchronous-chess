@@ -25,7 +25,7 @@ export class NotificationService {
         duration: number = this.duration,
     ): void {
         if (this.openedItem) {
-            this.pushToQueueIfNotExists({ content, type, duration });
+            this.pushToQueueIfNotExists(this.openedItem, { content, type, duration });
             return;
         }
 
@@ -52,23 +52,18 @@ export class NotificationService {
             });
     }
 
-    private itemsAreEqual(item1: SnackBarQueueItem | null, item2: SnackBarQueueItem | null): boolean {
-        if (!item1 || !item2) {
-            return false;
-        }
-
+    private itemsAreEqual(item1: SnackBarQueueItem, item2: SnackBarQueueItem): boolean {
         return item1.content === item2.content
         && item1.type === item2.type
         && item1.duration === item2.duration;
     }
 
-    private pushToQueueIfNotExists(item: SnackBarQueueItem): void {
-        if (!this.queue.find((queueItem: SnackBarQueueItem) => this.itemsAreEqual(queueItem, item)) && !this.itemsAreEqual(this.openedItem, item)) {
+    private pushToQueueIfNotExists(openedItem: SnackBarQueueItem, item: SnackBarQueueItem): void {
+        if (!this.queue.some((queueItem: SnackBarQueueItem) => this.itemsAreEqual(queueItem, item)) && !this.itemsAreEqual(openedItem, item)) {
             this.queue.push(item);
         }
     }
 
-    // TODO: color of snackbar
     public error(content: string, duration: number = this.duration): void {
         this.openSnackBar(content, SnackBarTypeEnum.ERROR, duration);
     }

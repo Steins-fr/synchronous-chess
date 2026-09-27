@@ -630,4 +630,19 @@ describe('ChessHelper', () => {
         expect(whiteCall).toThrowError();
         expect(blackCall).toThrowError();
     });
+
+    test('should throw on invalid fen coordinates', () => {
+        // Given
+        const fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
+        const invalidRow: FenCoordinate = [FenColumn.A, 9 as FenRow];
+        const invalidColumn: FenCoordinate = ['z' as FenColumn, FenRow._1];
+
+        // When
+        const getInvalidRow = (): FenPiece => ChessBoardHelper.getFenPiece(fenBoard, invalidRow);
+        const setInvalidColumn = (): FenBoard => ChessBoardHelper.setFenPiece(fenBoard, invalidColumn, FenPiece.WHITE_KING);
+
+        // Then
+        expect(getInvalidRow).toThrow('Invalid row index: 9');
+        expect(setInvalidColumn).toThrow('Invalid column index: z');
+    });
 });

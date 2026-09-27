@@ -6,6 +6,9 @@ import { PieceColor } from '../../enums/piece-color.enum';
 
 export class IntermediateTurn extends MoveTurn<IntermediateTurnAction> {
 
+    // A null move is a pass, which has to be distinguished from a move not played yet
+    private readonly passedColors = new Set<PieceColor>();
+
     public constructor(public action: IntermediateTurnAction,
         public readonly lastWhiteMove: Move | null = null,
         public readonly lastBlackMove: Move | null = null) {
@@ -27,14 +30,22 @@ export class IntermediateTurn extends MoveTurn<IntermediateTurnAction> {
             this.action.whiteMove = move;
         } else if (color === PieceColor.BLACK && this.action.blackTarget !== null) {
             this.action.blackMove = move;
+        } else {
+            return;
+        }
+
+        if (move === null) {
+            this.passedColors.add(color);
+        } else {
+            this.passedColors.delete(color);
         }
     }
 
     public isFilled(color: PieceColor): boolean {
         if (color === PieceColor.WHITE) {
-            return this.action.whiteTarget === null || this.action.whiteMove !== null;
+            return this.action.whiteTarget === null || this.action.whiteMove !== null || this.passedColors.has(color);
         } else if (color === PieceColor.BLACK) {
-            return this.action.blackTarget === null || this.action.blackMove !== null;
+            return this.action.blackTarget === null || this.action.blackMove !== null || this.passedColors.has(color);
         }
 
         return true;

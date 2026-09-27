@@ -1,32 +1,22 @@
-import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
-import { ToReworkMessage } from '@app/services/room-manager/classes/webrtc/messages/to-rework-message';
+import { idGenerator } from '@app/helpers/id-generator.helper';
+import { NetworkMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 
-export enum PlayerEventType {
-    DISCONNECTED = 'disconnected',
-    MESSAGE = 'message'
-}
-
-export interface PlayerEvent<T extends Message = Message> {
-    type: PlayerEventType;
-    name: string; // Player name
-    message: T;
+function* markIdGenerator(name: string): Generator<string, never> {
+    const ids: Generator<number, never> = idGenerator();
+    while (true) {
+        yield `${ name }-${ ids.next().value }`;
+    }
 }
 
 export abstract class Player {
 
-    protected readonly markIdGenerator: Generator = function* generator(name: string): Generator {
-        let id: number = 0;
-        while (true) {
-            ++id;
-            yield `${ name }-${ id }`;
-        }
-    }(this.name);
+    protected readonly markIdGenerator: Generator<string, never> = markIdGenerator(this.name);
 
     protected constructor(public readonly name: string) {}
 
     public abstract clear(): void;
 
-    public abstract sendData(message: ToReworkMessage): void;
+    public abstract sendData(message: NetworkMessage): void;
 
     public abstract get isLocal(): boolean;
 }

@@ -7,7 +7,7 @@ import {
 } from '@app/services/room-api/room-socket.api';
 import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { Subject, takeUntil } from 'rxjs';
-import { Negotiator, NegotiatorEventType } from './negotiator';
+import { Negotiator, NegotiatorConnectionState } from './negotiator';
 
 export class WebsocketNegotiator extends Negotiator {
     private destroyRef = new Subject<void>();
@@ -31,7 +31,7 @@ export class WebsocketNegotiator extends Negotiator {
 
     private onFull(data: FullNotification): void {
         if (data.from === this.playerName) {
-            this.pushEvent(NegotiatorEventType.DISCONNECTED);
+            this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
         }
     }
 
@@ -40,8 +40,7 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     protected handleSignal(signal: RtcSignal): void {
-        // FIXME: code
-        this.roomSocketApi.send(RoomApiRequestTypeEnum.SIGNAL, { signal, to: this.playerName, roomName: this.roomName }).then().catch((err: string) => {
+        this.roomSocketApi.send(RoomApiRequestTypeEnum.SIGNAL, { signal, to: this.playerName, roomName: this.roomName }).catch((err: string) => {
             console.error(err);
         });
     }

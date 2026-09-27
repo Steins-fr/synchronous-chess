@@ -1,46 +1,48 @@
 import SynchronousChessOnlineGameSession, {
+    ChessPayloads,
     SCGameSessionType
 } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import { Room } from '@app/services/room-manager/classes/room/room';
-import { RoomNetworkEventType } from '@app/services/room-manager/classes/room-network/events/room-network-event';
-import RoomNetworkPlayerAddEvent from '@app/services/room-manager/classes/room-network/events/room-network-player-add-event';
-import RoomNetworkPlayerRemoveEvent from '@app/services/room-manager/classes/room-network/events/room-network-player-remove-event';
 import { Player } from '@app/services/room-manager/classes/player/player';
+import { takeUntil } from 'rxjs';
 
 export default class SynchronousChessOnlineHostGameSession extends SynchronousChessOnlineGameSession {
 
-    public constructor(roomService: Room<RoomMessage>) {
+    public constructor(roomService: Room<ChessPayloads>) {
         super(roomService);
         this.followRoomManager();
     }
 
     private followRoomManager(): void {
-        this.roomService.roomManagerNotifier.follow(RoomNetworkEventType.PLAYER_ADD, this, (event: RoomNetworkPlayerAddEvent) => this.onPlayerAdd(event.payload));
-        this.roomService.roomManagerNotifier.follow(RoomNetworkEventType.PLAYER_REMOVE, this, (event: RoomNetworkPlayerRemoveEvent) => this.onPlayerRemove(event.payload));
+        this.roomService.playerAdded$.pipe(takeUntil(this.destroyRef)).subscribe((player: Player) => this.onPlayerAdd(player));
+        this.roomService.playerRemoved$.pipe(takeUntil(this.destroyRef)).subscribe((player: Player) => this.onPlayerRemove(player));
     }
 
     public onPlayerAdd(player: Player): void {
+        const configuration: Readonly<SessionConfiguration> = this.configuration();
 
-        if (this.configuration.whitePlayer === undefined) {
-            this.configuration.whitePlayer = player.name;
-        } else if (this.configuration.blackPlayer === undefined) {
-            this.configuration.blackPlayer = player.name;
+        if (configuration.whitePlayer === undefined) {
+            this.setConfiguration({ ...configuration, whitePlayer: player.name });
+        } else if (configuration.blackPlayer === undefined) {
+            this.setConfiguration({ ...configuration, blackPlayer: player.name });
         } else {
-            ++this.configuration.spectatorNumber;
+            this.setConfiguration({ ...configuration, spectatorNumber: configuration.spectatorNumber + 1 });
         }
 
-        this.roomService.transmitMessage(SCGameSessionType.CONFIGURATION, this.configuration);
+        this.roomService.transmitMessage(SCGameSessionType.CONFIGURATION, this.configuration());
     }
 
     public onPlayerRemove(player: Player): void {
+        const configuration: Readonly<SessionConfiguration> = this.configuration();
+
         switch (player.name) {
-            case this.configuration.whitePlayer:
+            case configuration.whitePlayer:
                 break;
-            case this.configuration.blackPlayer:
+            case configuration.blackPlayer:
                 break;
             default:
-                --this.configuration.spectatorNumber;
+                this.setConfiguration({ ...configuration, spectatorNumber: configuration.spectatorNumber - 1 });
         }
     }
 }

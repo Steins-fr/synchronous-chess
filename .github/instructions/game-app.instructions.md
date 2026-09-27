@@ -16,6 +16,7 @@ This is an Angular TypeScript project with the following characteristics:
 ## Code Conventions
 
 - Zoneless, so use `signal` for all reactive variables used in templates
+- Type `signal` / `computed` generics as readonly: `ReadonlyArray<Readonly<T>>` for arrays, `ReadonlyMap<K, Readonly<V>>` for maps (`Readonly<>` is omitted for primitives, e.g. `ReadonlyArray<string>`)
 - Inject dependencies using `inject()` function
 - Use `takeUntilDestroyed()` for subscription cleanup
 - Input/Output uses `input()`, `model()` and `output()` signal function with `readonly` modifier
@@ -23,6 +24,13 @@ This is an Angular TypeScript project with the following characteristics:
 - Follow Angular style guide naming conventions
 - Use protected/private access modifiers appropriately
 - Strict typing everywhere
+
+## Testing
+
+- Keep 100% line and branch coverage: every commit and push must leave `npm run test:ci` fully
+  covered (report in `coverage/game-app/lcov.info`), so new or changed code ships with its specs
+- Enforced by `coverageThresholds` in `angular.json`: `npm run test:ci` fails below 100%
+- SonarCloud reports coverage on the PR's new code; it must stay at 100% there too
 
 ## Project Structure
 

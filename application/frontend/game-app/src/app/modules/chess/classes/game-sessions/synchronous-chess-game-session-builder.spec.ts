@@ -1,33 +1,27 @@
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
+import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import SynchronousChessOnlineHostGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-host-game-session';
 import SynchronousChessOnlinePeerGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-peer-game-session';
-import { NotifierFlow } from '@app/deprecated/notifier/notifier';
+import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
 import { describe, test, expect, beforeEach, vi } from 'vitest';
 
 describe('SynchronousChessGameSessionBuilder', () => {
-    let roomSpy: any; // Room<any>
+    let roomSpy: any; // Room<ChessPayloads>
     let initiatorGetterSpy: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
-        // Base spy object with method spies
+        // Base spy object with method spies and player streams
         roomSpy = {
             messenger: vi.fn(),
+            playerAdded$: new Subject<Player>(),
+            playerRemoved$: new Subject<Player>(),
         };
 
-        // roomManagerNotifier getter providing follow & unfollow spies
-        TestHelper.defineGetterSpy(
-            roomSpy,
-            'roomManagerNotifier',
-            {
-                follow: vi.fn(),
-                unfollow: vi.fn(),
-            } as NotifierFlow<any>
-        );
         // initiator getter (value overridden in individual tests)
         initiatorGetterSpy = TestHelper.defineGetterSpy(roomSpy, 'initiator', false);
 
@@ -41,7 +35,7 @@ describe('SynchronousChessGameSessionBuilder', () => {
     test('should create an instance of SynchronousChessOnlineHostGameSession', () => {
         initiatorGetterSpy.mockReturnValue(true);
 
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<any>);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<ChessPayloads>);
 
         expect(session instanceof SynchronousChessOnlineHostGameSession).toBeTruthy();
     });
@@ -49,12 +43,19 @@ describe('SynchronousChessGameSessionBuilder', () => {
     test('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
         initiatorGetterSpy.mockReturnValue(false);
 
-        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<any>);
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<ChessPayloads>);
 
         expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
     });
 
-    test('should create an instance of SynchronousChessOnlinePeerGameSession', () => {
+    test('should create an instance of SynchronousChessOnlinePeerGameSession by default', () => {
+        const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildOnline(roomSpy as Room<ChessPayloads>);
+
+        expect(session instanceof SynchronousChessOnlinePeerGameSession).toBeTruthy();
+        expect(initiatorGetterSpy).toHaveBeenCalled();
+    });
+
+    test('should create an instance of SynchronousChessLocalGameSession', () => {
         const session: SynchronousChessGameSession = SynchronousChessGameSessionBuilder.buildLocal();
 
         expect(session instanceof SynchronousChessLocalGameSession).toBeTruthy();

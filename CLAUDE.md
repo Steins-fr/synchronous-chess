@@ -50,8 +50,7 @@ npm run lint         # ESLint
 - Tests use **Vitest** with jsdom (`vitest.config.ts`, `test-setup.ts`), not Karma/Jasmine.
   Shared test providers are in `src/test-providers.ts`, helpers under `src/testing`.
 - Path aliases: `@app/*`, `@environments/*`, `@testing/*`.
-- Code lives under `src/app/{modules,services,pages,helpers,types}`; `src/app/deprecated`
-  is legacy — don't extend it.
+- Code lives under `src/app/{modules,services,pages,helpers,types}`.
 - Tailwind v4 is wired through PostCSS (`src/tailwind.css`); global styles in `src/styles.scss`.
 
 ## CI

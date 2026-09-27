@@ -1,6 +1,6 @@
-import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGameSession, { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import Move from '@app/modules/chess/interfaces/move';
-import { RoomMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { Subject, takeUntil } from 'rxjs';
 import { PieceColor } from '../../enums/piece-color.enum';
@@ -20,13 +20,19 @@ export interface PromotionMessage {
     pieceType: PieceType;
 }
 
+export interface ChessPayloads {
+    [SCGameSessionType.CONFIGURATION]: SessionConfiguration;
+    [SCGameSessionType.PLAY]: PlayMessage;
+    [SCGameSessionType.PROMOTION]: PromotionMessage;
+}
+
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
     protected destroyRef = new Subject<void>();
 
-    protected constructor(protected readonly roomService: Room<any>) {
+    protected constructor(protected readonly roomService: Room<ChessPayloads>) {
         super();
-        this.roomService.messenger(SCGameSessionType.PLAY).pipe(takeUntil(this.destroyRef)).subscribe(this.onMove.bind(this));
-        this.roomService.messenger(SCGameSessionType.PROMOTION).pipe(takeUntil(this.destroyRef)).subscribe(this.onPromotion.bind(this));
+        this.roomService.messenger(SCGameSessionType.PLAY).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onMove(message));
+        this.roomService.messenger(SCGameSessionType.PROMOTION).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onPromotion(message));
     }
 
     public get myColor(): PieceColor {
@@ -34,7 +40,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     }
 
     public get playingColor(): PieceColor {
-        if (this.configuration.whitePlayer === undefined || this.configuration.blackPlayer === undefined) {
+        if (this.configuration().whitePlayer === undefined || this.configuration().blackPlayer === undefined) {
             return PieceColor.NONE;
         }
 
@@ -47,9 +53,9 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
     protected playerColor(playerName: string): PieceColor {
         switch (playerName) {
-            case this.configuration.whitePlayer:
+            case this.configuration().whitePlayer:
                 return PieceColor.WHITE;
-            case this.configuration.blackPlayer:
+            case this.configuration().blackPlayer:
                 return PieceColor.BLACK;
             default:
                 return PieceColor.NONE;
@@ -66,9 +72,14 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         return this.playerColor(playerName) !== PieceColor.NONE;
     }
 
-    protected onMove(message: RoomMessage<SCGameSessionType, PlayMessage>): void {
-        // Prevent reception of move from spectator
-        if (!this.isPlaying(message.from)) {
+    // The room echoes messages to their sender, local moves and promotions are already run by move() and promote()
+    private isRemotePlaying(playerName: string): boolean {
+        return this.isPlaying(playerName) && playerName !== this.roomService.localPlayer.name;
+    }
+
+    protected onMove(message: AppMessage<SCGameSessionType.PLAY, PlayMessage>): void {
+        // Prevent reception of move from spectator or from myself
+        if (!this.isRemotePlaying(message.from)) {
             return;
         }
 
@@ -86,9 +97,9 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         }
     }
 
-    protected onPromotion(message: RoomMessage<SCGameSessionType, PromotionMessage>): void {
-        // Prevent reception of move from spectator
-        if (!this.isPlaying(message.from)) {
+    protected onPromotion(message: AppMessage<SCGameSessionType.PROMOTION, PromotionMessage>): void {
+        // Prevent reception of promotion from spectator or from myself
+        if (!this.isRemotePlaying(message.from)) {
             return;
         }
 

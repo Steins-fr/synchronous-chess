@@ -20,7 +20,7 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./chat-participant.component.scss'],
 })
 export class ChatParticipantComponent {
-    public readonly player = input.required<Player>();
+    public readonly player = input.required<Readonly<Player>>();
 
     protected ping = signal<string>('');
     protected isMe = signal<boolean>(false);

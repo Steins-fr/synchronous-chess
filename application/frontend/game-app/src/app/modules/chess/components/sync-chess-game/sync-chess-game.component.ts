@@ -1,9 +1,10 @@
 
-import { Component, OnDestroy, computed, input, signal } from '@angular/core';
+import { Component, OnDestroy, computed, input, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
+import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import CoordinateMove from '@app/modules/chess/interfaces/CoordinateMove';
 import Move from '@app/modules/chess/interfaces/move';
 import { FenPiece } from '@app/modules/chess/enums/fen-piece.enum';
@@ -17,6 +18,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { ChessPromotionComponent } from '../chess/chess-promotion/chess-promotion.component';
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -25,20 +27,17 @@ import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component'
     imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
 })
 export class SyncChessGameComponent implements OnDestroy {
-    public readonly room = input.required<Room<any> | undefined>();
+    public readonly room = input.required<Room<ChessPayloads> | undefined>();
 
     protected readonly gameSession = computed<SynchronousChessGameSession>(() => {
         const room = this.room();
 
-        if (room) {
-            return SynchronousChessGameSessionBuilder.buildOnline(room);
-        }
-
-        return new SynchronousChessLocalGameSession();
+        // The session state is made of signals, it must not become a dependency: only a new room recreates the session
+        return untracked(() => room ? SynchronousChessGameSessionBuilder.buildOnline(room) : new SynchronousChessLocalGameSession());
     });
 
     private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
-    protected validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
+    protected readonly validPlayBoard = signal<ValidPlayBoard>(ChessBoardHelper.createFilledBoard(false));
     protected blackPiece: FenPiece = FenPiece.BLACK_KING;
     protected whitePiece: FenPiece = FenPiece.WHITE_KING;
     protected whiteColor: PieceColor = PieceColor.WHITE;
@@ -54,10 +53,11 @@ export class SyncChessGameComponent implements OnDestroy {
     }
 
     public pieceClicked(cellPos: Vec2): void {
-        this.resetHighlight();
+        const validPlayBoard: ValidPlayBoard = ChessBoardHelper.createFilledBoard(false);
         this.gameSession().game.getPossiblePlays(cellPos).forEach((play: Vec2) => {
-            this.validPlayBoard[play.y][play.x] = true;
+            validPlayBoard[play.y][play.x] = true;
         });
+        this.validPlayBoard.set(validPlayBoard);
     }
 
     public pieceDropped(cellPos: Vec2): void {
@@ -72,7 +72,8 @@ export class SyncChessGameComponent implements OnDestroy {
     }
 
     public turnType(): string {
-        switch (this.gameSession().game.getTurnType()) {
+        const turnType: TurnType = this.gameSession().game.getTurnType();
+        switch (turnType) {
             case TurnType.MOVE_SYNC:
                 return 'Synchronisé';
             case TurnType.MOVE_INTERMEDIATE:
@@ -80,7 +81,7 @@ export class SyncChessGameComponent implements OnDestroy {
             case TurnType.CHOICE_PROMOTION:
                 return 'Promotion';
             default:
-                return '';
+                return switchExhaustivenessGuard(turnType);
         }
     }
 
@@ -90,6 +91,11 @@ export class SyncChessGameComponent implements OnDestroy {
 
     public moveColor(): PieceColor {
         return this.isMoveTurn() ? this.gameSession().playingColor : PieceColor.NONE;
+    }
+
+    // Only an intermediate turn can be skipped, a synchronous turn requires a move from both players
+    public canSkip(): boolean {
+        return this.gameSession().game.getTurnType() === TurnType.MOVE_INTERMEDIATE;
     }
 
     public isPromotion(): boolean {
@@ -127,7 +133,7 @@ export class SyncChessGameComponent implements OnDestroy {
     }
 
     private resetHighlight(): void {
-        this.validPlayBoard = ChessBoardHelper.createFilledBoard(false);
+        this.validPlayBoard.set(ChessBoardHelper.createFilledBoard(false));
     }
 
     private formatLastMove(move: Move | null): string {
