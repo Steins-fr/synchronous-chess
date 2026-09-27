@@ -1,5 +1,6 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import WebrtcStates, { DebugRTCIceCandidate, defaultWebrtcStates } from './webrtc-states';
 
 import { Message } from './messages/message';
@@ -258,6 +259,8 @@ export class Webrtc {
                     clearTimeout(this.pendingAcknowledgement.get(packet.id));
                 }
                 break;
+            default:
+                switchExhaustivenessGuard(packet.type);
         }
     }
 

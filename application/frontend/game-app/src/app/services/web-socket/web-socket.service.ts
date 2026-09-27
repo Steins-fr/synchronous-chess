@@ -1,4 +1,5 @@
 import { BehaviorSubject, Observable, Subject, filter, first } from 'rxjs';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
 export enum SocketState {
     CONNECTING = WebSocket.CONNECTING,
@@ -39,9 +40,11 @@ export class WebSocketService {
         }
 
         let webSocket: WebSocket | null;
+        const state: SocketState = this._state.getValue();
 
-        switch (this._state.getValue()) {
+        switch (state) {
             case SocketState.CONNECTING:
+            case SocketState.OPEN:
                 webSocket = this.webSocket;
                 break;
             case SocketState.CLOSED:
@@ -50,7 +53,7 @@ export class WebSocketService {
                 this._state.next(SocketState.CONNECTING);
                 break;
             default:
-                throw new Error('Should not happen');
+                return switchExhaustivenessGuard(state);
         }
 
         if (!webSocket) {

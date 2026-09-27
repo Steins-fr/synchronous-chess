@@ -1,4 +1,5 @@
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { isNetworkMessage, NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
@@ -127,6 +128,8 @@ export class WebRtcPlayer extends Player {
             case PlayerMessageType.PONG:
                 this.onPlayerPongMessage(playerMessage);
                 break;
+            default:
+                switchExhaustivenessGuard(playerMessage);
         }
     }
 

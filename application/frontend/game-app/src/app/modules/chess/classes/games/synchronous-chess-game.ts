@@ -19,6 +19,7 @@ import TurnType, { TurnCategory } from '../turns/turn.types';
 import { FenPiece } from '../../enums/fen-piece.enum';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
 export default class SynchronousChessGame {
     private _fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
@@ -187,6 +188,8 @@ export default class SynchronousChessGame {
             case TurnType.CHOICE_PROMOTION:
                 this.runPromotionTurn();
                 break;
+            default:
+                switchExhaustivenessGuard(this.turn.type);
         }
 
         this.turn.isDone = true;
@@ -291,8 +294,10 @@ export default class SynchronousChessGame {
                 const { whiteMove, blackMove }: MoveTurnAction = action;
                 return (whiteMove === null || this.isMoveValid(whiteMove)) &&
                     (blackMove === null || this.isMoveValid(blackMove));
-            default:
+            case TurnType.CHOICE_PROMOTION:
                 return false;
+            default:
+                return switchExhaustivenessGuard(this.turn.type);
         }
     }
 
@@ -449,8 +454,10 @@ export default class SynchronousChessGame {
                 return this.getIntermediateTurnPossiblePlays(possiblePlays, position);
             case TurnType.MOVE_SYNC:
                 return this.getSynchronousTurnPossiblePlays(possiblePlays, position);
-            default:
+            case TurnType.CHOICE_PROMOTION:
                 return possiblePlays;
+            default:
+                return switchExhaustivenessGuard(this.turn.type);
         }
     }
 

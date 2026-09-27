@@ -1,4 +1,5 @@
 import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
@@ -50,6 +51,8 @@ export class PeerRoomNetwork extends RoomNetwork {
             case HostRoomMessageType.REMOTE_SIGNAL:
                 void this.onRemoteSignal(message.payload);
                 break;
+            default:
+                switchExhaustivenessGuard(message);
         }
     }
 

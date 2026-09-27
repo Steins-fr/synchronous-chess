@@ -18,6 +18,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { ChessPromotionComponent } from '../chess/chess-promotion/chess-promotion.component';
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -73,7 +74,8 @@ export class SyncChessGameComponent implements OnDestroy {
     }
 
     public turnType(): string {
-        switch (this.gameSession().game.getTurnType()) {
+        const turnType: TurnType = this.gameSession().game.getTurnType();
+        switch (turnType) {
             case TurnType.MOVE_SYNC:
                 return 'Synchronisé';
             case TurnType.MOVE_INTERMEDIATE:
@@ -81,7 +83,7 @@ export class SyncChessGameComponent implements OnDestroy {
             case TurnType.CHOICE_PROMOTION:
                 return 'Promotion';
             default:
-                return '';
+                return switchExhaustivenessGuard(turnType);
         }
     }
 

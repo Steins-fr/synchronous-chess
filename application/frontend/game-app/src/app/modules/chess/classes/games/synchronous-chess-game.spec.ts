@@ -386,7 +386,39 @@ describe('SynchronousChessGame', () => {
         expect(result).toEqual(false);
     });
 
-    test('isTurnValid should return false if the turn type is unknown', () => {
+    test('isTurnValid should return false if the turn is a promotion', () => {
+        // Given
+        const game: ProtectedTest = new ProtectedTest();
+        const runSynchroneTurnSpy = vi.fn();
+        Object.defineProperty(game, 'runSynchroneTurn', {
+            value: runSynchroneTurnSpy,
+            writable: false
+        });
+        const moveTurnSpy = {
+            registerMove: vi.fn(),
+            canBeExecuted: vi.fn(),
+            isFilled: vi.fn(),
+            isDone: false,
+            action: {
+                whiteMove: null,
+                blackMove: null,
+            },
+            type: TurnType.CHOICE_PROMOTION,
+            category: TurnCategory.MOVE,
+        } as MoveTurn;
+        Object.defineProperty(game, 'turn', {
+            value: moveTurnSpy,
+            writable: true
+        });
+
+        // When
+        const result: boolean = game.isTurnValid();
+
+        // Then
+        expect(result).toEqual(false);
+    });
+
+    test('isTurnValid should throw if the turn type is unknown', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
         const runSynchroneTurnSpy = vi.fn();
@@ -412,10 +444,10 @@ describe('SynchronousChessGame', () => {
         });
 
         // When
-        const result: boolean = game.isTurnValid();
+        const call = (): boolean => game.isTurnValid();
 
         // Then
-        expect(result).toEqual(false);
+        expect(call).toThrow('Unhandled switch case: unknownType');
     });
 
     test('should not execute the turn if not ready', () => {
@@ -592,6 +624,10 @@ describe('SynchronousChessGame', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
         const runMoveSpy = vi.fn();
+        const runSyncTurnSpy = vi.fn();
+        Object.defineProperty(game, 'runSyncTurn', {
+            value: runSyncTurnSpy
+        });
         const checkPromotionTurnSpy = vi.fn();
         const verifyCheckSpy = vi.fn();
         Object.defineProperty(game, 'verifyCheck', {
@@ -609,7 +645,7 @@ describe('SynchronousChessGame', () => {
                 whiteMove: null,
                 blackMove: null,
             },
-            type: '' as TurnType,
+            type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
         Object.defineProperty(game, 'turn', {
@@ -629,6 +665,7 @@ describe('SynchronousChessGame', () => {
         // Then
         expect(result).toEqual(true);
         expect(moveTurnSpy.canBeExecuted).toHaveBeenCalledTimes(1);
+        expect(runSyncTurnSpy).toHaveBeenCalledTimes(1);
         expect(runMoveSpy).toHaveBeenCalledTimes(0);
         expect(moveTurnSpy.isDone).toEqual(true);
         expect(game.getTurn()).not.toBe(moveTurnSpy);
@@ -2667,7 +2704,7 @@ describe('SynchronousChessGame', () => {
         expect(blackKingPlays).toEqual(blackKingExpectedPlays);
     });
 
-    test('getPossiblePlays should return plays without treatment if move type is unknown ', () => {
+    test('getPossiblePlays should return plays without treatment if the turn is a promotion', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
         const moveTurnSpy = {
@@ -2676,7 +2713,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action: { whiteMove: null, blackMove: null },
-            type: '' as TurnType,
+            type: TurnType.CHOICE_PROMOTION,
             category: TurnCategory.MOVE,
         } as MoveTurn;
         Object.defineProperty(game, 'turn', {

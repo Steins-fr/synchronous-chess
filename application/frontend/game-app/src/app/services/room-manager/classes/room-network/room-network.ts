@@ -1,4 +1,5 @@
 import { signal } from '@angular/core';
+import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Subject } from 'rxjs';
@@ -116,6 +117,8 @@ export abstract class RoomNetwork {
                 case NegotiatorConnectionState.DISCONNECTED:
                     this.removeNegotiator(negotiator);
                     break;
+                default:
+                    switchExhaustivenessGuard(connectionState);
             }
         });
     }
