@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import ChessBoardHelper from '../../helpers/chess-board-helper';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
 import { SafeBoard } from '@app/modules/chess/types/safe-board';
@@ -22,49 +23,59 @@ import { PieceType } from '../../enums/piece-type.enum';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 
 export default class SynchronousChessGame {
-    private _fenBoard: FenBoard = ChessBoardHelper.createFenBoard();
-    private _oldFenBoard: FenBoard = this._fenBoard;
+    private readonly _fenBoard = signal<FenBoard>(ChessBoardHelper.createFenBoard());
+    public readonly fenBoard = this._fenBoard.asReadonly();
+    // A turn is mutated in place when a move is registered, each set must notify even with the same turn
+    private readonly _turn = signal<Turn>(new SyncTurn(), { equal: () => false });
+    protected readonly turn = this._turn.asReadonly();
+    private readonly _oldTurn = signal<Turn | null>(null);
+    protected readonly oldTurn = this._oldTurn.asReadonly();
+    private readonly _isWhiteInCheck = signal<boolean>(false);
+    public readonly isWhiteInCheck = this._isWhiteInCheck.asReadonly();
+    private readonly _isWhiteInCheckmate = signal<boolean>(false);
+    public readonly isWhiteInCheckmate = this._isWhiteInCheckmate.asReadonly();
+    private readonly _isBlackInCheck = signal<boolean>(false);
+    public readonly isBlackInCheck = this._isBlackInCheck.asReadonly();
+    private readonly _isBlackInCheckmate = signal<boolean>(false);
+    public readonly isBlackInCheckmate = this._isBlackInCheckmate.asReadonly();
+
+    private _oldFenBoard: FenBoard = this._fenBoard();
     public readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
     public readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
-    protected turn: Turn = new SyncTurn();
-    protected oldTurn: Turn | null = null;
 
-    public isWhiteInCheck: boolean = false;
-    public isWhiteInCheckmate: boolean = false;
-    public isBlackInCheck: boolean = false;
-    public isBlackInCheckmate: boolean = false;
+    // The turn has been mutated in place, its readers have to be notified
+    private notifyTurnChange(): void {
+        this._turn.set(this._turn());
+    }
 
     protected getRules(color: PieceColor): SynchronousChessRules {
         return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
     }
 
-    public get fenBoard(): FenBoard {
-        return this._fenBoard;
-    }
-
     public load(fenBoard: FenBoard): void {
-        this._fenBoard = ChessBoardHelper.cloneBoard(fenBoard);
+        this._fenBoard.set(ChessBoardHelper.cloneBoard(fenBoard));
     }
 
     public isCheckmate(): boolean {
-        return this.isBlackInCheckmate || this.isWhiteInCheckmate;
+        return this.isBlackInCheckmate() || this.isWhiteInCheckmate();
     }
 
     public lastMoveTurnAction(): MoveTurnAction | null {
-        if (!this.oldTurn || this.oldTurn.category !== TurnCategory.MOVE) {
+        const oldTurn: Turn | null = this.oldTurn();
+        if (!oldTurn || oldTurn.category !== TurnCategory.MOVE) {
             return null;
         }
 
         // FIXME: types
-        return this.oldTurn.action as MoveTurnAction;
+        return oldTurn.action as MoveTurnAction;
     }
 
     public getTurnType(): TurnType {
-        return this.turn.type;
+        return this.turn().type;
     }
 
     public getTurnCategory(): TurnCategory {
-        return this.turn.category;
+        return this.turn().category;
     }
 
     private kingMoved(move: Move, rules: ChessRules): void {
@@ -77,8 +88,8 @@ export default class SynchronousChessGame {
             const rookEmplacement: Vec2 = new Vec2(castlingRook, from.y);
             const rookNewEmplacement: Vec2 = from.addVec(to.subVec(from).div(2, 2));
 
-            this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookNewEmplacement, ChessBoardHelper.getFenPieceByVec(this._fenBoard, rookEmplacement));
-            this._fenBoard = ChessBoardHelper.setFenPieceByVec(this._fenBoard, rookEmplacement, FenPiece.EMPTY);
+            this._fenBoard.set(ChessBoardHelper.setFenPieceByVec(this._fenBoard(), rookNewEmplacement, ChessBoardHelper.getFenPieceByVec(this._fenBoard(), rookEmplacement)));
+            this._fenBoard.set(ChessBoardHelper.setFenPieceByVec(this._fenBoard(), rookEmplacement, FenPiece.EMPTY));
         }
         rules.setQueenSideCastleAvailable(false);
         rules.setKingSideCastleAvailable(false);
@@ -99,7 +110,7 @@ export default class SynchronousChessGame {
         const from: Vec2 = ChessBoardHelper.fenCoordinateToVec2(move.from);
         const to: Vec2 = ChessBoardHelper.fenCoordinateToVec2(move.to);
 
-        if (ChessBoardHelper.getFenPieceByVec(this._fenBoard, from) === FenPiece.EMPTY) {
+        if (ChessBoardHelper.getFenPieceByVec(this._fenBoard(), from) === FenPiece.EMPTY) {
             return false;
         }
 
@@ -107,12 +118,12 @@ export default class SynchronousChessGame {
     }
 
     public registerMove(move: Move | null, color: PieceColor): boolean {
-        if (this.turn.category !== TurnCategory.MOVE) {
+        if (this.turn().category !== TurnCategory.MOVE) {
             return false;
         }
-        const moveTurn: MoveTurn = this.turn as MoveTurn;
+        const moveTurn: MoveTurn = this.turn() as MoveTurn;
 
-        const isInCheck: boolean = color === PieceColor.WHITE ? this.isWhiteInCheck : this.isBlackInCheck;
+        const isInCheck: boolean = color === PieceColor.WHITE ? this.isWhiteInCheck() : this.isBlackInCheck();
 
         if (isInCheck && move === null) {
             return false;
@@ -123,62 +134,66 @@ export default class SynchronousChessGame {
         }
 
         moveTurn.registerMove(move, color);
+        this.notifyTurnChange();
 
         return true;
     }
 
     public promote(pieceType: PieceType, color: PieceColor): boolean {
-        if (this.turn.type !== TurnType.CHOICE_PROMOTION) {
+        if (this.turn().type !== TurnType.CHOICE_PROMOTION) {
             return false;
         }
-        const promotionTurn: PromotionTurn = this.turn as PromotionTurn;
+        const promotionTurn: PromotionTurn = this.turn() as PromotionTurn;
 
         promotionTurn.registerChoice(pieceType, color);
+        this.notifyTurnChange();
 
         return true;
     }
 
     public colorHasPlayed(color: PieceColor): boolean {
-        return this.turn.isFilled(color);
+        return this.turn().isFilled(color);
     }
 
     public verifyCheck(): void {
-        this.isWhiteInCheck = false;
-        this.isBlackInCheck = false;
+        this._isWhiteInCheck.set(false);
+        this._isBlackInCheck.set(false);
 
         // Check can only exists during synchrone turn.
-        if (this.turn.type !== TurnType.MOVE_SYNC) {
+        if (this.turn().type !== TurnType.MOVE_SYNC) {
             return;
         }
 
-        const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard);
-        const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard);
-        const whiteKingFenCoordinate: FenCoordinate = ChessBoardHelper.findKing(this._fenBoard, FenPiece.WHITE_KING);
-        const blackKingFenCoordinate: FenCoordinate = ChessBoardHelper.findKing(this._fenBoard, FenPiece.BLACK_KING);
+        const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard());
+        const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard());
+        const whiteKingFenCoordinate: FenCoordinate = ChessBoardHelper.findKing(this._fenBoard(), FenPiece.WHITE_KING);
+        const blackKingFenCoordinate: FenCoordinate = ChessBoardHelper.findKing(this._fenBoard(), FenPiece.BLACK_KING);
 
         if (!ChessBoardHelper.isSafe(whiteSafeBoard, whiteKingFenCoordinate)) {
-            this.isWhiteInCheck = true;
+            this._isWhiteInCheck.set(true);
             if (this.getPossiblePlays(ChessBoardHelper.fenCoordinateToVec2(whiteKingFenCoordinate)).length === 0) {
-                this.isWhiteInCheckmate = true;
+                this._isWhiteInCheckmate.set(true);
             }
         }
 
         if (!ChessBoardHelper.isSafe(blackSafeBoard, blackKingFenCoordinate)) {
-            this.isBlackInCheck = true;
+            this._isBlackInCheck.set(true);
             if (this.getPossiblePlays(ChessBoardHelper.fenCoordinateToVec2(blackKingFenCoordinate)).length === 0) {
-                this.isBlackInCheckmate = true;
+                this._isBlackInCheckmate.set(true);
             }
         }
     }
 
     public runTurn(): boolean {
-        if (!this.turn.canBeExecuted()) {
+        if (!this.turn().canBeExecuted()) {
             return false;
         }
 
-        this._oldFenBoard = ChessBoardHelper.cloneBoard(this._fenBoard);
+        this._oldFenBoard = ChessBoardHelper.cloneBoard(this._fenBoard());
 
-        switch (this.turn.type) {
+        const turnType: TurnType = this.turn().type;
+
+        switch (turnType) {
             case TurnType.MOVE_INTERMEDIATE:
                 this.runIntermediateTurn();
                 break;
@@ -189,10 +204,10 @@ export default class SynchronousChessGame {
                 this.runPromotionTurn();
                 break;
             default:
-                switchExhaustivenessGuard(this.turn.type);
+                switchExhaustivenessGuard(turnType);
         }
 
-        this.turn.isDone = true;
+        this.turn().isDone = true;
         this.nextTurn();
         this.checkPromotionTurn();
         this.verifyCheck();
@@ -202,7 +217,7 @@ export default class SynchronousChessGame {
 
     protected getNextTurnTarget(move: Move | undefined | null, oldSafeBoard: SafeBoard, safeBoard: SafeBoard): FenCoordinate | null {
         if (move
-            && ChessBoardHelper.getFenPiece(this._fenBoard, move.to) !== FenPiece.EMPTY
+            && ChessBoardHelper.getFenPiece(this._fenBoard(), move.to) !== FenPiece.EMPTY
             && !ChessBoardHelper.isSafe(oldSafeBoard, move.to)
             && !ChessBoardHelper.isSafe(safeBoard, move.to)) { // We assure that the destination remains attacked or protected.
             return move.to;
@@ -212,19 +227,19 @@ export default class SynchronousChessGame {
     }
 
     protected nextTurn(): void {
-        const turnCategory: TurnCategory = this.turn.category;
+        const turnCategory: TurnCategory = this.turn().category;
 
-        this.oldTurn = this.turn;
+        this._oldTurn.set(this.turn());
 
         if (turnCategory === TurnCategory.MOVE) {
-            const { whiteMove, blackMove }: MoveTurnAction = this.turn.action as MoveTurnAction;
+            const { whiteMove, blackMove }: MoveTurnAction = this.turn().action as MoveTurnAction;
             const blackMoveDestination: FenCoordinate | undefined = blackMove ? blackMove.to : undefined;
             const whiteMoveDestination: FenCoordinate | undefined = whiteMove ? whiteMove.to : undefined;
 
             const whiteOldSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._oldFenBoard, blackMoveDestination);
             const blackOldSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._oldFenBoard, whiteMoveDestination);
-            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard, blackMoveDestination);
-            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard, whiteMoveDestination);
+            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard(), blackMoveDestination);
+            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard(), whiteMoveDestination);
 
             const intermediateAction: IntermediateTurnAction = {
                 whiteTarget: this.getNextTurnTarget(blackMove, blackOldSafeBoard, blackSafeBoard),
@@ -234,16 +249,16 @@ export default class SynchronousChessGame {
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
-                this.turn = new IntermediateTurn(intermediateAction, whiteMove, blackMove);
+                this._turn.set(new IntermediateTurn(intermediateAction, whiteMove, blackMove));
             }
         } else if (turnCategory === TurnCategory.CHOICE) {
-            const choiceTurn: ChoiceTurn = this.turn as ChoiceTurn;
-            this.turn = choiceTurn.nextTurn;
+            const choiceTurn: ChoiceTurn = this.turn() as ChoiceTurn;
+            this._turn.set(choiceTurn.nextTurn);
         }
 
         // If the turn was not changed, change it
-        if (this.turn.isDone) {
-            this.turn = new SyncTurn();
+        if (this.turn().isDone) {
+            this._turn.set(new SyncTurn());
         }
     }
 
@@ -253,7 +268,7 @@ export default class SynchronousChessGame {
         }
 
         const fenCoordinate: FenCoordinate = move.to;
-        const piece: FenPiece = ChessBoardHelper.getFenPiece(this._fenBoard, fenCoordinate);
+        const piece: FenPiece = ChessBoardHelper.getFenPiece(this._fenBoard(), fenCoordinate);
         const color: PieceColor = ChessBoardHelper.pieceColor(piece);
         const row: FenRow = color === PieceColor.WHITE ? FenRow._8 : FenRow._1;
 
@@ -261,7 +276,8 @@ export default class SynchronousChessGame {
     }
 
     protected checkPromotionTurn(): void {
-        if (this.oldTurn?.category !== TurnCategory.MOVE) {
+        const oldTurn: Turn | null = this.oldTurn();
+        if (oldTurn?.category !== TurnCategory.MOVE) {
             return;
         }
 
@@ -272,7 +288,7 @@ export default class SynchronousChessGame {
             blackPiece: null,
         };
         // TODO: better type checking
-        const { whiteMove, blackMove }: MoveTurnAction = this.oldTurn.action as MoveTurnAction;
+        const { whiteMove, blackMove }: MoveTurnAction = oldTurn.action as MoveTurnAction;
         if (this.canPromote(whiteMove) && whiteMove) {
             promotionAction.whiteFenCoordinate = whiteMove.to;
         }
@@ -282,40 +298,41 @@ export default class SynchronousChessGame {
         }
 
         if (promotionAction.whiteFenCoordinate !== null || promotionAction.blackFenCoordinate !== null) {
-            this.turn = new PromotionTurn(promotionAction, this.turn);
+            this._turn.set(new PromotionTurn(promotionAction, this.turn()));
         }
     }
 
     protected isTurnValid(): boolean {
-        switch (this.turn.type) {
+        const turnType: TurnType = this.turn().type;
+        switch (turnType) {
             case TurnType.MOVE_INTERMEDIATE:
             case TurnType.MOVE_SYNC:
-                const action: MoveTurnAction = this.turn.action as MoveTurnAction;
+                const action: MoveTurnAction = this.turn().action as MoveTurnAction;
                 const { whiteMove, blackMove }: MoveTurnAction = action;
                 return (whiteMove === null || this.isMoveValid(whiteMove)) &&
                     (blackMove === null || this.isMoveValid(blackMove));
             case TurnType.CHOICE_PROMOTION:
                 return false;
             default:
-                return switchExhaustivenessGuard(this.turn.type);
+                return switchExhaustivenessGuard(turnType);
         }
     }
 
     protected runPromotionTurn(): void {
-        const promotionTurn: PromotionTurn = this.turn as PromotionTurn;
+        const promotionTurn: PromotionTurn = this.turn() as PromotionTurn;
         const { whiteFenCoordinate, whitePiece, blackFenCoordinate, blackPiece }: PromotionTurnAction = promotionTurn.action;
 
         if (whiteFenCoordinate !== null && whitePiece) { // White move
-            this._fenBoard = ChessBoardHelper.promote(this._fenBoard, whiteFenCoordinate, whitePiece, PieceColor.WHITE);
+            this._fenBoard.set(ChessBoardHelper.promote(this._fenBoard(), whiteFenCoordinate, whitePiece, PieceColor.WHITE));
         }
 
         if (blackFenCoordinate !== null && blackPiece) { // Black move
-            this._fenBoard = ChessBoardHelper.promote(this._fenBoard, blackFenCoordinate, blackPiece, PieceColor.BLACK);
+            this._fenBoard.set(ChessBoardHelper.promote(this._fenBoard(), blackFenCoordinate, blackPiece, PieceColor.BLACK));
         }
     }
 
     protected runIntermediateTurn(): void {
-        const { whiteMove, blackMove }: MoveTurnAction = this.turn.action as MoveTurnAction;
+        const { whiteMove, blackMove }: MoveTurnAction = this.turn().action as MoveTurnAction;
 
         if (!this.isTurnValid()) {
             return;
@@ -331,15 +348,15 @@ export default class SynchronousChessGame {
     }
 
     protected applySingleMove(move: Move): void {
-        const piece = ChessBoardHelper.getFenPiece(this._fenBoard, move.from);
+        const piece = ChessBoardHelper.getFenPiece(this._fenBoard(), move.from);
 
         this.updateCastling(move);
-        this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, move.from, FenPiece.EMPTY);
-        this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, move.to, piece);
+        this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), move.from, FenPiece.EMPTY));
+        this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), move.to, piece));
     }
 
     protected runSyncTurn(): void {
-        const { whiteMove, blackMove }: MoveTurnAction = this.turn.action as MoveTurnAction;
+        const { whiteMove, blackMove }: MoveTurnAction = this.turn().action as MoveTurnAction;
 
         if (!this.isTurnValid()) {
             return;
@@ -347,8 +364,8 @@ export default class SynchronousChessGame {
 
         if (whiteMove !== null && blackMove !== null) { // Both move
             // We can't use "applySingleMove" because pieces can: evade, confront or move independently
-            const whitePiece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard, whiteMove.from);
-            const blackPiece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard, blackMove.from);
+            const whitePiece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard(), whiteMove.from);
+            const blackPiece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard(), blackMove.from);
 
             if (!whitePiece || !blackPiece) {
                 throw new Error('Piece is undefined');
@@ -356,8 +373,8 @@ export default class SynchronousChessGame {
 
             this.updateCastling(whiteMove);
             this.updateCastling(blackMove);
-            this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, whiteMove.from, FenPiece.EMPTY);
-            this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, blackMove.from, FenPiece.EMPTY);
+            this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.from, FenPiece.EMPTY));
+            this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), blackMove.from, FenPiece.EMPTY));
 
             if (whiteMove.to.toString() === blackMove.to.toString()) {  // Confrontation. King survive, others double capture
                 let destinationPiece: FenPiece = FenPiece.EMPTY;
@@ -367,10 +384,10 @@ export default class SynchronousChessGame {
                     destinationPiece = blackPiece;
                 }
 
-                this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, whiteMove.to, destinationPiece);
+                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, destinationPiece));
             } else {
-                this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, whiteMove.to, whitePiece);
-                this._fenBoard = ChessBoardHelper.setFenPiece(this._fenBoard, blackMove.to, blackPiece);
+                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, whitePiece));
+                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), blackMove.to, blackPiece));
             }
         } else if (whiteMove !== null) { // White move
             this.applySingleMove(whiteMove);
@@ -381,7 +398,7 @@ export default class SynchronousChessGame {
 
     protected updateCastling(move: Move): void {
 
-        const fromPiece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard, move.from);
+        const fromPiece: FenPiece | null = ChessBoardHelper.getFenPiece(this._fenBoard(), move.from);
 
         if (!fromPiece) {
             throw new Error('Piece is undefined');
@@ -400,9 +417,9 @@ export default class SynchronousChessGame {
     }
 
     protected getIntermediateTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
-        const fenPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
+        const fenPiece: FenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard(), position);
 
-        const intermediateTurn: IntermediateTurn = this.turn as IntermediateTurn;
+        const intermediateTurn: IntermediateTurn = this.turn() as IntermediateTurn;
         const intermediateAction: IntermediateTurnAction = intermediateTurn.action;
         const target: FenCoordinate | null = ChessBoardHelper.pieceColor(fenPiece) === PieceColor.WHITE ? intermediateAction.whiteTarget : intermediateAction.blackTarget;
 
@@ -425,11 +442,11 @@ export default class SynchronousChessGame {
     }
 
     protected getSynchronousTurnPossiblePlays(possiblePlays: Array<Vec2>, position: Vec2): Array<Vec2> {
-        const fenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
+        const fenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard(), position);
 
         const pieceColor: PieceColor = ChessBoardHelper.pieceColor(fenPiece);
         const pieceType: PieceType = ChessBoardHelper.pieceType(fenPiece);
-        const isInCheck: boolean = pieceColor === PieceColor.WHITE ? this.isWhiteInCheck : this.isBlackInCheck;
+        const isInCheck: boolean = pieceColor === PieceColor.WHITE ? this.isWhiteInCheck() : this.isBlackInCheck();
 
         if (isInCheck && pieceType !== PieceType.KING) {
             return [];
@@ -439,17 +456,19 @@ export default class SynchronousChessGame {
     }
 
     public getPossiblePlays(position: Vec2): Array<Vec2> {
-        if (this.turn.category !== TurnCategory.MOVE || this.isBlackInCheckmate || this.isWhiteInCheckmate) {
+        if (this.turn().category !== TurnCategory.MOVE || this.isBlackInCheckmate() || this.isWhiteInCheckmate()) {
             return [];
         }
 
-        const fenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard, position);
+        const fenPiece = ChessBoardHelper.getFenPieceByVec(this._fenBoard(), position);
 
         const rules: SynchronousChessRules = this.getRules(ChessBoardHelper.pieceColor(fenPiece));
 
-        const possiblePlays: Array<Vec2> = rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard));
+        const possiblePlays: Array<Vec2> = rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard()));
 
-        switch (this.turn.type) {
+        const turnType: TurnType = this.turn().type;
+
+        switch (turnType) {
             case TurnType.MOVE_INTERMEDIATE:
                 return this.getIntermediateTurnPossiblePlays(possiblePlays, position);
             case TurnType.MOVE_SYNC:
@@ -457,11 +476,11 @@ export default class SynchronousChessGame {
             case TurnType.CHOICE_PROMOTION:
                 return possiblePlays;
             default:
-                return switchExhaustivenessGuard(this.turn.type);
+                return switchExhaustivenessGuard(turnType);
         }
     }
 
     public hasPlayed(color: PieceColor): boolean {
-        return this.turn.isFilled(color);
+        return this.turn().isFilled(color);
     }
 }

@@ -1,3 +1,4 @@
+import { gameState } from '@testing/chess-state.helper';
 import { vi, describe, test, expect } from 'vitest';
 import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-chess-game';
 import { Column, Row } from '@app/modules/chess/interfaces/CoordinateMove';
@@ -68,11 +69,11 @@ class ProtectedTest extends SynchronousChessGame {
     }
 
     public getTurn(): Turn {
-        return this.turn;
+        return this.turn();
     }
 
     public getOldTurn(): Turn | null {
-        return this.oldTurn;
+        return this.oldTurn();
     }
 }
 
@@ -94,9 +95,7 @@ describe('SynchronousChessGame', () => {
 
     test('should get the last turn action of move category', () => {
         const gameUndefinedOldTurn: SynchronousChessGame = new SynchronousChessGame();
-        Object.defineProperty(gameUndefinedOldTurn, 'oldTurn', {
-            value: undefined,
-        });
+        gameState(gameUndefinedOldTurn)._oldTurn.set(null);
         const moveTurnSpy = {
             registerMove: vi.fn(),
             canBeExecuted: vi.fn(),
@@ -110,9 +109,7 @@ describe('SynchronousChessGame', () => {
             category: TurnCategory.MOVE,
         } as MoveTurn;
         const gameMoveTurn: SynchronousChessGame = new SynchronousChessGame();
-        Object.defineProperty(gameMoveTurn, 'oldTurn', {
-            value: moveTurnSpy,
-        });
+        gameState(gameMoveTurn)._oldTurn.set(moveTurnSpy);
         const gameChoiceTurn: SynchronousChessGame = new SynchronousChessGame();
         const choiceTurnSpy = {
             registerChoice: vi.fn(),
@@ -131,9 +128,7 @@ describe('SynchronousChessGame', () => {
                 category: TurnCategory.MOVE,
             } as Turn,
         } as ChoiceTurn;
-        Object.defineProperty(gameChoiceTurn, 'oldTurn', {
-            value: choiceTurnSpy,
-        });
+        gameState(gameChoiceTurn)._oldTurn.set(choiceTurnSpy);
 
         expect(gameUndefinedOldTurn.lastMoveTurnAction()).toEqual(null);
         expect(gameMoveTurn.lastMoveTurnAction()).toBe(moveTurnSpy.action);
@@ -178,9 +173,7 @@ describe('SynchronousChessGame', () => {
                 category: TurnCategory.MOVE,
             } as Turn,
         } as ChoiceTurn;
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
         const position: Vec2 = new Vec2(Column.B, Row._8);
 
         const boardExpectedPlays: Array<Vec2> = [];
@@ -208,10 +201,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: false
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         game.isMoveValid = isMoveValidSpy;
         isMoveValidSpy.mockReturnValue(true);
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.A, 5] };
@@ -242,10 +232,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: false
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         game.isMoveValid = isMoveValidSpy;
         isMoveValidSpy.mockReturnValue(false);
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.A, 5] };
@@ -263,8 +250,8 @@ describe('SynchronousChessGame', () => {
     test('registerMove should not skip move if in check', () => {
         // Given
         const game: SynchronousChessGame = new SynchronousChessGame();
-        game.isWhiteInCheck = true;
-        game.isBlackInCheck = true;
+        gameState(game)._isWhiteInCheck.set(true);
+        gameState(game)._isBlackInCheck.set(true);
 
         // When
         const resultWhite: boolean = game.registerMove(null, PieceColor.WHITE);
@@ -295,10 +282,7 @@ describe('SynchronousChessGame', () => {
                 category: TurnCategory.MOVE,
             } as Turn,
         } as ChoiceTurn;
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy,
-            writable: false
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
         const move: Move = { from: [FenColumn.A, 3], to: [FenColumn.A, 5] };
         const color: PieceColor = PieceColor.BLACK;
 
@@ -324,10 +308,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: false
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         const color: PieceColor = PieceColor.BLACK;
 
         // When
@@ -348,10 +329,7 @@ describe('SynchronousChessGame', () => {
             action: {},
             category: TurnCategory.CHOICE,
         });
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy,
-            writable: false
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
         const color: PieceColor = PieceColor.BLACK;
 
         // When
@@ -377,10 +355,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: false
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         const move: Move = { from: [FenColumn.D, 4], to: [FenColumn.F, 5] };
 
         // When
@@ -410,10 +385,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.CHOICE_PROMOTION,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         // When
         const result: boolean = game.isTurnValid();
@@ -442,10 +414,7 @@ describe('SynchronousChessGame', () => {
             type: 'unknownType' as TurnType,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         // When
         const call = (): boolean => game.isTurnValid();
@@ -469,10 +438,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         vi.mocked(moveTurnSpy.canBeExecuted).mockReturnValue(false);
         moveTurnSpy.isDone = false;
 
@@ -516,9 +482,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         vi.mocked(moveTurnSpy.canBeExecuted).mockReturnValue(true);
         moveTurnSpy.isDone = false;
 
@@ -562,10 +526,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         vi.mocked(moveTurnSpy.canBeExecuted).mockReturnValue(true);
         moveTurnSpy.isDone = false;
 
@@ -607,10 +568,7 @@ describe('SynchronousChessGame', () => {
             action: {},
             category: TurnCategory.CHOICE,
         });
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
         vi.mocked(choiceTurnSpy.canBeExecuted).mockReturnValue(true);
         choiceTurnSpy.isDone = false;
 
@@ -652,10 +610,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         Object.defineProperty(game, 'runMove', {
             value: runMoveSpy,
             writable: false
@@ -693,10 +648,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
             [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
@@ -722,12 +674,12 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
 
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should apply a valid play', () => {
@@ -748,10 +700,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -778,11 +727,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should pass move', () => {
@@ -800,10 +749,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -830,11 +776,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should double capture', () => {
@@ -855,9 +801,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -884,11 +828,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should double capture with black king surviving', () => {
@@ -909,10 +853,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.EMPTY, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.EMPTY, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -939,11 +880,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should double capture with white king surviving', () => {
@@ -964,9 +905,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.EMPTY, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -993,11 +932,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should exchange places', () => {
@@ -1018,10 +957,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1048,11 +984,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should move only the white piece', () => {
@@ -1072,10 +1008,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1102,11 +1035,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runSynchroneTurn should move only the black piece', () => {
@@ -1126,10 +1059,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1156,11 +1086,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runSyncTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runIntermediateTurn should not apply a bad play', () => {
@@ -1186,10 +1116,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
             [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
@@ -1215,12 +1142,12 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runIntermediateTurn();
 
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runIntermediateTurn should apply a valid play', () => {
@@ -1246,10 +1173,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1276,11 +1200,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runIntermediateTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runIntermediateTurn should pass moves', () => {
@@ -1306,10 +1230,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const expectedFenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1336,11 +1257,11 @@ describe('SynchronousChessGame', () => {
         ];
 
         // When
-        const initBoard: FenBoard = game.fenBoard;
+        const initBoard: FenBoard = game.fenBoard();
         game.runIntermediateTurn();
         // Then
         expect(initBoard).toEqual(expectedFenBoardInit);
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('should apply king single move', () => {
@@ -1360,10 +1281,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1396,7 +1314,7 @@ describe('SynchronousChessGame', () => {
         game.runSyncTurn();
 
         // Then
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
         expect(game.blackRules.isKingSideCastleAvailable()).toBeFalsy();
@@ -1420,10 +1338,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_ROOK],
@@ -1456,7 +1371,7 @@ describe('SynchronousChessGame', () => {
         game.runSyncTurn();
 
         // Then
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
         expect(game.blackRules.isKingSideCastleAvailable()).toBeFalsy();
@@ -1480,10 +1395,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1516,7 +1428,7 @@ describe('SynchronousChessGame', () => {
         game.runSyncTurn();
 
         // Then
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
         expect(game.blackRules.isKingSideCastleAvailable()).toBeFalsy();
@@ -1540,10 +1452,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1576,7 +1485,7 @@ describe('SynchronousChessGame', () => {
         game.runSyncTurn();
 
         // Then
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
         expect(castlingKing).toBeTruthy();
         expect(castlingQueen).toBeTruthy();
         expect(game.blackRules.isKingSideCastleAvailable()).toBeTruthy();
@@ -1608,10 +1517,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const oldFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1639,9 +1545,7 @@ describe('SynchronousChessGame', () => {
             value: oldFenBoard
         });
 
-        Object.defineProperty(game, '_fenBoard', {
-            value: newFenBoard
-        });
+        gameState(game)._fenBoard.set(newFenBoard);
 
         // When
         game.nextTurn();
@@ -1676,10 +1580,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const oldFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1707,9 +1608,7 @@ describe('SynchronousChessGame', () => {
             value: oldFenBoard
         });
 
-        Object.defineProperty(game, '_fenBoard', {
-            value: newFenBoard
-        });
+        gameState(game)._fenBoard.set(newFenBoard);
 
         // When
         game.nextTurn();
@@ -1737,10 +1636,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const oldFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1768,9 +1664,7 @@ describe('SynchronousChessGame', () => {
             value: oldFenBoard
         });
 
-        Object.defineProperty(game, '_fenBoard', {
-            value: newFenBoard
-        });
+        gameState(game)._fenBoard.set(newFenBoard);
 
         // When
         game.nextTurn();
@@ -1810,10 +1704,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const oldFenBoard: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -1841,9 +1732,7 @@ describe('SynchronousChessGame', () => {
             value: oldFenBoard
         });
 
-        Object.defineProperty(game, '_fenBoard', {
-            value: newFenBoard
-        });
+        gameState(game)._fenBoard.set(newFenBoard);
 
         // When
         game.nextTurn();
@@ -1876,10 +1765,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const oldFenBoard: FenBoard = [
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_KING, FenPiece.WHITE_QUEEN, FenPiece.EMPTY],
@@ -1907,9 +1793,7 @@ describe('SynchronousChessGame', () => {
             value: oldFenBoard
         });
 
-        Object.defineProperty(game, '_fenBoard', {
-            value: newFenBoard
-        });
+        gameState(game)._fenBoard.set(newFenBoard);
 
         // When
         game.nextTurn();
@@ -1936,10 +1820,7 @@ describe('SynchronousChessGame', () => {
             nextTurn: synchroneTurn,
         });
 
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
 
         // When
         game.nextTurn();
@@ -1969,10 +1850,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2024,10 +1902,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2078,10 +1953,7 @@ describe('SynchronousChessGame', () => {
         };
         const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
 
-        Object.defineProperty(game, 'turn', {
-            value: turn,
-            writable: true
-        });
+        gameState(game)._turn.set(turn);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2139,10 +2011,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const oldTurnSpy = TestHelper.cast<Turn>({
             canBeExecuted: vi.fn(),
@@ -2150,10 +2019,7 @@ describe('SynchronousChessGame', () => {
             isDone: false,
             action: oldAction,
         });
-        Object.defineProperty(game, 'oldTurn', {
-            value: oldTurnSpy,
-            writable: true
-        });
+        gameState(game)._oldTurn.set(oldTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2262,14 +2128,8 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'oldTurn', {
-            value: moveTurnSpy,
-            writable: true
-        });
-        Object.defineProperty(game, 'turn', {
-            value: nextTurn,
-            writable: true
-        });
+        gameState(game)._oldTurn.set(moveTurnSpy);
+        gameState(game)._turn.set(nextTurn);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.WHITE_PAWN, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2310,14 +2170,8 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'oldTurn', {
-            value: moveTurnSpy,
-            writable: true
-        });
-        Object.defineProperty(game, 'turn', {
-            value: nextTurn,
-            writable: true
-        });
+        gameState(game)._oldTurn.set(moveTurnSpy);
+        gameState(game)._turn.set(nextTurn);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.EMPTY, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2360,9 +2214,7 @@ describe('SynchronousChessGame', () => {
                 category: TurnCategory.MOVE,
             } as Turn,
         } as ChoiceTurn;
-        Object.defineProperty(game, 'oldTurn', {
-            value: choiceTurnSpy
-        });
+        gameState(game)._oldTurn.set(choiceTurnSpy);
         const moveTurnSpy = {
             registerMove: vi.fn(),
             canBeExecuted: vi.fn(),
@@ -2372,9 +2224,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         // When
         game.checkPromotionTurn();
@@ -2403,9 +2253,7 @@ describe('SynchronousChessGame', () => {
             action,
             category: TurnCategory.CHOICE,
         });
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
 
         const initialFenBoard: FenBoard = [
             [FenPiece.WHITE_PAWN, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2436,7 +2284,7 @@ describe('SynchronousChessGame', () => {
         game.runPromotionTurn();
 
         // Then
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('runPromotionTurn should skip the promotion', () => {
@@ -2459,9 +2307,7 @@ describe('SynchronousChessGame', () => {
             action,
             category: TurnCategory.CHOICE,
         });
-        Object.defineProperty(game, 'turn', {
-            value: choiceTurnSpy
-        });
+        gameState(game)._turn.set(choiceTurnSpy);
 
         const initialFenBoard: FenBoard = [
             [FenPiece.WHITE_PAWN, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2492,7 +2338,7 @@ describe('SynchronousChessGame', () => {
         game.runPromotionTurn();
 
         // Then
-        expect(game.fenBoard).toEqual(expectedFenBoard);
+        expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
     test('verifyCheck should detect both check state', () => {
@@ -2508,10 +2354,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2529,10 +2372,10 @@ describe('SynchronousChessGame', () => {
         // When
         game.verifyCheck();
         // Then
-        expect(game.isBlackInCheck).toBeTruthy();
-        expect(game.isWhiteInCheck).toBeTruthy();
-        expect(game.isBlackInCheckmate).toBeFalsy();
-        expect(game.isWhiteInCheckmate).toBeFalsy();
+        expect(game.isBlackInCheck()).toBeTruthy();
+        expect(game.isWhiteInCheck()).toBeTruthy();
+        expect(game.isBlackInCheckmate()).toBeFalsy();
+        expect(game.isWhiteInCheckmate()).toBeFalsy();
     });
 
     test('verifyCheck should detect both checkmate state', () => {
@@ -2548,10 +2391,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2569,10 +2409,10 @@ describe('SynchronousChessGame', () => {
         // When
         game.verifyCheck();
         // Then
-        expect(game.isBlackInCheck).toBeTruthy();
-        expect(game.isWhiteInCheck).toBeTruthy();
-        expect(game.isBlackInCheckmate).toBeTruthy();
-        expect(game.isWhiteInCheckmate).toBeTruthy();
+        expect(game.isBlackInCheck()).toBeTruthy();
+        expect(game.isWhiteInCheck()).toBeTruthy();
+        expect(game.isBlackInCheckmate()).toBeTruthy();
+        expect(game.isWhiteInCheckmate()).toBeTruthy();
     });
 
     test('verifyCheck should not detect check state', () => {
@@ -2588,10 +2428,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2609,10 +2446,10 @@ describe('SynchronousChessGame', () => {
         // When
         game.verifyCheck();
         // Then
-        expect(game.isBlackInCheck).toBeFalsy();
-        expect(game.isWhiteInCheck).toBeFalsy();
-        expect(game.isBlackInCheckmate).toBeFalsy();
-        expect(game.isWhiteInCheckmate).toBeFalsy();
+        expect(game.isBlackInCheck()).toBeFalsy();
+        expect(game.isWhiteInCheck()).toBeFalsy();
+        expect(game.isBlackInCheckmate()).toBeFalsy();
+        expect(game.isWhiteInCheckmate()).toBeFalsy();
     });
 
     test('verifyCheck should return on turn other than synchrone turn', () => {
@@ -2628,10 +2465,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(moveTurnSpy);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.EMPTY, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2649,10 +2483,10 @@ describe('SynchronousChessGame', () => {
         // When
         game.verifyCheck();
         // Then
-        expect(game.isBlackInCheck).toBeFalsy();
-        expect(game.isWhiteInCheck).toBeFalsy();
-        expect(game.isBlackInCheckmate).toBeFalsy();
-        expect(game.isWhiteInCheckmate).toBeFalsy();
+        expect(game.isBlackInCheck()).toBeFalsy();
+        expect(game.isWhiteInCheck()).toBeFalsy();
+        expect(game.isBlackInCheckmate()).toBeFalsy();
+        expect(game.isWhiteInCheckmate()).toBeFalsy();
     });
 
     test('getPossiblePlays should only return king plays during check state', () => {
@@ -2667,9 +2501,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         const whitePawn: Vec2 = new Vec2(Column.B, Row._2);
         const whiteKing: Vec2 = new Vec2(Column.E, Row._1);
         const blackPawn: Vec2 = new Vec2(Column.B, Row._7);
@@ -2679,8 +2511,8 @@ describe('SynchronousChessGame', () => {
         const whiteKingExpectedPlays: Array<Vec2> = [new Vec2(Column.F, Row._2)];
         const blackPawnExpectedPlays: Array<Vec2> = [];
         const blackKingExpectedPlays: Array<Vec2> = [new Vec2(Column.D, Row._7)];
-        game.isBlackInCheck = true;
-        game.isWhiteInCheck = true;
+        gameState(game)._isBlackInCheck.set(true);
+        gameState(game)._isWhiteInCheck.set(true);
 
         const fenBoardInit: FenBoard = [
             [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
@@ -2720,9 +2552,7 @@ describe('SynchronousChessGame', () => {
             type: TurnType.CHOICE_PROMOTION,
             category: TurnCategory.MOVE,
         } as MoveTurn;
-        Object.defineProperty(game, 'turn', {
-            value: moveTurnSpy
-        });
+        gameState(game)._turn.set(moveTurnSpy);
         const whitePawnExpectedPlays: Array<Vec2> = [new Vec2(Column.B, Row._3), new Vec2(Column.B, Row._4)];
         const blackPawnExpectedPlays: Array<Vec2> = [new Vec2(Column.B, Row._6), new Vec2(Column.B, Row._5)];
         const whitePawn: Vec2 = new Vec2(Column.B, Row._2);
@@ -2741,9 +2571,9 @@ describe('SynchronousChessGame', () => {
         // Given
         const noCheckmateGame: SynchronousChessGame = new SynchronousChessGame();
         const whiteCheckmateGame: SynchronousChessGame = new SynchronousChessGame();
-        whiteCheckmateGame.isWhiteInCheckmate = true;
+        gameState(whiteCheckmateGame)._isWhiteInCheckmate.set(true);
         const blackCheckmateGame: SynchronousChessGame = new SynchronousChessGame();
-        blackCheckmateGame.isBlackInCheckmate = true;
+        gameState(blackCheckmateGame)._isBlackInCheckmate.set(true);
 
         // When
         const noCheckmate: boolean = noCheckmateGame.isCheckmate();
@@ -2792,10 +2622,7 @@ describe('SynchronousChessGame', () => {
             type: 'unknownType' as TurnType,
             category: TurnCategory.MOVE,
         });
-        Object.defineProperty(game, 'turn', {
-            value: turnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(turnSpy);
 
         // When
         const call = (): boolean => game.runTurn();
@@ -2811,10 +2638,7 @@ describe('SynchronousChessGame', () => {
             type: 'unknownType' as TurnType,
             category: TurnCategory.MOVE,
         });
-        Object.defineProperty(game, 'turn', {
-            value: turnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(turnSpy);
 
         // When
         const call = (): Array<Vec2> => game.getPossiblePlays(new Vec2(0, 6));
@@ -2831,10 +2655,7 @@ describe('SynchronousChessGame', () => {
             category: 'unknownCategory' as TurnCategory,
             isDone: true,
         });
-        Object.defineProperty(game, 'turn', {
-            value: turnSpy,
-            writable: true
-        });
+        gameState(game)._turn.set(turnSpy);
 
         // When
         game.nextTurn();
@@ -2850,10 +2671,7 @@ describe('SynchronousChessGame', () => {
         const turn: SyncTurn = new SyncTurn();
         turn.action.whiteMove = { from: [FenColumn.A, FenRow._4], to: [FenColumn.A, FenRow._5] };
         turn.action.blackMove = { from: [FenColumn.A, FenRow._7], to: [FenColumn.A, FenRow._6] };
-        Object.defineProperty(game, 'turn', {
-            value: turn,
-            writable: true
-        });
+        gameState(game)._turn.set(turn);
         Object.defineProperty(game, 'isTurnValid', {
             value: vi.fn().mockReturnValue(true)
         });
@@ -2875,5 +2693,16 @@ describe('SynchronousChessGame', () => {
 
         // Then
         expect(call).toThrow('Piece is undefined');
+    });
+
+    test('registerMove should throw when skipping a synchronous turn', () => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+
+        // When
+        const call = (): boolean => game.registerMove(null, PieceColor.WHITE);
+
+        // Then
+        expect(call).toThrow('A synchronous turn can not be skipped');
     });
 });

@@ -1,3 +1,5 @@
+import { signal } from '@angular/core';
+import { sessionState } from '@testing/chess-state.helper';
 import { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessOnlinePeerGameSession
     from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-peer-game-session';
@@ -52,7 +54,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         messengerSubject.next(configuration);
 
-        expect(session.configuration).toBe(configuration.payload);
+        expect(session.configuration()).toBe(configuration.payload);
     });
 
     test('should set the configuration', () => {
@@ -76,7 +78,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         session.onConfiguration(configuration);
 
         // Then
-        expect(session.configuration).toBe(configuration.payload);
+        expect(session.configuration()).toBe(configuration.payload);
     });
 
     test('should return false if runMove move a piece from another color', () => {
@@ -85,7 +87,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
             runTurn: vi.fn(),
-            fenBoard: ChessBoardHelper.createFenBoard(),
+            fenBoard: signal(ChessBoardHelper.createFenBoard()),
         });
 
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
@@ -118,7 +120,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
             runTurn: vi.fn(),
-            fenBoard: ChessBoardHelper.createFenBoard(),
+            fenBoard: signal(ChessBoardHelper.createFenBoard()),
         });
 
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
@@ -152,7 +154,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
             runTurn: vi.fn(),
-            fenBoard: ChessBoardHelper.createFenBoard(),
+            fenBoard: signal(ChessBoardHelper.createFenBoard()),
         });
 
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
@@ -162,7 +164,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
 
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
+        sessionState(session).setConfiguration({ whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 });
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -173,7 +175,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             from: [FenColumn.A, FenRow._7],
             to: [FenColumn.A, FenRow._4]
         };
-        session.movePreview = undefined;
+        sessionState(session)._movePreview.set(undefined);
         vi.mocked(gameSpy.registerMove).mockReturnValue(true);
         vi.mocked(gameSpy.runTurn).mockReturnValue(false);
 
@@ -182,7 +184,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview).not.toEqual(undefined);
+        expect(session.movePreview()).not.toEqual(undefined);
         expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
         expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });
@@ -193,7 +195,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
             runTurn: vi.fn(),
-            fenBoard: ChessBoardHelper.createFenBoard(),
+            fenBoard: signal(ChessBoardHelper.createFenBoard()),
         });
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
@@ -201,7 +203,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
+        sessionState(session).setConfiguration({ whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 });
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -212,7 +214,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             from: [FenColumn.A, FenRow._7],
             to: [FenColumn.A, FenRow._4]
         };
-        session.movePreview = undefined;
+        sessionState(session)._movePreview.set(undefined);
         vi.mocked(gameSpy.registerMove).mockReturnValue(true);
         vi.mocked(gameSpy.runTurn).mockReturnValue(false);
 
@@ -221,7 +223,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview).toEqual(undefined);
+        expect(session.movePreview()).toEqual(undefined);
         expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
         expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });
@@ -232,7 +234,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             registerMove: vi.fn(),
             isMoveValid: vi.fn(),
             runTurn: vi.fn(),
-            fenBoard: ChessBoardHelper.createFenBoard(),
+            fenBoard: signal(ChessBoardHelper.createFenBoard()),
         });
         const roomSpy = TestHelper.cast<Room<ChessPayloads>>({
             messenger: vi.fn(),
@@ -240,7 +242,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
         });
         vi.mocked(roomSpy.messenger).mockReturnValue(new Subject<ConfigurationMessage>());
         const session: ProtectedTest = new ProtectedTest(roomSpy);
-        session.configuration = { whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 };
+        sessionState(session).setConfiguration({ whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 0 });
         Object.defineProperty(session, 'game', {
             value: gameSpy,
             writable: false
@@ -253,7 +255,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             from: [FenColumn.A, FenRow._7],
             to: [FenColumn.A, FenRow._4]
         };
-        session.movePreview = { from, to };
+        sessionState(session)._movePreview.set({ from, to });
         vi.mocked(gameSpy.registerMove).mockReturnValue(true);
         vi.mocked(gameSpy.runTurn).mockReturnValue(true);
 
@@ -262,7 +264,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
 
         // Then
         expect(result).toBeTruthy();
-        expect(session.movePreview).toBeUndefined();
+        expect(session.movePreview()).toBeUndefined();
         expect(gameSpy.registerMove).toHaveBeenCalledTimes(1);
         expect(gameSpy.runTurn).toHaveBeenCalledTimes(1);
     });
@@ -275,7 +277,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             runTurn: vi.fn(),
         });
         Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
+            value: signal(ChessBoardHelper.createFenBoard()),
             writable: false
         });
         vi.mocked(gameSpy.promote).mockReturnValue(false);
@@ -308,7 +310,7 @@ describe('SynchronousChessOnlinePeerGameSession', () => {
             runTurn: vi.fn(),
         });
         Object.defineProperty(gameSpy, 'fenBoard', {
-            value: ChessBoardHelper.createFenBoard(),
+            value: signal(ChessBoardHelper.createFenBoard()),
             writable: false
         });
         vi.mocked(gameSpy.promote).mockReturnValue(true);

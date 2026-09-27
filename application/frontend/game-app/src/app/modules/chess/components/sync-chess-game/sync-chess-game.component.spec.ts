@@ -1,11 +1,15 @@
-import { ChangeDetectorRef } from '@angular/core';
+import { gameState } from '@testing/chess-state.helper';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SyncChessGameComponent } from './sync-chess-game.component';
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import { ChessPayloads, SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
-import TurnType, { TurnCategory } from '@app/modules/chess/classes/turns/turn.types';
+import { IntermediateTurn } from '@app/modules/chess/classes/turns/intermediate-turn';
+import PromotionTurn from '@app/modules/chess/classes/turns/promotion-turn';
+import SyncTurn from '@app/modules/chess/classes/turns/sync-turn';
+import Turn from '@app/modules/chess/classes/turns/turn';
+import TurnType from '@app/modules/chess/classes/turns/turn.types';
 import { Vec2 } from '@app/modules/chess/classes/vector/vec2';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import { PieceType } from '@app/modules/chess/enums/piece-type.enum';
@@ -35,10 +39,26 @@ describe('SyncChessGameComponent', () => {
         return fixture.nativeElement.querySelector(`.player-information.${ color }-player .skip-button`);
     }
 
-    // The game state is not made of signals, the view has to be marked for check explicitly
+    // The game state is made of signals, its changes are rendered without explicit check
     async function refresh(): Promise<void> {
-        fixture.componentRef.injector.get(ChangeDetectorRef).markForCheck();
         await fixture.whenStable();
+    }
+
+    function setTurn(turn: Turn): void {
+        gameState(session().game)._turn.set(turn);
+    }
+
+    function intermediateTurn(): IntermediateTurn {
+        return new IntermediateTurn({ whiteTarget: [FenColumn.E, FenRow._4], blackTarget: [FenColumn.E, FenRow._5], whiteMove: null, blackMove: null });
+    }
+
+    function promotionTurn(color: PieceColor): PromotionTurn {
+        return new PromotionTurn({
+            whiteFenCoordinate: color === PieceColor.WHITE ? [FenColumn.A, FenRow._8] : null,
+            blackFenCoordinate: color === PieceColor.BLACK ? [FenColumn.A, FenRow._1] : null,
+            whitePiece: null,
+            blackPiece: null,
+        }, new SyncTurn());
     }
 
     function board(): ChessBoardComponent {
@@ -49,13 +69,15 @@ describe('SyncChessGameComponent', () => {
         network.onMessage$.next({ type: SCGameSessionType.PLAY, payload: { move }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
     }
 
-    async function createOnlineGame(): Promise<void> {
+    // The first added player is white, the second one is black
+    async function createOnlineGame(localColor: PieceColor = PieceColor.WHITE): Promise<void> {
         network = new RoomNetworkMock('local', true);
         const room: Room<ChessPayloads> = new Room<ChessPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
         fixture.componentRef.setInput('room', room);
         await fixture.whenStable();
-        network.playerAdded$.next(network.localPlayer);
-        network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false, sendData: vi.fn() }));
+        const remotePlayer = TestHelper.cast<Player>({ name: 'remote', isLocal: false, sendData: vi.fn() });
+        const players: Player[] = localColor === PieceColor.WHITE ? [network.localPlayer, remotePlayer] : [remotePlayer, network.localPlayer];
+        players.forEach((player: Player) => network.playerAdded$.next(player));
         await refresh();
     }
 
@@ -92,7 +114,8 @@ describe('SyncChessGameComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Joueur Noir : remote');
         expect(fixture.nativeElement.textContent).toContain('Joueur Blanc : local');
         expect(component.moveColor()).toEqual(PieceColor.WHITE);
-        expect(skipButton('white')).not.toBeNull();
+        expect(component.canSkip()).toEqual(false);
+        expect(skipButton('white')).toBeNull();
         expect(skipButton('black')).toBeNull();
     });
 
@@ -134,7 +157,6 @@ describe('SyncChessGameComponent', () => {
         expect(component.whiteHasPlayed()).toEqual(true);
         expect(component.blackHasPlayed()).toEqual(false);
         expect(text('.player-information.white-player')).toContain('a joué');
-        expect(skipButton('white')).toBeNull();
 
         // When
         remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
@@ -146,16 +168,31 @@ describe('SyncChessGameComponent', () => {
         expect(text('.player-information.black-player')).toContain('E7 -> E5');
     });
 
-    test('should skip a turn', async () => {
+    test('should skip an intermediate turn', async () => {
         // Given
         await createOnlineGame();
-        const moveSpy = vi.spyOn(session(), 'move');
+        const moveSpy = vi.spyOn(session(), 'move').mockImplementation(() => undefined);
 
         // When
+        setTurn(intermediateTurn());
+        await refresh();
         skipButton('white')?.click();
 
         // Then
+        expect(component.canSkip()).toEqual(true);
+        expect(skipButton('black')).toBeNull();
         expect(moveSpy).toHaveBeenCalledWith(null);
+    });
+
+    test('should not be able to skip a synchronous turn', async () => {
+        // Given
+        await createOnlineGame();
+
+        // When
+        const call = (): void => component.skip();
+
+        // Then
+        expect(call).toThrow('A synchronous turn can not be skipped');
     });
 
     test('should display the skipped moves', async () => {
@@ -173,10 +210,10 @@ describe('SyncChessGameComponent', () => {
 
     test('should display the black interactions when black is playing', async () => {
         // Given
-        await createOnlineGame();
-        vi.spyOn(session(), 'playingColor', 'get').mockReturnValue(PieceColor.BLACK);
+        await createOnlineGame(PieceColor.BLACK);
 
         // When
+        setTurn(intermediateTurn());
         await refresh();
 
         // Then
@@ -191,7 +228,7 @@ describe('SyncChessGameComponent', () => {
         expect(moveSpy).toHaveBeenCalledWith(null);
 
         // When
-        session().game.isBlackInCheck = true;
+        gameState(session().game)._isBlackInCheck.set(true);
         await refresh();
 
         // Then
@@ -202,9 +239,10 @@ describe('SyncChessGameComponent', () => {
     test('should display the check and checkmate states', async () => {
         // Given
         await createOnlineGame();
+        setTurn(intermediateTurn());
 
         // When
-        session().game.isWhiteInCheck = true;
+        gameState(session().game)._isWhiteInCheck.set(true);
         await refresh();
 
         // Then
@@ -212,9 +250,9 @@ describe('SyncChessGameComponent', () => {
         expect(text('.player-information.white-player .check')).toEqual('Échec');
 
         // When
-        session().game.isWhiteInCheckmate = true;
-        session().game.isBlackInCheck = true;
-        session().game.isBlackInCheckmate = true;
+        gameState(session().game)._isWhiteInCheckmate.set(true);
+        gameState(session().game)._isBlackInCheck.set(true);
+        gameState(session().game)._isBlackInCheckmate.set(true);
         await refresh();
 
         // Then
@@ -228,11 +266,10 @@ describe('SyncChessGameComponent', () => {
     test('should display the promotion choices of the playing color', async () => {
         // Given
         await createOnlineGame();
-        vi.spyOn(session().game, 'getTurnType').mockReturnValue(TurnType.CHOICE_PROMOTION);
-        vi.spyOn(session().game, 'getTurnCategory').mockReturnValue(TurnCategory.CHOICE);
         const promoteSpy = vi.spyOn(session(), 'promote').mockImplementation(() => undefined);
 
         // When
+        setTurn(promotionTurn(PieceColor.WHITE));
         await refresh();
 
         // Then
@@ -249,13 +286,27 @@ describe('SyncChessGameComponent', () => {
         expect(promoteSpy).toHaveBeenCalledWith(PieceType.ROOK);
 
         // When
-        vi.spyOn(session(), 'playingColor', 'get').mockReturnValue(PieceColor.BLACK);
+        setTurn(promotionTurn(PieceColor.BLACK));
+        await refresh();
+
+        // Then
+        expect(fixture.nativeElement.querySelector('.promotion-list.white-player')).toBeNull();
+        expect(fixture.nativeElement.querySelector('.promotion-list.black-player')).toBeNull();
+    });
+
+    test('should display the black promotion choices when black is playing', async () => {
+        // Given
+        await createOnlineGame(PieceColor.BLACK);
+        const promoteSpy = vi.spyOn(session(), 'promote').mockImplementation(() => undefined);
+
+        // When
+        setTurn(promotionTurn(PieceColor.BLACK));
         await refresh();
         (fixture.nativeElement.querySelector('.promotion-list.black-player app-chess-piece') as HTMLElement).click();
 
         // Then
         expect(fixture.nativeElement.querySelector('.promotion-list.white-player')).toBeNull();
-        expect(promoteSpy).toHaveBeenCalledTimes(2);
+        expect(promoteSpy).toHaveBeenCalledWith(PieceType.ROOK);
     });
 
     test('should name the intermediate turn and reject unknown turns', async () => {

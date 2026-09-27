@@ -19,7 +19,11 @@ export default class SyncTurn extends MoveTurn<SyncTurnAction> {
         return this.isFilled(PieceColor.WHITE) && this.isFilled(PieceColor.BLACK);
     }
 
-    public registerMove(move: Move, color: PieceColor): void {
+    public registerMove(move: Move | null, color: PieceColor): void {
+        if (move === null) {
+            throw new Error('A synchronous turn can not be skipped');
+        }
+
         if (color === PieceColor.WHITE) {
             this.action.whiteMove = move;
         } else if (color === PieceColor.BLACK) {

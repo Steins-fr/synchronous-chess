@@ -80,4 +80,16 @@ describe('SyncTurn', () => {
         expect(turn.action).toEqual({ whiteMove: null, blackMove: null });
         expect(turn.isFilled(PieceColor.NONE)).toEqual(true);
     });
+
+    test('registerMove should throw on a skipped move', () => {
+        // Given
+        const turn: SyncTurn = new SyncTurn();
+
+        // When
+        const call = (): void => turn.registerMove(null, PieceColor.WHITE);
+
+        // Then
+        expect(call).toThrow('A synchronous turn can not be skipped');
+        expect(turn.isFilled(PieceColor.WHITE)).toEqual(false);
+    });
 });

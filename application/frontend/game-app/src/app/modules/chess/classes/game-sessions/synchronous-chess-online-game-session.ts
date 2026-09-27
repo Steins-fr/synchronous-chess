@@ -40,7 +40,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     }
 
     public get playingColor(): PieceColor {
-        if (this.configuration.whitePlayer === undefined || this.configuration.blackPlayer === undefined) {
+        if (this.configuration().whitePlayer === undefined || this.configuration().blackPlayer === undefined) {
             return PieceColor.NONE;
         }
 
@@ -53,9 +53,9 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
     protected playerColor(playerName: string): PieceColor {
         switch (playerName) {
-            case this.configuration.whitePlayer:
+            case this.configuration().whitePlayer:
                 return PieceColor.WHITE;
-            case this.configuration.blackPlayer:
+            case this.configuration().blackPlayer:
                 return PieceColor.BLACK;
             default:
                 return PieceColor.NONE;
