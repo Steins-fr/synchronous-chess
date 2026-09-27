@@ -13,15 +13,13 @@ import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-c
 import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import { PieceType } from '@app/modules/chess/enums/piece-type.enum';
-import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
 import { AppMessage, AppMessagesOf } from '@app/services/room-manager/classes/webrtc/messages/room-message';
-import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
-import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { TestHelper } from '@testing/test.helper';
+import { WebrtcMock } from '@testing/webrtc.mock';
 import { Subject } from 'rxjs';
-import { vi, describe, test, expect } from 'vitest';
+import { vi, describe, test, expect, onTestFinished } from 'vitest';
 import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { Player } from '@app/services/room-manager/classes/player/player';
@@ -263,16 +261,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
         const session: SynchronousChessOnlineHostGameSession = new SynchronousChessOnlineHostGameSession(roomSpy);
         const defaultConfiguration: SessionConfiguration = { ...session.configuration() };
 
-        const webRtcSpy = TestHelper.cast<Webrtc>({
-            close: vi.fn(),
-            states: new Subject<WebrtcStates>(),
-            data: new Subject<Message>(),
-        });
+        const webrtc = new WebrtcMock().webrtc;
 
-        const player1: Player = new WebRtcPlayer('robert', webRtcSpy);
-        const player2: Player = new WebRtcPlayer('mario', webRtcSpy);
-        const player3: Player = new WebRtcPlayer('bertrand', webRtcSpy);
-        const player4: Player = new WebRtcPlayer('romain', webRtcSpy);
+        const player1: Player = new WebRtcPlayer('robert', webrtc);
+        const player2: Player = new WebRtcPlayer('mario', webrtc);
+        const player3: Player = new WebRtcPlayer('bertrand', webrtc);
+        const player4: Player = new WebRtcPlayer('romain', webrtc);
+        onTestFinished(() => [player1, player2, player3, player4].forEach((player: Player) => player.clear()));
 
         const expectedDefaultConfiguration: SessionConfiguration = {
             spectatorNumber: 0
@@ -325,16 +320,13 @@ describe('SynchronousChessOnlineHostGameSession', () => {
             blackPlayer: 'mario',
             spectatorNumber: 2
         });
-        const webRtcSpy = TestHelper.cast<Webrtc>({
-            close: vi.fn(),
-            states: new Subject<WebrtcStates>(),
-            data: new Subject<Message>(),
-        });
+        const webrtc = new WebrtcMock().webrtc;
 
-        const player1: Player = new WebRtcPlayer('robert', webRtcSpy);
-        const player2: Player = new WebRtcPlayer('mario', webRtcSpy);
-        const player3: Player = new WebRtcPlayer('bertrand', webRtcSpy);
-        const player4: Player = new WebRtcPlayer('romain', webRtcSpy);
+        const player1: Player = new WebRtcPlayer('robert', webrtc);
+        const player2: Player = new WebRtcPlayer('mario', webrtc);
+        const player3: Player = new WebRtcPlayer('bertrand', webrtc);
+        const player4: Player = new WebRtcPlayer('romain', webrtc);
+        onTestFinished(() => [player1, player2, player3, player4].forEach((player: Player) => player.clear()));
 
         // When
         session.onPlayerRemove(player1);
