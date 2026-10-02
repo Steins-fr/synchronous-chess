@@ -20,7 +20,7 @@ export default class RoomManagerService {
         routing: NonEmptyBlockChainRouting<M>,
     ): Promise<BlockRoom<M>> {
         try {
-            const keys = await BlockRoom.createKeys();
+            const keys = await BlockRoom.createKeys(setup.playerName);
             let roomConnection: RoomNetwork;
 
             if (setup.type === 'create') {

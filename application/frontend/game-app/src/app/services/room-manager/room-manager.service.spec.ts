@@ -52,6 +52,7 @@ describe('RoomManagerService', () => {
         expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host' });
         expect(room.roomConnection).toBeInstanceOf(HostRoomNetwork);
         expect(room.localPlayer.name).toEqual('host');
+        expect(BlockRoom.createKeys).toHaveBeenCalledWith('host');
     });
 
     test.each([

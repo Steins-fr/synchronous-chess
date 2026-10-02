@@ -653,16 +653,31 @@ describe('DistributedBlockChain', () => {
         expect(sentTypes(remote)).toEqual([BlockChainMessageType.GET_LAST_BLOCK_REQUEST]);
     });
 
-    test('should trust the caught up history on its hash chain, as the keys of past connections are unknown', async () => {
+    test('should verify the caught up blocks of the known authors, and trust those of the unknown ones', async () => {
         // Given
-        const { internals, room } = createNode();
-        const blockOfPastConnection: Block = await createSignedBlock(internals.blockChain.getLatestBlock(), 'b', localKeyPair);
+        const forged: Node = createNode();
+        const pending: Node = createNode();
+        const signedBefore: Node = createNode();
+        const unknown: Node = createNode();
+        createRemote(pending.participants, 'c');
+        signedBefore.remoteParticipant.receiveKey(localKeyPair.publicKey);
+        const forgedBlock: Block = await createSignedBlock(forged.internals.blockChain.getLatestBlock(), 'b', localKeyPair);
+        const pendingBlock: Block = await createSignedBlock(pending.internals.blockChain.getLatestBlock(), 'c', remoteKeyPair);
+        const blockOfPreviousKey: Block = await createSignedBlock(signedBefore.internals.blockChain.getLatestBlock(), 'b', remoteKeyPair);
+        const unknownAuthorBlock: Block = await createSignedBlock(unknown.internals.blockChain.getLatestBlock(), 'gone', remoteKeyPair);
 
         // When
-        await internals.onGetBlocksResponse(receivedMessage(BlockChainMessageType.GET_BLOCKS_RESPONSE, [blockOfPastConnection]));
+        await forged.internals.onGetBlocksResponse(receivedMessage(BlockChainMessageType.GET_BLOCKS_RESPONSE, [forgedBlock]));
+        await pending.internals.onGetBlocksResponse(receivedMessage(BlockChainMessageType.GET_BLOCKS_RESPONSE, [pendingBlock]));
+        await signedBefore.internals.onGetBlocksResponse(receivedMessage(BlockChainMessageType.GET_BLOCKS_RESPONSE, [blockOfPreviousKey]));
+        await unknown.internals.onGetBlocksResponse(receivedMessage(BlockChainMessageType.GET_BLOCKS_RESPONSE, [unknownAuthorBlock]));
 
         // Then
-        expect(room.notifyMessage).toHaveBeenCalledExactlyOnceWith(blockOfPastConnection);
+        expect(forged.room.notifyMessage).not.toHaveBeenCalled();
+        expect(pending.room.notifyMessage).not.toHaveBeenCalled();
+        expect(signedBefore.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(blockOfPreviousKey);
+        // An author who left before this participant joined is unknown: its block is trusted on the hash chain
+        expect(unknown.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(unknownAuthorBlock);
     });
 
     test('should skip a caught up block added by an overlapping response while its hash was checked', async () => {

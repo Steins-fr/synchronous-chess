@@ -5,6 +5,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { takeUntil } from 'rxjs';
 import { Block } from './block-chain/block';
 import { DistributedBlockChain } from './block-chain/distributed-block-chain';
+import { ParticipantKeyStore } from './block-chain/participant-key-store';
 import { ParticipantKeys, ParticipantReady, ParticipantRegistry } from './block-chain/participant-registry';
 import { BlockChainName } from './block-chain-name.enum';
 import { BlockRoomInterface } from './block-room.interface';
@@ -40,8 +41,9 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     /** The block chains by name, to dispatch the received messages */
     private readonly blockChains: ReadonlyMap<BlockChainName, DistributedBlockChain>;
 
-    public static async createKeys(): Promise<ParticipantKeys> {
-        return await ParticipantRegistry.createKeys();
+    /** The stored keys of the player, so that it keeps its identity when reloading the page */
+    public static async createKeys(playerName: string, keyStore: ParticipantKeyStore = new ParticipantKeyStore()): Promise<ParticipantKeys> {
+        return await ParticipantRegistry.createKeys(await keyStore.keyPairOf(playerName));
     }
 
     public constructor(

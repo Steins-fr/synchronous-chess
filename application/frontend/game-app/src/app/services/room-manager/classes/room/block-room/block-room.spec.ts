@@ -2,6 +2,8 @@ import { BlockChainRouting, BlockRoom, mergeBlockChainRoutings } from './block-r
 import { Block } from './block-chain/block';
 import { DistributedBlockChain } from './block-chain/distributed-block-chain';
 import { ParticipantKeys, ParticipantRegistry } from './block-chain/participant-registry';
+import { ParticipantKeyStore } from './block-chain/participant-key-store';
+import { IDBFactory } from 'fake-indexeddb';
 import { BlockChainName } from './block-chain-name.enum';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
@@ -36,7 +38,7 @@ describe('BlockRoom', () => {
     const players: WebRtcPlayer[] = [];
 
     beforeAll(async () => {
-        keys = await BlockRoom.createKeys();
+        keys = await BlockRoom.createKeys('local', new ParticipantKeyStore(new IDBFactory()));
     });
 
     beforeEach(() => {
@@ -57,6 +59,18 @@ describe('BlockRoom', () => {
 
     test('createKeys should create a signing key pair', () => {
         expect(keys.keyPair.privateKey.usages).toEqual(['sign']);
+    });
+
+    test('createKeys should keep the identity of a player when it comes back', async () => {
+        // Given
+        const keyStore: ParticipantKeyStore = new ParticipantKeyStore(new IDBFactory());
+        const first: ParticipantKeys = await BlockRoom.createKeys('local', keyStore);
+
+        // When
+        const again: ParticipantKeys = await BlockRoom.createKeys('local', keyStore);
+
+        // Then
+        expect(again.publicJwk).toEqual(first.publicJwk);
     });
 
     test('should reject an empty routing at compile time', () => {

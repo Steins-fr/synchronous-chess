@@ -12,6 +12,7 @@ import { Subject } from 'rxjs';
 import { Player } from '../../../player/player';
 import { keyPairAlgorithm } from './block-chain.constants';
 import { Participant } from './participant';
+import { ParticipantKeyStore } from './participant-key-store';
 import { ReadyParticipants } from './waiting-queue';
 
 /** The key pair of the local participant, with its public key exported once to be sent to each player */
@@ -35,9 +36,10 @@ export class ParticipantRegistry implements ReadyParticipants {
     /** The blocks a participant wrote before leaving are approved within this delay */
     private static readonly DEPARTED_RETENTION_MS: number = 60_000;
 
-    public static async createKeys(): Promise<ParticipantKeys> {
-        const keyPair: CryptoKeyPair = await window.crypto.subtle.generateKey(keyPairAlgorithm, true, ['sign', 'verify']);
-        return { keyPair, publicJwk: await window.crypto.subtle.exportKey('jwk', keyPair.publicKey) };
+    /** @param keyPair the stored key pair of the player, a new one otherwise */
+    public static async createKeys(keyPair?: CryptoKeyPair): Promise<ParticipantKeys> {
+        const pair: CryptoKeyPair = keyPair ?? await ParticipantKeyStore.generateKeyPair();
+        return { keyPair: pair, publicJwk: await crypto.subtle.exportKey('jwk', pair.publicKey) };
     }
 
     /** The connected participants */
@@ -93,8 +95,8 @@ export class ParticipantRegistry implements ReadyParticipants {
     }
 
     /**
-     * A reconnecting player gets a participant waiting for its current key: it may have reloaded and changed its key pair.
-     * Its previous keys are kept to verify the blocks it signed before.
+     * A reconnecting player gets a participant waiting for its current key: it may have lost its stored key pair
+     * (cleared site data, private browsing). Its previous keys are kept to verify the blocks it signed before.
      */
     public onNewPlayer(player: Player): void {
         const previous: Participant | undefined = this.author(player.name);

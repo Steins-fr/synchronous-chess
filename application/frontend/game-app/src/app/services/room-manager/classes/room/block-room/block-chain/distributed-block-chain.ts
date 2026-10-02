@@ -396,14 +396,13 @@ export class DistributedBlockChain {
     }
 
     /**
-     * The history is trusted on the hash chain of the peer, the signatures are not verified:
-     * each connection of a player has its own key pair, so the keys of the blocks signed before the current
-     * connections are unknown, even to their author after a reload. The live blocks are verified.
+     * The blocks of the known authors are verified with their keys, the players keeping their key pair when reloading.
+     * The blocks of an author who left before this participant joined are trusted on the hash chain of the peer, its keys being unknown.
      */
     private async onGetBlocksResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_RESPONSE>): Promise<BlockChainState> {
 
         for (const block of message.payload) {
-            const isValid: boolean = this.ownsBlock(block) && await this.blockChain.hasValidHash(block);
+            const isValid: boolean = this.ownsBlock(block) && await this.isSignedByKnownAuthor(block) && await this.blockChain.hasValidHash(block);
 
             // Checked after the hash: overlapping responses from several peers carry the same blocks, and may have added it meanwhile
             if (this.blockChain.contains(block)) {
@@ -426,6 +425,14 @@ export class DistributedBlockChain {
         this.getParticipantLastBlock(message.from);
 
         return BlockChainState.OUTDATED;
+    }
+
+    private async isSignedByKnownAuthor(block: Block): Promise<boolean> {
+        const author: Participant | undefined = this.participants.author(block.data.from);
+
+        // Refused while the key of the author is being negotiated: once known, its ready event asks for the last block again,
+        // which resumes the catch up
+        return !author || await this.isSignedWithOneOf(block, [...author.knownKeys].reverse());
     }
 
     private getParticipantLastBlock(participantName: string): void {

@@ -3,7 +3,7 @@ import { BlockRoomParticipantMessage } from '@app/services/room-manager/classes/
 import { Player } from '../../../player/player';
 
 export class Participant {
-    /** From the oldest: a player reloading the page signs with a new key, its blocks signed before are still valid */
+    /** From the oldest: a player who lost its stored key pair signs with a new one, its blocks signed before are still valid */
     private readonly keys: CryptoKey[];
     private hasCurrentKey: boolean = false;
 
