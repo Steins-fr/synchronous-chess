@@ -1,4 +1,4 @@
-import { ParticipantKeys, ParticipantReady, ParticipantRegistry } from './participant-registry';
+import { ParticipantKeys, ParticipantRegistry } from './participant-registry';
 import { BlockChainName } from '../block-chain-name.enum';
 import { BlockChainMessage, BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
@@ -26,7 +26,7 @@ describe('ParticipantRegistry', () => {
     let remoteKeys: ParticipantKeys;
     let registry: ParticipantRegistry;
     let remote: Player;
-    let ready: ParticipantReady[];
+    let ready: string[];
 
     beforeAll(async () => {
         keys = await ParticipantRegistry.createKeys();
@@ -38,15 +38,15 @@ describe('ParticipantRegistry', () => {
         registry = new ParticipantRegistry(new LocalPlayer('a'), keys);
         remote = createPlayer('b');
         ready = [];
-        registry.ready$.subscribe((participantReady: ParticipantReady) => ready.push(participantReady));
+        registry.ready$.subscribe((name: string) => ready.push(name));
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    function remoteKey(nbParticipants: number = 2): NegotiationPayload {
-        return { publicKey: remoteKeys.publicJwk, nbParticipants };
+    function remoteKey(): NegotiationPayload {
+        return { publicKey: remoteKeys.publicJwk };
     }
 
     async function negotiate(player: Player = remote): Promise<void> {
@@ -65,8 +65,6 @@ describe('ParticipantRegistry', () => {
         expect(registry.local.knownKeys).toEqual([keys.keyPair.publicKey]);
         expect(registry.get('a')).toBe(registry.local);
         expect([...registry.values()]).toEqual([registry.local]);
-        expect(registry.size).toEqual(1);
-        expect(registry.readyCount).toEqual(1);
     });
 
     test('should send its public key to a new player', () => {
@@ -76,11 +74,9 @@ describe('ParticipantRegistry', () => {
         // Then
         expect(remote.sendData).toHaveBeenCalledExactlyOnceWith({
             type: BlockRoomParticipantMessageType.NEGOTIATION_REQUEST,
-            payload: { nbParticipants: 2, publicKey: keys.publicJwk },
+            payload: { publicKey: keys.publicJwk },
             origin: MessageOriginType.BLOCK_ROOM_PARTICIPANT,
         });
-        expect(registry.size).toEqual(2);
-        expect(registry.readyCount).toEqual(1);
     });
 
     test('should answer a negotiation request and register the key it carries', async () => {
@@ -88,17 +84,16 @@ describe('ParticipantRegistry', () => {
         registry.onNewPlayer(remote);
 
         // When
-        registry.handle(receivedMessage(BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, remoteKey(3)));
+        registry.handle(receivedMessage(BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, remoteKey()));
         registry.handle(receivedMessage(BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, remoteKey(), 'unknown'));
 
         // Then
         expect(remote.sendData).toHaveBeenLastCalledWith({
             type: BlockRoomParticipantMessageType.NEGOTIATION_RESPONSE,
-            payload: { nbParticipants: 2, publicKey: keys.publicJwk },
+            payload: { publicKey: keys.publicJwk },
             origin: MessageOriginType.BLOCK_ROOM_PARTICIPANT,
         });
-        await vi.waitFor(() => expect(ready).toEqual([{ name: 'b', nbParticipants: 3 }]));
-        expect(registry.readyCount).toEqual(2);
+        await vi.waitFor(() => expect(ready).toEqual(['b']));
     });
 
     test('should register the key of a connection once, from its request or its response', async () => {
@@ -115,7 +110,7 @@ describe('ParticipantRegistry', () => {
 
         // Then
         expect(importKeySpy).toHaveBeenCalledOnce();
-        expect(ready).toEqual([{ name: 'b', nbParticipants: 2 }]);
+        expect(ready).toEqual(['b']);
         expect(registry.get('b')?.knownKeys).toHaveLength(1);
     });
 
@@ -148,11 +143,10 @@ describe('ParticipantRegistry', () => {
         // Then
         expect([...registry.values()]).toEqual([registry.local]);
         expect(registry.author('b')).toBeUndefined();
-        expect(registry.readyCount).toEqual(1);
         expect(completed).toEqual(['ready', 'left']);
     });
 
-    test('should keep the vote and the previous keys of a reconnecting player, and wait for its current key', async () => {
+    test('should keep the previous keys of a reconnecting player, and wait for its current key', async () => {
         // Given
         const reconnected: Player = createPlayer('b');
         registry.onNewPlayer(remote);
@@ -163,7 +157,6 @@ describe('ParticipantRegistry', () => {
         registry.onNewPlayer(reconnected);
 
         // Then
-        expect(registry.readyCount).toEqual(2);
         expect(registry.get('b')?.isReady()).toEqual(false);
         expect(registry.get('b')?.knownKeys).toEqual(previousKeys);
         expect(reconnected.sendData).toHaveBeenCalledOnce();
@@ -188,10 +181,10 @@ describe('ParticipantRegistry', () => {
         await negotiate();
 
         // Then
-        expect(ready).toEqual([{ name: 'b', nbParticipants: 2 }]);
+        expect(ready).toEqual(['b']);
     });
 
-    test('should stop counting the votes of the players who left, but keep them as authors', async () => {
+    test('should forget the players who left, but keep them as authors', async () => {
         // Given
         const left: string[] = [];
         registry.left$.subscribe((name: string) => left.push(name));
@@ -209,11 +202,10 @@ describe('ParticipantRegistry', () => {
         expect(registry.get('b')).toBeUndefined();
         expect(registry.author('b')).toBe(participant);
         expect(registry.author('a')).toBe(registry.local);
-        expect(registry.readyCount).toEqual(1);
         expect(left).toEqual(['b']);
     });
 
-    test('should forget a departed author once its blocks are approved', async () => {
+    test('should forget a departed author once its blocks reached everyone', async () => {
         // Given
         registry.onNewPlayer(remote);
         await negotiate();
@@ -285,7 +277,7 @@ describe('ParticipantRegistry', () => {
         const other: Player = createPlayer('c');
         registry.onNewPlayer(remote);
         registry.onNewPlayer(other);
-        const message: BlockChainMessage = { type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST, payload: null, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: BlockChainName.CHESS };
+        const message: BlockChainMessage = { type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 1 }, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: BlockChainName.CHESS };
 
         // When
         registry.send('b', message);

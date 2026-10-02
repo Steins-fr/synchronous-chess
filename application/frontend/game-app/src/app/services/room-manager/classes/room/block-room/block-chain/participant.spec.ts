@@ -8,8 +8,8 @@ import { TestHelper } from '@testing/test.helper';
 import { describe, test, expect, vi } from 'vitest';
 
 const message: BlockChainMessage = {
-    type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
-    payload: null,
+    type: BlockChainMessageType.GET_BLOCKS_REQUEST,
+    payload: { from: 1 },
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
     chain: BlockChainName.CHESS,
 };

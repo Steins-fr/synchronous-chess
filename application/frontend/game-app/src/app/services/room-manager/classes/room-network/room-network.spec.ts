@@ -82,8 +82,8 @@ function createPlayer(name: string): { player: WebRtcPlayer; webrtcMock: WebrtcM
 }
 
 const message: NetworkMessage = {
-    type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
-    payload: null,
+    type: BlockChainMessageType.GET_BLOCKS_REQUEST,
+    payload: { from: 1 },
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
     chain: BlockChainName.CHESS,
 };

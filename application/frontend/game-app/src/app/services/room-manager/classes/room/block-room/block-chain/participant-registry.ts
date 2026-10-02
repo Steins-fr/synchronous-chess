@@ -1,5 +1,6 @@
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
+import { AntiCheatMessage } from '@app/services/room-manager/classes/webrtc/messages/anti-cheat-message';
 import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
 import {
     BlockRoomParticipantMessage,
@@ -13,7 +14,6 @@ import { Player } from '../../../player/player';
 import { keyPairAlgorithm } from './block-chain.constants';
 import { Participant } from './participant';
 import { ParticipantKeyStore } from './participant-key-store';
-import { ReadyParticipants } from './waiting-queue';
 
 /** The key pair of the local participant, with its public key exported once to be sent to each player */
 export interface ParticipantKeys {
@@ -21,19 +21,12 @@ export interface ParticipantKeys {
     readonly publicJwk: JsonWebKey;
 }
 
-export interface ParticipantReady {
-    /** Name of the participant whose public key has just been received */
-    name: string;
-    /** Number of participants known by this participant */
-    nbParticipants: number;
-}
-
 /**
  * Participants of a block room, with their public key.
  * They are shared by all the block chains of the room, so each player is negotiated once whatever the number of chains.
  */
-export class ParticipantRegistry implements ReadyParticipants {
-    /** The blocks a participant wrote before leaving are approved within this delay */
+export class ParticipantRegistry {
+    /** The blocks a participant wrote before leaving reach the other participants within this delay */
     private static readonly DEPARTED_RETENTION_MS: number = 60_000;
 
     /** @param keyPair the stored key pair of the player, a new one otherwise */
@@ -44,19 +37,15 @@ export class ParticipantRegistry implements ReadyParticipants {
 
     /** The connected participants */
     private readonly participants: Map<string, Participant> = new Map();
-    /** The participants who left, kept to verify the blocks they wrote which are still being approved */
+    /** The participants who left, kept to verify the blocks they wrote which are still being sequenced */
     private readonly departed: Map<string, Participant> = new Map();
     private readonly departedTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
-    /**
-     * The participants voting for the blocks: negotiated once and still connected.
-     * A vote is authenticated by the connection it comes from, so a reconnecting player keeps voting while its key is refreshed.
-     */
-    private readonly voters: Set<string> = new Set();
     /** The participants whose key is being imported */
     private readonly importing: Set<Participant> = new Set();
     public readonly local: Participant;
 
-    private readonly readySubject = new Subject<ParticipantReady>();
+    /** The names of the participants whose key has just been received */
+    private readonly readySubject = new Subject<string>();
     public readonly ready$ = this.readySubject.asObservable();
     private readonly leftSubject = new Subject<string>();
     public readonly left$ = this.leftSubject.asObservable();
@@ -65,19 +54,6 @@ export class ParticipantRegistry implements ReadyParticipants {
         this.local = new Participant(localPlayer);
         this.local.receiveKey(keys.keyPair.publicKey);
         this.participants.set(this.local.name, this.local);
-        this.voters.add(this.local.name);
-    }
-
-    public get size(): number {
-        return this.participants.size;
-    }
-
-    public get readyCount(): number {
-        return this.voters.size;
-    }
-
-    public isVoter(name: string): boolean {
-        return this.voters.has(name);
     }
 
     /** A connected participant */
@@ -122,7 +98,6 @@ export class ParticipantRegistry implements ReadyParticipants {
             this.departed.set(player.name, participant);
             this.departedTimers.set(player.name, setTimeout(() => this.forgetDeparted(player.name), ParticipantRegistry.DEPARTED_RETENTION_MS));
         }
-        this.voters.delete(player.name);
         this.leftSubject.next(player.name);
     }
 
@@ -150,7 +125,7 @@ export class ParticipantRegistry implements ReadyParticipants {
     }
 
     private negotiationPayload(): NegotiationPayload {
-        return { nbParticipants: this.size, publicKey: this.keys.publicJwk };
+        return { publicKey: this.keys.publicJwk };
     }
 
     /**
@@ -188,15 +163,14 @@ export class ParticipantRegistry implements ReadyParticipants {
         }
 
         participant.receiveKey(publicKey);
-        this.voters.add(name);
-        this.readySubject.next({ name, nbParticipants: payload.nbParticipants });
+        this.readySubject.next(name);
     }
 
     public send(name: string, message: BlockChainMessage | BlockRoomParticipantMessage): void {
         this.participants.get(name)?.sendMessage(message);
     }
 
-    public broadcast(message: BlockChainMessage): void {
+    public broadcast(message: BlockChainMessage | AntiCheatMessage): void {
         this.participants.forEach((participant: Participant) => participant.sendMessage(message));
     }
 
@@ -208,8 +182,6 @@ export class ParticipantRegistry implements ReadyParticipants {
         this.departedTimers.clear();
         this.departed.clear();
         this.importing.clear();
-        this.voters.clear();
-        this.voters.add(this.local.name);
         this.readySubject.complete();
         this.leftSubject.complete();
     }

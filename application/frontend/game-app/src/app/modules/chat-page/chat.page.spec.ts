@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatPage } from './chat.page';
 import { ChatMessengerType } from './components/chat/chat.component';
@@ -17,7 +18,8 @@ describe('ChatPage', () => {
 
     beforeEach(async () => {
         Element.prototype.scrollTo ??= (): void => undefined;
-        room = new Room<object>(TestHelper.cast<RoomSocketApi>({ close: vi.fn() }), new RoomNetworkMock().roomNetwork);
+        // A room without cheat report
+        room = Object.assign(new Room<object>(TestHelper.cast<RoomSocketApi>({ close: vi.fn() }), new RoomNetworkMock().roomNetwork), { cheatFlags: signal([]) });
         roomManagerService = TestHelper.cast<RoomManagerService>({ buildBlockRoom: vi.fn().mockResolvedValue(room) });
 
         await TestBed.configureTestingModule({

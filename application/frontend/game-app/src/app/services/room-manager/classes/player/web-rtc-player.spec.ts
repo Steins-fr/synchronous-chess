@@ -10,8 +10,8 @@ import { WebrtcMock } from '@testing/webrtc.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const blockChainMessage: NetworkMessage = {
-    type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
-    payload: null,
+    type: BlockChainMessageType.GET_BLOCKS_REQUEST,
+    payload: { from: 1 },
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
     chain: BlockChainName.CHESS,
 };

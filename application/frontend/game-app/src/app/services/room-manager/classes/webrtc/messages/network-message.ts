@@ -1,5 +1,6 @@
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { BlockChainMessage, BlockChainMessageType } from './block-chain-message';
+import { AntiCheatMessage, AntiCheatMessageType } from './anti-cheat-message';
 import { BlockRoomParticipantMessage, BlockRoomParticipantMessageType } from './block-room-participant-message';
 import { Received } from './envelope';
 import { HostRoomMessage, HostRoomMessageType } from './host-room-message';
@@ -8,7 +9,8 @@ import { NegotiatorMessage, NegotiatorMessageType } from './negotiator-message';
 import { PlayerMessage, PlayerMessageType } from './player-message';
 import { RoomServiceMessage } from './room-message';
 
-export type NetworkMessage = PlayerMessage | NegotiatorMessage | HostRoomMessage | BlockChainMessage | BlockRoomParticipantMessage | RoomServiceMessage;
+export type NetworkMessage = PlayerMessage | NegotiatorMessage | HostRoomMessage | BlockChainMessage | BlockRoomParticipantMessage | AntiCheatMessage
+    | RoomServiceMessage;
 
 export type ReceivedMessage = Received<NetworkMessage>;
 
@@ -19,6 +21,7 @@ const knownTypes: Readonly<Record<Exclude<MessageOriginType, MessageOriginType.R
     [MessageOriginType.HOST_ROOM]: Object.values(HostRoomMessageType),
     [MessageOriginType.BLOCK_ROOM_SERVICE]: Object.values(BlockChainMessageType),
     [MessageOriginType.BLOCK_ROOM_PARTICIPANT]: Object.values(BlockRoomParticipantMessageType),
+    [MessageOriginType.ANTI_CHEAT]: Object.values(AntiCheatMessageType),
 };
 
 const blockChainNames: ReadonlyArray<unknown> = Object.values(BlockChainName);

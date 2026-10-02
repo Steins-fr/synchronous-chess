@@ -8,7 +8,6 @@ export enum BlockRoomParticipantMessageType {
 
 export interface NegotiationPayload {
     publicKey: JsonWebKey;
-    nbParticipants: number;
 }
 
 export interface BlockRoomParticipantPayloads {

@@ -80,7 +80,7 @@ describe('Room', () => {
         // When
         network.onMessage$.next({ type: 'move', payload: 'e4', origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
         network.onMessage$.next({ type: 'chat', payload: 1, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
-        network.onMessage$.next({ type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST, payload: null, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: BlockChainName.CHESS, from: 'remote' });
+        network.onMessage$.next({ type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 1 }, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: BlockChainName.CHESS, from: 'remote' });
 
         // Then
         expect(moves).toEqual([{ type: 'move', payload: 'e4', origin: MessageOriginType.ROOM_SERVICE, from: 'remote' }]);

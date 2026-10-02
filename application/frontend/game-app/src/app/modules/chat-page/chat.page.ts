@@ -2,7 +2,8 @@
 import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
-import { Room } from '@app/services/room-manager/classes/room/room';
+import { BlockRoom } from '@app/services/room-manager/classes/room/block-room/block-room';
+import { notifyCheatFlags } from '../room-layout/cheat-notifications';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { chatBlockChains, ChatComponent, ChatPayloads } from './components/chat/chat.component';
@@ -16,11 +17,15 @@ import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.compone
 })
 export class ChatPage implements OnInit, OnDestroy {
     public maxPlayer: number = 6;
-    public readonly room = signal<Room<ChatPayloads> | undefined>(undefined);
+    public readonly room = signal<BlockRoom<ChatPayloads> | undefined>(undefined);
 
     private readonly destroyRef = inject(DestroyRef);
     private readonly roomSetupService = inject(RoomSetupService);
     private readonly roomManagerService = inject(RoomManagerService);
+
+    public constructor() {
+        notifyCheatFlags(() => this.room()?.cheatFlags());
+    }
 
     public ngOnInit(): void {
         this.roomSetupService.setup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async (setup) => {

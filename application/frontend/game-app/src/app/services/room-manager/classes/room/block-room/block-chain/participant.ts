@@ -1,5 +1,6 @@
 import { BlockChainMessage } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
 import { BlockRoomParticipantMessage } from '@app/services/room-manager/classes/webrtc/messages/block-room-participant-message';
+import { AntiCheatMessage } from '@app/services/room-manager/classes/webrtc/messages/anti-cheat-message';
 import { Player } from '../../../player/player';
 
 export class Participant {
@@ -31,7 +32,7 @@ export class Participant {
         return this.hasCurrentKey || this.isLocal;
     }
 
-    public sendMessage(message: BlockChainMessage | BlockRoomParticipantMessage): void {
+    public sendMessage(message: BlockChainMessage | BlockRoomParticipantMessage | AntiCheatMessage): void {
 
         if (this.isLocal) {
             return;

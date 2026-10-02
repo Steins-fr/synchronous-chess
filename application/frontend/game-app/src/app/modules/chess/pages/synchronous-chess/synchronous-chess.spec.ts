@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SynchronousChess } from './synchronous-chess';
 import { SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
@@ -18,7 +19,8 @@ describe('SynchronousChess', () => {
 
     beforeEach(async () => {
         Element.prototype.scrollTo ??= (): void => undefined;
-        room = new Room<object>(TestHelper.cast<RoomSocketApi>({ close: vi.fn() }), new RoomNetworkMock().roomNetwork);
+        // A room without cheat report
+        room = Object.assign(new Room<object>(TestHelper.cast<RoomSocketApi>({ close: vi.fn() }), new RoomNetworkMock().roomNetwork), { cheatFlags: signal([]) });
         roomManagerService = TestHelper.cast<RoomManagerService>({ buildBlockRoom: vi.fn().mockResolvedValue(room) });
 
         await TestBed.configureTestingModule({
