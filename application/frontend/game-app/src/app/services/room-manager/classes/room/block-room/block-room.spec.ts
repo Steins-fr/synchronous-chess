@@ -219,9 +219,48 @@ describe('BlockRoom', () => {
 
         // Then
         expect(room.players()).toEqual([network.localPlayer, remote]);
-        expect(remote.sendData).toHaveBeenCalledExactlyOnceWith({ type: BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, payload: { publicKey: keys.publicJwk }, origin: MessageOriginType.BLOCK_ROOM_PARTICIPANT });
         await vi.waitFor(() => expect(onParticipantReadySpy.mock.contexts.map(chainName)).toEqual([BlockChainName.CHESS, BlockChainName.CHAT]));
         expect(onParticipantReadySpy).toHaveBeenCalledWith('remote');
+        // Then tells it the sequencer it follows
+        expect(vi.mocked(remote.sendData).mock.calls).toEqual([
+            [{ type: BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, payload: { publicKey: keys.publicJwk }, origin: MessageOriginType.BLOCK_ROOM_PARTICIPANT }],
+            [{ type: AntiCheatMessageType.SEQUENCER_STATE, payload: { sequencer: 'local', handovers: 0, distrusted: [] }, origin: MessageOriginType.ANTI_CHEAT }],
+        ]);
+    });
+
+    test('should follow the sequencer most of the other participants follow, after more handovers than it made', () => {
+        // Given a player joining a room whose host was distrusted
+        network = new RoomNetworkMock('local', false, 'host');
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        createRoom();
+        const b: Player = createRemote('b');
+        ['host', 'c'].forEach((name: string) => network.playerAdded$.next(createRemote(name)));
+        network.playerAdded$.next(b);
+        const state = (from: string, sequencer: string, handovers: number, distrusted: string[]): void => network.onMessage$.next({
+            type: AntiCheatMessageType.SEQUENCER_STATE,
+            payload: { sequencer, handovers, distrusted },
+            origin: MessageOriginType.ANTI_CHEAT,
+            from,
+        });
+
+        // When b tells it then leaves, c tells it, and the host claims it still orders
+        state('b', 'b', 1, ['host']);
+        network.playerRemoved$.next(b);
+        state('c', 'b', 1, ['host']);
+        state('host', 'host', 0, []);
+
+        // Then the state of a participant who left does not count
+        expect(changeSequencerSpy).not.toHaveBeenCalled();
+
+        // When b comes back and tells it again
+        network.playerAdded$.next(b);
+        state('b', 'b', 1, ['host']);
+        state('host', 'c', 1, []);
+
+        // Then
+        expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+        expect(TimedLogger.warn).toHaveBeenCalledWith('Most of the participants follow b, after 1 handovers');
     });
 
     test('should hand the ordering over to the first participant by name when the sequencer leaves', () => {

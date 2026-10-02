@@ -1,4 +1,9 @@
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
+import {
+    AntiCheatMessageType,
+    ReceivedAntiCheatMessage,
+    SequencerState
+} from '@app/services/room-manager/classes/webrtc/messages/anti-cheat-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -38,10 +43,6 @@ export function mergeBlockChainRoutings<A extends object, B extends object>(a: B
 }
 
 /**
- * A room whose messages go through block chains, ordered by a sequencer: the host, then the participant taking over when it leaves.
- * The participants check the blocks they receive and report the cheats to each other, outside the chains.
- */
-/**
  * A room whose messages go through block chains, ordered by a sequencer: the host, then the participant taking over when
  * it leaves or when most of the other participants report it as cheating.
  * The participants check the blocks they receive and report the cheats to each other, outside the chains.
@@ -62,7 +63,11 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block }>();
     private sequencer: string;
     /** The sequencers most of the other participants reported as cheating */
-    private readonly distrusted = new Set<string>();
+    private distrusted = new Set<string>();
+    /** The number of handovers made, to know whether the other participants follow a later sequencer */
+    private handovers: number = 0;
+    /** The sequencer each other participant follows, as it told this participant once its key was received */
+    private readonly sequencerStates = new Map<string, Readonly<SequencerState>>();
     private readonly tickTimer: ReturnType<typeof setInterval>;
 
     /** The stored keys of the player, so that it keeps its identity when reloading the page */
@@ -97,6 +102,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
         this.participants.ready$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => {
             this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.onParticipantReady(name));
+            this.sendSequencerState(name);
         });
         this.participants.left$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => this.onParticipantLeft(name));
         this.antiCheat.reported$.pipe(takeUntil(this.destroyRef)).subscribe(() => this.checkSequencerTrust());
@@ -109,6 +115,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     private onParticipantLeft(name: string): void {
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.onParticipantLeft(name));
+        this.sequencerStates.delete(name);
 
         if (name === this.sequencer) {
             this.handOver();
@@ -136,8 +143,54 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
             return;
         }
 
-        this.sequencer = successor;
-        this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.changeSequencer(successor));
+        this.handovers++;
+        this.follow(successor);
+    }
+
+    private follow(sequencer: string): void {
+        this.sequencer = sequencer;
+        this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.changeSequencer(sequencer));
+    }
+
+    private sendSequencerState(name: string): void {
+        this.participants.send(name, {
+            type: AntiCheatMessageType.SEQUENCER_STATE,
+            payload: { sequencer: this.sequencer, handovers: this.handovers, distrusted: [...this.distrusted].sort() },
+            origin: MessageOriginType.ANTI_CHEAT,
+        });
+    }
+
+    private onSequencerState(message: ReceivedAntiCheatMessage<AntiCheatMessageType.SEQUENCER_STATE>): void {
+        this.sequencerStates.set(message.from, message.payload);
+        this.followSequencerOfTheRoom();
+    }
+
+    /**
+     * A player joining or reloading the page starts with the host as sequencer, it missed the handovers: it follows the
+     * sequencer most of the other participants follow, after more handovers than it made.
+     * A participant can not make the others follow a sequencer on its own.
+     */
+    private followSequencerOfTheRoom(): void {
+        const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== this.localPlayer.name);
+        const votes = new Map<string, { state: Readonly<SequencerState>; count: number }>();
+
+        for (const name of others) {
+            const state: Readonly<SequencerState> | undefined = this.sequencerStates.get(name);
+
+            if (state && state.handovers > this.handovers) {
+                const key: string = JSON.stringify([state.sequencer, state.handovers, state.distrusted]);
+                votes.set(key, { state, count: (votes.get(key)?.count ?? 0) + 1 });
+            }
+        }
+
+        const elected: Readonly<SequencerState> | undefined = [...votes.values()].find(({ count }) => count * 2 > others.length)?.state;
+
+        if (elected) {
+            TimedLogger.warn(`Most of the participants follow ${ elected.sequencer }, after ${ elected.handovers } handovers`);
+            this.handovers = elected.handovers;
+            this.distrusted = new Set(elected.distrusted);
+            this.follow(elected.sequencer);
+        }
     }
 
     private participantNames(): string[] {
@@ -179,7 +232,11 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         if (message.origin === MessageOriginType.BLOCK_ROOM_PARTICIPANT) {
             this.participants.handle(message);
         } else if (message.origin === MessageOriginType.ANTI_CHEAT) {
-            this.antiCheat.handle(message);
+            if (message.type === AntiCheatMessageType.SEQUENCER_STATE) {
+                this.onSequencerState(message);
+            } else {
+                this.antiCheat.handle(message);
+            }
         } else if (message.origin === MessageOriginType.BLOCK_ROOM_SERVICE) {
             const blockChain: SequencedBlockChain | undefined = this.blockChains.get(message.chain);
 

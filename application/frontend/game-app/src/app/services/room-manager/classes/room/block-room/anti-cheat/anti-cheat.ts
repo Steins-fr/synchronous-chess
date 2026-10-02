@@ -3,7 +3,7 @@ import { AntiCheatMessageType, ReceivedAntiCheatMessage } from '@app/services/ro
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { Subject } from 'rxjs';
 import { ParticipantRegistry } from '../block-chain/participant-registry';
-import { CheatFlag, CheatReport, CheatReporting, sequencerCheats } from './cheat-report';
+import { CheatFlag, CheatReason, CheatReport, CheatReporting, sequencerCheats } from './cheat-report';
 
 /**
  * Collects the cheats, outside the block chains: the sequencer orders the blocks alone,
@@ -27,7 +27,7 @@ export class AntiCheat {
     }
 
     /** A cheat reported by another participant, known by its connection */
-    public handle(message: ReceivedAntiCheatMessage): void {
+    public handle(message: ReceivedAntiCheatMessage<AntiCheatMessageType.CHEAT_REPORT>): void {
         this.flag(message.from, message.payload);
     }
 
@@ -38,12 +38,20 @@ export class AntiCheat {
         for (const flag of this._flags()) {
             if (flag.sequencer === sequencer) {
                 flag.reports
-                    .filter((reporting: Readonly<CheatReporting>) => sequencerCheats.has(reporting.reason))
+                    .filter((reporting: Readonly<CheatReporting>) => AntiCheat.accuses(flag, reporting))
                     .forEach((reporting: Readonly<CheatReporting>) => accusers.add(reporting.reporter));
             }
         }
 
         return accusers;
+    }
+
+    /**
+     * An author giving different keys to the participants makes some of them find its entries forged: only the author
+     * knows for sure its entry is forged, the others' reports do not accuse the sequencer
+     */
+    private static accuses(flag: Readonly<CheatFlag>, reporting: Readonly<CheatReporting>): boolean {
+        return sequencerCheats.has(reporting.reason) && (reporting.reason !== CheatReason.FORGED_AUTHOR || reporting.reporter === flag.author);
     }
 
     /** @returns whether the report is new */

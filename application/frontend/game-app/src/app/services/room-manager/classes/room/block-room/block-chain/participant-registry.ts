@@ -166,7 +166,7 @@ export class ParticipantRegistry {
         this.readySubject.next(name);
     }
 
-    public send(name: string, message: BlockChainMessage | BlockRoomParticipantMessage): void {
+    public send(name: string, message: BlockChainMessage | BlockRoomParticipantMessage | AntiCheatMessage): void {
         this.participants.get(name)?.sendMessage(message);
     }
 

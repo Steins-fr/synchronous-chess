@@ -22,24 +22,23 @@ export class ParticipantKeyStore {
 
     /** The stored key pair of the player, created on its first use */
     public async keyPairOf(playerName: string): Promise<CryptoKeyPair> {
-        // Created first: the key generation can not happen inside the transaction, which would end meanwhile
-        const keyPair: CryptoKeyPair = await ParticipantKeyStore.generateKeyPair();
-
         try {
-            return await this.storeOnce(playerName, keyPair);
+            // Created outside the transaction, which would end during the key generation
+            return await this.stored(playerName) ?? await this.storeOnce(playerName, await ParticipantKeyStore.generateKeyPair());
         } catch (error: unknown) {
             // Private browsing or blocked site data: the identity only lasts until the page is reloaded
             TimedLogger.warn('The key pair can not be stored, a reload will change the identity of the player', error);
-            return keyPair;
+            return await ParticipantKeyStore.generateKeyPair();
         }
+    }
+
+    private async stored(playerName: string): Promise<CryptoKeyPair | undefined> {
+        return await this.inStore('readonly', async (store: IDBObjectStore) => await ParticipantKeyStore.result<CryptoKeyPair | undefined>(store.get(playerName)));
     }
 
     /** In a single transaction, so that two pages of the same player end up with the same key pair */
     private async storeOnce(playerName: string, keyPair: CryptoKeyPair): Promise<CryptoKeyPair> {
-        const database: IDBDatabase = await this.open();
-
-        try {
-            const store: IDBObjectStore = database.transaction(ParticipantKeyStore.STORE, 'readwrite').objectStore(ParticipantKeyStore.STORE);
+        return await this.inStore('readwrite', async (store: IDBObjectStore) => {
             const stored: CryptoKeyPair | undefined = await ParticipantKeyStore.result<CryptoKeyPair | undefined>(store.get(playerName));
 
             if (stored) {
@@ -48,6 +47,14 @@ export class ParticipantKeyStore {
 
             await ParticipantKeyStore.result(store.add(keyPair, playerName));
             return keyPair;
+        });
+    }
+
+    private async inStore<T>(mode: IDBTransactionMode, operation: (store: IDBObjectStore) => Promise<T>): Promise<T> {
+        const database: IDBDatabase = await this.open();
+
+        try {
+            return await operation(database.transaction(ParticipantKeyStore.STORE, mode).objectStore(ParticipantKeyStore.STORE));
         } finally {
             database.close();
         }

@@ -9,7 +9,8 @@ export class CryptoHelper {
         return CryptoHelper.toHex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))));
     }
 
-    private static toHex(bytes: Uint8Array): string {
+    /** Bytes as an hexadecimal string */
+    public static toHex(bytes: Uint8Array): string {
         return Array.from(bytes, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
     }
 

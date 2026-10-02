@@ -1,3 +1,4 @@
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Block, ChainEntry } from './block';
 import { genesisHash, signatureAlgorithm } from './block-chain.constants';
@@ -23,12 +24,6 @@ export class Chain {
         return encoder.encode(message);
     }
 
-    private static arrayToHexString(arrayBuffer: Uint8Array): string {
-        const hashArray: number[] = Array.from(new Uint8Array(arrayBuffer)); // convert buffer to byte array
-
-        return hashArray.map((b: number) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
-    }
-
     private static hexStringToArray(hexString: string): Uint8Array<ArrayBuffer> {
 
         const buffer: number[] = [];
@@ -45,11 +40,9 @@ export class Chain {
     // The chain name is hashed so that a block of a chain is not valid on another chain of the room
     public static async calculateHash(chainName: BlockChainName, block: BlockToHash): Promise<string> {
         const { entry } = block;
-        const data = this.encodeMessage(
+        return await CryptoHelper.sha256(
             `${ chainName } ${ block.index } ${ block.previousHash } ${ block.sequencer } ${ entry.id } ${ entry.signature } ${ JSON.stringify(entry.data) }`
         );
-        const hashBuffer: ArrayBuffer = await crypto.subtle.digest('SHA-256', data);
-        return this.arrayToHexString(new Uint8Array(hashBuffer));
     }
 
     /** What the author of an entry signs: the chain name prevents the entry from being replayed on another chain */
@@ -64,7 +57,7 @@ export class Chain {
             this.encodeMessage(content)
         );
 
-        return this.arrayToHexString(new Uint8Array(signature));
+        return CryptoHelper.toHex(new Uint8Array(signature));
     }
 
     public static async verify(signature: string, content: string, publicKey: CryptoKey): Promise<boolean> {

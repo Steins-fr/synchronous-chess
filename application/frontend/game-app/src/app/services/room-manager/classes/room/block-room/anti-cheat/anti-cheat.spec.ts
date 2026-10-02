@@ -11,7 +11,7 @@ import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const report: CheatReport = { chain: BlockChainName.CHESS, subject: 'hash', index: 2, author: 'bob', sequencer: 'host', reason: CheatReason.FORGED_AUTHOR };
 
-function received(cheatReport: CheatReport, from: string): ReceivedAntiCheatMessage {
+function received(cheatReport: CheatReport, from: string): ReceivedAntiCheatMessage<AntiCheatMessageType.CHEAT_REPORT> {
     return { type: AntiCheatMessageType.CHEAT_REPORT, payload: cheatReport, origin: MessageOriginType.ANTI_CHEAT, from };
 }
 
@@ -81,8 +81,8 @@ describe('AntiCheat', () => {
         antiCheat.reported$.subscribe(() => reports++);
 
         // When
-        antiCheat.report(report);
-        antiCheat.report(report);
+        antiCheat.report({ ...report, reason: CheatReason.REPLAYED_ENTRY });
+        antiCheat.report({ ...report, reason: CheatReason.REPLAYED_ENTRY });
         antiCheat.handle(received({ ...report, subject: 'move', reason: CheatReason.ILLEGAL_MOVE }, 'carol'));
         antiCheat.handle(received({ ...report, subject: 'other', sequencer: 'carol', reason: CheatReason.CENSORED_ENTRY }, 'dave'));
 
@@ -90,6 +90,15 @@ describe('AntiCheat', () => {
         expect(antiCheat.accusersOf('host')).toEqual(new Set(['alice']));
         expect(antiCheat.accusersOf('carol')).toEqual(new Set(['dave']));
         expect(reports).toEqual(3);
+    });
+
+    test('should only count a forged author against the sequencer when its author reports it', () => {
+        // When the author of the entry and another participant find it forged
+        antiCheat.handle(received(report, 'carol'));
+        antiCheat.handle(received({ ...report, subject: 'own' }, 'bob'));
+
+        // Then only the author is sure, the other may have been given another key by the author
+        expect(antiCheat.accusersOf('host')).toEqual(new Set(['bob']));
     });
 
     test('clear should forget the flags', () => {

@@ -59,16 +59,22 @@ export class SequencedBlockChain {
     private static readonly MAX_ENTRIES_WAITING_FOR_KEY: number = 32;
     /** An entry not ordered within this delay, while the sequencer orders other ones, is reported */
     public static readonly CENSORSHIP_DELAY_MS: number = 10_000;
+    /** A new sequencer stops waiting for the blocks of a participant not following it within this delay */
+    public static readonly HANDOVER_DELAY_MS: number = 10_000;
 
     private readonly blockChain: Chain;
     private sequencer: string;
     /** As a new sequencer, collecting the blocks of the participants before ordering new ones */
     private syncing: boolean = false;
+    /** When the collection started, set by the next tick */
+    private syncingSince?: number;
+    /** The new sequencers collecting the blocks, answered once this participant follows them: the index they collect from */
+    private readonly handoverRequests: Map<string, number> = new Map();
     /** The participants asked for blocks, until their last response */
     private readonly awaitingBlocksFrom: Set<string> = new Set();
     /** The entries submitted while syncing, ordered once synced */
     private readonly queuedEntries: ChainEntry[] = [];
-    /** As sequencer, the entries checked once the key of their author is received */
+    /** The entries checked once the key of their author is received */
     private readonly entriesWaitingForKey: Map<string, ChainEntry[]> = new Map();
     /** The entries of the local participant not in the chain yet, submitted again to a new sequencer */
     private readonly ownPendingEntries: Map<string, ChainEntry> = new Map();
@@ -158,16 +164,14 @@ export class SequencedBlockChain {
             return;
         }
 
-        if (!this.isSequencer) {
-            this.watch(entry);
-            return;
-        }
-
-        await this.order(entry);
+        await this.receiveEntry(entry);
     }
 
-    /** As sequencer, the entry of another participant: its signature is checked, so that the sequencer is not blamed for it */
-    private async order(entry: ChainEntry): Promise<void> {
+    /**
+     * The entry of another participant, once its signature is checked: the sequencer is not blamed for a forged entry it
+     * orders, and the others only watch the entries an honest sequencer orders
+     */
+    private async receiveEntry(entry: ChainEntry): Promise<void> {
         const author: string = entry.data.from;
         const signature: Signature = await this.signatureOf(entry.signature, this.entryContent(entry), this.participants.get(author));
 
@@ -176,6 +180,8 @@ export class SequencedBlockChain {
             this.entriesWaitingForKey.set(author, entries.slice(-SequencedBlockChain.MAX_ENTRIES_WAITING_FOR_KEY));
         } else if (signature !== Signature.SIGNED) {
             TimedLogger.warn(`Entry of ${ author } not signed by it, refused by the ${ this.name } chain`, entry);
+        } else if (!this.isSequencer) {
+            this.watch(entry);
         } else if (this.syncing) {
             this.queuedEntries.push(entry);
         } else {
@@ -354,7 +360,7 @@ export class SequencedBlockChain {
 
     // Catch up
 
-    private requestBlocks(participantName: string): void {
+    private requestBlocks(participantName: string, handover?: boolean): void {
         if (this.awaitingBlocksFrom.has(participantName)) {
             return;
         }
@@ -362,15 +368,27 @@ export class SequencedBlockChain {
         this.awaitingBlocksFrom.add(participantName);
         this.participants.send(participantName, {
             type: BlockChainMessageType.GET_BLOCKS_REQUEST,
-            payload: { from: this.blockChain.getLatestBlock().index + 1 },
+            payload: { from: this.blockChain.getLatestBlock().index + 1, handover },
             origin: MessageOriginType.BLOCK_ROOM_SERVICE,
             chain: this.name,
         });
     }
 
     private async onGetBlocksRequest(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_REQUEST>): Promise<void> {
-        const blocks: ReadonlyArray<Block> = this.blockChain.blocksFrom(message.payload.from, SequencedBlockChain.MAX_BLOCKS_PER_RESPONSE);
-        this.participants.send(message.from, { type: BlockChainMessageType.GET_BLOCKS_RESPONSE, payload: blocks, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: this.name });
+        const { from, handover } = message.payload;
+
+        // Answered once following the new sequencer: the blocks the former one sends meanwhile are kept, they reach it
+        if (handover && message.from !== this.sequencer) {
+            this.handoverRequests.set(message.from, from);
+            return;
+        }
+
+        this.sendBlocks(message.from, from);
+    }
+
+    private sendBlocks(participantName: string, from: number): void {
+        const blocks: ReadonlyArray<Block> = this.blockChain.blocksFrom(from, SequencedBlockChain.MAX_BLOCKS_PER_RESPONSE);
+        this.participants.send(participantName, { type: BlockChainMessageType.GET_BLOCKS_RESPONSE, payload: blocks, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: this.name });
     }
 
     private async onGetBlocksResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_RESPONSE>): Promise<void> {
@@ -458,9 +476,25 @@ export class SequencedBlockChain {
         }
     }
 
-    /** Called regularly: shows the chain to the others, and reports the entries the sequencer does not order */
+    /**
+     * Called regularly: shows the chain to the others, reports the entries the sequencer does not order, and stops a
+     * collection of the blocks waiting for participants which do not follow this new sequencer
+     */
     public tick(now: number): void {
         this.sendHead();
+
+        if (this.syncing) {
+            this.syncingSince ??= now;
+
+            if (now - this.syncingSince >= SequencedBlockChain.HANDOVER_DELAY_MS) {
+                void this.serially(() => this.stopSyncing());
+            }
+        }
+
+        // The entries watched before taking over are ordered once synced
+        if (this.isSequencer) {
+            return;
+        }
 
         const latestIndex: number = this.blockChain.getLatestBlock().index;
 
@@ -489,7 +523,7 @@ export class SequencedBlockChain {
             this.entriesWaitingForKey.delete(name);
 
             for (const entry of entries) {
-                await this.order(entry);
+                await this.receiveEntry(entry);
             }
 
             await this.deliver();
@@ -508,6 +542,7 @@ export class SequencedBlockChain {
         void this.serially(async () => {
             this.awaitingBlocksFrom.delete(name);
             this.entriesWaitingForKey.delete(name);
+            this.handoverRequests.delete(name);
             await this.finishSyncIfDone();
             // The author may be forgotten, its blocks are then trusted
             await this.deliver();
@@ -517,6 +552,7 @@ export class SequencedBlockChain {
     /** The former sequencer left, or is distrusted: a new one takes over */
     public changeSequencer(name: string): void {
         void this.serially(async () => {
+            const former: string = this.sequencer;
             this.sequencer = name;
 
             // The new sequencer gets as much time as the former one to order the watched entries
@@ -525,6 +561,13 @@ export class SequencedBlockChain {
                 watched.latestIndex = this.blockChain.getLatestBlock().index;
             });
 
+            // The blocks of the former sequencer are refused from now on: the new one collects them all
+            const handoverFrom: number | undefined = this.handoverRequests.get(name);
+            this.handoverRequests.clear();
+            if (handoverFrom !== undefined) {
+                this.sendBlocks(name, handoverFrom);
+            }
+
             if (!this.isSequencer) {
                 // The entries the former sequencer did not order, and the blocks it sent to some participants only
                 this.submitPendingEntries();
@@ -532,11 +575,13 @@ export class SequencedBlockChain {
                 return;
             }
 
-            // Collects the blocks the former sequencer sent to some participants only, before ordering new ones
+            // Collects the blocks the former sequencer sent to some participants only, before ordering new ones.
+            // The former sequencer is not asked: it is distrusted, and the blocks it sent to the others are collected from them
             this.syncing = true;
+            this.syncingSince = undefined;
             for (const participant of this.participants.values()) {
-                if (!participant.isLocal) {
-                    this.requestBlocks(participant.name);
+                if (!participant.isLocal && participant.name !== former) {
+                    this.requestBlocks(participant.name, true);
                 }
             }
 
@@ -548,6 +593,16 @@ export class SequencedBlockChain {
         this.ownPendingEntries.forEach((entry: ChainEntry) => this.broadcastEntry(entry));
     }
 
+    private async stopSyncing(): Promise<void> {
+        if (!this.syncing) {
+            return;
+        }
+
+        TimedLogger.warn(`Participants not following ${ this.participants.local.name } on the ${ this.name } chain, it stops waiting for their blocks`, [...this.awaitingBlocksFrom]);
+        this.awaitingBlocksFrom.clear();
+        await this.finishSyncIfDone();
+    }
+
     private async finishSyncIfDone(): Promise<void> {
         if (!this.syncing || this.awaitingBlocksFrom.size > 0) {
             return;
@@ -555,7 +610,10 @@ export class SequencedBlockChain {
 
         this.syncing = false;
 
-        for (const entry of [...this.ownPendingEntries.values(), ...this.queuedEntries.splice(0)]) {
+        // The entries watched until now were submitted to the former sequencer, or to this one before it took over
+        const watchedEntries: ReadonlyArray<ChainEntry> = [...this.watchedEntries.values()].map((watched: WatchedEntry) => watched.entry);
+
+        for (const entry of [...this.ownPendingEntries.values(), ...watchedEntries, ...this.queuedEntries.splice(0)]) {
             await this.sequence(entry);
         }
     }
@@ -578,6 +636,7 @@ export class SequencedBlockChain {
     public clear(): void {
         this.blockChain.reset();
         this.awaitingBlocksFrom.clear();
+        this.handoverRequests.clear();
         this.queuedEntries.splice(0);
         this.entriesWaitingForKey.clear();
         this.ownPendingEntries.clear();

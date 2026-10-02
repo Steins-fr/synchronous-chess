@@ -17,6 +17,11 @@ export enum BlockChainMessageType {
 export interface BlocksRequest {
     /** The index of the first block, the response goes as far as it can */
     from: number;
+    /**
+     * Sent by a new sequencer collecting the blocks of the participants: answered once the participant follows it too,
+     * so that the blocks the former sequencer sends meanwhile all reach it
+     */
+    handover?: boolean;
 }
 
 export interface BlockChainPayloads {
