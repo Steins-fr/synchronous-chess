@@ -23,6 +23,9 @@ export default abstract class SynchronousChessGameSession {
     public readonly configuration = this._configuration.asReadonly();
     public readonly spectatorNumber = computed<number>(() => this.configuration().spectatorNumber);
 
+    /** The number of turns run, the same for every participant applying the same moves */
+    protected turnCount: number = 0;
+
     public abstract myColor: PieceColor;
 
     public abstract get playingColor(): PieceColor;
@@ -45,6 +48,7 @@ export default abstract class SynchronousChessGameSession {
         }
 
         if (this.game.runTurn()) {
+            this.turnCount++;
             this._movePreview.set(undefined);
         }
 
@@ -57,7 +61,10 @@ export default abstract class SynchronousChessGameSession {
             return false;
         }
 
-        this.game.runTurn();
+        if (this.game.runTurn()) {
+            this.turnCount++;
+        }
+
         return true;
     }
 

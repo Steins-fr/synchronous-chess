@@ -4,7 +4,12 @@ import { By } from '@angular/platform-browser';
 import { SyncChessGameComponent } from './sync-chess-game.component';
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
-import { ChessPayloads, SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
+import SynchronousChessOnlineGameSession, {
+    ChessPayloads,
+    SCGameSessionType,
+    SealedAction,
+    SealedActionKind
+} from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import { IntermediateTurn } from '@app/modules/chess/classes/turns/intermediate-turn';
 import PromotionTurn from '@app/modules/chess/classes/turns/promotion-turn';
 import SyncTurn from '@app/modules/chess/classes/turns/sync-turn';
@@ -65,8 +70,14 @@ describe('SyncChessGameComponent', () => {
         return fixture.debugElement.query(By.directive(ChessBoardComponent)).componentInstance;
     }
 
-    function remotePlay(move: Move | null): void {
-        network.onMessage$.next({ type: SCGameSessionType.PLAY, payload: { move }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
+    // The remote player commits to its move, then reveals it
+    async function remotePlay(move: Move | null, color: PieceColor = PieceColor.BLACK): Promise<void> {
+        const turn: number = TestHelper.cast<{ turnCount: number }>(session()).turnCount;
+        const action: SealedAction = { kind: SealedActionKind.MOVE, move };
+        const commitment: string = await SynchronousChessOnlineGameSession.commitment(turn, color, action, 'salt');
+        network.onMessage$.next({ type: SCGameSessionType.COMMIT, payload: { turn, commitment }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
+        network.onMessage$.next({ type: SCGameSessionType.REVEAL, payload: { turn, action, salt: 'salt' }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
+        await vi.waitFor(() => expect(session().game.colorHasPlayed(color) || TestHelper.cast<{ turnCount: number }>(session()).turnCount > turn).toEqual(true));
     }
 
     // The first added player is white, the second one is black
@@ -136,7 +147,7 @@ describe('SyncChessGameComponent', () => {
         await createOnlineGame();
 
         // When
-        remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
+        await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
         await refresh();
 
         // Then
@@ -159,7 +170,7 @@ describe('SyncChessGameComponent', () => {
         expect(text('.player-information.white-player')).toContain('a joué');
 
         // When
-        remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
+        await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
         await refresh();
 
         // Then
