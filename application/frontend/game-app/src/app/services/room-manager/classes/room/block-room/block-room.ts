@@ -4,9 +4,10 @@ import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { takeUntil } from 'rxjs';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { Block } from './block-chain/block';
 import { Signal } from '@angular/core';
 import { AntiCheat } from './anti-cheat/anti-cheat';
-import { CheatFlag } from './anti-cheat/cheat-report';
+import { CheatFlag, CheatReason } from './anti-cheat/cheat-report';
 import { ParticipantKeyStore } from './block-chain/participant-key-store';
 import { ParticipantKeys, ParticipantRegistry } from './block-chain/participant-registry';
 import { SequencedBlockChain } from './block-chain/sequenced-block-chain';
@@ -40,17 +41,29 @@ export function mergeBlockChainRoutings<A extends object, B extends object>(a: B
  * A room whose messages go through block chains, ordered by a sequencer: the host, then the participant taking over when it leaves.
  * The participants check the blocks they receive and report the cheats to each other, outside the chains.
  */
+/**
+ * A room whose messages go through block chains, ordered by a sequencer: the host, then the participant taking over when
+ * it leaves or when most of the other participants report it as cheating.
+ * The participants check the blocks they receive and report the cheats to each other, outside the chains.
+ */
 export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInterface {
+    /** The chains are compared, and the entries not ordered reported, at this pace */
+    private static readonly TICK_MS: number = 2_000;
 
     private readonly participants: ParticipantRegistry;
     private readonly antiCheat: AntiCheat;
-    /** The blocks reported as cheated, by the local participant or the others */
+    /** The blocks and entries reported as cheated, by the local participant or the others */
     public readonly cheatFlags: Signal<ReadonlyArray<Readonly<CheatFlag>>>;
     /** The block chain of each message type, to transmit the messages */
     private readonly blockChainOf: ReadonlyMap<string, SequencedBlockChain>;
     /** The block chains by name, to dispatch the received messages */
     private readonly blockChains: ReadonlyMap<BlockChainName, SequencedBlockChain>;
+    /** The block of each message delivered to the application, to report it */
+    private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block }>();
     private sequencer: string;
+    /** The sequencers most of the other participants reported as cheating */
+    private readonly distrusted = new Set<string>();
+    private readonly tickTimer: ReturnType<typeof setInterval>;
 
     /** The stored keys of the player, so that it keeps its identity when reloading the page */
     public static async createKeys(playerName: string, keyStore: ParticipantKeyStore = new ParticipantKeyStore()): Promise<ParticipantKeys> {
@@ -86,21 +99,53 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
             this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.onParticipantReady(name));
         });
         this.participants.left$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => this.onParticipantLeft(name));
+        this.antiCheat.reported$.pipe(takeUntil(this.destroyRef)).subscribe(() => this.checkSequencerTrust());
+        this.tickTimer = setInterval(() => this.tick(Date.now()), BlockRoom.TICK_MS);
+    }
+
+    private tick(now: number): void {
+        this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.tick(now));
     }
 
     private onParticipantLeft(name: string): void {
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.onParticipantLeft(name));
 
-        if (name !== this.sequencer) {
+        if (name === this.sequencer) {
+            this.handOver();
+        }
+    }
+
+    /** Most of the other participants reporting the sequencer as cheating take the ordering away from it */
+    private checkSequencerTrust(): void {
+        const accusers: ReadonlySet<string> = this.antiCheat.accusersOf(this.sequencer);
+        const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== this.sequencer);
+
+        if (others.filter((name: string) => accusers.has(name)).length * 2 > others.length) {
+            TimedLogger.warn(`${ this.sequencer } is reported as cheating by most of the participants, it does not order the blocks anymore`);
+            this.distrusted.add(this.sequencer);
+            this.handOver();
+        }
+    }
+
+    /** Every participant names the same successor from the same participants: the first one by name, not distrusted */
+    private handOver(): void {
+        const successor: string | undefined = this.participantNames().filter((name: string) => !this.distrusted.has(name)).sort()[0];
+
+        if (successor === undefined) {
+            TimedLogger.warn('No participant left to order the blocks');
             return;
         }
 
-        // Every participant names the same successor from the same participants: the first one by name
-        this.sequencer = [...this.participants.values()].map((participant) => participant.name).sort()[0];
-        this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.changeSequencer(this.sequencer));
+        this.sequencer = successor;
+        this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.changeSequencer(successor));
+    }
+
+    private participantNames(): string[] {
+        return [...this.participants.values()].map((participant) => participant.name);
     }
 
     public override clear(): void {
+        clearInterval(this.tickTimer);
         super.clear();
         this.participants.clear();
         this.antiCheat.clear();
@@ -116,6 +161,18 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
         // Do not await, there is no need to handle the result
         void blockChain.transmitMessage(type, payload);
+    }
+
+    /** Reports a message delivered by this room, the application finds cheated */
+    public override reportCheat(message: AppMessage, reason: CheatReason): void {
+        const delivered = this.deliveredBlocks.get(message);
+
+        if (!delivered) {
+            return;
+        }
+
+        const { chain, block } = delivered;
+        this.antiCheat.report({ chain, subject: block.hash, index: block.index, author: message.from, sequencer: block.sequencer, reason });
     }
 
     protected override onMessage(message: ReceivedMessage): void {
@@ -134,10 +191,12 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         }
     }
 
-    public notifyMessage(data: AppMessage): void {
-        TimedLogger.log(data);
+    public notifyMessage(chain: BlockChainName, block: Block): void {
+        const message: AppMessage = block.entry.data;
+        TimedLogger.log(message);
 
-        this.publicMessenger$.next(data);
+        this.deliveredBlocks.set(message, { chain, block });
+        this.publicMessenger$.next(message);
     }
 
     protected override handleRoomPlayerAdd(player: Player): void {

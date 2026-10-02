@@ -3,6 +3,8 @@ import MessageOriginType from '@app/services/room-manager/classes/webrtc/message
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { AppMessage, AppMessagesOf, RoomServiceMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { CheatReason } from './block-room/anti-cheat/cheat-report';
+import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Observable, Subject, filter, takeUntil } from 'rxjs';
 import { RoomNetwork } from '../room-network/room-network';
 import { LocalPlayer } from '../player/local-player';
@@ -68,6 +70,12 @@ export class Room<M extends object> {
 
     public get initiator(): boolean {
         return this._roomConnection.initiator;
+    }
+
+    /** Reports a message the application finds cheated */
+    public reportCheat(message: AppMessage, reason: CheatReason): void {
+        // A room without block chain has no anti-cheat to report to
+        TimedLogger.warn(`Cheat not reported, ${ reason } by ${ message.from }`, message);
     }
 
     public transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {

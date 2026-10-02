@@ -12,7 +12,7 @@ import { AntiCheat } from '../anti-cheat/anti-cheat';
 import { CheatReason } from '../anti-cheat/cheat-report';
 import { BlockChainName } from '../block-chain-name.enum';
 import { BlockRoomInterface } from '../block-room.interface';
-import { Block, ChainEntry } from './block';
+import { Block, ChainEntry, ChainHead } from './block';
 import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
 import { ParticipantRegistry } from './participant-registry';
@@ -21,19 +21,44 @@ type MessageHandlers = {
     [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>) => Promise<void>;
 };
 
+enum Signature {
+    SIGNED = 'signed',
+    FORGED = 'forged',
+    /** The keys of the signer are not known */
+    UNKNOWN = 'unknown',
+    /** The key of the signer is being negotiated */
+    PENDING = 'pending',
+}
+
+/** An entry submitted to the sequencer, which a participant watches until it is ordered */
+interface WatchedEntry {
+    entry: ChainEntry;
+    /** When the watch started, set by the next tick */
+    since?: number;
+    /** The latest index when the watch started: the sequencer ordering other entries since ignores this one */
+    latestIndex: number;
+}
+
 /**
  * A block chain whose blocks are ordered by a single participant, the sequencer: the blocks can not fork.
  * The participants sign their entries and submit them to the sequencer, which appends them and broadcasts the blocks.
- * Each participant checks the blocks it adds and reports the cheats to the anti-cheat.
  *
- * When the sequencer leaves, the room names another one, which first collects the blocks of all the participants:
- * a block the former sequencer sent to some of them only is kept, none is rolled back.
+ * The other participants watch the sequencer:
+ * - they check the blocks they add, and leave the cheated ones out of the application;
+ * - they watch the entries submitted are ordered;
+ * - they compare their latest blocks, to detect a sequencer sending different blocks to the participants.
+ * They report the cheats to the anti-cheat.
+ *
+ * When the sequencer leaves or is distrusted, the room names another one, which first collects the blocks of all the
+ * participants: a block the former sequencer sent to some of them only is kept, none is rolled back.
  */
 export class SequencedBlockChain {
     /** For a response to fit in a data channel message */
     private static readonly MAX_BLOCKS_PER_RESPONSE: number = 50;
-    /** Bounds the memory taken by the blocks of an author whose key never comes */
-    private static readonly MAX_CHECKS_PER_AUTHOR: number = 32;
+    /** Bounds the memory taken by the entries of an author whose key never comes */
+    private static readonly MAX_ENTRIES_WAITING_FOR_KEY: number = 32;
+    /** An entry not ordered within this delay, while the sequencer orders other ones, is reported */
+    public static readonly CENSORSHIP_DELAY_MS: number = 10_000;
 
     private readonly blockChain: Chain;
     private sequencer: string;
@@ -43,10 +68,16 @@ export class SequencedBlockChain {
     private readonly awaitingBlocksFrom: Set<string> = new Set();
     /** The entries submitted while syncing, ordered once synced */
     private readonly queuedEntries: ChainEntry[] = [];
+    /** As sequencer, the entries checked once the key of their author is received */
+    private readonly entriesWaitingForKey: Map<string, ChainEntry[]> = new Map();
     /** The entries of the local participant not in the chain yet, submitted again to a new sequencer */
     private readonly ownPendingEntries: Map<string, ChainEntry> = new Map();
-    /** The blocks whose author signature is checked once the key of their author is received */
-    private readonly checksWaitingForKey: Map<string, Block[]> = new Map();
+    /** The entries submitted to the sequencer, watched until they are ordered */
+    private readonly watchedEntries: Map<string, WatchedEntry> = new Map();
+    /** The indexes of the blocks left out of the application, as all the participants find them cheated alike */
+    private readonly leftOut: Set<number> = new Set();
+    /** The index of the latest block delivered to the application, or left out of it */
+    private deliveredIndex: number = 0;
     /** The chain changes one message at a time, so that the blocks are added in order */
     private queue: Promise<void> = Promise.resolve();
 
@@ -55,6 +86,7 @@ export class SequencedBlockChain {
         [BlockChainMessageType.NEW_BLOCK]: (message) => this.onNewBlock(message),
         [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message) => this.onGetBlocksRequest(message),
         [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message) => this.onGetBlocksResponse(message),
+        [BlockChainMessageType.CHAIN_HEAD]: (message) => this.onChainHead(message),
     };
 
     /**
@@ -89,6 +121,8 @@ export class SequencedBlockChain {
         void logHandlingFailure(message, this.serially(() => handler(message)));
     }
 
+    // Submission
+
     public async transmitMessage(type: string, payload: unknown): Promise<void> {
         const id: string = crypto.randomUUID();
         const data: AppMessage = { from: this.participants.local.name, type, payload };
@@ -101,7 +135,8 @@ export class SequencedBlockChain {
 
     private async submit(entry: ChainEntry): Promise<void> {
         if (!this.isSequencer) {
-            this.submitTo(this.sequencer, entry);
+            this.watch(entry);
+            this.broadcastEntry(entry);
         } else if (this.syncing) {
             this.queuedEntries.push(entry);
         } else {
@@ -109,16 +144,39 @@ export class SequencedBlockChain {
         }
     }
 
+    /** To the sequencer which orders it, and to the others which watch it is ordered */
+    private broadcastEntry(entry: ChainEntry): void {
+        this.participants.broadcast({ type: BlockChainMessageType.SUBMIT_ENTRY, payload: entry, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: this.name });
+    }
+
     private async onSubmitEntry(message: ReceivedBlockChainMessage<BlockChainMessageType.SUBMIT_ENTRY>): Promise<void> {
         const entry: ChainEntry = message.payload;
 
         // A participant only submits its own entries, its connection proves who it is
-        if (!this.isSequencer || entry.data.from !== message.from || !this.ownsType(entry.data.type)) {
+        if (entry.data.from !== message.from || !this.ownsType(entry.data.type)) {
             TimedLogger.warn(`Entry of ${ message.from } refused by the ${ this.name } chain`, entry);
             return;
         }
 
-        if (this.syncing) {
+        if (!this.isSequencer) {
+            this.watch(entry);
+            return;
+        }
+
+        await this.order(entry);
+    }
+
+    /** As sequencer, the entry of another participant: its signature is checked, so that the sequencer is not blamed for it */
+    private async order(entry: ChainEntry): Promise<void> {
+        const author: string = entry.data.from;
+        const signature: Signature = await this.signatureOf(entry.signature, this.entryContent(entry), this.participants.get(author));
+
+        if (signature === Signature.PENDING) {
+            const entries: ChainEntry[] = [...this.entriesWaitingForKey.get(author) ?? [], entry];
+            this.entriesWaitingForKey.set(author, entries.slice(-SequencedBlockChain.MAX_ENTRIES_WAITING_FOR_KEY));
+        } else if (signature !== Signature.SIGNED) {
+            TimedLogger.warn(`Entry of ${ author } not signed by it, refused by the ${ this.name } chain`, entry);
+        } else if (this.syncing) {
             this.queuedEntries.push(entry);
         } else {
             await this.sequence(entry);
@@ -149,7 +207,7 @@ export class SequencedBlockChain {
         );
 
         this.broadcastBlock(block);
-        await this.addBlock(block);
+        await this.addBlock(block, false);
     }
 
     private broadcastBlock(block: Block): void {
@@ -164,6 +222,8 @@ export class SequencedBlockChain {
             this.participants.broadcast(message);
         }
     }
+
+    // Reception
 
     private async onNewBlock(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK>): Promise<void> {
         const block: Block = message.payload;
@@ -190,27 +250,24 @@ export class SequencedBlockChain {
      * @returns whether the block is added
      */
     private async acceptBlock(block: Block, fromSequencer: boolean): Promise<boolean> {
-        if (!await this.isSignedBySequencer(block)) {
-            // The sequencer orders the chain, its blocks are added anyway; another participant can not forge them
-            if (!fromSequencer) {
-                return false;
-            }
+        // Unknown keys: the block is trusted on the hash chain
+        const isForged: boolean = await this.sequencingOf(block) === Signature.FORGED;
 
-            this.report(block, CheatReason.FORGED_SEQUENCING);
+        // The sequencer orders the chain, its blocks are added anyway; another participant can not forge them
+        if (isForged && !fromSequencer) {
+            return false;
         }
 
-        await this.addBlock(block);
+        await this.addBlock(block, isForged);
         return true;
     }
 
-    /** Signed, or by a sequencer whose keys are not known: the block is trusted on the hash chain */
-    private async isSignedBySequencer(block: Block): Promise<boolean> {
-        const sequencer: Participant | undefined = this.participants.author(block.sequencer);
-        return !sequencer?.knownKeys.length || await this.isSignedWithOneOf(block.sequencerSignature, block.hash, sequencer.knownKeys);
+    private async sequencingOf(head: ChainHead): Promise<Signature> {
+        return await this.signatureOf(head.sequencerSignature, head.hash, this.participants.author(head.sequencer));
     }
 
     /** The block must follow the latest one */
-    private async addBlock(block: Block): Promise<void> {
+    private async addBlock(block: Block, isForgedSequencing: boolean): Promise<void> {
         const { entry } = block;
         // Checked before appending the block, which adds its entry to the chain
         const isReplayed: boolean = this.blockChain.hasEntry(entry.id);
@@ -218,59 +275,84 @@ export class SequencedBlockChain {
 
         this.blockChain.append(block);
         this.ownPendingEntries.delete(entry.id);
+        this.watchedEntries.delete(entry.id);
 
-        if (isReplayed) {
-            this.report(block, CheatReason.REPLAYED_ENTRY);
+        const cheats: ReadonlyArray<CheatReason> = [
+            ...isForgedSequencing ? [CheatReason.FORGED_SEQUENCING] : [],
+            ...isReplayed ? [CheatReason.REPLAYED_ENTRY] : [],
+            ...isOwned ? [] : [CheatReason.WRONG_CHAIN],
+        ];
+
+        if (cheats.length > 0) {
+            cheats.forEach((reason: CheatReason) => this.report(block, reason));
+            this.leftOut.add(block.index);
         }
 
-        if (!isOwned) {
-            this.report(block, CheatReason.WRONG_CHAIN);
-        }
-
-        // Every participant finds these cheats alike, so they all leave the block out of the application
-        if (!isReplayed && isOwned) {
-            this.blockRoomService.notifyMessage(entry.data);
-        }
-
-        await this.checkAuthor(block);
+        await this.deliver();
     }
 
-    private async checkAuthor(block: Block): Promise<void> {
-        const author: Participant | undefined = this.participants.author(block.entry.data.from);
+    /**
+     * Delivers the blocks to the application in their order, once their author signature is checked:
+     * every participant leaves the same cheated blocks out of the application, so that their states stay the same.
+     */
+    private async deliver(): Promise<void> {
+        const latestIndex: number = this.blockChain.getLatestBlock().index;
 
-        // An author who left before this participant joined is unknown
-        if (!author) {
-            return;
-        }
+        while (this.deliveredIndex < latestIndex) {
+            const block: Block = this.blockChain.getBlock(this.deliveredIndex + 1);
 
-        // A copy: the key of the author may be received while verifying
-        const keys: ReadonlyArray<CryptoKey> = [...author.knownKeys];
-        const content: string = Chain.entryContent(this.name, block.entry.id, block.entry.data);
+            if (!this.leftOut.has(block.index)) {
+                const signature: Signature = await this.signatureOf(block.entry.signature, this.entryContent(block.entry), this.participants.author(block.entry.data.from));
 
-        if (await this.isSignedWithOneOf(block.entry.signature, content, keys)) {
-            return;
-        }
+                if (signature === Signature.PENDING) {
+                    // Waits for the key of the author, the next blocks with it
+                    return;
+                }
 
-        if (author.knownKeys.length > keys.length) {
-            await this.checkAuthor(block);
-        } else if (author.isReady()) {
-            this.report(block, CheatReason.FORGED_AUTHOR);
-        } else {
-            const blocks: Block[] = [...this.checksWaitingForKey.get(author.name) ?? [], block];
-            this.checksWaitingForKey.set(author.name, blocks.slice(-SequencedBlockChain.MAX_CHECKS_PER_AUTHOR));
+                if (signature === Signature.FORGED) {
+                    this.report(block, CheatReason.FORGED_AUTHOR);
+                } else {
+                    // An author who left before this participant joined is unknown: its entry is trusted
+                    this.blockRoomService.notifyMessage(this.name, block);
+                }
+            }
+
+            this.deliveredIndex = block.index;
         }
     }
 
-    /** From the newest key, which signs the live blocks */
-    private async isSignedWithOneOf(signature: string, content: string, keys: ReadonlyArray<CryptoKey>): Promise<boolean> {
+    private entryContent(entry: ChainEntry): string {
+        return Chain.entryContent(this.name, entry.id, entry.data);
+    }
+
+    private async signatureOf(signature: string, content: string, signer: Participant | undefined): Promise<Signature> {
+        if (!signer) {
+            return Signature.UNKNOWN;
+        }
+
+        // A copy: the key of the signer may be received while verifying
+        const keys: ReadonlyArray<CryptoKey> = [...signer.knownKeys];
+
+        // From the newest key, which signs the live entries and blocks
         for (const key of [...keys].reverse()) {
             if (await Chain.verify(signature, content, key)) {
-                return true;
+                return Signature.SIGNED;
             }
         }
 
-        return false;
+        if (signer.knownKeys.length > keys.length) {
+            return await this.signatureOf(signature, content, signer);
+        }
+
+        if (signer.isReady()) {
+            return Signature.FORGED;
+        }
+
+        // A participant who left will not send its key anymore
+        return this.participants.get(signer.name) === signer ? Signature.PENDING : Signature.UNKNOWN;
     }
+
+    // Catch up
 
     private requestBlocks(participantName: string): void {
         if (this.awaitingBlocksFrom.has(participantName)) {
@@ -321,15 +403,98 @@ export class SequencedBlockChain {
         await this.finishSyncIfDone();
     }
 
+    // Comparison of the chains
+
+    private sendHead(participantName?: string): void {
+        const latestBlock: Block = this.blockChain.getLatestBlock();
+
+        if (latestBlock.index === 0) {
+            return;
+        }
+
+        const { index, hash, sequencer, sequencerSignature } = latestBlock;
+        const message: BlockChainMessage = {
+            type: BlockChainMessageType.CHAIN_HEAD,
+            payload: { index, hash, sequencer, sequencerSignature },
+            origin: MessageOriginType.BLOCK_ROOM_SERVICE,
+            chain: this.name,
+        };
+
+        if (participantName) {
+            this.participants.send(participantName, message);
+        } else {
+            this.participants.broadcast(message);
+        }
+    }
+
+    private async onChainHead(message: ReceivedBlockChainMessage<BlockChainMessageType.CHAIN_HEAD>): Promise<void> {
+        const head: ChainHead = message.payload;
+
+        if (head.index > this.blockChain.getLatestBlock().index) {
+            // Blocks the sequencer did not send to this participant, the catch up checks they are signed by their sequencer
+            this.requestBlocks(message.from);
+            return;
+        }
+
+        const block: Block = this.blockChain.getBlock(head.index);
+
+        if (block.hash === head.hash) {
+            return;
+        }
+
+        // Two blocks at the same index, both signed by their sequencer: it sent different blocks to the participants
+        if (head.sequencer === block.sequencer && await this.sequencingOf(head) === Signature.SIGNED) {
+            this.report(block, CheatReason.CONFLICTING_BLOCK);
+        } else {
+            TimedLogger.warn(`The ${ this.name } chain of ${ message.from } differs at block ${ head.index }`, head);
+        }
+    }
+
+    // Watch of the sequencer
+
+    private watch(entry: ChainEntry): void {
+        if (!this.watchedEntries.has(entry.id) && !this.blockChain.hasEntry(entry.id)) {
+            this.watchedEntries.set(entry.id, { entry, latestIndex: this.blockChain.getLatestBlock().index });
+        }
+    }
+
+    /** Called regularly: shows the chain to the others, and reports the entries the sequencer does not order */
+    public tick(now: number): void {
+        this.sendHead();
+
+        const latestIndex: number = this.blockChain.getLatestBlock().index;
+
+        for (const watched of this.watchedEntries.values()) {
+            watched.since ??= now;
+
+            if (latestIndex > watched.latestIndex && now - watched.since >= SequencedBlockChain.CENSORSHIP_DELAY_MS) {
+                this.watchedEntries.delete(watched.entry.id);
+                this.antiCheat.report({
+                    chain: this.name,
+                    subject: watched.entry.id,
+                    author: watched.entry.data.from,
+                    sequencer: this.sequencer,
+                    reason: CheatReason.CENSORED_ENTRY,
+                });
+            }
+        }
+    }
+
+    // Participants
+
     /** The key of a participant has just been received */
     public onParticipantReady(name: string): void {
-        const blocks: ReadonlyArray<Block> = this.checksWaitingForKey.get(name) ?? [];
-        this.checksWaitingForKey.delete(name);
-
         void this.serially(async () => {
-            for (const block of blocks) {
-                await this.checkAuthor(block);
+            const entries: ReadonlyArray<ChainEntry> = this.entriesWaitingForKey.get(name) ?? [];
+            this.entriesWaitingForKey.delete(name);
+
+            for (const entry of entries) {
+                await this.order(entry);
             }
+
+            await this.deliver();
+            // Shows its chain to the new participant, which compares it with the one of the sequencer
+            this.sendHead(name);
 
             if (name === this.sequencer && !this.isSequencer) {
                 // Catches up with the sequencer, and submits the entries it may not have received
@@ -340,18 +505,25 @@ export class SequencedBlockChain {
     }
 
     public onParticipantLeft(name: string): void {
-        this.checksWaitingForKey.delete(name);
-
         void this.serially(async () => {
             this.awaitingBlocksFrom.delete(name);
+            this.entriesWaitingForKey.delete(name);
             await this.finishSyncIfDone();
+            // The author may be forgotten, its blocks are then trusted
+            await this.deliver();
         });
     }
 
-    /** The former sequencer left: a new one takes over */
+    /** The former sequencer left, or is distrusted: a new one takes over */
     public changeSequencer(name: string): void {
         void this.serially(async () => {
             this.sequencer = name;
+
+            // The new sequencer gets as much time as the former one to order the watched entries
+            this.watchedEntries.forEach((watched: WatchedEntry) => {
+                watched.since = undefined;
+                watched.latestIndex = this.blockChain.getLatestBlock().index;
+            });
 
             if (!this.isSequencer) {
                 // The entries the former sequencer did not order, and the blocks it sent to some participants only
@@ -373,11 +545,7 @@ export class SequencedBlockChain {
     }
 
     private submitPendingEntries(): void {
-        this.ownPendingEntries.forEach((entry: ChainEntry) => this.submitTo(this.sequencer, entry));
-    }
-
-    private submitTo(sequencer: string, entry: ChainEntry): void {
-        this.participants.send(sequencer, { type: BlockChainMessageType.SUBMIT_ENTRY, payload: entry, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: this.name });
+        this.ownPendingEntries.forEach((entry: ChainEntry) => this.broadcastEntry(entry));
     }
 
     private async finishSyncIfDone(): Promise<void> {
@@ -399,8 +567,8 @@ export class SequencedBlockChain {
     private report(block: Block, reason: CheatReason): void {
         this.antiCheat.report({
             chain: this.name,
+            subject: block.hash,
             index: block.index,
-            hash: block.hash,
             author: block.entry.data.from,
             sequencer: block.sequencer,
             reason,
@@ -411,8 +579,11 @@ export class SequencedBlockChain {
         this.blockChain.reset();
         this.awaitingBlocksFrom.clear();
         this.queuedEntries.splice(0);
+        this.entriesWaitingForKey.clear();
         this.ownPendingEntries.clear();
-        this.checksWaitingForKey.clear();
+        this.watchedEntries.clear();
+        this.leftOut.clear();
+        this.deliveredIndex = 0;
         this.syncing = false;
     }
 }

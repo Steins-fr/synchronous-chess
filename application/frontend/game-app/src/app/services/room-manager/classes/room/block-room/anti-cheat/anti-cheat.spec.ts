@@ -9,7 +9,7 @@ import MessageOriginType from '@app/services/room-manager/classes/webrtc/message
 import { TestHelper } from '@testing/test.helper';
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
-const report: CheatReport = { chain: BlockChainName.CHESS, index: 2, hash: 'hash', author: 'bob', sequencer: 'host', reason: CheatReason.FORGED_AUTHOR };
+const report: CheatReport = { chain: BlockChainName.CHESS, subject: 'hash', index: 2, author: 'bob', sequencer: 'host', reason: CheatReason.FORGED_AUTHOR };
 
 function received(cheatReport: CheatReport, from: string): ReceivedAntiCheatMessage {
     return { type: AntiCheatMessageType.CHEAT_REPORT, payload: cheatReport, origin: MessageOriginType.ANTI_CHEAT, from };
@@ -41,8 +41,8 @@ describe('AntiCheat', () => {
         expect(remote.sendData).toHaveBeenCalledExactlyOnceWith({ type: AntiCheatMessageType.CHEAT_REPORT, payload: report, origin: MessageOriginType.ANTI_CHEAT });
         expect(antiCheat.flags()).toEqual([{
             chain: BlockChainName.CHESS,
+            subject: 'hash',
             index: 2,
-            hash: 'hash',
             author: 'bob',
             sequencer: 'host',
             reports: [{ reporter: 'alice', reason: CheatReason.FORGED_AUTHOR }],
@@ -51,7 +51,7 @@ describe('AntiCheat', () => {
 
     test('should gather the reports of a block from all the participants', () => {
         // Given
-        const otherBlock: CheatReport = { ...report, hash: 'other', reason: CheatReason.REPLAYED_ENTRY };
+        const otherBlock: CheatReport = { ...report, subject: 'other', reason: CheatReason.REPLAYED_ENTRY };
         const otherChain: CheatReport = { ...report, chain: BlockChainName.CHAT };
 
         // When
@@ -61,17 +61,35 @@ describe('AntiCheat', () => {
         antiCheat.handle(received(report, 'carol'));
         antiCheat.handle(received(otherBlock, 'carol'));
         antiCheat.handle(received(otherChain, 'carol'));
+        antiCheat.handle(received({ ...otherBlock, reason: CheatReason.FORGED_AUTHOR }, 'dave'));
 
         // Then
-        expect(antiCheat.flags().map((flag) => [flag.chain, flag.hash, flag.reports])).toEqual([
+        expect(antiCheat.flags().map((flag) => [flag.chain, flag.subject, flag.reports])).toEqual([
             [BlockChainName.CHESS, 'hash', [
                 { reporter: 'alice', reason: CheatReason.FORGED_AUTHOR },
                 { reporter: 'carol', reason: CheatReason.FORGED_AUTHOR },
                 { reporter: 'carol', reason: CheatReason.FORGED_SEQUENCING },
             ]],
-            [BlockChainName.CHESS, 'other', [{ reporter: 'carol', reason: CheatReason.REPLAYED_ENTRY }]],
+            [BlockChainName.CHESS, 'other', [{ reporter: 'carol', reason: CheatReason.REPLAYED_ENTRY }, { reporter: 'dave', reason: CheatReason.FORGED_AUTHOR }]],
             [BlockChainName.CHAT, 'hash', [{ reporter: 'carol', reason: CheatReason.FORGED_AUTHOR }]],
         ]);
+    });
+
+    test('should name the participants who reported a cheat of a sequencer, and notify each new report', () => {
+        // Given
+        let reports: number = 0;
+        antiCheat.reported$.subscribe(() => reports++);
+
+        // When
+        antiCheat.report(report);
+        antiCheat.report(report);
+        antiCheat.handle(received({ ...report, subject: 'move', reason: CheatReason.ILLEGAL_MOVE }, 'carol'));
+        antiCheat.handle(received({ ...report, subject: 'other', sequencer: 'carol', reason: CheatReason.CENSORED_ENTRY }, 'dave'));
+
+        // Then the cheats of the application do not count against the sequencer
+        expect(antiCheat.accusersOf('host')).toEqual(new Set(['alice']));
+        expect(antiCheat.accusersOf('carol')).toEqual(new Set(['dave']));
+        expect(reports).toEqual(3);
     });
 
     test('clear should forget the flags', () => {

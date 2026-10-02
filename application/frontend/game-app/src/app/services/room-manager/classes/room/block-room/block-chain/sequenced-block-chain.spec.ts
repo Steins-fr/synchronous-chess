@@ -1,5 +1,5 @@
 import { SequencedBlockChain } from './sequenced-block-chain';
-import { Block, ChainEntry } from './block';
+import { Block, ChainEntry, ChainHead } from './block';
 import { BlockToHash, Chain } from './chain';
 import { ParticipantKeys, ParticipantRegistry } from './participant-registry';
 import { Participant } from './participant';
@@ -24,18 +24,28 @@ import { afterEach, beforeAll, beforeEach, describe, expect, MockInstance, test,
 
 const chainName: BlockChainName = BlockChainName.CHESS;
 const routing: ReadonlyMap<string, BlockChainName> = new Map([['move', chainName], ['chat', BlockChainName.CHAT]]);
+const delay: number = SequencedBlockChain.CENSORSHIP_DELAY_MS;
 
 let localKeys: ParticipantKeys;
 let remoteKeys: ParticipantKeys;
 let otherKeys: ParticipantKeys;
+
+interface WatchedEntry {
+    entry: ChainEntry;
+    since?: number;
+    latestIndex: number;
+}
 
 interface ChainInternals {
     blockChain: Chain;
     syncing: boolean;
     awaitingBlocksFrom: Set<string>;
     queuedEntries: ChainEntry[];
+    entriesWaitingForKey: Map<string, ChainEntry[]>;
     ownPendingEntries: Map<string, ChainEntry>;
-    checksWaitingForKey: Map<string, Block[]>;
+    watchedEntries: Map<string, WatchedEntry>;
+    leftOut: Set<number>;
+    deliveredIndex: number;
     queue: Promise<void>;
 }
 
@@ -59,12 +69,18 @@ function createNode(sequencer: string = 'a'): Node {
     participants.onNewPlayer(players['b']);
     participants.onNewPlayer(players['c']);
     (participants.get('b') as Participant).receiveKey(remoteKeys.keyPair.publicKey);
+    vi.mocked(players['b'].sendData).mockClear();
+    vi.mocked(players['c'].sendData).mockClear();
     const antiCheat: AntiCheat = new AntiCheat(participants);
     const report = vi.spyOn(antiCheat, 'report');
     const room = { notifyMessage: vi.fn() };
     const chain: SequencedBlockChain = new SequencedBlockChain(chainName, routing, TestHelper.cast<BlockRoomInterface>(room), participants, antiCheat, sequencer);
 
     return { chain, internals: TestHelper.cast<ChainInternals>(chain), participants, room, report, players };
+}
+
+function delivered(node: Node): AppMessage[] {
+    return node.room.notifyMessage.mock.calls.map((call: unknown[]) => TestHelper.cast<Block>(call[1]).entry.data);
 }
 
 function sent(player: Player): BlockChainMessage[] {
@@ -75,6 +91,10 @@ function sent(player: Player): BlockChainMessage[] {
 
 function sentTypes(player: Player): BlockChainMessageType[] {
     return sent(player).map((message: BlockChainMessage) => message.type);
+}
+
+function reasons(node: Node): Array<[number | undefined, CheatReason]> {
+    return node.report.mock.calls.map(([report]) => [report.index, report.reason]);
 }
 
 function received<K extends BlockChainMessageType>(type: K, payload: BlockChainPayloads[K], from: string = 'b'): ReceivedBlockChainMessage<K> {
@@ -91,6 +111,21 @@ async function createBlock(previous: Block, entry: ChainEntry, sequencer: string
     const blockToHash: BlockToHash = { index: previous.index + 1, previousHash: previous.hash, entry, sequencer };
     const hash: string = await Chain.calculateHash(chainName, blockToHash);
     return new Block(blockToHash.index, previous.hash, entry, sequencer, hash, await Chain.sign(hash, keys.keyPair.privateKey));
+}
+
+async function createBlocks(node: Node, count: number, author: string, keys: ParticipantKeys): Promise<Block[]> {
+    const blocks: Block[] = [];
+    let previous: Block = node.internals.blockChain.getLatestBlock();
+    for (let index = 0; index < count; index++) {
+        previous = await createBlock(previous, await createEntry(author, keys, index), 'b', remoteKeys);
+        blocks.push(previous);
+    }
+    return blocks;
+}
+
+function headOf(block: Block): ChainHead {
+    const { index, hash, sequencer, sequencerSignature } = block;
+    return { index, hash, sequencer, sequencerSignature };
 }
 
 async function handled(node: Node, message: ReceivedBlockChainMessage): Promise<void> {
@@ -119,23 +154,23 @@ describe('SequencedBlockChain', () => {
     describe('as sequencer', () => {
         test('should order, broadcast and deliver its own messages', async () => {
             // Given
-            const { chain, internals, room, players } = createNode();
+            const node: Node = createNode();
 
             // When
-            await chain.transmitMessage('move', 'e4');
+            await node.chain.transmitMessage('move', 'e4');
 
             // Then
-            const block: Block = internals.blockChain.getLatestBlock();
+            const block: Block = node.internals.blockChain.getLatestBlock();
             expect(block.index).toEqual(1);
             expect(block.sequencer).toEqual('a');
             expect(block.entry.data).toEqual({ from: 'a', type: 'move', payload: 'e4' });
-            expect(room.notifyMessage).toHaveBeenCalledExactlyOnceWith(block.entry.data);
-            expect(sent(players['b'])).toEqual([{ type: BlockChainMessageType.NEW_BLOCK, payload: block, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: chainName }]);
-            expect(internals.ownPendingEntries.size).toEqual(0);
-            expect(await internals.blockChain.hasValidHash(block)).toEqual(true);
+            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(chainName, block);
+            expect(sent(node.players['b'])).toEqual([{ type: BlockChainMessageType.NEW_BLOCK, payload: block, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: chainName }]);
+            expect(node.internals.ownPendingEntries.size).toEqual(0);
+            expect(await node.internals.blockChain.hasValidHash(block)).toEqual(true);
         });
 
-        test('should order the entries submitted by the participants', async () => {
+        test('should order the entries submitted by the participants, once', async () => {
             // Given
             const node: Node = createNode();
             const entry: ChainEntry = await createEntry('b', remoteKeys, 'd5');
@@ -144,26 +179,46 @@ describe('SequencedBlockChain', () => {
             await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, entry));
             await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, entry));
 
-            // Then the entry submitted again is ordered once
+            // Then
             expect(node.internals.blockChain.getLatestBlock().index).toEqual(1);
             expect(node.internals.blockChain.getLatestBlock().entry).toEqual(entry);
-            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(entry.data);
+            expect(delivered(node)).toEqual([entry.data]);
             expect(node.report).not.toHaveBeenCalled();
         });
 
-        test('should refuse the entries of another participant or of another chain', async () => {
+        test('should refuse the entries of another participant, of another chain, or not signed by their author', async () => {
             // Given
             const node: Node = createNode();
-            const entryOfC: ChainEntry = await createEntry('c', otherKeys);
-            const chatEntry: ChainEntry = await createEntry('b', remoteKeys, 'hello', { type: 'chat' });
 
             // When
-            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, entryOfC));
-            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, chatEntry));
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, await createEntry('c', otherKeys)));
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, await createEntry('b', remoteKeys, 'hello', { type: 'chat' })));
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, await createEntry('b', otherKeys)));
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, await createEntry('z', otherKeys), 'z'));
+
+            // Then the sequencer can not be blamed for a forged entry
+            expect(node.internals.blockChain.getLatestBlock().index).toEqual(0);
+            expect(TimedLogger.warn).toHaveBeenCalledTimes(4);
+        });
+
+        test('should order the entries of an author once its key is received, at most 32 of them', async () => {
+            // Given
+            const node: Node = createNode();
+            const entries: ChainEntry[] = [];
+            for (let index = 0; index < 33; index++) {
+                entries.push(await createEntry('c', otherKeys, index));
+                await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, entries[index], 'c'));
+            }
+            expect(node.internals.blockChain.getLatestBlock().index).toEqual(0);
+
+            // When
+            (node.participants.get('c') as Participant).receiveKey(otherKeys.keyPair.publicKey);
+            node.chain.onParticipantReady('c');
+            await node.internals.queue;
 
             // Then
-            expect(node.internals.blockChain.getLatestBlock().index).toEqual(0);
-            expect(TimedLogger.warn).toHaveBeenCalledTimes(2);
+            expect(delivered(node)).toEqual(entries.slice(-32).map((entry: ChainEntry) => entry.data));
+            expect(node.internals.entriesWaitingForKey.size).toEqual(0);
         });
 
         test('should delay the broadcast when a latency is configured', async () => {
@@ -185,39 +240,44 @@ describe('SequencedBlockChain', () => {
     });
 
     describe('as participant', () => {
-        test('should submit its messages to the sequencer, and deliver them once ordered', async () => {
+        test('should submit its messages to everyone, and deliver them once ordered', async () => {
             // Given
             const node: Node = createNode('b');
 
             // When
             await node.chain.transmitMessage('move', 'e4');
 
-            // Then
+            // Then the sequencer orders it, the other participant watches it
             const [submission] = sent(node.players['b']);
             expect(submission.type).toEqual(BlockChainMessageType.SUBMIT_ENTRY);
-            expect(node.room.notifyMessage).not.toHaveBeenCalled();
+            expect(sent(node.players['c'])).toEqual([submission]);
+            expect(delivered(node)).toEqual([]);
             expect(node.internals.ownPendingEntries.size).toEqual(1);
+            expect(node.internals.watchedEntries.size).toEqual(1);
 
             // When
             const entry: ChainEntry = TestHelper.cast<ChainEntry>(submission.payload);
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, await createBlock(node.internals.blockChain.getLatestBlock(), entry, 'b', remoteKeys)));
 
             // Then
-            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(entry.data);
+            expect(delivered(node)).toEqual([entry.data]);
             expect(node.internals.ownPendingEntries.size).toEqual(0);
+            expect(node.internals.watchedEntries.size).toEqual(0);
             expect(node.report).not.toHaveBeenCalled();
         });
 
-        test('should not order the submitted entries', async () => {
+        test('should watch the entries submitted to the sequencer, without ordering them', async () => {
             // Given
             const node: Node = createNode('b');
+            const entry: ChainEntry = await createEntry('c', otherKeys);
 
             // When
-            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, await createEntry('b', remoteKeys)));
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, entry, 'c'));
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, entry, 'c'));
 
             // Then
             expect(node.internals.blockChain.getLatestBlock().index).toEqual(0);
-            expect(TimedLogger.warn).toHaveBeenCalledOnce();
+            expect([...node.internals.watchedEntries.keys()]).toEqual([entry.id]);
         });
 
         test('should only add the blocks of its sequencer', async () => {
@@ -241,9 +301,7 @@ describe('SequencedBlockChain', () => {
         test('should catch up once with the sequencer when blocks are missing', async () => {
             // Given
             const node: Node = createNode('b');
-            const block1: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys, 1), 'b', remoteKeys);
-            const block2: Block = await createBlock(block1, await createEntry('b', remoteKeys, 2), 'b', remoteKeys);
-            const block3: Block = await createBlock(block2, await createEntry('b', remoteKeys, 3), 'b', remoteKeys);
+            const [block1, block2, block3] = await createBlocks(node, 3, 'b', remoteKeys);
 
             // When
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, block2));
@@ -257,7 +315,7 @@ describe('SequencedBlockChain', () => {
 
             // Then
             expect(node.internals.blockChain.getLatestBlock()).toBe(block3);
-            expect(node.room.notifyMessage.mock.calls).toEqual([[block1.entry.data], [block2.entry.data], [block3.entry.data]]);
+            expect(delivered(node)).toEqual([block1.entry.data, block2.entry.data, block3.entry.data]);
         });
 
         test('should report the invalid and the conflicting blocks of the sequencer', async () => {
@@ -266,7 +324,7 @@ describe('SequencedBlockChain', () => {
             const genesis: Block = node.internals.blockChain.getLatestBlock();
             const block1: Block = await createBlock(genesis, await createEntry('b', remoteKeys, 1), 'b', remoteKeys);
             const conflictingBlock1: Block = await createBlock(genesis, await createEntry('b', remoteKeys, 2), 'b', remoteKeys);
-            const tamperedBlock2: Block = { ...await createBlock(block1, await createEntry('b', remoteKeys, 3), 'b', remoteKeys), sequencer: 'b', hash: 'tampered' };
+            const tamperedBlock2: Block = { ...await createBlock(block1, await createEntry('b', remoteKeys, 3), 'b', remoteKeys), hash: 'tampered' };
             const forkedBlock2: Block = await createBlock(conflictingBlock1, await createEntry('b', remoteKeys, 4), 'b', remoteKeys);
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
 
@@ -276,7 +334,7 @@ describe('SequencedBlockChain', () => {
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, forkedBlock2));
 
             // Then
-            expect(node.report.mock.calls.map(([report]) => [report.index, report.reason])).toEqual([
+            expect(reasons(node)).toEqual([
                 [1, CheatReason.CONFLICTING_BLOCK],
                 [2, CheatReason.INVALID_BLOCK],
                 [2, CheatReason.CONFLICTING_BLOCK],
@@ -284,7 +342,7 @@ describe('SequencedBlockChain', () => {
             expect(node.internals.blockChain.getLatestBlock()).toBe(block1);
         });
 
-        test('should add the blocks of its sequencer not signed by it, and report them', async () => {
+        test('should add the blocks of its sequencer not signed by it, and leave them out of the application', async () => {
             // Given
             const node: Node = createNode('b');
             const block: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys), 'b', otherKeys);
@@ -294,17 +352,18 @@ describe('SequencedBlockChain', () => {
 
             // Then
             expect(node.internals.blockChain.getLatestBlock()).toBe(block);
+            expect(node.room.notifyMessage).not.toHaveBeenCalled();
             expect(node.report).toHaveBeenCalledExactlyOnceWith({
                 chain: chainName,
+                subject: block.hash,
                 index: 1,
-                hash: block.hash,
                 author: 'b',
                 sequencer: 'b',
                 reason: CheatReason.FORGED_SEQUENCING,
             });
         });
 
-        test('should catch up with its sequencer once ready, and submit its pending entries again', async () => {
+        test('should catch up with its sequencer once ready, submit its pending entries again and show its chain', async () => {
             // Given
             const node: Node = createNode('c');
             await node.chain.transmitMessage('move', 'e4');
@@ -317,11 +376,11 @@ describe('SequencedBlockChain', () => {
 
             // Then
             expect(sent(node.players['c'])).toEqual([submission, expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST }), submission]);
-            expect(sent(node.players['b'])).toEqual([]);
+            expect(sent(node.players['b'])).toEqual([submission, submission]);
         });
     });
 
-    describe('cheat detection', () => {
+    describe('delivery', () => {
         test('should leave out of the application the replayed entries and the entries of another chain', async () => {
             // Given
             const node: Node = createNode('b');
@@ -338,16 +397,11 @@ describe('SequencedBlockChain', () => {
 
             // Then the chain follows its sequencer
             expect(node.internals.blockChain.getLatestBlock()).toBe(chatBlock);
-            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(entry.data);
-            expect(node.report.mock.calls.map(([report]) => [report.index, report.reason])).toEqual([
-                [2, CheatReason.REPLAYED_ENTRY],
-                [3, CheatReason.WRONG_CHAIN],
-                // The signature binds the entry to its chain
-                [3, CheatReason.FORGED_AUTHOR],
-            ]);
+            expect(delivered(node)).toEqual([entry.data]);
+            expect(reasons(node)).toEqual([[2, CheatReason.REPLAYED_ENTRY], [3, CheatReason.WRONG_CHAIN]]);
         });
 
-        test('should report the entries not signed by their author', async () => {
+        test('should leave out the entries not signed by their author, and trust the unknown authors', async () => {
             // Given
             const node: Node = createNode('b');
             const forgedEntry: ChainEntry = await createEntry('b', otherKeys);
@@ -359,19 +413,21 @@ describe('SequencedBlockChain', () => {
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, forgedBlock));
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, blockOfUnknownAuthor));
 
-            // Then the block of an author who left before is not checked
-            expect(node.report).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ index: 1, reason: CheatReason.FORGED_AUTHOR }));
-            expect(node.room.notifyMessage).toHaveBeenCalledTimes(2);
+            // Then
+            expect(reasons(node)).toEqual([[1, CheatReason.FORGED_AUTHOR]]);
+            expect(delivered(node)).toEqual([entryOfUnknownAuthor.data]);
         });
 
-        test('should check the entries of an author once its key is received', async () => {
+        test('should deliver in order, waiting for the key of an author', async () => {
             // Given
             const node: Node = createNode('b');
-            const validBlock: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('c', otherKeys, 1), 'b', remoteKeys);
-            const forgedBlock: Block = await createBlock(validBlock, await createEntry('c', remoteKeys, 2), 'b', remoteKeys);
-            await handled(node, received(BlockChainMessageType.NEW_BLOCK, validBlock));
-            await handled(node, received(BlockChainMessageType.NEW_BLOCK, forgedBlock));
-            expect(node.internals.checksWaitingForKey.get('c')).toEqual([validBlock, forgedBlock]);
+            const blockOfC: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('c', otherKeys, 1), 'b', remoteKeys);
+            const forgedBlockOfC: Block = await createBlock(blockOfC, await createEntry('c', remoteKeys, 2), 'b', remoteKeys);
+            const blockOfB: Block = await createBlock(forgedBlockOfC, await createEntry('b', remoteKeys, 3), 'b', remoteKeys);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, blockOfC));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, forgedBlockOfC));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, blockOfB));
+            expect(delivered(node)).toEqual([]);
 
             // When
             (node.participants.get('c') as Participant).receiveKey(otherKeys.keyPair.publicKey);
@@ -379,33 +435,27 @@ describe('SequencedBlockChain', () => {
             await node.internals.queue;
 
             // Then
-            expect(node.internals.checksWaitingForKey.size).toEqual(0);
-            expect(node.report).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ index: 2, reason: CheatReason.FORGED_AUTHOR }));
+            expect(delivered(node)).toEqual([blockOfC.entry.data, blockOfB.entry.data]);
+            expect(reasons(node)).toEqual([[2, CheatReason.FORGED_AUTHOR]]);
         });
 
-        test('should bound the checks waiting for the key of an author, and drop them when it leaves', async () => {
+        test('should deliver the entries of an author who left before sending its key', async () => {
             // Given
             const node: Node = createNode('b');
-            const blocks: Block[] = [];
-            let previous: Block = node.internals.blockChain.getLatestBlock();
-            for (let index = 0; index < 34; index++) {
-                previous = await createBlock(previous, await createEntry('c', otherKeys, index), 'b', remoteKeys);
-                blocks.push(previous);
-            }
+            const author: Participant = node.participants.get('c') as Participant;
+            // A key of a previous connection, which does not sign the entry
+            TestHelper.cast<{ keys: CryptoKey[] }>(author).keys.push(localKeys.keyPair.publicKey);
+            const block: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('c', otherKeys), 'b', remoteKeys);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block));
 
             // When
-            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
-            node.internals.awaitingBlocksFrom.add('b');
-            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, blocks));
-
-            // Then
-            expect(node.internals.checksWaitingForKey.get('c')).toEqual(blocks.slice(-32));
-
-            // When
+            node.participants.onPlayerLeft(node.players['c']);
             node.chain.onParticipantLeft('c');
+            await node.internals.queue;
 
             // Then
-            expect(node.internals.checksWaitingForKey.size).toEqual(0);
+            expect(delivered(node)).toEqual([block.entry.data]);
+            expect(node.report).not.toHaveBeenCalled();
         });
 
         test('should check an entry again when the key of its author is received while checking', async () => {
@@ -428,8 +478,8 @@ describe('SequencedBlockChain', () => {
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, block));
 
             // Then
+            expect(delivered(node)).toEqual([block.entry.data]);
             expect(node.report).not.toHaveBeenCalled();
-            expect(node.internals.checksWaitingForKey.size).toEqual(0);
         });
     });
 
@@ -454,12 +504,7 @@ describe('SequencedBlockChain', () => {
         test('should ask for the next page of a full response', async () => {
             // Given
             const node: Node = createNode('b');
-            const blocks: Block[] = [];
-            let previous: Block = node.internals.blockChain.getLatestBlock();
-            for (let index = 0; index < 50; index++) {
-                previous = await createBlock(previous, await createEntry('b', remoteKeys, index), 'b', remoteKeys);
-                blocks.push(previous);
-            }
+            const blocks: Block[] = await createBlocks(node, 50, 'b', remoteKeys);
             node.internals.awaitingBlocksFrom.add('b');
 
             // When
@@ -505,6 +550,110 @@ describe('SequencedBlockChain', () => {
         });
     });
 
+    describe('comparison of the chains', () => {
+        test('should show its latest block to everyone at each tick, once it has one', async () => {
+            // Given
+            const node: Node = createNode();
+            node.chain.tick(0);
+            expect(sent(node.players['b'])).toEqual([]);
+            await node.chain.transmitMessage('move', 'e4');
+            vi.mocked(node.players['b'].sendData).mockClear();
+
+            // When
+            node.chain.tick(0);
+
+            // Then
+            expect(sent(node.players['b'])).toEqual([{
+                type: BlockChainMessageType.CHAIN_HEAD,
+                payload: headOf(node.internals.blockChain.getLatestBlock()),
+                origin: MessageOriginType.BLOCK_ROOM_SERVICE,
+                chain: chainName,
+            }]);
+        });
+
+        test('should catch up with a participant whose chain goes further', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const [block1] = await createBlocks(node, 1, 'b', remoteKeys);
+
+            // When
+            await handled(node, received(BlockChainMessageType.CHAIN_HEAD, headOf(block1), 'c'));
+
+            // Then
+            expect(sent(node.players['c'])).toEqual([expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 1 } })]);
+        });
+
+        test('should report a sequencer which signed different blocks for the same index', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const genesis: Block = node.internals.blockChain.getLatestBlock();
+            const [block1] = await createBlocks(node, 1, 'b', remoteKeys);
+            const otherBlock1: Block = await createBlock(genesis, await createEntry('b', remoteKeys, 'other'), 'b', remoteKeys);
+            const unsignedBlock1: Block = { ...otherBlock1, sequencerSignature: block1.sequencerSignature };
+            const blockOfOtherSequencer: Block = await createBlock(genesis, await createEntry('b', remoteKeys, 'other'), 'c', otherKeys);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
+
+            // When
+            await handled(node, received(BlockChainMessageType.CHAIN_HEAD, headOf(block1), 'c'));
+            await handled(node, received(BlockChainMessageType.CHAIN_HEAD, headOf(blockOfOtherSequencer), 'c'));
+            await handled(node, received(BlockChainMessageType.CHAIN_HEAD, headOf(unsignedBlock1), 'c'));
+            await handled(node, received(BlockChainMessageType.CHAIN_HEAD, headOf(otherBlock1), 'c'));
+
+            // Then only the proof signed by the sequencer is reported, the other differences are logged
+            expect(reasons(node)).toEqual([[1, CheatReason.CONFLICTING_BLOCK]]);
+            expect(TimedLogger.warn).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('watch of the sequencer', () => {
+        test('should report an entry the sequencer does not order while it orders other ones', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const ignoredEntry: ChainEntry = await createEntry('c', otherKeys);
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, ignoredEntry, 'c'));
+            node.chain.tick(1000);
+
+            // When the sequencer orders nothing
+            node.chain.tick(1000 + delay);
+
+            // Then
+            expect(node.report).not.toHaveBeenCalled();
+
+            // When the sequencer orders another entry, for not long enough, then long enough
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, (await createBlocks(node, 1, 'b', remoteKeys))[0]));
+            node.chain.tick(1000 + delay - 1);
+            node.chain.tick(1000 + delay);
+            node.chain.tick(1000 + delay + 1);
+
+            // Then
+            expect(node.report).toHaveBeenCalledExactlyOnceWith({
+                chain: chainName,
+                subject: ignoredEntry.id,
+                author: 'c',
+                sequencer: 'b',
+                reason: CheatReason.CENSORED_ENTRY,
+            });
+            expect(node.internals.watchedEntries.size).toEqual(0);
+        });
+
+        test('should give a new sequencer the time to order the watched entries', async () => {
+            // Given
+            const node: Node = createNode('b');
+            await handled(node, received(BlockChainMessageType.SUBMIT_ENTRY, await createEntry('c', otherKeys), 'c'));
+            node.chain.tick(0);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, (await createBlocks(node, 1, 'b', remoteKeys))[0]));
+
+            // When
+            node.chain.changeSequencer('c');
+            await node.internals.queue;
+            node.chain.tick(delay);
+
+            // Then
+            expect(node.report).not.toHaveBeenCalled();
+            expect([...node.internals.watchedEntries.values()][0]).toEqual(expect.objectContaining({ since: delay, latestIndex: 1 }));
+        });
+    });
+
     describe('sequencer change', () => {
         test('should submit its pending entries to a new sequencer, and catch up with it', async () => {
             // Given
@@ -517,13 +666,13 @@ describe('SequencedBlockChain', () => {
             await node.internals.queue;
 
             // Then
-            expect(sent(node.players['b'])).toEqual([submission, expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST })]);
+            expect(sent(node.players['b'])).toEqual([submission, submission, expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST })]);
         });
 
         test('should collect the blocks of the participants before ordering, as the new sequencer', async () => {
             // Given
             const node: Node = createNode('b');
-            const blockOfFormerSequencer: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys, 1), 'b', remoteKeys);
+            const [blockOfFormerSequencer] = await createBlocks(node, 1, 'b', remoteKeys);
             await node.chain.transmitMessage('move', 'own');
 
             // When
@@ -545,7 +694,7 @@ describe('SequencedBlockChain', () => {
 
             // Then nothing is rolled back, the entries are ordered after the collected block
             expect(node.internals.syncing).toEqual(false);
-            expect(node.room.notifyMessage.mock.calls.map(([data]) => data.payload)).toEqual([1, 'own', 'while syncing', 'submitted']);
+            expect(delivered(node).map((data: AppMessage) => data.payload)).toEqual([0, 'own', 'while syncing', 'submitted']);
             expect(node.internals.blockChain.getLatestBlock().sequencer).toEqual('a');
         });
 
@@ -584,8 +733,10 @@ describe('SequencedBlockChain', () => {
         node.internals.syncing = true;
         node.internals.awaitingBlocksFrom.add('b');
         node.internals.queuedEntries.push(await createEntry('b', remoteKeys));
+        node.internals.entriesWaitingForKey.set('c', []);
         node.internals.ownPendingEntries.set('id', await createEntry('a', localKeys));
-        node.internals.checksWaitingForKey.set('c', []);
+        node.internals.watchedEntries.set('id', { entry: await createEntry('a', localKeys), latestIndex: 0 });
+        node.internals.leftOut.add(1);
 
         // When
         node.chain.clear();
@@ -595,7 +746,10 @@ describe('SequencedBlockChain', () => {
         expect(node.internals.syncing).toEqual(false);
         expect(node.internals.awaitingBlocksFrom.size).toEqual(0);
         expect(node.internals.queuedEntries).toEqual([]);
+        expect(node.internals.entriesWaitingForKey.size).toEqual(0);
         expect(node.internals.ownPendingEntries.size).toEqual(0);
-        expect(node.internals.checksWaitingForKey.size).toEqual(0);
+        expect(node.internals.watchedEntries.size).toEqual(0);
+        expect(node.internals.leftOut.size).toEqual(0);
+        expect(node.internals.deliveredIndex).toEqual(0);
     });
 });

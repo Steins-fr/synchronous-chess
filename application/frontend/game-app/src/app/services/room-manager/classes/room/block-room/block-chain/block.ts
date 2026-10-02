@@ -9,6 +9,9 @@ export interface ChainEntry {
     readonly signature: string;
 }
 
+/** What a participant shows of its chain to the others, to compare them */
+export type ChainHead = Pick<Block, 'index' | 'hash' | 'sequencer' | 'sequencerSignature'>;
+
 export class Block {
     public constructor(
         public readonly index: number,

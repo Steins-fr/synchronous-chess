@@ -7,6 +7,8 @@ import MessageOriginType from '@app/services/room-manager/classes/webrtc/message
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
 import { RoomNetworkMock } from '@testing/room-network.mock';
+import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { CheatReason } from './block-room/anti-cheat/cheat-report';
 import { TestHelper } from '@testing/test.helper';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -84,6 +86,20 @@ describe('Room', () => {
 
         // Then
         expect(moves).toEqual([{ type: 'move', payload: 'e4', origin: MessageOriginType.ROOM_SERVICE, from: 'remote' }]);
+    });
+
+    test('reportCheat should only log, without anti-cheat', () => {
+        // Given
+        const warnSpy = vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        const room: Room<TestPayloads> = new Room<TestPayloads>(roomApi, network.roomNetwork);
+        const message: AppMessage = { from: 'remote', type: 'move', payload: 'e9' };
+
+        // When
+        room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
+
+        // Then
+        expect(warnSpy).toHaveBeenCalledWith('Cheat not reported, illegalMove by remote', message);
+        warnSpy.mockRestore();
     });
 
     test('transmitMessage should send the message to the remote players and to itself', () => {

@@ -2,6 +2,7 @@ import { BlockChainRouting, BlockRoom, mergeBlockChainRoutings } from './block-r
 import { AntiCheat } from './anti-cheat/anti-cheat';
 import { CheatReason, CheatReport } from './anti-cheat/cheat-report';
 import { SequencedBlockChain } from './block-chain/sequenced-block-chain';
+import { Block } from './block-chain/block';
 import { ParticipantKeys, ParticipantRegistry } from './block-chain/participant-registry';
 import { ParticipantKeyStore } from './block-chain/participant-key-store';
 import { BlockChainName } from './block-chain-name.enum';
@@ -151,7 +152,7 @@ describe('BlockRoom', () => {
         expect(() => room.transmitMessage(TestHelper.cast<'move'>('unknown'), 'e4')).toThrow('No block chain routes the unknown messages');
     });
 
-    test('notifyMessage should publish the message', () => {
+    test('notifyMessage should publish the message of the block', () => {
         // Given
         const room: BlockRoom<TestPayloads> = createRoom();
         const data: AppMessage = { from: 'remote', type: 'move', payload: 'd5' };
@@ -159,7 +160,7 @@ describe('BlockRoom', () => {
         room.messenger('move').subscribe((message: AppMessage) => moves.push(message));
 
         // When
-        room.notifyMessage(data);
+        room.notifyMessage(BlockChainName.CHESS, new Block(1, 'previous', { id: 'id', data, signature: 'signature' }, 'local', 'hash', 'signature'));
 
         // Then
         expect(moves).toEqual([data]);
@@ -249,7 +250,7 @@ describe('BlockRoom', () => {
     test('should expose the cheats reported to the room', () => {
         // Given
         const room: BlockRoom<TestPayloads> = createRoom();
-        const report: CheatReport = { chain: BlockChainName.CHESS, index: 1, hash: 'hash', author: 'b', sequencer: 'local', reason: CheatReason.FORGED_AUTHOR };
+        const report: CheatReport = { chain: BlockChainName.CHESS, subject: 'hash', index: 1, author: 'b', sequencer: 'local', reason: CheatReason.FORGED_AUTHOR };
 
         // When
         network.onMessage$.next({ type: AntiCheatMessageType.CHEAT_REPORT, payload: report, origin: MessageOriginType.ANTI_CHEAT, from: 'remote' });
@@ -257,12 +258,100 @@ describe('BlockRoom', () => {
         // Then
         expect(room.cheatFlags()).toEqual([{
             chain: BlockChainName.CHESS,
+            subject: 'hash',
             index: 1,
-            hash: 'hash',
             author: 'b',
             sequencer: 'local',
             reports: [{ reporter: 'remote', reason: CheatReason.FORGED_AUTHOR }],
         }]);
+    });
+
+    test('should tick the block chains regularly, until cleared', () => {
+        // Given
+        vi.useFakeTimers({ now: 1000 });
+        const tickSpy = vi.spyOn(SequencedBlockChain.prototype, 'tick').mockImplementation(() => undefined);
+        const room: BlockRoom<TestPayloads> = createRoom();
+
+        // When
+        vi.advanceTimersByTime(2000);
+        room.clear();
+        vi.advanceTimersByTime(2000);
+        vi.useRealTimers();
+
+        // Then
+        expect(tickSpy.mock.calls).toEqual([[3000], [3000]]);
+        expect(tickSpy.mock.contexts.map(chainName)).toEqual([BlockChainName.CHESS, BlockChainName.CHAT]);
+    });
+
+    test('should hand the ordering over when most of the other participants report the sequencer', () => {
+        // Given
+        network = new RoomNetworkMock('local', false, 'host');
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        createRoom();
+        ['host', 'b', 'c'].forEach((name: string) => network.playerAdded$.next(createRemote(name)));
+        const report = (from: string, sequencer: string = 'host'): void => network.onMessage$.next({
+            type: AntiCheatMessageType.CHEAT_REPORT,
+            payload: { chain: BlockChainName.CHESS, subject: `${ from } ${ sequencer }`, author: 'local', sequencer, reason: CheatReason.CENSORED_ENTRY },
+            origin: MessageOriginType.ANTI_CHEAT,
+            from,
+        });
+
+        // When half of the other participants report it
+        report('b');
+        report('c', 'b');
+
+        // Then
+        expect(changeSequencerSpy).not.toHaveBeenCalled();
+
+        // When most of them report it
+        report('c');
+
+        // Then the first participant by name takes over
+        expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+    });
+
+    test('should keep its sequencer when no participant can take over', () => {
+        // Given
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        const warnSpy = vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        const room: BlockRoom<TestPayloads> = createRoom();
+        network.playerAdded$.next(createRemote('b'));
+        network.onMessage$.next({
+            type: AntiCheatMessageType.CHEAT_REPORT,
+            payload: { chain: BlockChainName.CHESS, subject: 'entry', author: 'b', sequencer: 'local', reason: CheatReason.CENSORED_ENTRY },
+            origin: MessageOriginType.ANTI_CHEAT,
+            from: 'b',
+        });
+        expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+
+        // When the new sequencer is reported too
+        TestHelper.cast<{ antiCheat: AntiCheat }>(room).antiCheat.report({ chain: BlockChainName.CHESS, subject: 'block', index: 1, author: 'b', sequencer: 'b', reason: CheatReason.FORGED_SEQUENCING });
+
+        // Then
+        expect(changeSequencerSpy).toHaveBeenCalledTimes(2);
+        expect(warnSpy).toHaveBeenCalledWith('No participant left to order the blocks');
+    });
+
+    test('should report the messages the application finds cheated', async () => {
+        // Given
+        const room: BlockRoom<TestPayloads> = createRoom();
+        const moves: AppMessage[] = [];
+        room.messenger('move').subscribe((message: AppMessage) => moves.push(message));
+        room.transmitMessage('move', 'e9');
+        await vi.waitFor(() => expect(moves).toHaveLength(1));
+
+        // When
+        room.reportCheat({ from: 'local', type: 'move', payload: 'e9' }, CheatReason.ILLEGAL_MOVE);
+        room.reportCheat(moves[0], CheatReason.ILLEGAL_MOVE);
+
+        // Then only a message delivered by the room is reported
+        expect(room.cheatFlags()).toEqual([expect.objectContaining({
+            chain: BlockChainName.CHESS,
+            index: 1,
+            author: 'local',
+            sequencer: 'local',
+            reports: [{ reporter: 'local', reason: CheatReason.ILLEGAL_MOVE }],
+        })]);
     });
 
     test('clear should clear the room, the participants, the anti-cheat and the block chains', () => {
@@ -302,11 +391,14 @@ describe('BlockRoom', () => {
             return { name, network: peerNetwork, room, received, links: new Map() };
         }
 
-        function link(from: Peer, to: Peer): void {
+        /** @param drops the messages the receiver ignores */
+        function link(from: Peer, to: Peer, drops: (message: NetworkMessage) => boolean = () => false): void {
             const webrtcMock: WebrtcMock = new WebrtcMock();
             webrtcMock.sendMessage.mockImplementation((message: NetworkMessage) => {
                 const delivered: ReceivedMessage = { ...JSON.parse(JSON.stringify(message)), from: from.name };
-                setTimeout(() => to.network.onMessage$.next(delivered));
+                if (!drops(message)) {
+                    setTimeout(() => to.network.onMessage$.next(delivered));
+                }
                 return 1;
             });
             const player: WebRtcPlayer = new WebRtcPlayer(to.name, webrtcMock.webrtc);
@@ -323,6 +415,10 @@ describe('BlockRoom', () => {
                     }
                 }
             }
+        }
+
+        function tick(peer: Peer, now: number): void {
+            TestHelper.cast<{ tick(time: number): void }>(peer.room).tick(now);
         }
 
         function leave(peer: Peer, others: ReadonlyArray<Peer>): void {
@@ -377,6 +473,39 @@ describe('BlockRoom', () => {
                 expect(bob.received).toEqual(alice.received);
             });
             expect(alice.room.cheatFlags()).toEqual([]);
+        });
+
+        test('should hand the ordering over when the host ignores the entries of a participant', async () => {
+            // Given a host ignoring the entries of bob
+            const host: Peer = await createPeer('host', 'host');
+            const alice: Peer = await createPeer('alice', 'host');
+            const bob: Peer = await createPeer('bob', 'host');
+            for (const [from, to] of [[host, alice], [host, bob], [alice, host], [alice, bob], [bob, alice]]) {
+                link(from, to);
+            }
+            link(bob, host, (message: NetworkMessage) => message.type === BlockChainMessageType.SUBMIT_ENTRY);
+            vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+
+            // When bob plays, while the host goes on ordering the entries of the others
+            bob.room.transmitMessage('move', 'e4');
+            alice.room.transmitMessage('move', 'd5');
+            await vi.waitFor(() => expect(bob.received).toEqual([{ from: 'alice', type: 'move', payload: 'd5' }]));
+            [alice, bob].forEach((peer: Peer) => tick(peer, 0));
+            [alice, bob].forEach((peer: Peer) => tick(peer, 10_000));
+
+            // Then alice and bob report it, alice takes over and orders the move of bob
+            await vi.waitFor(() => {
+                expect(host.room.cheatFlags()).toEqual([expect.objectContaining({
+                    author: 'bob',
+                    sequencer: 'host',
+                    reports: expect.arrayContaining([
+                        { reporter: 'alice', reason: CheatReason.CENSORED_ENTRY },
+                        { reporter: 'bob', reason: CheatReason.CENSORED_ENTRY },
+                    ]),
+                })]);
+                expect(alice.received).toContainEqual({ from: 'bob', type: 'move', payload: 'e4' });
+                expect(bob.received).toContainEqual({ from: 'bob', type: 'move', payload: 'e4' });
+            });
         });
     });
 });

@@ -19,8 +19,8 @@ class HostComponent {
 function flag(hash: string, reporters: ReadonlyArray<string>): CheatFlag {
     return {
         chain: BlockChainName.CHESS,
+        subject: hash,
         index: 3,
-        hash,
         author: 'bob',
         sequencer: 'host',
         reports: reporters.map((reporter: string) => ({ reporter, reason: CheatReason.FORGED_AUTHOR })),
@@ -55,5 +55,17 @@ describe('notifyCheatFlags', () => {
             ['Le message 3 (chess) de bob est signalé comme triché par alice, carol'],
             ['Le message 3 (chess) de bob est signalé comme triché par alice'],
         ]);
+    });
+
+    test('should notify an entry the sequencer does not order', () => {
+        // Given
+        TestBed.createComponent(HostComponent);
+
+        // When
+        flags.set([{ ...flag('entry', ['alice']), index: undefined }]);
+        TestBed.tick();
+
+        // Then
+        expect(notificationService.error).toHaveBeenCalledExactlyOnceWith('Un message (chess) de bob est ignoré par host, signalé par alice');
     });
 });
