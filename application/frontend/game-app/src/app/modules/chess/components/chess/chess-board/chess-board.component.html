@@ -4,8 +4,8 @@
         <ng-container *ngTemplateOutlet="rowLabels" />
         <div [ngClass]="{'grabbing-cursor': !pieceDragged().equal(-1, -1)}" cdkDropListGroup id="board-grid">
             <mat-grid-list cols="8">
-                @for (row of fenBoard(); track row; let y = $index) {
-                @for (piece of row; track piece; let x = $index) {
+                @for (row of fenBoard(); track $index; let y = $index) {
+                @for (piece of row; track $index; let x = $index) {
                 @let pos = [x, y] | vector2d;
                 <mat-grid-tile
                     [ngClass]="{
