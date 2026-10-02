@@ -14,27 +14,14 @@ function createRemote(name: string): Participant {
     return new Participant(TestHelper.cast<Player>({ name, isLocal: false, sendData: vi.fn() }));
 }
 
-function createQueue(): { queue: WaitingQueue; local: Participant } {
-    const queue: WaitingQueue = new WaitingQueue();
-    const local: Participant = new Participant(new LocalPlayer('local'));
-    queue.localParticipant = local;
-    return { queue, local };
+function createQueue(): { queue: WaitingQueue; local: Participant; participants: { local: Participant; readyCount: number; isVoter(name: string): boolean } } {
+    const participants = { local: new Participant(new LocalPlayer('local')), readyCount: 1, isVoter: (name: string): boolean => name !== 'not-voter' };
+    return { queue: new WaitingQueue(participants), local: participants.local, participants };
 }
 
 describe('WaitingQueue', () => {
     test('should create an instance', () => {
-        expect(new WaitingQueue()).toBeTruthy();
-    });
-
-    test('localParticipant should throw if not set', () => {
-        // Given
-        const queue: WaitingQueue = new WaitingQueue();
-
-        // When
-        const call = (): Participant => queue.localParticipant;
-
-        // Then
-        expect(call).toThrow('Local participant not set');
+        expect(createQueue().queue).toBeTruthy();
     });
 
     test('approveBlock should register the approval once', () => {
@@ -107,10 +94,10 @@ describe('WaitingQueue', () => {
 
     test('declineBlock should register the decline once', () => {
         // Given
-        const { queue } = createQueue();
+        const { queue, participants } = createQueue();
         const remote: Participant = createRemote('remote');
         const block: Block = createBlock(1, 'b');
-        queue.participantNumber = 2;
+        participants.readyCount = 2;
 
         // When
         queue.declineBlock(block, remote);
@@ -121,6 +108,23 @@ describe('WaitingQueue', () => {
         expect(queue.blockIsDeclined(block)).toEqual(false);
         queue.declineBlock(block, createRemote('other'));
         expect(queue.blockIsDeclined(block)).toEqual(true);
+    });
+
+    test('should only count the votes of the current voters', () => {
+        // Given
+        const { queue, local, participants } = createQueue();
+        const block: Block = createBlock(1, 'b');
+        participants.readyCount = 2;
+        queue.approveBlock(block, local);
+        queue.approveBlock(block, createRemote('not-voter'));
+        queue.declineBlock(block, createRemote('not-voter'));
+
+        // When
+        const approved: boolean = queue.blockJustApproved(block);
+
+        // Then
+        expect(approved).toEqual(false);
+        expect(queue.blockIsDeclined(block)).toEqual(false);
     });
 
     test('should return false for unknown blocks', () => {
@@ -139,9 +143,9 @@ describe('WaitingQueue', () => {
 
     test('blockJustApproved should approve a block only once', () => {
         // Given
-        const { queue, local } = createQueue();
+        const { queue, local, participants } = createQueue();
         const block: Block = createBlock(1, 'b');
-        queue.participantNumber = 2;
+        participants.readyCount = 2;
         queue.approveBlock(block, local);
 
         // When

@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SynchronousChess } from './synchronous-chess';
+import { SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
+import { ChatMessengerType } from '@app/modules/chat-page/components/chat/chat.component';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
@@ -45,7 +48,12 @@ describe('SynchronousChess', () => {
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, 4);
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, 4, {
+            [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
+            [SCGameSessionType.CONFIGURATION]: BlockChainName.CHESS,
+            [SCGameSessionType.PLAY]: BlockChainName.CHESS,
+            [SCGameSessionType.PROMOTION]: BlockChainName.CHESS,
+        });
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull());
 
         // When

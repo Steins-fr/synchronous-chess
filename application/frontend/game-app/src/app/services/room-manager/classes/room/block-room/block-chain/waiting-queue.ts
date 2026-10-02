@@ -2,27 +2,23 @@ import { Participant } from './participant';
 import { Block } from './block';
 import { WaitingBlock } from './waiting-block';
 
+/** The participants of the room, shared by all the chains */
+export interface ReadyParticipants {
+    readonly local: Participant;
+    /** Number of participants whose public key is known, they are the ones voting for the blocks */
+    readonly readyCount: number;
+    isVoter(name: string): boolean;
+}
+
 export class WaitingQueue {
 
     private static readonly RATIO: number = 2.0 / 3.0;
     private readonly _queue: Map<string, WaitingBlock> = new Map<string, WaitingBlock>();
-    private _participantNumber: number = 1;
-    private _localParticipant?: Participant;
 
-    public set participantNumber(nb: number) {
-        this._participantNumber = nb;
-    }
+    public constructor(private readonly participants: ReadyParticipants) {}
 
-    public set localParticipant(localParticipant: Participant) {
-        this._localParticipant = localParticipant;
-    }
-
-    public get localParticipant(): Participant {
-        if (!this._localParticipant) {
-            throw new Error('Local participant not set, please call isReady() first');
-        }
-
-        return this._localParticipant;
+    private get localParticipant(): Participant {
+        return this.participants.local;
     }
 
     public approveBlock(block: Block, participant: Participant): boolean {
@@ -100,7 +96,7 @@ export class WaitingQueue {
             return false;
         }
 
-        return wb.declinedBy.length > this._participantNumber * WaitingQueue.RATIO;
+        return this.countVotes(wb.declinedBy) > this.participants.readyCount * WaitingQueue.RATIO;
     }
 
     public blockJustApproved(block: Block): boolean {
@@ -114,13 +110,29 @@ export class WaitingQueue {
             return false;
         }
 
-        wb.isApproved = wb.approvedBy.length > this._participantNumber * WaitingQueue.RATIO;
+        wb.isApproved = this.countVotes(wb.approvedBy) > this.participants.readyCount * WaitingQueue.RATIO;
 
         return wb.isApproved;
     }
 
+    /**
+     * Only the votes of the current voters are counted, as only they make the threshold:
+     * the votes of the participants who left, or whose key is not known yet, could approve a block the other peers do not.
+     */
+    private countVotes(participants: ReadonlyArray<Participant>): number {
+        return participants.filter((participant: Participant) => this.participants.isVoter(participant.name)).length;
+    }
+
     public blockIsApproved(block: Block): boolean {
         return this._queue.get(block.hash)?.isApproved ?? false;
+    }
+
+    /** The blocks still waiting for their approval, from the oldest */
+    public pendingBlocks(): ReadonlyArray<Block> {
+        return [...this._queue.values()]
+            .filter((wb: WaitingBlock) => !wb.isApproved)
+            .map((wb: WaitingBlock) => wb.block)
+            .sort((a: Block, b: Block) => a.index - b.index);
     }
 
     public clearBlock(block: Block): void {

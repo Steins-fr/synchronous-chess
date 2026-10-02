@@ -1,11 +1,14 @@
 import { Block } from './block';
 import { genesisHash, signatureAlgorithm } from './block-chain.constants';
+import { BlockChainName } from '../block-chain-name.enum';
 
 export type BlockToHash = Omit<Block, 'hash' | 'signature'>;
 
 export class Chain {
 
     private chain: Block[] = [Chain.createGenesisBlock()];
+
+    public constructor(public readonly name: BlockChainName) {}
 
     private static createGenesisBlock(): Block {
         return new Block(0, '', {
@@ -39,8 +42,9 @@ export class Chain {
         return new Uint8Array(buffer);
     }
 
-    public static async calculateHash(block: BlockToHash): Promise<string> {
-        const data = this.encodeMessage(`${block.index} ${block.previousHash} ${block.timestamp} ${JSON.stringify(block.data)}`);
+    // The chain name is hashed so that a block signed for a chain is not valid on another chain of the room
+    public static async calculateHash(chainName: BlockChainName, block: BlockToHash): Promise<string> {
+        const data = this.encodeMessage(`${chainName} ${block.index} ${block.previousHash} ${block.timestamp} ${JSON.stringify(block.data)}`);
         const hashBuffer: ArrayBuffer = await crypto.subtle.digest('SHA-256', data);
         return this.arrayToHexString(new Uint8Array(hashBuffer));
     }
@@ -74,29 +78,36 @@ export class Chain {
         return latestBlock;
     }
 
-    public async addBlock(newBlock: Block): Promise<void> {
-        const hash: string = await Chain.calculateHash(newBlock);
+    /** The hash depends on the content of the block only, so it is checked once per received block */
+    public async hasValidHash(block: Block): Promise<boolean> {
+        return block.hash === await Chain.calculateHash(this.name, block);
+    }
 
-        if (this.canAddBlock(newBlock, hash) === false) {
+    /** Whether the block follows the latest one, its hash must have been checked */
+    public canAppend(block: Block): boolean {
+        const latestBlock: Block = this.getLatestBlock();
+        return latestBlock.index === block.index - 1 && latestBlock.hash === block.previousHash;
+    }
+
+    public append(block: Block): void {
+        if (!this.canAppend(block)) {
             throw new Error('Block not valid');
         }
 
-        this.chain.push(newBlock);
+        this.chain.push(block);
     }
 
-    private canAddBlock(newBlock: Block, hash: string): boolean {
-        return newBlock.index <= this.chain.length
-            && this.getLatestBlock().index === newBlock.index - 1
-            && this.getLatestBlock().hash === newBlock.previousHash
-            && newBlock.hash === hash;
+    public contains(block: Block): boolean {
+        return this.hasIndex(block.index) && this.chain[block.index].hash === block.hash;
     }
 
-    public async canAddBlockAsync(newBlock: Block): Promise<boolean> {
-        return this.canAddBlock(newBlock, await Chain.calculateHash(newBlock));
+    // The index comes from a peer
+    private hasIndex(index: number): boolean {
+        return Number.isInteger(index) && index >= 0 && index < this.chain.length;
     }
 
     public getBlock(index: number): Block {
-        if (index < this.chain.length) {
+        if (this.hasIndex(index)) {
             return this.chain[index];
         }
 
@@ -108,7 +119,7 @@ export class Chain {
             const current: Block = this.chain[i];
             const previous: Block = this.chain[i - 1];
 
-            if (current.hash !== await Chain.calculateHash(current)) {
+            if (current.hash !== await Chain.calculateHash(this.name, current)) {
                 return false;
             }
 

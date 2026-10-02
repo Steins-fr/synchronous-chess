@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { RoomApiRequestTypeEnum, RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { BlockRoom } from '@app/services/room-manager/classes/room/block-room/block-room';
+import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
@@ -17,9 +17,10 @@ export default class RoomManagerService {
     public async buildBlockRoom<M extends object>(
         setup: RoomSetupInterface,
         maxPlayer: number,
+        routing: NonEmptyBlockChainRouting<M>,
     ): Promise<BlockRoom<M>> {
         try {
-            const keyPair = await BlockRoom.createKeyPair();
+            const keys = await BlockRoom.createKeys();
             let roomConnection: RoomNetwork;
 
             if (setup.type === 'create') {
@@ -39,7 +40,8 @@ export default class RoomManagerService {
             return new BlockRoom<M>(
                 this.roomSocketApi,
                 roomConnection,
-                keyPair,
+                keys,
+                routing,
             );
         } catch (e) {
             if (setup.type === 'create') {

@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatPage } from './chat.page';
+import { ChatMessengerType } from './components/chat/chat.component';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
@@ -45,7 +47,7 @@ describe('ChatPage', () => {
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', roomName: 'room', playerName: 'local' }, 6);
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT });
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 

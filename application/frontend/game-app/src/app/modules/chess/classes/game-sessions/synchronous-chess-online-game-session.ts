@@ -2,6 +2,8 @@ import SynchronousChessGameSession, { SessionConfiguration } from '@app/modules/
 import Move from '@app/modules/chess/interfaces/move';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Room } from '@app/services/room-manager/classes/room/room';
+import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { Subject, takeUntil } from 'rxjs';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
@@ -25,6 +27,13 @@ export interface ChessPayloads {
     [SCGameSessionType.PLAY]: PlayMessage;
     [SCGameSessionType.PROMOTION]: PromotionMessage;
 }
+
+// The game has its own block chain, so the activity of another chain sharing the room (e.g. the chat) never delays it
+export const chessBlockChains: BlockChainRouting<ChessPayloads> = {
+    [SCGameSessionType.CONFIGURATION]: BlockChainName.CHESS,
+    [SCGameSessionType.PLAY]: BlockChainName.CHESS,
+    [SCGameSessionType.PROMOTION]: BlockChainName.CHESS,
+};
 
 export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
     protected destroyRef = new Subject<void>();

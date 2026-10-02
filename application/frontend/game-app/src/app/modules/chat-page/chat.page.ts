@@ -5,7 +5,7 @@ import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.compon
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
-import { ChatComponent, ChatPayloads } from './components/chat/chat.component';
+import { chatBlockChains, ChatComponent, ChatPayloads } from './components/chat/chat.component';
 import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.component';
 
 @Component({
@@ -24,7 +24,7 @@ export class ChatPage implements OnInit, OnDestroy {
 
     public ngOnInit(): void {
         this.roomSetupService.setup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async (setup) => {
-            this.room.set(await this.roomManagerService.buildBlockRoom<ChatPayloads>(setup, this.maxPlayer));
+            this.room.set(await this.roomManagerService.buildBlockRoom<ChatPayloads>(setup, this.maxPlayer, chatBlockChains));
 
             this.roomSetupService.roomIsSetup(true);
         });

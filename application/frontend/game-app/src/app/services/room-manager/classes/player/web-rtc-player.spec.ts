@@ -1,6 +1,7 @@
 import { WebRtcPlayer } from './web-rtc-player';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { PlayerMessage, PlayerMessageType } from '@app/services/room-manager/classes/webrtc/messages/player-message';
@@ -12,6 +13,7 @@ const blockChainMessage: NetworkMessage = {
     type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
     payload: null,
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
+    chain: BlockChainName.CHESS,
 };
 
 function createPlayer(): { player: WebRtcPlayer; webrtcMock: WebrtcMock } {
