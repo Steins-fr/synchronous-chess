@@ -69,6 +69,9 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 
 The synchronous chess board game with chat. 
 
+The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
+with an anti-cheat checking each block. See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md).
+
 **Required**: Backend Websocket API.
 
 **Technology**: Angular 17+.
