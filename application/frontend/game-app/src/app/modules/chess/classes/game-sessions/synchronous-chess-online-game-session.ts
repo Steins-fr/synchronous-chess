@@ -6,9 +6,11 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
+import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { Subject, takeUntil } from 'rxjs';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
+import { SealedTurnStore, StoredTurn } from './sealed-turn-store';
 
 export enum SCGameSessionType {
     CONFIGURATION = 'SC_GS_configuration',
@@ -54,12 +56,7 @@ export const chessBlockChains: BlockChainRouting<ChessPayloads> = {
 };
 
 /** The action of the local player, revealed once every player of its turn is committed */
-interface SealedTurn {
-    turn: number;
-    /** The colors playing the turn */
-    colors: ReadonlyArray<PieceColor>;
-    action: SealedAction;
-    salt: string;
+interface SealedTurn extends StoredTurn {
     revealed: boolean;
 }
 
@@ -71,7 +68,15 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     protected destroyRef = new Subject<void>();
     /** The first commitment of each player for each turn, by `turn color` */
     private readonly commitments = new Map<string, string>();
-    private sealedTurn?: SealedTurn;
+    /**
+     * The actions the local player played in this session, by turn: a turn played alone runs at once, so the next turn
+     * may be played before the commitments of the previous one are in the chain. They are kept once revealed, the
+     * reveals of the other turns being the ones of a previous session, replayed after a reload of the page.
+     */
+    private readonly sealedTurns = new Map<number, SealedTurn>();
+    /** The actions committed to before a reload of the page, played once the game reaches their turn */
+    private readonly restoredTurns = new Map<number, SealedTurn>();
+    private store?: SealedTurnStore;
     /** The reveals are checked one after the other: the reveal of a turn must not be checked before the previous turn is run */
     private reveals: Promise<void> = Promise.resolve();
 
@@ -83,6 +88,12 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
 
     public static async commitment(turn: number, color: PieceColor, action: SealedAction, salt: string): Promise<string> {
         return await CryptoHelper.sha256(`${ turn } ${ color } ${ JSON.stringify(action) } ${ salt }`);
+    }
+
+    /** The actions committed to and not revealed in the chain yet, kept across the reloads of the page */
+    private get sealedTurnStore(): SealedTurnStore {
+        this.store ??= new SealedTurnStore(this.roomService.roomName, this.roomService.localPlayer.name);
+        return this.store;
     }
 
     public get myColor(): PieceColor {
@@ -133,8 +144,11 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         const colors: ReadonlyArray<PieceColor> = [PieceColor.WHITE, PieceColor.BLACK].filter((playing: PieceColor) => !this.game.colorHasPlayed(playing));
 
         if (color !== PieceColor.NONE && this.runAction(color, action)) {
-            this.sealedTurn = { turn, colors, action, salt: CryptoHelper.randomHex(16), revealed: false };
-            void this.commit(this.sealedTurn, color);
+            const salt: string = CryptoHelper.randomHex(16);
+            this.sealedTurnStore.save({ turn, colors, action, salt });
+            const sealedTurn: SealedTurn = { turn, colors, action, salt, revealed: false };
+            this.sealedTurns.set(turn, sealedTurn);
+            void this.commit(sealedTurn, color);
         }
     }
 
@@ -158,44 +172,90 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         }
 
         this.commitments.set(key, message.payload.commitment);
-        this.revealIfEveryoneCommitted();
-    }
 
-    private revealIfEveryoneCommitted(): void {
-        const sealedTurn: SealedTurn | undefined = this.sealedTurn;
-
-        if (!sealedTurn || sealedTurn.revealed || !sealedTurn.colors.every((color: PieceColor) => this.commitments.has(`${ sealedTurn.turn } ${ color }`))) {
-            return;
+        // A commitment of the local player it did not play in this page: the page was reloaded since
+        if (message.from === this.roomService.localPlayer.name && !this.sealedTurns.has(message.payload.turn)) {
+            const { turn, commitment } = message.payload;
+            this.reveals = this.reveals.then(() => logHandlingFailure(message, this.restore(turn, color, commitment)));
         }
 
-        sealedTurn.revealed = true;
-        this.roomService.transmitMessage(SCGameSessionType.REVEAL, { turn: sealedTurn.turn, action: sealedTurn.action, salt: sealedTurn.salt });
+        this.revealCommittedTurns();
     }
 
-    /** The actions of the other players: the local one already played its own */
+    /** The action of a commitment of the local player, stored before the reload of the page */
+    private async restore(turn: number, color: PieceColor, commitment: string): Promise<void> {
+        const stored: Readonly<StoredTurn> | undefined = this.sealedTurnStore.get(turn);
+
+        if (stored && commitment === await SynchronousChessOnlineGameSession.commitment(turn, color, stored.action, stored.salt)) {
+            this.restoredTurns.set(turn, { ...stored, revealed: false });
+            this.playRestoredTurns();
+        }
+    }
+
+    /** The restored actions of the current turn, the next turn may be restored too once a turn played alone is run */
+    private playRestoredTurns(): void {
+        for (let sealedTurn = this.restoredTurns.get(this.turnCount); sealedTurn; sealedTurn = this.restoredTurns.get(this.turnCount)) {
+            this.restoredTurns.delete(sealedTurn.turn);
+            this.sealedTurns.set(sealedTurn.turn, sealedTurn);
+            this.runRevealedAction(this.myColor, sealedTurn.action);
+        }
+
+        this.revealCommittedTurns();
+    }
+
+    /** In the order of the turns */
+    private revealCommittedTurns(): void {
+        for (const sealedTurn of this.sealedTurns.values()) {
+            if (!sealedTurn.revealed && sealedTurn.colors.every((color: PieceColor) => this.commitments.has(`${ sealedTurn.turn } ${ color }`))) {
+                sealedTurn.revealed = true;
+                this.roomService.transmitMessage(SCGameSessionType.REVEAL, { turn: sealedTurn.turn, action: sealedTurn.action, salt: sealedTurn.salt });
+            }
+        }
+    }
+
+    /** The reveals of every player, the local one included */
     protected onReveal(message: AppMessage<SCGameSessionType.REVEAL, RevealMessage>): void {
         const color: PieceColor = this.playerColor(message.from);
 
-        if (color === PieceColor.NONE || message.from === this.roomService.localPlayer.name) {
+        if (color === PieceColor.NONE) {
             return;
         }
 
-        this.reveals = this.reveals.then(() => this.applyReveal(message, color));
+        // A reveal throwing, its payload being malformed, must not stop the next ones
+        this.reveals = this.reveals
+            .then(() => logHandlingFailure(message, this.applyReveal(message, color)))
+            .then(() => this.playRestoredTurns());
     }
 
     private async applyReveal(message: AppMessage<SCGameSessionType.REVEAL, RevealMessage>, color: PieceColor): Promise<void> {
         const { turn, action, salt } = message.payload;
-        const commitment: string | undefined = this.commitments.get(`${ turn } ${ color }`);
+
+        if (message.from === this.roomService.localPlayer.name) {
+            // In the chain: a reload does not need it anymore
+            this.sealedTurnStore.remove(turn);
+
+            // The local player ran the actions it played at once, not the ones of a previous session replayed after a reload
+            if (this.sealedTurns.has(turn)) {
+                return;
+            }
+        }
+
+        const isCommitted: boolean = this.commitments.get(`${ turn } ${ color }`) === await SynchronousChessOnlineGameSession.commitment(turn, color, action, salt);
+
+        // A player reloading the page may not know its reveal is in the chain already, and reveal it again
+        if (isCommitted && (turn < this.turnCount || (turn === this.turnCount && this.game.colorHasPlayed(color)))) {
+            return;
+        }
 
         // The action must be the one committed to, for the current turn
-        if (turn !== this.turnCount || commitment !== await SynchronousChessOnlineGameSession.commitment(turn, color, action, salt)) {
+        if (turn !== this.turnCount || !isCommitted) {
             this.roomService.reportCheat(message, CheatReason.INVALID_REVEAL);
         } else if (!this.runRevealedAction(color, action)) {
             this.roomService.reportCheat(message, CheatReason.ILLEGAL_MOVE);
         }
     }
 
-    // A revealed action comes from another player: the game may throw on an action its interface never sends
+    // A revealed or a restored action does not come from the interface of this page: the game may throw on it
     private runRevealedAction(color: PieceColor, action: SealedAction): boolean {
         try {
             return this.runAction(color, action);
