@@ -50,7 +50,8 @@ jobs:
 
             - name: Install backend dependencies
               working-directory: application/backend/websocket-api
-              run: npm ci
+              # The dependencies run no install script: none is needed to build
+              run: npm ci --ignore-scripts
 
             - name: Build backend lambdas
               working-directory: application/backend/websocket-api
@@ -69,7 +70,8 @@ jobs:
 
             - name: Install frontend dependencies
               working-directory: application/frontend/game-app
-              run: npm ci
+              # The dependencies run no install script: none is needed to build
+              run: npm ci --ignore-scripts
 
             - name: Build frontend
               working-directory: application/frontend/game-app

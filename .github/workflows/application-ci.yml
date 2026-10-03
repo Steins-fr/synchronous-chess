@@ -44,7 +44,8 @@ jobs:
                       ${{ runner.os }}-npm-
 
             - name: Install dependencies
-              run: npm ci
+              # The dependencies run no install script: none is needed to lint, test and build
+              run: npm ci --ignore-scripts
 
             - name: Run Angular lint
               run: npm run lint
@@ -80,7 +81,8 @@ jobs:
                       ${{ runner.os }}-npm-
 
             - name: Install dependencies
-              run: npm ci
+              # The dependencies run no install script: none is needed to lint, test and build
+              run: npm ci --ignore-scripts
 
             - name: Run Test
               run: npm run test:ci
@@ -120,7 +122,8 @@ jobs:
                       ${{ runner.os }}-websocket-api-npm-
 
             - name: Install dependencies
-              run: npm ci
+              # The dependencies run no install script: none is needed to lint, test and build
+              run: npm ci --ignore-scripts
 
             - name: Run lint
               run: npm run lint
@@ -160,7 +163,8 @@ jobs:
                       ${{ runner.os }}-websocket-api-npm-
 
             - name: Install dependencies
-              run: npm ci
+              # The dependencies run no install script: none is needed to lint, test and build
+              run: npm ci --ignore-scripts
 
             - name: Run Test
               run: npm run test:ci
