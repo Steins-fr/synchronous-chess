@@ -18,7 +18,7 @@ import { Participant } from './participant';
 import { ParticipantRegistry } from './participant-registry';
 
 type MessageHandlers = {
-    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>) => Promise<void>;
+    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>) => Promise<void> | void;
 };
 
 enum Signature {
@@ -116,7 +116,7 @@ export class SequencedBlockChain {
         return this.sequencer === this.participants.local.name;
     }
 
-    private serially(task: () => Promise<void>): Promise<void> {
+    private serially(task: () => Promise<void> | void): Promise<void> {
         const result: Promise<void> = this.queue.then(task);
         this.queue = result.catch(() => undefined);
         return result;
@@ -374,7 +374,7 @@ export class SequencedBlockChain {
         });
     }
 
-    private async onGetBlocksRequest(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_REQUEST>): Promise<void> {
+    private onGetBlocksRequest(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_REQUEST>): void {
         const { from, handover } = message.payload;
 
         // Answered once following the new sequencer: the blocks the former one sends meanwhile are kept, they reach it

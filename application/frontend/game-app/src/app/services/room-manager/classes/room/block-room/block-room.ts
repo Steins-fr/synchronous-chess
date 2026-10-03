@@ -134,9 +134,17 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         }
     }
 
+    /**
+     * Orders the names by their UTF-16 code units, the same in every browser: an order depending on the locale
+     * (localeCompare) could make the participants name different successors
+     */
+    private static byCodeUnits(a: string, b: string): number {
+        return Number(a > b) - Number(a < b);
+    }
+
     /** Every participant names the same successor from the same participants: the first one by name, not distrusted */
     private handOver(): void {
-        const successor: string | undefined = this.participantNames().filter((name: string) => !this.distrusted.has(name)).sort()[0];
+        const successor: string | undefined = this.participantNames().filter((name: string) => !this.distrusted.has(name)).sort(BlockRoom.byCodeUnits)[0];
 
         if (successor === undefined) {
             TimedLogger.warn('No participant left to order the blocks');
@@ -155,7 +163,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private sendSequencerState(name: string): void {
         this.participants.send(name, {
             type: AntiCheatMessageType.SEQUENCER_STATE,
-            payload: { sequencer: this.sequencer, handovers: this.handovers, distrusted: [...this.distrusted].sort() },
+            payload: { sequencer: this.sequencer, handovers: this.handovers, distrusted: [...this.distrusted].sort(BlockRoom.byCodeUnits) },
             origin: MessageOriginType.ANTI_CHEAT,
         });
     }

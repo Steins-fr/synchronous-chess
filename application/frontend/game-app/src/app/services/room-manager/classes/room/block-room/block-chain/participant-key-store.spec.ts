@@ -80,7 +80,7 @@ describe('ParticipantKeyStore', () => {
 
         // Then
         expect(keyPair.privateKey.usages).toEqual(['sign']);
-        expect(TimedLogger.warn).toHaveBeenCalledWith(expect.any(String), new Error('blocked'));
+        expect(TimedLogger.warn).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ message: 'IndexedDB request failed', cause: new Error('blocked') }));
     });
 
     test('should use the storage of the browser by default', () => {

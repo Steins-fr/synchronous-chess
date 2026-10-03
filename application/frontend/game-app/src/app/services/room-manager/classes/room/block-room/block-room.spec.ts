@@ -286,6 +286,22 @@ describe('BlockRoom', () => {
         expect(changeSequencerSpy.mock.contexts.map(chainName)).toEqual([BlockChainName.CHESS, BlockChainName.CHAT]);
     });
 
+    test('should order the names by their code units, the same in every browser whatever its locale', () => {
+        // Given participants a locale would order a, B
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        createRoom();
+        const host: Player = createRemote('host');
+        [host, createRemote('a'), createRemote('B')].forEach((player: Player) => network.playerAdded$.next(player));
+
+        // When
+        network.playerRemoved$.next(host);
+
+        // Then B (66) comes before a (97) and before local (108)
+        expect(changeSequencerSpy.mock.calls).toEqual([['B'], ['B']]);
+    });
+
     test('should expose the cheats reported to the room', () => {
         // Given
         const room: BlockRoom<TestPayloads> = createRoom();

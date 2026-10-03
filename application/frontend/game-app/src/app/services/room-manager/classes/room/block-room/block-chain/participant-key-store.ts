@@ -76,7 +76,7 @@ export class ParticipantKeyStore {
     private static async result<T>(request: IDBRequest<T>): Promise<T> {
         return await new Promise<T>((resolve, reject) => {
             request.onsuccess = (): void => resolve(request.result);
-            request.onerror = (): void => reject(request.error);
+            request.onerror = (): void => reject(new Error('IndexedDB request failed', { cause: request.error }));
         });
     }
 }
