@@ -4,5 +4,5 @@ import EnvironmentInterface from './environment.interface';
 export const environment: EnvironmentInterface = {
     production: false,
     iceServers: ['stun:stun.l.google.com:19302'],
-    webSocketServer: 'ws://localhost:3001',
+    webSocketServer: 'ws://127.0.0.1:3001',
 };
