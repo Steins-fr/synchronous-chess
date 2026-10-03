@@ -1,5 +1,13 @@
 <div id="game">
-    <div class="player">Joueur Noir : {{ gameSession().configuration().blackPlayer || 'En attente' }}</div>
+    <div class="player black-seat">
+        Joueur Noir : {{ gameSession().configuration().blackPlayer || 'En attente' }}
+        @if (canTakeSeat(blackColor)) {
+        <button (click)="takeSeat(blackColor)" class="seat-button" color="primary" mat-stroked-button>Jouer les noirs</button>
+        }
+        @if (canLeaveSeat(blackColor)) {
+        <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>Quitter la place</button>
+        }
+    </div>
     <div id="board-section">
         <div id="chess-board">
             <app-chess-board
@@ -84,7 +92,15 @@
             </div>
         </div>
     </div>
-    <div class="player">Joueur Blanc : {{ gameSession().configuration().whitePlayer || 'En attente' }}</div>
+    <div class="player white-seat">
+        Joueur Blanc : {{ gameSession().configuration().whitePlayer || 'En attente' }}
+        @if (canTakeSeat(whiteColor)) {
+        <button (click)="takeSeat(whiteColor)" class="seat-button" color="primary" mat-stroked-button>Jouer les blancs</button>
+        }
+        @if (canLeaveSeat(whiteColor)) {
+        <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>Quitter la place</button>
+        }
+    </div>
     <div class="spectators">Spectateurs : {{ gameSession().spectatorNumber() }}</div>
     <div id="rules">
         <h3>Règles</h3>
@@ -92,8 +108,8 @@
         <h4>Joueurs</h4>
 
         <div>Nombre de joueur : 2.</div>
-        <div>Blanc : Host de la partie.<br>
-            Noir : Premier participant à rejoindre la salle.
+        <div>Chaque participant de la salle, l'hôte compris, choisit sa couleur parmi les places libres. Les places sont
+            fixées dès le premier coup joué ; les autres participants sont spectateurs.
         </div>
 
         <h4>Principe</h4>

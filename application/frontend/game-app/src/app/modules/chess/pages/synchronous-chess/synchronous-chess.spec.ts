@@ -1,5 +1,9 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SynchronousChess } from './synchronous-chess';
+import { SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
+import { ChatMessengerType } from '@app/modules/chat-page/components/chat/chat.component';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
@@ -15,7 +19,8 @@ describe('SynchronousChess', () => {
 
     beforeEach(async () => {
         Element.prototype.scrollTo ??= (): void => undefined;
-        room = new Room<object>(TestHelper.cast<RoomSocketApi>({ close: vi.fn() }), new RoomNetworkMock().roomNetwork);
+        // A room without cheat report
+        room = Object.assign(new Room<object>(TestHelper.cast<RoomSocketApi>({ close: vi.fn() }), new RoomNetworkMock().roomNetwork), { cheatFlags: signal([]) });
         roomManagerService = TestHelper.cast<RoomManagerService>({ buildBlockRoom: vi.fn().mockResolvedValue(room) });
 
         await TestBed.configureTestingModule({
@@ -45,7 +50,12 @@ describe('SynchronousChess', () => {
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, 4);
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, 4, {
+            [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
+            [SCGameSessionType.SEAT]: BlockChainName.CHESS,
+            [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
+            [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
+        });
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull());
 
         // When
@@ -54,6 +64,22 @@ describe('SynchronousChess', () => {
 
         // Then
         expect(clearSpy).toHaveBeenCalledTimes(1);
+    });
+
+    test('should make the setup form available again when the room can not be built', async () => {
+        // Given
+        const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
+        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(new Error('Already in game'));
+        const loading: boolean[] = [];
+        roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
+
+        // When
+        roomSetupService.setup('join', 'room', 'local');
+
+        // Then
+        await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
+        await fixture.whenStable();
+        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
     });
 
     test('should be destroyed without room', () => {

@@ -5,6 +5,10 @@
     .player {
         width: 100%;
         text-align: center;
+
+        .seat-button {
+            margin: 4px 0 4px 8px;
+        }
     }
 
     #board-section {

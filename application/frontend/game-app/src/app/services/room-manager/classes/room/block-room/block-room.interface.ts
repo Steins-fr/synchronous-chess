@@ -1,12 +1,7 @@
-import { Player } from '../../player/player';
+import { BlockChainName } from './block-chain-name.enum';
 import { Block } from './block-chain/block';
 
 export interface BlockRoomInterface {
-
-    get localPlayer(): Player;
-    set localPlayer(value: Player);
-
-    notifyMessage(block: Block): void;
-
-    clear(): void;
+    /** Delivers the message of a block to the application */
+    notifyMessage(chain: BlockChainName, block: Block): void;
 }

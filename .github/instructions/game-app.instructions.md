@@ -24,6 +24,9 @@ This is an Angular TypeScript project with the following characteristics:
 - Follow Angular style guide naming conventions
 - Use protected/private access modifiers appropriately
 - Strict typing everywhere
+- The app is in development, not in production: do not add backward compatibility or rollout
+  handling (protocol versioning, support for clients on an older bundle, data migration). Breaking
+  the peer-to-peer message format is fine, all the peers run the same build
 
 ## Testing
 

@@ -1,4 +1,4 @@
-import { computed, Signal, signal } from '@angular/core';
+import { Signal, signal } from '@angular/core';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
 import SynchronousChessGame from '../games/synchronous-chess-game';
 import CoordinateMove from '../../interfaces/CoordinateMove';
@@ -7,10 +7,10 @@ import { PieceColor } from '../../enums/piece-color.enum';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { PieceType } from '../../enums/piece-type.enum';
 
+/** The players seated at the board */
 export interface SessionConfiguration {
     whitePlayer?: string;
     blackPlayer?: string;
-    spectatorNumber: number;
 }
 
 export default abstract class SynchronousChessGameSession {
@@ -19,9 +19,14 @@ export default abstract class SynchronousChessGameSession {
     public readonly board: Signal<FenBoard> = this.game.fenBoard;
     private readonly _movePreview = signal<Readonly<CoordinateMove> | undefined>(undefined);
     public readonly movePreview = this._movePreview.asReadonly();
-    private readonly _configuration = signal<Readonly<SessionConfiguration>>({ spectatorNumber: 0 });
+    private readonly _configuration = signal<Readonly<SessionConfiguration>>({});
     public readonly configuration = this._configuration.asReadonly();
-    public readonly spectatorNumber = computed<number>(() => this.configuration().spectatorNumber);
+    public abstract readonly spectatorNumber: Signal<number>;
+    /** Whether the participants can still take or leave a seat */
+    public abstract readonly seatsOpen: Signal<boolean>;
+
+    /** The number of turns run, the same for every participant applying the same moves */
+    protected turnCount: number = 0;
 
     public abstract myColor: PieceColor;
 
@@ -45,6 +50,7 @@ export default abstract class SynchronousChessGameSession {
         }
 
         if (this.game.runTurn()) {
+            this.turnCount++;
             this._movePreview.set(undefined);
         }
 
@@ -57,10 +63,15 @@ export default abstract class SynchronousChessGameSession {
             return false;
         }
 
-        this.game.runTurn();
+        if (this.game.runTurn()) {
+            this.turnCount++;
+        }
+
         return true;
     }
 
+    public abstract takeSeat(color: PieceColor): void;
+    public abstract leaveSeat(): void;
     public abstract move(move: Move | null): void;
     public abstract promote(pieceType: PieceType): void;
     public abstract destroy(): void;

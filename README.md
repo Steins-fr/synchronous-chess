@@ -16,7 +16,7 @@ The room creator is the host, if he leave the room, the participants can continu
 
 ### Synchronous Chess demo
 
-The host is the white player and the first joining participant is the black player. The others are just spectators. 
+Each participant, the host included, takes a free seat with the `Jouer les blancs` / `Jouer les noirs` buttons. The seats are final once the first move is played; the others are spectators.
 
 Drag & Drop a piece to validate a move. The registered move will be displayed with two green cells: the origin and the destination. When both players has played, both moves will be played.
 
@@ -68,6 +68,11 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 ---
 
 The synchronous chess board game with chat. 
+
+The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
+which the other participants watch for cheats. The moves stay hidden until both players are committed.
+See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md) and
+[Chess game session](documentation/chess-game-session.md).
 
 **Required**: Backend Websocket API.
 

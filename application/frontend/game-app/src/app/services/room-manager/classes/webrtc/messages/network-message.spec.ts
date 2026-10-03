@@ -1,7 +1,9 @@
 import { isNetworkMessage } from './network-message';
 import MessageOriginType from './message-origin.types';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { PlayerMessageType } from './player-message';
 import { BlockChainMessageType } from './block-chain-message';
+import { BlockRoomParticipantMessageType } from './block-room-participant-message';
 import { describe, test, expect } from 'vitest';
 
 describe('isNetworkMessage', () => {
@@ -23,7 +25,14 @@ describe('isNetworkMessage', () => {
 
     test('should accept known envelopes and any room service type', () => {
         expect(isNetworkMessage({ origin: MessageOriginType.PLAYER, type: PlayerMessageType.PONG, payload: '' })).toEqual(true);
-        expect(isNetworkMessage({ origin: MessageOriginType.BLOCK_ROOM_SERVICE, type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: null })).toEqual(true);
+        expect(isNetworkMessage({ origin: MessageOriginType.BLOCK_ROOM_SERVICE, type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: null, chain: BlockChainName.CHESS })).toEqual(true);
         expect(isNetworkMessage({ origin: MessageOriginType.ROOM_SERVICE, type: 'anything', payload: null })).toEqual(true);
+        expect(isNetworkMessage({ origin: MessageOriginType.BLOCK_ROOM_PARTICIPANT, type: BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, payload: null })).toEqual(true);
+    });
+
+    test('should reject block chain envelopes without a known chain name', () => {
+        expect(isNetworkMessage({ origin: MessageOriginType.BLOCK_ROOM_SERVICE, type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: null })).toEqual(false);
+        expect(isNetworkMessage({ origin: MessageOriginType.BLOCK_ROOM_SERVICE, type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: null, chain: 1 })).toEqual(false);
+        expect(isNetworkMessage({ origin: MessageOriginType.BLOCK_ROOM_SERVICE, type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: null, chain: 'unknown' })).toEqual(false);
     });
 });

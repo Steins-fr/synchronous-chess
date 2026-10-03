@@ -1,17 +1,20 @@
 import { WebRtcPlayer } from './web-rtc-player';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { PlayerMessage, PlayerMessageType } from '@app/services/room-manager/classes/webrtc/messages/player-message';
 import { TestHelper } from '@testing/test.helper';
 import { WebrtcMock } from '@testing/webrtc.mock';
+import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const blockChainMessage: NetworkMessage = {
-    type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
-    payload: null,
+    type: BlockChainMessageType.GET_BLOCKS_REQUEST,
+    payload: { from: 1 },
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
+    chain: BlockChainName.CHESS,
 };
 
 function createPlayer(): { player: WebRtcPlayer; webrtcMock: WebrtcMock } {
@@ -82,6 +85,43 @@ describe('WebRtcPlayer', () => {
         webrtcMock.emitStates({ iceConnection: 'connected' });
         webrtcMock.emitStates({ iceConnection: 'checking' });
         webrtcMock.emitStates({ iceConnection: 'disconnected' });
+
+        // Then
+        expect(disconnectedSpy).toHaveBeenCalledTimes(1);
+        player.clear();
+    });
+
+    test.each<Partial<WebrtcStates>>([
+        { iceConnection: 'failed' },
+        { iceConnection: 'closed' },
+        { sendChannel: 'closing' },
+        { receiveChannel: 'closed' },
+    ])('should notify at once the departure of the peer from %o', (states: Partial<WebrtcStates>) => {
+        // Given channels still connecting, as before the peer opens them
+        const { player, webrtcMock } = createPlayer();
+        const disconnectedSpy = vi.fn();
+        player.disconnected$.subscribe(disconnectedSpy);
+        webrtcMock.emitStates({ iceConnection: 'connected', sendChannel: 'connecting', receiveChannel: 'connecting' });
+        expect(disconnectedSpy).not.toHaveBeenCalled();
+
+        // When
+        webrtcMock.emitStates(states);
+
+        // Then
+        expect(disconnectedSpy).toHaveBeenCalledTimes(1);
+        player.clear();
+    });
+
+    test('should notify the disconnection once, even when the connection comes back', () => {
+        // Given
+        const { player, webrtcMock } = createPlayer();
+        const disconnectedSpy = vi.fn();
+        player.disconnected$.subscribe(disconnectedSpy);
+
+        // When
+        webrtcMock.emitStates({ iceConnection: 'disconnected' });
+        webrtcMock.emitStates({ iceConnection: 'connected' });
+        webrtcMock.emitStates({ iceConnection: 'disconnected', receiveChannel: 'closed' });
 
         // Then
         expect(disconnectedSpy).toHaveBeenCalledTimes(1);

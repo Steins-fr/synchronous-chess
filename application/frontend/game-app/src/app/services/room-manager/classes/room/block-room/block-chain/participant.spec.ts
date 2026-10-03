@@ -2,26 +2,33 @@ import { Participant } from './participant';
 import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { BlockChainMessage, BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { TestHelper } from '@testing/test.helper';
 import { describe, test, expect, vi } from 'vitest';
 
 const message: BlockChainMessage = {
-    type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
-    payload: null,
+    type: BlockChainMessageType.GET_BLOCKS_REQUEST,
+    payload: { from: 1 },
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
+    chain: BlockChainName.CHESS,
 };
 
 describe('Participant', () => {
-    test('publicKey should throw if not set', () => {
+    test('should keep the keys of the previous connections of the player', () => {
         // Given
-        const participant: Participant = new Participant(new LocalPlayer('a'));
+        const previousKey = TestHelper.cast<CryptoKey>({ id: 'previous' });
+        const currentKey = TestHelper.cast<CryptoKey>({ id: 'current' });
+        const participant: Participant = new Participant(TestHelper.cast<Player>({ name: 'b', isLocal: false }), [previousKey]);
 
         // When
-        const call = (): CryptoKey => participant.publicKey;
+        const readyBefore: boolean = participant.isReady();
+        participant.receiveKey(currentKey);
 
         // Then
-        expect(call).toThrow('Public key not set');
+        expect(readyBefore).toEqual(false);
+        expect(participant.isReady()).toEqual(true);
+        expect(participant.knownKeys).toEqual([previousKey, currentKey]);
     });
 
     test('should expose the player information', () => {
@@ -30,7 +37,7 @@ describe('Participant', () => {
         const local: Participant = new Participant(new LocalPlayer('a'));
         const remote: Participant = new Participant(TestHelper.cast<Player>({ name: 'b', isLocal: false }));
         const readyRemote: Participant = new Participant(TestHelper.cast<Player>({ name: 'c', isLocal: false }));
-        readyRemote.publicKey = publicKey;
+        readyRemote.receiveKey(publicKey);
 
         // When / Then
         expect(local.name).toEqual('a');
@@ -39,7 +46,8 @@ describe('Participant', () => {
         expect(remote.isLocal).toEqual(false);
         expect(remote.isReady()).toEqual(false);
         expect(readyRemote.isReady()).toEqual(true);
-        expect(readyRemote.publicKey).toBe(publicKey);
+        expect(readyRemote.knownKeys).toEqual([publicKey]);
+        expect(remote.knownKeys).toEqual([]);
     });
 
     test('sendMessage should only send to remote players', () => {

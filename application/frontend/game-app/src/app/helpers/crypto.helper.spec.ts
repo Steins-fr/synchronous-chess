@@ -42,4 +42,19 @@ describe('CryptoHelper', () => {
             expect(Number.isInteger(result)).toEqual(true);
         }
     });
+
+    test('randomHex should give random bytes as hexadecimal', () => {
+        // Given
+        vi.spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
+            (array as unknown as Uint8Array).set([0, 15, 255]);
+            return array;
+        });
+
+        // When / Then
+        expect(CryptoHelper.randomHex(3)).toEqual('000fff');
+    });
+
+    test('sha256 should digest a text as hexadecimal', async () => {
+        expect(await CryptoHelper.sha256('abc')).toEqual('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    });
 });

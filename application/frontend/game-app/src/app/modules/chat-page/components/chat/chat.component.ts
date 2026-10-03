@@ -21,6 +21,8 @@ import { MatInput } from '@angular/material/input';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
+import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { EMPTY, switchMap } from 'rxjs';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatMessage, ChatMessageComponent } from './chat-message/chat-message.component';
@@ -32,6 +34,11 @@ export enum ChatMessengerType {
 export interface ChatPayloads {
     [ChatMessengerType.CHAT_MESSAGE]: string;
 }
+
+// The chat has its own block chain, so its activity never delays the messages of another chain sharing the room
+export const chatBlockChains: BlockChainRouting<ChatPayloads> = {
+    [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
+};
 
 type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, string>;
 

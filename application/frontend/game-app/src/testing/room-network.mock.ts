@@ -20,10 +20,9 @@ export class RoomNetworkMock {
     public readonly queueAdded$ = new Subject<string>();
     public readonly queueRemoved$ = new Subject<string>();
     public readonly roomName: string = 'room';
-    public readonly hostName: string = 'host';
     public readonly clear = vi.fn();
 
-    public constructor(localPlayerName: string = 'local', public readonly initiator: boolean = true) {
+    public constructor(localPlayerName: string = 'local', public readonly initiator: boolean = true, public readonly hostName: string = 'host') {
         this.localPlayer = new LocalPlayer(localPlayerName);
     }
 

@@ -4,6 +4,7 @@ import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { TestHelper } from '@testing/test.helper';
@@ -81,9 +82,10 @@ function createPlayer(name: string): { player: WebRtcPlayer; webrtcMock: WebrtcM
 }
 
 const message: NetworkMessage = {
-    type: BlockChainMessageType.GET_LAST_BLOCK_REQUEST,
-    payload: null,
+    type: BlockChainMessageType.GET_BLOCKS_REQUEST,
+    payload: { from: 1 },
     origin: MessageOriginType.BLOCK_ROOM_SERVICE,
+    chain: BlockChainName.CHESS,
 };
 
 describe('RoomNetwork', () => {
