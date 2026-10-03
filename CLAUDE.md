@@ -51,7 +51,7 @@ templates, nor type-check the specs as `ng test` does.
 Backend, from `application/backend/websocket-api`:
 
 ```bash
-npm run serve:local  # the API on ws://localhost:3001, without AWS (local/server.ts, DynamoDB in memory)
+npm run serve:local  # the API on ws://127.0.0.1:3001, without AWS (local/server.ts, DynamoDB in memory)
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
 npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
@@ -83,6 +83,12 @@ developed in WSL, which it does not support.
   the MCP expects (a plain `npx playwright install` fetches an older one). Restart the Claude Code
   session so the `mcp__playwright__*` tools load. Rerun the second command if the MCP reports a
   missing browser after an update.
+- Start the local API (`npm run serve:local` in `application/backend/websocket-api`) and the game app
+  (`npm run serve:local` in `application/frontend/game-app`) in the background, then browse
+  `http://localhost:4200`.
+- `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
+  match. If their state collides, add a second server (e.g. `playwright2`) for an independent
+  browser.
 - The MCP writes its snapshots and console logs to `.playwright-mcp/` (git-ignored).
 - Save every screenshot to `.playwright-mcp/screenshots/`, named with the local ISO date and time as a
   prefix, with `-` instead of `:` (not allowed in Windows file names):
@@ -111,13 +117,8 @@ When a browser test is done, always shut everything down before reporting back:
 1. Close the browser with `mcp__playwright__browser_close` (once per Playwright server used).
 2. Stop the Angular dev server and the local API: stop their background tasks, then check that ports
    4200 and 3001 are free (`lsof -i :4200 -i :3001` prints nothing) and kill any leftover `ng serve`
-   or `tsx` process.
-- Start the local API (`npm run serve:local` in `application/backend/websocket-api`) and the game app
-  (`npm run serve:local` in `application/frontend/game-app`) in the background, then browse
-  `http://localhost:4200`.
-- `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
-  match. If their state collides, add a second server (e.g. `playwright2`) for an independent
-  browser.
+   or `tsx` process by its port (`kill $(lsof -ti :3001)`): `pkill -f <pattern>` also matches the shell
+   running it, and kills it.
 
 ## SonarQube
 
