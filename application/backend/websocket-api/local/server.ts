@@ -30,6 +30,10 @@ const MAX_MESSAGE_BYTES: number = 128 * 1024;
 // The maximum size of a frame API Gateway receives. The browsers send each message in a single frame, so it limits
 // their messages (ws cannot limit the frames apart from the messages)
 const MAX_FRAME_BYTES: number = 32 * 1024;
+// API Gateway closes a connection without message, in either direction, for 10 minutes, and any after 2 hours
+const IDLE_TIMEOUT_MS: number = 10 * 60 * 1000;
+const MAX_CONNECTION_MS: number = 2 * 60 * 60 * 1000;
+const GOING_AWAY: number = 1001;
 const CONNECTIONS_PATH: RegExp = /^\/@connections\/([^/]+)$/;
 
 function listen(httpServer: Server, port: number): Promise<number> {
@@ -68,7 +72,13 @@ const { handler: onConnect }: { handler: Lambda } = await import('../lambdas/onc
 const { handler: onDisconnect }: { handler: Lambda } = await import('../lambdas/ondisconnect/app');
 const { handler: sendMessage }: { handler: Lambda } = await import('../lambdas/sendmessage/app');
 
-const sockets: Map<string, WebSocket> = new Map<string, WebSocket>();
+interface Connection {
+    socket: WebSocket;
+    // Refreshed by each message, in either direction
+    idleTimer: NodeJS.Timeout;
+}
+
+const connections: Map<string, Connection> = new Map<string, Connection>();
 
 /**
  * Runs a lambda with the event of a websocket route, with only what the lambdas read: no domain name, the
@@ -123,6 +133,15 @@ function replyError(response: ServerResponse, statusCode: number, errorType: str
         .end(JSON.stringify({ message }));
 }
 
+/** @returns the connection id of the path, undefined when not properly encoded */
+function decodeConnectionId(encodedConnectionId: string): string | undefined {
+    try {
+        return decodeURIComponent(encodedConnectionId);
+    } catch {
+        return undefined;
+    }
+}
+
 /** The PostToConnection endpoint of the API Gateway management API, used by the lambdas to reach the clients */
 async function postToConnection(request: IncomingMessage, response: ServerResponse): Promise<void> {
     const connectionId: string | undefined = CONNECTIONS_PATH.exec(request.url ?? '')?.[1];
@@ -138,6 +157,12 @@ async function postToConnection(request: IncomingMessage, response: ServerRespon
         return;
     }
 
+    const decodedConnectionId: string | undefined = decodeConnectionId(connectionId);
+    if (decodedConnectionId === undefined) {
+        replyError(response, 400, 'BadRequestException', 'Invalid connectionId');
+        return;
+    }
+
     const body: string | undefined = await readBody(request);
     if (body === undefined) {
         // The rest of the body is not read: the request is cut once answered
@@ -148,22 +173,29 @@ async function postToConnection(request: IncomingMessage, response: ServerRespon
         return;
     }
 
-    const socket: WebSocket | undefined = sockets.get(decodeURIComponent(connectionId));
-    if (socket?.readyState !== WebSocket.OPEN) {
+    const connection: Connection | undefined = connections.get(decodedConnectionId);
+    if (connection?.socket.readyState !== WebSocket.OPEN) {
         replyError(response, 410, 'GoneException', 'Connection gone');
         return;
     }
 
-    socket.send(body);
+    connection.socket.send(body);
+    connection.idleTimer.refresh();
     response.writeHead(200).end();
 }
 
-/** An opened connection: its messages run the sendmessage route, its closing the $disconnect route */
+/**
+ * An opened connection: its messages run the sendmessage route, its closing the $disconnect route. Closed like API
+ * Gateway once idle or too old
+ */
 function connect(connectionId: string, socket: WebSocket): void {
-    sockets.set(connectionId, socket);
+    const idleTimer: NodeJS.Timeout = setTimeout((): void => socket.close(GOING_AWAY, 'Going away'), IDLE_TIMEOUT_MS);
+    const lifetimeTimer: NodeJS.Timeout = setTimeout((): void => socket.close(GOING_AWAY, 'Going away'), MAX_CONNECTION_MS);
+    connections.set(connectionId, { socket, idleTimer });
 
     // A Buffer, the binary type of the socket being the default `nodebuffer`
     socket.on('message', (data: RawData): void => {
+        idleTimer.refresh();
         const body: string = (data as Buffer).toString('utf8');
 
         if (routeOf(body) === SEND_MESSAGE_ROUTE) {
@@ -179,22 +211,34 @@ function connect(connectionId: string, socket: WebSocket): void {
     socket.on('error', (e: Error): void => console.error(`Websocket ${connectionId} failed`, e));
 
     socket.on('close', (): void => {
-        sockets.delete(connectionId);
+        clearTimeout(idleTimer);
+        clearTimeout(lifetimeTimer);
+        connections.delete(connectionId);
         void invoke('$disconnect', onDisconnect, connectionId);
     });
 }
 
-// The connections $connect accepted, until their handshake completes
-const acceptedConnections: WeakMap<IncomingMessage, string> = new WeakMap<IncomingMessage, string>();
+/** A connection until its handshake completes */
+interface PendingConnection {
+    // Set once $connect accepted it
+    connectionId?: string;
+    // The client left: before $connect returns when it resets the connection
+    closed: boolean;
+}
+
+const pendingConnections: WeakMap<IncomingMessage, PendingConnection> = new WeakMap<IncomingMessage, PendingConnection>();
 
 /** Like API Gateway, runs $connect once the handshake is valid (checked by ws before), and refuses it with its status code */
 async function verifyConnection(request: IncomingMessage, accept: (accepted: boolean, statusCode: number) => void): Promise<void> {
     const connectionId: string = randomUUID();
     const statusCode: number = await invoke('$connect', onConnect, connectionId);
     const accepted: boolean = statusCode >= 200 && statusCode < 300;
+    const pending: PendingConnection = pendingConnections.get(request) as PendingConnection;
 
-    if (accepted) {
-        acceptedConnections.set(request, connectionId);
+    if (accepted && pending.closed) {
+        void invoke('$disconnect', onDisconnect, connectionId);
+    } else if (accepted) {
+        pending.connectionId = connectionId;
     }
 
     accept(accepted, statusCode);
@@ -220,22 +264,22 @@ const server: Server = createServer((request: IncomingMessage, response: ServerR
 });
 
 server.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer): void => {
+    const pending: PendingConnection = { closed: false };
+    pendingConnections.set(request, pending);
+
     // A connection $connect accepted but that never opens (the client left during $connect) runs $disconnect, to keep
-    // each $connect paired with a $disconnect
+    // each $connect paired with a $disconnect: here when it closes after $connect, in verifyConnection before
     const onClose = (): void => {
-        const connectionId: string | undefined = acceptedConnections.get(request);
-        if (connectionId !== undefined) {
-            acceptedConnections.delete(request);
-            void invoke('$disconnect', onDisconnect, connectionId);
+        pending.closed = true;
+        if (pending.connectionId !== undefined) {
+            void invoke('$disconnect', onDisconnect, pending.connectionId);
         }
     };
     socket.once('close', onClose);
 
     webSocketServer.handleUpgrade(request, socket, head, (webSocket: WebSocket): void => {
         socket.off('close', onClose);
-        const connectionId: string = acceptedConnections.get(request) as string;
-        acceptedConnections.delete(request);
-        connect(connectionId, webSocket);
+        connect(pending.connectionId as string, webSocket);
     });
 });
 

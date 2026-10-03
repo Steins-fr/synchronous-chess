@@ -17,6 +17,6 @@ each restart.
 Then serve the game app against it, from `application/frontend/game-app`: `npm run serve:local`.
 
 Emulated limits: 32 KB per message received (one frame of API Gateway, where a browser sends each message
-in a single frame) and 128 KB per message posted to a connection. Not emulated: the authorization and the
-other limits of API Gateway (idle timeout, connection duration, throttling). The staging environment on AWS
-remains the reference.
+in a single frame), 128 KB per message posted to a connection, and the connections closed (1001) after
+10 minutes without message in either direction, or after 2 hours. Not emulated: the authorization and the
+throttling. The staging environment on AWS remains the reference.
