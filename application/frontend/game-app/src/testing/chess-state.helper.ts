@@ -1,6 +1,7 @@
 import { WritableSignal } from '@angular/core';
 import SynchronousChessGameSession, { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-chess-game';
+import { GameResult } from '@app/modules/chess/classes/games/game-result';
 import Turn from '@app/modules/chess/classes/turns/turn';
 import CoordinateMove from '@app/modules/chess/interfaces/CoordinateMove';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
@@ -14,6 +15,7 @@ interface SynchronousChessGameState {
     readonly _isWhiteInCheckmate: WritableSignal<boolean>;
     readonly _isBlackInCheck: WritableSignal<boolean>;
     readonly _isBlackInCheckmate: WritableSignal<boolean>;
+    readonly _result: WritableSignal<GameResult | null>;
 }
 
 interface SynchronousChessGameSessionState {

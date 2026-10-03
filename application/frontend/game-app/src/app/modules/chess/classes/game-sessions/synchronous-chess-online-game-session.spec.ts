@@ -21,6 +21,7 @@ import { CheatReason } from '@app/services/room-manager/classes/room/block-room/
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { gameState, sessionState } from '@testing/chess-state.helper';
+import { GameEndReason } from '../games/game-result';
 import { TestHelper } from '@testing/test.helper';
 import { filter, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -138,6 +139,14 @@ describe('SynchronousChessOnlineGameSession', () => {
         // Then
         expect(white.playingColor).toEqual(PieceColor.NONE);
         expect(black.playingColor).toEqual(PieceColor.BLACK);
+    });
+
+    test('should let no one play once the game ended', () => {
+        // When
+        gameState(white.game)._result.set({ winner: PieceColor.NONE, reason: GameEndReason.STALEMATE });
+
+        // Then
+        expect(white.playingColor).toEqual(PieceColor.NONE);
     });
 
     test('should hide the move of a player until the other one is committed', async () => {

@@ -19,6 +19,7 @@ import { ChessPromotionComponent } from '../chess/chess-promotion/chess-promotio
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
+import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -121,11 +122,36 @@ export class SyncChessGameComponent implements OnDestroy {
     }
 
     public displayBlackInteractions(): boolean {
-        return this.gameSession().playingColor === PieceColor.BLACK && !this.gameSession().game.isCheckmate();
+        return this.gameSession().playingColor === PieceColor.BLACK && !this.gameSession().game.isGameOver();
     }
 
     public displayWhiteInteractions(): boolean {
-        return this.gameSession().playingColor === PieceColor.WHITE && !this.gameSession().game.isCheckmate();
+        return this.gameSession().playingColor === PieceColor.WHITE && !this.gameSession().game.isGameOver();
+    }
+
+    public resultText(): string {
+        const result: GameResult | null = this.gameSession().game.result();
+
+        if (result === null) {
+            return '';
+        }
+
+        switch (result.reason) {
+            case GameEndReason.CHECKMATE:
+                return `Échec et mat : victoire des ${ result.winner === PieceColor.WHITE ? 'blancs' : 'noirs' }`;
+            case GameEndReason.DOUBLE_CHECKMATE:
+                return 'Match nul : échec et mat des deux joueurs';
+            case GameEndReason.STALEMATE:
+                return 'Match nul : pat, un joueur ne peut plus bouger';
+            case GameEndReason.THREEFOLD_REPETITION:
+                return 'Match nul : la même position s\'est répétée trois fois';
+            case GameEndReason.FIFTY_TURNS:
+                return 'Match nul : 50 tours sans mouvement de pion ni prise';
+            case GameEndReason.INSUFFICIENT_MATERIAL:
+                return 'Match nul : plus assez de pièces pour mater';
+            default:
+                return switchExhaustivenessGuard(result.reason);
+        }
     }
 
     public skip(): void {
