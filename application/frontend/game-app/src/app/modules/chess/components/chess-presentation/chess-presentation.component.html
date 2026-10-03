@@ -1,0 +1,28 @@
+<section class="presentation">
+    <div class="description">
+        <h1>Échecs synchrones</h1>
+        <p class="tagline">Les échecs où les deux joueurs jouent en même temps.</p>
+        <p>
+            Plus d'avantage aux blancs : à chaque tour, chaque joueur choisit son coup sans connaître celui de son
+            adversaire, puis les deux coups sont révélés et joués ensemble.
+        </p>
+        <ul>
+            <li>Deux pièces qui visent la même case se capturent mutuellement, et deux pièces peuvent échanger leur
+                place.</li>
+            <li>Une pièce qui s'aventure sur une case attaquée peut être capturée lors d'un tour intermédiaire.</li>
+            <li>Un roi peut être capturé directement, même sans échec et mat.</li>
+        </ul>
+        <p>
+            Créez une salle et partagez son nom à votre adversaire, ou rejoignez la sienne. Chaque participant choisit
+            sa couleur ; les autres regardent la partie.
+        </p>
+    </div>
+    <figure class="preview">
+        <app-chess-board
+            [fenBoard]="board"
+            [grabColor]="noColor"
+            [movePreview]="preview"
+            [validPlayBoard]="validPlays" />
+        <figcaption>Les blancs ont choisi leur coup, les noirs ne le voient pas avant d'avoir joué le leur.</figcaption>
+    </figure>
+</section>

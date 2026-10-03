@@ -3,6 +3,8 @@ import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { chessBlockChains, ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import { SyncChessGameComponent } from '@app/modules/chess/components/sync-chess-game/sync-chess-game.component';
+import { ChessPresentationComponent } from '@app/modules/chess/components/chess-presentation/chess-presentation.component';
+import { ChessRulesComponent } from '@app/modules/chess/components/chess-rules/chess-rules.component';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
 import { BlockRoom, mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { notifyCheatFlags } from '@app/modules/room-layout/cheat-notifications';
@@ -14,7 +16,8 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
 @Component({
     selector: 'app-synchronous-chess',
     templateUrl: './synchronous-chess.html',
-    imports: [RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent],
+    styleUrl: './synchronous-chess.scss',
+    imports: [RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent, ChessPresentationComponent, ChessRulesComponent],
     providers: [RoomSetupService, RoomManagerService],
 })
 export class SynchronousChess implements OnInit, OnDestroy {

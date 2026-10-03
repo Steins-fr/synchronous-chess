@@ -210,6 +210,10 @@ participant, the sender included.
 
 ## Interface
 
+Before joining a room, the chess page presents the game (`ChessPresentationComponent`: a description
+and a preview board), above the room setup form, then the rules (`ChessRulesComponent`). Once in a
+room, the game replaces the presentation, and the rules are folded below it.
+
 `SyncChessGameComponent` shows the session:
 
 - **Seats.** Above and below the board, the name of the player of each color, or `En attente`. Before

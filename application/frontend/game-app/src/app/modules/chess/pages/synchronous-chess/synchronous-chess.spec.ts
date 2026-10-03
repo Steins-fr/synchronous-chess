@@ -34,9 +34,13 @@ describe('SynchronousChess', () => {
         await fixture.whenStable();
     });
 
-    test('should display a local game until the room is setup', () => {
-        expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
+    test('should present the game and its rules until the room is setup', () => {
+        expect(fixture.nativeElement.querySelector('app-chess-presentation')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-chess-rules .title')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('details.rules')).toBeNull();
+        expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-sync-chess-game')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
     });
 
@@ -57,6 +61,15 @@ describe('SynchronousChess', () => {
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
         });
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull());
+
+        // Then the game replaces the presentation, the rules are folded below it, without their own title
+        roomSetupService.roomIsSetup(true);
+        await fixture.whenStable();
+        expect(fixture.nativeElement.querySelector('app-chess-presentation')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('details.rules:not([open]) app-chess-rules')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-chess-rules .title')).toBeNull();
 
         // When
         const clearSpy = vi.spyOn(room, 'clear');
