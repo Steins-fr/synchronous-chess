@@ -9,6 +9,7 @@ import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 import SignalHandler from './handlers/signal-handler';
 import { SocketPacketRequestPayload } from '@protocol/socket-packet-payload.type';
+import { getManagementApiEndpoint } from '@helpers/environment.helper';
 
 interface Response {
     statusCode: number;
@@ -37,7 +38,7 @@ const messageHandlers: MessageHandlers = {
 
 export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {
     const client = new ApiGatewayManagementApiClient({
-        endpoint: `https://${event.requestContext.domainName}`,
+        endpoint: getManagementApiEndpoint(event.requestContext.domainName as string),
     });
 
     try {
