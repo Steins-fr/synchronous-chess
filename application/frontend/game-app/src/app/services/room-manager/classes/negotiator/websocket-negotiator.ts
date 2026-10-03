@@ -36,7 +36,10 @@ export class WebsocketNegotiator extends Negotiator {
     }
 
     private onRemoteSignal(data: SignalNotification): void {
-        this.negotiationMessage(data).then(() => console.debug('Negotiation message sent'));
+        this.negotiationMessage(data).then(
+            () => console.debug('Negotiation message sent'),
+            (error: unknown) => console.error('Negotiation message failed', error),
+        );
     }
 
     protected handleSignal(signal: RtcSignal): void {
