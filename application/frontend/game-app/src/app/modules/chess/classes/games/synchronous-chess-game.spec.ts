@@ -22,6 +22,8 @@ import { Vec2 } from '@app/modules/chess/classes/vector/vec2';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
 import { TestHelper } from '@testing/test.helper';
+import { boardWith } from '@testing/fen-board.helper';
+import { GameEndReason } from '@app/modules/chess/classes/games/game-result';
 
 class ProtectedTest extends SynchronousChessGame {
     public override runSyncTurn(): void {
@@ -2729,5 +2731,131 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard()).toEqual(board);
         expect(game.getTurnType()).toEqual(TurnType.MOVE_SYNC);
         expect(game.lastMoveTurnAction()).toEqual(expect.objectContaining({ whiteMove: null, blackMove: null }));
+    });
+
+    describe('end of the game', () => {
+        const g1f3: Move = { from: [FenColumn.G, FenRow._1], to: [FenColumn.F, FenRow._3] };
+        const f3g1: Move = { from: [FenColumn.F, FenRow._3], to: [FenColumn.G, FenRow._1] };
+        const b8c6: Move = { from: [FenColumn.B, FenRow._8], to: [FenColumn.C, FenRow._6] };
+        const c6b8: Move = { from: [FenColumn.C, FenRow._6], to: [FenColumn.B, FenRow._8] };
+
+        /** The position starts a synchronous turn */
+        function startTurn(game: SynchronousChessGame, board: FenBoard): void {
+            game.load(board);
+            game.verifyCheck();
+            game.verifyEnd();
+        }
+
+        function playTurn(game: SynchronousChessGame, whiteMove: Move, blackMove: Move): void {
+            game.registerMove(whiteMove, PieceColor.WHITE);
+            game.registerMove(blackMove, PieceColor.BLACK);
+            game.runTurn();
+        }
+
+        test('should go on while no player is checkmated nor any draw reached', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When
+            playTurn(game, g1f3, b8c6);
+
+            // Then
+            expect(game.result()).toBeNull();
+            expect(game.isGameOver()).toEqual(false);
+        });
+
+        test('should give the win to the opponent of a checkmated player, and stop the game', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When
+            startTurn(game, boardWith({ h8: FenPiece.BLACK_KING, g7: FenPiece.WHITE_QUEEN, f6: FenPiece.WHITE_KING }));
+
+            // Then
+            expect(game.result()).toEqual({ winner: PieceColor.WHITE, reason: GameEndReason.CHECKMATE });
+            expect(game.isGameOver()).toEqual(true);
+            expect(game.getPossiblePlays(new Vec2(6, 1))).toEqual([]);
+        });
+
+        test('should give the win to black when white is checkmated', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When
+            startTurn(game, boardWith({ h1: FenPiece.WHITE_KING, g2: FenPiece.BLACK_QUEEN, f3: FenPiece.BLACK_KING }));
+
+            // Then
+            expect(game.result()).toEqual({ winner: PieceColor.BLACK, reason: GameEndReason.CHECKMATE });
+        });
+
+        test('should go on when a player in check can move its king, which is not a stalemate', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When
+            startTurn(game, boardWith({ e1: FenPiece.WHITE_KING, e8: FenPiece.BLACK_ROOK, a8: FenPiece.BLACK_KING }));
+
+            // Then
+            expect(game.isWhiteInCheck()).toEqual(true);
+            expect(game.isWhiteInCheckmate()).toEqual(false);
+            expect(game.result()).toBeNull();
+        });
+
+        test('should draw when both players are checkmated', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            gameState(game)._isWhiteInCheckmate.set(true);
+            gameState(game)._isBlackInCheckmate.set(true);
+
+            // When
+            game.verifyEnd();
+
+            // Then
+            expect(game.result()).toEqual({ winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE });
+        });
+
+        test('should draw when a player, not in check, can not move any piece', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When
+            startTurn(game, boardWith({ a8: FenPiece.BLACK_KING, b6: FenPiece.WHITE_QUEEN, h1: FenPiece.WHITE_KING }));
+
+            // Then
+            expect(game.isBlackInCheck()).toEqual(false);
+            expect(game.result()).toEqual({ winner: PieceColor.NONE, reason: GameEndReason.STALEMATE });
+            expect(game.getPossiblePlays(new Vec2(1, 2))).toEqual([]);
+        });
+
+        test('should draw when no piece left can checkmate', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When
+            startTurn(game, boardWith({ e1: FenPiece.WHITE_KING, e8: FenPiece.BLACK_KING, c1: FenPiece.WHITE_BISHOP }));
+
+            // Then
+            expect(game.result()).toEqual({ winner: PieceColor.NONE, reason: GameEndReason.INSUFFICIENT_MATERIAL });
+        });
+
+        test('should draw when the same position starts a synchronous turn for the third time', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+
+            // When the knights go and come back once: the starting position comes back a second time
+            playTurn(game, g1f3, b8c6);
+            playTurn(game, f3g1, c6b8);
+
+            // Then
+            expect(game.result()).toBeNull();
+
+            // When they go and come back again
+            playTurn(game, g1f3, b8c6);
+            playTurn(game, f3g1, c6b8);
+
+            // Then
+            expect(game.result()).toEqual({ winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION });
+            expect(game.registerMove(g1f3, PieceColor.WHITE)).toEqual(false);
+        });
     });
 });

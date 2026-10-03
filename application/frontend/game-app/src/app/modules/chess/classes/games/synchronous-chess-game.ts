@@ -21,6 +21,8 @@ import { FenPiece } from '../../enums/fen-piece.enum';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
+import { DrawRules } from './draw-rules';
+import { GameEndReason, GameResult } from './game-result';
 
 export default class SynchronousChessGame {
     private readonly _fenBoard = signal<FenBoard>(ChessBoardHelper.createFenBoard());
@@ -39,9 +41,18 @@ export default class SynchronousChessGame {
     private readonly _isBlackInCheckmate = signal<boolean>(false);
     public readonly isBlackInCheckmate = this._isBlackInCheckmate.asReadonly();
 
+    /** The end of the game, decided at the start of a synchronous turn */
+    private readonly _result = signal<GameResult | null>(null);
+    public readonly result = this._result.asReadonly();
+
     private _oldFenBoard: FenBoard = this._fenBoard();
     public readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
     public readonly blackRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.BLACK);
+    private drawRules: DrawRules = new DrawRules();
+
+    public constructor() {
+        this.drawRules.recordPosition(this._fenBoard(), this.castlingRights());
+    }
 
     // The turn has been mutated in place, its readers have to be notified
     private notifyTurnChange(): void {
@@ -52,12 +63,26 @@ export default class SynchronousChessGame {
         return color === PieceColor.BLACK ? this.blackRules : this.whiteRules;
     }
 
+    /** Starts the game from another position, its history starting there */
     public load(fenBoard: FenBoard): void {
         this._fenBoard.set(ChessBoardHelper.cloneBoard(fenBoard));
+        this.drawRules = new DrawRules();
+        this.drawRules.recordPosition(this._fenBoard(), this.castlingRights());
     }
 
     public isCheckmate(): boolean {
         return this.isBlackInCheckmate() || this.isWhiteInCheckmate();
+    }
+
+    public isGameOver(): boolean {
+        return this._result() !== null;
+    }
+
+    /** The castling rights of both players, part of a position */
+    private castlingRights(): string {
+        return [this.whiteRules, this.blackRules]
+            .map((rules: ChessRules) => `${ Number(rules.isQueenSideCastleAvailable()) }${ Number(rules.isKingSideCastleAvailable()) }`)
+            .join('');
     }
 
     public lastMoveTurnAction(): MoveTurnAction | null {
@@ -206,12 +231,58 @@ export default class SynchronousChessGame {
                 switchExhaustivenessGuard(turnType);
         }
 
+        if (turnType !== TurnType.CHOICE_PROMOTION) {
+            const { whiteMove, blackMove }: MoveTurnAction = this.turn().action as MoveTurnAction;
+            this.drawRules.recordMoves(this._oldFenBoard, this._fenBoard(), [whiteMove, blackMove].filter((move: Move | null) => move !== null));
+        }
+
         this.turn().isDone = true;
         this.nextTurn();
         this.checkPromotionTurn();
         this.verifyCheck();
+        this.verifyEnd();
 
         return true;
+    }
+
+    /** At the start of a synchronous turn: a checkmate, then a stalemate, then the draws of the history end the game */
+    public verifyEnd(): void {
+        if (this.turn().type !== TurnType.MOVE_SYNC) {
+            return;
+        }
+
+        this.drawRules.recordPosition(this._fenBoard(), this.castlingRights());
+        this._result.set(this.endOfGame());
+    }
+
+    private endOfGame(): GameResult | null {
+        const isWhiteCheckmated: boolean = this.isWhiteInCheckmate();
+        const isBlackCheckmated: boolean = this.isBlackInCheckmate();
+
+        if (isWhiteCheckmated && isBlackCheckmated) {
+            return { winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE };
+        }
+
+        if (isWhiteCheckmated || isBlackCheckmated) {
+            return { winner: isWhiteCheckmated ? PieceColor.BLACK : PieceColor.WHITE, reason: GameEndReason.CHECKMATE };
+        }
+
+        if (this.isStalemate(PieceColor.WHITE) || this.isStalemate(PieceColor.BLACK)) {
+            return { winner: PieceColor.NONE, reason: GameEndReason.STALEMATE };
+        }
+
+        const draw: GameEndReason | null = this.drawRules.draw(this._fenBoard());
+        return draw === null ? null : { winner: PieceColor.NONE, reason: draw };
+    }
+
+    /** A player not in check which can not move any piece */
+    private isStalemate(color: PieceColor): boolean {
+        if (color === PieceColor.WHITE ? this.isWhiteInCheck() : this.isBlackInCheck()) {
+            return false;
+        }
+
+        return !this._fenBoard().some((row: ReadonlyArray<FenPiece>, y: number) => row.some((piece: FenPiece, x: number) =>
+            ChessBoardHelper.pieceColor(piece) === color && this.getPossiblePlays(new Vec2(x, y)).length > 0));
     }
 
     protected getNextTurnTarget(move: Move | undefined | null, oldSafeBoard: SafeBoard, safeBoard: SafeBoard): FenCoordinate | null {
@@ -454,7 +525,7 @@ export default class SynchronousChessGame {
     }
 
     public getPossiblePlays(position: Vec2): Array<Vec2> {
-        if (this.turn().category !== TurnCategory.MOVE || this.isBlackInCheckmate() || this.isWhiteInCheckmate()) {
+        if (this.turn().category !== TurnCategory.MOVE || this.isBlackInCheckmate() || this.isWhiteInCheckmate() || this.isGameOver()) {
             return [];
         }
 

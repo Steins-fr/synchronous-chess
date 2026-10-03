@@ -8,6 +8,9 @@
         <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>Quitter la place</button>
         }
     </div>
+    @if (gameSession().game.isGameOver()) {
+    <div class="game-result">{{ resultText() }}</div>
+    }
     <div id="board-section">
         <div id="chess-board">
             <app-chess-board
@@ -39,7 +42,7 @@
                 <div class="player-identity">
                     <app-chess-piece [piece]="blackPiece"/>
                 </div>
-                @if (!gameSession().game.isCheckmate()) {
+                @if (!gameSession().game.isGameOver()) {
                 <div>Dernier coup :</div>
                 <div>{{ blackLastMove() || 'aucun'}}</div>
                 <div>{{ blackHasPlayed() ? 'a joué' : 'en attente' }}</div>
@@ -81,7 +84,7 @@
                 @if (gameSession().game.isWhiteInCheckmate()) {
                 <div class="check">Échec et mat</div>
                 }
-                @if (!gameSession().game.isCheckmate()) {
+                @if (!gameSession().game.isGameOver()) {
                 <div>{{ whiteHasPlayed() ? 'a joué' : 'en attente' }}</div>
                 <div>Dernier coup :</div>
                 <div>{{ whiteLastMove() || 'aucun'}}</div>
@@ -188,12 +191,17 @@
             </ul>
         </div>
 
+        <h4>Fin de partie</h4>
         <div>
-            Règles qui ne sont pas encore implémentées pour le match nul :
+            La partie est terminée au début d'un tour synchrone :
             <ul>
-                <li>3 répétition de la même séquence de mouvements ;</li>
-                <li>50 tours sans le mouvement d'un pion ou aucune capture ;</li>
-                <li>Et d'autres règles des échecs classique...</li>
+                <li>Échec et mat d'un joueur : son adversaire gagne ;</li>
+                <li>Échec et mat des deux joueurs : match nul ;</li>
+                <li>Pat, un joueur qui n'est pas en échec ne peut bouger aucune pièce : match nul ;</li>
+                <li>La même position (pièces et droits de roque) revient pour la troisième fois : match nul ;</li>
+                <li>50 tours synchrones sans mouvement de pion ni prise : match nul ;</li>
+                <li>Plus assez de pièces pour mater (rois seuls, un seul cavalier ou fou, fous tous sur des cases de même
+                    couleur) : match nul.</li>
             </ul>
         </div>
     </div>

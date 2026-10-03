@@ -20,6 +20,7 @@ import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import { PieceType } from '@app/modules/chess/enums/piece-type.enum';
 import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
@@ -361,6 +362,7 @@ describe('SyncChessGameComponent', () => {
         gameState(session().game)._isWhiteInCheckmate.set(true);
         gameState(session().game)._isBlackInCheck.set(true);
         gameState(session().game)._isBlackInCheckmate.set(true);
+        gameState(session().game)._result.set({ winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE });
         await refresh();
 
         // Then
@@ -369,6 +371,41 @@ describe('SyncChessGameComponent', () => {
         expect(text('.player-information.white-player')).not.toContain('Dernier coup');
         expect(component.displayWhiteInteractions()).toEqual(false);
         expect(component.displayBlackInteractions()).toEqual(false);
+    });
+
+    test.each([
+        { result: { winner: PieceColor.WHITE, reason: GameEndReason.CHECKMATE }, message: 'Échec et mat : victoire des blancs' },
+        { result: { winner: PieceColor.BLACK, reason: GameEndReason.CHECKMATE }, message: 'Échec et mat : victoire des noirs' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE }, message: 'Match nul : échec et mat des deux joueurs' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.STALEMATE }, message: 'Match nul : pat, un joueur ne peut plus bouger' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION }, message: 'Match nul : la même position s\'est répétée trois fois' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.FIFTY_TURNS }, message: 'Match nul : 50 tours sans mouvement de pion ni prise' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.INSUFFICIENT_MATERIAL }, message: 'Match nul : plus assez de pièces pour mater' },
+    ])('should display the end of the game: $message', async ({ result, message }) => {
+        // Given
+        await createOnlineGame();
+        expect(fixture.nativeElement.querySelector('.game-result')).toBeNull();
+        expect(component.resultText()).toEqual('');
+
+        // When
+        gameState(session().game)._result.set(result);
+        await refresh();
+
+        // Then
+        expect(text('.game-result')).toEqual(message);
+        expect(component.displayWhiteInteractions()).toEqual(false);
+        expect(text('.player-information.white-player')).not.toContain('Dernier coup');
+    });
+
+    test('should reject an unknown end of the game', async () => {
+        // Given
+        await createOnlineGame();
+
+        // When
+        gameState(session().game)._result.set(TestHelper.cast<GameResult>({ winner: PieceColor.NONE, reason: 'unknown' }));
+
+        // Then
+        expect(() => component.resultText()).toThrow('Unhandled switch case: unknown');
     });
 
     test('should display the promotion choices of the playing color', async () => {

@@ -118,7 +118,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     }
 
     public get playingColor(): PieceColor {
-        if (this.configuration().whitePlayer === undefined || this.configuration().blackPlayer === undefined) {
+        if (this.configuration().whitePlayer === undefined || this.configuration().blackPlayer === undefined || this.game.isGameOver()) {
             return PieceColor.NONE;
         }
 

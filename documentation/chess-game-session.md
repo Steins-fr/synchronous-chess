@@ -13,6 +13,7 @@ ordering and checking of the messages is described in
 - [Life cycle](#life-cycle)
 - [Seats](#seats)
 - [Playing a turn](#playing-a-turn)
+- [End of the game](#end-of-the-game)
 - [Reloading the page](#reloading-the-page)
 - [Messages](#messages)
 - [Interface](#interface)
@@ -30,9 +31,9 @@ ordering and checking of the messages is described in
 | `SealedTurnStore` | `sealed-turn-store.ts` | Keeps the hidden action of the local player across the reloads of the page |
 | `SyncChessGameComponent` | `components/sync-chess-game` | Shows the session, and turns the clicks and drops into seat requests and actions |
 
-The rules of the game (moves, turns, check) belong to `SynchronousChessGame` and its turns
-(`classes/games`, `classes/turns`); the session only decides **who** plays and **when** an action is
-applied.
+The rules of the game (moves, turns, check, end of the game) belong to `SynchronousChessGame`, its
+turns and `DrawRules` (`classes/games`, `classes/turns`); the session only decides **who** plays and
+**when** an action is applied.
 
 Every participant runs the same online session: the host has no role in the game. It only creates the
 room, and orders the block chains until it leaves (see
@@ -153,6 +154,30 @@ A player runs its own action when playing it, and a turn played alone ends at on
 next turn before the commitments of the previous one are in the chain. The session keeps every action
 it played until it is revealed.
 
+## End of the game
+
+The game decides its end at the start of each synchronous turn (`SynchronousChessGame.verifyEnd()`),
+from the board and its history, the same for every participant: no message is needed. The first end
+found, in this order, is the `result()` of the game (`GameResult`: the winner, none for a draw, and a
+`GameEndReason`):
+
+| Reason | When | Result |
+|---|---|---|
+| `checkmate` | A player in check can not move its king | Its opponent wins |
+| `doubleCheckmate` | Both players are checkmated | Draw |
+| `stalemate` | A player not in check can not move any piece | Draw |
+| `insufficientMaterial` | Only the kings are left, with a single knight or bishop, or bishops all on squares of the same color | Draw |
+| `threefoldRepetition` | The same position (the pieces and the castling rights) starts a synchronous turn for the third time | Draw |
+| `fiftyTurns` | 50 synchronous turns without a pawn move nor a capture | Draw |
+
+`DrawRules` keeps the history: a synchronous turn and the intermediate turns following it are a pair of
+moves of the conventional rules. A pawn move or a capture, in a synchronous or an intermediate turn,
+starts the history again, since no former position can come back.
+
+Once the game ends, no piece can move anymore. These draws come from the rules of
+[Synchronous Chess](http://www.hexenspiel.de/engl/synchronous-chess/), which keep the draws of the
+conventional chess.
+
 ## Reloading the page
 
 The player joins the room again under its name. The host notices at once that its former page left,
@@ -192,6 +217,7 @@ participant, the sender included.
   moves it.
 - **Turn.** The type of the turn, whether each color has played, the last move of each color, the check
   and checkmate states.
+- **End of the game.** Above the board, the winner or the reason of the draw.
 - **Actions.** The local player drags the pieces of `playingColor` only; `Passer` skips an intermediate
   turn; a promotion turn shows the pieces to choose from.
 - **Spectators.** `Spectateurs : n`.
@@ -201,8 +227,8 @@ participant, the sender included.
 - **A seat taken before the game starts stays taken** when its player leaves the room: the participants
   notice a departure at different times, so it can not free a seat the same way for all of them. The
   player can come back to it by reloading the page.
-- **One game per room**: the seats stay final after a checkmate.
-- **Draws** by repetition or by the 50 moves rule are not implemented.
+- **One game per room**: the seats stay final once the game ended.
+- **No resignation nor draw by agreement**: only the position ends a game.
 
 ## Testing
 
