@@ -60,7 +60,7 @@ flowchart LR
 | `ParticipantRegistry` | `block-chain/participant-registry.ts` | Exchanges the public keys, shared by all the chains |
 | `ParticipantKeyStore` | `block-chain/participant-key-store.ts` | Keeps the key pair of the player in the browser |
 | `AntiCheat` | `anti-cheat/anti-cheat.ts` | Collects the cheat reports into flags, names the accusers of a sequencer |
-| `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Commits then reveals the moves, reports the cheated ones |
+| `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
 | `SealedTurnStore` | `modules/chess/classes/game-sessions` | Keeps the hidden moves across the reloads of the page |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
@@ -330,7 +330,7 @@ The `block_room_service` messages carry the name of their chain in a `chain` fie
 `isNetworkMessage` validates the envelope of the received messages (origin, type, known chain name);
 their payload is trusted, and a payload making a handler throw is logged.
 
-The chess game sends `SC_GS_configuration` (host only), `SC_GS_commit` and `SC_GS_reveal` through the
+The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the chat `chatMessage` through the `chat` chain.
 
 ## Trust model and limits

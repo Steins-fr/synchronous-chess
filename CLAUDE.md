@@ -36,7 +36,9 @@ npm run test:ci      # single run with coverage (what CI runs)
 npm run lint         # ESLint (Angular, template, RxJS and stylistic rules)
 ```
 
-Run a single spec: `npx vitest run src/app/path/to/file.spec.ts`
+Run some specs: `npx ng test --watch=false --include='src/app/path/to/**/*.spec.ts'`. A plain
+`npx vitest run <file>` only works for the specs without a component: it does not compile the
+templates, nor type-check the specs as `ng test` does.
 
 Backend, from `application/backend/websocket-api`:
 
@@ -71,7 +73,20 @@ developed in WSL, which it does not support.
   `filename: ".playwright-mcp/screenshots/2026-10-03T08-21-56_chat-alice.png"`. Get the prefix
   from `date +%Y-%m-%dT%H-%M-%S` right before taking the screenshot.
 - Before starting a new browser test, delete the screenshots of the previous one:
-  `rm -f .playwright-mcp/screenshots/*`.
+  `rm -f <repo root>/.playwright-mcp/screenshots/*.png`, with the absolute path of the repo and no
+  `cd` in the command, or Claude Code's safety check blocks the removal.
+
+### Testing a chess game
+
+- Each participant, the host included, takes a seat with the `Jouer les blancs` / `Jouer les noirs`
+  buttons: two tabs are enough. See `documentation/chess-game-session.md`.
+- The pieces only move by drag and drop (CDK drag). Drive the mouse from
+  `mcp__playwright__browser_run_code_unsafe`: `mouse.down()` on the origin cell, a first small
+  `mouse.move` to start the drag, then a `mouse.move` with `steps` to the destination and
+  `mouse.up()`. The cells are `#board-grid mat-grid-tile`, rank 8 first, not flipped for black.
+- `page.context().pages()` reaches every tab from one script, to compare the boards after a turn.
+- The MCP only records the console of the selected tab: select each tab and call
+  `mcp__playwright__browser_console_messages` to check it.
 
 ### Cleanup after every browser test
 
