@@ -1,18 +1,11 @@
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
-import SynchronousChessOnlineHostGameSession
-    from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-host-game-session';
-import SynchronousChessOnlinePeerGameSession
-    from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-peer-game-session';
-import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
+import SynchronousChessOnlineGameSession, { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import { Room } from '@app/services/room-manager/classes/room/room';
 
 export default abstract class SynchronousChessGameSessionBuilder {
     public static buildOnline(roomService: Room<ChessPayloads>): SynchronousChessGameSession {
-        if (roomService.initiator) {
-            return new SynchronousChessOnlineHostGameSession(roomService);
-        }
-        return new SynchronousChessOnlinePeerGameSession(roomService);
+        return new SynchronousChessOnlineGameSession(roomService);
     }
 
     public static buildLocal(): SynchronousChessGameSession {

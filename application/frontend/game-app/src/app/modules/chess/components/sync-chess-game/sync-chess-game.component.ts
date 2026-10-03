@@ -132,6 +132,28 @@ export class SyncChessGameComponent implements OnDestroy {
         this.gameSession().move(null);
     }
 
+    /** A free seat, until the game starts: the local player may take it, leaving its other seat */
+    public canTakeSeat(color: PieceColor): boolean {
+        return this.gameSession().seatsOpen() && this.seatedPlayer(color) === undefined;
+    }
+
+    public canLeaveSeat(color: PieceColor): boolean {
+        return this.gameSession().seatsOpen() && this.gameSession().myColor === color;
+    }
+
+    public takeSeat(color: PieceColor): void {
+        this.gameSession().takeSeat(color);
+    }
+
+    public leaveSeat(): void {
+        this.gameSession().leaveSeat();
+    }
+
+    private seatedPlayer(color: PieceColor): string | undefined {
+        const { whitePlayer, blackPlayer } = this.gameSession().configuration();
+        return color === PieceColor.WHITE ? whitePlayer : blackPlayer;
+    }
+
     private resetHighlight(): void {
         this.validPlayBoard.set(ChessBoardHelper.createFilledBoard(false));
     }

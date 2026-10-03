@@ -21,17 +21,18 @@ describe('SynchronousChessLocalGameSession', () => {
         expect(color).toEqual(PieceColor.NONE);
     });
 
-    test('should expose the configuration and the game board', () => {
+    test('should expose the configuration and the game board, without seats nor spectators', () => {
         // Given
         const session: SynchronousChessLocalGameSession = new SynchronousChessLocalGameSession();
-        sessionState(session).setConfiguration({ spectatorNumber: 2 });
+        sessionState(session).setConfiguration({ whitePlayer: 'a' });
 
         // When
-        const spectatorNumber: number = session.spectatorNumber();
         const board: FenBoard = session.board();
 
         // Then
-        expect(spectatorNumber).toEqual(2);
+        expect(session.configuration()).toEqual({ whitePlayer: 'a' });
+        expect(session.spectatorNumber()).toEqual(0);
+        expect(session.seatsOpen()).toEqual(false);
         expect(board).toBe(session.game.fenBoard());
     });
 
@@ -41,6 +42,8 @@ describe('SynchronousChessLocalGameSession', () => {
         const board: FenBoard = session.board();
 
         // When
+        session.takeSeat();
+        session.leaveSeat();
         session.move();
         session.skip();
         session.promote();

@@ -80,15 +80,33 @@ describe('SyncChessGameComponent', () => {
         await vi.waitFor(() => expect(session().game.colorHasPlayed(color) || TestHelper.cast<{ turnCount: number }>(session()).turnCount > turn).toEqual(true));
     }
 
-    // The first added player is white, the second one is black
-    async function createOnlineGame(localColor: PieceColor = PieceColor.WHITE): Promise<void> {
+    function seatButtons(color: 'black' | 'white'): HTMLButtonElement[] {
+        return [...fixture.nativeElement.querySelectorAll(`.${ color }-seat .seat-button`)];
+    }
+
+    function seatButton(color: 'black' | 'white', label: string): HTMLButtonElement | undefined {
+        return seatButtons(color).find((button: HTMLButtonElement) => button.textContent?.trim() === label);
+    }
+
+    function remoteSeat(color: PieceColor): void {
+        network.onMessage$.next({ type: SCGameSessionType.SEAT, payload: { color }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
+    }
+
+    // A room with the local player and a remote one, no one seated yet
+    async function joinOnlineRoom(): Promise<void> {
         network = new RoomNetworkMock('local', true);
         const room: Room<ChessPayloads> = new Room<ChessPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
         fixture.componentRef.setInput('room', room);
         await fixture.whenStable();
-        const remotePlayer = TestHelper.cast<Player>({ name: 'remote', isLocal: false, sendData: vi.fn() });
-        const players: Player[] = localColor === PieceColor.WHITE ? [network.localPlayer, remotePlayer] : [remotePlayer, network.localPlayer];
-        players.forEach((player: Player) => network.playerAdded$.next(player));
+        network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false, sendData: vi.fn() }));
+        await refresh();
+    }
+
+    // The local player takes its seat with its button, the remote one takes the other seat
+    async function createOnlineGame(localColor: PieceColor = PieceColor.WHITE): Promise<void> {
+        await joinOnlineRoom();
+        seatButton(localColor === PieceColor.WHITE ? 'white' : 'black', localColor === PieceColor.WHITE ? 'Jouer les blancs' : 'Jouer les noirs')?.click();
+        remoteSeat(localColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
         await refresh();
     }
 
@@ -110,6 +128,8 @@ describe('SyncChessGameComponent', () => {
         expect(fixture.nativeElement.textContent).toContain('Joueur Noir : En attente');
         expect(fixture.nativeElement.textContent).toContain('Joueur Blanc : En attente');
         expect(text('.spectators')).toEqual('Spectateurs : 0');
+        expect(seatButtons('white')).toEqual([]);
+        expect(seatButtons('black')).toEqual([]);
         expect(fixture.nativeElement.textContent).toContain('Tour : Synchronisé');
         expect(text('.player-information.black-player')).toContain('aucunen attente');
         expect(skipButton('white')).toBeNull();
@@ -122,12 +142,87 @@ describe('SyncChessGameComponent', () => {
         await createOnlineGame();
 
         // Then
-        expect(fixture.nativeElement.textContent).toContain('Joueur Noir : remote');
-        expect(fixture.nativeElement.textContent).toContain('Joueur Blanc : local');
+        expect(text('.black-seat')).toEqual('Joueur Noir : remote');
+        expect(text('.white-seat')).toEqual('Joueur Blanc : local Quitter la place');
+        expect(text('.spectators')).toEqual('Spectateurs : 0');
         expect(component.moveColor()).toEqual(PieceColor.WHITE);
         expect(component.canSkip()).toEqual(false);
         expect(skipButton('white')).toBeNull();
         expect(skipButton('black')).toBeNull();
+    });
+
+    test('should let the participants take the free seats, then change or leave theirs', async () => {
+        // Given
+        await joinOnlineRoom();
+
+        // Then
+        expect(text('.black-seat')).toEqual('Joueur Noir : En attente Jouer les noirs');
+        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
+        expect(text('.spectators')).toEqual('Spectateurs : 2');
+        expect(component.moveColor()).toEqual(PieceColor.NONE);
+
+        // When
+        seatButton('white', 'Jouer les blancs')?.click();
+        await refresh();
+
+        // Then the local player may still take the other seat
+        expect(text('.white-seat')).toEqual('Joueur Blanc : local Quitter la place');
+        expect(text('.black-seat')).toEqual('Joueur Noir : En attente Jouer les noirs');
+        expect(text('.spectators')).toEqual('Spectateurs : 1');
+
+        // When
+        seatButton('black', 'Jouer les noirs')?.click();
+        await refresh();
+
+        // Then
+        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
+        expect(text('.black-seat')).toEqual('Joueur Noir : local Quitter la place');
+
+        // When
+        seatButton('black', 'Quitter la place')?.click();
+        await refresh();
+
+        // Then
+        expect(text('.black-seat')).toEqual('Joueur Noir : En attente Jouer les noirs');
+        expect(text('.spectators')).toEqual('Spectateurs : 2');
+
+        // When
+        seatButton('white', 'Jouer les blancs')?.click();
+        await refresh();
+        seatButton('white', 'Quitter la place')?.click();
+        await refresh();
+
+        // Then
+        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
+    });
+
+    test('should not offer a seat taken by another participant', async () => {
+        // Given
+        await joinOnlineRoom();
+
+        // When
+        remoteSeat(PieceColor.BLACK);
+        await refresh();
+
+        // Then
+        expect(text('.black-seat')).toEqual('Joueur Noir : remote');
+        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
+    });
+
+    test('should fix the seats once the game started', async () => {
+        // Given
+        await createOnlineGame();
+
+        // When
+        board().piecePicked.emit(new Vec2(4, 6));
+        board().pieceDropped.emit(new Vec2(4, 4));
+        await vi.waitFor(() => expect(session().seatsOpen()).toEqual(false));
+        await refresh();
+
+        // Then
+        expect(seatButtons('white')).toEqual([]);
+        expect(seatButtons('black')).toEqual([]);
+        expect(text('.white-seat')).toEqual('Joueur Blanc : local');
     });
 
     test('should highlight the possible plays of a clicked piece', async () => {

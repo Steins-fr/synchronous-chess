@@ -6,15 +6,15 @@ import SynchronousChessOnlineGameSession, {
     SealedAction,
     SealedActionKind
 } from './synchronous-chess-online-game-session';
-import SynchronousChessOnlineHostGameSession from './synchronous-chess-online-host-game-session';
 import { SealedTurnStore } from './sealed-turn-store';
-import SynchronousChessOnlinePeerGameSession from './synchronous-chess-online-peer-game-session';
+import { SessionConfiguration } from './synchronous-chess-game-session';
 import PromotionTurn from '../turns/promotion-turn';
 import SyncTurn from '../turns/sync-turn';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import Move, { FenColumn, FenRow } from '../../interfaces/move';
 import ChessBoardHelper from '../../helpers/chess-board-helper';
+import { signal } from '@angular/core';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
@@ -34,6 +34,8 @@ class RoomHub {
     public readonly delivered: AppMessage[] = [];
     public readonly reports: Array<[string, AppMessage, CheatReason]> = [];
     private readonly rooms = new Map<Room<ChessPayloads>, Subject<AppMessage>>();
+    /** The connected participants, the same for every room */
+    private readonly players = signal<ReadonlyArray<Readonly<Player>>>([]);
     private readonly queue: AppMessage[] = [];
     private delivering: boolean = false;
 
@@ -41,15 +43,14 @@ class RoomHub {
         const messages = new Subject<AppMessage>();
         const room: Room<ChessPayloads> = TestHelper.cast<Room<ChessPayloads>>({
             localPlayer: { name },
-            hostName: 'a',
             roomName: 'room',
-            playerAdded$: new Subject<Player>(),
-            playerRemoved$: new Subject<Player>(),
+            players: this.players,
             messenger: (type: string) => messages.pipe(filter((message: AppMessage) => message.type === type)),
             transmitMessage: (type: string, payload: unknown) => this.send({ from: name, type, payload }),
             reportCheat: (message: AppMessage, reason: CheatReason) => this.reports.push([name, message, reason]),
         });
         this.rooms.set(room, messages);
+        this.players.update((players) => players.some((player) => player.name === name) ? players : [...players, TestHelper.cast<Player>({ name })]);
         return room;
     }
 
@@ -92,7 +93,7 @@ function promotionOfWhite(session: SynchronousChessOnlineGameSession): void {
 }
 
 function configure(session: SynchronousChessOnlineGameSession): void {
-    sessionState(session).setConfiguration({ whitePlayer: 'a', blackPlayer: 'b', spectatorNumber: 1 });
+    sessionState(session).setConfiguration({ whitePlayer: 'a', blackPlayer: 'b' });
 }
 
 describe('SynchronousChessOnlineGameSession', () => {
@@ -105,9 +106,9 @@ describe('SynchronousChessOnlineGameSession', () => {
     beforeEach(() => {
         sessionStorage.clear();
         hub = new RoomHub();
-        white = new SynchronousChessOnlineHostGameSession(hub.room('a'));
-        black = new SynchronousChessOnlinePeerGameSession(hub.room('b'));
-        spectator = new SynchronousChessOnlinePeerGameSession(hub.room('c'));
+        white = new SynchronousChessOnlineGameSession(hub.room('a'));
+        black = new SynchronousChessOnlineGameSession(hub.room('b'));
+        spectator = new SynchronousChessOnlineGameSession(hub.room('c'));
         sessions = [white, black, spectator];
         sessions.forEach(configure);
     });
@@ -124,6 +125,20 @@ describe('SynchronousChessOnlineGameSession', () => {
         hub.send({ from, type: SCGameSessionType.COMMIT, payload: commit });
         hub.send({ from, type: SCGameSessionType.REVEAL, payload: reveal });
     }
+
+    test('should let each seated player play its color once, until the next turn', () => {
+        // Then
+        expect(white.playingColor).toEqual(PieceColor.WHITE);
+        expect(black.playingColor).toEqual(PieceColor.BLACK);
+        expect(spectator.playingColor).toEqual(PieceColor.NONE);
+
+        // When
+        white.move(e2e4);
+
+        // Then
+        expect(white.playingColor).toEqual(PieceColor.NONE);
+        expect(black.playingColor).toEqual(PieceColor.BLACK);
+    });
 
     test('should hide the move of a player until the other one is committed', async () => {
         // When
@@ -181,7 +196,7 @@ describe('SynchronousChessOnlineGameSession', () => {
     function reloadWhite(messages?: ReadonlyArray<AppMessage>, prepare: (session: SynchronousChessOnlineGameSession) => void = () => undefined): SynchronousChessOnlineGameSession {
         white.destroy();
         const room: Room<ChessPayloads> = hub.room('a');
-        const reloaded: SynchronousChessOnlineGameSession = new SynchronousChessOnlineHostGameSession(room);
+        const reloaded: SynchronousChessOnlineGameSession = new SynchronousChessOnlineGameSession(room);
         configure(reloaded);
         prepare(reloaded);
         hub.replay(room, messages);
@@ -317,7 +332,7 @@ describe('SynchronousChessOnlineGameSession', () => {
         black.move(e7e5);
 
         // Then the move of white does not match its first commitment
-        await vi.waitFor(() => expect(hub.reports.map(([reporter, , reason]) => [reporter, reason])).toEqual([
+        await vi.waitFor(() => expect(hub.reports.map(([reporter, , reason]) => [reporter, reason]).sort()).toEqual([
             ['b', CheatReason.INVALID_REVEAL],
             ['c', CheatReason.INVALID_REVEAL],
         ]));
@@ -373,5 +388,139 @@ describe('SynchronousChessOnlineGameSession', () => {
         await new Promise((resolve) => setTimeout(resolve, 20));
         expect(hub.reports).toEqual([]);
         expect(white.game.colorHasPlayed(PieceColor.WHITE)).toEqual(false);
+    });
+});
+
+describe('SynchronousChessOnlineGameSession seats', () => {
+    let hub: RoomHub;
+    let host: SynchronousChessOnlineGameSession;
+    let joining: SynchronousChessOnlineGameSession;
+    let other: SynchronousChessOnlineGameSession;
+    let sessions: SynchronousChessOnlineGameSession[];
+
+    beforeEach(() => {
+        sessionStorage.clear();
+        hub = new RoomHub();
+        host = new SynchronousChessOnlineGameSession(hub.room('a'));
+        joining = new SynchronousChessOnlineGameSession(hub.room('b'));
+        other = new SynchronousChessOnlineGameSession(hub.room('c'));
+        sessions = [host, joining, other];
+    });
+
+    function configurations(): SessionConfiguration[] {
+        return sessions.map((session: SynchronousChessOnlineGameSession) => session.configuration());
+    }
+
+    test('should start with free seats, every participant being a spectator', () => {
+        // Then
+        expect(configurations()).toEqual([{}, {}, {}]);
+        expect(sessions.map((session) => session.spectatorNumber())).toEqual([3, 3, 3]);
+        expect(sessions.every((session) => session.seatsOpen())).toEqual(true);
+        expect(host.playingColor).toEqual(PieceColor.NONE);
+    });
+
+    test('should seat the participants taking a free seat, the host included', () => {
+        // When
+        host.takeSeat(PieceColor.BLACK);
+        joining.takeSeat(PieceColor.WHITE);
+
+        // Then every participant seats the same players
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'b', blackPlayer: 'a' }));
+        expect(sessions.map((session) => session.spectatorNumber())).toEqual([1, 1, 1]);
+        expect(host.myColor).toEqual(PieceColor.BLACK);
+        expect(host.playingColor).toEqual(PieceColor.BLACK);
+        expect(joining.playingColor).toEqual(PieceColor.WHITE);
+        expect(other.playingColor).toEqual(PieceColor.NONE);
+    });
+
+    test('should not play before both seats are taken', () => {
+        // Given
+        host.takeSeat(PieceColor.WHITE);
+
+        // When
+        host.move(e2e4);
+
+        // Then
+        expect(host.playingColor).toEqual(PieceColor.NONE);
+        expect(hub.types()).toEqual([SCGameSessionType.SEAT]);
+    });
+
+    test('should give a seat to the first request ordered in the chain', () => {
+        // When both request the same seat
+        joining.takeSeat(PieceColor.WHITE);
+        other.takeSeat(PieceColor.WHITE);
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'b', blackPlayer: undefined }));
+    });
+
+    test('should move a player to the other seat, or out of its seat', () => {
+        // When
+        host.takeSeat(PieceColor.WHITE);
+        host.takeSeat(PieceColor.BLACK);
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: undefined, blackPlayer: 'a' }));
+
+        // When
+        host.leaveSeat();
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: undefined, blackPlayer: undefined }));
+        expect(host.spectatorNumber()).toEqual(3);
+    });
+
+    test('should keep its seat to a player requesting a taken seat', () => {
+        // Given
+        host.takeSeat(PieceColor.BLACK);
+        joining.takeSeat(PieceColor.WHITE);
+
+        // When
+        joining.takeSeat(PieceColor.BLACK);
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'b', blackPlayer: 'a' }));
+    });
+
+    test('should keep the seats once a player committed to its first action', async () => {
+        // Given
+        host.takeSeat(PieceColor.WHITE);
+        joining.takeSeat(PieceColor.BLACK);
+
+        // When
+        host.move(e2e4);
+        await vi.waitFor(() => expect(sessions.every((session) => !session.seatsOpen())).toEqual(true));
+        joining.leaveSeat();
+        other.takeSeat(PieceColor.BLACK);
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'a', blackPlayer: 'b' }));
+    });
+
+    test('should ignore a malformed seat request', () => {
+        // Given
+        other.takeSeat(PieceColor.WHITE);
+
+        // When
+        hub.send({ from: 'c', type: SCGameSessionType.SEAT, payload: { color: 'red' } });
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'c', blackPlayer: undefined }));
+    });
+
+    test('should seat the players again when the chain is replayed after a reload', () => {
+        // Given
+        host.takeSeat(PieceColor.WHITE);
+        joining.takeSeat(PieceColor.BLACK);
+
+        // When the host reloads the page
+        host.destroy();
+        const room: Room<ChessPayloads> = hub.room('a');
+        const reloaded: SynchronousChessOnlineGameSession = new SynchronousChessOnlineGameSession(room);
+        hub.replay(room);
+
+        // Then
+        expect(reloaded.configuration()).toEqual({ whitePlayer: 'a', blackPlayer: 'b' });
+        expect(reloaded.playingColor).toEqual(PieceColor.WHITE);
     });
 });

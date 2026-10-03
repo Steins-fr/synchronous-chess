@@ -1,3 +1,4 @@
+import { computed, Signal, signal } from '@angular/core';
 import SynchronousChessGameSession, { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import Move from '@app/modules/chess/interfaces/move';
@@ -13,7 +14,8 @@ import { PieceType } from '../../enums/piece-type.enum';
 import { SealedTurnStore, StoredTurn } from './sealed-turn-store';
 
 export enum SCGameSessionType {
-    CONFIGURATION = 'SC_GS_configuration',
+    /** A participant takes the seat of a color, or leaves its seat with no color */
+    SEAT = 'SC_GS_seat',
     /** The commitment of a player to its action of a turn, which stays hidden */
     COMMIT = 'SC_GS_commit',
     /** The action of a player, revealed once every player of the turn is committed */
@@ -30,6 +32,10 @@ export type SealedAction =
     | { kind: SealedActionKind.MOVE; move: Move | null }
     | { kind: SealedActionKind.PROMOTION; pieceType: PieceType };
 
+export interface SeatMessage {
+    color: PieceColor;
+}
+
 export interface CommitMessage {
     turn: number;
     /** The SHA-256 of the turn, the color, the action and a salt */
@@ -43,14 +49,14 @@ export interface RevealMessage {
 }
 
 export interface ChessPayloads {
-    [SCGameSessionType.CONFIGURATION]: SessionConfiguration;
+    [SCGameSessionType.SEAT]: SeatMessage;
     [SCGameSessionType.COMMIT]: CommitMessage;
     [SCGameSessionType.REVEAL]: RevealMessage;
 }
 
 // The game has its own block chain, so the activity of another chain sharing the room (e.g. the chat) never delays it
 export const chessBlockChains: BlockChainRouting<ChessPayloads> = {
-    [SCGameSessionType.CONFIGURATION]: BlockChainName.CHESS,
+    [SCGameSessionType.SEAT]: BlockChainName.CHESS,
     [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
     [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
 };
@@ -61,11 +67,21 @@ interface SealedTurn extends StoredTurn {
 }
 
 /**
+ * The participants take the seats themselves: the chain orders their requests, so every participant seats the same players,
+ * the first request for a free seat getting it. The seats are final once a player committed to its first action.
+ *
  * The players play at the same time: each one commits to its action first, and reveals it once every player of the turn
  * is committed. Neither the other player, nor the sequencer ordering the messages, can adapt its action to the other one.
  */
-export default abstract class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
+export default class SynchronousChessOnlineGameSession extends SynchronousChessGameSession {
     protected destroyRef = new Subject<void>();
+    private readonly started = signal<boolean>(false);
+    public readonly seatsOpen: Signal<boolean> = computed<boolean>(() => !this.started());
+    /** The connected participants without a seat */
+    public readonly spectatorNumber: Signal<number> = computed<number>(() => {
+        const { whitePlayer, blackPlayer } = this.configuration();
+        return this.roomService.players().filter(({ name }) => name !== whitePlayer && name !== blackPlayer).length;
+    });
     /** The first commitment of each player for each turn, by `turn color` */
     private readonly commitments = new Map<string, string>();
     /**
@@ -80,8 +96,9 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
     /** The reveals are checked one after the other: the reveal of a turn must not be checked before the previous turn is run */
     private reveals: Promise<void> = Promise.resolve();
 
-    protected constructor(protected readonly roomService: Room<ChessPayloads>) {
+    public constructor(protected readonly roomService: Room<ChessPayloads>) {
         super();
+        this.roomService.messenger(SCGameSessionType.SEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onSeat(message));
         this.roomService.messenger(SCGameSessionType.COMMIT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onCommit(message));
         this.roomService.messenger(SCGameSessionType.REVEAL).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onReveal(message));
     }
@@ -129,6 +146,50 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         this.destroyRef = new Subject<void>();
     }
 
+    public takeSeat(color: PieceColor): void {
+        this.roomService.transmitMessage(SCGameSessionType.SEAT, { color });
+    }
+
+    public leaveSeat(): void {
+        this.roomService.transmitMessage(SCGameSessionType.SEAT, { color: PieceColor.NONE });
+    }
+
+    /** The requests of every participant, the local one included, in the order of the chain */
+    protected onSeat(message: AppMessage<SCGameSessionType.SEAT, SeatMessage>): void {
+        if (this.started()) {
+            return;
+        }
+
+        const { whitePlayer, blackPlayer } = this.configuration();
+        // A participant has a single seat: taking a seat leaves the other one
+        const seats: SessionConfiguration = {
+            whitePlayer: whitePlayer === message.from ? undefined : whitePlayer,
+            blackPlayer: blackPlayer === message.from ? undefined : blackPlayer,
+        };
+
+        switch (message.payload.color) {
+            case PieceColor.WHITE:
+                if (seats.whitePlayer !== undefined) {
+                    return;
+                }
+                seats.whitePlayer = message.from;
+                break;
+            case PieceColor.BLACK:
+                if (seats.blackPlayer !== undefined) {
+                    return;
+                }
+                seats.blackPlayer = message.from;
+                break;
+            case PieceColor.NONE:
+                break;
+            default:
+                // A malformed request
+                return;
+        }
+
+        this.setConfiguration(seats);
+    }
+
     public move(move: Move | null): void {
         this.play({ kind: SealedActionKind.MOVE, move });
     }
@@ -172,6 +233,7 @@ export default abstract class SynchronousChessOnlineGameSession extends Synchron
         }
 
         this.commitments.set(key, message.payload.commitment);
+        this.started.set(true);
 
         // A commitment of the local player it did not play in this page: the page was reloaded since
         if (message.from === this.roomService.localPlayer.name && !this.sealedTurns.has(message.payload.turn)) {

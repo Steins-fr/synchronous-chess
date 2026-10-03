@@ -52,7 +52,7 @@ describe('SynchronousChess', () => {
         // Then
         expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, 4, {
             [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
-            [SCGameSessionType.CONFIGURATION]: BlockChainName.CHESS,
+            [SCGameSessionType.SEAT]: BlockChainName.CHESS,
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
         });
