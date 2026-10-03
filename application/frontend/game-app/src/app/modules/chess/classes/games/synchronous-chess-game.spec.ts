@@ -2733,6 +2733,42 @@ describe('SynchronousChessGame', () => {
         expect(game.lastMoveTurnAction()).toEqual(expect.objectContaining({ whiteMove: null, blackMove: null }));
     });
 
+    describe('castling and check', () => {
+        const castlingPosition: Record<string, FenPiece> = { e1: FenPiece.WHITE_KING, a1: FenPiece.WHITE_ROOK, h1: FenPiece.WHITE_ROOK, h8: FenPiece.BLACK_KING };
+
+        function kingPlays(game: SynchronousChessGame): string[] {
+            return game.getPossiblePlays(new Vec2(4, 7)).map((play: Vec2) => `${ 'abcdefgh'[play.x] }${ 8 - play.y }`).sort();
+        }
+
+        test('should not castle out of check, the castling rights being kept', () => {
+            // Given the white king in check by a rook
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ ...castlingPosition, e8: FenPiece.BLACK_ROOK }));
+
+            // When
+            game.verifyCheck();
+
+            // Then the king can only step aside
+            expect(game.isWhiteInCheck()).toEqual(true);
+            expect(kingPlays(game)).toEqual(['d1', 'd2', 'f1', 'f2']);
+            expect(game.whiteRules.isKingSideCastleAvailable()).toEqual(true);
+            expect(game.whiteRules.isQueenSideCastleAvailable()).toEqual(true);
+        });
+
+        test('should castle on both sides when the king is not in check', () => {
+            // Given the same position, the rook not giving check
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ ...castlingPosition, b8: FenPiece.BLACK_ROOK }));
+
+            // When
+            game.verifyCheck();
+
+            // Then
+            expect(game.isWhiteInCheck()).toEqual(false);
+            expect(kingPlays(game)).toEqual(['c1', 'd1', 'd2', 'e2', 'f1', 'f2', 'g1']);
+        });
+    });
+
     describe('end of the game', () => {
         const g1f3: Move = { from: [FenColumn.G, FenRow._1], to: [FenColumn.F, FenRow._3] };
         const f3g1: Move = { from: [FenColumn.F, FenRow._3], to: [FenColumn.G, FenRow._1] };

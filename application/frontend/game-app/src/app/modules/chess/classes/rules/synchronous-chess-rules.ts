@@ -48,11 +48,14 @@ export default class SynchronousChessRules extends ChessRules {
         const opponentRules: ChessRules = isBlack ? SynchronousChessRules.whiteNoSafetyRules : SynchronousChessRules.blackNoSafetyRules;
 
         const castlingMoves: Array<Movement> = [];
+        // A king in check can not castle out of it: the check prevents the castling for the turn, the right is kept
+        const notInCheck: SafeMovementCondition = new SafeMovementCondition(opponentRules, isForCheckSafety, [0, 0]);
 
         if (isKingSideCastleAvailable) {
             castlingMoves.push(HopMovement.build([2, 0], [
                 new CaseMovementCondition([1, 0], [FenPiece.EMPTY]),
                 new CaseMovementCondition([2, 0], [FenPiece.EMPTY]),
+                notInCheck,
                 new SafeMovementCondition(opponentRules, isForCheckSafety, [1, 0])
             ]));
         }
@@ -61,6 +64,7 @@ export default class SynchronousChessRules extends ChessRules {
                 new CaseMovementCondition([-1, 0], [FenPiece.EMPTY]),
                 new CaseMovementCondition([-2, 0], [FenPiece.EMPTY]),
                 new CaseMovementCondition([-3, 0], [FenPiece.EMPTY]),
+                notInCheck,
                 new SafeMovementCondition(opponentRules, isForCheckSafety, [-1, 0])
             ]));
         }
