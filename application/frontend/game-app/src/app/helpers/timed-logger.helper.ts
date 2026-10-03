@@ -6,7 +6,7 @@ export class TimedLogger {
     }
 
     private static getCallerInfo(): string {
-        const stack = new Error().stack;
+        const stack = new Error('caller').stack;
         if (!stack) {
             return '';
         }

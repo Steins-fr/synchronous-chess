@@ -39,7 +39,7 @@ export class HostRoomNetwork extends RoomNetwork {
     }
 
     private enableMatchmakingStateRefresh(): ReturnType<typeof setInterval> {
-        const refreshInterval: number = 360000; // 6 minutes
+        const refreshInterval: number = 360_000; // 6 minutes
         return setInterval(async () => {
             try {
                 const roomName: string = this.roomName;

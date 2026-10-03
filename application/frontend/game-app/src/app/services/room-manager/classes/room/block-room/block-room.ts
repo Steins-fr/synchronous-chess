@@ -49,7 +49,7 @@ export function mergeBlockChainRoutings<A extends object, B extends object>(a: B
  */
 export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInterface {
     /** The chains are compared, and the entries not ordered reported, at this pace */
-    private static readonly TICK_MS: number = 2_000;
+    private static readonly TICK_MS: number = 2000;
 
     private readonly participants: ParticipantRegistry;
     private readonly antiCheat: AntiCheat;

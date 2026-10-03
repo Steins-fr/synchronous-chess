@@ -316,7 +316,7 @@ export class Webrtc {
 
         return [
             // tslint:disable-next-line: no-bitwise
-            priority >> 24, (priority >> 8) & 0xFFFF, priority & 0xFF
+            priority >> 24, (priority >> 8) & 0xFF_FF, priority & 0xFF
         ].join(' | ');
     }
 

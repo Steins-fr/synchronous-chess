@@ -45,7 +45,7 @@ export class DrawRules {
             this.quietTurns++;
         }
 
-        const key: string = `${ board.map((row: ReadonlyArray<FenPiece>) => row.map((piece: FenPiece) => piece || '.').join('')).join('/') } ${ castling }`;
+        const key: string = `${ board.map((row: ReadonlyArray<FenPiece>) => row.map((piece: FenPiece) => piece === FenPiece.EMPTY ? '.' : piece).join('')).join('/') } ${ castling }`;
         this.positions.set(key, (this.positions.get(key) ?? 0) + 1);
     }
 
