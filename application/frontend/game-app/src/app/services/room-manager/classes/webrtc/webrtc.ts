@@ -170,9 +170,8 @@ export class Webrtc {
     }
 
     private async registerRemoteIce(candidates: RTCIceCandidateInit[]): Promise<void> {
-        for (const candidate of candidates) {
-            await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        }
+        // The connection adds them in order: a refused candidate does not keep the next ones out
+        await Promise.all(candidates.map((candidate: RTCIceCandidateInit) => this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate))));
     }
 
     private onIceConnectionStateChange(): void {

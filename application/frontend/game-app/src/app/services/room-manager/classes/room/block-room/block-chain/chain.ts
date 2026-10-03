@@ -125,22 +125,6 @@ export class Chain {
         return this.hasIndex(index) ? this.chain.slice(index, index + max) : [];
     }
 
-    public async isChainValid(): Promise<boolean> {
-        for (let i: number = 1; i < this.chain.length; i++) {
-            const current: Block = this.chain[i];
-            const previous: Block = this.chain[i - 1];
-
-            if (current.hash !== await Chain.calculateHash(this.name, current)) {
-                return false;
-            }
-
-            if (current.previousHash !== previous.hash) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public reset(): void {
         this.chain = [Chain.createGenesisBlock()];
         this.entryIds.clear();

@@ -63,10 +63,12 @@ export class HostRoomNetwork extends RoomNetwork {
                 }
 
                 for (const playerName of missingPlayers) {
+                    // eslint-disable-next-line no-await-in-loop -- one update of the room at a time on the API
                     await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName, playerName });
                 }
 
                 for (const playerName of playersToRemove) {
+                    // eslint-disable-next-line no-await-in-loop -- the API removes a player by its index in the room: two removals at a time could remove the wrong one
                     await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName, playerName });
                 }
             } catch (e) {

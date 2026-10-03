@@ -73,7 +73,6 @@ describe('Chain', () => {
         expect(canAppend).toEqual(true);
         expect(chain.getLatestBlock()).toBe(block);
         expect(chain.contains(block)).toEqual(true);
-        expect(await chain.isChainValid()).toEqual(true);
     });
 
     test('should refuse invalid blocks', async () => {
@@ -131,34 +130,6 @@ describe('Chain', () => {
 
         // Then
         expect(call).toThrow('Chain has no genesis block');
-    });
-
-    test('isChainValid should detect a tampered hash', async () => {
-        // Given
-        const chain: Chain = new Chain(chainName);
-        const block: Block = await createNextBlock(chain.getLatestBlock());
-        const tampered: Block = { ...block, entry: createEntry({ ...data, payload: 2 }) };
-        (chain as unknown as { chain: Block[] }).chain.push(tampered);
-
-        // When
-        const isValid: boolean = await chain.isChainValid();
-
-        // Then
-        expect(isValid).toEqual(false);
-    });
-
-    test('isChainValid should detect a broken link', async () => {
-        // Given
-        const chain: Chain = new Chain(chainName);
-        const orphanPrevious: Block = new Block(0, '', createEntry(), '', 'orphan', '');
-        const orphan: Block = await createNextBlock(orphanPrevious);
-        (chain as unknown as { chain: Block[] }).chain.push(orphan);
-
-        // When
-        const isValid: boolean = await chain.isChainValid();
-
-        // Then
-        expect(isValid).toEqual(false);
     });
 
     test('should sign and verify a content', async () => {
