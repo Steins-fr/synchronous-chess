@@ -1,6 +1,16 @@
+:host {
+    display: block;
+}
+
+// The virtual scroll of the chat lays out the messages by a fixed itemSize of 20px: a message stays on one line of
+// that height, padding included (Tailwind's preflight sets box-sizing: border-box)
 .chat-message {
-    height: 14px;
-    padding: 3px;
+    height: 20px;
+    padding: 0 3px;
+    line-height: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
     .author {
         color: blue;

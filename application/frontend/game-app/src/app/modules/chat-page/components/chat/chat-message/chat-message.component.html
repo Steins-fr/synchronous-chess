@@ -1,4 +1,4 @@
-<div class="chat-message">
+<div class="chat-message" [title]="message().message">
     <span class="author" [class.my-message]="message().isSelf">{{ message().author }} :</span>
     {{ message().message }}
 </div>

@@ -21,3 +21,9 @@ body {
         --mat-snack-bar-supporting-text-color: #fff;
     }
 }
+
+// The CDK sizes the content wrapper of a virtual scroll to its widest item: held to the chat width, so that a long
+// message is cut with an ellipsis (ChatMessageComponent) instead of overflowing the chat
+#virtual-chat .cdk-virtual-scroll-content-wrapper {
+    width: 100%;
+}
