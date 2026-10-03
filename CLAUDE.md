@@ -53,7 +53,13 @@ Backend, from `application/backend/websocket-api`:
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
 npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
+npm test             # Vitest in watch mode
+npm run test:ci      # single run with coverage, 100% required (vitest.config.ts)
 ```
+
+The API specs sit next to their file and mock DynamoDB and API Gateway with `aws-sdk-client-mock`:
+`mockAws()` of `testing/api-mocks.ts` (alias `@testing/*`) resets both before each test, with the room
+fixtures and a reader of the packets posted to the connections.
 
 ## Frontend specifics
 

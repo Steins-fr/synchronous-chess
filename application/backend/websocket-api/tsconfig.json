@@ -21,6 +21,7 @@
             "@protocol/*": ["../../shared/room-socket-protocol/*"],
             "@repositories/*": ["./shared/repositories/*"],
             "@services/*": ["./shared/services/*"],
+            "@testing/*": ["./testing/*"],
         },
     }
 }
