@@ -2,14 +2,10 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
+import { RtcSignal } from '@protocol/rtc-signal';
 import WebrtcStates, { DebugRTCIceCandidate, defaultWebrtcStates } from './webrtc-states';
 
 import { Message } from './messages/message';
-
-export interface RtcSignal {
-    sdp: RTCSessionDescriptionInit;
-    ice: Array<RTCIceCandidateInit>;
-}
 
 enum PacketType {
     MESSAGE = 'message',

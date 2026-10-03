@@ -1,4 +1,4 @@
-import { RtcSignal } from '../webrtc';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { EnvelopesOf } from './envelope';
 import MessageOriginType from './message-origin.types';
 

@@ -4,6 +4,7 @@ on:
     pull_request:
         paths:
             - "application/backend/websocket-api/**"
+            - "application/shared/**"
 
 defaults:
     run:

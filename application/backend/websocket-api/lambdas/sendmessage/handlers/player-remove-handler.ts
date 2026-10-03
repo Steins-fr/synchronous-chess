@@ -1,7 +1,7 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import RoomHelper from '@helpers/room-helper';
 import Room from '@models/room';
-import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '../types/socket-packet-payload.type';
+import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 
 export default class PlayerRemoveHandler extends MessageHandler {

@@ -1,150 +1,22 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { objectHasValue } from '@app/helpers/object.helper';
-import { ValuesOf } from '@app/types/values-of.type';
+import {
+    requestToResponse,
+    RequestToResponseType,
+    RoomApiRequestTypeEnum,
+    RoomApiResponseTypeEnum,
+    RoomSocketApiNotificationEnum,
+    RoomSocketApiNotifications,
+    RoomSocketApiRequestTypedData,
+    RoomSocketApiResponseTypedData,
+    SocketPacketRequestPayload,
+    SocketPacketResponsePayload,
+} from '@protocol/socket-packet-payload.type';
 import { filter, first, map, Observable, Subject, takeUntil, tap } from 'rxjs';
 import { WebSocketService } from '../web-socket/web-socket.service';
-import FullNotification from './notifications/full-notification';
-import JoinNotification from './notifications/join-notification';
-import SignalNotification from './notifications/signal-notification';
-import FullRequest from './requests/full-request';
-import PlayerRequest from './requests/player-request';
-import PlayersRequest from './requests/players-request';
-import RoomCreateRequest from './requests/room-create-request';
-import RoomJoinRequest from './requests/room-join-request';
-import RtcSignalRequest from './requests/signal-request';
-import ErrorResponse from './responses/error-response';
-import FullResponse from './responses/full-response';
-import PlayerResponse from './responses/player-response';
-import PlayersResponse from './responses/players-response';
-import RoomCreateResponse from './responses/room-create-response';
-import RoomJoinResponse from './responses/room-join-response';
-import RtcSignalResponse from './responses/rtc-signal-response';
 
-interface SocketPacketPayload<Type, Data> {
-    id: number; // Positive number are reserved for followed messages, request and response share the same id, -1 is reserved for notifications
-    type: Type;
-    data: Data;
-}
-
-// region RequestPayload
-export enum RoomApiRequestTypeEnum {
-    CREATE = 'create',
-    JOIN = 'join',
-    PLAYER_GET_ALL = 'playerGetAll',
-    PLAYER_ADD = 'playerAdd',
-    PLAYER_REMOVE = 'playerRemove',
-    FULL = 'full',
-    SIGNAL = 'signal'
-}
-
-type RoomSocketApiRequestTypedData = {
-    'create': RoomCreateRequest,
-    'join': RoomJoinRequest,
-    'playerGetAll': PlayersRequest,
-    'playerAdd': PlayerRequest,
-    'playerRemove': PlayerRequest,
-    'signal': RtcSignalRequest,
-    'full': FullRequest,
-};
-
-type SocketPacketRequestPayload<Type extends RoomApiRequestTypeEnum = RoomApiRequestTypeEnum> = SocketPacketPayload<Type, RoomSocketApiRequestTypedData[Type]>;
-// endregion
-
-// region ResponsePayload
-/** The messages of the error responses the application tells apart, sent by the websocket API */
-export enum RoomApiErrorMessage {
-    ROOM_ALREADY_EXISTS = 'Room already exists',
-    /** A player of the same name is in the room, until the host tells it left */
-    ALREADY_IN_GAME = 'Already in game',
-    ALREADY_IN_QUEUE = 'Already in queue',
-}
-
-enum RoomApiResponseTypeEnum {
-    ADDED = 'added',
-    CREATED = 'created',
-    ERROR = 'error',
-    FULL_SENT = 'fullSent',
-    JOINING_ROOM = 'joiningRoom',
-    PLAYERS = 'players',
-    REMOVED = 'removed',
-    SIGNAL_SENT = 'signalSent',
-}
-
-type RoomSocketApiResponseType = `${ RoomApiResponseTypeEnum }`;
-type RoomSocketApiResponseTypedData = {
-    'added': PlayerResponse,
-    'created': RoomCreateResponse,
-    'error': ErrorResponse,
-    'fullSent': FullResponse,
-    'joiningRoom': RoomJoinResponse,
-    'players': PlayersResponse,
-    'removed': PlayerResponse,
-    'signalSent': RtcSignalResponse,
-};
-
-type SocketPacketResponsePayload<Type extends RoomApiResponseTypeEnum = RoomApiResponseTypeEnum> = SocketPacketPayload<Type, RoomSocketApiResponseTypedData[Type]>;
-// endregion
-
-type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = {
-    [RoomApiRequestTypeEnum.CREATE]: RoomApiResponseTypeEnum.CREATED,
-    [RoomApiRequestTypeEnum.JOIN]: RoomApiResponseTypeEnum.JOINING_ROOM,
-    [RoomApiRequestTypeEnum.PLAYER_GET_ALL]: RoomApiResponseTypeEnum.PLAYERS,
-    [RoomApiRequestTypeEnum.PLAYER_ADD]: RoomApiResponseTypeEnum.ADDED,
-    [RoomApiRequestTypeEnum.PLAYER_REMOVE]: RoomApiResponseTypeEnum.REMOVED,
-    [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
-    [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
-}[Type];
-
-const requestToResponse: {
-    [Type in RoomApiRequestTypeEnum]: RequestToResponseType<Type>
-} = {
-    [RoomApiRequestTypeEnum.CREATE]: RoomApiResponseTypeEnum.CREATED,
-    [RoomApiRequestTypeEnum.JOIN]: RoomApiResponseTypeEnum.JOINING_ROOM,
-    [RoomApiRequestTypeEnum.PLAYER_GET_ALL]: RoomApiResponseTypeEnum.PLAYERS,
-    [RoomApiRequestTypeEnum.PLAYER_ADD]: RoomApiResponseTypeEnum.ADDED,
-    [RoomApiRequestTypeEnum.PLAYER_REMOVE]: RoomApiResponseTypeEnum.REMOVED,
-    [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
-    [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
-};
-
-// region NotificationPayload
-export enum RoomSocketApiNotificationEnum {
-    FULL = 'full',
-    JOIN_REQUEST = 'joinRequest',
-    REMOTE_SIGNAL = 'remoteSignal'
-}
-
-// Compared to Response, Notification ara propagated as RoomSocketApiNotifications.
-// So, we need to ensure that comparing `type` to `RoomSocketApiNotificationEnum` determines `data` type.
-type RoomSocketApiNotificationType = `${ RoomSocketApiNotificationEnum }`;
-type RoomSocketApiNotificationTypedData = {
-    'full': FullNotification,
-    'joinRequest': JoinNotification,
-    'remoteSignal': SignalNotification,
-};
-
-type RoomSocketApiNotification<Type extends RoomSocketApiNotificationType> = {
-    type: Type,
-    data: RoomSocketApiNotificationTypedData[Type],
-};
-
-type SocketPacketNotificationPayloads = ValuesOf<{
-    [Type in keyof RoomSocketApiNotificationTypedData]: RoomSocketApiNotification<Type>
-}>;
-
-export type RoomSocketApiNotifications = ValuesOf<{
-    [Type in keyof RoomSocketApiNotificationTypedData]: RoomSocketApiNotification<Type>
-}>;
-// endregion
-
-// Throw compilation error if colliding key in constants. Responsibility of this component because this is its behavior that defines that keys should not collide
-type NotificationAndResponseCommonKeys = RoomSocketApiNotificationType & RoomSocketApiResponseType;
-type NotificationAndResponseHasCommonKeys = NotificationAndResponseCommonKeys extends never ? 'NotificationAndResponseHasNoCommonKeys' : `Notifications cannot have same key than key registered in Responses, common key is -> ${NotificationAndResponseCommonKeys}`;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const notificationAndResponseHasCommonKeys: NotificationAndResponseHasCommonKeys = 'NotificationAndResponseHasNoCommonKeys';
-
-type SocketPacketAllPayload = SocketPacketResponsePayload | SocketPacketNotificationPayloads;
+type SocketPacketAllPayload = SocketPacketResponsePayload | RoomSocketApiNotifications;
 
 // Injection token for WebSocketServer
 export const WEB_SOCKET_SERVER = new InjectionToken<string>('WebSocketServer');
@@ -212,7 +84,7 @@ export class RoomSocketApi {
         return isPacketPayload;
     }
 
-    private isSocketPacketNotificationPayload(payload: SocketPacketAllPayload): payload is SocketPacketNotificationPayloads {
+    private isSocketPacketNotificationPayload(payload: SocketPacketAllPayload): payload is RoomSocketApiNotifications {
         return objectHasValue(RoomSocketApiNotificationEnum, payload.type);
     }
 

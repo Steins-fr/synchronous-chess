@@ -3,17 +3,17 @@ import { Negotiator } from '../negotiator/negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
-import {
-    RoomApiRequestTypeEnum,
-    RoomSocketApi,
-    RoomSocketApiNotificationEnum,
-    RoomSocketApiNotifications
-} from '@app/services/room-api/room-socket.api';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
-import { RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RtcSignal } from '@protocol/rtc-signal';
+import {
+    RoomApiRequestTypeEnum,
+    RoomSocketApiNotificationEnum,
+    RoomSocketApiNotifications
+} from '@protocol/socket-packet-payload.type';
 import { TestHelper } from '@testing/test.helper';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { Subject } from 'rxjs';

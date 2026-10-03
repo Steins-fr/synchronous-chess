@@ -1,10 +1,10 @@
-import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import RtcSignalResponse from '@protocol/responses/rtc-signal-response';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';

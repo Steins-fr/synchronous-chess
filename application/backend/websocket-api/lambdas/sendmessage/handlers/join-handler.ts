@@ -1,18 +1,15 @@
 import BadRequestException from '@exceptions/bad-request-exception';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import {
     RoomApiRequestTypeEnum,
     RoomApiResponseTypeEnum,
     RoomSocketApiNotificationEnum
-} from '../types/socket-packet-payload.type';
+} from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 import Room from '@models/room';
 import RoomHelper from '@helpers/room-helper';
 
 export default class JoinHandler extends MessageHandler {
-
-    private static readonly ERROR_ALREADY_IN_GAME: string = 'Already in game';
-    private static readonly ERROR_ALREADY_IN_QUEUE: string = 'Already in queue';
-
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.JOIN);
 
@@ -23,11 +20,11 @@ export default class JoinHandler extends MessageHandler {
         const room: Room = await this.roomService.getRoomByName(data.roomName);
 
         if (RoomHelper.isInGame(room, data.playerName)) {
-            throw new BadRequestException(JoinHandler.ERROR_ALREADY_IN_GAME);
+            throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_GAME);
         }
 
         if (RoomHelper.isInQueue(room, data.playerName)) {
-            throw new BadRequestException(JoinHandler.ERROR_ALREADY_IN_QUEUE);
+            throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_QUEUE);
         }
 
         await this.connectionService.create({ connectionId: this.connectionId, roomName: room.id });

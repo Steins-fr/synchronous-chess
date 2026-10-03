@@ -7,6 +7,7 @@ on:
             - main
         paths:
             - "application/frontend/game-app/**"
+            - "application/shared/**"
     workflow_dispatch:
 
 defaults:

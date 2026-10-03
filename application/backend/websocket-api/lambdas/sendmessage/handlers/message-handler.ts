@@ -9,7 +9,7 @@ import {
     SocketPacketResponsePayload,
     RoomApiResponseTypeEnum,
     RoomSocketApiNotificationEnum
-} from '../types/socket-packet-payload.type';
+} from '@protocol/socket-packet-payload.type';
 import BadRequestException from '@exceptions/bad-request-exception';
 import ExceptionTypeEnum from '@exceptions/exception-type.enum';
 import ConnectionService from '@services/connection-service';

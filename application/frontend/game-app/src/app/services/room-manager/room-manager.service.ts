@@ -1,12 +1,14 @@
 import { inject, Injectable } from '@angular/core';
-import { RoomApiErrorMessage, RoomApiRequestTypeEnum, RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
+import RoomCreateResponse from '@protocol/responses/room-create-response';
+import RoomJoinResponse from '@protocol/responses/room-join-response';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
 import { RoomNetwork } from './classes/room-network/room-network';
-import RoomJoinResponse from '../room-api/responses/room-join-response';
-import RoomCreateResponse from '../room-api/responses/room-create-response';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()

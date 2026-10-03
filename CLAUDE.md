@@ -21,6 +21,9 @@ Mono-repo, no root package.json — each package is installed and run from its o
 
 - `application/frontend/game-app` — Angular 21 app (the main project)
 - `application/backend/websocket-api` — AWS Lambda WebSocket API (TypeScript, esbuild, DynamoDB)
+- `application/shared/room-socket-protocol` — the WebSocket message types (requests, responses,
+  notifications, error messages), imported by both packages as `@protocol/*`. Plain TypeScript with
+  no dependency nor package.json: each package compiles it through its own tsconfig alias
 - `infrastructure` — Terraform (AWS), applied by GitHub Actions
 - `documentation` — resources and diagrams
 
@@ -51,7 +54,7 @@ npm run lint         # ESLint
 
 - Tests use **Vitest** with jsdom (`vitest.config.ts`, `test-setup.ts`), not Karma/Jasmine.
   Shared test providers are in `src/test-providers.ts`, helpers under `src/testing`.
-- Path aliases: `@app/*`, `@environments/*`, `@testing/*`.
+- Path aliases: `@app/*`, `@environments/*`, `@testing/*`, `@protocol/*` (the shared WebSocket protocol).
 - Code lives under `src/app/{modules,services,pages,helpers,types}`.
 - Tailwind v4 is wired through PostCSS (`src/tailwind.css`); global styles in `src/styles.scss`.
 

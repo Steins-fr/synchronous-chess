@@ -1,11 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import RoomManagerService from './room-manager.service';
 import { NotificationService } from '../notification/notification.service';
-import { RoomApiErrorMessage, RoomApiRequestTypeEnum, RoomSocketApi, RoomSocketApiNotifications } from '../room-api/room-socket.api';
+import { RoomSocketApi } from '../room-api/room-socket.api';
 import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { RoomApiRequestTypeEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';

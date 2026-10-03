@@ -1,4 +1,4 @@
-import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
+import RtcSignalResponse from '@protocol/responses/rtc-signal-response';
 import { EnvelopesOf } from './envelope';
 import MessageOriginType from './message-origin.types';
 

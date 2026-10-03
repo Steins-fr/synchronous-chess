@@ -1,8 +1,9 @@
 import { environment } from '@environments/environment';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { firstValueFrom } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Message } from './messages/message';
-import { RtcSignal, Webrtc } from './webrtc';
+import { Webrtc } from './webrtc';
 import WebrtcStates from './webrtc-states';
 
 class MockRTCDataChannel {

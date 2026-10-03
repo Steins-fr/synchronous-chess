@@ -17,6 +17,7 @@
             "@exceptions/*": ["./shared/exceptions/*"],
             "@helpers/*": ["./shared/helpers/*"],
             "@models/*": ["./shared/models/*"],
+            "@protocol/*": ["../../shared/room-socket-protocol/*"],
             "@repositories/*": ["./shared/repositories/*"],
             "@services/*": ["./shared/services/*"],
         },

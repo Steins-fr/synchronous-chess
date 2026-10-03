@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { RoomApiRequestTypeEnum, RoomSocketApi, RoomSocketApiNotificationEnum, RoomSocketApiNotifications, WEB_SOCKET_SERVER } from './room-socket.api';
+import { RoomSocketApi, WEB_SOCKET_SERVER } from './room-socket.api';
+import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { WebSocketMock } from '@testing/web-socket.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 

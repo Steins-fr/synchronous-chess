@@ -1,11 +1,9 @@
-import FullNotification from '@app/services/room-api/notifications/full-notification';
-import SignalNotification from '@app/services/room-api/notifications/signal-notification';
-import {
-    RoomApiRequestTypeEnum,
-    RoomSocketApi,
-    RoomSocketApiNotificationEnum
-} from '@app/services/room-api/room-socket.api';
-import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import FullNotification from '@protocol/notifications/full-notification';
+import SignalNotification from '@protocol/notifications/signal-notification';
+import { RtcSignal } from '@protocol/rtc-signal';
+import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
 import { Subject, takeUntil } from 'rxjs';
 import { Negotiator, NegotiatorConnectionState } from './negotiator';
 

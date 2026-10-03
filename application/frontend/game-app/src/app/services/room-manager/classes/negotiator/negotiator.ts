@@ -1,6 +1,7 @@
-import SignalNotification from '@app/services/room-api/notifications/signal-notification';
-import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates from '@app/services/room-manager/classes/webrtc/webrtc-states';
+import SignalNotification from '@protocol/notifications/signal-notification';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { Observable, Subject, Subscription } from 'rxjs';
 
 export enum NegotiatorConnectionState {

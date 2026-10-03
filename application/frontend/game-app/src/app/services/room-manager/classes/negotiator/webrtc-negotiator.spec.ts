@@ -2,7 +2,7 @@ import { WebrtcNegotiator } from './webrtc-negotiator';
 import { Player } from '../player/player';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
-import { RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { TestHelper } from '@testing/test.helper';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { describe, expect, test, vi } from 'vitest';

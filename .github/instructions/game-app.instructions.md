@@ -39,6 +39,8 @@ This is an Angular TypeScript project with the following characteristics:
 
 - Import shortcut `@app/*`for `src/app/*`
 - Import shortcut `@testing/*` for `src/testing/*`
+- Import shortcut `@protocol/*` for `../../shared/room-socket-protocol/*`: the WebSocket message types
+  shared with the API, never duplicated in the app
 
 ## Common Patterns
 

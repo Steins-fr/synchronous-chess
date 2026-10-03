@@ -1,4 +1,4 @@
-import { RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RtcSignal } from '../rtc-signal';
 
 export default interface SignalNotification {
     from: string;

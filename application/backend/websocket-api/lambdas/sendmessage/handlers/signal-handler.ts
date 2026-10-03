@@ -6,7 +6,7 @@ import {
     RoomApiRequestTypeEnum,
     RoomSocketApiNotificationEnum,
     RoomApiResponseTypeEnum
-} from '../types/socket-packet-payload.type';
+} from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 
 export default class SignalHandler extends MessageHandler {
