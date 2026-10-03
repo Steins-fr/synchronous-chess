@@ -1,8 +1,6 @@
 import { DynamoDBClient, DynamoDBServiceException } from '@aws-sdk/client-dynamodb';
 import {
     DynamoDBDocumentClient,
-    QueryCommandInput,
-    QueryCommand,
     UpdateCommand,
     UpdateCommandInput,
     PutCommand,
@@ -74,33 +72,6 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             }
 
             return data.Item as Resource;
-        } catch (err) {
-            if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(DynamoCrudActionEnum.GET, err.message);
-            }
-
-            throw err;
-        }
-    }
-
-    public async findOneBy(expression: QueryCommandInput['KeyConditionExpression'], paramValues: QueryCommandInput['ExpressionAttributeValues']): Promise<Resource | null> {
-        const command = new QueryCommand({
-            TableName: this.tableName,
-            KeyConditionExpression: expression,
-            ExpressionAttributeValues: paramValues,
-            ProjectionExpression: this.defaultProjection,
-            ConsistentRead: true,
-            Limit: 1
-        });
-
-        try {
-            const data = await this.ddb.send(command);
-
-            if (data.Count === 0 || data.Items === undefined) {
-                return null;
-            } else {
-                return data.Items.shift() as Resource;
-            }
         } catch (err) {
             if (err instanceof DynamoDBServiceException) {
                 throw new DynamoException(DynamoCrudActionEnum.GET, err.message);

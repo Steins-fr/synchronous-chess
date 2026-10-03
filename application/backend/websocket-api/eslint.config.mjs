@@ -11,14 +11,21 @@ import sonarWay from "../../shared/sonar-eslint-rules/sonar-way.json" with { typ
 
 export default [
     {
-        ignores: ["dist/*", "node_modules/*"],
+        ignores: ["dist/*", "node_modules/*", "coverage/*"],
     },
     {
         // The rules of the SonarCloud quality profile (see shared/sonar-eslint-rules), before the rules of the
-        // project that override them. The import rules need the plugin of the next block
+        // project that override them. The import rules need the plugin of the next block. SonarCloud analyzes the
+        // specs as tests, with their own rules
         files: ["**/*.ts"],
+        ignores: ["**/*.spec.ts"],
         plugins: { sonarjs, unicorn, promise },
         rules: { ...sonarWay.sources, ...sonarWay.import },
+    },
+    {
+        files: ["**/*.spec.ts"],
+        plugins: { sonarjs },
+        rules: sonarWay.tests,
     },
     {
         plugins: {
@@ -293,6 +300,13 @@ export default [
             quotes: "off",
             radix: "error",
             semi: "off",
+        },
+    },
+    {
+        // The callbacks of the specs (test, describe...) need no return type
+        files: ["**/*.spec.ts"],
+        rules: {
+            "@typescript-eslint/explicit-function-return-type": "off",
         },
     },
 ];
