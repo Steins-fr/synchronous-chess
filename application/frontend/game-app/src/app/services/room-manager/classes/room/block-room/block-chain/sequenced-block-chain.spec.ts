@@ -544,6 +544,23 @@ describe('SequencedBlockChain', () => {
             expect(node.internals.awaitingBlocksFrom.has('b')).toEqual(true);
         });
 
+        test('should skip the blocks it has already, as when several participants answer a new sequencer', async () => {
+            // Given a block received, then a response bringing it again with the next one
+            const node: Node = createNode('b');
+            const [block1, block2] = await createBlocks(node, 2, 'b', remoteKeys);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
+            node.internals.awaitingBlocksFrom.add('b');
+
+            // When
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1, block2]));
+
+            // Then the block is added and delivered once
+            expect(node.internals.blockChain.getLatestBlock()).toBe(block2);
+            expect(delivered(node)).toEqual([block1.entry.data, block2.entry.data]);
+            expect(TimedLogger.error).not.toHaveBeenCalled();
+            expect(node.report).not.toHaveBeenCalled();
+        });
+
         test('should ignore the responses it did not ask for, and stop at a refused block', async () => {
             // Given
             const node: Node = createNode('b');
