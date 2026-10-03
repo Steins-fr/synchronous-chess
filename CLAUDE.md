@@ -48,6 +48,7 @@ Backend, from `application/backend/websocket-api`:
 ```bash
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
+npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
 ```
 
 ## Frontend specifics

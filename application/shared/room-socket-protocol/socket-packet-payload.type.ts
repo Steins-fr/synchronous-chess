@@ -73,7 +73,7 @@ export type SocketPacketResponsePayload<Type extends RoomApiResponseTypeEnum = R
 // endregion
 
 // region RequestToResponse
-export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = {
+export const requestToResponse = {
     [RoomApiRequestTypeEnum.CREATE]: RoomApiResponseTypeEnum.CREATED,
     [RoomApiRequestTypeEnum.JOIN]: RoomApiResponseTypeEnum.JOINING_ROOM,
     [RoomApiRequestTypeEnum.PLAYER_GET_ALL]: RoomApiResponseTypeEnum.PLAYERS,
@@ -81,19 +81,9 @@ export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = {
     [RoomApiRequestTypeEnum.PLAYER_REMOVE]: RoomApiResponseTypeEnum.REMOVED,
     [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
     [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
-}[Type];
+} as const satisfies Record<RoomApiRequestTypeEnum, RoomApiResponseTypeEnum>;
 
-export const requestToResponse: {
-    [Type in RoomApiRequestTypeEnum]: RequestToResponseType<Type>
-} = {
-    [RoomApiRequestTypeEnum.CREATE]: RoomApiResponseTypeEnum.CREATED,
-    [RoomApiRequestTypeEnum.JOIN]: RoomApiResponseTypeEnum.JOINING_ROOM,
-    [RoomApiRequestTypeEnum.PLAYER_GET_ALL]: RoomApiResponseTypeEnum.PLAYERS,
-    [RoomApiRequestTypeEnum.PLAYER_ADD]: RoomApiResponseTypeEnum.ADDED,
-    [RoomApiRequestTypeEnum.PLAYER_REMOVE]: RoomApiResponseTypeEnum.REMOVED,
-    [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
-    [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
-};
+export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = (typeof requestToResponse)[Type];
 // endregion
 
 // region NotificationPayload

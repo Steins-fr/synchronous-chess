@@ -2,6 +2,7 @@ import BadRequestException from '@exceptions/bad-request-exception';
 import RoomHelper from '@helpers/room-helper';
 import Player from '@models/player';
 import Room from '@models/room';
+import { RtcSignal } from '@protocol/rtc-signal';
 import {
     RoomApiRequestTypeEnum,
     RoomSocketApiNotificationEnum,
@@ -10,10 +11,21 @@ import {
 import MessageHandler from './message-handler';
 
 export default class SignalHandler extends MessageHandler {
+    /** The signal is relayed as is, so check its shape before the receiving peer reads it */
+    private static isRtcSignal(signal: unknown): signal is RtcSignal {
+        if (!signal || typeof signal !== 'object' || !('sdp' in signal) || !('ice' in signal)) {
+            return false;
+        }
+
+        const { sdp, ice } = signal;
+
+        return !!sdp && typeof sdp === 'object' && 'type' in sdp && typeof sdp.type === 'string' && Array.isArray(ice);
+    }
+
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.SIGNAL);
 
-        if (!data.roomName || !data.to || !data.signal) {
+        if (!data.roomName || !data.to || !SignalHandler.isRtcSignal(data.signal)) {
             throw new BadRequestException(SignalHandler.ERROR_PARSING);
         }
 

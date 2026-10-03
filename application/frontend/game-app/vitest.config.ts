@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
             environment: 'jsdom',
             setupFiles: ['./test-setup.ts'],
             reporters: ['default'],
+            coverage: { allowExternal: true },
         },
         define: {
             'import.meta.vitest': mode !== 'production',
@@ -21,6 +22,7 @@ export default defineConfig(({ mode }) => {
                 '@app': path.resolve(__dirname, 'src/app'),
                 '@testing': path.resolve(__dirname, 'src/testing'),
                 '@environments': path.resolve(__dirname, 'src/environments'),
+                '@protocol': path.resolve(__dirname, '../../shared/room-socket-protocol'),
             }
         }
     };
