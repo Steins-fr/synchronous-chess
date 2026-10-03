@@ -2877,6 +2877,52 @@ describe('SynchronousChessGame', () => {
         });
     });
 
+    describe('pinned pieces (rule C)', () => {
+        function plays(game: SynchronousChessGame, square: string): string[] {
+            return game.getPossiblePlays(new Vec2(square.charCodeAt(0) - 97, 8 - Number(square[1])))
+                .map((play: Vec2) => `${ 'abcdefgh'[play.x] }${ 8 - play.y }`).sort();
+        }
+
+        test('should not let a pinned piece leave the line of its king', () => {
+            // Given the bishop e2 pinned by the rook e8, and the knight f2 pinned by the queen h4
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({
+                e1: FenPiece.WHITE_KING, e2: FenPiece.WHITE_BISHOP, f2: FenPiece.WHITE_KNIGHT, b1: FenPiece.WHITE_KNIGHT,
+                e8: FenPiece.BLACK_ROOK, h4: FenPiece.BLACK_QUEEN, a8: FenPiece.BLACK_KING,
+            }));
+
+            // When
+            game.verifyCheck();
+
+            // Then the pinned pieces can not move, the other knight can
+            expect(game.isWhiteInCheck()).toEqual(false);
+            expect(plays(game, 'e2')).toEqual([]);
+            expect(plays(game, 'f2')).toEqual([]);
+            expect(plays(game, 'b1')).toEqual(['a3', 'c3', 'd2']);
+        });
+
+        test('should let a pinned piece move along the line of its king, up to the pinning piece', () => {
+            // Given the rook e2 pinned by the rook e8
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ e1: FenPiece.WHITE_KING, e2: FenPiece.WHITE_ROOK, e8: FenPiece.BLACK_ROOK, a8: FenPiece.BLACK_KING }));
+
+            // When
+            game.verifyCheck();
+
+            // Then
+            expect(plays(game, 'e2')).toEqual(['e3', 'e4', 'e5', 'e6', 'e7', 'e8']);
+        });
+
+        test('should not look for the safety of a king which is not on the board', () => {
+            // Given a king captured
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ a1: FenPiece.WHITE_ROOK, e8: FenPiece.BLACK_KING }));
+
+            // Then
+            expect(plays(game, 'a1')).toHaveLength(14);
+        });
+    });
+
     describe('castling and check', () => {
         const castlingPosition: Record<string, FenPiece> = { e1: FenPiece.WHITE_KING, a1: FenPiece.WHITE_ROOK, h1: FenPiece.WHITE_ROOK, h8: FenPiece.BLACK_KING };
 

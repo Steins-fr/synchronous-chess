@@ -560,7 +560,8 @@ export default class SynchronousChessGame {
 
         const rules: SynchronousChessRules = this.getRules(ChessBoardHelper.pieceColor(fenPiece));
 
-        const possiblePlays: Array<Vec2> = rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard()));
+        const possiblePlays: Array<Vec2> = this.keepingKingSafe(fenPiece, position,
+            rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard())));
 
         const turnType: TurnType = this.turn().type;
 
@@ -574,6 +575,24 @@ export default class SynchronousChessGame {
             default:
                 return switchExhaustivenessGuard(turnType);
         }
+    }
+
+    /**
+     * A player can not make a move leaving its king attacked, the position of the opponent being unchanged (rule C): a
+     * pinned piece can not leave the line of its king. The moves of the king itself only go to cells not attacked.
+     */
+    private keepingKingSafe(piece: FenPiece, from: Vec2, plays: Array<Vec2>): Array<Vec2> {
+        const color: PieceColor = ChessBoardHelper.pieceColor(piece);
+        const king: FenPiece.WHITE_KING | FenPiece.BLACK_KING = color === PieceColor.WHITE ? FenPiece.WHITE_KING : FenPiece.BLACK_KING;
+
+        if (ChessBoardHelper.pieceType(piece) === PieceType.KING || !this._fenBoard().flat().includes(king)) {
+            return plays;
+        }
+
+        return plays.filter((to: Vec2) => {
+            const board: FenBoard = ChessBoardHelper.setFenPieceByVec(ChessBoardHelper.setFenPieceByVec(this._fenBoard(), to, piece), from, FenPiece.EMPTY);
+            return ChessBoardHelper.isSafe(this.getRules(color).getSafeBoard(board), ChessBoardHelper.findKing(board, king));
+        });
     }
 
     public hasPlayed(color: PieceColor): boolean {
