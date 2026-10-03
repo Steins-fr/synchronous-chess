@@ -24,7 +24,7 @@ export default class RoomService {
         return room;
     }
 
-    public async canEditRoomGuard(room: Room, connectionId: string): Promise<void> {
+    public canEditRoomGuard(room: Room, connectionId: string): void {
         if (room.connectionId !== connectionId) {
             throw new BadRequestException('You are not the host of the room');
         }
