@@ -10,6 +10,7 @@ export default defineConfig({
             TABLE_NAME_ROOMS: 'rooms',
         },
         restoreMocks: true,
+        unstubEnvs: true,
         coverage: {
             provider: 'v8',
             include: ['lambdas/**/*.ts', 'shared/**/*.ts'],
