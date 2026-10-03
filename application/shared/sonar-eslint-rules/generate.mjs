@@ -41,6 +41,7 @@ const OPTIONS = {
     S5693: (p) => [{ fileUploadSizeLimit: Number(p.fileUploadSizeLimit), standardSizeLimit: Number(p.standardSizeLimit) }],
     S5843: (p) => [{ threshold: Number(p.threshold) }],
     S6418: (p) => [{ secretWords: p.secretWords, randomnessSensibility: Number(p.randomnessSensibility) }],
+    S7718: (p) => [{ ignore: p.ignore.split(',') }],
 };
 
 // Deviations from the profile, by ESLint rule
@@ -52,7 +53,7 @@ const OVERRIDES = {
 };
 
 function sonarApi(endpoint) {
-    return JSON.parse(execFileSync('sonar', ['api', 'get', endpoint], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }));
+    return execFileSync('sonar', ['api', 'get', endpoint], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
 }
 
 function readProjectProperties() {
@@ -60,22 +61,24 @@ function readProjectProperties() {
     return Object.fromEntries([...properties.matchAll(/^([\w.]+)=(.*)$/gm)].map(([, key, value]) => [key, value.trim()]));
 }
 
-function fetchProfileRules(organization, profileKey) {
-    const rules = [];
-    const actives = {};
-    let page = 0;
-    let total;
-    do {
-        page++;
-        const result = sonarApi(`/api/rules/search?organization=${organization}&qprofile=${profileKey}&activation=true&f=repo,actives&ps=500&p=${page}`);
-        total = result.total;
-        rules.push(...result.rules);
-        Object.assign(actives, result.actives);
-    } while (rules.length < total);
-    return rules.map((rule) => ({
-        repo: rule.repo,
-        sonarKey: rule.key.split(':')[1],
-        params: Object.fromEntries((actives[rule.key][0].params ?? []).map(({ key, value }) => [key, value])),
+// The text between the first `<tag>` and its closing tag
+function xmlValue(xml, tag) {
+    const start = xml.indexOf(`<${tag}>`);
+    if (start === -1) {
+        return '';
+    }
+    const end = xml.indexOf(`</${tag}>`, start);
+    return xml.slice(start + tag.length + 2, end)
+        .replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&apos;', "'").replaceAll('&amp;', '&');
+}
+
+// The active rules of the profile, from its backup: the search of the rules misses the ones SonarSource added lately
+function fetchProfileRules(organization, profileName) {
+    const backup = sonarApi(`/api/qualityprofiles/backup?organization=${organization}&language=ts&qualityProfile=${encodeURIComponent(profileName)}`);
+    return backup.split('<rule>').slice(1).map((rule) => ({
+        repo: xmlValue(rule, 'repositoryKey'),
+        sonarKey: xmlValue(rule, 'key'),
+        params: Object.fromEntries(rule.split('<parameter>').slice(1).map((param) => [xmlValue(param, 'key'), xmlValue(param, 'value')])),
     }));
 }
 
@@ -120,13 +123,13 @@ function sortKeys(rules) {
 }
 
 const { 'sonar.organization': organization, 'sonar.projectKey': projectKey } = readProjectProperties();
-const profile = sonarApi(`/api/qualityprofiles/search?organization=${organization}&project=${projectKey}&language=ts`).profiles[0];
+const profile = JSON.parse(sonarApi(`/api/qualityprofiles/search?organization=${organization}&project=${projectKey}&language=ts`)).profiles[0];
 const pluginRules = readPluginRules();
 const externalRules = readExternalRules();
 const groups = { sources: {}, tests: {}, angular: {}, import: {} };
 const skipped = {};
 
-for (const { repo, sonarKey, params } of fetchProfileRules(organization, profile.key)) {
+for (const { repo, sonarKey, params } of fetchProfileRules(organization, profile.name)) {
     if (repo !== 'typescript') {
         // Security (taint analysis) and architecture rules: SonarCloud only
         skipped[repo] = (skipped[repo] ?? 0) + 1;
