@@ -192,7 +192,8 @@ jobs:
                   path: application/backend/websocket-api/coverage
 
             - name: SonarQube Scan
-              uses: SonarSource/sonarqube-scan-action@v7 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+              # v8 checks the GPG signature of the SonarScanner CLI it downloads, v7 skipped it by default
+              uses: SonarSource/sonarqube-scan-action@v8
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               with:
