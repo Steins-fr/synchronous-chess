@@ -7,7 +7,7 @@ import {
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
-import { takeUntil } from 'rxjs';
+import { interval, map, Observable, takeUntil } from 'rxjs';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Block } from './block-chain/block';
 import { Signal } from '@angular/core';
@@ -68,18 +68,22 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private handovers: number = 0;
     /** The sequencer each other participant follows, as it told this participant once its key was received */
     private readonly sequencerStates = new Map<string, Readonly<SequencerState>>();
-    private readonly tickTimer: ReturnType<typeof setInterval>;
 
     /** The stored keys of the player, so that it keeps its identity when reloading the page */
     public static async createKeys(playerName: string, keyStore: ParticipantKeyStore = new ParticipantKeyStore()): Promise<ParticipantKeys> {
         return await ParticipantRegistry.createKeys(await keyStore.keyPairOf(playerName));
     }
 
+    /**
+     * @param ticks$ the times the chains are compared at, until the room is cleared: every TICK_MS by default. Given by
+     * the specs, to tick the room themselves without timer
+     */
     public constructor(
         roomApi: RoomSocketApi,
         roomConnection: RoomNetwork,
         keys: ParticipantKeys,
         routing: NonEmptyBlockChainRouting<M>,
+        ticks$: Observable<number> = interval(BlockRoom.TICK_MS).pipe(map(() => Date.now())),
     ) {
         super(roomApi, roomConnection);
         this.participants = new ParticipantRegistry(this.localPlayer, keys);
@@ -106,7 +110,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         });
         this.participants.left$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => this.onParticipantLeft(name));
         this.antiCheat.reported$.pipe(takeUntil(this.destroyRef)).subscribe(() => this.checkSequencerTrust());
-        this.tickTimer = setInterval(() => this.tick(Date.now()), BlockRoom.TICK_MS);
+        ticks$.pipe(takeUntil(this.destroyRef)).subscribe((now: number) => this.tick(now));
     }
 
     private tick(now: number): void {
@@ -206,7 +210,6 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     }
 
     public override clear(): void {
-        clearInterval(this.tickTimer);
         super.clear();
         this.participants.clear();
         this.antiCheat.clear();
