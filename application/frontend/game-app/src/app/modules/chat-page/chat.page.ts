@@ -29,9 +29,13 @@ export class ChatPage implements OnInit, OnDestroy {
 
     public ngOnInit(): void {
         this.roomSetupService.setup$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async (setup) => {
-            this.room.set(await this.roomManagerService.buildBlockRoom<ChatPayloads>(setup, this.maxPlayer, chatBlockChains));
-
-            this.roomSetupService.roomIsSetup(true);
+            try {
+                this.room.set(await this.roomManagerService.buildBlockRoom<ChatPayloads>(setup, this.maxPlayer, chatBlockChains));
+                this.roomSetupService.roomIsSetup(true);
+            } catch {
+                // Already notified: the form is available again, to try another room or name
+                this.roomSetupService.roomIsSetup(false);
+            }
         });
     }
 

@@ -66,6 +66,22 @@ describe('SynchronousChess', () => {
         expect(clearSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('should make the setup form available again when the room can not be built', async () => {
+        // Given
+        const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
+        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(new Error('Already in game'));
+        const loading: boolean[] = [];
+        roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
+
+        // When
+        roomSetupService.setup('join', 'room', 'local');
+
+        // Then
+        await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
+        await fixture.whenStable();
+        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
+    });
+
     test('should be destroyed without room', () => {
         expect(() => fixture.destroy()).not.toThrow();
     });

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import RoomManagerService from './room-manager.service';
 import { NotificationService } from '../notification/notification.service';
-import { RoomApiRequestTypeEnum, RoomSocketApi, RoomSocketApiNotifications } from '../room-api/room-socket.api';
+import { RoomApiErrorMessage, RoomApiRequestTypeEnum, RoomSocketApi, RoomSocketApiNotifications } from '../room-api/room-socket.api';
 import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
@@ -22,7 +22,7 @@ describe('RoomManagerService', () => {
             send: vi.fn(),
             close: vi.fn(),
         });
-        notificationService = TestHelper.cast<NotificationService>({ error: vi.fn() });
+        notificationService = TestHelper.cast<NotificationService>({ error: vi.fn(), info: vi.fn() });
         vi.spyOn(BlockRoom, 'createKeys').mockResolvedValue({ keyPair: TestHelper.cast<CryptoKeyPair>({ publicKey: {}, privateKey: {} }), publicJwk: {} });
 
         TestBed.configureTestingModule({
@@ -38,6 +38,7 @@ describe('RoomManagerService', () => {
 
     afterEach(() => {
         room?.clear();
+        vi.useRealTimers();
         vi.restoreAllMocks();
     });
 
@@ -68,7 +69,19 @@ describe('RoomManagerService', () => {
 
         // Then
         await expect(build).rejects.toThrow('Room creation failed, mismatched parameters');
-        expect(notificationService.error).toHaveBeenCalledWith('La salle existe déjà');
+        expect(notificationService.error).toHaveBeenCalledWith('La salle n\'a pas pu être créée.');
+    });
+
+    test('should notify when the room to create exists already', async () => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.ROOM_ALREADY_EXISTS));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
+
+        // Then
+        await expect(build).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
+        expect(notificationService.error).toHaveBeenCalledWith('La salle existe déjà.');
     });
 
     test('should reject an empty routing at compile time', () => {
@@ -100,6 +113,58 @@ describe('RoomManagerService', () => {
 
         // Then
         await expect(build).rejects.toThrow('full');
+        expect(notificationService.error).toHaveBeenCalledWith('La salle est pleine ou elle n\'existe plus.');
+    });
+
+    test('should join again while its name is still in the room, as after a reload of the page', async () => {
+        // Given the host has not noticed yet the former connection of the player left
+        vi.useFakeTimers();
+        vi.mocked(roomSocketApi.send)
+            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.ALREADY_IN_GAME))
+            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.ALREADY_IN_QUEUE))
+            .mockResolvedValue({ playerName: 'host' });
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        await vi.advanceTimersByTimeAsync(4000);
+        room = await build;
+
+        // Then
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
+        expect(notificationService.info).toHaveBeenCalledTimes(1);
+        expect(notificationService.error).not.toHaveBeenCalled();
+        expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
+    });
+
+    test.each([
+        { error: RoomApiErrorMessage.ALREADY_IN_GAME, notification: 'Un joueur de ce nom est déjà dans la salle.' },
+        { error: RoomApiErrorMessage.ALREADY_IN_QUEUE, notification: 'Un joueur de ce nom attend déjà d\'entrer dans la salle.' },
+    ])('should give up joining after 20 seconds, on $error', async ({ error, notification }) => {
+        // Given
+        vi.useFakeTimers();
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        const rejected = expect(build).rejects.toThrow(error);
+        await vi.advanceTimersByTimeAsync(20000);
+
+        // Then
+        await rejected;
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(11);
+        expect(notificationService.error).toHaveBeenCalledWith(notification);
+    });
+
+    test('should not join again on a failure which is not an error', async () => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockRejectedValue('closed');
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // Then
+        await expect(build).rejects.toEqual('closed');
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
         expect(notificationService.error).toHaveBeenCalledWith('La salle est pleine ou elle n\'existe plus.');
     });
 });

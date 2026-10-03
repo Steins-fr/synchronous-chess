@@ -155,6 +155,11 @@ it played until it is revealed.
 
 ## Reloading the page
 
+The player joins the room again under its name. The host notices at once that its former page left,
+since the data channels close with it, but the websocket API refuses the name (`Already in game`) until
+the host removed the former connection: the page asks to join again every 2 seconds, for 20 seconds
+at most (`RoomManagerService`), then tells the name is taken.
+
 A reloaded page builds a new session, and the chain delivers again all its messages:
 
 - the `SC_GS_seat` requests seat the same players again;

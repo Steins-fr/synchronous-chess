@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { RoomApiRequestTypeEnum, RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomApiErrorMessage, RoomApiRequestTypeEnum, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
@@ -11,6 +11,13 @@ import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export default class RoomManagerService {
+    /**
+     * A player reloading the page joins again under its name before the host noticed it left: the websocket API refuses
+     * the name until the host removes the former connection, which takes a few seconds
+     */
+    private static readonly JOIN_RETRY_DELAY: number = 2000;
+    private static readonly JOIN_RETRIES: number = 10;
+
     private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);
 
@@ -32,7 +39,7 @@ export default class RoomManagerService {
 
                 roomConnection = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName);
             } else {
-                const response: RoomJoinResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
+                const response: RoomJoinResponse = await this.join(setup);
 
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName);
             }
@@ -44,13 +51,48 @@ export default class RoomManagerService {
                 routing,
             );
         } catch (e) {
-            if (setup.type === 'create') {
-                this.notificationService.error('La salle existe déjà');
-            } else {
-                this.notificationService.error('La salle est pleine ou elle n\'existe plus.');
-            }
-
+            this.notificationService.error(RoomManagerService.failureMessage(setup, e));
             throw e;
+        }
+    }
+
+    private async join(setup: RoomSetupInterface): Promise<RoomJoinResponse> {
+        for (let retry = 0; ; retry++) {
+            try {
+                return await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
+            } catch (e) {
+                if (!RoomManagerService.isNameInRoom(e) || retry === RoomManagerService.JOIN_RETRIES) {
+                    throw e;
+                }
+
+                if (retry === 0) {
+                    this.notificationService.info('Ce nom est encore dans la salle, reconnexion en cours…');
+                }
+
+                await new Promise<void>((resolve) => setTimeout(resolve, RoomManagerService.JOIN_RETRY_DELAY));
+            }
+        }
+    }
+
+    private static isNameInRoom(error: unknown): boolean {
+        const message: string | undefined = error instanceof Error ? error.message : undefined;
+        return message === RoomApiErrorMessage.ALREADY_IN_GAME || message === RoomApiErrorMessage.ALREADY_IN_QUEUE;
+    }
+
+    private static failureMessage(setup: RoomSetupInterface, error: unknown): string {
+        const message: string | undefined = error instanceof Error ? error.message : undefined;
+
+        if (setup.type === 'create') {
+            return message === RoomApiErrorMessage.ROOM_ALREADY_EXISTS ? 'La salle existe déjà.' : 'La salle n\'a pas pu être créée.';
+        }
+
+        switch (message) {
+            case RoomApiErrorMessage.ALREADY_IN_GAME:
+                return 'Un joueur de ce nom est déjà dans la salle.';
+            case RoomApiErrorMessage.ALREADY_IN_QUEUE:
+                return 'Un joueur de ce nom attend déjà d\'entrer dans la salle.';
+            default:
+                return 'La salle est pleine ou elle n\'existe plus.';
         }
     }
 }

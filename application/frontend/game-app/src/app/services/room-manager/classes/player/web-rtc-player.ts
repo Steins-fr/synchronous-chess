@@ -12,6 +12,8 @@ import { Player } from './player';
 export class WebRtcPlayer extends Player {
 
     private static readonly PING_MARK: string = 'pingMark';
+    private static readonly DISCONNECTED_ICE_STATES: ReadonlyArray<RTCIceConnectionState> = ['disconnected', 'failed', 'closed'];
+    private static readonly CLOSED_CHANNEL_STATES: ReadonlyArray<RTCDataChannelState> = ['closing', 'closed'];
     private static readonly PONG_MARK: string = 'pongMark';
 
     private readonly subs: Subscription[] = [];
@@ -22,7 +24,7 @@ export class WebRtcPlayer extends Player {
     public readonly disconnected$ = this.disconnectedSubject.asObservable();
 
     public readonly states: Observable<WebrtcStates>; // For external debugging
-    private connectionState: RTCIceConnectionState = 'connected';
+    private disconnected: boolean = false;
 
     private readonly pingTimerId: ReturnType<typeof setInterval>;
     public ping: BehaviorSubject<string> = new BehaviorSubject<string>('');
@@ -81,13 +83,17 @@ export class WebRtcPlayer extends Player {
         }, pingInterval);
     }
 
+    /**
+     * The ICE takes several seconds to notice a peer which is gone, while a data channel closes at once when the page of the
+     * peer is reloaded or closed. A channel still connecting is not closed: the peer may not have opened it yet.
+     */
     private onPeerStates(states: WebrtcStates): void {
-        if (this.connectionState === states.iceConnection) {
-            return; // Do nothing, it's the same state
-        }
-        this.connectionState = states.iceConnection;
+        const isDisconnected: boolean = WebRtcPlayer.DISCONNECTED_ICE_STATES.includes(states.iceConnection)
+            || WebRtcPlayer.CLOSED_CHANNEL_STATES.includes(states.sendChannel)
+            || WebRtcPlayer.CLOSED_CHANNEL_STATES.includes(states.receiveChannel);
 
-        if (this.connectionState === 'disconnected') {
+        if (isDisconnected && !this.disconnected) {
+            this.disconnected = true;
             this.disconnectedSubject.next();
         }
     }
