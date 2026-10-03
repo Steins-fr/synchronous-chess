@@ -1,0 +1,209 @@
+name: Application CI
+
+# The jobs of the game app and of the websocket API, then the SonarCloud analysis of both: SonarCloud replaces the
+# whole analysis of the project at each scan, so a scan always covers both packages, with their coverage
+on:
+    workflow_call:
+        inputs:
+            lint:
+                description: Lint and type check the packages before testing them
+                type: boolean
+                default: true
+        secrets:
+            SONAR_TOKEN:
+                required: true
+
+jobs:
+    angular-lint:
+        if: inputs.lint
+        timeout-minutes: 5
+        runs-on: ubuntu-24.04
+        defaults:
+            run:
+                working-directory: application/frontend/game-app
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+
+            - name: Get npm cache directory
+              id: npm-cache-dir
+              shell: bash
+              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+            - uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      **/node_modules
+                  key: ${{ runner.os }}-npm-${{ hashFiles('application/frontend/game-app/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-npm-
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run Angular lint
+              run: npm run lint
+
+    angular-test:
+        needs: [angular-lint]
+        # Runs after the lint, or without it when the lint is skipped
+        if: ${{ !failure() && !cancelled() }}
+        runs-on: ubuntu-24.04
+        defaults:
+            run:
+                working-directory: application/frontend/game-app
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+
+            - name: Get npm cache directory
+              id: npm-cache-dir
+              shell: bash
+              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+            - uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      **/node_modules
+                  key: ${{ runner.os }}-npm-${{ hashFiles('application/frontend/game-app/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-npm-
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run Test
+              run: npm run test:ci
+
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: game-app-coverage
+                  path: application/frontend/game-app/coverage/game-app/lcov.info
+
+    websocket-api-lint:
+        if: inputs.lint
+        timeout-minutes: 5
+        runs-on: ubuntu-24.04
+        defaults:
+            run:
+                working-directory: application/backend/websocket-api
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+
+            - name: Get npm cache directory
+              id: npm-cache-dir
+              shell: bash
+              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+            - uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      **/node_modules
+                  key: ${{ runner.os }}-websocket-api-npm-${{ hashFiles('application/backend/websocket-api/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-websocket-api-npm-
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run lint
+              run: npm run lint
+
+            - name: Run type check
+              run: npm run typecheck
+
+    websocket-api-test:
+        needs: [websocket-api-lint]
+        # Runs after the lint, or without it when the lint is skipped
+        if: ${{ !failure() && !cancelled() }}
+        timeout-minutes: 5
+        runs-on: ubuntu-24.04
+        defaults:
+            run:
+                working-directory: application/backend/websocket-api
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+
+            - name: Get npm cache directory
+              id: npm-cache-dir
+              shell: bash
+              run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+            - uses: actions/cache@v5
+              with:
+                  path: |
+                      ${{ steps.npm-cache-dir.outputs.dir }}
+                      **/node_modules
+                  key: ${{ runner.os }}-websocket-api-npm-${{ hashFiles('application/backend/websocket-api/package-lock.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-websocket-api-npm-
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run Test
+              run: npm run test:ci
+
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: websocket-api-coverage
+                  path: application/backend/websocket-api/coverage/lcov.info
+
+    sonarcloud:
+        needs: [angular-test, websocket-api-test]
+        if: ${{ !failure() && !cancelled() }}
+        timeout-minutes: 10
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  # Disabling shallow clones is recommended for improving the relevancy of reporting
+                  fetch-depth: 0
+
+            - uses: actions/download-artifact@v8
+              with:
+                  name: game-app-coverage
+                  path: application/frontend/game-app/coverage/game-app
+
+            - uses: actions/download-artifact@v8
+              with:
+                  name: websocket-api-coverage
+                  path: application/backend/websocket-api/coverage
+
+            - name: SonarQube Scan
+              uses: SonarSource/sonarqube-scan-action@v7 # Ex: See the latest version at https://github.com/marketplace/actions/official-sonarqube-scan
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              with:
+                  projectBaseDir: application
+                  args: >
+                      -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+                      -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+                      -Dsonar.typescript.tsconfigPaths=frontend/game-app/tsconfig.json,shared/room-socket-protocol/tsconfig.json,backend/websocket-api/tsconfig.json
+                      -Dsonar.sources=frontend/game-app/src/app,shared/room-socket-protocol,backend/websocket-api/lambdas,backend/websocket-api/shared
+                      -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts,**/eslint.config.mjs
+                      -Dsonar.tests=frontend/game-app/src/app,backend/websocket-api/lambdas,backend/websocket-api/shared
+                      -Dsonar.test.inclusions=**/*.spec.ts
+                      -Dsonar.sourceEncoding=UTF-8
+                      -Dsonar.typescript.lcov.reportPaths=frontend/game-app/coverage/game-app/lcov.info,backend/websocket-api/coverage/lcov.info

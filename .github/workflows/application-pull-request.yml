@@ -1,0 +1,14 @@
+name: Application CI Pull request
+
+on:
+    pull_request:
+        paths:
+            - "application/**"
+            - ".github/workflows/application-*.yml"
+
+jobs:
+    ci:
+        if: github.event.pull_request.draft == false
+        uses: ./.github/workflows/application-ci.yml
+        secrets:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

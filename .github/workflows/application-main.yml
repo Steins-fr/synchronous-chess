@@ -1,0 +1,19 @@
+name: Application CI Main
+
+# Analyse main so SonarCloud tracks its quality (README badges) and pull requests compare against it
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "application/**"
+            - ".github/workflows/application-*.yml"
+    workflow_dispatch:
+
+jobs:
+    ci:
+        uses: ./.github/workflows/application-ci.yml
+        with:
+            lint: false
+        secrets:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -143,7 +143,10 @@ to read the SonarCloud issues, quality gate and coverage of the project.
 
 ## CI
 
-`.github/workflows/game-app-pull-request.yml` runs lint, then tests with coverage and a SonarCloud
-scan, on PRs touching `application/frontend/game-app/**`. `game-app-main.yml` runs the tests and
-the SonarCloud scan on `main` (pushes touching the app, or manually) for the README badges.
-Terraform workflows cover `infrastructure`. Keep `npm run lint` and `npm run test:ci` green before pushing.
+`.github/workflows/application-ci.yml` holds the jobs of both packages: lint (and type check for the
+API), tests with coverage, then one SonarCloud scan of the game app, the shared protocol and the API,
+with the coverage of both. SonarCloud replaces the whole analysis of the project at each scan, so the
+scan always covers both packages. `application-pull-request.yml` runs it on PRs touching
+`application/**`, `application-main.yml` without the lint on `main` (or manually) for the README
+badges. Terraform workflows cover `infrastructure`. Keep `npm run lint` and `npm run test:ci` of both
+packages green before pushing.
