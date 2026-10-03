@@ -11,6 +11,17 @@
         "--headless"
       ],
       "env": {}
+    },
+    "sonarqube": {
+      "type": "stdio",
+      "command": "sonar",
+      "args": [
+        "run",
+        "mcp",
+        "--project",
+        "Steins-fr_synchronous-chess"
+      ],
+      "env": {}
     }
   }
 }
