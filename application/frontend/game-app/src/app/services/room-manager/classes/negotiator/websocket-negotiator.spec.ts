@@ -68,6 +68,20 @@ describe('WebsocketNegotiator', () => {
         expect(webrtcMock.registerSignal).toHaveBeenCalledWith(signal);
     });
 
+    test('should log a remote signal which can not be registered', async () => {
+        // Given
+        const { negotiator, webrtcMock, notification$ } = createNegotiator();
+        const failure: Error = new Error('invalid signal');
+        webrtcMock.registerSignal.mockRejectedValueOnce(failure);
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'remote', signal } });
+
+        // Then
+        await vi.waitFor(() => expect(console.error).toHaveBeenCalledWith('Negotiation message failed', failure));
+        negotiator.clear();
+    });
+
     test('should send the local signals through the socket', async () => {
         // Given
         const { negotiator, webrtcMock, roomSocketApi } = createNegotiator();

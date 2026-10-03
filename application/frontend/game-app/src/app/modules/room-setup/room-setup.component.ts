@@ -40,11 +40,11 @@ export class RoomSetupComponent implements OnInit {
         }
     }
 
-    protected async hostRoom(): Promise<void> {
+    protected hostRoom(): void {
         this.roomSetupService.setup('create', this.roomName, this.playerName);
     }
 
-    protected async joinRoom(): Promise<void> {
+    protected joinRoom(): void {
         this.roomSetupService.setup('join', this.roomName, this.playerName);
     }
 }
