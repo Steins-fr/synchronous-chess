@@ -2,7 +2,8 @@
     "type": "module",
     "scripts": {
         "build": "node esbuild.build.js",
-        "lint": "eslint"
+        "lint": "eslint && npm run lint:protocol",
+        "lint:protocol": "cd ../../shared/room-socket-protocol && eslint"
     },
     "dependencies": {
         "@aws-sdk/client-apigatewaymanagementapi": "^3.1131.0",

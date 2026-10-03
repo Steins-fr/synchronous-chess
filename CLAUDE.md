@@ -47,7 +47,7 @@ Backend, from `application/backend/websocket-api`:
 
 ```bash
 npm run build        # esbuild bundle
-npm run lint         # ESLint
+npm run lint         # ESLint, then the shared protocol (lint:protocol)
 ```
 
 ## Frontend specifics
