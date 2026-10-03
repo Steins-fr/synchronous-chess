@@ -61,6 +61,24 @@ describe('ChatPage', () => {
         expect(clearSpy).toHaveBeenCalledTimes(1);
     });
 
+    test('should clear a room built once the page left', async () => {
+        // Given: a room still being built
+        const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
+        let build: (built: Room<object>) => void = () => undefined;
+        vi.mocked(roomManagerService.buildBlockRoom).mockReturnValue(TestHelper.cast(new Promise<Room<object>>((resolve) => build = resolve)));
+        const clearSpy = vi.spyOn(room, 'clear');
+        roomSetupService.setup('join', 'room', 'local');
+        await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
+
+        // When: the page leaves, then the room is built
+        fixture.destroy();
+        build(room);
+
+        // Then
+        await vi.waitFor(() => expect(clearSpy).toHaveBeenCalledTimes(1));
+        expect(fixture.componentInstance.room()).toBeUndefined();
+    });
+
     test('should make the setup form available again when the room can not be built', async () => {
         // Given
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);

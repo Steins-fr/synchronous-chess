@@ -15,10 +15,17 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     const roomSetupService: RoomSetupService = inject(RoomSetupService);
     const roomManagerService: RoomManagerService = inject(RoomManagerService);
     const room = signal<BlockRoom<M> | undefined>(undefined);
+    let destroyed: boolean = false;
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
         try {
-            room.set(await roomManagerService.buildBlockRoom<M>(setup, maxPlayer, routing));
+            const built: BlockRoom<M> = await roomManagerService.buildBlockRoom<M>(setup, maxPlayer, routing);
+            if (destroyed) {
+                // The page left while the room was built: nothing else would clear its socket, peers and timers
+                built.clear();
+                return;
+            }
+            room.set(built);
             roomSetupService.roomIsSetup(true);
         } catch {
             // Already notified: the form is available again, to try another room or name
@@ -27,7 +34,10 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     };
 
     roomSetupService.setup$.pipe(takeUntilDestroyed()).subscribe((setup: RoomSetupInterface) => void buildRoom(setup));
-    inject(DestroyRef).onDestroy(() => room()?.clear());
+    inject(DestroyRef).onDestroy(() => {
+        destroyed = true;
+        room()?.clear();
+    });
     notifyCheatFlags(() => room()?.cheatFlags());
 
     return room.asReadonly();
