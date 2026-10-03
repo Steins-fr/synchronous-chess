@@ -10,10 +10,12 @@ to both tools. They are imported below.
 
 @.github/instructions/git-config.instructions.md
 @.github/instructions/game-app.instructions.md
+@.github/instructions/room-socket-protocol.instructions.md
 
 Note: each imported file has a Copilot `applyTo` glob in its front matter. Claude Code has no
 equivalent, so treat `game-app.instructions.md` as applying only to
-`application/frontend/game-app/**`.
+`application/frontend/game-app/**`, and `room-socket-protocol.instructions.md` only to
+`application/shared/room-socket-protocol/**`.
 
 ## Repository layout
 

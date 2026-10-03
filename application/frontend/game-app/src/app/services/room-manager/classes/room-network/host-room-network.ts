@@ -1,11 +1,10 @@
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { HostRoomMessage, HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
+import { HostRoomMessage, HostRoomMessageType, RemoteSignalPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import JoinNotification from '@protocol/notifications/join-notification';
-import RtcSignalResponse from '@protocol/responses/rtc-signal-response';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
 import { Subject, takeUntil } from 'rxjs';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
@@ -120,7 +119,7 @@ export class HostRoomNetwork extends RoomNetwork {
                 return;
             }
 
-            const remoteSignalPayload: RtcSignalResponse = {
+            const remoteSignalPayload: RemoteSignalPayload = {
                 from: message.from,
                 signal: message.payload.signal
             };

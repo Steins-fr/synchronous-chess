@@ -63,8 +63,8 @@ async function currentStates(webrtc: Webrtc): Promise<WebrtcStates> {
     return firstValueFrom(webrtc.states);
 }
 
-const offerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'offer' }, ice: [{ candidate: 'c1' }, { candidate: 'c2' }] };
-const answerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'answer' }, ice: [{ candidate: 'c1' }] };
+const offerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'offer' }, ice: [{ candidate: 'c1', sdpMid: '0' }, { candidate: 'c2', sdpMLineIndex: 0 }] };
+const answerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'answer' }, ice: [{ candidate: 'c1', sdpMid: '0' }] };
 
 describe('Webrtc', () => {
     beforeEach(() => {
@@ -291,6 +291,22 @@ describe('Webrtc', () => {
         expect(peerConnection.addIceCandidate).toHaveBeenCalledTimes(2);
         expect(peerConnection.createAnswer).toHaveBeenCalledTimes(1);
         expect(peerConnection.setLocalDescription).toHaveBeenCalledWith({ sdp: 'answer-sdp', type: 'answer' });
+    });
+
+    test('should reject a malformed remote signal', async () => {
+        // Given
+        const webrtc: Webrtc = new Webrtc();
+        webrtc.configure(false);
+        const peerConnection: MockRTCPeerConnection = lastPeerConnection();
+        const malformedSignal = { sdp: { sdp: 'remote', type: 'offer' }, ice: [null] } as unknown as RtcSignal;
+
+        // When
+        await webrtc.registerSignal(malformedSignal);
+
+        // Then
+        expect(peerConnection.setRemoteDescription).not.toHaveBeenCalled();
+        expect(peerConnection.addIceCandidate).not.toHaveBeenCalled();
+        expect((await currentStates(webrtc)).error).toBe('Invalid remote signal');
     });
 
     test('should detect SDP parsing', async () => {
