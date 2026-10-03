@@ -39,6 +39,8 @@ describe('BlockRoom', () => {
     let network: RoomNetworkMock;
     let roomApi: RoomSocketApi;
     const players: WebRtcPlayer[] = [];
+    // Cleared after each test: their tick would keep running, and logging, in the next spec files of the worker
+    const rooms: Array<{ clear(): void }> = [];
 
     beforeAll(async () => {
         keys = await BlockRoom.createKeys('local', new ParticipantKeyStore(new IDBFactory()));
@@ -53,12 +55,18 @@ describe('BlockRoom', () => {
     });
 
     afterEach(() => {
+        rooms.splice(0).forEach((room: { clear(): void }) => room.clear());
         players.splice(0).forEach((player: WebRtcPlayer) => player.clear());
         vi.restoreAllMocks();
     });
 
+    function track<R extends { clear(): void }>(room: R): R {
+        rooms.push(room);
+        return room;
+    }
+
     function createRoom(): BlockRoom<TestPayloads> {
-        return new BlockRoom<TestPayloads>(roomApi, network.roomNetwork, keys, routing);
+        return track(new BlockRoom<TestPayloads>(roomApi, network.roomNetwork, keys, routing));
     }
 
     function createRemote(name: string): Player {
@@ -192,7 +200,7 @@ describe('BlockRoom', () => {
     test('should log the messages of a block chain missing from the room', () => {
         // Given
         const chainHandleSpy = vi.spyOn(SequencedBlockChain.prototype, 'handle');
-        new BlockRoom<{ move: string }>(roomApi, network.roomNetwork, keys, { move: BlockChainName.CHESS });
+        track(new BlockRoom<{ move: string }>(roomApi, network.roomNetwork, keys, { move: BlockChainName.CHESS }));
 
         // When
         network.onMessage$.next({ type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 1 }, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: BlockChainName.CHAT, from: 'remote' });
@@ -439,7 +447,7 @@ describe('BlockRoom', () => {
         async function createPeer(name: string, hostName: string): Promise<Peer> {
             const peerNetwork: RoomNetworkMock = new RoomNetworkMock(name, name === hostName, hostName);
             const peerKeys: ParticipantKeys = await BlockRoom.createKeys(name, new ParticipantKeyStore(new IDBFactory()));
-            const room: BlockRoom<TestPayloads> = new BlockRoom<TestPayloads>(roomApi, peerNetwork.roomNetwork, peerKeys, routing);
+            const room: BlockRoom<TestPayloads> = track(new BlockRoom<TestPayloads>(roomApi, peerNetwork.roomNetwork, peerKeys, routing));
             const received: AppMessage[] = [];
             room.messenger('chat').subscribe((message: AppMessage) => received.push(message));
             room.messenger('move').subscribe((message: AppMessage) => received.push(message));
