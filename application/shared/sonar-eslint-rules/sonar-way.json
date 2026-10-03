@@ -28,6 +28,7 @@
         "@typescript-eslint/prefer-readonly": "error",
         "@typescript-eslint/prefer-return-this-type": "error",
         "@typescript-eslint/prefer-string-starts-ends-with": "error",
+        "@typescript-eslint/require-await": "error",
         "constructor-super": "error",
         "getter-return": [
             "error",
@@ -229,6 +230,7 @@
         "sonarjs/no-mime-sniff": "error",
         "sonarjs/no-misleading-array-reverse": "error",
         "sonarjs/no-misleading-character-class": "error",
+        "sonarjs/no-mutate-reactive-state-in-updated-hook": "error",
         "sonarjs/no-nested-assignment": "error",
         "sonarjs/no-nested-conditional": "error",
         "sonarjs/no-nested-functions": [
@@ -272,6 +274,7 @@
         "sonarjs/post-message": "error",
         "sonarjs/prefer-default-last": "error",
         "sonarjs/prefer-native-axios-alternative": "error",
+        "sonarjs/prefer-native-jquery-alternative": "error",
         "sonarjs/prefer-native-lodash-alternative": "error",
         "sonarjs/prefer-promise-shorthand": "error",
         "sonarjs/prefer-read-only-props": "error",
@@ -312,6 +315,20 @@
         "sonarjs/weak-ssl": "error",
         "sonarjs/x-powered-by": "error",
         "sonarjs/xml-parser-xxe": "error",
+        "unicorn/catch-error-name": [
+            "error",
+            {
+                "ignore": [
+                    "^(e|ex)$",
+                    "[eE][xX][cC][eE][pP][tT][iI][oO][nN]$",
+                    "[eE][rR][rR]$",
+                    "^_",
+                    "^\\w\\$\\d+$",
+                    "^[cC][aA][uU][sS][eE]$",
+                    "^[rR][eE][aA][sS][oO][nN]$"
+                ]
+            }
+        ],
         "unicorn/consistent-date-clone": "error",
         "unicorn/consistent-empty-array-spread": "error",
         "unicorn/consistent-function-scoping": "error",
@@ -347,6 +364,7 @@
         "unicorn/prefer-at": "error",
         "unicorn/prefer-blob-reading-methods": "error",
         "unicorn/prefer-class-fields": "error",
+        "unicorn/prefer-code-point": "error",
         "unicorn/prefer-date-now": "error",
         "unicorn/prefer-default-parameters": "error",
         "unicorn/prefer-dom-node-remove": "error",
@@ -355,6 +373,7 @@
         "unicorn/prefer-math-min-max": "error",
         "unicorn/prefer-math-trunc": "error",
         "unicorn/prefer-modern-dom-apis": "error",
+        "unicorn/prefer-modern-math-apis": "error",
         "unicorn/prefer-native-coercion-functions": "error",
         "unicorn/prefer-negative-index": "error",
         "unicorn/prefer-node-protocol": "error",
@@ -379,6 +398,7 @@
         "sonarjs/chai-determinate-assertion": "error",
         "sonarjs/disabled-timeout": "error",
         "sonarjs/explicit-test-skip": "error",
+        "sonarjs/hooks-before-test-cases": "error",
         "sonarjs/inverted-assertion-arguments": "error",
         "sonarjs/no-code-after-done": "error",
         "sonarjs/no-debug-commands-in-ui-tests": "error",
@@ -389,6 +409,7 @@
         "sonarjs/no-empty-test-title": "error",
         "sonarjs/no-exclusive-tests": "error",
         "sonarjs/no-fixed-wait-in-tests": "error",
+        "sonarjs/no-forced-browser-interaction": "error",
         "sonarjs/no-incompatible-assertion-types": "error",
         "sonarjs/no-incomplete-assertions": "error",
         "sonarjs/no-interpolation-in-inline-snapshots": "error",
@@ -402,12 +423,18 @@
         "sonarjs/synchronous-suite-callback": "error",
         "sonarjs/test-check-exception": "error",
         "sonarjs/testing-library-prefer-query-by-disappearance": "error",
+        "sonarjs/testing-library-query-assertion": "error",
         "sonarjs/vitest-mock-at-module-scope": "error"
     },
     "angular": {
+        "@angular-eslint/contextual-lifecycle": "error",
         "@angular-eslint/no-empty-lifecycle-method": "error",
+        "@angular-eslint/no-input-rename": "error",
+        "@angular-eslint/no-inputs-metadata-property": "error",
         "@angular-eslint/no-output-native": "error",
+        "@angular-eslint/no-output-on-prefix": "error",
         "@angular-eslint/no-output-rename": "error",
+        "@angular-eslint/no-outputs-metadata-property": "error",
         "@angular-eslint/use-lifecycle-interface": "error",
         "@angular-eslint/use-pipe-transform-interface": "error"
     },
