@@ -129,6 +129,10 @@ export class SyncChessGameComponent implements OnDestroy {
         return this.gameSession().playingColor === PieceColor.WHITE && !this.gameSession().game.isGameOver();
     }
 
+    private static colorName(color: PieceColor): string {
+        return color === PieceColor.WHITE ? 'blancs' : 'noirs';
+    }
+
     public resultText(): string {
         const result: GameResult | null = this.gameSession().game.result();
 
@@ -138,11 +142,12 @@ export class SyncChessGameComponent implements OnDestroy {
 
         switch (result.reason) {
             case GameEndReason.CHECKMATE:
-                return `Échec et mat : victoire des ${ result.winner === PieceColor.WHITE ? 'blancs' : 'noirs' }`;
+                return `Échec et mat : victoire des ${ SyncChessGameComponent.colorName(result.winner) }`;
             case GameEndReason.KING_CAPTURED:
-                return result.winner === PieceColor.NONE
-                    ? 'Match nul : les deux rois ont été capturés'
-                    : `Roi capturé : victoire des ${ result.winner === PieceColor.WHITE ? 'blancs' : 'noirs' }`;
+                if (result.winner === PieceColor.NONE) {
+                    return 'Match nul : les deux rois ont été capturés';
+                }
+                return `Roi capturé : victoire des ${ SyncChessGameComponent.colorName(result.winner) }`;
             case GameEndReason.DOUBLE_CHECKMATE:
                 return 'Match nul : échec et mat des deux joueurs';
             case GameEndReason.STALEMATE:

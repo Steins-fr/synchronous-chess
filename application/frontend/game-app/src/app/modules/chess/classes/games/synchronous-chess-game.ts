@@ -290,9 +290,9 @@ export default class SynchronousChessGame {
 
     /** The colors whose king is not on the board anymore */
     private capturedKingColors(): ReadonlyArray<PieceColor> {
-        const pieces: ReadonlyArray<FenPiece> = this._fenBoard().flat();
+        const pieces: ReadonlySet<FenPiece> = new Set(this._fenBoard().flat());
         return ([[PieceColor.WHITE, FenPiece.WHITE_KING], [PieceColor.BLACK, FenPiece.BLACK_KING]] as const)
-            .filter(([, king]) => !pieces.includes(king))
+            .filter(([, king]) => !pieces.has(king))
             .map(([color]) => color);
     }
 
@@ -344,21 +344,7 @@ export default class SynchronousChessGame {
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
-                // A piece moves once during the intermediate phase: the pieces of the synchronous turn may move once more
-                const movedPieces: ReadonlyArray<FenCoordinate> = this.turn() instanceof IntermediateTurn
-                    ? [...(this.turn() as IntermediateTurn).movedPieces, ...[whiteMove, blackMove].filter((move: Move | null) => move !== null).map((move: Move) => move.to)]
-                    : [];
-
-                // The possible captures are the plays of the intermediate turn
-                this._turn.set(new IntermediateTurn(intermediateAction, movedPieces));
-
-                // A player has the right to capture the piece which moved to its target only if it can capture it
-                const whiteTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.WHITE) ? intermediateAction.whiteTarget : null;
-                const blackTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.BLACK) ? intermediateAction.blackTarget : null;
-
-                this._turn.set(whiteTarget === null && blackTarget === null
-                    ? new SyncTurn()
-                    : new IntermediateTurn({ ...intermediateAction, whiteTarget, blackTarget }, movedPieces));
+                this._turn.set(this.intermediateTurn(intermediateAction, [whiteMove, blackMove]));
             }
         } else if (turnCategory === TurnCategory.CHOICE) {
             const choiceTurn: ChoiceTurn = this.turn() as ChoiceTurn;
@@ -369,6 +355,30 @@ export default class SynchronousChessGame {
         if (this.turn().isDone) {
             this._turn.set(new SyncTurn());
         }
+    }
+
+    /**
+     * The intermediate turn following the moves of the current turn, or a synchronous turn when no player can capture
+     * its target
+     */
+    private intermediateTurn(action: IntermediateTurnAction, moves: ReadonlyArray<Move | null>): Turn {
+        // A piece moves once during the intermediate phase: the pieces of the synchronous turn may move once more
+        const movedPieces: ReadonlyArray<FenCoordinate> = this.turn() instanceof IntermediateTurn
+            ? [...(this.turn() as IntermediateTurn).movedPieces, ...moves.filter((move: Move | null) => move !== null).map((move: Move) => move.to)]
+            : [];
+
+        // The possible captures are the plays of the intermediate turn
+        this._turn.set(new IntermediateTurn(action, movedPieces));
+
+        // A player has the right to capture the piece which moved to its target only if it can capture it
+        const whiteTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.WHITE) ? action.whiteTarget : null;
+        const blackTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.BLACK) ? action.blackTarget : null;
+
+        if (whiteTarget === null && blackTarget === null) {
+            return new SyncTurn();
+        }
+
+        return new IntermediateTurn({ ...action, whiteTarget, blackTarget }, movedPieces);
     }
 
     protected canPromote(move: Move | null): boolean {
