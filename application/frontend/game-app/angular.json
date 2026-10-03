@@ -106,7 +106,7 @@
                             "buildTarget": "game-app:build:development"
                         },
                         "local": {
-                            "buildTarget": "game-app:build:local"
+                            "buildTarget": "game-app:build:development,local"
                         }
                     },
                     "defaultConfiguration": "development"
