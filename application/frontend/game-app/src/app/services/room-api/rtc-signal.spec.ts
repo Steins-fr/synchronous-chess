@@ -1,7 +1,7 @@
 // Specs of the protocol shared with the websocket API (application/shared/room-socket-protocol): it has
 // no test runner of its own, the app's covers it
-import { isRtcSignal } from '@protocol/rtc-signal';
-import { describe, expect, test } from 'vitest';
+import { isRtcSignal, RtcIceCandidateInit, RtcSessionDescription } from '@protocol/rtc-signal';
+import { describe, expect, expectTypeOf, test } from 'vitest';
 
 const validSignal = {
     sdp: { type: 'offer', sdp: 'v=0' },
@@ -10,6 +10,14 @@ const validSignal = {
         { sdpMLineIndex: 0, sdpMid: null, usernameFragment: null },
     ],
 };
+
+describe('RtcSignal', () => {
+    test('should copy the DOM types exactly', () => {
+        // Type-checked by ng test: fails the build when the DOM's WebRTC types change
+        expectTypeOf<RtcSessionDescription>().toEqualTypeOf<RTCSessionDescriptionInit>();
+        expectTypeOf<RtcIceCandidateInit>().toEqualTypeOf<RTCIceCandidateInit>();
+    });
+});
 
 describe('isRtcSignal', () => {
     test('should accept a signal with the shape Webrtc reads', () => {

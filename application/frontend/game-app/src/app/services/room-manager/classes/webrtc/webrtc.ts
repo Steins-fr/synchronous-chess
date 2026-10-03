@@ -2,16 +2,10 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
-import { isRtcSignal, RtcIceCandidate, RtcSessionDescription, RtcSignal } from '@protocol/rtc-signal';
+import { isRtcIceCandidate, RtcSignal } from '@protocol/rtc-signal';
 import WebrtcStates, { DebugRTCIceCandidate, defaultWebrtcStates } from './webrtc-states';
 
 import { Message } from './messages/message';
-
-type Equals<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
-
-// The protocol copies the DOM's WebRTC types to stay free of the DOM library: break the build if they drift apart
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const rtcSignalMatchesTheDom: Equals<RtcSessionDescription, RTCSessionDescriptionInit> & Equals<RtcIceCandidate, RTCIceCandidateInit> = true;
 
 enum PacketType {
     MESSAGE = 'message',
@@ -161,12 +155,6 @@ export class Webrtc {
     }
 
     public async registerSignal(remoteSignal: RtcSignal): Promise<void> {
-        // Relayed from another peer, by the websocket API or the host's data channel
-        if (!isRtcSignal(remoteSignal)) {
-            this.createError('Invalid remote signal');
-            return;
-        }
-
         if ((this.initiator && remoteSignal.sdp.type === 'answer')) {
             this.registerRemoteSdp(remoteSignal.sdp);
             await this.registerRemoteIce(remoteSignal.ice);
@@ -300,7 +288,10 @@ export class Webrtc {
 
         if (event.candidate !== null) { // Gathering 'complete' send a null candidate
             const candidate = event.candidate;
-            this._rtcSignal.ice.push(event.candidate);
+
+            if (isRtcIceCandidate(candidate)) { // The remote peer could not register it otherwise
+                this._rtcSignal.ice.push(candidate);
+            }
 
             this._iceDebug({
                 ...candidate,

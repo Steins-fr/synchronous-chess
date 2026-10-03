@@ -232,22 +232,25 @@ describe('Webrtc', () => {
         const peerConnection: MockRTCPeerConnection = lastPeerConnection();
         const signals: RtcSignal[] = [];
         webrtc.rtcSignal$.subscribe((signal: RtcSignal) => signals.push(signal));
-        const candidate: Partial<RTCIceCandidate> = { candidate: 'c1', priority: 2122260223, port: 1234 };
-        const candidateWithoutPriority: Partial<RTCIceCandidate> = { candidate: 'c2', priority: null };
+        const candidate: Partial<RTCIceCandidate> = { candidate: 'c1', sdpMid: '0', priority: 2122260223, port: 1234 };
+        const candidateWithoutPriority: Partial<RTCIceCandidate> = { candidate: 'c2', sdpMLineIndex: 0, priority: null };
+        const candidateWithoutMedia: Partial<RTCIceCandidate> = { candidate: 'c3', sdpMid: null, sdpMLineIndex: null };
 
         // When
         peerConnection.onicecandidate?.({ candidate });
         peerConnection.onicecandidate?.({ candidate: candidateWithoutPriority });
+        peerConnection.onicecandidate?.({ candidate: candidateWithoutMedia });
         peerConnection.onicecandidate?.({ candidate: null });
         peerConnection.iceGatheringState = 'complete';
         peerConnection.onicegatheringstatechange?.();
 
         // Then
         const states: WebrtcStates = await currentStates(webrtc);
-        expect(states.candidates).toHaveLength(2);
+        expect(states.candidates).toHaveLength(3);
         expect(states.candidates[0].priorities).toBe('126 | 32542 | 255');
         expect(states.candidates[0].elapsed).toMatch(/^-?\d+\.\d{3}$/);
         expect(states.candidates[1].priorities).toBe('');
+        // The remote peer could not register a candidate without sdpMid nor sdpMLineIndex
         expect(signals[0].ice).toEqual([candidate, candidateWithoutPriority]);
     });
 
@@ -291,22 +294,6 @@ describe('Webrtc', () => {
         expect(peerConnection.addIceCandidate).toHaveBeenCalledTimes(2);
         expect(peerConnection.createAnswer).toHaveBeenCalledTimes(1);
         expect(peerConnection.setLocalDescription).toHaveBeenCalledWith({ sdp: 'answer-sdp', type: 'answer' });
-    });
-
-    test('should reject a malformed remote signal', async () => {
-        // Given
-        const webrtc: Webrtc = new Webrtc();
-        webrtc.configure(false);
-        const peerConnection: MockRTCPeerConnection = lastPeerConnection();
-        const malformedSignal = { sdp: { sdp: 'remote', type: 'offer' }, ice: [null] } as unknown as RtcSignal;
-
-        // When
-        await webrtc.registerSignal(malformedSignal);
-
-        // Then
-        expect(peerConnection.setRemoteDescription).not.toHaveBeenCalled();
-        expect(peerConnection.addIceCandidate).not.toHaveBeenCalled();
-        expect((await currentStates(webrtc)).error).toBe('Invalid remote signal');
     });
 
     test('should detect SDP parsing', async () => {

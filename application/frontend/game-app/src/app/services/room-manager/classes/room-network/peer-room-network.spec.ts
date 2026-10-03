@@ -150,6 +150,22 @@ describe('PeerRoomNetwork', () => {
         expect(Negotiator.prototype.negotiationMessage).toHaveBeenCalledWith({ from: 'newcomer', signal });
     });
 
+    test('should drop a remote signal it could not register, before any negotiator', async () => {
+        // Given
+        vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        network.onPlayerConnected(hostPlayer);
+        const invalidSignal = TestHelper.cast<RtcSignal>({ sdp: { sdp: 'sdp', type: 'offer' }, ice: [{ candidate: 'c1' }] });
+
+        // When
+        network.onRoomMessage({ type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'newcomer', signal: invalidSignal }, origin: MessageOriginType.HOST_ROOM, from: 'host' });
+        await Promise.resolve();
+
+        // Then
+        expect(network.negotiators().has('newcomer')).toEqual(false);
+        expect(Negotiator.prototype.negotiationMessage).not.toHaveBeenCalled();
+        expect(console.error).toHaveBeenCalledWith('PeerRoom: invalid remote signal', { from: 'newcomer', signal: invalidSignal });
+    });
+
     test('should throw on unknown host room message', () => {
         // When
         const call = (): void => network.onRoomMessage({ type: 'unknown' as HostRoomMessageType, payload: { playerName: 'a' }, origin: MessageOriginType.HOST_ROOM, from: 'host' } as ReceivedMessage);

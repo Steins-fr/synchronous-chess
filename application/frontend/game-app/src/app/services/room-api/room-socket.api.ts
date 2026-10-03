@@ -1,6 +1,7 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { objectHasValue } from '@app/helpers/object.helper';
+import { isRtcSignal } from '@protocol/rtc-signal';
 import {
     requestToResponse,
     RequestToResponseType,
@@ -51,7 +52,10 @@ export class RoomSocketApi {
     }
 
     public get notification$(): Observable<RoomSocketApiNotifications> {
-        return this.getPayloadMessage().pipe(filter(this.isSocketPacketNotificationPayload));
+        return this.getPayloadMessage().pipe(
+            filter(this.isSocketPacketNotificationPayload),
+            filter(this.hasValidData),
+        );
     }
 
     public async send<RequestType extends RoomApiRequestTypeEnum>(
@@ -86,6 +90,17 @@ export class RoomSocketApi {
 
     private isSocketPacketNotificationPayload(payload: SocketPacketAllPayload): payload is RoomSocketApiNotifications {
         return objectHasValue(RoomSocketApiNotificationEnum, payload.type);
+    }
+
+    private hasValidData(notification: RoomSocketApiNotifications): boolean {
+        // The API checks the signals it relays, but they come from another peer: check them before negotiating
+        const isValid = notification.type !== RoomSocketApiNotificationEnum.REMOTE_SIGNAL || isRtcSignal(notification.data.signal);
+
+        if (!isValid) {
+            console.error('Received an invalid notification', notification);
+        }
+
+        return isValid;
     }
 
     private isSocketPacketResponsePayload(payload: SocketPacketAllPayload): payload is SocketPacketResponsePayload {

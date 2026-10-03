@@ -1,6 +1,6 @@
 // Structural copies of the DOM's RTCSessionDescriptionInit and RTCIceCandidateInit, so that the
-// protocol does not depend on the DOM library: the API runs on Node. The app checks at compile time
-// that they still match the DOM types
+// protocol does not depend on the DOM library: the API runs on Node. The app's specs check that they
+// still match the DOM types
 
 const RTC_SDP_TYPES = ['answer', 'offer', 'pranswer', 'rollback'] as const;
 
@@ -11,12 +11,15 @@ export interface RtcSessionDescription {
     sdp?: string;
 }
 
-export interface RtcIceCandidate {
+export interface RtcIceCandidateInit {
     candidate?: string;
     sdpMid?: string | null;
     sdpMLineIndex?: number | null;
     usernameFragment?: string | null;
 }
+
+/** A candidate the remote peer can register: the RTCIceCandidate constructor throws without sdpMid nor sdpMLineIndex */
+export type RtcIceCandidate = RtcIceCandidateInit & ({ sdpMid: string } | { sdpMLineIndex: number });
 
 /** The WebRTC session description and ICE candidates a peer relays to another through the websocket API */
 export interface RtcSignal {
@@ -42,14 +45,13 @@ function isRtcSessionDescription(value: unknown): value is RtcSessionDescription
         && isOptional(value['sdp'], 'string');
 }
 
-function isRtcIceCandidate(value: unknown): value is RtcIceCandidate {
+export function isRtcIceCandidate(value: unknown): value is RtcIceCandidate {
     return isRecord(value)
         && isOptional(value['candidate'], 'string')
         && isNullable(value['sdpMid'], 'string')
         && isNullable(value['sdpMLineIndex'], 'number')
         && isNullable(value['usernameFragment'], 'string')
-        // The RTCIceCandidate constructor throws without both
-        && (value['sdpMid'] != null || value['sdpMLineIndex'] != null);
+        && (typeof value['sdpMid'] === 'string' || typeof value['sdpMLineIndex'] === 'number');
 }
 
 /** Whether a signal received from the network has the shape that Webrtc reads, before it is relayed or registered */

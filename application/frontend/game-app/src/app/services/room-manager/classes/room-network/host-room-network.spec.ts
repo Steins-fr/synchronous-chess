@@ -196,6 +196,20 @@ describe('HostRoomNetwork', () => {
         });
     });
 
+    test('should not relay a signal the targeted player could not register', () => {
+        // Given
+        createNetwork();
+        const webrtcMock: WebrtcMock = addRemotePlayer('target');
+        const invalidSignal = TestHelper.cast<RtcSignal>({ sdp: { sdp: 'sdp', type: 'offer' }, ice: [null] });
+
+        // When
+        network.onRoomMessage({ type: NegotiatorMessageType.SIGNAL, payload: { to: 'target', signal: invalidSignal }, origin: MessageOriginType.NEGOTIATOR, from: 'a' });
+
+        // Then
+        expect(webrtcMock.sendMessage).not.toHaveBeenCalled();
+        expect(console.error).toHaveBeenCalledWith('HostRoom: invalid signal not relayed', expect.anything());
+    });
+
     test('clear should stop the notifications and the synchronization', async () => {
         // Given
         createNetwork();

@@ -11,11 +11,12 @@ relayed WebRTC signal. Both packages import it as `@protocol/*`; it is never dup
 
 - Plain TypeScript, no `package.json` and no import of a package, Angular, Node or the DOM: the app
   runs in the browser, the API on Node. Copy a DOM type structurally when needed (see `rtc-signal.ts`,
-  whose drift from the DOM is checked at compile time in the app's `webrtc.ts`)
+  whose drift from the DOM fails the app's `rtc-signal.spec.ts` with `expectTypeOf`)
 - Imports between its files are relative, never through an alias
 - Strict typing everywhere; use enum constants for the message types (not `const enum`: the app
   compiles with `isolatedModules`)
-- Keep the runtime code small (enums, mappings, type guards for data received from the network)
+- Keep the runtime code small (enums, mappings, type guards for data received from the network).
+  Check received data where it enters a package, before acting on it
 - Breaking the message format is fine: the app and the API are deployed together, so no protocol
   versioning nor backward compatibility
 

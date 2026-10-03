@@ -5,6 +5,7 @@ import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import JoinNotification from '@protocol/notifications/join-notification';
+import { isRtcSignal } from '@protocol/rtc-signal';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
 import { Subject, takeUntil } from 'rxjs';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
@@ -116,6 +117,11 @@ export class HostRoomNetwork extends RoomNetwork {
             const player: Player | undefined = this.players.get(message.payload.to);
 
             if (!player) {
+                return;
+            }
+
+            if (!isRtcSignal(message.payload.signal)) { // Do not relay what the other peer could not register
+                console.error('HostRoom: invalid signal not relayed', message);
                 return;
             }
 

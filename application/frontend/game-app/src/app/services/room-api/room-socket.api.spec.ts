@@ -109,6 +109,23 @@ describe('RoomSocketApi', () => {
         expect(notifications).toEqual([{ id: -1, type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'peer' } }]);
     });
 
+    test('notification$ should drop the remote signals a peer could not register', async () => {
+        // Given
+        const notifications: RoomSocketApiNotifications[] = [];
+        api.notification$.subscribe((notification: RoomSocketApiNotifications) => notifications.push(notification));
+        const { socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'peer' }));
+        const validSignal = { sdp: { type: 'offer', sdp: 'sdp' }, ice: [{ candidate: 'c1', sdpMid: '0' }] };
+        const invalidSignal = { sdp: { type: 'offer', sdp: 'sdp' }, ice: [{ candidate: 'c1' }] };
+
+        // When
+        socket.receive({ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: invalidSignal } });
+        socket.receive({ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: validSignal } });
+
+        // Then
+        expect(notifications).toEqual([{ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: validSignal } }]);
+        expect(console.error).toHaveBeenCalledWith('Received an invalid notification', expect.objectContaining({ data: { from: 'peer', signal: invalidSignal } }));
+    });
+
     test('close should stop the pending requests and close the socket', async () => {
         // Given
         const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'peer' }));
