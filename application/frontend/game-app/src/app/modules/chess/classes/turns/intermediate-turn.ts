@@ -1,6 +1,6 @@
 import IntermediateTurnAction from './turn-actions/intermediate-turn-action';
 import TurnType from './turn.types';
-import Move from '../../interfaces/move';
+import Move, { FenCoordinate } from '../../interfaces/move';
 import MoveTurn from './move-turn';
 import { PieceColor } from '../../enums/piece-color.enum';
 
@@ -9,9 +9,12 @@ export class IntermediateTurn extends MoveTurn<IntermediateTurnAction> {
     // A null move is a pass, which has to be distinguished from a move not played yet
     private readonly passedColors = new Set<PieceColor>();
 
+    /**
+     * @param movedPieces the cells of the pieces which already moved during this intermediate phase, which can not move
+     * again (rule A); a piece moved in the synchronous turn before the phase may move once
+     */
     public constructor(public action: IntermediateTurnAction,
-        public readonly lastWhiteMove: Move | null = null,
-        public readonly lastBlackMove: Move | null = null) {
+        public readonly movedPieces: ReadonlyArray<FenCoordinate> = []) {
         super(TurnType.MOVE_INTERMEDIATE);
         if (this.action.blackTarget === null) {
             this.action.blackMove = null;

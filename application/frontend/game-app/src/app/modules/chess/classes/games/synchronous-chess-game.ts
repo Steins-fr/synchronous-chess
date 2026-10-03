@@ -329,13 +329,12 @@ export default class SynchronousChessGame {
 
         if (turnCategory === TurnCategory.MOVE) {
             const { whiteMove, blackMove }: MoveTurnAction = this.turn().action as MoveTurnAction;
-            const blackMoveDestination: FenCoordinate | undefined = blackMove ? blackMove.to : undefined;
-            const whiteMoveDestination: FenCoordinate | undefined = whiteMove ? whiteMove.to : undefined;
 
-            const whiteOldSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._oldFenBoard, blackMoveDestination);
-            const blackOldSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._oldFenBoard, whiteMoveDestination);
-            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard(), blackMoveDestination);
-            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard(), whiteMoveDestination);
+            // The piece which just moved attacks too: it may capture once during the intermediate phase (rule A)
+            const whiteOldSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._oldFenBoard);
+            const blackOldSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._oldFenBoard);
+            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard());
+            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard());
 
             const intermediateAction: IntermediateTurnAction = {
                 whiteTarget: this.getNextTurnTarget(blackMove, blackOldSafeBoard, blackSafeBoard),
@@ -345,8 +344,13 @@ export default class SynchronousChessGame {
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
+                // A piece moves once during the intermediate phase: the pieces of the synchronous turn may move once more
+                const movedPieces: ReadonlyArray<FenCoordinate> = this.turn() instanceof IntermediateTurn
+                    ? [...(this.turn() as IntermediateTurn).movedPieces, ...[whiteMove, blackMove].filter((move: Move | null) => move !== null).map((move: Move) => move.to)]
+                    : [];
+
                 // The possible captures are the plays of the intermediate turn
-                this._turn.set(new IntermediateTurn(intermediateAction, whiteMove, blackMove));
+                this._turn.set(new IntermediateTurn(intermediateAction, movedPieces));
 
                 // A player has the right to capture the piece which moved to its target only if it can capture it
                 const whiteTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.WHITE) ? intermediateAction.whiteTarget : null;
@@ -354,7 +358,7 @@ export default class SynchronousChessGame {
 
                 this._turn.set(whiteTarget === null && blackTarget === null
                     ? new SyncTurn()
-                    : new IntermediateTurn({ ...intermediateAction, whiteTarget, blackTarget }, whiteMove, blackMove));
+                    : new IntermediateTurn({ ...intermediateAction, whiteTarget, blackTarget }, movedPieces));
             }
         } else if (turnCategory === TurnCategory.CHOICE) {
             const choiceTurn: ChoiceTurn = this.turn() as ChoiceTurn;
@@ -520,13 +524,8 @@ export default class SynchronousChessGame {
         const intermediateAction: IntermediateTurnAction = intermediateTurn.action;
         const target: FenCoordinate | null = ChessBoardHelper.pieceColor(fenPiece) === PieceColor.WHITE ? intermediateAction.whiteTarget : intermediateAction.blackTarget;
 
-        const lastWhiteMove: Move | null = intermediateTurn.lastWhiteMove;
-        const lastBlackMove: Move | null = intermediateTurn.lastBlackMove;
-        const whiteLastMovedPiece: Vec2 | null = lastWhiteMove ? ChessBoardHelper.fenCoordinateToVec2(lastWhiteMove.to) : null;
-        const blackLastMovedPiece: Vec2 | null = lastBlackMove ? ChessBoardHelper.fenCoordinateToVec2(lastBlackMove.to) : null;
-
-        if ((whiteLastMovedPiece && position.equal(whiteLastMovedPiece.x, whiteLastMovedPiece.y))
-            || (blackLastMovedPiece && position.equal(blackLastMovedPiece.x, blackLastMovedPiece.y))) {
+        // A piece moves only once during the intermediate phase (rule A)
+        if (intermediateTurn.movedPieces.some((cell: FenCoordinate) => ChessBoardHelper.fenCoordinateToVec2(cell).equal(position.x, position.y))) {
             return [];
         }
 

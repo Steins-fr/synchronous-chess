@@ -525,6 +525,7 @@ describe('SynchronousChessGame', () => {
                 whiteMove: null,
                 blackMove: null,
             },
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1115,6 +1116,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1172,6 +1174,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1229,6 +1232,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1849,6 +1853,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1901,6 +1906,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1936,24 +1942,68 @@ describe('SynchronousChessGame', () => {
         expect(blackResult).toEqual(expectedBlackPossiblePlays);
     });
 
-    test('getIntermediateTurnPossiblePlays should exclude the movement of last moved pieces', () => {
+    test('getIntermediateTurnPossiblePlays should let the pieces of the synchronous turn capture once (rule A)', () => {
         // Given
         ChessBoardHelper.disableCache();
         const game: ProtectedTest = new ProtectedTest();
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const oldAction: SyncTurnAction = {
-            whiteMove: { from: [FenColumn.C, 2], to: blackTarget },
-            blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
-        };
+        // The synchronous turn moved a white pawn c2 to the black target b4, and a black pawn b7 to the white target c5
         const action: IntermediateTurnAction = {
             whiteTarget,
             blackTarget,
             whiteMove: null,
             blackMove: null,
         };
-        const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
+        const turn: IntermediateTurn = new IntermediateTurn(action);
+
+        gameState(game)._turn.set(turn);
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        const blackPosition: Vec2 = new Vec2(Column.C, Row._5);
+        const whitePosition: Vec2 = new Vec2(Column.B, Row._4);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2(Column.B, Row._5)];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2(Column.C, Row._4)];
+        const expectedBlackPossiblePlays: Array<Vec2> = [whitePosition];
+        const expectedWhitePossiblePlays: Array<Vec2> = [blackPosition];
+
+        game.load(fenBoardInit);
+
+        // When
+        const whiteResult: Array<Vec2> = game.getIntermediateTurnPossiblePlays(whitePossiblePlays, whitePosition);
+        const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlays(blackPossiblePlays, blackPosition);
+
+        // Then
+        expect(whiteResult).toEqual(expectedWhitePossiblePlays);
+        expect(blackResult).toEqual(expectedBlackPossiblePlays);
+    });
+
+    test('getIntermediateTurnPossiblePlays should exclude the pieces which moved during the intermediate phase (rule A)', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteTarget: FenCoordinate = [FenColumn.C, 5];
+        const blackTarget: FenCoordinate = [FenColumn.B, 4];
+        // The synchronous turn moved a white pawn c2 to the black target b4, and a black pawn b7 to the white target c5
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
+        const turn: IntermediateTurn = new IntermediateTurn(action, [blackTarget, whiteTarget]);
 
         gameState(game)._turn.set(turn);
 
@@ -2010,6 +2060,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -2464,6 +2515,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action: { whiteMove: null, blackMove: null },
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -2778,6 +2830,32 @@ describe('SynchronousChessGame', () => {
             expect(plays(game, 'd6')).toEqual([]);
             expect(plays(game, 'c3')).toEqual(['e4']);
             expect(plays(game, 'g4')).toEqual(['e4']);
+        });
+
+        test('should let the piece moved in the synchronous turn capture once, then the opponent recapture (rule A)', () => {
+            // Given the white knight going to d5, while the black rook, attacking d5, moves along the d file
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ h1: FenPiece.WHITE_KING, d1: FenPiece.WHITE_ROOK, c3: FenPiece.WHITE_KNIGHT, h8: FenPiece.BLACK_KING, d8: FenPiece.BLACK_ROOK }));
+            game.verifyCheck();
+            game.registerMove({ from: [FenColumn.C, FenRow._3], to: [FenColumn.D, FenRow._5] }, PieceColor.WHITE);
+            game.registerMove({ from: [FenColumn.D, FenRow._8], to: [FenColumn.D, FenRow._7] }, PieceColor.BLACK);
+
+            // When
+            game.runTurn();
+
+            // Then the black rook, just moved, may capture the knight
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_INTERMEDIATE);
+            expect(gameState(game)._turn().action).toEqual(expect.objectContaining({ whiteTarget: null, blackTarget: [FenColumn.D, FenRow._5] }));
+            expect(plays(game, 'd7')).toEqual(['d5']);
+
+            // When it captures
+            game.registerMove({ from: [FenColumn.D, FenRow._7], to: [FenColumn.D, FenRow._5] }, PieceColor.BLACK);
+            game.runTurn();
+
+            // Then white may recapture with its rook, the black rook having moved during the phase
+            expect(gameState(game)._turn().action).toEqual(expect.objectContaining({ whiteTarget: [FenColumn.D, FenRow._5], blackTarget: null }));
+            expect((gameState(game)._turn() as IntermediateTurn).movedPieces).toEqual([[FenColumn.D, FenRow._5]]);
+            expect(plays(game, 'd1')).toEqual(['d5']);
         });
 
         test('should go on with a synchronous turn when no player can capture its target', () => {
