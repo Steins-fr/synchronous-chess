@@ -308,6 +308,7 @@ export class SequencedBlockChain {
             const block: Block = this.blockChain.getBlock(this.deliveredIndex + 1);
 
             if (!this.leftOut.has(block.index)) {
+                // eslint-disable-next-line no-await-in-loop -- the blocks are delivered in their order, up to the first one waiting for a key
                 const signature: Signature = await this.signatureOf(block.entry.signature, this.entryContent(block.entry), this.participants.author(block.entry.data.from));
 
                 if (signature === Signature.PENDING) {
@@ -341,6 +342,7 @@ export class SequencedBlockChain {
 
         // From the newest key, which signs the live entries and blocks
         for (const key of [...keys].reverse()) {
+            // eslint-disable-next-line no-await-in-loop -- from the newest key, up to the first one verifying the signature
             if (await Chain.verify(signature, content, key)) {
                 return Signature.SIGNED;
             }
@@ -406,9 +408,11 @@ export class SequencedBlockChain {
                 continue;
             }
 
+            // eslint-disable-next-line no-await-in-loop -- each block follows the previous one, up to the first refused
             if (!await this.blockChain.hasValidHash(block) || !this.blockChain.canAppend(block) || !await this.acceptBlock(block, fromSequencer)) {
                 // Asking again would bring the same refused block
                 TimedLogger.error(`Block ${ block.index } from ${ message.from } refused, stop catching up with it`);
+                // eslint-disable-next-line no-await-in-loop -- once, the loop stops here
                 await this.finishSyncIfDone();
                 return;
             }
@@ -523,6 +527,7 @@ export class SequencedBlockChain {
             this.entriesWaitingForKey.delete(name);
 
             for (const entry of entries) {
+                // eslint-disable-next-line no-await-in-loop -- the entries are sequenced in their order
                 await this.receiveEntry(entry);
             }
 
@@ -614,6 +619,7 @@ export class SequencedBlockChain {
         const watchedEntries: ReadonlyArray<ChainEntry> = [...this.watchedEntries.values()].map((watched: WatchedEntry) => watched.entry);
 
         for (const entry of [...this.ownPendingEntries.values(), ...watchedEntries, ...this.queuedEntries.splice(0)]) {
+            // eslint-disable-next-line no-await-in-loop -- the entries are sequenced in their order
             await this.sequence(entry);
         }
     }

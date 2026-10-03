@@ -31,11 +31,11 @@ export class RoomSetupComponent implements OnInit {
         const params = this.route.snapshot.queryParamMap;
         if (params.has('auto-create')) {
             this.roomName = params.get('room') ?? 'test';
-            this.playerName = `${ CryptoHelper.randomNumber(100000, 999999) }`;
+            this.playerName = `${ CryptoHelper.randomNumber(100_000, 999_999) }`;
             this.hostRoom();
         } else if (params.has('auto-join')) {
             this.roomName = params.get('room') ?? 'test';
-            this.playerName = `${ CryptoHelper.randomNumber(100000, 999999) }`;
+            this.playerName = `${ CryptoHelper.randomNumber(100_000, 999_999) }`;
             setTimeout(() => this.joinRoom(), 1000);
         }
     }

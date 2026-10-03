@@ -12,7 +12,7 @@ export enum NegotiatorConnectionState {
 export abstract class Negotiator {
 
     private static readonly maxSignalTry: number = 3;
-    private static readonly timeoutAfter: number = 15000;
+    private static readonly timeoutAfter: number = 15_000;
     private readonly subs: Array<Subscription> = [];
     private iceConnectionState: RTCIceConnectionState = 'disconnected';
     private signalTry: number = 0;

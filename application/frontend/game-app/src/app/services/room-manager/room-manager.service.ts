@@ -61,6 +61,7 @@ export default class RoomManagerService {
     private async join(setup: RoomSetupInterface): Promise<RoomJoinResponse> {
         for (let retry = 0; ; retry++) {
             try {
+                // eslint-disable-next-line no-await-in-loop -- retries, one attempt after the other
                 return await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
             } catch (e) {
                 if (!RoomManagerService.isNameInRoom(e) || retry === RoomManagerService.JOIN_RETRIES) {
@@ -71,6 +72,7 @@ export default class RoomManagerService {
                     this.notificationService.info('Ce nom est encore dans la salle, reconnexion en cours…');
                 }
 
+                // eslint-disable-next-line no-await-in-loop -- the delay between two attempts
                 await new Promise<void>((resolve) => setTimeout(resolve, RoomManagerService.JOIN_RETRY_DELAY));
             }
         }

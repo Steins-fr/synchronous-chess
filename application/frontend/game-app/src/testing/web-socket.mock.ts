@@ -8,7 +8,7 @@ export class WebSocketMock {
     public static readonly OPEN: number = 1;
     public static readonly CLOSING: number = 2;
     public static readonly CLOSED: number = 3;
-    public static instances: WebSocketMock[] = [];
+    public static readonly instances: WebSocketMock[] = [];
 
     public readyState: number = WebSocketMock.CONNECTING;
     public onopen?: () => void;
@@ -22,7 +22,11 @@ export class WebSocketMock {
     }
 
     public static last(): WebSocketMock {
-        return WebSocketMock.instances[WebSocketMock.instances.length - 1];
+        return WebSocketMock.instances.at(-1) as WebSocketMock;
+    }
+
+    public static reset(): void {
+        WebSocketMock.instances.length = 0;
     }
 
     public open(): void {

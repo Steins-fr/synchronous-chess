@@ -28,7 +28,7 @@ describe('RoomSocketApi', () => {
     }
 
     beforeEach(() => {
-        WebSocketMock.instances = [];
+        WebSocketMock.reset();
         vi.stubGlobal('WebSocket', WebSocketMock);
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
         vi.spyOn(console, 'debug').mockImplementation(() => undefined);

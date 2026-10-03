@@ -26,6 +26,8 @@ Mono-repo, no root package.json — each package is installed and run from its o
 - `application/shared/room-socket-protocol` — the WebSocket message types (requests, responses,
   notifications, error messages), imported by both packages as `@protocol/*`. Plain TypeScript with
   no dependency nor package.json: each package compiles it through its own tsconfig alias
+- `application/shared/sonar-eslint-rules` — the ESLint rules of the SonarCloud quality profile
+  (`sonar-way.json`), used by the ESLint configs of both packages, and the script generating them
 - `infrastructure` — Terraform (AWS), applied by GitHub Actions
 - `documentation` — resources and diagrams
 
@@ -105,6 +107,33 @@ When a browser test is done, always shut everything down before reporting back:
 - `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
   match. If their state collides, add a second server (e.g. `playwright2`) for an independent
   browser.
+
+## SonarQube
+
+### ESLint rules of the quality profile
+
+`npm run lint` raises the issues SonarCloud would report: both ESLint configs apply the rules of the
+TypeScript quality profile of the project ("My Sonar way"), listed in
+`application/shared/sonar-eslint-rules/sonar-way.json`. The profile is the reference, ESLint mirrors it.
+
+- `npm run sonar-rules` (game app) regenerates the file from the profile, through the SonarQube CLI and
+  `eslint-plugin-sonarjs` (which maps each Sonar rule to its ESLint rule). Rerun it when the profile or the
+  plugin changes, and review the diff.
+- The specs get the rules SonarCloud applies to tests only, like its analysis.
+- Not mirrored: the security (taint analysis) and architecture rules, run by SonarCloud only. Some rules
+  SonarCloud runs with exceptions of its own: the deviations are in `OVERRIDES` of `generate.mjs`.
+- A false positive in ESLint is turned off in ESLint, not in the profile.
+
+### SonarQube MCP
+
+`.mcp.json` also declares the SonarQube MCP server (`sonar run mcp --project Steins-fr_synchronous-chess`),
+to read the SonarCloud issues, quality gate and coverage of the project.
+
+- Needs the SonarQube CLI (`sonar`, installed under `~/.local/share/sonarqube-cli/bin`) on the `PATH`
+  and a container runtime: the CLI starts the `sonarsource/sonarqube-mcp` Docker image.
+- In WSL there is no keychain: the CLI authenticates with `SONARQUBE_CLI_TOKEN` and
+  `SONARQUBE_CLI_ORG`, exported by `~/.sonar-env` (sourced from `~/.zshrc`). Claude Code must be
+  started from a shell that has them.
 
 ## CI
 

@@ -4,10 +4,21 @@ import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import stylistic from "@stylistic/eslint-plugin";
 import globals from "globals";
 import tsParser from "@typescript-eslint/parser";
+import sonarjs from "eslint-plugin-sonarjs";
+import unicorn from "eslint-plugin-unicorn";
+import promise from "eslint-plugin-promise";
+import sonarWay from "../../shared/sonar-eslint-rules/sonar-way.json" with { type: "json" };
 
 export default [
     {
         ignores: ["dist/*", "node_modules/*"],
+    },
+    {
+        // The rules of the SonarCloud quality profile (see shared/sonar-eslint-rules), before the rules of the
+        // project that override them. The import rules need the plugin of the next block
+        files: ["**/*.ts"],
+        plugins: { sonarjs, unicorn, promise },
+        rules: { ...sonarWay.sources, ...sonarWay.import },
     },
     {
         plugins: {

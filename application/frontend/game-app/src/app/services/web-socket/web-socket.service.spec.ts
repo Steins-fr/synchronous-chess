@@ -9,7 +9,7 @@ function stateOf(service: WebSocketService): BehaviorSubject<SocketState> {
 
 describe('WebSocketService', () => {
     beforeEach(() => {
-        WebSocketMock.instances = [];
+        WebSocketMock.reset();
         vi.stubGlobal('WebSocket', WebSocketMock);
     });
 

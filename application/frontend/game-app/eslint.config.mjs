@@ -6,6 +6,10 @@ import tseslint from "typescript-eslint";
 import angular from "angular-eslint";
 import stylistic from '@stylistic/eslint-plugin';
 import html from "@html-eslint/eslint-plugin";
+import sonarjs from "eslint-plugin-sonarjs";
+import unicorn from "eslint-plugin-unicorn";
+import promise from "eslint-plugin-promise";
+import sonarWay from "../../shared/sonar-eslint-rules/sonar-way.json" with { type: "json" };
 
 export default defineConfig([globalIgnores([
     "projects/**/*",
@@ -21,6 +25,17 @@ export default defineConfig([globalIgnores([
         rxjs,
         '@stylistic': stylistic
     },
+}, {
+    // The rules of the SonarCloud quality profile (see shared/sonar-eslint-rules), before the rules of the project
+    // that override them. SonarCloud analyzes the specs as tests, with their own rules
+    files: ["**/*.ts"],
+    ignores: ["**/*.spec.ts"],
+    plugins: { sonarjs, unicorn, promise },
+    rules: { ...sonarWay.sources, ...sonarWay.angular },
+}, {
+    files: ["**/*.spec.ts"],
+    plugins: { sonarjs },
+    rules: sonarWay.tests,
 }, {
     files: ["**/*.ts"],
 

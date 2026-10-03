@@ -27,7 +27,7 @@
     },
     "files.insertFinalNewline": true,
     "sonarlint.connectedMode.project": {
-        "connectionId": "Steins orga",
+        "connectionId": "steins-sonar-key",
         "projectKey": "Steins-fr_synchronous-chess"
     },
 }

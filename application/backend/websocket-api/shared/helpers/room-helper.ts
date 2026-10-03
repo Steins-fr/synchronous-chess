@@ -29,11 +29,11 @@ export default abstract class RoomHelper {
     }
 
     public static getPlayerByName(room: Room, playerName: string): Player | null {
-        return RoomHelper.findPlayerByName(room.players, playerName) || RoomHelper.findPlayerByName(room.queue, playerName);
+        return RoomHelper.findPlayerByName(room.players, playerName) ?? RoomHelper.findPlayerByName(room.queue, playerName);
     }
 
     public static getPlayerByConnectionId(room: Room, connectionId: string): Player | null {
-        return RoomHelper.findPlayerConnectionId(room.players, connectionId) || RoomHelper.findPlayerConnectionId(room.queue, connectionId);
+        return RoomHelper.findPlayerConnectionId(room.players, connectionId) ?? RoomHelper.findPlayerConnectionId(room.queue, connectionId);
     }
 
     public static isInQueue(room: Room, playerName: string): boolean {
