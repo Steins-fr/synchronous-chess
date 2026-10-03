@@ -2,6 +2,8 @@ import { PieceColor } from '../../enums/piece-color.enum';
 
 export enum GameEndReason {
     CHECKMATE = 'checkmate',
+    /** A king moved to the cell an opposing piece moved to as well: both are captured, its player loses (both kings: a draw) */
+    KING_CAPTURED = 'kingCaptured',
     /** Both players are checkmated at the same time: a draw */
     DOUBLE_CHECKMATE = 'doubleCheckmate',
     /** A player, not in check, can not move any piece: a draw */

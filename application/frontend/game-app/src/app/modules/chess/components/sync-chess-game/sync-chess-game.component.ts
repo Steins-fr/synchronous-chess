@@ -139,6 +139,10 @@ export class SyncChessGameComponent implements OnDestroy {
         switch (result.reason) {
             case GameEndReason.CHECKMATE:
                 return `Échec et mat : victoire des ${ result.winner === PieceColor.WHITE ? 'blancs' : 'noirs' }`;
+            case GameEndReason.KING_CAPTURED:
+                return result.winner === PieceColor.NONE
+                    ? 'Match nul : les deux rois ont été capturés'
+                    : `Roi capturé : victoire des ${ result.winner === PieceColor.WHITE ? 'blancs' : 'noirs' }`;
             case GameEndReason.DOUBLE_CHECKMATE:
                 return 'Match nul : échec et mat des deux joueurs';
             case GameEndReason.STALEMATE:

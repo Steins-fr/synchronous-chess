@@ -183,8 +183,8 @@ export default class SynchronousChessGame {
         this._isWhiteInCheck.set(false);
         this._isBlackInCheck.set(false);
 
-        // Check can only exists during synchrone turn.
-        if (this.turn().type !== TurnType.MOVE_SYNC) {
+        // Check can only exists during synchrone turn, with both kings on the board
+        if (this.turn().type !== TurnType.MOVE_SYNC || this.capturedKingColors().length > 0) {
             return;
         }
 
@@ -245,9 +245,12 @@ export default class SynchronousChessGame {
         return true;
     }
 
-    /** At the start of a synchronous turn: a checkmate, then a stalemate, then the draws of the history end the game */
+    /**
+     * A captured king ends the game at once. Otherwise at the start of a synchronous turn: a checkmate, then a stalemate,
+     * then the draws of the history end the game.
+     */
     public verifyEnd(): void {
-        if (this.turn().type !== TurnType.MOVE_SYNC) {
+        if (this.turn().type !== TurnType.MOVE_SYNC && this.capturedKingColors().length === 0) {
             return;
         }
 
@@ -256,6 +259,16 @@ export default class SynchronousChessGame {
     }
 
     private endOfGame(): GameResult | null {
+        const capturedKings: ReadonlyArray<PieceColor> = this.capturedKingColors();
+
+        if (capturedKings.length === 2) {
+            return { winner: PieceColor.NONE, reason: GameEndReason.KING_CAPTURED };
+        }
+
+        if (capturedKings.length === 1) {
+            return { winner: capturedKings[0] === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED };
+        }
+
         const isWhiteCheckmated: boolean = this.isWhiteInCheckmate();
         const isBlackCheckmated: boolean = this.isBlackInCheckmate();
 
@@ -273,6 +286,14 @@ export default class SynchronousChessGame {
 
         const draw: GameEndReason | null = this.drawRules.draw(this._fenBoard());
         return draw === null ? null : { winner: PieceColor.NONE, reason: draw };
+    }
+
+    /** The colors whose king is not on the board anymore */
+    private capturedKingColors(): ReadonlyArray<PieceColor> {
+        const pieces: ReadonlyArray<FenPiece> = this._fenBoard().flat();
+        return ([[PieceColor.WHITE, FenPiece.WHITE_KING], [PieceColor.BLACK, FenPiece.BLACK_KING]] as const)
+            .filter(([, king]) => !pieces.includes(king))
+            .map(([color]) => color);
     }
 
     /** A player not in check which can not move any piece */
@@ -459,15 +480,8 @@ export default class SynchronousChessGame {
             this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.from, FenPiece.EMPTY));
             this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), blackMove.from, FenPiece.EMPTY));
 
-            if (whiteMove.to.toString() === blackMove.to.toString()) {  // Confrontation. King survive, others double capture
-                let destinationPiece: FenPiece = FenPiece.EMPTY;
-                if (whitePiece === FenPiece.WHITE_KING) {
-                    destinationPiece = whitePiece;
-                } else if (blackPiece === FenPiece.BLACK_KING) {
-                    destinationPiece = blackPiece;
-                }
-
-                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, destinationPiece));
+            if (whiteMove.to.toString() === blackMove.to.toString()) {  // Confrontation: both pieces are captured, a king too
+                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, FenPiece.EMPTY));
             } else {
                 this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, whitePiece));
                 this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), blackMove.to, blackPiece));
