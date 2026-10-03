@@ -47,9 +47,11 @@
             flex: 15;
 
             .mat-grid-list {
+                // The cells touch each other, the board has a single frame. An outline takes no room: the grid sizes its
+                // rows from its whole width, a border would leave an empty strip below the last row
+                outline: solid 1px black;
 
                 .mat-grid-tile {
-                    border: solid 1px black;
                     background-color: rgb(235, 235, 235);
 
                     &:nth-of-type(16n + 2),

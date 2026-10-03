@@ -12,6 +12,8 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
 })
 export class RoomLayoutComponent {
     public readonly maxPlayer = input.required<number>();
+    /** Whether the content is dimmed until the room is set up, as a preview of the page */
+    public readonly dimContent = input<boolean>(true);
 
     private readonly roomSetupService = inject(RoomSetupService);
     protected readonly isSetup = toSignal(this.roomSetupService.roomIsSetup$);

@@ -3,7 +3,7 @@
     <div class="row">
         <ng-container *ngTemplateOutlet="rowLabels" />
         <div [ngClass]="{'grabbing-cursor': !pieceDragged().equal(-1, -1)}" cdkDropListGroup id="board-grid">
-            <mat-grid-list cols="8">
+            <mat-grid-list cols="8" gutterSize="0">
                 @for (row of fenBoard(); track $index; let y = $index) {
                 @for (piece of row; track $index; let x = $index) {
                 @let pos = [x, y] | vector2d;

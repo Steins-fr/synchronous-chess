@@ -1,7 +1,14 @@
-<app-room-layout [maxPlayer]="maxPlayer">
+<app-room-layout [maxPlayer]="maxPlayer" [dimContent]="false">
+    <app-chess-presentation roomPresentation />
     @if (room(); as myRoom) {
     <app-debug-webrtc [room]="myRoom"/>
+    <app-chat [room]="myRoom" />
+    <app-sync-chess-game [room]="myRoom" />
+    <details class="rules">
+        <summary>Règles du jeu</summary>
+        <app-chess-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-chess-rules />
     }
-    <app-chat [room]="room()" />
-    <app-sync-chess-game [room]="room()" />
 </app-room-layout>

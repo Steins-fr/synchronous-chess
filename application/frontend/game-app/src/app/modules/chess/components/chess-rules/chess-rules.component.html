@@ -1,0 +1,174 @@
+@if (withTitle()) {
+<h2 class="title">Règles</h2>
+}
+
+<p class="source">
+    D'après les règles du
+    <a href="http://www.hexenspiel.de/engl/synchronous-chess/" rel="noopener" target="_blank">Synchronous Chess</a>
+    (Ralf Hansmann, Arnold J. Krasowsky et Andrey Krasowsky). Le plateau, les pièces, leur position de départ et
+    leurs déplacements restent ceux des échecs classiques.
+</p>
+
+<section class="summary" aria-labelledby="rules-summary-title">
+    <h3 id="rules-summary-title">En bref</h3>
+    <ul>
+        <li><strong>Coups simultanés</strong> : chacun choisit son coup en secret, puis les deux coups sont joués
+            ensemble.</li>
+        <li><strong>Même case</strong> : deux pièces qui vont sur la même case sont capturées toutes les deux, un roi
+            compris.</li>
+        <li><strong>Tours intermédiaires</strong> : une pièce qui arrive sur une case attaquée peut être capturée
+            aussitôt.</li>
+        <li><strong>Fin de partie</strong> : échec et mat ou roi capturé ; les nulles des échecs classiques
+            s'appliquent.</li>
+    </ul>
+</section>
+
+<nav class="table-of-contents" aria-label="Sommaire des règles">
+    <button (click)="scrollTo(players)" type="button">Joueurs</button>
+    <button (click)="scrollTo(captures)" type="button">Mouvement et capture</button>
+    <button (click)="scrollTo(intermediate)" type="button">Tours intermédiaires</button>
+    <button (click)="scrollTo(promotion)" type="button">Promotion</button>
+    <button (click)="scrollTo(restrictions)" type="button">Restrictions</button>
+    <button (click)="scrollTo(end)" type="button">Fin de partie</button>
+</nav>
+
+<section #players class="rule">
+    <h3>Joueurs et principe</h3>
+    <p>
+        Deux joueurs. Chaque participant de la salle, l'hôte compris, choisit sa couleur parmi les places libres. Les
+        places sont fixées dès le premier coup joué ; les autres participants sont spectateurs.
+    </p>
+    <p>
+        Les deux joueurs jouent leur coup simultanément, chacun sans connaître le coup de l'autre. Lorsque les deux
+        joueurs ont fait leur choix, les deux coups sont révélés et appliqués selon les règles ci-dessous.
+    </p>
+</section>
+
+<section #captures class="rule">
+    <h3>Mouvement et capture</h3>
+    <p>Si, pendant un tour synchrone…</p>
+    <div class="cases">
+        <div class="case">
+            <h4><span class="letter">a</span> Capture</h4>
+            <p class="scene" aria-hidden="true">♖ ➜ ♟ <span class="result">⇒ ♖</span></p>
+            <p>
+                … une pièce va sur une case occupée par une pièce adverse qui n'a pas bougé pendant ce tour, cette
+                dernière est capturée. La pièce qui a bougé occupe la case libérée.
+            </p>
+        </div>
+        <div class="case">
+            <h4><span class="letter">b</span> Échange</h4>
+            <p class="scene" aria-hidden="true">♖ ⇄ ♜ <span class="result">⇒ ♜ ♖</span></p>
+            <p>
+                … une pièce va sur une case occupée avant le tour par une pièce adverse qui a elle-même bougé, les deux
+                pièces atteignent leur destination sans être capturées, même si leurs trajets se croisent.
+            </p>
+        </div>
+        <div class="case">
+            <h4><span class="letter">c</span> Confrontation</h4>
+            <p class="scene" aria-hidden="true">♗ ➜ ✕ ⬅ ♝ <span class="result">⇒ ∅</span></p>
+            <p>
+                … les deux pièces vont sur la même case, elles sont toutes les deux capturées et retirées du plateau,
+                <strong>un roi compris</strong>.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section #intermediate class="rule">
+    <h3>Tours intermédiaires</h3>
+    <ol class="steps">
+        <li>
+            <strong>Déclenchement.</strong> Après un tour synchrone, un tour intermédiaire a lieu si une pièce qui a
+            bougé est arrivée sur une case déjà attaquée (ou protégée) par l'adversaire avant le tour, et qu'une pièce
+            adverse peut légalement la capturer.
+        </li>
+        <li>
+            <strong>Capture et reprises.</strong> L'adversaire peut capturer cette pièce, ou passer son tour. Seules les
+            captures sur les cases concernées sont autorisées ; chaque capture peut à son tour être reprise, jusqu'à ce
+            qu'un joueur ne puisse plus ou ne veuille plus capturer. Si les deux joueurs ont le droit de jouer, leurs
+            coups sont choisis en secret et appliqués simultanément.
+        </li>
+        <li>
+            <strong>Une fois par pièce.</strong> Une pièce ne peut bouger qu'une seule fois pendant la phase
+            intermédiaire. La pièce qui vient de bouger pendant le tour synchrone peut néanmoins y bouger une fois.
+        </li>
+        <li><strong>Retour au jeu.</strong> Le jeu reprend ensuite par un tour synchrone.</li>
+    </ol>
+</section>
+
+<section #promotion class="rule">
+    <h3>Promotion</h3>
+    <p>
+        Si au moins un joueur amène un pion sur la dernière rangée, un tour dédié permet de choisir sa promotion. Le jeu
+        reprend ensuite par le tour synchrone ou intermédiaire qui résulte des coups joués.
+    </p>
+</section>
+
+<section #restrictions class="rule">
+    <h3>Restrictions</h3>
+    <ul class="restrictions">
+        <li><strong>Pas de prise en passant</strong> dans cette variante.</li>
+        <li>
+            <strong>Cases interdites au roi</strong> : il ne peut pas aller sur une case attaquée par l'adversaire avant
+            le tour synchrone ; inutile d'anticiper la libération d'une case pour s'y placer.
+        </li>
+        <li>
+            <strong>Pièces clouées</strong> : aucun coup ne peut laisser son propre roi attaqué, la position adverse
+            étant supposée inchangée ; une pièce clouée ne peut pas quitter la ligne de son roi.
+        </li>
+        <li>
+            <strong>Échec</strong> : un roi attaqué au début du tour synchrone doit bouger sur une case qui n'est pas
+            attaquée avant les coups. S'il ne le peut pas, c'est échec et mat.
+        </li>
+        <li>
+            <strong>Roque</strong> : un roi en échec ne peut pas roquer pour en sortir. L'échec n'empêche le roque que
+            pour ce tour ; le droit de roquer n'est perdu que lorsque le roi ou la tour a bougé.
+        </li>
+    </ul>
+</section>
+
+<section #end class="rule">
+    <h3>Fin de partie</h3>
+    <p>Un roi capturé met fin à la partie aussitôt. Sinon, la partie se termine au début d'un tour synchrone.</p>
+    <table class="ends">
+        <caption class="visually-hidden">Fins de partie et leur résultat</caption>
+        <thead>
+            <tr>
+                <th scope="col">Situation</th>
+                <th scope="col">Résultat</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Roi capturé, en allant sur la même case qu'une pièce adverse</td>
+                <td><span class="badge win">Victoire</span> de l'adversaire (nul si les deux rois sont capturés)</td>
+            </tr>
+            <tr>
+                <td>Échec et mat d'un joueur</td>
+                <td><span class="badge win">Victoire</span> de l'adversaire</td>
+            </tr>
+            <tr>
+                <td>Échec et mat des deux joueurs</td>
+                <td><span class="badge draw">Nul</span></td>
+            </tr>
+            <tr>
+                <td>Pat : un joueur qui n'est pas en échec ne peut bouger aucune pièce</td>
+                <td><span class="badge draw">Nul</span></td>
+            </tr>
+            <tr>
+                <td>La même position (pièces et droits de roque) revient pour la troisième fois</td>
+                <td><span class="badge draw">Nul</span></td>
+            </tr>
+            <tr>
+                <td>50 tours synchrones sans mouvement de pion ni prise</td>
+                <td><span class="badge draw">Nul</span></td>
+            </tr>
+            <tr>
+                <td>Plus assez de pièces pour mater : rois seuls, un seul cavalier ou fou, fous tous sur des cases de
+                    même couleur</td>
+                <td><span class="badge draw">Nul</span></td>
+            </tr>
+        </tbody>
+    </table>
+</section>

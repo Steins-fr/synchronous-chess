@@ -27,3 +27,8 @@ body {
 #virtual-chat .cdk-virtual-scroll-content-wrapper {
     width: 100%;
 }
+
+// The pieces of the board are sized for the board of the game: smaller in the preview of the presentation page
+app-chess-presentation .preview app-chess-piece {
+    font-size: min(30px, 8vw);
+}

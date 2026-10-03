@@ -1,3 +1,6 @@
+@if (!isSetup()) {
+<ng-content select="[roomPresentation]"/>
+}
 <div class="container">
     <app-room-setup [maxPlayer]="maxPlayer()"/>
 </div>
@@ -5,7 +8,7 @@
     <div id="page-content" class="container">
         <ng-content/>
     </div>
-    @if (!isSetup()) {
+    @if (!isSetup() && dimContent()) {
     <div id="room-content-overlay"></div>
     }
 </div>

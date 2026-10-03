@@ -1,0 +1,38 @@
+// The rules below the game: a bar to unfold them
+.rules {
+    max-width: 860px;
+    margin: 24px auto;
+
+    summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border: 1px solid #dfe2f0;
+        border-radius: 8px;
+        background-color: #f5f6fb;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::before {
+            content: '▸';
+            color: rgb(60, 77, 175);
+            transition: transform 0.2s;
+        }
+
+        &:hover,
+        &:focus-visible {
+            border-color: rgb(60, 77, 175);
+        }
+    }
+
+    &[open] summary::before {
+        transform: rotate(90deg);
+    }
+}
