@@ -8,6 +8,10 @@ applyTo: '**'
   - `application/frontend/game-app`: This Angular project;
   - `application/backend/websocket-api`: The backend WebSocket API project that is used for real-time communication;
 - PR target branch: `main`
+- A branch behind `main` (branch protection requires it up to date before merging): rebase it on
+  `origin/main` and push with `git push --force-with-lease`; never merge `main` into it (no
+  "Update branch" merge commit). Run lint and tests on the rebased branch before pushing.
+- Merge the PRs with a merge commit (the only method allowed on the repository)
 - To list commit messages, use the command:
   `git log origin/main..HEAD --oneline | head -20`
 - Open in draft mode if there is a commit with the message "WIP" or "wip"
