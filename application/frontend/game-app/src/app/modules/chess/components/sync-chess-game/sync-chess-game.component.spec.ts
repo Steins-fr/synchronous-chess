@@ -376,6 +376,9 @@ describe('SyncChessGameComponent', () => {
     test.each([
         { result: { winner: PieceColor.WHITE, reason: GameEndReason.CHECKMATE }, message: 'Échec et mat : victoire des blancs' },
         { result: { winner: PieceColor.BLACK, reason: GameEndReason.CHECKMATE }, message: 'Échec et mat : victoire des noirs' },
+        { result: { winner: PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED }, message: 'Roi capturé : victoire des blancs' },
+        { result: { winner: PieceColor.BLACK, reason: GameEndReason.KING_CAPTURED }, message: 'Roi capturé : victoire des noirs' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.KING_CAPTURED }, message: 'Match nul : les deux rois ont été capturés' },
         { result: { winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE }, message: 'Match nul : échec et mat des deux joueurs' },
         { result: { winner: PieceColor.NONE, reason: GameEndReason.STALEMATE }, message: 'Match nul : pat, un joueur ne peut plus bouger' },
         { result: { winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION }, message: 'Match nul : la même position s\'est répétée trois fois' },

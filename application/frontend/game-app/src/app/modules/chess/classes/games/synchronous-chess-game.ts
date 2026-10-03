@@ -183,8 +183,8 @@ export default class SynchronousChessGame {
         this._isWhiteInCheck.set(false);
         this._isBlackInCheck.set(false);
 
-        // Check can only exists during synchrone turn.
-        if (this.turn().type !== TurnType.MOVE_SYNC) {
+        // Check can only exists during synchrone turn, with both kings on the board
+        if (this.turn().type !== TurnType.MOVE_SYNC || this.capturedKingColors().length > 0) {
             return;
         }
 
@@ -245,9 +245,12 @@ export default class SynchronousChessGame {
         return true;
     }
 
-    /** At the start of a synchronous turn: a checkmate, then a stalemate, then the draws of the history end the game */
+    /**
+     * A captured king ends the game at once. Otherwise at the start of a synchronous turn: a checkmate, then a stalemate,
+     * then the draws of the history end the game.
+     */
     public verifyEnd(): void {
-        if (this.turn().type !== TurnType.MOVE_SYNC) {
+        if (this.turn().type !== TurnType.MOVE_SYNC && this.capturedKingColors().length === 0) {
             return;
         }
 
@@ -256,6 +259,16 @@ export default class SynchronousChessGame {
     }
 
     private endOfGame(): GameResult | null {
+        const capturedKings: ReadonlyArray<PieceColor> = this.capturedKingColors();
+
+        if (capturedKings.length === 2) {
+            return { winner: PieceColor.NONE, reason: GameEndReason.KING_CAPTURED };
+        }
+
+        if (capturedKings.length === 1) {
+            return { winner: capturedKings[0] === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED };
+        }
+
         const isWhiteCheckmated: boolean = this.isWhiteInCheckmate();
         const isBlackCheckmated: boolean = this.isBlackInCheckmate();
 
@@ -275,13 +288,26 @@ export default class SynchronousChessGame {
         return draw === null ? null : { winner: PieceColor.NONE, reason: draw };
     }
 
+    /** The colors whose king is not on the board anymore */
+    private capturedKingColors(): ReadonlyArray<PieceColor> {
+        const pieces: ReadonlySet<FenPiece> = new Set(this._fenBoard().flat());
+        return ([[PieceColor.WHITE, FenPiece.WHITE_KING], [PieceColor.BLACK, FenPiece.BLACK_KING]] as const)
+            .filter(([, king]) => !pieces.has(king))
+            .map(([color]) => color);
+    }
+
     /** A player not in check which can not move any piece */
     private isStalemate(color: PieceColor): boolean {
         if (color === PieceColor.WHITE ? this.isWhiteInCheck() : this.isBlackInCheck()) {
             return false;
         }
 
-        return !this._fenBoard().some((row: ReadonlyArray<FenPiece>, y: number) => row.some((piece: FenPiece, x: number) =>
+        return !this.canMoveAnyPiece(color);
+    }
+
+    /** In the current turn */
+    private canMoveAnyPiece(color: PieceColor): boolean {
+        return this._fenBoard().some((row: ReadonlyArray<FenPiece>, y: number) => row.some((piece: FenPiece, x: number) =>
             ChessBoardHelper.pieceColor(piece) === color && this.getPossiblePlays(new Vec2(x, y)).length > 0));
     }
 
@@ -303,13 +329,12 @@ export default class SynchronousChessGame {
 
         if (turnCategory === TurnCategory.MOVE) {
             const { whiteMove, blackMove }: MoveTurnAction = this.turn().action as MoveTurnAction;
-            const blackMoveDestination: FenCoordinate | undefined = blackMove ? blackMove.to : undefined;
-            const whiteMoveDestination: FenCoordinate | undefined = whiteMove ? whiteMove.to : undefined;
 
-            const whiteOldSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._oldFenBoard, blackMoveDestination);
-            const blackOldSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._oldFenBoard, whiteMoveDestination);
-            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard(), blackMoveDestination);
-            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard(), whiteMoveDestination);
+            // The piece which just moved attacks too: it may capture once during the intermediate phase (rule A)
+            const whiteOldSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._oldFenBoard);
+            const blackOldSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._oldFenBoard);
+            const whiteSafeBoard: SafeBoard = this.whiteRules.getSafeBoard(this._fenBoard());
+            const blackSafeBoard: SafeBoard = this.blackRules.getSafeBoard(this._fenBoard());
 
             const intermediateAction: IntermediateTurnAction = {
                 whiteTarget: this.getNextTurnTarget(blackMove, blackOldSafeBoard, blackSafeBoard),
@@ -319,7 +344,7 @@ export default class SynchronousChessGame {
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
-                this._turn.set(new IntermediateTurn(intermediateAction, whiteMove, blackMove));
+                this._turn.set(this.intermediateTurn(intermediateAction, [whiteMove, blackMove]));
             }
         } else if (turnCategory === TurnCategory.CHOICE) {
             const choiceTurn: ChoiceTurn = this.turn() as ChoiceTurn;
@@ -330,6 +355,30 @@ export default class SynchronousChessGame {
         if (this.turn().isDone) {
             this._turn.set(new SyncTurn());
         }
+    }
+
+    /**
+     * The intermediate turn following the moves of the current turn, or a synchronous turn when no player can capture
+     * its target
+     */
+    private intermediateTurn(action: IntermediateTurnAction, moves: ReadonlyArray<Move | null>): Turn {
+        // A piece moves once during the intermediate phase: the pieces of the synchronous turn may move once more
+        const movedPieces: ReadonlyArray<FenCoordinate> = this.turn() instanceof IntermediateTurn
+            ? [...(this.turn() as IntermediateTurn).movedPieces, ...moves.filter((move: Move | null) => move !== null).map((move: Move) => move.to)]
+            : [];
+
+        // The possible captures are the plays of the intermediate turn
+        this._turn.set(new IntermediateTurn(action, movedPieces));
+
+        // A player has the right to capture the piece which moved to its target only if it can capture it
+        const whiteTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.WHITE) ? action.whiteTarget : null;
+        const blackTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.BLACK) ? action.blackTarget : null;
+
+        if (whiteTarget === null && blackTarget === null) {
+            return new SyncTurn();
+        }
+
+        return new IntermediateTurn({ ...action, whiteTarget, blackTarget }, movedPieces);
     }
 
     protected canPromote(move: Move | null): boolean {
@@ -445,15 +494,8 @@ export default class SynchronousChessGame {
             this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.from, FenPiece.EMPTY));
             this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), blackMove.from, FenPiece.EMPTY));
 
-            if (whiteMove.to.toString() === blackMove.to.toString()) {  // Confrontation. King survive, others double capture
-                let destinationPiece: FenPiece = FenPiece.EMPTY;
-                if (whitePiece === FenPiece.WHITE_KING) {
-                    destinationPiece = whitePiece;
-                } else if (blackPiece === FenPiece.BLACK_KING) {
-                    destinationPiece = blackPiece;
-                }
-
-                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, destinationPiece));
+            if (whiteMove.to.toString() === blackMove.to.toString()) {  // Confrontation: both pieces are captured, a king too
+                this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, FenPiece.EMPTY));
             } else {
                 this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), whiteMove.to, whitePiece));
                 this._fenBoard.set(ChessBoardHelper.setFenPiece(this._fenBoard(), blackMove.to, blackPiece));
@@ -492,13 +534,8 @@ export default class SynchronousChessGame {
         const intermediateAction: IntermediateTurnAction = intermediateTurn.action;
         const target: FenCoordinate | null = ChessBoardHelper.pieceColor(fenPiece) === PieceColor.WHITE ? intermediateAction.whiteTarget : intermediateAction.blackTarget;
 
-        const lastWhiteMove: Move | null = intermediateTurn.lastWhiteMove;
-        const lastBlackMove: Move | null = intermediateTurn.lastBlackMove;
-        const whiteLastMovedPiece: Vec2 | null = lastWhiteMove ? ChessBoardHelper.fenCoordinateToVec2(lastWhiteMove.to) : null;
-        const blackLastMovedPiece: Vec2 | null = lastBlackMove ? ChessBoardHelper.fenCoordinateToVec2(lastBlackMove.to) : null;
-
-        if ((whiteLastMovedPiece && position.equal(whiteLastMovedPiece.x, whiteLastMovedPiece.y))
-            || (blackLastMovedPiece && position.equal(blackLastMovedPiece.x, blackLastMovedPiece.y))) {
+        // A piece moves only once during the intermediate phase (rule A)
+        if (intermediateTurn.movedPieces.some((cell: FenCoordinate) => ChessBoardHelper.fenCoordinateToVec2(cell).equal(position.x, position.y))) {
             return [];
         }
 
@@ -533,7 +570,8 @@ export default class SynchronousChessGame {
 
         const rules: SynchronousChessRules = this.getRules(ChessBoardHelper.pieceColor(fenPiece));
 
-        const possiblePlays: Array<Vec2> = rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard()));
+        const possiblePlays: Array<Vec2> = this.keepingKingSafe(fenPiece, position,
+            rules.getPossiblePlays(ChessBoardHelper.pieceType(fenPiece), position, ChessBoardHelper.cloneBoard(this._fenBoard())));
 
         const turnType: TurnType = this.turn().type;
 
@@ -547,6 +585,24 @@ export default class SynchronousChessGame {
             default:
                 return switchExhaustivenessGuard(turnType);
         }
+    }
+
+    /**
+     * A player can not make a move leaving its king attacked, the position of the opponent being unchanged (rule C): a
+     * pinned piece can not leave the line of its king. The moves of the king itself only go to cells not attacked.
+     */
+    private keepingKingSafe(piece: FenPiece, from: Vec2, plays: Array<Vec2>): Array<Vec2> {
+        const color: PieceColor = ChessBoardHelper.pieceColor(piece);
+        const king: FenPiece.WHITE_KING | FenPiece.BLACK_KING = color === PieceColor.WHITE ? FenPiece.WHITE_KING : FenPiece.BLACK_KING;
+
+        if (ChessBoardHelper.pieceType(piece) === PieceType.KING || !this._fenBoard().flat().includes(king)) {
+            return plays;
+        }
+
+        return plays.filter((to: Vec2) => {
+            const board: FenBoard = ChessBoardHelper.setFenPieceByVec(ChessBoardHelper.setFenPieceByVec(this._fenBoard(), to, piece), from, FenPiece.EMPTY);
+            return ChessBoardHelper.isSafe(this.getRules(color).getSafeBoard(board), ChessBoardHelper.findKing(board, king));
+        });
     }
 
     public hasPlayed(color: PieceColor): boolean {

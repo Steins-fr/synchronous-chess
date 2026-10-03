@@ -108,97 +108,91 @@
     <div id="rules">
         <h3>Règles</h3>
 
-        <h4>Joueurs</h4>
+        <p>
+            Règles du
+            <a href="http://www.hexenspiel.de/engl/synchronous-chess/" rel="noopener" target="_blank">Synchronous Chess</a>
+            (Ralf Hansmann, Arnold J. Krasowsky et Andrey Krasowsky). Le plateau, les pièces, leur position de départ et
+            leurs déplacements restent ceux des échecs classiques.
+        </p>
 
-        <div>Nombre de joueur : 2.</div>
-        <div>Chaque participant de la salle, l'hôte compris, choisit sa couleur parmi les places libres. Les places sont
+        <h4>Joueurs</h4>
+        <div>Nombre de joueurs : 2.</div>
+        <div>
+            Chaque participant de la salle, l'hôte compris, choisit sa couleur parmi les places libres. Les places sont
             fixées dès le premier coup joué ; les autres participants sont spectateurs.
         </div>
 
         <h4>Principe</h4>
         <div>
-            Les deux joueurs jouent leur coup simultanément. Ils prennent donc la décision de leur mouvement chacun de
-            leur côté. Lorsque les deux joueurs ont fait leur choix, les deux mouvements sont appliqués selon les règles
-            détaillées ci-dessous.
-        </div>
-        <div>
-            Certaines règles ont été modifiées par rapport aux règles conventionnelles des Échecs.
+            Les deux joueurs jouent leur coup simultanément, chacun sans connaître le coup de l'autre. Lorsque les deux
+            joueurs ont fait leur choix, les deux coups sont révélés et appliqués selon les règles ci-dessous.
         </div>
 
         <h4>Mouvement et capture</h4>
-        <div>Si pendant un tour synchrone ...</div>
+        <div>Si, pendant un tour synchrone…</div>
         <div>
-            a) ... une pièce bouge sur une case occupé par l'ennemie, et que cette dernière n'a pas bougée durant le
-            tour synchrone, celle-ci est capturée et retiré du plateau. La pièce ayant bougé occupe alors la case
-            libérée.
+            a) … une pièce va sur une case occupée par une pièce adverse qui n'a pas bougé pendant ce tour, cette dernière
+            est capturée et retirée du plateau. La pièce qui a bougé occupe la case libérée.
         </div>
         <div>
-            b) ... une pièce bouge sur une case occupé par l'ennemie, mais que cette dernière a bougé durant ce même
-            tour,
-            alors les deux pièces atteignent leur destination. Parfois, un tour synchrone peut se conclure sur
-            l'échange mutuel
-            de la position de deux pièces même si les mouvements se superposent.
+            b) … une pièce va sur une case occupée avant le tour par une pièce adverse qui a elle-même bougé pendant ce
+            tour, les deux pièces atteignent leur destination sans être capturées. Un tour synchrone peut ainsi échanger la
+            position de deux pièces, même si leurs trajets se croisent.
         </div>
         <div>
-            c) ... les deux pièces bougent sur la même case, alors les deux pièces sont retirées du plateau.
-            Exception : Si l'une des deux pièces est un roi, alors le roi est avantagé et occupe la case ciblée.
+            c) … les deux pièces vont sur la même case, elles sont toutes les deux capturées et retirées du plateau, un
+            roi compris.
         </div>
 
-        <h4>Les tours</h4>
+        <h4>Tours intermédiaires</h4>
         <div>
-            La partie se déroule avec un enchaînement de tour synchrone qui peuvent être entrelacés de tour
-            intermédiaire.
+            Après un tour synchrone, un tour intermédiaire a lieu si au moins une des pièces qui ont bougé est arrivée sur
+            une case déjà attaquée (ou protégée) par l'adversaire avant le tour. L'adversaire a alors le droit de jouer un
+            coup supplémentaire pour capturer cette pièce, à condition qu'une de ses pièces puisse légalement la capturer.
+            Il n'est pas obligé de le faire et peut passer son tour.
         </div>
         <div>
-            Après les mouvements d'un tour synchrone, un tour intermédiaire peut prendre place si au moins une des
-            pièces s'est
-            placée sur une case qui était attaquée ou protégée avant le tour.
-            Dans ce cas, l'ennemie a le droit d'effectuer un tour additionnel appelé "intermédiaire" afin de
-            capturer la pièce qui s'est mise en danger. Il peut passer ce tour s'il le souhaite.
-            Si les deux joueurs ont le droit à un tour additionnel, alors le tour intermédiaire est joué simultanément
-            comme un tour synchrone, à la différence qu'ils sont uniquement autorisés à capturer les pièces mise en
-            danger.
+            Pendant les tours intermédiaires, seules les captures sur les cases concernées sont autorisées. Chaque capture
+            peut à son tour être reprise par l'adversaire, et ainsi de suite, jusqu'à ce qu'un joueur ne puisse plus ou ne
+            veuille plus capturer. Si les deux joueurs ont le droit de jouer, ils décident chacun de leur côté et leurs
+            coups sont appliqués simultanément. Le jeu reprend ensuite par un tour synchrone.
         </div>
         <div>
-            Un tour intermédiaire peut être suivi d'un nouveau tour intermédiaire si les conditions de déclenchement
-            d'un tour intermédiaire sont remplies. Sinon, le jeu reprend sur un tour synchrone.
+            Une pièce ne peut bouger qu'une seule fois pendant une phase intermédiaire. Une pièce qui vient de bouger
+            pendant le tour synchrone peut néanmoins bouger une fois pendant la phase intermédiaire qui suit.
         </div>
 
         <h4>Promotion</h4>
-        <div>Si au moins un des deux joueurs bouge un pion sur une position permettant une promotion, alors un tour
-            dédié à la promotion est mis en place afin d'effectuer le choix de la promotion. Le jeu reprend ensuite
-            le tour synchrone ou intermédiaire résultant des mouvements précédemment effectués.
+        <div>
+            Si au moins un joueur amène un pion sur la dernière rangée, un tour dédié permet de choisir sa promotion. Le jeu
+            reprend ensuite par le tour synchrone ou intermédiaire qui résulte des coups joués.
         </div>
 
         <h4>Restrictions</h4>
+        <div>La prise « en passant » n'existe pas dans cette variante.</div>
         <div>
-            La règle "en passant" n'existe pas dans cette variante.
+            Le roi ne peut pas aller sur une case attaquée par l'adversaire avant le tour synchrone : il est inutile
+            d'anticiper la libération d'une case pour s'y placer.
         </div>
         <div>
-            Le roi n'est pas autorisé à se placer sur une case attaquée ou protégée par l'adversaire. Il est donc
-            inutile
-            d'essayer de prévoir la libération d'une case afin de pouvoir s'y mettre.
+            Un joueur ne peut pas jouer un coup qui laisserait son propre roi attaqué, la position de l'adversaire étant
+            supposée inchangée : une pièce clouée ne peut pas quitter la ligne de son roi.
         </div>
         <div>
-            Si le roi est attaqué, en échec, au début du tour synchrone, alors le roi est obligé de bouger sur une case
-            actuellement non attaquée ou non protégée. Si il est dans l'impossibilité de bouger, c'est échec et mat.
+            Si le roi est attaqué (en échec) au début du tour synchrone, il doit bouger sur une case qui n'est pas attaquée
+            avant les coups. S'il ne le peut pas, c'est échec et mat.
         </div>
         <div>
             Un roi en échec ne peut pas roquer pour en sortir. L'échec n'empêche le roque que pour ce tour : le droit de
             roquer n'est perdu que lorsque le roi ou la tour a bougé.
         </div>
-        <div>
-            Avec ces règles, il est alors possible :
-            <ul>
-                <li>Échec et mat des deux joueurs. C'est donc un match nul ;</li>
-                <li>Le roi peut être capturé avec l'exécution de seulement deux tours synchrones.</li>
-            </ul>
-        </div>
 
         <h4>Fin de partie</h4>
         <div>
-            La partie est terminée au début d'un tour synchrone :
+            Un roi capturé met fin à la partie aussitôt. Sinon, la partie est terminée au début d'un tour synchrone :
             <ul>
+                <li>Roi capturé, lorsqu'il va sur la même case qu'une pièce adverse : son adversaire gagne (match nul si les
+                    deux rois sont capturés) ;</li>
                 <li>Échec et mat d'un joueur : son adversaire gagne ;</li>
                 <li>Échec et mat des deux joueurs : match nul ;</li>
                 <li>Pat, un joueur qui n'est pas en échec ne peut bouger aucune pièce : match nul ;</li>

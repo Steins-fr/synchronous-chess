@@ -156,13 +156,14 @@ it played until it is revealed.
 
 ## End of the game
 
-The game decides its end at the start of each synchronous turn (`SynchronousChessGame.verifyEnd()`),
-from the board and its history, the same for every participant: no message is needed. The first end
-found, in this order, is the `result()` of the game (`GameResult`: the winner, none for a draw, and a
-`GameEndReason`):
+The game decides its end (`SynchronousChessGame.verifyEnd()`) from the board and its history, the
+same for every participant: no message is needed. A captured king ends the game at once; otherwise the
+end is decided at the start of each synchronous turn. The first end found, in this order, is the
+`result()` of the game (`GameResult`: the winner, none for a draw, and a `GameEndReason`):
 
 | Reason | When | Result |
 |---|---|---|
+| `kingCaptured` | A king moved to the same cell as an opposing piece: both are captured (rule c) | Its opponent wins, a draw when both kings are captured |
 | `checkmate` | A player in check can not move its king | Its opponent wins |
 | `doubleCheckmate` | Both players are checkmated | Draw |
 | `stalemate` | A player not in check can not move any piece | Draw |

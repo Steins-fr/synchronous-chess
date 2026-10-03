@@ -257,13 +257,8 @@ export default abstract class ChessBoardHelper {
     }
 
 
-    public static fenBoardToSafeBoard(board: FenBoard, rules: ChessRules, excludeFrom?: FenCoordinate): SafeBoard {
-        let cacheKey: string = board.toString() + rules.color;
-        let excludeFromCoordinate: Vec2;
-        if (excludeFrom !== undefined) {
-            cacheKey += excludeFrom.toString();
-            excludeFromCoordinate = ChessBoardHelper.fenCoordinateToVec2(excludeFrom);
-        }
+    public static fenBoardToSafeBoard(board: FenBoard, rules: ChessRules): SafeBoard {
+        const cacheKey: string = board.toString() + rules.color;
 
         const cachedSafeBoard: SafeBoard | undefined = ChessBoardHelper.fenBoardToSafeBoardCache.get(cacheKey);
         if (cachedSafeBoard !== undefined && !ChessBoardHelper.isCacheDisabled) {
@@ -277,11 +272,6 @@ export default abstract class ChessBoardHelper {
         board.forEach((row: Array<FenPiece>, y: number) => {
             row.forEach((piece: FenPiece, x: number) => {
                 const pieceType: PieceType = ChessBoardHelper.pieceType(piece);
-                // Exclude results for this piece
-                if (excludeFromCoordinate?.equal(x, y)) {
-                    return;
-                }
-
                 if (pieceType !== PieceType.NONE && ChessBoardHelper.pieceColor(piece) === rules.color) {
                     protectionPlays = protectionPlays.concat(this.getProtectionPlays(new Vec2(x, y), board, rules));
                 }

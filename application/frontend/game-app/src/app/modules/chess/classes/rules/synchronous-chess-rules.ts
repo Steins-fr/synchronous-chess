@@ -11,7 +11,6 @@ import { Row } from '../../interfaces/CoordinateMove';
 import ChessBoardHelper from '../../helpers/chess-board-helper';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
 import { SafeBoard } from '@app/modules/chess/types/safe-board';
-import { FenCoordinate } from '../../interfaces/move';
 import { FenPiece } from '../../enums/fen-piece.enum';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
@@ -114,8 +113,8 @@ export default class SynchronousChessRules extends ChessRules {
         };
     }
 
-    public getSafeBoard(board: FenBoard, excludeFrom?: FenCoordinate): SafeBoard {
+    public getSafeBoard(board: FenBoard): SafeBoard {
         const opponentRules: ChessRules = this.isBlack() ? SynchronousChessRules.whiteNoSafetyRules : SynchronousChessRules.blackNoSafetyRules;
-        return ChessBoardHelper.fenBoardToSafeBoard(board, opponentRules, excludeFrom);
+        return ChessBoardHelper.fenBoardToSafeBoard(board, opponentRules);
     }
 }

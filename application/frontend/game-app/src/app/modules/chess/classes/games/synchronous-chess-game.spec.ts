@@ -23,7 +23,7 @@ import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
 import { TestHelper } from '@testing/test.helper';
 import { boardWith } from '@testing/fen-board.helper';
-import { GameEndReason } from '@app/modules/chess/classes/games/game-result';
+import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
 
 class ProtectedTest extends SynchronousChessGame {
     public override runSyncTurn(): void {
@@ -525,6 +525,7 @@ describe('SynchronousChessGame', () => {
                 whiteMove: null,
                 blackMove: null,
             },
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -837,7 +838,7 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
-    test('runSynchroneTurn should double capture with black king surviving', () => {
+    test('runSynchroneTurn should capture both pieces, the black king too', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
@@ -875,7 +876,7 @@ describe('SynchronousChessGame', () => {
             [FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
-            [FenPiece.BLACK_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
             [FenPiece.EMPTY, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
@@ -889,7 +890,7 @@ describe('SynchronousChessGame', () => {
         expect(game.fenBoard()).toEqual(expectedFenBoard);
     });
 
-    test('runSynchroneTurn should double capture with white king surviving', () => {
+    test('runSynchroneTurn should capture both pieces, the white king too', () => {
         // Given
         const game: ProtectedTest = new ProtectedTest();
 
@@ -927,7 +928,7 @@ describe('SynchronousChessGame', () => {
             [FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
-            [FenPiece.WHITE_KING, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
             [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
             [FenPiece.EMPTY, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.EMPTY, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
@@ -1115,6 +1116,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1172,6 +1174,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1229,6 +1232,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1849,6 +1853,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1901,6 +1906,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -1936,24 +1942,68 @@ describe('SynchronousChessGame', () => {
         expect(blackResult).toEqual(expectedBlackPossiblePlays);
     });
 
-    test('getIntermediateTurnPossiblePlays should exclude the movement of last moved pieces', () => {
+    test('getIntermediateTurnPossiblePlays should let the pieces of the synchronous turn capture once (rule A)', () => {
         // Given
         ChessBoardHelper.disableCache();
         const game: ProtectedTest = new ProtectedTest();
 
         const whiteTarget: FenCoordinate = [FenColumn.C, 5];
         const blackTarget: FenCoordinate = [FenColumn.B, 4];
-        const oldAction: SyncTurnAction = {
-            whiteMove: { from: [FenColumn.C, 2], to: blackTarget },
-            blackMove: { from: [FenColumn.B, 7], to: whiteTarget }
-        };
+        // The synchronous turn moved a white pawn c2 to the black target b4, and a black pawn b7 to the white target c5
         const action: IntermediateTurnAction = {
             whiteTarget,
             blackTarget,
             whiteMove: null,
             blackMove: null,
         };
-        const turn: IntermediateTurn = new IntermediateTurn(action, oldAction.whiteMove, oldAction.blackMove);
+        const turn: IntermediateTurn = new IntermediateTurn(action);
+
+        gameState(game)._turn.set(turn);
+
+        const fenBoardInit: FenBoard = [
+            [FenPiece.BLACK_ROOK, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_BISHOP, FenPiece.BLACK_QUEEN, FenPiece.BLACK_KING, FenPiece.BLACK_BISHOP, FenPiece.BLACK_KNIGHT, FenPiece.BLACK_ROOK],
+            [FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.BLACK_PAWN],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.BLACK_PAWN, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY, FenPiece.EMPTY],
+            [FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN, FenPiece.EMPTY, FenPiece.WHITE_PAWN, FenPiece.WHITE_PAWN],
+            [FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_QUEEN, FenPiece.WHITE_KING, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_ROOK]
+        ];
+
+        const blackPosition: Vec2 = new Vec2(Column.C, Row._5);
+        const whitePosition: Vec2 = new Vec2(Column.B, Row._4);
+        const blackPossiblePlays: Array<Vec2> = [whitePosition, new Vec2(Column.B, Row._5)];
+        const whitePossiblePlays: Array<Vec2> = [blackPosition, new Vec2(Column.C, Row._4)];
+        const expectedBlackPossiblePlays: Array<Vec2> = [whitePosition];
+        const expectedWhitePossiblePlays: Array<Vec2> = [blackPosition];
+
+        game.load(fenBoardInit);
+
+        // When
+        const whiteResult: Array<Vec2> = game.getIntermediateTurnPossiblePlays(whitePossiblePlays, whitePosition);
+        const blackResult: Array<Vec2> = game.getIntermediateTurnPossiblePlays(blackPossiblePlays, blackPosition);
+
+        // Then
+        expect(whiteResult).toEqual(expectedWhitePossiblePlays);
+        expect(blackResult).toEqual(expectedBlackPossiblePlays);
+    });
+
+    test('getIntermediateTurnPossiblePlays should exclude the pieces which moved during the intermediate phase (rule A)', () => {
+        // Given
+        ChessBoardHelper.disableCache();
+        const game: ProtectedTest = new ProtectedTest();
+
+        const whiteTarget: FenCoordinate = [FenColumn.C, 5];
+        const blackTarget: FenCoordinate = [FenColumn.B, 4];
+        // The synchronous turn moved a white pawn c2 to the black target b4, and a black pawn b7 to the white target c5
+        const action: IntermediateTurnAction = {
+            whiteTarget,
+            blackTarget,
+            whiteMove: null,
+            blackMove: null,
+        };
+        const turn: IntermediateTurn = new IntermediateTurn(action, [blackTarget, whiteTarget]);
 
         gameState(game)._turn.set(turn);
 
@@ -2010,6 +2060,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action,
+            movedPieces: [],
             type: TurnType.MOVE_SYNC,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -2464,6 +2515,7 @@ describe('SynchronousChessGame', () => {
             isFilled: vi.fn(),
             isDone: false,
             action: { whiteMove: null, blackMove: null },
+            movedPieces: [],
             type: TurnType.MOVE_INTERMEDIATE,
             category: TurnCategory.MOVE,
         } as MoveTurn;
@@ -2733,6 +2785,144 @@ describe('SynchronousChessGame', () => {
         expect(game.lastMoveTurnAction()).toEqual(expect.objectContaining({ whiteMove: null, blackMove: null }));
     });
 
+    describe('intermediate turn rights', () => {
+        // The pawns on e4 and d5 capture each other, and swap
+        const e4d5: Move = { from: [FenColumn.E, FenRow._4], to: [FenColumn.D, FenRow._5] };
+        const d5e4: Move = { from: [FenColumn.D, FenRow._5], to: [FenColumn.E, FenRow._4] };
+
+        function swapPawns(board: FenBoard): SynchronousChessGame {
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(board);
+            game.verifyCheck();
+            game.registerMove(e4d5, PieceColor.WHITE);
+            game.registerMove(d5e4, PieceColor.BLACK);
+            game.runTurn();
+            return game;
+        }
+
+        function plays(game: SynchronousChessGame, square: string): string[] {
+            return game.getPossiblePlays(new Vec2(square.charCodeAt(0) - 97, 8 - Number(square[1])))
+                .map((play: Vec2) => `${ 'abcdefgh'[play.x] }${ 8 - play.y }`);
+        }
+
+        test('should give an intermediate turn only to the player which can capture its target (issue #49 position)', () => {
+            // Given the position of the issue: the white pawn reaching d5 is protected by the knight c3, out of reach of the
+            // black king, while the black pawn reaching e4 can be captured by the white queen or knight
+            const board: FenBoard = boardWith({
+                a8: FenPiece.BLACK_ROOK, b8: FenPiece.BLACK_KNIGHT, c8: FenPiece.BLACK_BISHOP, d8: FenPiece.BLACK_QUEEN,
+                f8: FenPiece.BLACK_BISHOP, g8: FenPiece.BLACK_KNIGHT, h8: FenPiece.BLACK_ROOK,
+                a7: FenPiece.BLACK_PAWN, b7: FenPiece.BLACK_PAWN, c7: FenPiece.BLACK_PAWN, e7: FenPiece.BLACK_PAWN,
+                g7: FenPiece.BLACK_PAWN, h7: FenPiece.BLACK_PAWN, f6: FenPiece.BLACK_PAWN, d6: FenPiece.BLACK_KING, d5: FenPiece.BLACK_PAWN,
+                b5: FenPiece.WHITE_BISHOP, e4: FenPiece.WHITE_PAWN, g4: FenPiece.WHITE_QUEEN, c3: FenPiece.WHITE_KNIGHT, f3: FenPiece.WHITE_KNIGHT,
+                a2: FenPiece.WHITE_PAWN, b2: FenPiece.WHITE_PAWN, c2: FenPiece.WHITE_PAWN, d2: FenPiece.WHITE_PAWN,
+                f2: FenPiece.WHITE_PAWN, g2: FenPiece.WHITE_PAWN, h2: FenPiece.WHITE_PAWN,
+                a1: FenPiece.WHITE_ROOK, c1: FenPiece.WHITE_BISHOP, e1: FenPiece.WHITE_KING, h1: FenPiece.WHITE_ROOK,
+            });
+
+            // When
+            const game: SynchronousChessGame = swapPawns(board);
+
+            // Then black has nothing to play, white may capture
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_INTERMEDIATE);
+            expect(gameState(game)._turn().action).toEqual(expect.objectContaining({ whiteTarget: [FenColumn.E, FenRow._4], blackTarget: null }));
+            expect(game.colorHasPlayed(PieceColor.BLACK)).toEqual(true);
+            expect(game.colorHasPlayed(PieceColor.WHITE)).toEqual(false);
+            expect(plays(game, 'd6')).toEqual([]);
+            expect(plays(game, 'c3')).toEqual(['e4']);
+            expect(plays(game, 'g4')).toEqual(['e4']);
+        });
+
+        test('should let the piece moved in the synchronous turn capture once, then the opponent recapture (rule A)', () => {
+            // Given the white knight going to d5, while the black rook, attacking d5, moves along the d file
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ h1: FenPiece.WHITE_KING, d1: FenPiece.WHITE_ROOK, c3: FenPiece.WHITE_KNIGHT, h8: FenPiece.BLACK_KING, d8: FenPiece.BLACK_ROOK }));
+            game.verifyCheck();
+            game.registerMove({ from: [FenColumn.C, FenRow._3], to: [FenColumn.D, FenRow._5] }, PieceColor.WHITE);
+            game.registerMove({ from: [FenColumn.D, FenRow._8], to: [FenColumn.D, FenRow._7] }, PieceColor.BLACK);
+
+            // When
+            game.runTurn();
+
+            // Then the black rook, just moved, may capture the knight
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_INTERMEDIATE);
+            expect(gameState(game)._turn().action).toEqual(expect.objectContaining({ whiteTarget: null, blackTarget: [FenColumn.D, FenRow._5] }));
+            expect(plays(game, 'd7')).toEqual(['d5']);
+
+            // When it captures
+            game.registerMove({ from: [FenColumn.D, FenRow._7], to: [FenColumn.D, FenRow._5] }, PieceColor.BLACK);
+            game.runTurn();
+
+            // Then white may recapture with its rook, the black rook having moved during the phase
+            expect(gameState(game)._turn().action).toEqual(expect.objectContaining({ whiteTarget: [FenColumn.D, FenRow._5], blackTarget: null }));
+            expect((gameState(game)._turn() as IntermediateTurn).movedPieces).toEqual([[FenColumn.D, FenRow._5]]);
+            expect(plays(game, 'd1')).toEqual(['d5']);
+        });
+
+        test('should go on with a synchronous turn when no player can capture its target', () => {
+            // Given a black pawn f5 protecting e4 from the white king, and a white bishop b3 protecting d5 from the black king
+            const board: FenBoard = boardWith({
+                d6: FenPiece.BLACK_KING, d5: FenPiece.BLACK_PAWN, f5: FenPiece.BLACK_PAWN,
+                e4: FenPiece.WHITE_PAWN, f3: FenPiece.WHITE_KING, b3: FenPiece.WHITE_BISHOP,
+            });
+
+            // When
+            const game: SynchronousChessGame = swapPawns(board);
+
+            // Then
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_SYNC);
+            expect(game.fenBoard()).toEqual(boardWith({
+                d6: FenPiece.BLACK_KING, e4: FenPiece.BLACK_PAWN, f5: FenPiece.BLACK_PAWN,
+                d5: FenPiece.WHITE_PAWN, f3: FenPiece.WHITE_KING, b3: FenPiece.WHITE_BISHOP,
+            }));
+        });
+    });
+
+    describe('pinned pieces (rule C)', () => {
+        function plays(game: SynchronousChessGame, square: string): string[] {
+            return game.getPossiblePlays(new Vec2(square.charCodeAt(0) - 97, 8 - Number(square[1])))
+                .map((play: Vec2) => `${ 'abcdefgh'[play.x] }${ 8 - play.y }`).sort();
+        }
+
+        test('should not let a pinned piece leave the line of its king', () => {
+            // Given the bishop e2 pinned by the rook e8, and the knight f2 pinned by the queen h4
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({
+                e1: FenPiece.WHITE_KING, e2: FenPiece.WHITE_BISHOP, f2: FenPiece.WHITE_KNIGHT, b1: FenPiece.WHITE_KNIGHT,
+                e8: FenPiece.BLACK_ROOK, h4: FenPiece.BLACK_QUEEN, a8: FenPiece.BLACK_KING,
+            }));
+
+            // When
+            game.verifyCheck();
+
+            // Then the pinned pieces can not move, the other knight can
+            expect(game.isWhiteInCheck()).toEqual(false);
+            expect(plays(game, 'e2')).toEqual([]);
+            expect(plays(game, 'f2')).toEqual([]);
+            expect(plays(game, 'b1')).toEqual(['a3', 'c3', 'd2']);
+        });
+
+        test('should let a pinned piece move along the line of its king, up to the pinning piece', () => {
+            // Given the rook e2 pinned by the rook e8
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ e1: FenPiece.WHITE_KING, e2: FenPiece.WHITE_ROOK, e8: FenPiece.BLACK_ROOK, a8: FenPiece.BLACK_KING }));
+
+            // When
+            game.verifyCheck();
+
+            // Then
+            expect(plays(game, 'e2')).toEqual(['e3', 'e4', 'e5', 'e6', 'e7', 'e8']);
+        });
+
+        test('should not look for the safety of a king which is not on the board', () => {
+            // Given a king captured
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ a1: FenPiece.WHITE_ROOK, e8: FenPiece.BLACK_KING }));
+
+            // Then
+            expect(plays(game, 'a1')).toHaveLength(14);
+        });
+    });
+
     describe('castling and check', () => {
         const castlingPosition: Record<string, FenPiece> = { e1: FenPiece.WHITE_KING, a1: FenPiece.WHITE_ROOK, h1: FenPiece.WHITE_ROOK, h8: FenPiece.BLACK_KING };
 
@@ -2835,6 +3025,36 @@ describe('SynchronousChessGame', () => {
             expect(game.isWhiteInCheck()).toEqual(true);
             expect(game.isWhiteInCheckmate()).toEqual(false);
             expect(game.result()).toBeNull();
+        });
+
+        test('should give the win to the opponent of a king captured in a confrontation, at once', () => {
+            // Given the white king and a black pawn moving to the same cell, not attacked before the turn
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ e1: FenPiece.WHITE_KING, e8: FenPiece.BLACK_KING, d3: FenPiece.BLACK_PAWN }));
+
+            // When
+            playTurn(game, { from: [FenColumn.E, FenRow._1], to: [FenColumn.D, FenRow._2] }, { from: [FenColumn.D, FenRow._3], to: [FenColumn.D, FenRow._2] });
+
+            // Then both are captured
+            expect(game.fenBoard()).toEqual(boardWith({ e8: FenPiece.BLACK_KING }));
+            expect(game.result()).toEqual({ winner: PieceColor.BLACK, reason: GameEndReason.KING_CAPTURED });
+            expect(game.isWhiteInCheck()).toEqual(false);
+        });
+
+        test.each<{ kings: Record<string, FenPiece>; result: GameResult }>([
+            { kings: { e1: FenPiece.WHITE_KING }, result: { winner: PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED } },
+            { kings: {}, result: { winner: PieceColor.NONE, reason: GameEndReason.KING_CAPTURED } },
+        ])('should end the game when a king is missing: $result.winner', ({ kings, result }) => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ ...kings, a2: FenPiece.WHITE_PAWN, a7: FenPiece.BLACK_PAWN }));
+
+            // When
+            game.verifyCheck();
+            game.verifyEnd();
+
+            // Then
+            expect(game.result()).toEqual(result);
         });
 
         test('should draw when both players are checkmated', () => {
