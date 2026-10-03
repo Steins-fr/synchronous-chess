@@ -61,7 +61,8 @@ npm run test:ci      # single run with coverage, 100% required (vitest.config.ts
 
 The API specs sit next to their file and mock DynamoDB and API Gateway with `aws-sdk-client-mock`:
 `mockAws()` of `testing/api-mocks.ts` (alias `@testing/*`) resets both before each test, with the room
-fixtures and a reader of the packets posted to the connections.
+fixtures and a reader of the packets posted to the connections. Except `local/local-api.spec.ts`: it starts
+the local API on a free port, with dynalite and real websocket clients, out of the coverage threshold.
 
 ## Frontend specifics
 
