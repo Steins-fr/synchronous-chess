@@ -2733,6 +2733,72 @@ describe('SynchronousChessGame', () => {
         expect(game.lastMoveTurnAction()).toEqual(expect.objectContaining({ whiteMove: null, blackMove: null }));
     });
 
+    describe('intermediate turn rights', () => {
+        // The pawns on e4 and d5 capture each other, and swap
+        const e4d5: Move = { from: [FenColumn.E, FenRow._4], to: [FenColumn.D, FenRow._5] };
+        const d5e4: Move = { from: [FenColumn.D, FenRow._5], to: [FenColumn.E, FenRow._4] };
+
+        function swapPawns(board: FenBoard): SynchronousChessGame {
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(board);
+            game.verifyCheck();
+            game.registerMove(e4d5, PieceColor.WHITE);
+            game.registerMove(d5e4, PieceColor.BLACK);
+            game.runTurn();
+            return game;
+        }
+
+        function plays(game: SynchronousChessGame, square: string): string[] {
+            return game.getPossiblePlays(new Vec2(square.charCodeAt(0) - 97, 8 - Number(square[1])))
+                .map((play: Vec2) => `${ 'abcdefgh'[play.x] }${ 8 - play.y }`);
+        }
+
+        test('should give an intermediate turn only to the player which can capture its target (issue #49 position)', () => {
+            // Given the position of the issue: the white pawn reaching d5 is protected by the knight c3, out of reach of the
+            // black king, while the black pawn reaching e4 can be captured by the white queen or knight
+            const board: FenBoard = boardWith({
+                a8: FenPiece.BLACK_ROOK, b8: FenPiece.BLACK_KNIGHT, c8: FenPiece.BLACK_BISHOP, d8: FenPiece.BLACK_QUEEN,
+                f8: FenPiece.BLACK_BISHOP, g8: FenPiece.BLACK_KNIGHT, h8: FenPiece.BLACK_ROOK,
+                a7: FenPiece.BLACK_PAWN, b7: FenPiece.BLACK_PAWN, c7: FenPiece.BLACK_PAWN, e7: FenPiece.BLACK_PAWN,
+                g7: FenPiece.BLACK_PAWN, h7: FenPiece.BLACK_PAWN, f6: FenPiece.BLACK_PAWN, d6: FenPiece.BLACK_KING, d5: FenPiece.BLACK_PAWN,
+                b5: FenPiece.WHITE_BISHOP, e4: FenPiece.WHITE_PAWN, g4: FenPiece.WHITE_QUEEN, c3: FenPiece.WHITE_KNIGHT, f3: FenPiece.WHITE_KNIGHT,
+                a2: FenPiece.WHITE_PAWN, b2: FenPiece.WHITE_PAWN, c2: FenPiece.WHITE_PAWN, d2: FenPiece.WHITE_PAWN,
+                f2: FenPiece.WHITE_PAWN, g2: FenPiece.WHITE_PAWN, h2: FenPiece.WHITE_PAWN,
+                a1: FenPiece.WHITE_ROOK, c1: FenPiece.WHITE_BISHOP, e1: FenPiece.WHITE_KING, h1: FenPiece.WHITE_ROOK,
+            });
+
+            // When
+            const game: SynchronousChessGame = swapPawns(board);
+
+            // Then black has nothing to play, white may capture
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_INTERMEDIATE);
+            expect(gameState(game)._turn().action).toEqual(expect.objectContaining({ whiteTarget: [FenColumn.E, FenRow._4], blackTarget: null }));
+            expect(game.colorHasPlayed(PieceColor.BLACK)).toEqual(true);
+            expect(game.colorHasPlayed(PieceColor.WHITE)).toEqual(false);
+            expect(plays(game, 'd6')).toEqual([]);
+            expect(plays(game, 'c3')).toEqual(['e4']);
+            expect(plays(game, 'g4')).toEqual(['e4']);
+        });
+
+        test('should go on with a synchronous turn when no player can capture its target', () => {
+            // Given a black pawn f5 protecting e4 from the white king, and a white bishop b3 protecting d5 from the black king
+            const board: FenBoard = boardWith({
+                d6: FenPiece.BLACK_KING, d5: FenPiece.BLACK_PAWN, f5: FenPiece.BLACK_PAWN,
+                e4: FenPiece.WHITE_PAWN, f3: FenPiece.WHITE_KING, b3: FenPiece.WHITE_BISHOP,
+            });
+
+            // When
+            const game: SynchronousChessGame = swapPawns(board);
+
+            // Then
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_SYNC);
+            expect(game.fenBoard()).toEqual(boardWith({
+                d6: FenPiece.BLACK_KING, e4: FenPiece.BLACK_PAWN, f5: FenPiece.BLACK_PAWN,
+                d5: FenPiece.WHITE_PAWN, f3: FenPiece.WHITE_KING, b3: FenPiece.WHITE_BISHOP,
+            }));
+        });
+    });
+
     describe('castling and check', () => {
         const castlingPosition: Record<string, FenPiece> = { e1: FenPiece.WHITE_KING, a1: FenPiece.WHITE_ROOK, h1: FenPiece.WHITE_ROOK, h8: FenPiece.BLACK_KING };
 

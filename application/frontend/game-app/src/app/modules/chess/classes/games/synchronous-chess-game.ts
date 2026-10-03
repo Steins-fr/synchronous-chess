@@ -281,7 +281,12 @@ export default class SynchronousChessGame {
             return false;
         }
 
-        return !this._fenBoard().some((row: ReadonlyArray<FenPiece>, y: number) => row.some((piece: FenPiece, x: number) =>
+        return !this.canMoveAnyPiece(color);
+    }
+
+    /** In the current turn */
+    private canMoveAnyPiece(color: PieceColor): boolean {
+        return this._fenBoard().some((row: ReadonlyArray<FenPiece>, y: number) => row.some((piece: FenPiece, x: number) =>
             ChessBoardHelper.pieceColor(piece) === color && this.getPossiblePlays(new Vec2(x, y)).length > 0));
     }
 
@@ -319,7 +324,16 @@ export default class SynchronousChessGame {
             };
 
             if (intermediateAction.whiteTarget !== null || intermediateAction.blackTarget !== null) {
+                // The possible captures are the plays of the intermediate turn
                 this._turn.set(new IntermediateTurn(intermediateAction, whiteMove, blackMove));
+
+                // A player has the right to capture the piece which moved to its target only if it can capture it
+                const whiteTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.WHITE) ? intermediateAction.whiteTarget : null;
+                const blackTarget: FenCoordinate | null = this.canMoveAnyPiece(PieceColor.BLACK) ? intermediateAction.blackTarget : null;
+
+                this._turn.set(whiteTarget === null && blackTarget === null
+                    ? new SyncTurn()
+                    : new IntermediateTurn({ ...intermediateAction, whiteTarget, blackTarget }, whiteMove, blackMove));
             }
         } else if (turnCategory === TurnCategory.CHOICE) {
             const choiceTurn: ChoiceTurn = this.turn() as ChoiceTurn;
