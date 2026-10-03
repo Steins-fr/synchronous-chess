@@ -53,6 +53,38 @@ npm run lint         # ESLint
 - Code lives under `src/app/{modules,services,pages,helpers,types}`.
 - Tailwind v4 is wired through PostCSS (`src/tailwind.css`); global styles in `src/styles.scss`.
 
+## Browser testing
+
+Claude drives the app in a headless Chromium through the Playwright MCP server declared in
+`.mcp.json` (`@playwright/mcp`, `--browser chromium --isolated --headless`; without `--browser`
+it looks for a branded Google Chrome). The `/chrome` integration is not used: the repo is
+developed in WSL, which it does not support.
+
+- One-time setup in WSL: `npx playwright install-deps chromium` for the system libraries (needs
+  sudo), then `npx @playwright/mcp@latest install-browser chrome-for-testing` for the browser build
+  the MCP expects (a plain `npx playwright install` fetches an older one). Restart the Claude Code
+  session so the `mcp__playwright__*` tools load. Rerun the second command if the MCP reports a
+  missing browser after an update.
+- The MCP writes its snapshots and console logs to `.playwright-mcp/` (git-ignored).
+- Save every screenshot to `.playwright-mcp/screenshots/`, named with the local ISO date and time as a
+  prefix, with `-` instead of `:` (not allowed in Windows file names):
+  `filename: ".playwright-mcp/screenshots/2026-10-03T08-21-56_chat-alice.png"`. Get the prefix
+  from `date +%Y-%m-%dT%H-%M-%S` right before taking the screenshot.
+- Before starting a new browser test, delete the screenshots of the previous one:
+  `rm -f .playwright-mcp/screenshots/*`.
+
+### Cleanup after every browser test
+
+When a browser test is done, always shut everything down before reporting back:
+
+1. Close the browser with `mcp__playwright__browser_close` (once per Playwright server used).
+2. Stop the Angular dev server: stop its background task, then check that port 4200 is free
+   (`lsof -i :4200` prints nothing) and kill any leftover `ng serve` process.
+- Start `npm run serve:dev` in the background, then browse `http://localhost:4200`.
+- `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
+  match. If their state collides, add a second server (e.g. `playwright2`) for an independent
+  browser.
+
 ## CI
 
 `.github/workflows/game-app-pull-request.yml` runs lint, then tests with coverage and a SonarCloud
