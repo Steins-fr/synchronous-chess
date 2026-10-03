@@ -53,8 +53,32 @@ describe('sendmessage lambda', () => {
         expect(await handler(anEvent(undefined, body(RoomApiRequestTypeEnum.PLAYER_GET_ALL)))).toEqual({ statusCode: 401, body: 'Unauthorized request.' });
     });
 
+    test('should refuse a request without connection before looking for the endpoint of the management API', async () => {
+        // Given: an event without domain name, nor endpoint in the environment
+        vi.stubEnv('MANAGEMENT_API_ENDPOINT', undefined);
+        const event = anEvent(undefined, body(RoomApiRequestTypeEnum.PLAYER_GET_ALL));
+        event.requestContext.domainName = undefined;
+
+        // When / Then
+        expect(await handler(event)).toEqual({ statusCode: 401, body: 'Unauthorized request.' });
+    });
+
     test('should refuse an unknown request', async () => {
         expect(await handler(anEvent(GUEST_CONNECTION, body('unknown')))).toEqual({ statusCode: 401, body: 'Operation not permitted.' });
+    });
+
+    test('should answer a server error without endpoint for the management API', async () => {
+        // Given: an event without domain name, nor endpoint in the environment
+        vi.stubEnv('MANAGEMENT_API_ENDPOINT', undefined);
+        const event = anEvent(GUEST_CONNECTION, body(RoomApiRequestTypeEnum.PLAYER_GET_ALL));
+        event.requestContext.domainName = undefined;
+
+        // When
+        const response = await handler(event);
+
+        // Then
+        expect(response).toEqual({ statusCode: 500, body: 'Server error.' });
+        expect(postedPackets(apiGateway)).toEqual([]);
     });
 
     test.each([

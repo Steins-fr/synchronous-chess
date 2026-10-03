@@ -60,6 +60,17 @@
                                 }
                             ]
                         },
+                        "local": {
+                            "optimization": false,
+                            "extractLicenses": false,
+                            "sourceMap": true,
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.local.ts"
+                                }
+                            ]
+                        },
                         "testing": {
                             "optimization": false,
                             "extractLicenses": false,
@@ -93,6 +104,9 @@
                         },
                         "development": {
                             "buildTarget": "game-app:build:development"
+                        },
+                        "local": {
+                            "buildTarget": "game-app:build:development,local"
                         }
                     },
                     "defaultConfiguration": "development"

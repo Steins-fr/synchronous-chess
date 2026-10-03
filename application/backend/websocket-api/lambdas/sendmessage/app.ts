@@ -9,6 +9,7 @@ import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 import SignalHandler from './handlers/signal-handler';
 import { SocketPacketRequestPayload } from '@protocol/socket-packet-payload.type';
+import { getManagementApiEndpoint } from '@helpers/environment.helper';
 
 interface Response {
     statusCode: number;
@@ -36,10 +37,6 @@ const messageHandlers: MessageHandlers = {
 };
 
 export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {
-    const client = new ApiGatewayManagementApiClient({
-        endpoint: `https://${event.requestContext.domainName}`,
-    });
-
     try {
         const body: string = event.body as string;
         const connectionId = event.requestContext.connectionId;
@@ -50,12 +47,15 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
 
         const payload: SocketPacketRequestPayload = JSON.parse(body).data;
 
-        if (messageHandlers[payload.type]) {
-            const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload);
-            await messageHandler.execute();
-        } else {
+        if (!messageHandlers[payload.type]) {
             return { statusCode: 401, body: 'Operation not permitted.' };
         }
+
+        const client = new ApiGatewayManagementApiClient({
+            endpoint: getManagementApiEndpoint(event.requestContext.domainName),
+        });
+        const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload);
+        await messageHandler.execute();
     } catch (e) {
         console.error(e);
         return { statusCode: 500, body: 'Server error.' };

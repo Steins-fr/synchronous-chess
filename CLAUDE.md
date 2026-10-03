@@ -36,7 +36,8 @@ Mono-repo, no root package.json — each package is installed and run from its o
 Frontend, from `application/frontend/game-app`:
 
 ```bash
-npm run serve:dev    # dev server
+npm run serve:local  # dev server, against the local API (see below)
+npm run serve:dev    # dev server, against the development API on AWS
 npm run build        # production build (build:staging / build:dev for other configs)
 npm test             # Vitest in watch mode
 npm run test:ci      # single run with coverage (what CI runs)
@@ -50,6 +51,7 @@ templates, nor type-check the specs as `ng test` does.
 Backend, from `application/backend/websocket-api`:
 
 ```bash
+npm run serve:local  # the API on ws://127.0.0.1:3001, without AWS (local/server.ts, DynamoDB in memory)
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
 npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
@@ -59,7 +61,8 @@ npm run test:ci      # single run with coverage, 100% required (vitest.config.ts
 
 The API specs sit next to their file and mock DynamoDB and API Gateway with `aws-sdk-client-mock`:
 `mockAws()` of `testing/api-mocks.ts` (alias `@testing/*`) resets both before each test, with the room
-fixtures and a reader of the packets posted to the connections.
+fixtures and a reader of the packets posted to the connections. Except `local/local-api.spec.ts`: it starts
+the local API on a free port, with dynalite and real websocket clients, out of the coverage threshold.
 
 ## Frontend specifics
 
@@ -81,6 +84,12 @@ developed in WSL, which it does not support.
   the MCP expects (a plain `npx playwright install` fetches an older one). Restart the Claude Code
   session so the `mcp__playwright__*` tools load. Rerun the second command if the MCP reports a
   missing browser after an update.
+- Start the local API (`npm run serve:local` in `application/backend/websocket-api`) and the game app
+  (`npm run serve:local` in `application/frontend/game-app`) in the background, then browse
+  `http://localhost:4200`.
+- `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
+  match. If their state collides, add a second server (e.g. `playwright2`) for an independent
+  browser.
 - The MCP writes its snapshots and console logs to `.playwright-mcp/` (git-ignored).
 - Save every screenshot to `.playwright-mcp/screenshots/`, named with the local ISO date and time as a
   prefix, with `-` instead of `:` (not allowed in Windows file names):
@@ -107,12 +116,10 @@ developed in WSL, which it does not support.
 When a browser test is done, always shut everything down before reporting back:
 
 1. Close the browser with `mcp__playwright__browser_close` (once per Playwright server used).
-2. Stop the Angular dev server: stop its background task, then check that port 4200 is free
-   (`lsof -i :4200` prints nothing) and kill any leftover `ng serve` process.
-- Start `npm run serve:dev` in the background, then browse `http://localhost:4200`.
-- `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
-  match. If their state collides, add a second server (e.g. `playwright2`) for an independent
-  browser.
+2. Stop the Angular dev server and the local API: stop their background tasks, then check that ports
+   4200 and 3001 are free (`lsof -i :4200 -i :3001` prints nothing) and kill any leftover `ng serve`
+   or `tsx` process by its port (`kill $(lsof -ti :3001)`): `pkill -f <pattern>` also matches the shell
+   running it, and kills it.
 
 ## SonarQube
 
