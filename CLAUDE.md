@@ -36,7 +36,8 @@ Mono-repo, no root package.json — each package is installed and run from its o
 Frontend, from `application/frontend/game-app`:
 
 ```bash
-npm run serve:dev    # dev server
+npm run serve:local  # dev server, against the local API (see below)
+npm run serve:dev    # dev server, against the development API on AWS
 npm run build        # production build (build:staging / build:dev for other configs)
 npm test             # Vitest in watch mode
 npm run test:ci      # single run with coverage (what CI runs)
@@ -50,6 +51,7 @@ templates, nor type-check the specs as `ng test` does.
 Backend, from `application/backend/websocket-api`:
 
 ```bash
+npm run serve:local  # the API on ws://localhost:3001, without AWS (local/server.ts, DynamoDB in memory)
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
 npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
@@ -107,9 +109,12 @@ developed in WSL, which it does not support.
 When a browser test is done, always shut everything down before reporting back:
 
 1. Close the browser with `mcp__playwright__browser_close` (once per Playwright server used).
-2. Stop the Angular dev server: stop its background task, then check that port 4200 is free
-   (`lsof -i :4200` prints nothing) and kill any leftover `ng serve` process.
-- Start `npm run serve:dev` in the background, then browse `http://localhost:4200`.
+2. Stop the Angular dev server and the local API: stop their background tasks, then check that ports
+   4200 and 3001 are free (`lsof -i :4200 -i :3001` prints nothing) and kill any leftover `ng serve`
+   or `tsx` process.
+- Start the local API (`npm run serve:local` in `application/backend/websocket-api`) and the game app
+  (`npm run serve:local` in `application/frontend/game-app`) in the background, then browse
+  `http://localhost:4200`.
 - `--isolated` gives each browser context its own storage, so two tabs can play the two peers of a
   match. If their state collides, add a second server (e.g. `playwright2`) for an independent
   browser.
