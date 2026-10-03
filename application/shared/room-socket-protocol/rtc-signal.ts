@@ -38,7 +38,7 @@ function isNullable(value: unknown, type: 'string' | 'number'): boolean {
 
 function isRtcSessionDescription(value: unknown): value is RtcSessionDescription {
     return isRecord(value)
-        && RTC_SDP_TYPES.some((type: RtcSdpType): boolean => type === value['type'])
+        && (RTC_SDP_TYPES as readonly unknown[]).includes(value['type'])
         && isOptional(value['sdp'], 'string');
 }
 
