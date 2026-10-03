@@ -10,10 +10,12 @@ to both tools. They are imported below.
 
 @.github/instructions/git-config.instructions.md
 @.github/instructions/game-app.instructions.md
+@.github/instructions/room-socket-protocol.instructions.md
 
 Note: each imported file has a Copilot `applyTo` glob in its front matter. Claude Code has no
 equivalent, so treat `game-app.instructions.md` as applying only to
-`application/frontend/game-app/**`.
+`application/frontend/game-app/**`, and `room-socket-protocol.instructions.md` only to
+`application/shared/room-socket-protocol/**`.
 
 ## Repository layout
 
@@ -21,6 +23,9 @@ Mono-repo, no root package.json — each package is installed and run from its o
 
 - `application/frontend/game-app` — Angular 21 app (the main project)
 - `application/backend/websocket-api` — AWS Lambda WebSocket API (TypeScript, esbuild, DynamoDB)
+- `application/shared/room-socket-protocol` — the WebSocket message types (requests, responses,
+  notifications, error messages), imported by both packages as `@protocol/*`. Plain TypeScript with
+  no dependency nor package.json: each package compiles it through its own tsconfig alias
 - `infrastructure` — Terraform (AWS), applied by GitHub Actions
 - `documentation` — resources and diagrams
 
@@ -44,14 +49,15 @@ Backend, from `application/backend/websocket-api`:
 
 ```bash
 npm run build        # esbuild bundle
-npm run lint         # ESLint
+npm run lint         # ESLint, then the shared protocol (lint:protocol)
+npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
 ```
 
 ## Frontend specifics
 
 - Tests use **Vitest** with jsdom (`vitest.config.ts`, `test-setup.ts`), not Karma/Jasmine.
   Shared test providers are in `src/test-providers.ts`, helpers under `src/testing`.
-- Path aliases: `@app/*`, `@environments/*`, `@testing/*`.
+- Path aliases: `@app/*`, `@environments/*`, `@testing/*`, `@protocol/*` (the shared WebSocket protocol).
 - Code lives under `src/app/{modules,services,pages,helpers,types}`.
 - Tailwind v4 is wired through PostCSS (`src/tailwind.css`); global styles in `src/styles.scss`.
 

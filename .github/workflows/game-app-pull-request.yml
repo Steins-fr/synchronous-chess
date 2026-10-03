@@ -4,6 +4,7 @@ on:
     pull_request:
         paths:
             - "application/frontend/game-app/**"
+            - "application/shared/**"
 
 defaults:
     run:
@@ -80,14 +81,14 @@ jobs:
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               with:
-                  projectBaseDir: application/frontend/game-app
+                  projectBaseDir: application
                   args: >
                       -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
                       -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
-                      -Dsonar.typescript.tsconfigPath=tsconfig.json
-                      -Dsonar.sources=src/app
-                      -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts
-                      -Dsonar.tests=src/app
+                      -Dsonar.typescript.tsconfigPaths=frontend/game-app/tsconfig.json,shared/room-socket-protocol/tsconfig.json
+                      -Dsonar.sources=frontend/game-app/src/app,shared/room-socket-protocol
+                      -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts,**/eslint.config.mjs
+                      -Dsonar.tests=frontend/game-app/src/app
                       -Dsonar.test.inclusions=**/*.spec.ts
                       -Dsonar.sourceEncoding=UTF-8
-                      -Dsonar.typescript.lcov.reportPaths=coverage/game-app/lcov.info
+                      -Dsonar.typescript.lcov.reportPaths=frontend/game-app/coverage/game-app/lcov.info

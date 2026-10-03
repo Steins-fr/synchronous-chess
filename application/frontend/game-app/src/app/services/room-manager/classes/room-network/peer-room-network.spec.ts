@@ -3,12 +3,13 @@ import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
-import { RoomSocketApi, RoomSocketApiNotifications } from '@app/services/room-api/room-socket.api';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
-import { RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RtcSignal } from '@protocol/rtc-signal';
+import { RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -147,6 +148,22 @@ describe('PeerRoomNetwork', () => {
         expect(negotiator).toBeInstanceOf(WebrtcNegotiator);
         expect(network.negotiators().get('newcomer')).toBe(negotiator);
         expect(Negotiator.prototype.negotiationMessage).toHaveBeenCalledWith({ from: 'newcomer', signal });
+    });
+
+    test('should drop a remote signal it could not register, before any negotiator', async () => {
+        // Given
+        vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        network.onPlayerConnected(hostPlayer);
+        const invalidSignal = TestHelper.cast<RtcSignal>({ sdp: { sdp: 'sdp', type: 'offer' }, ice: [{ candidate: 'c1' }] });
+
+        // When
+        network.onRoomMessage({ type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'newcomer', signal: invalidSignal }, origin: MessageOriginType.HOST_ROOM, from: 'host' });
+        await Promise.resolve();
+
+        // Then
+        expect(network.negotiators().has('newcomer')).toEqual(false);
+        expect(Negotiator.prototype.negotiationMessage).not.toHaveBeenCalled();
+        expect(console.error).toHaveBeenCalledWith('PeerRoom: invalid remote signal', { from: 'newcomer', signal: invalidSignal });
     });
 
     test('should throw on unknown host room message', () => {

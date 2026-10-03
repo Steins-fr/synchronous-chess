@@ -2,18 +2,19 @@ import BadRequestException from '@exceptions/bad-request-exception';
 import RoomHelper from '@helpers/room-helper';
 import Player from '@models/player';
 import Room from '@models/room';
+import { isRtcSignal } from '@protocol/rtc-signal';
 import {
     RoomApiRequestTypeEnum,
     RoomSocketApiNotificationEnum,
     RoomApiResponseTypeEnum
-} from '../types/socket-packet-payload.type';
+} from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 
 export default class SignalHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.SIGNAL);
 
-        if (!data.roomName || !data.to || !data.signal) {
+        if (!data.roomName || !data.to || !isRtcSignal(data.signal)) {
             throw new BadRequestException(SignalHandler.ERROR_PARSING);
         }
 
@@ -47,7 +48,6 @@ export default class SignalHandler extends MessageHandler {
         });
         await this.reply(RoomApiResponseTypeEnum.SIGNAL_SENT, {
             from: fromPlayerName,
-            signal: data.signal
         });
     }
 }

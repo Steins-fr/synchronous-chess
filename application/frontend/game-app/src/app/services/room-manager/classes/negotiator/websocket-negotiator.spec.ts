@@ -1,12 +1,12 @@
 import { WebsocketNegotiator } from './websocket-negotiator';
 import { NegotiatorConnectionState } from './negotiator';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RtcSignal } from '@protocol/rtc-signal';
 import {
     RoomApiRequestTypeEnum,
-    RoomSocketApi,
     RoomSocketApiNotificationEnum,
     RoomSocketApiNotifications
-} from '@app/services/room-api/room-socket.api';
-import { RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
+} from '@protocol/socket-packet-payload.type';
 import { TestHelper } from '@testing/test.helper';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { Subject } from 'rxjs';

@@ -1,6 +1,7 @@
 import { Message } from '@app/services/room-manager/classes/webrtc/messages/message';
-import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import WebrtcStates, { defaultWebrtcStates } from '@app/services/room-manager/classes/webrtc/webrtc-states';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { TestHelper } from './test.helper';

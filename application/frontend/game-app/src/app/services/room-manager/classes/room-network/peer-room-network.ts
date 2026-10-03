@@ -1,10 +1,10 @@
-import RtcSignalResponse from '@app/services/room-api/responses/rtc-signal-response';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
+import { HostRoomMessageType, NewPlayerPayload, RemoteSignalPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { isRtcSignal } from '@protocol/rtc-signal';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
@@ -73,8 +73,13 @@ export class PeerRoomNetwork extends RoomNetwork {
         this.addNegotiator(negotiator);
     }
 
-    private async onRemoteSignal(remoteSignalPayload: RtcSignalResponse): Promise<void> {
+    private async onRemoteSignal(remoteSignalPayload: RemoteSignalPayload): Promise<void> {
         if (this.hostPlayer === undefined) { // Do nothing if we don't have a host for transmitting negotiations
+            return;
+        }
+
+        if (!isRtcSignal(remoteSignalPayload.signal)) { // Before any negotiator restarts its connection for it
+            console.error('PeerRoom: invalid remote signal', remoteSignalPayload);
             return;
         }
 

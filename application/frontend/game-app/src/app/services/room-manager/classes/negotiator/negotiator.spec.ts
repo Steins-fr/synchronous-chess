@@ -1,5 +1,5 @@
 import { Negotiator, NegotiatorConnectionState } from './negotiator';
-import { RtcSignal } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 

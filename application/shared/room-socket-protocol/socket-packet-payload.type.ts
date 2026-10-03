@@ -1,19 +1,19 @@
-import FullNotification from '../notifications/full-notification';
-import JoinNotification from '../notifications/join-notification';
-import SignalNotification from '../notifications/signal-notification';
-import FullRequest from '../requests/full-request';
-import PlayerRequest from '../requests/player-request';
-import PlayersRequest from '../requests/players-request';
-import RoomCreateRequest from '../requests/room-create-request';
-import RoomJoinRequest from '../requests/room-join-request';
-import RtcSignalRequest from '../requests/rtc-signal-request';
-import ErrorResponse from '../responses/error-response';
-import FullResponse from '../responses/full-response';
-import PlayerResponse from '../responses/player-response';
-import PlayersResponse from '../responses/players-response';
-import RoomCreateResponse from '../responses/room-create-response';
-import RoomJoinResponse from '../responses/room-join-response';
-import RtcSignalResponse from '../responses/rtc-signal-response';
+import FullNotification from './notifications/full-notification';
+import JoinNotification from './notifications/join-notification';
+import SignalNotification from './notifications/signal-notification';
+import FullRequest from './requests/full-request';
+import PlayerRequest from './requests/player-request';
+import PlayersRequest from './requests/players-request';
+import RoomCreateRequest from './requests/room-create-request';
+import RoomJoinRequest from './requests/room-join-request';
+import RtcSignalRequest from './requests/rtc-signal-request';
+import ErrorResponse from './responses/error-response';
+import FullResponse from './responses/full-response';
+import PlayerResponse from './responses/player-response';
+import PlayersResponse from './responses/players-response';
+import RoomCreateResponse from './responses/room-create-response';
+import RoomJoinResponse from './responses/room-join-response';
+import RtcSignalResponse from './responses/rtc-signal-response';
 
 export interface SocketPacketPayload<Type, Data> {
     id: number; // Positive number are reserved for followed messages, request and response share the same id, -1 is reserved for notifications
@@ -72,6 +72,20 @@ export type RoomSocketApiResponseTypedData = {
 export type SocketPacketResponsePayload<Type extends RoomApiResponseTypeEnum = RoomApiResponseTypeEnum> = SocketPacketPayload<Type, RoomSocketApiResponseTypedData[Type]>;
 // endregion
 
+// region RequestToResponse
+export const requestToResponse = {
+    [RoomApiRequestTypeEnum.CREATE]: RoomApiResponseTypeEnum.CREATED,
+    [RoomApiRequestTypeEnum.JOIN]: RoomApiResponseTypeEnum.JOINING_ROOM,
+    [RoomApiRequestTypeEnum.PLAYER_GET_ALL]: RoomApiResponseTypeEnum.PLAYERS,
+    [RoomApiRequestTypeEnum.PLAYER_ADD]: RoomApiResponseTypeEnum.ADDED,
+    [RoomApiRequestTypeEnum.PLAYER_REMOVE]: RoomApiResponseTypeEnum.REMOVED,
+    [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
+    [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
+} as const satisfies Record<RoomApiRequestTypeEnum, RoomApiResponseTypeEnum>;
+
+export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = (typeof requestToResponse)[Type];
+// endregion
+
 // region NotificationPayload
 export enum RoomSocketApiNotificationEnum {
     FULL = 'full',
@@ -88,13 +102,15 @@ export type RoomSocketApiNotificationTypedData = {
     'remoteSignal': SignalNotification,
 };
 
-type RoomSocketApiNotification<Type extends RoomSocketApiNotificationType> = {
+export type SocketPacketNotificationPayload<Type extends RoomSocketApiNotificationType> = {
     type: Type,
     data: RoomSocketApiNotificationTypedData[Type],
 };
 
-export type SocketPacketNotificationPayload<Type extends RoomSocketApiNotificationType> = RoomSocketApiNotification<Type>;
-
+/** Every notification, as a union discriminated by `type` */
+export type RoomSocketApiNotifications = {
+    [Type in RoomSocketApiNotificationType]: SocketPacketNotificationPayload<Type>
+}[RoomSocketApiNotificationType];
 // endregion
 
 // Throw compilation error if colliding key in constants. Responsibility of this component because this is its behavior that defines that keys should not collide

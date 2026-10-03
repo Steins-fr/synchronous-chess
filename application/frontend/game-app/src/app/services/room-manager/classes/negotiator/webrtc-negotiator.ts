@@ -1,6 +1,7 @@
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessage, NegotiatorMessageType, SignalPayload } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
-import { RtcSignal, Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { Player } from '../player/player';
 import { Negotiator } from './negotiator';
 

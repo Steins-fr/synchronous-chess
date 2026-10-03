@@ -113,7 +113,7 @@
                         "buildTarget": "::testing",
                         "coverageReporters": [
                             "html",
-                            "lcov"
+                            ["lcov", { "projectRoot": "../.." }]
                         ],
                         "coverageThresholds": {
                             "statements": 100,

@@ -2,14 +2,10 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '@environments/environment';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
+import { isRtcIceCandidate, RtcSignal } from '@protocol/rtc-signal';
 import WebrtcStates, { DebugRTCIceCandidate, defaultWebrtcStates } from './webrtc-states';
 
 import { Message } from './messages/message';
-
-export interface RtcSignal {
-    sdp: RTCSessionDescriptionInit;
-    ice: Array<RTCIceCandidateInit>;
-}
 
 enum PacketType {
     MESSAGE = 'message',
@@ -292,7 +288,10 @@ export class Webrtc {
 
         if (event.candidate !== null) { // Gathering 'complete' send a null candidate
             const candidate = event.candidate;
-            this._rtcSignal.ice.push(event.candidate);
+
+            if (isRtcIceCandidate(candidate)) { // The remote peer could not register it otherwise
+                this._rtcSignal.ice.push(candidate);
+            }
 
             this._iceDebug({
                 ...candidate,

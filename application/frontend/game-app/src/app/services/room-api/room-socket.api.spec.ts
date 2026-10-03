@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { RoomApiRequestTypeEnum, RoomSocketApi, RoomSocketApiNotificationEnum, RoomSocketApiNotifications, WEB_SOCKET_SERVER } from './room-socket.api';
+import { RoomSocketApi, WEB_SOCKET_SERVER } from './room-socket.api';
+import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { WebSocketMock } from '@testing/web-socket.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -106,6 +107,23 @@ describe('RoomSocketApi', () => {
         // Then
         await expect(response).resolves.toEqual({ playerName: 'peer' });
         expect(notifications).toEqual([{ id: -1, type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'peer' } }]);
+    });
+
+    test('notification$ should drop the remote signals a peer could not register', async () => {
+        // Given
+        const notifications: RoomSocketApiNotifications[] = [];
+        api.notification$.subscribe((notification: RoomSocketApiNotifications) => notifications.push(notification));
+        const { socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'peer' }));
+        const validSignal = { sdp: { type: 'offer', sdp: 'sdp' }, ice: [{ candidate: 'c1', sdpMid: '0' }] };
+        const invalidSignal = { sdp: { type: 'offer', sdp: 'sdp' }, ice: [{ candidate: 'c1' }] };
+
+        // When
+        socket.receive({ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: invalidSignal } });
+        socket.receive({ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: validSignal } });
+
+        // Then
+        expect(notifications).toEqual([{ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: validSignal } }]);
+        expect(console.error).toHaveBeenCalledWith('Received an invalid notification', expect.objectContaining({ data: { from: 'peer', signal: invalidSignal } }));
     });
 
     test('close should stop the pending requests and close the socket', async () => {

@@ -13,6 +13,8 @@
         "esModuleInterop": true,
         "sourceMap": true,
         "declaration": false,
+        // Up to application/, to compile the protocol shared with the websocket API (@protocol/*)
+        "rootDir": "../..",
         "experimentalDecorators": true,
         "importHelpers": true,
         "useDefineForClassFields": false,
@@ -27,6 +29,9 @@
             ],
             "@testing/*": [
                 "./src/testing/*"
+            ],
+            "@protocol/*": [
+                "../../shared/room-socket-protocol/*"
             ]
         }
     },

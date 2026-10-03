@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "target": "ES2022",
+        "lib": ["ES2022"],
         "module": "ES2022",
         "forceConsistentCasingInFileNames": true,
         "strict": true,
@@ -17,6 +18,7 @@
             "@exceptions/*": ["./shared/exceptions/*"],
             "@helpers/*": ["./shared/helpers/*"],
             "@models/*": ["./shared/models/*"],
+            "@protocol/*": ["../../shared/room-socket-protocol/*"],
             "@repositories/*": ["./shared/repositories/*"],
             "@services/*": ["./shared/services/*"],
         },

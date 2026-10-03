@@ -1,8 +1,9 @@
 import { environment } from '@environments/environment';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { firstValueFrom } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Message } from './messages/message';
-import { RtcSignal, Webrtc } from './webrtc';
+import { Webrtc } from './webrtc';
 import WebrtcStates from './webrtc-states';
 
 class MockRTCDataChannel {
@@ -62,8 +63,8 @@ async function currentStates(webrtc: Webrtc): Promise<WebrtcStates> {
     return firstValueFrom(webrtc.states);
 }
 
-const offerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'offer' }, ice: [{ candidate: 'c1' }, { candidate: 'c2' }] };
-const answerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'answer' }, ice: [{ candidate: 'c1' }] };
+const offerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'offer' }, ice: [{ candidate: 'c1', sdpMid: '0' }, { candidate: 'c2', sdpMLineIndex: 0 }] };
+const answerSignal: RtcSignal = { sdp: { sdp: 'remote', type: 'answer' }, ice: [{ candidate: 'c1', sdpMid: '0' }] };
 
 describe('Webrtc', () => {
     beforeEach(() => {
@@ -231,22 +232,25 @@ describe('Webrtc', () => {
         const peerConnection: MockRTCPeerConnection = lastPeerConnection();
         const signals: RtcSignal[] = [];
         webrtc.rtcSignal$.subscribe((signal: RtcSignal) => signals.push(signal));
-        const candidate: Partial<RTCIceCandidate> = { candidate: 'c1', priority: 2122260223, port: 1234 };
-        const candidateWithoutPriority: Partial<RTCIceCandidate> = { candidate: 'c2', priority: null };
+        const candidate: Partial<RTCIceCandidate> = { candidate: 'c1', sdpMid: '0', priority: 2122260223, port: 1234 };
+        const candidateWithoutPriority: Partial<RTCIceCandidate> = { candidate: 'c2', sdpMLineIndex: 0, priority: null };
+        const candidateWithoutMedia: Partial<RTCIceCandidate> = { candidate: 'c3', sdpMid: null, sdpMLineIndex: null };
 
         // When
         peerConnection.onicecandidate?.({ candidate });
         peerConnection.onicecandidate?.({ candidate: candidateWithoutPriority });
+        peerConnection.onicecandidate?.({ candidate: candidateWithoutMedia });
         peerConnection.onicecandidate?.({ candidate: null });
         peerConnection.iceGatheringState = 'complete';
         peerConnection.onicegatheringstatechange?.();
 
         // Then
         const states: WebrtcStates = await currentStates(webrtc);
-        expect(states.candidates).toHaveLength(2);
+        expect(states.candidates).toHaveLength(3);
         expect(states.candidates[0].priorities).toBe('126 | 32542 | 255');
         expect(states.candidates[0].elapsed).toMatch(/^-?\d+\.\d{3}$/);
         expect(states.candidates[1].priorities).toBe('');
+        // The remote peer could not register a candidate without sdpMid nor sdpMLineIndex
         expect(signals[0].ice).toEqual([candidate, candidateWithoutPriority]);
     });
 

@@ -1,5 +1,7 @@
+import { RtcSignal } from '../rtc-signal';
+
 export default interface RtcSignalRequest {
     roomName: string;
     to: string; // Player name (destination)
-    signal: object;
+    signal: RtcSignal;
 }
