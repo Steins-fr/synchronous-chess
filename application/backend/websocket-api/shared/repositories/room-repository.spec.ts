@@ -1,6 +1,6 @@
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import Room from '@models/room';
-import { aRoom, GUEST_CONNECTION } from '@testing/api-mocks';
+import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION } from '@testing/api-mocks';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, test } from 'vitest';
 import RoomRepository from './room-repository';
@@ -29,8 +29,72 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'rooms',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, hostTokenHash, expiresAt',
         })).toHaveLength(1);
+    });
+
+    test('should create a room unless one of that name has its host connected', async () => {
+        // When
+        const created: boolean = await repository.create(room);
+
+        // Then
+        expect(created).toEqual(true);
+        expect(dynamo.commandCalls(PutCommand, {
+            TableName: 'rooms',
+            Item: room,
+            ConditionExpression: 'attribute_not_exists(id) OR attribute_exists(expiresAt)',
+        })).toHaveLength(1);
+    });
+
+    test('should not create a room whose name is taken', async () => {
+        // Given
+        dynamo.on(PutCommand).rejects(aConditionFailure());
+
+        // When / Then
+        expect(await repository.create(room)).toEqual(false);
+    });
+
+    test('should let a room wait for its host, unless the host moved it to another connection', async () => {
+        // When
+        await repository.waitForHost(room, HOST_CONNECTION, 1000);
+
+        // Then
+        expect(dynamo.commandCalls(UpdateCommand, {
+            Key: { id: 'room' },
+            UpdateExpression: 'SET expiresAt = :expiresAt',
+            ConditionExpression: 'connectionId = :hostConnectionId',
+            ExpressionAttributeValues: { ':expiresAt': 1000, ':hostConnectionId': HOST_CONNECTION },
+        })).toHaveLength(1);
+    });
+
+    test('should leave a room its host already moved to another connection', async () => {
+        // Given
+        dynamo.on(UpdateCommand).rejects(aConditionFailure());
+
+        // When / Then
+        await expect(repository.waitForHost(room, HOST_CONNECTION, 1000)).resolves.toBeUndefined();
+    });
+
+    test('should move a room to another connection of its host, with the hash of its token, before it expires', async () => {
+        // When
+        const reconnected: boolean = await repository.reconnectHost(room, 'new-connection', 'hash', 500);
+
+        // Then
+        expect(reconnected).toEqual(true);
+        expect(dynamo.commandCalls(UpdateCommand, {
+            Key: { id: 'room' },
+            UpdateExpression: 'SET connectionId = :connectionId REMOVE expiresAt',
+            ConditionExpression: 'hostTokenHash = :hostTokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
+            ExpressionAttributeValues: { ':connectionId': 'new-connection', ':hostTokenHash': 'hash', ':now': 500 },
+        })).toHaveLength(1);
+    });
+
+    test('should not move a room for another token, or once expired', async () => {
+        // Given
+        dynamo.on(UpdateCommand).rejects(aConditionFailure());
+
+        // When / Then
+        expect(await repository.reconnectHost(room, 'new-connection', 'hash', 500)).toEqual(false);
     });
 
     test('should append a player to the room', async () => {

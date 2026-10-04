@@ -1,5 +1,6 @@
 import RtcSignalRequest from '@protocol/requests/rtc-signal-request';
 import { RtcSignal } from '@protocol/rtc-signal';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import {
     anApiGatewayClient,
@@ -61,5 +62,14 @@ describe('SignalHandler', () => {
         // When / Then
         await expect(relay(data, connection)).rejects.toThrow(message);
         expect(postedPackets(apiGateway)).toEqual([errorReply(message, connection)]);
+    });
+
+    test('should refuse the signal of a queued player while the host is disconnected', async () => {
+        // Given
+        storeRoom(dynamo, aRoom({ expiresAt: Math.floor(Date.now() / 1000) + 60 }));
+
+        // When / Then
+        await expect(relay({ roomName: 'room', to: 'host', signal }, GUEST_CONNECTION)).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
+        expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.HOST_DISCONNECTED, GUEST_CONNECTION)]);
     });
 });

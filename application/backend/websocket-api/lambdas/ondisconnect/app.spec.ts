@@ -25,7 +25,7 @@ describe('ondisconnect lambda', () => {
         expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: GUEST_CONNECTION } })).toHaveLength(1);
     });
 
-    test('should delete the room of a disconnected host', async () => {
+    test('should let the room of a disconnected host wait for it', async () => {
         // Given
         storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
         storeRoom(dynamo, aRoom());
@@ -35,17 +35,33 @@ describe('ondisconnect lambda', () => {
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'rooms', Key: { id: 'room' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'rooms', UpdateExpression: 'SET expiresAt = :expiresAt' })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'rooms' })).toHaveLength(0);
         expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: HOST_CONNECTION } })).toHaveLength(1);
     });
 
-    test('should delete the connection even when it can not leave its room', async () => {
-        // Given: a connection the room no longer queues
-        storeConnection({ connectionId: 'other-connection', roomName: 'room' });
+    test('should only delete a connection the room no longer has', async () => {
+        // Given: a former connection of the host, which reconnected the room to another one
+        storeConnection({ connectionId: 'former-host-connection', roomName: 'room' });
         storeRoom(dynamo, aRoom());
 
         // When
-        const response = await handler(anEvent('other-connection'));
+        const response = await handler(anEvent('former-host-connection'));
+
+        // Then
+        expect(response).toEqual({ statusCode: 200, body: 'Closed' });
+        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: 'former-host-connection' } })).toHaveLength(1);
+    });
+
+    test('should delete the connection even when it can not leave its room', async () => {
+        // Given
+        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        storeRoom(dynamo, aRoom());
+        dynamo.on(UpdateCommand).rejects(new Error('Network down'));
+
+        // When
+        const response = await handler(anEvent(GUEST_CONNECTION));
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });

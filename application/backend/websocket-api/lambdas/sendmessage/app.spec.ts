@@ -9,6 +9,7 @@ import MessageHandler from './handlers/message-handler';
 import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
+import ReconnectHandler from './handlers/reconnect-handler';
 import SignalHandler from './handlers/signal-handler';
 
 describe('sendmessage lambda', () => {
@@ -38,6 +39,7 @@ describe('sendmessage lambda', () => {
         [RoomApiRequestTypeEnum.PLAYER_GET_ALL, PlayerGetAllHandler],
         [RoomApiRequestTypeEnum.PLAYER_ADD, PlayerAddHandler],
         [RoomApiRequestTypeEnum.PLAYER_REMOVE, PlayerRemoveHandler],
+        [RoomApiRequestTypeEnum.RECONNECT, ReconnectHandler],
     ])('should hand a %s request to its handler', async (type: RoomApiRequestTypeEnum, messageHandler: typeof MessageHandler) => {
         // Given
         const execute = vi.spyOn(messageHandler.prototype, 'execute').mockResolvedValue();

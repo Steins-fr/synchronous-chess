@@ -9,7 +9,7 @@
 
 `npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` (loopback only), and
 restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the websocket
-routes (`$connect`, `sendmessage`, `$disconnect`) and the `PostToConnection` endpoint of the management API.
+routes (`$connect`, `sendmessage`, `ping`, `$disconnect`) and the `PostToConnection` endpoint of the management API.
 DynamoDB is emulated by [dynalite](https://github.com/architect/dynalite), in memory: the rooms are lost at
 each restart.
 
@@ -20,4 +20,15 @@ in a single frame), 128 KB per message posted to a connection, and the connectio
 10 minutes without message in either direction, or after 2 hours. Not emulated: the authorization and the
 throttling. The staging environment on AWS remains the reference.
 
-The emulation is tested by `local/local-api.spec.ts`, run with the specs of the lambdas.
+The emulation is tested by `local/local-api.spec.ts`, run with the specs of the lambdas. Through dynalite, it also
+checks the condition expressions of the writes (the room creation and the reconnection of its host), which the
+mocks of DynamoDB in the other specs do not evaluate.
+
+## Host reconnection
+
+API Gateway closes any connection after 2 hours, and the host keeps its connection open while it waits for the
+players. The `create` response gives the host a secret token (the room keeps its SHA-256 only). Every 100 minutes,
+or as soon as its socket closes, the host opens a new socket and sends it `reconnect` with the token: the room moves
+to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
+the room for 10 minutes (`expiresAt`, also the TTL of the table): joins are refused (`Host disconnected`) until the
+host reconnects, and a new room can take its name.

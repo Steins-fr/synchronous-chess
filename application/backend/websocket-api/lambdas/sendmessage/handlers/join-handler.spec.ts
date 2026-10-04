@@ -47,4 +47,14 @@ describe('JoinHandler', () => {
         expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
         expect(postedPackets(apiGateway)).toEqual([errorReply(message, connection)]);
     });
+
+    test('should refuse to queue a player while the host is disconnected', async () => {
+        // Given
+        storeRoom(dynamo, aRoom({ expiresAt: Math.floor(Date.now() / 1000) + 60 }));
+
+        // When / Then
+        await expect(join({ roomName: 'room', playerName: 'other' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
+        expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
+        expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.HOST_DISCONNECTED, connection)]);
+    });
 });

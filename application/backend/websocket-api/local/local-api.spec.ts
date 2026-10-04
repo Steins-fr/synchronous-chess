@@ -54,6 +54,13 @@ function request(socket: WebSocket, type: string, data: object): void {
     socket.send(JSON.stringify({ message: 'sendmessage', data: { id: 1, type, data } }));
 }
 
+/** Sends a request, then reads the next message: its response */
+async function reply(socket: WebSocket, type: string, data: object): Promise<{ type: string; data: Record<string, unknown> }> {
+    const response = nextMessage(socket);
+    request(socket, type, data);
+    return JSON.parse(await response) as { type: string; data: Record<string, unknown> };
+}
+
 /** The connection id API Gateway gives in its answer to a message matching no route */
 async function connectionIdOf(socket: WebSocket): Promise<string> {
     const answer = nextMessage(socket);
@@ -164,6 +171,19 @@ describe('local websocket API', () => {
             expect(JSON.parse(await answer)).toMatchObject({ message: 'Forbidden', connectionId: expect.any(String) });
         });
 
+        test('should answer nothing to a ping', async () => {
+            // Given
+            const socket = await connected();
+            const answer = nextMessage(socket);
+
+            // When
+            socket.send(JSON.stringify({ message: 'ping' }));
+            socket.send('{}');
+
+            // Then: the first answer is the one to the second message
+            expect(JSON.parse(await answer)).toMatchObject({ message: 'Forbidden' });
+        });
+
         test('should close a connection sending a message larger than a frame, and keep serving the others', async () => {
             // Given
             const socket = await connected();
@@ -187,6 +207,78 @@ describe('local websocket API', () => {
 
             // Then
             await vi.waitFor(() => expect(routeRuns('$disconnect')).toContain(connectionId));
+        });
+    });
+
+    // Through DynamoDB (dynalite), which evaluates the conditions of the writes. Its tables outlive the APIs of the
+    // tests: each test has its own room
+    describe('host reconnection', () => {
+        async function hostedRoom(roomName: string): Promise<{ host: WebSocket; hostToken: string }> {
+            const host = await connected();
+            const created = await reply(host, 'create', { roomName, maxPlayer: 2, playerName: 'alice' });
+            return { host, hostToken: created.data['hostToken'] as string };
+        }
+
+        async function disconnect(socket: WebSocket): Promise<void> {
+            const connectionId = await connectionIdOf(socket);
+            socket.close();
+            await vi.waitFor(() => expect(routeRuns('$disconnect')).toContain(connectionId));
+        }
+
+        test('should move a room to a new connection of its host, before the former one closes', async () => {
+            // Given
+            const { host, hostToken } = await hostedRoom('moved');
+            const newHost = await connected();
+
+            // When
+            const reconnected = await reply(newHost, 'reconnect', { roomName: 'moved', hostToken });
+            await disconnect(host);
+
+            // Then
+            expect(reconnected).toMatchObject({ type: 'reconnected', data: { roomName: 'moved' } });
+            const joinRequest = nextMessage(newHost);
+            expect(await reply(await connected(), 'join', { roomName: 'moved', playerName: 'bob' })).toMatchObject({ type: 'joiningRoom' });
+            expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'bob' } });
+        });
+
+        test('should keep the room of a disconnected host until it reconnects', async () => {
+            // Given
+            const { host, hostToken } = await hostedRoom('waiting');
+            await disconnect(host);
+            const guest = await connected();
+            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob' })).toMatchObject({ type: 'error', data: { message: 'Host disconnected' } });
+
+            // When
+            const reconnected = await reply(await connected(), 'reconnect', { roomName: 'waiting', hostToken });
+
+            // Then
+            expect(reconnected).toMatchObject({ type: 'reconnected' });
+            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob' })).toMatchObject({ type: 'joiningRoom' });
+        });
+
+        test('should not move a room for another token', async () => {
+            // Given
+            await hostedRoom('kept');
+
+            // When
+            const refused = await reply(await connected(), 'reconnect', { roomName: 'kept', hostToken: 'other-token' });
+
+            // Then
+            expect(refused).toMatchObject({ type: 'error', data: { message: 'You are not the host of the room' } });
+        });
+
+        test('should give the name of a room waiting for its host to a new room', async () => {
+            // Given
+            const { host, hostToken } = await hostedRoom('taken');
+            await disconnect(host);
+
+            // When
+            const { host: newHost } = await hostedRoom('taken');
+
+            // Then
+            expect(await reply(await connected(), 'reconnect', { roomName: 'taken', hostToken })).toMatchObject({ type: 'error' });
+            expect(await reply(newHost, 'create', { roomName: 'taken', maxPlayer: 2, playerName: 'alice' }))
+                .toMatchObject({ type: 'error', data: { message: 'Room already exists' } });
         });
     });
 

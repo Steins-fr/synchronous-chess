@@ -54,6 +54,8 @@ module "sc_database_rooms" {
   name       = "rooms"
   hash-key   = "id"
   attributes = ["id"]
+  # Set while the host is disconnected: deletes the rooms it never reconnected
+  ttl-attribute = "expiresAt"
 
   stage = var.stage
 }
@@ -186,7 +188,7 @@ module "sc_api_gateway_routes" {
 
 resource "aws_apigatewayv2_deployment" "deployment" {
   api_id      = module.sc_api_gateway.api_gateway_id
-  description = "Deployment with routes (${module.sc_api_gateway_routes.connect_route_id},${module.sc_api_gateway_routes.disconnect_route_id}, ${module.sc_api_gateway_routes.sendmessage_route_id})"
+  description = "Deployment with routes (${module.sc_api_gateway_routes.connect_route_id},${module.sc_api_gateway_routes.disconnect_route_id}, ${module.sc_api_gateway_routes.sendmessage_route_id}, ${module.sc_api_gateway_routes.ping_route_id})"
 
   triggers = {
     redeployment = sha1(module.sc_api_gateway_routes.route_integration_jsonencode)
