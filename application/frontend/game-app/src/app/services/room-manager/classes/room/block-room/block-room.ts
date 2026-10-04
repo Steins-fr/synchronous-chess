@@ -68,6 +68,10 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private handovers: number = 0;
     /** The sequencer each other participant follows, as it told this participant once its key was received */
     private readonly sequencerStates = new Map<string, Readonly<SequencerState>>();
+    /** The participants each other participant is connected to, as it told this participant last */
+    private readonly connectedViews = new Map<string, ReadonlySet<string>>();
+    /** The participants this participant lost its connection to, until all the other participants lost them too */
+    private readonly lost = new Set<string>();
 
     /** The stored keys of the player, so that it keeps its identity when reloading the page */
     public static async createKeys(playerName: string, keyStore: ParticipantKeyStore = new ParticipantKeyStore()): Promise<ParticipantKeys> {
@@ -107,6 +111,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         this.participants.ready$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => {
             this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.onParticipantReady(name));
             this.sendSequencerState(name);
+            this.broadcastConnectedParticipants();
         });
         this.participants.left$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => this.onParticipantLeft(name));
         this.antiCheat.reported$.pipe(takeUntil(this.destroyRef)).subscribe(() => this.checkSequencerTrust());
@@ -117,9 +122,54 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.tick(now));
     }
 
+    /** This participant lost its connection to another one: it may only be their link, the others still connected to it */
     private onParticipantLeft(name: string): void {
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.onParticipantLeft(name));
         this.sequencerStates.delete(name);
+        this.connectedViews.delete(name);
+        this.lost.add(name);
+        this.broadcastConnectedParticipants();
+        this.checkDepartures();
+    }
+
+    private broadcastConnectedParticipants(): void {
+        const participants: string[] = this.participantNames().filter((name: string) => name !== this.localPlayer.name).sort(BlockRoom.byCodeUnits);
+
+        this.participants.broadcast({
+            type: AntiCheatMessageType.CONNECTED_PARTICIPANTS,
+            payload: { participants },
+            origin: MessageOriginType.ANTI_CHEAT,
+        });
+    }
+
+    private onConnectedParticipants(message: ReceivedAntiCheatMessage<AntiCheatMessageType.CONNECTED_PARTICIPANTS>): void {
+        if (!Array.isArray(message.payload.participants)) {
+            TimedLogger.error(`Invalid connected participants from ${ message.from }`, message.payload);
+            return;
+        }
+
+        this.connectedViews.set(message.from, new Set(message.payload.participants));
+        this.checkDepartures();
+    }
+
+    /**
+     * A participant lost by this one has left the room once each other connected participant told it lost it too: the
+     * participants who did not tell yet are waited for
+     */
+    private checkDepartures(): void {
+        const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== this.localPlayer.name);
+
+        for (const name of this.lost) {
+            if (others.every((other: string) => this.connectedViews.get(other)?.has(name) === false)) {
+                this.lost.delete(name);
+                this.onDeparted(name);
+            }
+        }
+    }
+
+    /** Every participant notices it, from the same participants: they all take the same decisions */
+    private onDeparted(name: string): void {
+        TimedLogger.warn(`${ name } has left the room`);
 
         if (name === this.sequencer) {
             this.handOver();
@@ -243,11 +293,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         if (message.origin === MessageOriginType.BLOCK_ROOM_PARTICIPANT) {
             this.participants.handle(message);
         } else if (message.origin === MessageOriginType.ANTI_CHEAT) {
-            if (message.type === AntiCheatMessageType.SEQUENCER_STATE) {
-                this.onSequencerState(message);
-            } else {
-                this.antiCheat.handle(message);
-            }
+            this.onAntiCheatMessage(message);
         } else if (message.origin === MessageOriginType.BLOCK_ROOM_SERVICE) {
             const blockChain: SequencedBlockChain | undefined = this.blockChains.get(message.chain);
 
@@ -256,6 +302,16 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
             } else {
                 TimedLogger.error(`No ${ message.chain } block chain in this room, message from ${ message.from }`);
             }
+        }
+    }
+
+    private onAntiCheatMessage(message: ReceivedAntiCheatMessage): void {
+        if (message.type === AntiCheatMessageType.SEQUENCER_STATE) {
+            this.onSequencerState(message);
+        } else if (message.type === AntiCheatMessageType.CONNECTED_PARTICIPANTS) {
+            this.onConnectedParticipants(message);
+        } else {
+            this.antiCheat.handle(message);
         }
     }
 
@@ -269,6 +325,8 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     protected override handleRoomPlayerAdd(player: Player): void {
         super.handleRoomPlayerAdd(player);
+        // Back before the others lost it: it did not leave the room
+        this.lost.delete(player.name);
 
         this.participants.onNewPlayer(player);
     }

@@ -192,11 +192,19 @@ Every 2 seconds, the room ticks its chains:
 
 ## Changing the sequencer
 
-The sequencer changes when it leaves, or when **more than half of the other participants** reported
-it for a cheat only a sequencer can commit (see the table below). The next sequencer is the first
-participant by name among the connected ones, a distrusted sequencer never coming back: every
+The sequencer changes when it leaves the room, or when **more than half of the other participants**
+reported it for a cheat only a sequencer can commit (see the table below). The next sequencer is the
+first participant by name among the connected ones, a distrusted sequencer never coming back: every
 participant knows the same participants and reports, so they all name the same one. When no
 participant can take over, the sequencer stays.
+
+**Leaving the room.** A participant losing its connection to another one does not know whether the
+other left, or only their link broke. Each participant tells the others whom it is connected to
+(`connectedParticipants`), whenever a participant becomes ready or leaves. A participant has left the
+room once **every other connected participant** told it lost it too: a participant which did not tell
+yet is waited for, and a participant connected again before that has not left. So the participants
+all notice a departure, and change their sequencer, from the same participants; a single broken link
+changes nothing.
 
 ```mermaid
 sequenceDiagram
@@ -325,6 +333,7 @@ report (`modules/room-layout/cheat-notifications.ts`).
 | `block_room_service` | `chainHead` | `{ index, hash, sequencer, sequencerSignature }` | a participant → everyone, every 2 seconds |
 | `anti_cheat` | `cheatReport` | `CheatReport` | a participant → everyone |
 | `anti_cheat` | `sequencerState` | `{ sequencer, handovers, distrusted }` | a participant → each participant whose key it receives |
+| `anti_cheat` | `connectedParticipants` | `{ participants }` (sender excluded) | a participant → everyone, when a participant becomes ready or leaves |
 
 The `block_room_service` messages carry the name of their chain in a `chain` field.
 `isNetworkMessage` validates the envelope of the received messages (origin, type, known chain name);
