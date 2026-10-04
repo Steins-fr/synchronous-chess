@@ -83,6 +83,17 @@ describe('RoomService', () => {
         expect(() => service.canEditRoomGuard(room, GUEST_CONNECTION)).toThrow('You are not the host of the room');
     });
 
+    test('should let the host reconnect its room, and a player of the room take it over from a disconnected host', () => {
+        // Given
+        const players = [{ playerName: 'host' }, { playerName: 'player' }];
+
+        // When / Then
+        expect(() => service.reconnectHostGuard(room, 'host')).not.toThrow();
+        expect(() => service.reconnectHostGuard(aRoom({ players, expiresAt: now + 1 }), 'player')).not.toThrow();
+        expect(() => service.reconnectHostGuard(aRoom({ players }), 'player')).toThrow(RoomApiErrorMessage.HOST_CONNECTED);
+        expect(() => service.reconnectHostGuard(aRoom({ expiresAt: now + 1 }), 'guest')).toThrow('You are not the host of the room');
+    });
+
     test('should only reach the host of a room while connected', () => {
         expect(() => service.hostConnectedGuard(room)).not.toThrow();
         expect(() => service.hostConnectedGuard(aRoom({ expiresAt: now + 1 }))).toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);

@@ -91,7 +91,29 @@ export default class RoomService {
         }
     }
 
-    /** @throws {BadRequestException} when the player is not the host of the room, or the token not its own */
+    /**
+     * Before a player reconnects the room: another player than the host must be in the room, and can only take over a
+     * room waiting for its host
+     * @throws {BadRequestException} when the player is not in the room, or the host is connected (HOST_CONNECTED)
+     */
+    public reconnectHostGuard(room: Room, playerName: string): void {
+        if (playerName === room.hostPlayer) {
+            return;
+        }
+
+        if (!RoomHelper.isInGame(room, playerName)) {
+            throw new BadRequestException('You are not the host of the room');
+        }
+
+        if (room.expiresAt === undefined) {
+            throw new BadRequestException(RoomApiErrorMessage.HOST_CONNECTED);
+        }
+    }
+
+    /**
+     * Moves the room to a connection of the player, which becomes its host
+     * @throws {BadRequestException} when the token is not the one of the player, or the host reconnected meanwhile
+     */
     public async reconnectHost(room: Room, connectionId: string, playerName: string, token: string): Promise<void> {
         if (!await this.roomRepository.reconnectHost(room, connectionId, playerName, hashToken(token), RoomService.now())) {
             throw new BadRequestException('You are not the host of the room');

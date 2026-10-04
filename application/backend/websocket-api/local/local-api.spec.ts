@@ -268,6 +268,45 @@ describe('local websocket API', () => {
             expect(refused).toMatchObject({ type: 'error', data: { message: 'You are not the host of the room' } });
         });
 
+        test('should let a player of the room take it over once its host left, its new host', async () => {
+            // Given: bob in the room
+            const { host } = await hostedRoom('handed');
+            const player = await connected();
+            expect(await reply(player, 'join', { roomName: 'handed', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(host, 'playerAdd', { roomName: 'handed', playerName: 'bob' })).toMatchObject({ type: 'added' });
+            const newHost = await connected();
+            const refused = await reply(newHost, 'reconnect', { roomName: 'handed', playerName: 'bob', token: 'bob-token' });
+
+            // When
+            await disconnect(host);
+            const reconnected = await reply(newHost, 'reconnect', { roomName: 'handed', playerName: 'bob', token: 'bob-token' });
+
+            // Then
+            expect(refused).toMatchObject({ type: 'error', data: { message: 'Host connected' } });
+            expect(reconnected).toMatchObject({ type: 'reconnected' });
+            const joinRequest = nextMessage(newHost);
+            expect(await reply(await connected(), 'join', { roomName: 'handed', playerName: 'carol', token: 'carol-token' }))
+                .toMatchObject({ type: 'joiningRoom', data: { playerName: 'bob' } });
+            expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'carol' } });
+        });
+
+        test('should forget the token of a player the host removed', async () => {
+            // Given
+            const { host } = await hostedRoom('left');
+            expect(await reply(await connected(), 'join', { roomName: 'left', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(host, 'playerAdd', { roomName: 'left', playerName: 'bob' })).toMatchObject({ type: 'added' });
+
+            // When: bob back in the room, without joining it again
+            const removed = await reply(host, 'playerRemove', { roomName: 'left', playerName: 'bob' });
+            expect(await reply(host, 'playerAdd', { roomName: 'left', playerName: 'bob' })).toMatchObject({ type: 'added' });
+            await disconnect(host);
+
+            // Then: its former token no longer takes the room over
+            expect(removed).toMatchObject({ type: 'removed' });
+            expect(await reply(await connected(), 'reconnect', { roomName: 'left', playerName: 'bob', token: 'bob-token' }))
+                .toMatchObject({ type: 'error', data: { message: 'You are not the host of the room' } });
+        });
+
         test('should keep the name of a room waiting for its host', async () => {
             // Given
             const { host, token } = await hostedRoom('taken');

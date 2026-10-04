@@ -32,4 +32,6 @@ players. Each page sends a secret token of its own with `create` and `join` (the
 socket and sends it `reconnect` with its name and token: the room moves
 to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
 the room for 10 minutes (`expiresAt`, also the TTL of the table): joins are refused (`Host disconnected`) until the
-host reconnects, and the room keeps its name until it expires.
+host reconnects, and the room keeps its name until it expires. Meanwhile, a player of the room can take it over with
+`reconnect` and its own name and token: the room moves to its connection, and it becomes the host (`Host connected`
+while the former host connection is still open).

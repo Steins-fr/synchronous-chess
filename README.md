@@ -58,7 +58,7 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 
 **sendmessage** - Handle all the websocket exchanges separated in host and peer roles. Available messages:
  - **create** - Create a new room if the room name is available (or its room expired), with a secret token of the host;
- - **reconnect** - only host - Move the room to the connection sending it, with the name and token of the host: before API Gateway closes the host connection (2 hours at most), or once it closed;
+ - **reconnect** - Move the room to the connection sending it, with the name and token of the player: the host, before API Gateway closes its connection (2 hours at most) or once it closed, or a player of the room taking it over while the room waits for its host (refused with `Host connected` before), which becomes the host;
  - **add player** - only host - Add a new player to the room player list;
  - **remove player** - only host - Remove a player from the room player list, and the hash of its token;
  - **get players** - only host - Get the room player list

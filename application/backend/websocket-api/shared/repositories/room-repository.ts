@@ -36,13 +36,15 @@ export default class RoomRepository extends BaseRepository<Room> {
     }
 
     /**
-     * Moves the room to another connection of its host, which no longer waits for it
-     * @returns false when the player is not the host, its token hash not the one of the room (another room took its
-     * name), or the room expired at `now`
+     * Moves the room to a connection of the player, which becomes its host: the host, or another player while the room
+     * waits for its host. The room no longer waits for its host
+     * @returns false when the token hash is not the one of the player (another room took its name), the room expired at
+     * `now`, or the player is not the host while the host is connected
      */
     public async reconnectHost(room: Room, connectionId: string, playerName: string, tokenHash: string, now: number): Promise<boolean> {
-        return this.updateItemIf(room, 'SET connectionId = :connectionId REMOVE expiresAt', {
-            expression: 'hostPlayer = :playerName AND tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
+        return this.updateItemIf(room, 'SET connectionId = :connectionId, hostPlayer = :playerName REMOVE expiresAt', {
+            expression: 'tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)'
+                + ' AND (hostPlayer = :playerName OR attribute_exists(expiresAt))',
             attributeValues: { ':playerName': playerName, ':tokenHash': tokenHash, ':now': now },
             attributeNames: { '#playerName': playerName },
         }, { ':connectionId': connectionId });

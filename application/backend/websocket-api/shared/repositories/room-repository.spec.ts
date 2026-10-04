@@ -76,7 +76,7 @@ describe('RoomRepository', () => {
         await expect(repository.waitForHost(room, HOST_CONNECTION, 1000)).resolves.toBeUndefined();
     });
 
-    test('should move a room to another connection of its host, with the hash of its token, before it expires', async () => {
+    test('should move a room to a connection of its host, or of a player while it waits for its host, before it expires', async () => {
         // When
         const reconnected: boolean = await repository.reconnectHost(room, 'new-connection', 'host', 'hash', 500);
 
@@ -84,8 +84,9 @@ describe('RoomRepository', () => {
         expect(reconnected).toEqual(true);
         expect(dynamo.commandCalls(UpdateCommand, {
             Key: { id: 'room' },
-            UpdateExpression: 'SET connectionId = :connectionId REMOVE expiresAt',
-            ConditionExpression: 'hostPlayer = :playerName AND tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
+            UpdateExpression: 'SET connectionId = :connectionId, hostPlayer = :playerName REMOVE expiresAt',
+            ConditionExpression: 'tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)'
+                + ' AND (hostPlayer = :playerName OR attribute_exists(expiresAt))',
             ExpressionAttributeValues: { ':connectionId': 'new-connection', ':playerName': 'host', ':tokenHash': 'hash', ':now': 500 },
             ExpressionAttributeNames: { '#playerName': 'host' },
         })).toHaveLength(1);

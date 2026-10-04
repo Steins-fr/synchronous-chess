@@ -1,6 +1,8 @@
 import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { hashToken } from '@helpers/token.helper';
+import Room from '@models/room';
 import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import {
     aConditionFailure,
@@ -38,7 +40,7 @@ describe('ReconnectHandler', () => {
         expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([expect.objectContaining({
             TableName: 'room',
             Key: { id: 'room' },
-            UpdateExpression: 'SET connectionId = :connectionId REMOVE expiresAt',
+            UpdateExpression: 'SET connectionId = :connectionId, hostPlayer = :playerName REMOVE expiresAt',
             ExpressionAttributeValues: { ':connectionId': connection, ':playerName': 'host', ':tokenHash': hashToken(HOST_TOKEN), ':now': expect.any(Number) },
             ExpressionAttributeNames: { '#playerName': 'host' },
         })]);
@@ -52,6 +54,39 @@ describe('ReconnectHandler', () => {
         // When / Then
         await expect(reconnect({ roomName: 'room', playerName: 'host', token: 'other-token' })).rejects.toThrow('You are not the host of the room');
         expect(postedPackets(apiGateway)).toEqual([errorReply('You are not the host of the room', connection)]);
+    });
+
+    describe('a player taking over', () => {
+        const players = [{ playerName: 'host' }, { playerName: 'player' }];
+
+        test('should move the room waiting for its host to the connection of a player of the room, its new host', async () => {
+            // Given
+            storeRoom(dynamo, aRoom({ players, expiresAt: Math.floor(Date.now() / 1000) + 60 }));
+
+            // When
+            await reconnect({ roomName: 'room', playerName: 'player', token: 'player-token' });
+
+            // Then
+            expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([expect.objectContaining({
+                ExpressionAttributeValues: { ':connectionId': connection, ':playerName': 'player', ':tokenHash': hashToken('player-token'), ':now': expect.any(Number) },
+                ExpressionAttributeNames: { '#playerName': 'player' },
+            })]);
+            expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: { id: 7, type: 'reconnected', data: { roomName: 'room' } } }]);
+        });
+
+        test.each([
+            ['while the host is connected', aRoom({ players }), 'player', RoomApiErrorMessage.HOST_CONNECTED],
+            ['out of the room, even queued', aRoom({ players, expiresAt: Math.floor(Date.now() / 1000) + 60 }), 'guest', 'You are not the host of the room'],
+        ])('should refuse a player %s', async (_case: string, room: Room, playerName: string, message: string) => {
+            // Given
+            storeRoom(dynamo, room);
+
+            // When / Then
+            await expect(reconnect({ roomName: 'room', playerName, token: 'player-token' })).rejects.toThrow(message);
+            expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
+            expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+            expect(postedPackets(apiGateway)).toEqual([errorReply(message, connection)]);
+        });
     });
 
     test.each([
