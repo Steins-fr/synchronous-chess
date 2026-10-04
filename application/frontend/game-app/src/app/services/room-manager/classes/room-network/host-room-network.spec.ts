@@ -72,8 +72,10 @@ describe('HostRoomNetwork', () => {
             notification$,
             closed$,
             send: vi.fn().mockResolvedValue({ players: ['host'] }),
-            reconnect: vi.fn().mockResolvedValue(undefined),
-            close: vi.fn(),
+            // The socket replacing the current one opens now
+            reconnect: vi.fn(async () => void Object.assign(roomSocketApi, { socketOpenedAt: Date.now() })),
+            keepAlive: vi.fn(),
+            socketOpenedAt: Date.now(),
         });
     });
 
@@ -81,6 +83,14 @@ describe('HostRoomNetwork', () => {
         network.clear();
         vi.useRealTimers();
         vi.restoreAllMocks();
+    });
+
+    test('should keep its socket alive', () => {
+        // When
+        createNetwork();
+
+        // Then
+        expect(roomSocketApi.keepAlive).toHaveBeenCalledTimes(1);
     });
 
     test('should be the initiator and the host', () => {
@@ -138,6 +148,45 @@ describe('HostRoomNetwork', () => {
             expect(before).toEqual(0);
             expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
             expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', hostToken: 'token' });
+        });
+
+        test('should replace the socket 100 minutes after it opened, before the room was built', async () => {
+            // Given: the socket of a creation refused 60 minutes before
+            Object.assign(roomSocketApi, { socketOpenedAt: Date.now() - 60 * 60_000 });
+            createNetwork();
+
+            // When
+            await vi.advanceTimersByTimeAsync(40 * 60_000);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(1);
+        });
+
+        test('should reconnect the room at once without open socket', async () => {
+            // Given
+            Object.assign(roomSocketApi, { socketOpenedAt: undefined });
+
+            // When
+            createNetwork();
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(1);
+        });
+
+        test('should reconnect again when the new socket closes while the players are synchronized', async () => {
+            // Given
+            createNetwork();
+            vi.mocked(roomSocketApi.send).mockReturnValue(new Promise(() => undefined));
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(0);
+
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
         });
 
         test('should synchronize the server players once reconnected', async () => {
@@ -322,7 +371,7 @@ describe('HostRoomNetwork', () => {
         expect(console.error).toHaveBeenCalledWith('HostRoom: invalid signal not relayed', expect.anything());
     });
 
-    test('clear should stop the notifications and the reconnections, and close the socket', async () => {
+    test('clear should stop the notifications and the reconnections', async () => {
         // Given
         createNetwork();
 
@@ -336,6 +385,5 @@ describe('HostRoomNetwork', () => {
         expect(closed$.observed).toEqual(false);
         expect(roomSocketApi.reconnect).not.toHaveBeenCalled();
         expect(roomSocketApi.send).not.toHaveBeenCalled();
-        expect(roomSocketApi.close).toHaveBeenCalledTimes(1);
     });
 });

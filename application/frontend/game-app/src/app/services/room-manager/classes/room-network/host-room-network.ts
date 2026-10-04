@@ -7,7 +7,7 @@ import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import JoinNotification from '@protocol/notifications/join-notification';
 import { isRtcSignal } from '@protocol/rtc-signal';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
-import { catchError, defer, EMPTY, exhaustMap, merge, Observable, retry, startWith, Subject, switchMap, takeUntil, throwError, timer } from 'rxjs';
+import { catchError, defer, EMPTY, exhaustMap, merge, Observable, retry, startWith, Subject, switchMap, takeUntil, tap, throwError, timer } from 'rxjs';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { RoomNetwork } from './room-network';
@@ -44,6 +44,7 @@ export class HostRoomNetwork extends RoomNetwork {
                 void this.onJoinNotification(notification.data);
             }
         });
+        this.roomSocketApi.keepAlive();
         this.keepRoomConnected();
     }
 
@@ -51,7 +52,7 @@ export class HostRoomNetwork extends RoomNetwork {
     private keepRoomConnected(): void {
         const replacementDue$ = this.reconnectedSubject.pipe(
             startWith(undefined),
-            switchMap(() => timer(HostRoomNetwork.SOCKET_REPLACEMENT_DELAY)),
+            switchMap(() => timer(this.replacementDelay())),
         );
 
         merge(replacementDue$, this.roomSocketApi.closed$).pipe(
@@ -61,6 +62,12 @@ export class HostRoomNetwork extends RoomNetwork {
         ).subscribe();
     }
 
+    /** From the opening of the socket, which may have served before the room (a refused creation): at once without socket */
+    private replacementDelay(): number {
+        const openedAt: number | undefined = this.roomSocketApi.socketOpenedAt;
+        return openedAt === undefined ? 0 : Math.max(0, openedAt + HostRoomNetwork.SOCKET_REPLACEMENT_DELAY - Date.now());
+    }
+
     private reconnect(): Observable<void> {
         return defer(() => this.roomSocketApi.reconnect({ roomName: this.roomName, hostToken: this.hostToken })).pipe(
             retry({
@@ -68,9 +75,10 @@ export class HostRoomNetwork extends RoomNetwork {
                 // Unless the API refused it: the room expired, or another room took its name
                 delay: (error: unknown) => error instanceof RoomApiError ? throwError(() => error) : timer(HostRoomNetwork.RECONNECTION_RETRY_DELAY),
             }),
-            switchMap(() => {
+            // Not waited for: the new socket may close meanwhile, to reconnect again
+            tap(() => {
                 this.reconnectedSubject.next();
-                return this.synchronizePlayers();
+                void this.synchronizePlayers();
             }),
             catchError((error: unknown) => {
                 console.error('HostRoom: the room could not move to a new socket', error);
@@ -188,8 +196,6 @@ export class HostRoomNetwork extends RoomNetwork {
         this.destroyRef = new Subject<void>();
         this.reconnectedSubject.complete();
         this.roomLostSubject.complete();
-        // The room then waits for its host on the API, until it expires: nobody can join it meanwhile
-        this.roomSocketApi.close();
         super.clear();
     }
 }

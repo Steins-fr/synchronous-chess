@@ -1,4 +1,5 @@
-import { inject, Injectable } from '@angular/core';
+import { DestroyRef, inject, Injectable } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
@@ -15,13 +16,20 @@ import { NotificationService } from '../notification/notification.service';
 export default class RoomManagerService {
     /**
      * A player reloading the page joins again under its name before the host noticed it left: the websocket API refuses
-     * the name until the host removes the former connection, which takes a few seconds
+     * the name until the host removes the former connection, which takes a few seconds. Joins are refused as well while
+     * the host reconnects its room to a new socket
      */
     private static readonly JOIN_RETRY_DELAY: number = 2000;
     private static readonly JOIN_RETRIES: number = 10;
+    private static readonly RETRIED_ERRORS: ReadonlySet<string | undefined> = new Set([
+        RoomApiErrorMessage.ALREADY_IN_GAME,
+        RoomApiErrorMessage.ALREADY_IN_QUEUE,
+        RoomApiErrorMessage.HOST_DISCONNECTED,
+    ]);
 
     private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);
+    private readonly destroyRef = inject(DestroyRef);
 
     public async buildBlockRoom<M extends object>(
         setup: RoomSetupInterface,
@@ -40,8 +48,7 @@ export default class RoomManagerService {
                 }
 
                 const hostRoomNetwork = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName, response.hostToken);
-                // Completes when the room is cleared
-                hostRoomNetwork.roomLost$.subscribe(() => {
+                hostRoomNetwork.roomLost$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                     this.notificationService.error('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
                 });
                 roomConnection = hostRoomNetwork;
@@ -69,12 +76,14 @@ export default class RoomManagerService {
                 // eslint-disable-next-line no-await-in-loop -- retries, one attempt after the other
                 return await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
             } catch (e) {
-                if (!RoomManagerService.isNameInRoom(e) || retry === RoomManagerService.JOIN_RETRIES) {
+                const message: string | undefined = e instanceof Error ? e.message : undefined;
+
+                if (!RoomManagerService.RETRIED_ERRORS.has(message) || retry === RoomManagerService.JOIN_RETRIES) {
                     throw e;
                 }
 
                 if (retry === 0) {
-                    this.notificationService.info('Ce nom est encore dans la salle, reconnexion en cours…');
+                    this.notificationService.info(RoomManagerService.retryMessage(message));
                 }
 
                 // eslint-disable-next-line no-await-in-loop -- the delay between two attempts
@@ -83,9 +92,9 @@ export default class RoomManagerService {
         }
     }
 
-    private static isNameInRoom(error: unknown): boolean {
-        const message: string | undefined = error instanceof Error ? error.message : undefined;
-        return message === RoomApiErrorMessage.ALREADY_IN_GAME || message === RoomApiErrorMessage.ALREADY_IN_QUEUE;
+
+    private static retryMessage(error: string | undefined): string {
+        return error === RoomApiErrorMessage.HOST_DISCONNECTED ? 'L\'hôte de la salle se reconnecte…' : 'Ce nom est encore dans la salle, reconnexion en cours…';
     }
 
     private static failureMessage(setup: RoomSetupInterface, error: unknown): string {
@@ -100,6 +109,8 @@ export default class RoomManagerService {
                 return 'Un joueur de ce nom est déjà dans la salle.';
             case RoomApiErrorMessage.ALREADY_IN_QUEUE:
                 return 'Un joueur de ce nom attend déjà d\'entrer dans la salle.';
+            case RoomApiErrorMessage.HOST_DISCONNECTED:
+                return 'L\'hôte de la salle s\'est déconnecté.';
             default:
                 return 'La salle est pleine ou elle n\'existe plus.';
         }

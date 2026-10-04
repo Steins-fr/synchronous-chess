@@ -33,7 +33,7 @@ describe('RoomSocketApi', () => {
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
         vi.spyOn(console, 'debug').mockImplementation(() => undefined);
         TestBed.configureTestingModule({
-            providers: [{ provide: WEB_SOCKET_SERVER, useValue: 'ws://server' }],
+            providers: [RoomSocketApi, { provide: WEB_SOCKET_SERVER, useValue: 'ws://server' }],
         });
         api = TestBed.inject(RoomSocketApi);
     });
@@ -173,6 +173,31 @@ describe('RoomSocketApi', () => {
 
         // Then
         expect(closed).toHaveBeenCalledTimes(1);
+    });
+
+    test('should keep the socket alive, and tell when it opened', async () => {
+        // Given
+        vi.useFakeTimers({ now: 1000 });
+        api.keepAlive();
+
+        // When
+        const { socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+        vi.advanceTimersByTime(5 * 60_000);
+
+        // Then
+        expect(api.socketOpenedAt).toEqual(1000);
+        expect(socket.sentPackets().at(-1)).toEqual({ message: 'ping' });
+    });
+
+    test('should close the socket when destroyed with its page', async () => {
+        // Given
+        const { socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+
+        // When
+        TestBed.resetTestingModule();
+
+        // Then
+        expect(socket.close).toHaveBeenCalledTimes(1);
     });
 
     test('close should stop the pending requests and close the socket', async () => {

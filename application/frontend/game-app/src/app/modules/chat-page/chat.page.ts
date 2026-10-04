@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
 import { roomFromSetup } from '../room-layout/room-from-setup';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { chatBlockChains, ChatComponent, ChatPayloads } from './components/chat/chat.component';
@@ -11,7 +12,7 @@ import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.compone
     selector: 'app-chat-page',
     templateUrl: './chat.page.html',
     imports: [RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
-    providers: [RoomSetupService, RoomManagerService],
+    providers: [RoomSetupService, RoomManagerService, RoomSocketApi],
 })
 export class ChatPage {
     public maxPlayer: number = 6;

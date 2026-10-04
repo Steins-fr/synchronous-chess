@@ -7,7 +7,7 @@ import { notifyCheatFlags } from './cheat-notifications';
 
 /**
  * The room of a page, built from the room setup form and cleared with the page, its cheats notified:
- * to call in an injection context, the page providing RoomSetupService and RoomManagerService
+ * to call in an injection context, the page providing RoomSetupService, RoomManagerService and RoomSocketApi
  * @param maxPlayer the most players the room accepts
  * @param routing the block chain of each message type of the room
  */

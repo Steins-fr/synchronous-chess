@@ -22,6 +22,12 @@ export class WebSocketService {
 
     private webSocket: WebSocket | null = null;
     private readonly pings = new Map<WebSocket, ReturnType<typeof setInterval>>();
+    // Pings the open socket, from keepAlive() until close()
+    private keepingAlive: boolean = false;
+    private _openedAt: number | undefined;
+    // Counts the calls of close(): a replacement started before one is abandoned
+    private closings: number = 0;
+    private replacement: Promise<void> | null = null;
 
     private readonly _state: BehaviorSubject<SocketState> = new BehaviorSubject<SocketState>(SocketState.CLOSED);
 
@@ -33,6 +39,20 @@ export class WebSocketService {
     public readonly closed$: Observable<void> = this._closed.asObservable();
 
     public constructor(private readonly _serverUrl: string) {}
+
+    /** When the current socket opened (Date.now()), undefined without an open socket */
+    public get openedAt(): number | undefined {
+        return this._openedAt;
+    }
+
+    /** Pings the open socket every 5 minutes, and the sockets replacing it, until close(): API Gateway closes it idle otherwise */
+    public keepAlive(): void {
+        this.keepingAlive = true;
+
+        if (this.webSocket && this._state.getValue() === SocketState.OPEN) {
+            this.startPing(this.webSocket);
+        }
+    }
 
     /** A socket whose messages the service emits, whatever socket is the current one */
     private openSocket(): WebSocket {
@@ -63,6 +83,7 @@ export class WebSocketService {
             }
 
             const wasOpen: boolean = this._state.getValue() === SocketState.OPEN;
+            this._openedAt = undefined;
             this._state.next(SocketState.CLOSED);
 
             if (wasOpen) {
@@ -72,8 +93,19 @@ export class WebSocketService {
     }
 
     private onOpen(webSocket: WebSocket): void {
-        this.pings.set(webSocket, setInterval(() => webSocket.send(WebSocketService.PING_PACKET), WebSocketService.PING_INTERVAL));
+        this._openedAt = Date.now();
+
+        if (this.keepingAlive) {
+            this.startPing(webSocket);
+        }
+
         this._state.next(SocketState.OPEN);
+    }
+
+    private startPing(webSocket: WebSocket): void {
+        if (!this.pings.has(webSocket)) {
+            this.pings.set(webSocket, setInterval(() => webSocket.send(WebSocketService.PING_PACKET), WebSocketService.PING_INTERVAL));
+        }
     }
 
     private stopPing(webSocket: WebSocket): void {
@@ -142,6 +174,9 @@ export class WebSocketService {
     public close(): void {
         const webSocket: WebSocket | null = this.webSocket;
         this.webSocket = null;
+        this.keepingAlive = false;
+        this._openedAt = undefined;
+        this.closings++;
 
         if (webSocket) {
             this.closeSocket(webSocket);
@@ -151,6 +186,11 @@ export class WebSocketService {
     }
 
     public async send<Data>(message: string, data: Data): Promise<Data> {
+        // Not through the socket being replaced: the server may have moved the room to the new one already
+        if (this.replacement) {
+            await this.replacement.then(() => undefined, () => undefined);
+        }
+
         const webSocket = await this.getConnection();
 
         const packet: string = JSON.stringify({ message, data });
@@ -161,10 +201,25 @@ export class WebSocketService {
 
     /**
      * Replaces the socket by a new one, which the handover sends its first messages through: the current socket keeps
-     * sending and receiving meanwhile, and closes once replaced. The new socket closes if the handover fails
+     * receiving meanwhile, the messages sent wait for the replacement to end. The current socket closes once replaced,
+     * the new one if the handover fails or close() ran meanwhile
      * @throws {Error} when the new socket does not open, or the error of the handover
      */
     public async replace(handover: SocketHandover): Promise<void> {
+        const replacement: Promise<void> = this.replaceSocket(handover);
+        this.replacement = replacement;
+
+        try {
+            await replacement;
+        } finally {
+            if (this.replacement === replacement) {
+                this.replacement = null;
+            }
+        }
+    }
+
+    private async replaceSocket(handover: SocketHandover): Promise<void> {
+        const closings: number = this.closings;
         const next: WebSocket = this.openSocket();
 
         await new Promise<void>((resolve, reject) => {
@@ -173,7 +228,9 @@ export class WebSocketService {
         });
 
         try {
+            this.closedGuard(closings);
             await handover(<Data>(message: string, data: Data): void => next.send(JSON.stringify({ message, data })));
+            this.closedGuard(closings);
 
             if (next.readyState !== SocketState.OPEN) { // Closed during the handover
                 throw new Error('Socket connection failed');
@@ -189,6 +246,13 @@ export class WebSocketService {
 
         if (previous) {
             this.closeSocket(previous);
+        }
+    }
+
+    /** @throws {Error} when close() ran since the count of closings given */
+    private closedGuard(closings: number): void {
+        if (this.closings !== closings) {
+            throw new Error('Socket closed during its replacement');
         }
     }
 }

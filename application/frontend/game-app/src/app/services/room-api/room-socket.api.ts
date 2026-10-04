@@ -1,4 +1,4 @@
-import { inject, Injectable, InjectionToken } from '@angular/core';
+import { inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { objectHasValue } from '@app/helpers/object.helper';
 import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
@@ -27,10 +27,9 @@ export const WEB_SOCKET_SERVER = new InjectionToken<string>('WebSocketServer');
 /** The error response of a request: the API refused it, retrying it as is fails again */
 export class RoomApiError extends Error {}
 
-@Injectable({
-    providedIn: 'root'
-})
-export class RoomSocketApi {
+/** The socket of the room of a page: provided by the page, closed with it */
+@Injectable()
+export class RoomSocketApi implements OnDestroy {
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
 
     private readonly webSocketService: WebSocketService;
@@ -65,6 +64,16 @@ export class RoomSocketApi {
     /** The socket closed without close(): by the server or the network */
     public get closed$(): Observable<void> {
         return this.webSocketService.closed$;
+    }
+
+    /** When the socket opened (Date.now()), undefined without an open socket */
+    public get socketOpenedAt(): number | undefined {
+        return this.webSocketService.openedAt;
+    }
+
+    /** Keeps the socket open, pinging it, until close() */
+    public keepAlive(): void {
+        this.webSocketService.keepAlive();
     }
 
     /**
@@ -192,5 +201,9 @@ export class RoomSocketApi {
         this.destroyRef.complete();
         this.destroyRef = new Subject<void>();
         this.webSocketService.close();
+    }
+
+    public ngOnDestroy(): void {
+        this.close();
     }
 }

@@ -24,6 +24,8 @@ describe('RoomManagerService', () => {
             closed$: new Subject<void>(),
             send: vi.fn(),
             reconnect: vi.fn(),
+            keepAlive: vi.fn(),
+            socketOpenedAt: Date.now(),
             close: vi.fn(),
         });
         notificationService = TestHelper.cast<NotificationService>({ error: vi.fn(), info: vi.fn() });
@@ -156,9 +158,28 @@ describe('RoomManagerService', () => {
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
     });
 
+    test('should join again while the host reconnects its room', async () => {
+        // Given
+        vi.useFakeTimers();
+        vi.mocked(roomSocketApi.send)
+            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.HOST_DISCONNECTED))
+            .mockResolvedValue({ playerName: 'host' });
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        await vi.advanceTimersByTimeAsync(2000);
+        room = await build;
+
+        // Then
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
+        expect(notificationService.info).toHaveBeenCalledWith('L\'hôte de la salle se reconnecte…');
+        expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
+    });
+
     test.each([
         { error: RoomApiErrorMessage.ALREADY_IN_GAME, notification: 'Un joueur de ce nom est déjà dans la salle.' },
         { error: RoomApiErrorMessage.ALREADY_IN_QUEUE, notification: 'Un joueur de ce nom attend déjà d\'entrer dans la salle.' },
+        { error: RoomApiErrorMessage.HOST_DISCONNECTED, notification: 'L\'hôte de la salle s\'est déconnecté.' },
     ])('should give up joining after 20 seconds, on $error', async ({ error, notification }) => {
         // Given
         vi.useFakeTimers();

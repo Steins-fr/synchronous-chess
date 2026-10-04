@@ -174,12 +174,26 @@ describe('WebSocketService', () => {
         expect(socket.close).toHaveBeenCalledTimes(1);
     });
 
-    test('should ping an open socket every 5 minutes, until it closes', async () => {
+    test('should not ping a socket not kept alive', async () => {
         // Given
         vi.useFakeTimers();
         const socket: WebSocketMock = await openService();
 
         // When
+        vi.advanceTimersByTime(5 * 60_000);
+
+        // Then
+        expect(socket.send).not.toHaveBeenCalled();
+    });
+
+    test('should ping an open socket kept alive every 5 minutes, until it closes', async () => {
+        // Given
+        vi.useFakeTimers();
+        const socket: WebSocketMock = await openService();
+
+        // When
+        service.keepAlive();
+        service.keepAlive();
         vi.advanceTimersByTime(5 * 60_000);
         socket.closeFromServer();
         vi.advanceTimersByTime(5 * 60_000);
@@ -188,17 +202,69 @@ describe('WebSocketService', () => {
         expect(socket.sentPackets()).toEqual([{ message: 'ping' }]);
     });
 
-    test('should stop pinging a socket closed by the service', async () => {
+    test('should ping a socket opened once kept alive', async () => {
+        // Given
+        vi.useFakeTimers();
+        service = new WebSocketService('ws://server');
+        service.keepAlive();
+
+        // When
+        const opening: Promise<number> = service.send('message', 1);
+        WebSocketMock.last().open();
+        await opening;
+        vi.advanceTimersByTime(5 * 60_000);
+
+        // Then
+        expect(WebSocketMock.last().sentPackets()).toEqual([{ message: 'message', data: 1 }, { message: 'ping' }]);
+    });
+
+    test('should stop pinging a socket closed by the service, and not ping the next one', async () => {
         // Given
         vi.useFakeTimers();
         const socket: WebSocketMock = await openService();
+        service.keepAlive();
 
         // When
         service.close();
+        const opening: Promise<number> = service.send('message', 2);
+        const next: WebSocketMock = WebSocketMock.last();
+        next.open();
+        await opening;
         vi.advanceTimersByTime(5 * 60_000);
 
         // Then
         expect(socket.send).not.toHaveBeenCalled();
+        expect(next.sentPackets()).toEqual([{ message: 'message', data: 2 }]);
+    });
+
+    test('openedAt should be when the current socket opened', async () => {
+        // Given
+        vi.useFakeTimers({ now: 1000 });
+        service = new WebSocketService('ws://server');
+        const before: number | undefined = service.openedAt;
+        const opening: Promise<number> = service.send('message', 1);
+        vi.advanceTimersByTime(500);
+
+        // When
+        WebSocketMock.last().open();
+        await opening;
+
+        // Then
+        expect(before).toBeUndefined();
+        expect(service.openedAt).toEqual(1500);
+        WebSocketMock.last().closeFromServer();
+        expect(service.openedAt).toBeUndefined();
+    });
+
+    test('openedAt should be undefined once the service closed its socket', async () => {
+        // Given
+        await openService();
+
+        // When
+        service.close();
+
+        // Then
+        expect(service.openedAt).toBeUndefined();
     });
 
     test('closed$ should emit when the server closes the open socket', async () => {
@@ -257,19 +323,98 @@ describe('WebSocketService', () => {
             expect(messages).toEqual(['"during the handover"']);
         });
 
-        test('should keep sending through the former socket during the handover', async () => {
+        test('should hold the sends during the handover, then send them through the new socket', async () => {
             // Given
             const former: WebSocketMock = await openService();
+            let sending: Promise<string> | undefined;
+
+            // When
+            const replacing: Promise<void> = service.replace(async (send) => {
+                sending = service.send('message', 'during');
+                send('message', 'handover');
+            });
+            const next: WebSocketMock = WebSocketMock.last();
+            next.open();
+            await replacing;
+            await sending;
+
+            // Then
+            expect(former.send).not.toHaveBeenCalled();
+            expect(next.sentPackets()).toEqual([{ message: 'message', data: 'handover' }, { message: 'message', data: 'during' }]);
+        });
+
+        test('should hold the sends until the last replacement ends', async () => {
+            // Given: two replacements at a time, the first one ending first
+            await openService();
+            let finishSecond: () => void = () => undefined;
+            const first: Promise<void> = service.replace(() => Promise.resolve());
+            WebSocketMock.last().open();
+            const second: Promise<void> = service.replace(() => new Promise<void>((resolve) => finishSecond = resolve));
+            const last: WebSocketMock = WebSocketMock.last();
+            last.open();
+            await first;
+
+            // When
+            const sending: Promise<string> = service.send('message', 'held');
+            await Promise.resolve();
+            const sentBeforeTheEnd: number = last.send.mock.calls.length;
+            finishSecond();
+            await second;
+            await sending;
+
+            // Then
+            expect(sentBeforeTheEnd).toEqual(0);
+            expect(last.sentPackets()).toEqual([{ message: 'message', data: 'held' }]);
+        });
+
+        test('should send the held messages through the former socket when the handover fails', async () => {
+            // Given
+            const former: WebSocketMock = await openService();
+            let sending: Promise<string> | undefined;
 
             // When
             const replacing: Promise<void> = service.replace(async () => {
-                await service.send('message', 'during');
+                sending = service.send('message', 'during');
+                throw new Error('Refused');
             });
             WebSocketMock.last().open();
-            await replacing;
+            await expect(replacing).rejects.toThrow('Refused');
+            await sending;
 
             // Then
             expect(former.sentPackets()).toEqual([{ message: 'message', data: 'during' }]);
+        });
+
+        test('should abandon the replacement when the service closes before the new socket opened', async () => {
+            // Given
+            await openService();
+            const handover = vi.fn();
+            const replacing: Promise<void> = service.replace(handover);
+            const next: WebSocketMock = WebSocketMock.last();
+
+            // When
+            service.close();
+            next.open();
+
+            // Then
+            await expect(replacing).rejects.toThrow('Socket closed during its replacement');
+            expect(handover).not.toHaveBeenCalled();
+            expect(next.close).toHaveBeenCalledTimes(1);
+        });
+
+        test('should abandon the replacement when the service closes during the handover', async () => {
+            // Given
+            await openService();
+
+            // When: the host leaves its room while the API moves it
+            const replacing: Promise<void> = service.replace(async () => service.close());
+            const next: WebSocketMock = WebSocketMock.last();
+            next.open();
+
+            // Then: the new socket closes, the API lets the room wait for its host
+            await expect(replacing).rejects.toThrow('Socket closed during its replacement');
+            expect(next.close).toHaveBeenCalledTimes(1);
+            expect(service.openedAt).toBeUndefined();
         });
 
         test('should replace a closed socket, and give it to the sends waiting for a socket', async () => {
@@ -313,6 +458,7 @@ describe('WebSocketService', () => {
             // Given
             vi.useFakeTimers();
             const former: WebSocketMock = await openService();
+            service.keepAlive();
             const replacing: Promise<void> = service.replace(() => Promise.resolve());
             const next: WebSocketMock = WebSocketMock.last();
             next.open();
