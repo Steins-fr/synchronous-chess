@@ -13,6 +13,7 @@
         "test": "ng test",
         "test:ci": "ng test --watch=false --coverage",
         "lint": "ng lint",
+        "e2e": "playwright test",
         "sonar-rules": "node ../../shared/sonar-eslint-rules/generate.mjs"
     },
     "private": true,
@@ -36,6 +37,7 @@
         "@angular/compiler-cli": "^22.2.1",
         "@eslint/js": "^10.0.1",
         "@html-eslint/eslint-plugin": "^0.65.0",
+        "@playwright/test": "^1.63.0",
         "@stylistic/eslint-plugin": "^5.2.2",
         "@tailwindcss/postcss": "^4.1.12",
         "@types/node": "^25.5.0",
