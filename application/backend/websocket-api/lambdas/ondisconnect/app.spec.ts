@@ -69,7 +69,7 @@ describe('ondisconnect lambda', () => {
         expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection' })).toHaveLength(1);
     });
 
-    test('should fail without the room of the connection', async () => {
+    test('should delete the connection of a room which no longer exists, or expired', async () => {
         // Given
         storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'missing' });
 
@@ -77,8 +77,18 @@ describe('ondisconnect lambda', () => {
         const response = await handler(anEvent(GUEST_CONNECTION));
 
         // Then
-        expect(response).toEqual({ statusCode: 500, body: 'Internal server error' });
-        expect(dynamo.commandCalls(DeleteCommand)).toHaveLength(0);
+        expect(response).toEqual({ statusCode: 200, body: 'Closed' });
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: GUEST_CONNECTION } })).toHaveLength(1);
+    });
+
+    test('should fail when the connection can not be deleted', async () => {
+        // Given
+        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        storeRoom(dynamo, aRoom());
+        dynamo.on(DeleteCommand).rejects(new Error('Network down'));
+
+        // When / Then
+        expect(await handler(anEvent(GUEST_CONNECTION))).toEqual({ statusCode: 500, body: 'Internal server error' });
     });
 
     test('should fail without connection id', async () => {

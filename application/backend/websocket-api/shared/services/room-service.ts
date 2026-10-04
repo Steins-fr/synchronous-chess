@@ -42,6 +42,22 @@ export default class RoomService {
         return room;
     }
 
+    /**
+     * A connection hosts a single room: moved to another one, the room it hosts would never wait for it
+     * @throws {BadRequestException} when the connection hosts a room
+     */
+    public async notHostingGuard(connection: Connection | null): Promise<void> {
+        if (connection === null) {
+            return;
+        }
+
+        const room: Room | null = await this.roomRepository.getByName(connection.roomName);
+
+        if (room?.connectionId === connection.connectionId) {
+            throw new BadRequestException('Already hosting a room');
+        }
+    }
+
     public canEditRoomGuard(room: Room, connectionId: string): void {
         if (room.connectionId !== connectionId) {
             throw new BadRequestException('You are not the host of the room');
@@ -55,8 +71,11 @@ export default class RoomService {
         }
     }
 
+    /** Once: the host declares again a player whose connection it restored */
     public async addPlayerToRoom(playerName: string, room: Room): Promise<void> {
-        await this.roomRepository.addPlayerToRoom({ playerName }, room);
+        if (!RoomHelper.isInGame(room, playerName)) {
+            await this.roomRepository.addPlayerToRoom({ playerName }, room);
+        }
     }
 
     public async removePlayerFromRoom(playerName: string, room: Room): Promise<void> {

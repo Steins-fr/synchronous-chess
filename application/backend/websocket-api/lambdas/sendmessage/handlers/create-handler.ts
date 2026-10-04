@@ -11,6 +11,7 @@ export default class CreateHandler extends MessageHandler {
             throw new BadRequestException(CreateHandler.ERROR_PARSING);
         }
 
+        await this.roomService.notHostingGuard(await this.connectionService.get(this.connectionId));
         // Before the room: a connection whose room was not created leaves no room on $disconnect, a room without its
         // host connection would never wait for it
         await this.connectionService.create({ connectionId: this.connectionId, roomName: data.roomName });

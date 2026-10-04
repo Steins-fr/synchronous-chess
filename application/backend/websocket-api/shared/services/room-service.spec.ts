@@ -109,6 +109,14 @@ describe('RoomService', () => {
         expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[0], tokenHashes.#playerName' })).toHaveLength(1);
     });
 
+    test('should not add a player twice to the room', async () => {
+        // When
+        await service.addPlayerToRoom('host', room);
+
+        // Then
+        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+    });
+
     test('should queue a player with its connection, and the hash of its token', async () => {
         // When
         await service.addPlayerToQueue('other', 'other-connection', 'other-token', room);

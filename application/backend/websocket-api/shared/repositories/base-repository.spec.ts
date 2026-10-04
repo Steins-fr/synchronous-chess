@@ -95,6 +95,17 @@ describe('BaseRepository', () => {
         })).toHaveLength(1);
     });
 
+    test('should put an item if its condition on attribute names holds', async () => {
+        // When
+        await repository.putIf(connection, { expression: '#room = :expected', attributeValues: { ':expected': 'room' }, attributeNames: { '#room': 'roomName' } });
+
+        // Then
+        expect(dynamo.commandCalls(PutCommand, {
+            ConditionExpression: '#room = :expected',
+            ExpressionAttributeNames: { '#room': 'roomName' },
+        })).toHaveLength(1);
+    });
+
     test('should update an item if its condition holds', async () => {
         // When
         const written: boolean = await repository.updateItemIf(connection, 'set roomName = :roomName', condition, { ':roomName': 'other' });

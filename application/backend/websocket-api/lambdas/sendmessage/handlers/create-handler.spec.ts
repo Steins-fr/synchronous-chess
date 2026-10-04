@@ -1,9 +1,9 @@
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { hashToken } from '@helpers/token.helper';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { aConditionFailure, anApiGatewayClient, aRequest, AwsMocks, errorReply, HOST_CONNECTION, HOST_TOKEN, mockAws, postedPackets } from '@testing/api-mocks';
+import { aConditionFailure, anApiGatewayClient, aRequest, aRoom, AwsMocks, errorReply, HOST_CONNECTION, HOST_TOKEN, mockAws, postedPackets, storeRoom } from '@testing/api-mocks';
 import { describe, expect, test } from 'vitest';
 import CreateHandler from './create-handler';
 
@@ -50,6 +50,28 @@ describe('CreateHandler', () => {
         await expect(create(data)).rejects.toThrow('Payload not valid');
         expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
         expect(postedPackets(apiGateway)).toEqual([errorReply('Payload not valid')]);
+    });
+
+    test('should create a room on a connection whose creation of another room was refused', async () => {
+        // Given
+        dynamo.on(GetCommand, { TableName: 'connection' }).resolves({ Item: { connectionId: HOST_CONNECTION, roomName: 'taken' } });
+        storeRoom(dynamo, aRoom({ id: 'taken', connectionId: 'other-connection' }));
+
+        // When
+        await create(request);
+
+        // Then
+        expect(dynamo.commandCalls(PutCommand, { TableName: 'room' })).toHaveLength(1);
+    });
+
+    test('should refuse to create a room on the connection of another room it hosts', async () => {
+        // Given
+        dynamo.on(GetCommand, { TableName: 'connection' }).resolves({ Item: { connectionId: HOST_CONNECTION, roomName: 'hosted' } });
+        storeRoom(dynamo, aRoom({ id: 'hosted' }));
+
+        // When / Then
+        await expect(create(request)).rejects.toThrow('Already hosting a room');
+        expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
     });
 
     test('should refuse a room name already taken', async () => {

@@ -67,6 +67,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             Item: item,
             ConditionExpression: condition?.expression,
             ExpressionAttributeValues: condition?.attributeValues,
+            ExpressionAttributeNames: condition?.attributeNames,
             ReturnValues: 'NONE',
         });
     }
