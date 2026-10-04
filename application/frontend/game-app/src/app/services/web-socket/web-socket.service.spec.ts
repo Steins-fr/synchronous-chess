@@ -218,6 +218,25 @@ describe('WebSocketService', () => {
         expect(WebSocketMock.last().sentPackets()).toEqual([{ message: 'message', data: 1 }, { message: 'ping' }]);
     });
 
+    test('should keep the sockets alive after one failed to open', async () => {
+        // Given
+        vi.useFakeTimers();
+        service = new WebSocketService('ws://server');
+        service.keepAlive();
+        const failing: Promise<number> = service.send('message', 1);
+        WebSocketMock.last().closeFromServer();
+        await expect(failing).rejects.toThrow('Socket connection failed');
+
+        // When
+        const opening: Promise<number> = service.send('message', 2);
+        WebSocketMock.last().open();
+        await opening;
+        vi.advanceTimersByTime(5 * 60_000);
+
+        // Then
+        expect(WebSocketMock.last().sentPackets()).toEqual([{ message: 'message', data: 2 }, { message: 'ping' }]);
+    });
+
     test('should stop pinging a socket closed by the service, and not ping the next one', async () => {
         // Given
         vi.useFakeTimers();

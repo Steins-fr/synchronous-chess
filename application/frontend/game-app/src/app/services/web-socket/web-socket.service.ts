@@ -163,8 +163,7 @@ export class WebSocketService {
                     if (state === SocketState.OPEN) {
                         // The socket open now: the one being opened, or the one that replaced it meanwhile
                         resolve(this.webSocket as WebSocket);
-                    } else {
-                        this.close();
+                    } else { // Not close(): the socket failing to open does not stop keeping the next ones alive
                         reject(new Error('Socket connection failed'));
                     }
                 });
