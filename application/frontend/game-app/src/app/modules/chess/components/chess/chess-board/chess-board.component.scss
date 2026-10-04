@@ -49,10 +49,10 @@
             .mat-grid-list {
                 // The cells touch each other, the board has a single frame. An outline takes no room: the grid sizes its
                 // rows from its whole width, a border would leave an empty strip below the last row
-                outline: solid 1px black;
+                outline: solid 1px var(--app-board-frame);
 
                 .mat-grid-tile {
-                    background-color: rgb(235, 235, 235);
+                    background-color: var(--app-board-light);
 
                     &:nth-of-type(16n + 2),
                     &:nth-of-type(16n + 4),
@@ -62,35 +62,24 @@
                     &:nth-of-type(16n + 11),
                     &:nth-of-type(16n + 13),
                     &:nth-of-type(16n + 15) {
-                        background-color: rgb(60, 77, 175);
+                        background-color: var(--app-accent);
                     }
 
                     &.drag-hover {
-                        background-color: red;
+                        background-color: var(--app-cell-hover);
                     }
 
                     &.dragged {
-                        background-color: darkgoldenrod;
+                        background-color: var(--app-cell-dragged);
                     }
 
                     &.valid-move {
-                        background-color: greenyellow;
+                        background-color: var(--app-cell-valid);
                     }
 
                     &.valid-move.drag-hover,
                     &.move-preview {
-                        background-color: green;
-                    }
-
-                    .cell {
-                        width: 100%;
-                        height: 100%;
-                    }
-
-                    .hidden-placeholder {
-                        display: block;
-                        height: 0;
-                        width: 0;
+                        background-color: var(--app-cell-preview);
                     }
                 }
             }

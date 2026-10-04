@@ -14,31 +14,14 @@ import {
     viewChild,
     ViewContainerRef
 } from '@angular/core';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: 'app-dialog-wrapper',
-    template: `
-<div
-    class="rounded-md bg-white shadow-md flex flex-col gap-2 p-2 isolate min-w-[300px] max-w-[80vw] relative"
->
-    @if (title()) {
-    <h1 class="px-4 mx-auto text-2xl lg:text-3xl">{{ title() }}</h1>
-    }
-    @if (closable()) {
-    <!-- <app-icon-button
-        (click)="close.emit()"
-        size="xs"
-        iconName="close"
-        class="absolute top-1 right-1 text-neutral-400"
-        /> -->
-    }
-
-    <ng-container #container></ng-container>
-</div>`,
+    templateUrl: './dialog-wrapper.component.html',
     standalone: true,
-    imports: [
-        // IconButtonComponent
-    ],
+    imports: [MatIconButton, MatIcon],
 })
 export class DialogWrapperComponent<TChild, TResult = void> implements OnInit {
     container = viewChild.required<ViewContainerRef>('container', {

@@ -22,9 +22,9 @@ describe('ChessRulesComponent', () => {
         // Then
         expect(element().querySelector('.title')?.textContent).toEqual('Règles');
         expect(element().querySelectorAll('.summary li')).toHaveLength(4);
-        expect([...element().querySelectorAll('.case h4')].map((title: Element) => title.textContent?.trim())).toEqual(['a Capture', 'b Échange', 'c Confrontation']);
+        expect([...element().querySelectorAll('.case-card h4')].map((title: Element) => title.textContent?.trim())).toEqual(['a Capture', 'b Échange', 'c Confrontation']);
         expect(element().querySelectorAll('.ends tbody tr')).toHaveLength(7);
-        expect(element().querySelectorAll('.ends .badge.win')).toHaveLength(2);
+        expect(element().querySelectorAll('.ends .badge-win')).toHaveLength(2);
         expect(element().querySelector('.source a')?.getAttribute('href')).toEqual('http://www.hexenspiel.de/engl/synchronous-chess/');
     });
 
@@ -39,7 +39,7 @@ describe('ChessRulesComponent', () => {
 
     test('should scroll to the section chosen in the table of contents', () => {
         // Given
-        const sections: HTMLElement[] = [...element().querySelectorAll<HTMLElement>('section.rule')];
+        const sections: HTMLElement[] = [...element().querySelectorAll<HTMLElement>('section.rule-card')];
         const scrolled: HTMLElement[] = [];
         sections.forEach((section: HTMLElement) => {
             section.scrollIntoView = vi.fn(() => scrolled.push(section));

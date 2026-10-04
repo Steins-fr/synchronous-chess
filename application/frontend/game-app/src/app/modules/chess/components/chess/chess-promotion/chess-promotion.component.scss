@@ -2,11 +2,11 @@
     .piece {
         cursor: pointer;
 
-        background-color: rgb(235, 235, 235);
+        background-color: var(--app-board-light);
 
         &:nth-of-type(2),
         &:nth-of-type(3) {
-            background-color: rgb(60, 77, 175);
+            background-color: var(--app-accent);
         }
     }
 }

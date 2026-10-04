@@ -8,9 +8,9 @@
         align-items: center;
         gap: 8px;
         padding: 12px 16px;
-        border: 1px solid #dfe2f0;
+        border: 1px solid var(--app-border);
         border-radius: 8px;
-        background-color: #f5f6fb;
+        background-color: var(--app-surface);
         font-size: 18px;
         font-weight: bold;
         cursor: pointer;
@@ -22,13 +22,13 @@
 
         &::before {
             content: '▸';
-            color: rgb(60, 77, 175);
+            color: var(--app-accent-text);
             transition: transform 0.2s;
         }
 
         &:hover,
         &:focus-visible {
-            border-color: rgb(60, 77, 175);
+            border-color: var(--app-accent-text);
         }
     }
 

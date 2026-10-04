@@ -16,7 +16,7 @@
                     }">
                     <div
                         (cdkDropListDropped)="pieceDropped.emit(pos); dragStop()"
-                        (cdkDropListEntered)="dragEntered(pos)" class="cell"
+                        (cdkDropListEntered)="dragEntered(pos)" class="size-full"
                         cdkDropList>
                         @if (piece) {
                         <app-chess-piece
@@ -29,7 +29,7 @@
                                     }"
                             [cdkDragDisabled]="!canBeDragged(pos)"
                             cdkDrag>
-                            <div class="hidden-placeholder" *cdkDragPlaceholder></div>
+                            <div class="hidden-placeholder block size-0" *cdkDragPlaceholder></div>
                             <div class="piece-preview-block" *cdkDragPreview>
                                 <div class="piece-preview">
                                     <app-chess-piece [piece]="piece" />

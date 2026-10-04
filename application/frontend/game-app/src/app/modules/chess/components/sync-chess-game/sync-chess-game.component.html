@@ -2,7 +2,7 @@
     <div class="player black-seat">
         Joueur Noir : {{ gameSession().configuration().blackPlayer || 'En attente' }}
         @if (canTakeSeat(blackColor)) {
-        <button (click)="takeSeat(blackColor)" class="seat-button" color="primary" mat-stroked-button>Jouer les noirs</button>
+        <button (click)="takeSeat(blackColor)" class="seat-button" mat-stroked-button>Jouer les noirs</button>
         }
         @if (canLeaveSeat(blackColor)) {
         <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>Quitter la place</button>
@@ -59,7 +59,7 @@
                 <button
                     (click)="skip()"
                     class="skip-button"
-                    color="primary"
+                   
                     mat-stroked-button>
                     Passer
                 </button>
@@ -71,7 +71,7 @@
                 <button
                     (click)="skip()"
                     class="skip-button"
-                    color="primary"
+                   
                     mat-stroked-button>
                     Passer
                 </button>
@@ -98,7 +98,7 @@
     <div class="player white-seat">
         Joueur Blanc : {{ gameSession().configuration().whitePlayer || 'En attente' }}
         @if (canTakeSeat(whiteColor)) {
-        <button (click)="takeSeat(whiteColor)" class="seat-button" color="primary" mat-stroked-button>Jouer les blancs</button>
+        <button (click)="takeSeat(whiteColor)" class="seat-button" mat-stroked-button>Jouer les blancs</button>
         }
         @if (canLeaveSeat(whiteColor)) {
         <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>Quitter la place</button>

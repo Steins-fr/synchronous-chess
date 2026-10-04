@@ -1,5 +1,6 @@
-import { inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
+import { inject, Injectable, OnDestroy } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
+import { WEB_SOCKET_SERVER } from './web-socket-server.token';
 import { objectHasValue } from '@app/helpers/object.helper';
 import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
@@ -20,9 +21,6 @@ import { filter, first, map, Observable, Subject, takeUntil, tap } from 'rxjs';
 import { WebSocketService } from '../web-socket/web-socket.service';
 
 type SocketPacketAllPayload = SocketPacketResponsePayload | RoomSocketApiNotifications;
-
-// Injection token for WebSocketServer
-export const WEB_SOCKET_SERVER = new InjectionToken<string>('WebSocketServer');
 
 /** The error response of a request: the API refused it, retrying it as is fails again */
 export class RoomApiError extends Error {}

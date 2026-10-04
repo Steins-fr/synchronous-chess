@@ -1,9 +1,7 @@
-import { OverlayRef } from '@angular/cdk/overlay';
-import { ApplicationRef, Component, ComponentRef, EventEmitter, input, output } from '@angular/core';
+import { ApplicationRef, Component, EventEmitter, input, output } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { DialogService } from './dialog.service';
-import { DialogWrapperComponent } from './components/dialog-wrapper.component';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 
 @Component({
     selector: 'app-test-dialog',
@@ -30,14 +28,9 @@ class PlainDialog {}
 
 describe('DialogService', () => {
     let service: DialogService;
-    let attachSpy: ReturnType<typeof vi.spyOn>;
 
     function overlay(): HTMLElement {
         return document.querySelector('.cdk-overlay-container') as HTMLElement;
-    }
-
-    function wrapperRef<R = void>(): ComponentRef<DialogWrapperComponent<unknown, R>> {
-        return attachSpy.mock.results[0].value as ComponentRef<DialogWrapperComponent<unknown, R>>;
     }
 
     async function render(): Promise<void> {
@@ -49,12 +42,7 @@ describe('DialogService', () => {
     }
 
     beforeEach(() => {
-        attachSpy = vi.spyOn(OverlayRef.prototype, 'attach');
         service = TestBed.inject(DialogService);
-    });
-
-    afterEach(() => {
-        vi.restoreAllMocks();
     });
 
     test('open should display the component and resolve with its result', async () => {
@@ -92,7 +80,7 @@ describe('DialogService', () => {
         await render();
 
         // When
-        wrapperRef().instance.close.emit();
+        (overlay().querySelector('#dialog-close') as HTMLButtonElement).click();
 
         // Then
         await expect(result).resolves.toBeUndefined();
@@ -140,6 +128,7 @@ describe('DialogService', () => {
 
         // Then
         expect(overlay().querySelector('h1')).toBeNull();
+        expect(overlay().querySelector('#dialog-close')).toBeNull();
         expect(overlay().querySelector('.emit')).not.toBeNull();
 
         // When
@@ -157,6 +146,8 @@ describe('DialogService', () => {
         // Then
         expect(overlay().querySelector('h1')?.textContent).toEqual('Confirm');
         expect(overlay().querySelector('app-confirm-dialog p')?.textContent).toEqual('Are you sure?');
+        expect(overlay().querySelector('#confirm-no')?.textContent?.trim()).toEqual('Annuler');
+        expect(overlay().querySelector('#confirm-yes')?.textContent?.trim()).toEqual('Confirmer');
 
         // When
         pressKey('Escape');
@@ -165,15 +156,31 @@ describe('DialogService', () => {
         await expect(result).resolves.toEqual(false);
     });
 
-    test('confirm should resolve with the result of the dialog', async () => {
+    test('confirm should resolve true when the user says yes', async () => {
+        // Given
+        const result: Promise<boolean> = service.confirm('Confirm', 'Are you sure?');
+        await render();
+
+        // Then
+        expect(overlay().querySelector('#confirm-no')?.textContent?.trim()).toEqual('Non');
+        expect(overlay().querySelector('#confirm-yes')?.textContent?.trim()).toEqual('Oui');
+
+        // When
+        (overlay().querySelector('#confirm-yes') as HTMLButtonElement).click();
+
+        // Then
+        await expect(result).resolves.toEqual(true);
+    });
+
+    test('confirm should resolve false when the user says no', async () => {
         // Given
         const result: Promise<boolean> = service.confirm('Confirm', 'Are you sure?');
         await render();
 
         // When
-        wrapperRef<boolean>().instance.result.emit(true);
+        (overlay().querySelector('#confirm-no') as HTMLButtonElement).click();
 
         // Then
-        await expect(result).resolves.toEqual(true);
+        await expect(result).resolves.toEqual(false);
     });
 });
