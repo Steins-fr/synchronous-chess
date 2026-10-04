@@ -146,13 +146,13 @@ describe('local websocket API', () => {
             const host = await connected();
             const guest = await connected();
             const created = nextMessage(host);
-            request(host, 'create', { roomName: 'flow', maxPlayer: 2, playerName: 'alice' });
+            request(host, 'create', { roomName: 'flow', maxPlayer: 2, playerName: 'alice', token: 'alice-token' });
             expect(JSON.parse(await created)).toMatchObject({ type: 'created' });
 
             // When
             const joinRequest = nextMessage(host);
             const joining = nextMessage(guest);
-            request(guest, 'join', { roomName: 'flow', playerName: 'bob' });
+            request(guest, 'join', { roomName: 'flow', playerName: 'bob', token: 'bob-token' });
 
             // Then
             expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'bob' } });
@@ -213,10 +213,11 @@ describe('local websocket API', () => {
     // Through DynamoDB (dynalite), which evaluates the conditions of the writes. Its tables outlive the APIs of the
     // tests: each test has its own room
     describe('host reconnection', () => {
-        async function hostedRoom(roomName: string): Promise<{ host: WebSocket; hostToken: string }> {
+        async function hostedRoom(roomName: string): Promise<{ host: WebSocket; token: string }> {
             const host = await connected();
-            const created = await reply(host, 'create', { roomName, maxPlayer: 2, playerName: 'alice' });
-            return { host, hostToken: created.data['hostToken'] as string };
+            const token = `${ roomName }-token`;
+            expect(await reply(host, 'create', { roomName, maxPlayer: 2, playerName: 'alice', token })).toMatchObject({ type: 'created' });
+            return { host, token };
         }
 
         async function disconnect(socket: WebSocket): Promise<void> {
@@ -227,33 +228,33 @@ describe('local websocket API', () => {
 
         test('should move a room to a new connection of its host, before the former one closes', async () => {
             // Given
-            const { host, hostToken } = await hostedRoom('moved');
+            const { host, token } = await hostedRoom('moved');
             const newHost = await connected();
 
             // When
-            const reconnected = await reply(newHost, 'reconnect', { roomName: 'moved', hostToken });
+            const reconnected = await reply(newHost, 'reconnect', { roomName: 'moved', playerName: 'alice', token });
             await disconnect(host);
 
             // Then
             expect(reconnected).toMatchObject({ type: 'reconnected', data: { roomName: 'moved' } });
             const joinRequest = nextMessage(newHost);
-            expect(await reply(await connected(), 'join', { roomName: 'moved', playerName: 'bob' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(await connected(), 'join', { roomName: 'moved', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
             expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'bob' } });
         });
 
         test('should keep the room of a disconnected host until it reconnects', async () => {
             // Given
-            const { host, hostToken } = await hostedRoom('waiting');
+            const { host, token } = await hostedRoom('waiting');
             await disconnect(host);
             const guest = await connected();
-            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob' })).toMatchObject({ type: 'error', data: { message: 'Host disconnected' } });
+            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'error', data: { message: 'Host disconnected' } });
 
             // When
-            const reconnected = await reply(await connected(), 'reconnect', { roomName: 'waiting', hostToken });
+            const reconnected = await reply(await connected(), 'reconnect', { roomName: 'waiting', playerName: 'alice', token });
 
             // Then
             expect(reconnected).toMatchObject({ type: 'reconnected' });
-            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
         });
 
         test('should not move a room for another token', async () => {
@@ -261,7 +262,7 @@ describe('local websocket API', () => {
             await hostedRoom('kept');
 
             // When
-            const refused = await reply(await connected(), 'reconnect', { roomName: 'kept', hostToken: 'other-token' });
+            const refused = await reply(await connected(), 'reconnect', { roomName: 'kept', playerName: 'alice', token: 'other-token' });
 
             // Then
             expect(refused).toMatchObject({ type: 'error', data: { message: 'You are not the host of the room' } });
@@ -269,15 +270,15 @@ describe('local websocket API', () => {
 
         test('should keep the name of a room waiting for its host', async () => {
             // Given
-            const { host, hostToken } = await hostedRoom('taken');
+            const { host, token } = await hostedRoom('taken');
             await disconnect(host);
 
             // When
-            const created = await reply(await connected(), 'create', { roomName: 'taken', maxPlayer: 2, playerName: 'bob' });
+            const created = await reply(await connected(), 'create', { roomName: 'taken', maxPlayer: 2, playerName: 'bob', token: 'bob-token' });
 
             // Then
             expect(created).toMatchObject({ type: 'error', data: { message: 'Room already exists' } });
-            expect(await reply(await connected(), 'reconnect', { roomName: 'taken', hostToken })).toMatchObject({ type: 'reconnected' });
+            expect(await reply(await connected(), 'reconnect', { roomName: 'taken', playerName: 'alice', token })).toMatchObject({ type: 'reconnected' });
         });
     });
 

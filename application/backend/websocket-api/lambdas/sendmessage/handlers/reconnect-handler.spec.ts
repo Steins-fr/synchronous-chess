@@ -1,5 +1,5 @@
 import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { hashHostToken } from '@helpers/host-token.helper';
+import { hashToken } from '@helpers/token.helper';
 import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import {
@@ -31,7 +31,7 @@ describe('ReconnectHandler', () => {
 
     test('should move the room to the new connection of its host', async () => {
         // When
-        await reconnect({ roomName: 'room', hostToken: HOST_TOKEN });
+        await reconnect({ roomName: 'room', playerName: 'host', token: HOST_TOKEN });
 
         // Then
         expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: { connectionId: connection, roomName: 'room' } })).toHaveLength(1);
@@ -39,7 +39,8 @@ describe('ReconnectHandler', () => {
             TableName: 'room',
             Key: { id: 'room' },
             UpdateExpression: 'SET connectionId = :connectionId REMOVE expiresAt',
-            ExpressionAttributeValues: { ':connectionId': connection, ':hostTokenHash': hashHostToken(HOST_TOKEN), ':now': expect.any(Number) },
+            ExpressionAttributeValues: { ':connectionId': connection, ':playerName': 'host', ':tokenHash': hashToken(HOST_TOKEN), ':now': expect.any(Number) },
+            ExpressionAttributeNames: { '#playerName': 'host' },
         })]);
         expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: { id: 7, type: 'reconnected', data: { roomName: 'room' } } }]);
     });
@@ -49,15 +50,15 @@ describe('ReconnectHandler', () => {
         dynamo.on(UpdateCommand).rejects(aConditionFailure());
 
         // When / Then
-        await expect(reconnect({ roomName: 'room', hostToken: 'other-token' })).rejects.toThrow('You are not the host of the room');
+        await expect(reconnect({ roomName: 'room', playerName: 'host', token: 'other-token' })).rejects.toThrow('You are not the host of the room');
         expect(postedPackets(apiGateway)).toEqual([errorReply('You are not the host of the room', connection)]);
     });
 
     test.each([
-        ['room name', { roomName: '', hostToken: HOST_TOKEN }, 'Payload not valid'],
-        ['token', { roomName: 'room', hostToken: '' }, 'Payload not valid'],
-        ['token not a string', { roomName: 'room', hostToken: 42 as unknown as string }, 'Payload not valid'],
-        ['room missing', { roomName: 'missing', hostToken: HOST_TOKEN }, 'Room \'missing\' does not exist'],
+        ['room name', { roomName: '', playerName: 'host', token: HOST_TOKEN }, 'Payload not valid'],
+        ['player name', { roomName: 'room', playerName: '', token: HOST_TOKEN }, 'Payload not valid'],
+        ['token', { roomName: 'room', playerName: 'host', token: '' }, 'Payload not valid'],
+        ['room missing', { roomName: 'missing', playerName: 'host', token: HOST_TOKEN }, 'Room \'missing\' does not exist'],
     ])('should refuse a request with its %s', async (_case: string, data: RoomReconnectRequest, message: string) => {
         // When / Then
         await expect(reconnect(data)).rejects.toThrow(message);

@@ -36,7 +36,8 @@ export class HostRoomNetwork extends RoomNetwork {
         roomName: string,
         private readonly maxPlayer: number,
         localPlayerName: string,
-        private readonly hostToken: string,
+        /** The token the host created the room with */
+        private readonly token: string,
     ) {
         super(roomApi, roomName, localPlayerName);
         this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
@@ -69,7 +70,7 @@ export class HostRoomNetwork extends RoomNetwork {
     }
 
     private reconnect(): Observable<void> {
-        return defer(() => this.roomSocketApi.reconnect({ roomName: this.roomName, hostToken: this.hostToken })).pipe(
+        return defer(() => this.roomSocketApi.reconnect({ roomName: this.roomName, playerName: this.localPlayer.name, token: this.token })).pipe(
             retry({
                 count: HostRoomNetwork.RECONNECTION_RETRIES,
                 // Unless the API refused it: the room expired, or another room took its name

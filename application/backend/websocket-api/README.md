@@ -27,8 +27,9 @@ mocks of DynamoDB in the other specs do not evaluate.
 ## Host reconnection
 
 API Gateway closes any connection after 2 hours, and the host keeps its connection open while it waits for the
-players. The `create` response gives the host a secret token (the room keeps its SHA-256 only). Every 100 minutes,
-or as soon as its socket closes, the host opens a new socket and sends it `reconnect` with the token: the room moves
+players. Each page sends a secret token of its own with `create` and `join` (the room keeps its SHA-256 by player,
+`tokenHashes`, until the player is removed). Every 100 minutes, or as soon as its socket closes, the host opens a new
+socket and sends it `reconnect` with its name and token: the room moves
 to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
 the room for 10 minutes (`expiresAt`, also the TTL of the table): joins are refused (`Host disconnected`) until the
 host reconnects, and the room keeps its name until it expires.

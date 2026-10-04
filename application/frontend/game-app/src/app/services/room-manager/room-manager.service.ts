@@ -1,5 +1,6 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
@@ -38,22 +39,24 @@ export default class RoomManagerService {
     ): Promise<BlockRoom<M>> {
         try {
             const keys = await BlockRoom.createKeys(setup.playerName);
+            // Proves to the API the player of this page: the host reconnects its room with it
+            const token: string = CryptoHelper.randomHex(32);
             let roomConnection: RoomNetwork;
 
             if (setup.type === 'create') {
-                const response: RoomCreateResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.CREATE, { roomName: setup.roomName, maxPlayer, playerName: setup.playerName });
+                const response: RoomCreateResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.CREATE, { roomName: setup.roomName, maxPlayer, playerName: setup.playerName, token });
 
                 if (response.playerName !== setup.playerName || response.roomName !== setup.roomName || response.maxPlayer !== maxPlayer) {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                const hostRoomNetwork = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName, response.hostToken);
+                const hostRoomNetwork = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName, token);
                 hostRoomNetwork.roomLost$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                     this.notificationService.error('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
                 });
                 roomConnection = hostRoomNetwork;
             } else {
-                const response: RoomJoinResponse = await this.join(setup);
+                const response: RoomJoinResponse = await this.join(setup, token);
 
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName);
             }
@@ -70,11 +73,11 @@ export default class RoomManagerService {
         }
     }
 
-    private async join(setup: RoomSetupInterface): Promise<RoomJoinResponse> {
+    private async join(setup: RoomSetupInterface, token: string): Promise<RoomJoinResponse> {
         for (let retry = 0; ; retry++) {
             try {
                 // eslint-disable-next-line no-await-in-loop -- retries, one attempt after the other
-                return await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName });
+                return await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName, token });
             } catch (e) {
                 const message: string | undefined = e instanceof Error ? e.message : undefined;
 

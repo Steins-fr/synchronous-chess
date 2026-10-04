@@ -1,4 +1,5 @@
 import BadRequestException from '@exceptions/bad-request-exception';
+import { isToken } from '@helpers/token.helper';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import {
     RoomApiRequestTypeEnum,
@@ -13,7 +14,7 @@ export default class JoinHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.JOIN);
 
-        if (!data.roomName || !data.playerName) {
+        if (!data.roomName || !data.playerName || !isToken(data.token)) {
             throw new BadRequestException(JoinHandler.ERROR_PARSING);
         }
 
@@ -29,7 +30,7 @@ export default class JoinHandler extends MessageHandler {
         }
 
         await this.connectionService.create({ connectionId: this.connectionId, roomName: room.id });
-        await this.roomService.addPlayerToQueue(data.playerName, this.connectionId, room);
+        await this.roomService.addPlayerToQueue(data.playerName, this.connectionId, data.token, room);
 
         await this.notify(RoomSocketApiNotificationEnum.JOIN_REQUEST, room.connectionId, {
             playerName: data.playerName,

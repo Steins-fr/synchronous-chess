@@ -29,7 +29,7 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, hostTokenHash, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, tokenHashes, expiresAt',
         })).toHaveLength(1);
     });
 
@@ -78,15 +78,16 @@ describe('RoomRepository', () => {
 
     test('should move a room to another connection of its host, with the hash of its token, before it expires', async () => {
         // When
-        const reconnected: boolean = await repository.reconnectHost(room, 'new-connection', 'hash', 500);
+        const reconnected: boolean = await repository.reconnectHost(room, 'new-connection', 'host', 'hash', 500);
 
         // Then
         expect(reconnected).toEqual(true);
         expect(dynamo.commandCalls(UpdateCommand, {
             Key: { id: 'room' },
             UpdateExpression: 'SET connectionId = :connectionId REMOVE expiresAt',
-            ConditionExpression: 'hostTokenHash = :hostTokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
-            ExpressionAttributeValues: { ':connectionId': 'new-connection', ':hostTokenHash': 'hash', ':now': 500 },
+            ConditionExpression: 'hostPlayer = :playerName AND tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
+            ExpressionAttributeValues: { ':connectionId': 'new-connection', ':playerName': 'host', ':tokenHash': 'hash', ':now': 500 },
+            ExpressionAttributeNames: { '#playerName': 'host' },
         })).toHaveLength(1);
     });
 
@@ -95,7 +96,7 @@ describe('RoomRepository', () => {
         dynamo.on(UpdateCommand).rejects(aConditionFailure());
 
         // When / Then
-        expect(await repository.reconnectHost(room, 'new-connection', 'hash', 500)).toEqual(false);
+        expect(await repository.reconnectHost(room, 'new-connection', 'host', 'hash', 500)).toEqual(false);
     });
 
     test('should append a player to the room', async () => {
@@ -118,7 +119,11 @@ describe('RoomRepository', () => {
         await repository.removePlayerFromRoom('guest', room);
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, { Key: { id: 'room' }, UpdateExpression: 'REMOVE players[1]' })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, {
+            Key: { id: 'room' },
+            UpdateExpression: 'REMOVE players[1], tokenHashes.#playerName',
+            ExpressionAttributeNames: { '#playerName': 'guest' },
+        })).toHaveLength(1);
     });
 
     test('should not remove a player out of the room', async () => {
@@ -127,15 +132,16 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
     });
 
-    test('should append a player to the queue', async () => {
+    test('should append a player to the queue, with the hash of its token', async () => {
         // When
-        await repository.addPlayerToQueue({ playerName: 'other', connectionId: 'other-connection' }, room);
+        await repository.addPlayerToQueue({ playerName: 'other', connectionId: 'other-connection' }, 'hash', room);
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
             Key: { id: 'room' },
-            UpdateExpression: 'set queue = list_append(queue, :items)',
-            ExpressionAttributeValues: { ':items': [{ playerName: 'other', connectionId: 'other-connection' }] },
+            UpdateExpression: 'set queue = list_append(queue, :items), tokenHashes.#playerName = :tokenHash',
+            ExpressionAttributeValues: { ':items': [{ playerName: 'other', connectionId: 'other-connection' }], ':tokenHash': 'hash' },
+            ExpressionAttributeNames: { '#playerName': 'other' },
         })).toHaveLength(1);
     });
 

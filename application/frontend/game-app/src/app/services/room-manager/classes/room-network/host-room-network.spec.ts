@@ -143,7 +143,7 @@ describe('HostRoomNetwork', () => {
             // Then
             expect(before).toEqual(0);
             expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
-            expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', hostToken: 'token' });
+            expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', playerName: 'host', token: 'token' });
         });
 
         test('should replace the socket 100 minutes after it opened, before the room was built', async () => {

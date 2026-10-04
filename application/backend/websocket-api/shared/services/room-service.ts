@@ -1,5 +1,5 @@
 import BadRequestException from '@exceptions/bad-request-exception';
-import { generateHostToken, hashHostToken } from '@helpers/host-token.helper';
+import { hashToken } from '@helpers/token.helper';
 import RoomHelper from '@helpers/room-helper';
 import Connection from '@models/connection';
 import Room from '@models/room';
@@ -67,16 +67,15 @@ export default class RoomService {
         await this.roomRepository.removePlayerFromQueue(connectionId, room);
     }
 
-    public async addPlayerToQueue(playerName: string, connectionId: string, room: Room): Promise<void> {
-        await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, room);
+    public async addPlayerToQueue(playerName: string, connectionId: string, token: string, room: Room): Promise<void> {
+        await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), room);
     }
 
     /**
-     * @returns the token of the host, to reconnect the room later
+     * @param token the token of the host, to reconnect the room later
      * @throws {BadRequestException} when a room of that name exists, even waiting for its host
      */
-    public async create(roomName: string, connectionId: string, playerName: string, maxPlayer: number): Promise<string> {
-        const hostToken: string = generateHostToken();
+    public async create(roomName: string, connectionId: string, playerName: string, maxPlayer: number, token: string): Promise<void> {
         const created: boolean = await this.roomRepository.create({
             id: roomName,
             connectionId,
@@ -84,19 +83,17 @@ export default class RoomService {
             maxPlayer,
             players: [{ playerName }],
             queue: [],
-            hostTokenHash: hashHostToken(hostToken),
+            tokenHashes: { [playerName]: hashToken(token) },
         }, RoomService.now());
 
         if (!created) {
             throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
         }
-
-        return hostToken;
     }
 
-    /** @throws {BadRequestException} when the token is not the one of the room's host */
-    public async reconnectHost(room: Room, connectionId: string, hostToken: string): Promise<void> {
-        if (!await this.roomRepository.reconnectHost(room, connectionId, hashHostToken(hostToken), RoomService.now())) {
+    /** @throws {BadRequestException} when the player is not the host of the room, or the token not its own */
+    public async reconnectHost(room: Room, connectionId: string, playerName: string, token: string): Promise<void> {
+        if (!await this.roomRepository.reconnectHost(room, connectionId, playerName, hashToken(token), RoomService.now())) {
             throw new BadRequestException('You are not the host of the room');
         }
     }

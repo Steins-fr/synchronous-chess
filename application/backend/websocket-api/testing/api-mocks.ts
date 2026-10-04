@@ -1,7 +1,7 @@
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import { ConditionalCheckFailedException, DynamoDBServiceException } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { hashHostToken } from '@helpers/host-token.helper';
+import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import {
     RoomApiRequestTypeEnum,
@@ -25,8 +25,9 @@ export interface AwsMocks {
 
 export const HOST_CONNECTION: string = 'host-connection';
 export const GUEST_CONNECTION: string = 'guest-connection';
-/** The token the host of `aRoom()` got at its creation */
+/** The tokens the host of `aRoom()` created it with, and its guest joined it with */
 export const HOST_TOKEN: string = 'host-token';
+export const GUEST_TOKEN: string = 'guest-token';
 
 /** A room hosted by `host`, `guest` waiting in its queue */
 export function aRoom(room: Partial<Room> = {}): Room {
@@ -37,7 +38,7 @@ export function aRoom(room: Partial<Room> = {}): Room {
         maxPlayer: 2,
         players: [{ playerName: 'host' }],
         queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }],
-        hostTokenHash: hashHostToken(HOST_TOKEN),
+        tokenHashes: { host: hashToken(HOST_TOKEN), guest: hashToken(GUEST_TOKEN) },
         ...room,
     };
 }

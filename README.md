@@ -57,13 +57,13 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 **ping** - A route with a mock integration, no lambda: the clients send `{"message":"ping"}` every 5 minutes on an open socket, as API Gateway closes a connection without message for 10 minutes.
 
 **sendmessage** - Handle all the websocket exchanges separated in host and peer roles. Available messages:
- - **create** - Create a new room if the room name is available (or its room expired), and give the host a secret token;
- - **reconnect** - only host - Move the room to the connection sending it, with the token of the host: before API Gateway closes the host connection (2 hours at most), or once it closed;
+ - **create** - Create a new room if the room name is available (or its room expired), with a secret token of the host;
+ - **reconnect** - only host - Move the room to the connection sending it, with the name and token of the host: before API Gateway closes the host connection (2 hours at most), or once it closed;
  - **add player** - only host - Add a new player to the room player list;
- - **remove player** - only host - Remove a player from the room player list;
+ - **remove player** - only host - Remove a player from the room player list, and the hash of its token;
  - **get players** - only host - Get the room player list
  - **signal to peer** - only host - Send the RTC signal to a specific peer waiting in the room queue;
- - **join** - Ask to join a room and add the player in the room queue;
+ - **join** - Ask to join a room and add the player in the room queue, with a secret token of the player;
  - **signal to host** - only peer - Send the RTC signal to the room host. The peer have to be in the waiting queue.
 
 
@@ -94,7 +94,7 @@ See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md) an
 - maxPlayer: Maximum of player that can join the room;
 - players: List of players currently in the room;
 - queue: List of joining players;
-- hostTokenHash: SHA-256 of the token the host reconnects the room with;
+- tokenHashes: SHA-256 of the token of each player, by name, sent with create or join: the host reconnects the room with its own;
 - expiresAt: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the TTL of the table deletes it.
 
 #### Connection Table

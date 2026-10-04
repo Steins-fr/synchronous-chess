@@ -1,5 +1,5 @@
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { hashHostToken } from '@helpers/host-token.helper';
+import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN } from '@testing/api-mocks';
@@ -95,26 +95,24 @@ describe('RoomService', () => {
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, { ExpressionAttributeValues: { ':items': [{ playerName: 'guest' }] } })).toHaveLength(1);
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[0]' })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[0], tokenHashes.#playerName' })).toHaveLength(1);
     });
 
-    test('should queue a player with its connection', async () => {
+    test('should queue a player with its connection, and the hash of its token', async () => {
         // When
-        await service.addPlayerToQueue('other', 'other-connection', room);
+        await service.addPlayerToQueue('other', 'other-connection', 'other-token', room);
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
-            UpdateExpression: 'set queue = list_append(queue, :items)',
-            ExpressionAttributeValues: { ':items': [{ playerName: 'other', connectionId: 'other-connection' }] },
+            ExpressionAttributeValues: { ':items': [{ playerName: 'other', connectionId: 'other-connection' }], ':tokenHash': hashToken('other-token') },
         })).toHaveLength(1);
     });
 
-    test('should create a room with its host as only player, keeping the hash of the token it returns', async () => {
+    test('should create a room with its host as only player, keeping the hash of its token', async () => {
         // When
-        const hostToken: string = await service.create('room', HOST_CONNECTION, 'host', 4);
+        await service.create('room', HOST_CONNECTION, 'host', 4, HOST_TOKEN);
 
         // Then
-        expect(hostToken).toMatch(/^[\w-]{43}$/);
         expect(dynamo.commandCalls(PutCommand, {
             TableName: 'room',
             Item: {
@@ -124,7 +122,7 @@ describe('RoomService', () => {
                 maxPlayer: 4,
                 players: [{ playerName: 'host' }],
                 queue: [],
-                hostTokenHash: hashHostToken(hostToken),
+                tokenHashes: { host: hashToken(HOST_TOKEN) },
             },
             ExpressionAttributeValues: { ':now': now },
         })).toHaveLength(1);
@@ -135,16 +133,16 @@ describe('RoomService', () => {
         dynamo.on(PutCommand).rejects(aConditionFailure());
 
         // When / Then
-        await expect(service.create('room', HOST_CONNECTION, 'host', 4)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
+        await expect(service.create('room', HOST_CONNECTION, 'host', 4, HOST_TOKEN)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
     });
 
     test('should move a room to another connection of its host', async () => {
         // When
-        await service.reconnectHost(room, 'new-connection', HOST_TOKEN);
+        await service.reconnectHost(room, 'new-connection', 'host', HOST_TOKEN);
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
-            ExpressionAttributeValues: { ':connectionId': 'new-connection', ':hostTokenHash': hashHostToken(HOST_TOKEN), ':now': now },
+            ExpressionAttributeValues: { ':connectionId': 'new-connection', ':playerName': 'host', ':tokenHash': hashToken(HOST_TOKEN), ':now': now },
         })).toHaveLength(1);
     });
 
@@ -153,6 +151,6 @@ describe('RoomService', () => {
         dynamo.on(UpdateCommand).rejects(aConditionFailure());
 
         // When / Then
-        await expect(service.reconnectHost(room, 'new-connection', 'other-token')).rejects.toThrow('You are not the host of the room');
+        await expect(service.reconnectHost(room, 'new-connection', 'host', 'other-token')).rejects.toThrow('You are not the host of the room');
     });
 });

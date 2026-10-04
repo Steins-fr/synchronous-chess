@@ -16,10 +16,11 @@ import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-except
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DocumentAttributes = Record<string, any>;
 
-/** A condition a write requires, with the values its expression compares to */
+/** A condition a write requires, with the values its expression compares to, and the names it uses */
 export interface WriteCondition {
     expression: string;
     attributeValues?: DocumentAttributes;
+    attributeNames?: Record<string, string>;
 }
 
 export default abstract class BaseRepository<Resource extends DocumentAttributes> {
@@ -100,12 +101,19 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
         return (data.Item as Resource | undefined) ?? null;
     }
 
-    public async updateItem(item: Resource, expression: UpdateCommandInput['UpdateExpression'], attributeValues?: UpdateCommandInput['ExpressionAttributeValues']): Promise<Resource> {
+    /** @param attributeNames the names the expression uses: the attributes named by the players for instance */
+    public async updateItem(
+        item: Resource,
+        expression: UpdateCommandInput['UpdateExpression'],
+        attributeValues?: UpdateCommandInput['ExpressionAttributeValues'],
+        attributeNames?: UpdateCommandInput['ExpressionAttributeNames'],
+    ): Promise<Resource> {
         const command = new UpdateCommand({
             TableName: this.tableName,
             Key: this.getKey(item),
             UpdateExpression: expression,
             ExpressionAttributeValues: attributeValues,
+            ExpressionAttributeNames: attributeNames,
             ReturnValues: 'ALL_NEW',
         });
 
@@ -121,6 +129,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             UpdateExpression: expression,
             ConditionExpression: condition.expression,
             ExpressionAttributeValues: { ...attributeValues, ...condition.attributeValues },
+            ExpressionAttributeNames: condition.attributeNames,
             ReturnValues: 'NONE',
         });
 

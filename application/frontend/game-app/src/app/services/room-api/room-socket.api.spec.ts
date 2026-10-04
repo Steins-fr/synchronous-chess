@@ -48,7 +48,7 @@ describe('RoomSocketApi', () => {
 
     test('send should resolve with the response of the request', async () => {
         // Given
-        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer' }));
+        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', token: 'token' }));
 
         // When
         socket.receive({ notAPacket: true });
@@ -57,13 +57,13 @@ describe('RoomSocketApi', () => {
 
         // Then
         await expect(response).resolves.toEqual({ playerName: 'host' });
-        expect(socket.sentPackets()[0]).toEqual({ message: 'sendmessage', data: { id, type: 'join', data: { roomName: 'room', playerName: 'peer' } } });
+        expect(socket.sentPackets()[0]).toEqual({ message: 'sendmessage', data: { id, type: 'join', data: { roomName: 'room', playerName: 'peer', token: 'token' } } });
         expect(console.error).toHaveBeenCalledWith('Received payload is not a packet', { notAPacket: true });
     });
 
     test('send should reject on error response', async () => {
         // Given
-        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host' }));
+        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host', token: 'token' }));
 
         // When
         socket.receive({ id, type: 'error', data: { message: 'Room already exists' } });
@@ -136,7 +136,7 @@ describe('RoomSocketApi', () => {
         await response;
 
         // When
-        const reconnecting: Promise<void> = api.reconnect({ roomName: 'room', hostToken: 'token' });
+        const reconnecting: Promise<void> = api.reconnect({ roomName: 'room', playerName: 'host', token: 'token' });
         const next: WebSocketMock = WebSocketMock.last();
         next.open();
         await flush();
@@ -145,13 +145,13 @@ describe('RoomSocketApi', () => {
         await reconnecting;
 
         // Then
-        expect(packet).toEqual({ message: 'sendmessage', data: { id: packet.data.id, type: 'reconnect', data: { roomName: 'room', hostToken: 'token' } } });
+        expect(packet).toEqual({ message: 'sendmessage', data: { id: packet.data.id, type: 'reconnect', data: { roomName: 'room', playerName: 'host', token: 'token' } } });
         expect(former.close).toHaveBeenCalledTimes(1);
     });
 
     test('reconnect should keep the current socket when the API refuses it', async () => {
         // When
-        const reconnecting: Promise<void> = api.reconnect({ roomName: 'room', hostToken: 'token' });
+        const reconnecting: Promise<void> = api.reconnect({ roomName: 'room', playerName: 'host', token: 'token' });
         const next: WebSocketMock = WebSocketMock.last();
         next.open();
         await flush();

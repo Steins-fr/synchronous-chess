@@ -1,4 +1,5 @@
 import BadRequestException from '@exceptions/bad-request-exception';
+import { isToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
@@ -8,7 +9,7 @@ export default class ReconnectHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.RECONNECT);
 
-        if (!data.roomName || typeof data.hostToken !== 'string' || !data.hostToken) {
+        if (!data.roomName || !data.playerName || !isToken(data.token)) {
             throw new BadRequestException(ReconnectHandler.ERROR_PARSING);
         }
 
@@ -16,7 +17,7 @@ export default class ReconnectHandler extends MessageHandler {
 
         // Before the room, like at its creation: the room must not move to a connection $disconnect would not find
         await this.connectionService.create({ connectionId: this.connectionId, roomName: room.id });
-        await this.roomService.reconnectHost(room, this.connectionId, data.hostToken);
+        await this.roomService.reconnectHost(room, this.connectionId, data.playerName, data.token);
 
         await this.reply(RoomApiResponseTypeEnum.RECONNECTED, { roomName: room.id });
     }

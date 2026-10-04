@@ -7,7 +7,7 @@ import BaseRepository, { DocumentAttributes } from './base-repository';
 export default class RoomRepository extends BaseRepository<Room> {
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, hostTokenHash, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -37,12 +37,14 @@ export default class RoomRepository extends BaseRepository<Room> {
 
     /**
      * Moves the room to another connection of its host, which no longer waits for it
-     * @returns false when the token hash is not the room's (another room took its name), or the room expired at `now`
+     * @returns false when the player is not the host, its token hash not the one of the room (another room took its
+     * name), or the room expired at `now`
      */
-    public async reconnectHost(room: Room, connectionId: string, hostTokenHash: string, now: number): Promise<boolean> {
+    public async reconnectHost(room: Room, connectionId: string, playerName: string, tokenHash: string, now: number): Promise<boolean> {
         return this.updateItemIf(room, 'SET connectionId = :connectionId REMOVE expiresAt', {
-            expression: 'hostTokenHash = :hostTokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
-            attributeValues: { ':hostTokenHash': hostTokenHash, ':now': now },
+            expression: 'hostPlayer = :playerName AND tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)',
+            attributeValues: { ':playerName': playerName, ':tokenHash': tokenHash, ':now': now },
+            attributeNames: { '#playerName': playerName },
         }, { ':connectionId': connectionId });
     }
 
@@ -58,13 +60,15 @@ export default class RoomRepository extends BaseRepository<Room> {
             throw new BadRequestException('Player not in the room');
         }
 
-        await this.updateItem(room, `REMOVE players[${ index }]`);
+        await this.updateItem(room, `REMOVE players[${ index }], tokenHashes.#playerName`, undefined, { '#playerName': playerName });
     }
 
-    public async addPlayerToQueue(player: Player, room: Room): Promise<void> {
-        await this.updateItem(room, 'set queue = list_append(queue, :items)', {
-            ':items': [player]
-        });
+    /** Queues the player, keeping the hash of its token */
+    public async addPlayerToQueue(player: Player, tokenHash: string, room: Room): Promise<void> {
+        await this.updateItem(room, 'set queue = list_append(queue, :items), tokenHashes.#playerName = :tokenHash', {
+            ':items': [player],
+            ':tokenHash': tokenHash,
+        }, { '#playerName': player.playerName });
     }
 
     public async removePlayerFromQueue(connectionId: string, room: Room): Promise<void> {
