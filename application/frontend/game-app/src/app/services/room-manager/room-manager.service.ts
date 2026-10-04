@@ -1,6 +1,7 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
+import { joinRoom } from '@app/services/room-api/join-room';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
@@ -15,19 +16,6 @@ import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export default class RoomManagerService {
-    /**
-     * A player reloading the page joins again under its name before the host noticed it left: the websocket API refuses
-     * the name until the host removes the former connection, which takes a few seconds. Joins are refused as well while
-     * the host reconnects its room to a new socket
-     */
-    private static readonly JOIN_RETRY_DELAY: number = 2000;
-    private static readonly JOIN_RETRIES: number = 10;
-    private static readonly RETRIED_ERRORS: ReadonlySet<string | undefined> = new Set([
-        RoomApiErrorMessage.ALREADY_IN_GAME,
-        RoomApiErrorMessage.ALREADY_IN_QUEUE,
-        RoomApiErrorMessage.HOST_DISCONNECTED,
-    ]);
-
     private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);
     private readonly destroyRef = inject(DestroyRef);
@@ -74,30 +62,14 @@ export default class RoomManagerService {
         }
     }
 
-    private async join(setup: RoomSetupInterface, token: string): Promise<RoomJoinResponse> {
-        for (let retry = 0; ; retry++) {
-            try {
-                // eslint-disable-next-line no-await-in-loop -- retries, one attempt after the other
-                return await this.roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, { roomName: setup.roomName, playerName: setup.playerName, token });
-            } catch (e) {
-                const message: string | undefined = e instanceof Error ? e.message : undefined;
-
-                if (!RoomManagerService.RETRIED_ERRORS.has(message) || retry === RoomManagerService.JOIN_RETRIES) {
-                    throw e;
-                }
-
-                if (retry === 0) {
-                    this.notificationService.info(RoomManagerService.retryMessage(message));
-                }
-
-                // eslint-disable-next-line no-await-in-loop -- the delay between two attempts
-                await new Promise<void>((resolve) => setTimeout(resolve, RoomManagerService.JOIN_RETRY_DELAY));
-            }
-        }
+    private join(setup: RoomSetupInterface, token: string): Promise<RoomJoinResponse> {
+        return joinRoom(this.roomSocketApi, { roomName: setup.roomName, playerName: setup.playerName, token }, (error: string) => {
+            this.notificationService.info(RoomManagerService.retryMessage(error));
+        });
     }
 
 
-    private static retryMessage(error: string | undefined): string {
+    private static retryMessage(error: string): string {
         return error === RoomApiErrorMessage.HOST_DISCONNECTED ? 'L\'hôte de la salle se reconnecte…' : 'Ce nom est encore dans la salle, reconnexion en cours…';
     }
 

@@ -1,16 +1,17 @@
-import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
+import { joinRoom } from '@app/services/room-api/join-room';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import { HostRoomMessageType, NewPlayerPayload, RemoteSignalPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
+import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
-import { isRtcSignal } from '@protocol/rtc-signal';
+import RoomJoinResponse from '@protocol/responses/room-join-response';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { RoomHosting } from './room-hosting';
-import { RoomNetwork } from './room-network';
+import { RejoinResult, RoomNetwork } from './room-network';
 
 /** The network of a player joining the room, which takes it over when the room agrees its host left and elects it */
 export class PeerRoomNetwork extends RoomNetwork {
@@ -75,22 +76,34 @@ export class PeerRoomNetwork extends RoomNetwork {
         this.hosting?.onPlayerDisconnected(player);
     }
 
+    /** The signals relayed to this participant are negotiated by every network */
     protected onRoomMessage(message: ReceivedMessage): void {
-        this.hosting?.onRoomMessage(message);
+        if (message.origin === MessageOriginType.HOST_ROOM && message.type === HostRoomMessageType.NEW_PLAYER) {
+            void this.onNewPlayer(message.payload);
+        }
+    }
 
-        if (message.origin !== MessageOriginType.HOST_ROOM) {
-            return;
+    /**
+     * Joins the room again through the socket, as on a reloaded page: the API refuses the name until the host removed
+     * the former connection, and while the host reconnects. The others connect to it again once connected to the host
+     */
+    public override async rejoin(): Promise<RejoinResult> {
+        if (this.hosting || this.getNegotiatorSize() > 0) { // Hosting, or connecting again already
+            return RejoinResult.NOT_JOINED;
         }
 
-        switch (message.type) {
-            case HostRoomMessageType.NEW_PLAYER:
-                void this.onNewPlayer(message.payload);
-                break;
-            case HostRoomMessageType.REMOTE_SIGNAL:
-                void this.onRemoteSignal(message.payload);
-                break;
-            default:
-                switchExhaustivenessGuard(message);
+        try {
+            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, token: this.token });
+            this._hostName = response.playerName;
+            this.addNegotiator(new WebsocketNegotiator(this.roomName, response.playerName, new Webrtc(), this.roomSocketApi));
+            return RejoinResult.JOINED;
+        } catch (e) {
+            if (e instanceof Error && e.message === RoomApiErrorMessage.HOST_DISCONNECTED) {
+                return RejoinResult.HOST_LEFT;
+            }
+
+            console.error('PeerRoom: the room could not be joined again', e);
+            return RejoinResult.NOT_JOINED;
         }
     }
 
@@ -109,28 +122,6 @@ export class PeerRoomNetwork extends RoomNetwork {
         const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, new Webrtc(), this.hostPlayer);
         await negotiator.initiate();
         this.addNegotiator(negotiator);
-    }
-
-    private async onRemoteSignal(remoteSignalPayload: RemoteSignalPayload): Promise<void> {
-        if (this.hostPlayer === undefined) { // Do nothing if we don't have a host for transmitting negotiations
-            return;
-        }
-
-        if (!isRtcSignal(remoteSignalPayload.signal)) { // Before any negotiator restarts its connection for it
-            console.error('PeerRoom: invalid remote signal', remoteSignalPayload);
-            return;
-        }
-
-        let negotiator = this.getNegotiator(remoteSignalPayload.from);
-
-        if (!negotiator) { // Create new negotiator
-            const newNegotiator = new WebrtcNegotiator(remoteSignalPayload.from, new Webrtc(), this.hostPlayer);
-            this.addNegotiator(newNegotiator);
-            negotiator = newNegotiator;
-        }
-
-        await negotiator.negotiationMessage(remoteSignalPayload);
-        console.debug('Negotiation message sent');
     }
 
     public override clear(): void {

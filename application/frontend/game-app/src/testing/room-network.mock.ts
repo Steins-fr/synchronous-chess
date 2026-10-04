@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { Negotiator } from '@app/services/room-manager/classes/negotiator/negotiator';
 import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
 import { Player } from '@app/services/room-manager/classes/player/player';
-import { RoomNetwork } from '@app/services/room-manager/classes/room-network/room-network';
+import { RejoinResult, RoomNetwork } from '@app/services/room-manager/classes/room-network/room-network';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
@@ -23,6 +23,8 @@ export class RoomNetworkMock {
     public readonly roomName: string = 'room';
     public readonly clear = vi.fn();
     public readonly changeHost = vi.fn();
+    public readonly restoreLink = vi.fn();
+    public readonly rejoin = vi.fn().mockResolvedValue(RejoinResult.NOT_JOINED);
 
     public constructor(localPlayerName: string = 'local', public readonly initiator: boolean = true, public readonly hostName: string = 'host') {
         this.localPlayer = new LocalPlayer(localPlayerName);

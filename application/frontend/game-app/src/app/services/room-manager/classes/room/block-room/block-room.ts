@@ -20,7 +20,7 @@ import { BlockChainName } from './block-chain-name.enum';
 import { BlockRoomInterface } from './block-room.interface';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Player } from '../../player/player';
-import { RoomNetwork } from '../../room-network/room-network';
+import { RejoinResult, RoomNetwork } from '../../room-network/room-network';
 
 /**
  * Names the block chain of each message type.
@@ -72,6 +72,9 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private readonly connectedViews = new Map<string, ReadonlySet<string>>();
     /** The participants this participant lost its connection to, until all the other participants lost them too */
     private readonly lost = new Set<string>();
+    /** Joining the room again through the socket, having lost all the participants */
+    private rejoining: boolean = false;
+    private cleared: boolean = false;
 
     /** The stored keys of the player, so that it keeps its identity when reloading the page */
     public static async createKeys(playerName: string, keyStore: ParticipantKeyStore = new ParticipantKeyStore()): Promise<ParticipantKeys> {
@@ -120,6 +123,8 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     private tick(now: number): void {
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.tick(now));
+        // Connecting again to the participants lost takes several attempts
+        this.checkDepartures();
     }
 
     /** This participant lost its connection to another one: it may only be their link, the others still connected to it */
@@ -154,10 +159,16 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     /**
      * A participant lost by this one has left the room once each other connected participant told it lost it too: the
-     * participants who did not tell yet are waited for
+     * participants who did not tell yet are waited for. Until then, this participant connects to it again through
+     * another one; without any participant left, it joins the room again
      */
     private checkDepartures(): void {
         const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== this.localPlayer.name);
+
+        if (others.length === 0 && this.lost.size > 0 && this.localPlayer.name !== this.hostName) {
+            this.rejoinRoom();
+            return;
+        }
 
         for (const name of this.lost) {
             if (others.every((other: string) => this.connectedViews.get(other)?.has(name) === false)) {
@@ -165,6 +176,49 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
                 this.onDeparted(name);
             }
         }
+
+        this.restoreLinks(others);
+    }
+
+    /**
+     * Connects again to the participants lost which another one is still connected to, through it. Of the two, the first
+     * by name connects, the other answers: they do not both negotiate the connection
+     */
+    private restoreLinks(others: ReadonlyArray<string>): void {
+        for (const name of this.lost) {
+            const relay: string | undefined = others.filter((other: string) => this.connectedViews.get(other)?.has(name)).sort(BlockRoom.byCodeUnits)[0];
+
+            if (relay !== undefined && BlockRoom.byCodeUnits(this.localPlayer.name, name) < 0) {
+                this.roomConnection.restoreLink(name, relay);
+            }
+        }
+    }
+
+    /**
+     * Without any participant left, this participant may have lost its own connection: it joins the room again. Joined,
+     * the others connect to it as to a joining player, it does not connect to them. The host gone, it is the last one,
+     * and the participants lost have left the room
+     */
+    private rejoinRoom(): void {
+        if (this.rejoining) {
+            return;
+        }
+
+        this.rejoining = true;
+        void this.roomConnection.rejoin().then((result: RejoinResult) => {
+            this.rejoining = false;
+
+            if (this.cleared || result === RejoinResult.NOT_JOINED) {
+                return;
+            }
+
+            const lost: ReadonlyArray<string> = [...this.lost];
+            this.lost.clear();
+
+            if (result === RejoinResult.HOST_LEFT) {
+                lost.forEach((name: string) => this.onDeparted(name));
+            }
+        });
     }
 
     /**
@@ -267,6 +321,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     }
 
     public override clear(): void {
+        this.cleared = true;
         super.clear();
         this.participants.clear();
         this.antiCheat.clear();

@@ -12,6 +12,7 @@ import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { AntiCheatMessageType } from '@app/services/room-manager/classes/webrtc/messages/anti-cheat-message';
 import { BlockChainMessage, BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { RejoinResult } from '@app/services/room-manager/classes/room-network/room-network';
 import { BlockRoomParticipantMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-room-participant-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
@@ -368,6 +369,121 @@ describe('BlockRoom', () => {
         // Then
         expect(whileWaiting).toEqual(0);
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+    });
+
+    describe('connections lost', () => {
+        beforeEach(() => {
+            network = new RoomNetworkMock('local', false, 'host');
+            vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+            vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        });
+
+        test('should connect again through another participant to the participants lost it connects to first', () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            createRoom(ticks);
+            const b: Player = createRemote('b');
+            const z: Player = createRemote('z');
+            [createRemote('host'), b, z].forEach((player: Player) => network.playerAdded$.next(player));
+            connectedParticipants('host', ['b', 'local', 'z']);
+
+            // When b and z are lost, the host still connected to them
+            network.playerRemoved$.next(b);
+            network.playerRemoved$.next(z);
+            ticks.next(0);
+
+            // Then this participant connects to z only, b connects to it
+            expect(network.restoreLink.mock.calls).toEqual([['z', 'host'], ['z', 'host']]);
+        });
+
+        test('should join the room again once it lost all the participants', () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            network.rejoin.mockReturnValue(new Promise<RejoinResult>(() => undefined));
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+
+            // When
+            network.playerRemoved$.next(host);
+            ticks.next(0);
+
+            // Then once at a time, without deciding the host left
+            expect(network.rejoin).toHaveBeenCalledTimes(1);
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        test('should take the room over as its last participant, the host gone', async () => {
+            // Given
+            const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+            network.rejoin.mockResolvedValue(RejoinResult.HOST_LEFT);
+            createRoom();
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+
+            // When
+            network.playerRemoved$.next(host);
+
+            // Then
+            await vi.waitFor(() => expect(network.changeHost.mock.calls).toEqual([['local']]));
+            expect(changeSequencerSpy.mock.calls).toEqual([['local'], ['local']]);
+        });
+
+        test('should try again later when not joined again', async () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+            network.playerRemoved$.next(host);
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // When
+            ticks.next(0);
+
+            // Then
+            expect(network.rejoin).toHaveBeenCalledTimes(2);
+        });
+
+        test('should let the participants connect to it once joined again, as to a joining player', async () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            network.rejoin.mockResolvedValue(RejoinResult.JOINED);
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            [host, createRemote('z')].forEach((player: Player) => network.playerAdded$.next(player));
+            network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'z' }));
+            network.playerRemoved$.next(host);
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // When connected to the host again, which is connected to z
+            network.playerAdded$.next(host);
+            connectedParticipants('host', ['local', 'z']);
+            ticks.next(0);
+
+            // Then z connects to it, not the other way round
+            expect(network.restoreLink).not.toHaveBeenCalled();
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        test('should not decide anything once cleared while joining again', async () => {
+            // Given
+            network.rejoin.mockResolvedValue(RejoinResult.HOST_LEFT);
+            const room: BlockRoom<TestPayloads> = createRoom();
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+            network.playerRemoved$.next(host);
+
+            // When
+            room.clear();
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // Then
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
     });
 
     test('should ignore invalid connected participants', () => {

@@ -1,6 +1,4 @@
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Player } from '../player/player';
 import { RoomHosting } from './room-hosting';
 import { RoomNetwork } from './room-network';
@@ -42,14 +40,9 @@ export class HostRoomNetwork extends RoomNetwork {
         this.hosting.onPlayerDisconnected(player);
     }
 
-    protected onRoomMessage(message: ReceivedMessage): void {
-        if (message.origin !== MessageOriginType.NEGOTIATOR) {
-            console.warn('HostRoom: no message', message);
-            return;
-        }
-        console.warn('HostRoom: onRoomMessage', message);
-
-        this.hosting.onRoomMessage(message);
+    /** The host only relays the signals of the players, as every participant */
+    protected onRoomMessage(): void {
+        // Nothing to do
     }
 
     public override clear(): void {

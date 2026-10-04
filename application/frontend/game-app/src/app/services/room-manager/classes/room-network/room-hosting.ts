@@ -1,12 +1,10 @@
 import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessage, HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
-import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
+import { NetworkMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import JoinNotification from '@protocol/notifications/join-notification';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
-import { isRtcSignal } from '@protocol/rtc-signal';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
 import { catchError, defer, EMPTY, exhaustMap, merge, Observable, retry, startWith, Subject, switchMap, takeUntil, tap, throwError, timer } from 'rxjs';
 import { Negotiator } from '../negotiator/negotiator';
@@ -30,8 +28,8 @@ export interface HostingContext {
 }
 
 /**
- * What the host of a room does, with the room on the websocket API: it lets the players join, relays the signals the
- * players exchange to connect to each other, and keeps the room on its socket. The player creating the room hosts it,
+ * What the host of a room does, with the room on the websocket API: it lets the players join, tells the others to
+ * connect to them, and keeps the room on its socket. The player creating the room hosts it,
  * then the participant taking over once its host left the room.
  */
 export class RoomHosting {
@@ -171,32 +169,6 @@ export class RoomHosting {
 
     public onPlayerDisconnected(player: Player): void {
         void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.context.roomName, playerName: player.name });
-    }
-
-    /** Relays the signals a player sends to another one, the others ignored */
-    public onRoomMessage(message: ReceivedMessage): void {
-        if (message.origin !== MessageOriginType.NEGOTIATOR || message.type !== NegotiatorMessageType.SIGNAL) {
-            return;
-        }
-
-        const player: Player | undefined = this.context.players().get(message.payload.to);
-
-        if (!player) {
-            return;
-        }
-
-        if (!isRtcSignal(message.payload.signal)) { // Do not relay what the other peer could not register
-            console.error('HostRoom: invalid signal not relayed', message);
-            return;
-        }
-
-        const negotiationMessage: HostRoomMessage = {
-            type: HostRoomMessageType.REMOTE_SIGNAL,
-            payload: { from: message.from, signal: message.payload.signal },
-            origin: MessageOriginType.HOST_ROOM,
-        };
-
-        player.sendData(negotiationMessage);
     }
 
     public clear(): void {

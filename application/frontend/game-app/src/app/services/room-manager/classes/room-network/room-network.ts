@@ -1,13 +1,29 @@
 import { signal } from '@angular/core';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { HostRoomMessage, HostRoomMessageType, RemoteSignalPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
+import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
+import { NegotiatorMessageType, SignalPayload } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
+import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import { isRtcSignal } from '@protocol/rtc-signal';
 import { Subject } from 'rxjs';
 import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
+import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { LocalPlayer } from '../player/local-player';
 import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
 import { HostingContext } from './room-hosting';
+
+/** What joining the room again through the socket gave */
+export enum RejoinResult {
+    /** Connecting to the host: the others connect to this participant through it, as to a joining player */
+    JOINED = 'joined',
+    /** The room waits for its host: this participant is the last one */
+    HOST_LEFT = 'hostLeft',
+    /** Not joined, to try again later: the API failed, or this participant hosts or connects already */
+    NOT_JOINED = 'notJoined',
+}
 
 export abstract class RoomNetwork {
     private readonly _localPlayer: LocalPlayer;
@@ -50,6 +66,28 @@ export abstract class RoomNetwork {
      * through it
      */
     public abstract changeHost(hostName: string): void;
+
+    /** Joins the room again through the socket, having lost the connections to all the participants */
+    public rejoin(): Promise<RejoinResult> {
+        // The host does not join its room: the players connect to it again
+        return Promise.resolve(RejoinResult.NOT_JOINED);
+    }
+
+    /**
+     * Connects again to a participant still in the room, the connection to it lost, through a participant connected to
+     * both: the relay forwards their signals
+     */
+    public restoreLink(playerName: string, relayName: string): void {
+        const relay: Player | undefined = this.players.get(relayName);
+
+        if (relay === undefined || this.isPlayerNameAlreadyInRoom(playerName)) {
+            return;
+        }
+
+        const negotiator: WebrtcNegotiator = new WebrtcNegotiator(playerName, new Webrtc(), relay);
+        this.addNegotiator(negotiator);
+        void negotiator.initiate();
+    }
 
     /** What the hosting of the room reads and changes of this network */
     protected hostingContext(maxPlayer: number, token: string): HostingContext {
@@ -107,9 +145,62 @@ export abstract class RoomNetwork {
     // Player events
     protected subscribeData(player: WebRtcPlayer): void {
         player.message$.subscribe((message: ReceivedMessage) => {
+            this.onNegotiationMessage(message, player);
             this.onRoomMessage(message);
             this.onMessageSubject.next(message);
         });
+    }
+
+    /**
+     * Every participant relays the signals two others exchange to connect to each other through it: the host for a
+     * joining player, any participant for a connection lost
+     */
+    private onNegotiationMessage(message: ReceivedMessage, sender: Player): void {
+        if (message.origin === MessageOriginType.NEGOTIATOR && message.type === NegotiatorMessageType.SIGNAL) {
+            this.relaySignal(message.from, message.payload);
+        } else if (message.origin === MessageOriginType.HOST_ROOM && message.type === HostRoomMessageType.REMOTE_SIGNAL) {
+            void this.onRemoteSignal(sender, message.payload);
+        }
+    }
+
+    private relaySignal(from: string, payload: SignalPayload): void {
+        const player: Player | undefined = this.players.get(payload.to);
+
+        if (!player) {
+            return;
+        }
+
+        if (!isRtcSignal(payload.signal)) { // Do not relay what the other peer could not register
+            console.error('Room: invalid signal not relayed', { from, ...payload });
+            return;
+        }
+
+        const message: HostRoomMessage = {
+            type: HostRoomMessageType.REMOTE_SIGNAL,
+            payload: { from, signal: payload.signal },
+            origin: MessageOriginType.HOST_ROOM,
+        };
+
+        player.sendData(message);
+    }
+
+    /** A signal another participant relayed: the connection to its sender is negotiated through the same relay */
+    private async onRemoteSignal(relay: Player, payload: RemoteSignalPayload): Promise<void> {
+        if (!isRtcSignal(payload.signal)) { // Before any negotiator restarts its connection for it
+            console.error('Room: invalid remote signal', payload);
+            return;
+        }
+
+        let negotiator: Readonly<Negotiator> | undefined = this.getNegotiator(payload.from);
+
+        if (!negotiator) {
+            const newNegotiator: WebrtcNegotiator = new WebrtcNegotiator(payload.from, new Webrtc(), relay);
+            this.addNegotiator(newNegotiator);
+            negotiator = newNegotiator;
+        }
+
+        await negotiator.negotiationMessage(payload);
+        console.debug('Negotiation message sent');
     }
 
     private subscribeOnDisconnected(player: WebRtcPlayer): void {

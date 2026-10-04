@@ -6,9 +6,6 @@ import { WebRtcPlayer } from '../player/web-rtc-player';
 import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
-import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
-import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
-import { RtcSignal } from '@protocol/rtc-signal';
 import {
     RoomApiRequestTypeEnum,
     RoomSocketApiNotificationEnum,
@@ -28,16 +25,11 @@ class TestHostRoomNetwork extends HostRoomNetwork {
         super.onPlayerDisconnected(player);
     }
 
-    public override onRoomMessage(message: ReceivedMessage): void {
-        super.onRoomMessage(message);
-    }
-
     public override addPlayer(player: WebRtcPlayer): void {
         super.addPlayer(player);
     }
 }
 
-const signal: RtcSignal = { sdp: { sdp: 'sdp', type: 'offer' }, ice: [] };
 
 describe('HostRoomNetwork', () => {
     const replacementDelay: number = 100 * 60_000;
@@ -345,41 +337,6 @@ describe('HostRoomNetwork', () => {
         const message = { type: HostRoomMessageType.NEW_PLAYER, payload: { playerName: 'newcomer' }, origin: MessageOriginType.HOST_ROOM };
         expect(remote.sendMessage).toHaveBeenCalledWith(message);
         expect(newcomer.sendMessage).toHaveBeenCalledWith(message);
-    });
-
-    test('should relay the negotiation signals to the targeted player', () => {
-        // Given
-        createNetwork();
-        const webrtcMock: WebrtcMock = addRemotePlayer('target');
-
-        // When
-        network.onRoomMessage({ type: HostRoomMessageType.NEW_PLAYER, payload: { playerName: 'x' }, origin: MessageOriginType.HOST_ROOM, from: 'a' });
-        network.onRoomMessage({ type: 'other' as NegotiatorMessageType, payload: { to: 'target', signal }, origin: MessageOriginType.NEGOTIATOR, from: 'a' });
-        network.onRoomMessage({ type: NegotiatorMessageType.SIGNAL, payload: { to: 'unknown', signal }, origin: MessageOriginType.NEGOTIATOR, from: 'a' });
-        network.onRoomMessage({ type: NegotiatorMessageType.SIGNAL, payload: { to: 'target', signal }, origin: MessageOriginType.NEGOTIATOR, from: 'a' });
-
-        // Then
-        expect(console.warn).toHaveBeenCalledWith('HostRoom: no message', expect.anything());
-        expect(webrtcMock.sendMessage).toHaveBeenCalledTimes(1);
-        expect(webrtcMock.sendMessage).toHaveBeenCalledWith({
-            type: HostRoomMessageType.REMOTE_SIGNAL,
-            payload: { from: 'a', signal },
-            origin: MessageOriginType.HOST_ROOM,
-        });
-    });
-
-    test('should not relay a signal the targeted player could not register', () => {
-        // Given
-        createNetwork();
-        const webrtcMock: WebrtcMock = addRemotePlayer('target');
-        const invalidSignal = TestHelper.cast<RtcSignal>({ sdp: { sdp: 'sdp', type: 'offer' }, ice: [null] });
-
-        // When
-        network.onRoomMessage({ type: NegotiatorMessageType.SIGNAL, payload: { to: 'target', signal: invalidSignal }, origin: MessageOriginType.NEGOTIATOR, from: 'a' });
-
-        // Then
-        expect(webrtcMock.sendMessage).not.toHaveBeenCalled();
-        expect(console.error).toHaveBeenCalledWith('HostRoom: invalid signal not relayed', expect.anything());
     });
 
     test('clear should stop the notifications and the reconnections', async () => {

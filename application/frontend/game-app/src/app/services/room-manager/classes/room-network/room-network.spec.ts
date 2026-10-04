@@ -1,4 +1,8 @@
-import { RoomNetwork } from './room-network';
+import { RejoinResult, RoomNetwork } from './room-network';
+import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
+import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
+import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
+import { RtcSignal } from '@protocol/rtc-signal';
 import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
 import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
@@ -216,6 +220,92 @@ describe('RoomNetwork', () => {
         // Then
         expect(network.onRoomMessageSpy).toHaveBeenCalledWith({ ...message, from: 'remote' });
         expect(messages).toEqual([{ ...message, from: 'remote' }]);
+    });
+
+    describe('negotiations through another participant', () => {
+        const signal: RtcSignal = { sdp: { sdp: 'sdp', type: 'offer' }, ice: [] };
+        const invalidSignal = TestHelper.cast<RtcSignal>({ sdp: { sdp: 'sdp', type: 'offer' }, ice: [{ candidate: 'c1' }] });
+
+        /** A message the player of the mock sends to the local participant */
+        function receive(from: WebrtcMock, received: NetworkMessage): void {
+            from.data.next(received);
+        }
+
+        beforeEach(() => {
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            vi.spyOn(Negotiator.prototype, 'initiate').mockResolvedValue(undefined);
+            vi.spyOn(Negotiator.prototype, 'negotiationMessage').mockResolvedValue(undefined);
+        });
+
+        test('should relay the signals a participant sends to another one', () => {
+            // Given
+            const sender = createPlayer('a');
+            const target = createPlayer('target');
+            network.addPlayer(sender.player);
+            network.addPlayer(target.player);
+
+            // When
+            receive(sender.webrtcMock, { type: 'other' as NegotiatorMessageType, payload: { to: 'target', signal }, origin: MessageOriginType.NEGOTIATOR });
+            receive(sender.webrtcMock, { type: NegotiatorMessageType.SIGNAL, payload: { to: 'unknown', signal }, origin: MessageOriginType.NEGOTIATOR });
+            receive(sender.webrtcMock, { type: NegotiatorMessageType.SIGNAL, payload: { to: 'target', signal: invalidSignal }, origin: MessageOriginType.NEGOTIATOR });
+            receive(sender.webrtcMock, { type: NegotiatorMessageType.SIGNAL, payload: { to: 'target', signal }, origin: MessageOriginType.NEGOTIATOR });
+
+            // Then
+            expect(target.webrtcMock.sendMessage.mock.calls).toEqual([[{ type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'a', signal }, origin: MessageOriginType.HOST_ROOM }]]);
+            expect(console.error).toHaveBeenCalledWith('Room: invalid signal not relayed', { from: 'a', to: 'target', signal: invalidSignal });
+        });
+
+        test('should negotiate with the sender of a relayed signal through the relay', async () => {
+            // Given
+            const relay = createPlayer('relay');
+            network.addPlayer(relay.player);
+
+            // When
+            receive(relay.webrtcMock, { type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'newcomer', signal }, origin: MessageOriginType.HOST_ROOM });
+            const negotiator: Readonly<Negotiator> | undefined = network.negotiators().get('newcomer');
+            receive(relay.webrtcMock, { type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'newcomer', signal }, origin: MessageOriginType.HOST_ROOM });
+            await vi.waitFor(() => expect(Negotiator.prototype.negotiationMessage).toHaveBeenCalledTimes(2));
+
+            // Then
+            expect(negotiator).toBeInstanceOf(WebrtcNegotiator);
+            expect(network.negotiators().get('newcomer')).toBe(negotiator);
+            expect(Negotiator.prototype.negotiationMessage).toHaveBeenCalledWith({ from: 'newcomer', signal });
+        });
+
+        test('should drop a relayed signal it could not register, before any negotiator', async () => {
+            // Given
+            const relay = createPlayer('relay');
+            network.addPlayer(relay.player);
+
+            // When
+            receive(relay.webrtcMock, { type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'newcomer', signal: invalidSignal }, origin: MessageOriginType.HOST_ROOM });
+            await Promise.resolve();
+
+            // Then
+            expect(network.negotiators().has('newcomer')).toEqual(false);
+            expect(console.error).toHaveBeenCalledWith('Room: invalid remote signal', { from: 'newcomer', signal: invalidSignal });
+        });
+
+        test('should connect again to a participant lost, through a relay', () => {
+            // Given
+            network.addPlayer(createPlayer('relay').player);
+            network.addPlayer(createPlayer('connected').player);
+
+            // When
+            network.restoreLink('lost', 'relay');
+            network.restoreLink('lost', 'relay');
+            network.restoreLink('other', 'unknown');
+            network.restoreLink('connected', 'relay');
+
+            // Then
+            expect(network.negotiators().get('lost')).toBeInstanceOf(WebrtcNegotiator);
+            expect([...network.negotiators().keys()]).toEqual(['lost']);
+            expect(Negotiator.prototype.initiate).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    test('should not join the room again by default', async () => {
+        expect(await network.rejoin()).toEqual(RejoinResult.NOT_JOINED);
     });
 
     test('transmitMessage should send the message to the remote players', () => {

@@ -206,6 +206,14 @@ yet is waited for, and a participant connected again before that has not left. S
 all notice a departure, and change their sequencer, from the same participants; a single broken link
 changes nothing.
 
+**Restoring a connection.** Until then, the connection is negotiated again through a participant still
+connected to both: every participant relays the signals of two others, as the host does for a joining
+player. Of the two, the first by name connects, the other answers through the same relay; the attempt
+is repeated at each tick of the room (2 seconds) while the other is lost. A participant which lost
+all the others may have lost its own network: it joins the room again through the websocket, the
+others connecting to it as to a joining player. Refused for 20 seconds because the host is gone, it is
+the last participant: the participants it lost have left the room, and it takes it over.
+
 ```mermaid
 sequenceDiagram
     participant N as New sequencer
