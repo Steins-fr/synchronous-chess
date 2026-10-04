@@ -8,6 +8,23 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script id="theme-preload">
+    // Applies the theme before the app starts, so that the page does not flash the other one: the one the user picked,
+    // else the one of the system. ThemeService takes over once the app runs; theme-preload.spec.ts checks that both
+    // read the same key and values
+    (() => {
+      let theme = null;
+      try {
+        theme = localStorage.getItem('theme');
+      } catch {
+        // The local storage is blocked: the theme follows the system
+      }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 </head>
 <body class="mat-typography">
   <app-root></app-root>

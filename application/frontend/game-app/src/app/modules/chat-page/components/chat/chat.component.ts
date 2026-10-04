@@ -6,18 +6,16 @@ import {
     afterEveryRender,
     afterNextRender,
     computed,
-    effect,
     inject,
     input,
     signal,
     viewChild
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { disabled, form } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
+import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -50,12 +48,9 @@ type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, string>;
         ChatMessageComponent,
         MatChip,
         MatChipSet,
-        MatFormField,
-        MatLabel,
-        MatInput,
+        TextFieldComponent,
         MatButton,
         ScrollingModule,
-        ReactiveFormsModule,
     ],
     styleUrls: ['./chat.component.scss'],
 })
@@ -74,9 +69,13 @@ export class ChatComponent {
         return room;
     }
 
-    protected readonly sendInput = new FormControl<string>('', { nonNullable: true });
+    protected readonly message = signal<string>('');
     protected readonly newMessage = signal<number>(0);
     protected readonly isSending = signal<boolean>(false);
+    // Disabled while the message sent is not received back
+    protected readonly messageForm = form(this.message, (path) => {
+        disabled(path, { when: () => this.isSending() });
+    }, { name: 'chat-message' });
     protected readonly chatMessages = signal<ReadonlyArray<Readonly<ChatMessage>>>([]);
     protected readonly viewingHistory = signal<boolean>(false);
     protected readonly players = computed<ReadonlyArray<Readonly<Player>>>(() => this.room()?.players() ?? []);
@@ -88,15 +87,6 @@ export class ChatComponent {
             switchMap(room => room?.messenger(ChatMessengerType.CHAT_MESSAGE) ?? EMPTY),
             takeUntilDestroyed(this.destroyRef),
         ).subscribe((message: ChatRoomMessage) => this.onChatMessage(message));
-
-        effect(() => {
-            const isSending = this.isSending();
-            if (isSending) {
-                this.sendInput.disable();
-            } else {
-                this.sendInput.enable();
-            }
-        });
 
         afterNextRender({
             write: () => {
@@ -135,7 +125,7 @@ export class ChatComponent {
     }
 
     protected sendMessage(): void {
-        this.currentRoom.transmitMessage(ChatMessengerType.CHAT_MESSAGE, this.sendInput.value);
+        this.currentRoom.transmitMessage(ChatMessengerType.CHAT_MESSAGE, this.message());
         this.isSending.set(true);
     }
 
@@ -143,7 +133,7 @@ export class ChatComponent {
         this.newMessage.update(value => value + 1);
 
         if (this.currentRoom.localPlayer.name === message.from) {
-            this.sendInput.reset('');
+            this.message.set('');
             this.isSending.set(false);
         }
 

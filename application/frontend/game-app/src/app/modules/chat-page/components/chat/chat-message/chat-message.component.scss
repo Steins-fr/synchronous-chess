@@ -13,10 +13,10 @@
     text-overflow: ellipsis;
 
     .author {
-        color: blue;
+        color: var(--app-chat-author);
 
         &.my-message {
-            color: green;
+            color: var(--app-chat-my-author);
         }
     }
 }

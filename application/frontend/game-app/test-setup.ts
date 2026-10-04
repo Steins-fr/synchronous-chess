@@ -13,6 +13,11 @@ try {
     // initTestEnvironment throws if called more than once — safe to ignore
 }
 
+// jsdom has no matchMedia, read by ThemeService for the color scheme of the system: no media matches. The specs of the
+// theme replace it to change the scheme
+globalThis.matchMedia ??= (query: string): MediaQueryList =>
+    Object.assign(new EventTarget(), { matches: false, media: query }) as unknown as MediaQueryList;
+
 // Fails a spec file leaving an interval running: it would keep firing, and logging, during the next spec files of the
 // worker, and a log still pending when the worker closes fails the run (EnvironmentTeardownError) on another spec.
 // The native functions are kept on the global object: the setup runs again for each spec file of the worker

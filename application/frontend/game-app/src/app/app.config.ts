@@ -1,7 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { provideRouter, withRouterConfig, withComponentInputBinding } from '@angular/router';
-import { WEB_SOCKET_SERVER } from '@app/services/room-api/room-socket.api';
+import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
 import { environment } from '@environments/environment';
 
 import { routes } from './app.routes';
@@ -18,7 +17,6 @@ export const appConfig: ApplicationConfig = {
                 paramsInheritanceStrategy: 'always',
             }),
         ),
-        { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } },
         { provide: WEB_SOCKET_SERVER, useValue: environment.webSocketServer },
     ],
 };

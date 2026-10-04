@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject, BehaviorSubject } from 'rxjs';
 
-type RoomSetupType = 'create' | 'join';
+export type RoomSetupType = 'create' | 'join';
 
 export interface RoomSetupInterface {
     type: RoomSetupType;

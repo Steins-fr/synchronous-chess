@@ -1,1 +1,75 @@
 @import "tailwindcss";
+
+/* The colors of the app (styles.scss) as Tailwind colors, e.g. bg-app-surface. Inline: the utilities read the variables
+   themselves, so that they follow the light and dark themes */
+@theme inline {
+    --color-app-accent: var(--app-accent);
+    --color-app-on-color: var(--app-on-color);
+    --color-app-accent-text: var(--app-accent-text);
+    --color-app-text: var(--app-text);
+    --color-app-text-muted: var(--app-text-muted);
+    --color-app-surface: var(--app-surface);
+    --color-app-surface-raised: var(--app-surface-raised);
+    --color-app-border: var(--app-border);
+    --color-app-win: var(--app-win);
+    --color-app-win-surface: var(--app-win-surface);
+    --color-app-draw: var(--app-draw);
+    --color-app-draw-surface: var(--app-draw-surface);
+    --color-app-board-light: var(--app-board-light);
+    --color-app-piece-ink: var(--app-piece-ink);
+    --color-app-link-active: var(--app-link-active);
+}
+
+/* The repeated blocks of the rules (ChessRulesComponent) */
+
+/* A section of the rules. It leaves room above it when the table of contents scrolls to it */
+@utility rule-card {
+    @apply my-4 px-5 py-4 border border-l-4 border-app-border border-l-app-accent-text rounded-lg bg-app-surface
+        scroll-mt-4;
+}
+
+@utility rule-heading {
+    @apply mb-3 text-[20px] font-bold;
+}
+
+/* A link of the table of contents: a chip, outlined in the accent color when hovered or focused */
+@utility toc-chip {
+    @apply px-3 py-1 border border-app-border rounded-2xl bg-app-surface-raised text-app-accent-text text-[14px]
+        cursor-pointer hover:border-app-accent-text hover:bg-app-surface focus-visible:border-app-accent-text
+        focus-visible:bg-app-surface;
+}
+
+@utility case-card {
+    @apply px-4 py-3 border border-app-border rounded-lg bg-app-surface-raised;
+}
+
+@utility case-title {
+    @apply m-0 flex items-center gap-2 font-bold;
+}
+
+@utility case-letter {
+    @apply inline-flex justify-center items-center size-6 rounded-full bg-app-accent text-app-on-color text-[14px];
+}
+
+/* The pieces of a scene, in the ink of the board on a light cell: their glyphs tell their color, a light ink would
+   swap the white and black pieces in the dark theme */
+@utility scene {
+    @apply my-2 py-0.5 rounded bg-app-board-light text-app-piece-ink text-[22px] tracking-[1px] text-center
+        whitespace-nowrap;
+}
+
+@utility rule-cell {
+    @apply px-3 py-2 border border-app-border text-left align-top;
+}
+
+@utility badge {
+    @apply inline-block px-2 rounded-xl text-[13px] font-bold;
+}
+
+@utility badge-win {
+    @apply bg-app-win-surface text-app-win;
+}
+
+@utility badge-draw {
+    @apply bg-app-draw-surface text-app-draw;
+}

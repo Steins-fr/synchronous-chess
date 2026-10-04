@@ -1,6 +1,12 @@
-<nav>
-    <a [routerLink]="[ homePath ]" routerLinkActive="active" [routerLinkActiveOptions]="{ exact:true }">Home</a>
-    <a [routerLink]="[ chatPath ]" routerLinkActive="active">Exemple: Tchat</a>
+<nav class="flex items-center">
+    <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="m-2.5"
+        routerLinkActive="text-app-link-active">Home</a>
+    <a [routerLink]="[ chatPath ]" class="m-2.5" routerLinkActive="text-app-link-active">Exemple: Tchat</a>
+    <button
+        (click)="themeService.toggle()" [attr.aria-label]="themeButton().label" [title]="themeButton().label"
+        class="ml-auto" id="theme-button" mat-icon-button type="button">
+        <mat-icon>{{ themeButton().icon }}</mat-icon>
+    </button>
 </nav>
 <div id="layout">
     <router-outlet></router-outlet>

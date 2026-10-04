@@ -2,7 +2,7 @@
     position: relative;
 
     #room-content-overlay {
-        background-color: rgba(#000000, 0.3);
+        background-color: color-mix(in srgb, var(--app-shadow) 30%, transparent);
         position: absolute;
         height: 100%;
         width: 100%;

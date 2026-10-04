@@ -4,7 +4,9 @@ import { Component, input } from '@angular/core';
 @Component({
     selector: 'app-chess-rules',
     templateUrl: './chess-rules.component.html',
-    styleUrl: './chess-rules.component.scss',
+    host: {
+        class: 'block max-w-[860px] mx-auto px-4 leading-[1.6] text-app-text',
+    },
 })
 export class ChessRulesComponent {
     /** Hidden when the rules are already titled, e.g. by a collapsible section */
