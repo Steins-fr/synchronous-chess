@@ -23,7 +23,7 @@
                 width: 100%;
                 display: flex;
 
-                .mdc-button--flat {
+                .mdc-button--unelevated {
                     flex: auto;
                     line-height: 20px;
                     font-size: 12px;
@@ -34,7 +34,7 @@
             #history-notification {
                 bottom: 0;
 
-                .mdc-button--flat {
+                .mdc-button--unelevated {
                     border-bottom-left-radius: 0;
                     border-bottom-right-radius: 0;
                 }
@@ -43,7 +43,7 @@
             #new-message-notification {
                 top: 0;
 
-                .mdc-button--flat {
+                .mdc-button--unelevated {
                     border-top-left-radius: 0;
                     border-top-right-radius: 0;
                 }
