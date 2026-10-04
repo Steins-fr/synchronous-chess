@@ -57,7 +57,7 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 **ping** - A route with a mock integration, no lambda: the clients send `{"message":"ping"}` every 5 minutes on an open socket, as API Gateway closes a connection without message for 10 minutes.
 
 **sendmessage** - Handle all the websocket exchanges separated in host and peer roles. Available messages:
- - **create** - Create a new room if the room name is available (or its host disconnected), and give the host a secret token;
+ - **create** - Create a new room if the room name is available (or its room expired), and give the host a secret token;
  - **reconnect** - only host - Move the room to the connection sending it, with the token of the host: before API Gateway closes the host connection (2 hours at most), or once it closed;
  - **add player** - only host - Add a new player to the room player list;
  - **remove player** - only host - Remove a player from the room player list;

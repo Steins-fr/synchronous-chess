@@ -73,7 +73,7 @@ export default class RoomService {
 
     /**
      * @returns the token of the host, to reconnect the room later
-     * @throws {BadRequestException} when a room of that name has its host connected
+     * @throws {BadRequestException} when a room of that name exists, even waiting for its host
      */
     public async create(roomName: string, connectionId: string, playerName: string, maxPlayer: number): Promise<string> {
         const hostToken: string = generateHostToken();
@@ -85,7 +85,7 @@ export default class RoomService {
             players: [{ playerName }],
             queue: [],
             hostTokenHash: hashHostToken(hostToken),
-        });
+        }, RoomService.now());
 
         if (!created) {
             throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);

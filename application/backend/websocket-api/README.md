@@ -31,4 +31,4 @@ players. The `create` response gives the host a secret token (the room keeps its
 or as soon as its socket closes, the host opens a new socket and sends it `reconnect` with the token: the room moves
 to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
 the room for 10 minutes (`expiresAt`, also the TTL of the table): joins are refused (`Host disconnected`) until the
-host reconnects, and a new room can take its name.
+host reconnects, and the room keeps its name until it expires.

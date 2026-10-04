@@ -267,18 +267,17 @@ describe('local websocket API', () => {
             expect(refused).toMatchObject({ type: 'error', data: { message: 'You are not the host of the room' } });
         });
 
-        test('should give the name of a room waiting for its host to a new room', async () => {
+        test('should keep the name of a room waiting for its host', async () => {
             // Given
             const { host, hostToken } = await hostedRoom('taken');
             await disconnect(host);
 
             // When
-            const { host: newHost } = await hostedRoom('taken');
+            const created = await reply(await connected(), 'create', { roomName: 'taken', maxPlayer: 2, playerName: 'bob' });
 
             // Then
-            expect(await reply(await connected(), 'reconnect', { roomName: 'taken', hostToken })).toMatchObject({ type: 'error' });
-            expect(await reply(newHost, 'create', { roomName: 'taken', maxPlayer: 2, playerName: 'alice' }))
-                .toMatchObject({ type: 'error', data: { message: 'Room already exists' } });
+            expect(created).toMatchObject({ type: 'error', data: { message: 'Room already exists' } });
+            expect(await reply(await connected(), 'reconnect', { roomName: 'taken', hostToken })).toMatchObject({ type: 'reconnected' });
         });
     });
 

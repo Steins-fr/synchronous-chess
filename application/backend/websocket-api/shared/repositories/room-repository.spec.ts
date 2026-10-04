@@ -33,16 +33,17 @@ describe('RoomRepository', () => {
         })).toHaveLength(1);
     });
 
-    test('should create a room unless one of that name has its host connected', async () => {
+    test('should create a room unless one of that name exists, expired', async () => {
         // When
-        const created: boolean = await repository.create(room);
+        const created: boolean = await repository.create(room, 500);
 
         // Then
         expect(created).toEqual(true);
         expect(dynamo.commandCalls(PutCommand, {
             TableName: 'room',
             Item: room,
-            ConditionExpression: 'attribute_not_exists(id) OR attribute_exists(expiresAt)',
+            ConditionExpression: 'attribute_not_exists(id) OR expiresAt <= :now',
+            ExpressionAttributeValues: { ':now': 500 },
         })).toHaveLength(1);
     });
 
@@ -51,7 +52,7 @@ describe('RoomRepository', () => {
         dynamo.on(PutCommand).rejects(aConditionFailure());
 
         // When / Then
-        expect(await repository.create(room)).toEqual(false);
+        expect(await repository.create(room, 500)).toEqual(false);
     });
 
     test('should let a room wait for its host, unless the host moved it to another connection', async () => {

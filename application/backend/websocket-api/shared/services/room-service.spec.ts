@@ -126,6 +126,7 @@ describe('RoomService', () => {
                 queue: [],
                 hostTokenHash: hashHostToken(hostToken),
             },
+            ExpressionAttributeValues: { ':now': now },
         })).toHaveLength(1);
     });
 

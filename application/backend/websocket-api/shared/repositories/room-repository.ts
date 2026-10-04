@@ -20,12 +20,11 @@ export default class RoomRepository extends BaseRepository<Room> {
     }
 
     /**
-     * Creates the room, replacing a room of the same name whose host is disconnected: its name is free again, like when
-     * the room of a disconnected host was deleted
-     * @returns false when a room of that name has its host connected: nothing created
+     * Creates the room, replacing an expired room of the same name: a room waiting for its host keeps its name
+     * @returns false when a room of that name exists at `now`: nothing created
      */
-    public async create(room: Room): Promise<boolean> {
-        return this.putIf(room, { expression: 'attribute_not_exists(id) OR attribute_exists(expiresAt)' });
+    public async create(room: Room, now: number): Promise<boolean> {
+        return this.putIf(room, { expression: 'attribute_not_exists(id) OR expiresAt <= :now', attributeValues: { ':now': now } });
     }
 
     /** Lets the room wait until `expiresAt` for its host, unless the host already reconnected it to another connection */

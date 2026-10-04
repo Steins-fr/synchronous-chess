@@ -3,9 +3,13 @@ import {
     DynamoDBDocumentClient,
     UpdateCommand,
     UpdateCommandInput,
+    UpdateCommandOutput,
     PutCommand,
+    PutCommandOutput,
     DeleteCommand,
-    GetCommand
+    DeleteCommandOutput,
+    GetCommand,
+    GetCommandOutput
 } from '@aws-sdk/lib-dynamodb';
 import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
 
@@ -27,36 +31,53 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
 
     protected abstract getKey(item: Partial<Resource>): DocumentAttributes;
 
-    public async put(item: Resource): Promise<Resource> {
-        const command = new PutCommand({
-            TableName: this.tableName,
-            Item: item,
-            ReturnValues: 'NONE',
-        });
-
+    /** Runs a command, its DynamoDB failure reported as a DynamoException of the action */
+    private async run<Output>(action: DynamoCrudActionEnum, command: () => Promise<Output>): Promise<Output> {
         try {
-            await this.ddb.send(command);
-            return item;
+            return await command();
         } catch (err) {
             if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(DynamoCrudActionEnum.PUT, err.message);
+                throw new DynamoException(action, err.message);
             }
 
             throw err;
         }
     }
 
-    /** @returns false when the condition does not hold: nothing written */
-    public async putIf(item: Resource, condition: WriteCondition): Promise<boolean> {
-        const command = new PutCommand({
+    /** @returns false when the condition of the command does not hold: nothing written */
+    private async runIf(action: DynamoCrudActionEnum, command: () => Promise<unknown>): Promise<boolean> {
+        return this.run(action, async (): Promise<boolean> => {
+            try {
+                await command();
+                return true;
+            } catch (err) {
+                if (err instanceof ConditionalCheckFailedException) {
+                    return false;
+                }
+
+                throw err;
+            }
+        });
+    }
+
+    private putCommand(item: Resource, condition?: WriteCondition): PutCommand {
+        return new PutCommand({
             TableName: this.tableName,
             Item: item,
-            ConditionExpression: condition.expression,
-            ExpressionAttributeValues: condition.attributeValues,
+            ConditionExpression: condition?.expression,
+            ExpressionAttributeValues: condition?.attributeValues,
             ReturnValues: 'NONE',
         });
+    }
 
-        return this.sendConditionally(DynamoCrudActionEnum.PUT, (): Promise<unknown> => this.ddb.send(command));
+    public async put(item: Resource): Promise<Resource> {
+        await this.run(DynamoCrudActionEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item)));
+        return item;
+    }
+
+    /** @returns false when the condition does not hold: nothing written */
+    public async putIf(item: Resource, condition: WriteCondition): Promise<boolean> {
+        return this.runIf(DynamoCrudActionEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item, condition)));
     }
 
     public async delete(item: Resource): Promise<void> {
@@ -65,15 +86,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             Key: this.getKey(item),
         });
 
-        try {
-            await this.ddb.send(command);
-        } catch (err) {
-            if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(DynamoCrudActionEnum.DELETE, err.message);
-            }
-
-            throw err;
-        }
+        await this.run(DynamoCrudActionEnum.DELETE, (): Promise<DeleteCommandOutput> => this.ddb.send(command));
     }
 
     public async find(item: Partial<Resource>): Promise<Resource | null> {
@@ -83,21 +96,8 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             ProjectionExpression: this.defaultProjection,
         });
 
-        try {
-            const data = await this.ddb.send(command);
-
-            if (!data.Item) {
-                return null;
-            }
-
-            return data.Item as Resource;
-        } catch (err) {
-            if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(DynamoCrudActionEnum.GET, err.message);
-            }
-
-            throw err;
-        }
+        const data = await this.run(DynamoCrudActionEnum.GET, (): Promise<GetCommandOutput> => this.ddb.send(command));
+        return (data.Item as Resource | undefined) ?? null;
     }
 
     public async updateItem(item: Resource, expression: UpdateCommandInput['UpdateExpression'], attributeValues?: UpdateCommandInput['ExpressionAttributeValues']): Promise<Resource> {
@@ -109,16 +109,8 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             ReturnValues: 'ALL_NEW',
         });
 
-        try {
-            const data = await this.ddb.send(command);
-            return data.Attributes as Resource;
-        } catch (err) {
-            if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(DynamoCrudActionEnum.UPDATE, err.message);
-            }
-
-            throw err;
-        }
+        const data = await this.run(DynamoCrudActionEnum.UPDATE, (): Promise<UpdateCommandOutput> => this.ddb.send(command));
+        return data.Attributes as Resource;
     }
 
     /** @returns false when the condition does not hold: nothing updated */
@@ -132,23 +124,6 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             ReturnValues: 'NONE',
         });
 
-        return this.sendConditionally(DynamoCrudActionEnum.UPDATE, (): Promise<unknown> => this.ddb.send(command));
-    }
-
-    private async sendConditionally(action: DynamoCrudActionEnum, send: () => Promise<unknown>): Promise<boolean> {
-        try {
-            await send();
-            return true;
-        } catch (err) {
-            if (err instanceof ConditionalCheckFailedException) {
-                return false;
-            }
-
-            if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(action, err.message);
-            }
-
-            throw err;
-        }
+        return this.runIf(DynamoCrudActionEnum.UPDATE, (): Promise<UpdateCommandOutput> => this.ddb.send(command));
     }
 }
