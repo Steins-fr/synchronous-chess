@@ -138,7 +138,11 @@ export class HostRoomNetwork extends RoomNetwork {
         }
     }
 
-    protected transmitNewPlayer(playerName: string): void {
+    /**
+     * Tells the remote players a player connected to the host: the others connect to it, the host relaying their
+     * signals, and the new player closes its socket
+     */
+    private transmitNewPlayer(playerName: string): void {
         const message: HostRoomMessage = {
             type: HostRoomMessageType.NEW_PLAYER,
             payload: { playerName },
@@ -150,6 +154,7 @@ export class HostRoomNetwork extends RoomNetwork {
 
     protected onPlayerConnected(player: Player): void {
         void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: this.roomName, playerName: player.name });
+        this.transmitNewPlayer(player.name);
     }
 
     protected onPlayerDisconnected(player: Player): void {

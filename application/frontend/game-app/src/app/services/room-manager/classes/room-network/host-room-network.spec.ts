@@ -20,10 +20,6 @@ import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 class TestHostRoomNetwork extends HostRoomNetwork {
-    public override transmitNewPlayer(playerName: string): void {
-        super.transmitNewPlayer(playerName);
-    }
-
     public override onPlayerConnected(player: Player): void {
         super.onPlayerConnected(player);
     }
@@ -320,20 +316,19 @@ describe('HostRoomNetwork', () => {
         expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'remote' });
     });
 
-    test('transmitNewPlayer should notify the remote players', () => {
+    test('should tell the remote players, the new one included, that a player connected', () => {
         // Given
         createNetwork();
-        const webrtcMock: WebrtcMock = addRemotePlayer('remote');
+        const remote: WebrtcMock = addRemotePlayer('remote');
+        const newcomer: WebrtcMock = addRemotePlayer('newcomer');
 
         // When
-        network.transmitNewPlayer('newcomer');
+        network.onPlayerConnected(TestHelper.cast<Player>({ name: 'newcomer' }));
 
         // Then
-        expect(webrtcMock.sendMessage).toHaveBeenCalledWith({
-            type: HostRoomMessageType.NEW_PLAYER,
-            payload: { playerName: 'newcomer' },
-            origin: MessageOriginType.HOST_ROOM,
-        });
+        const message = { type: HostRoomMessageType.NEW_PLAYER, payload: { playerName: 'newcomer' }, origin: MessageOriginType.HOST_ROOM };
+        expect(remote.sendMessage).toHaveBeenCalledWith(message);
+        expect(newcomer.sendMessage).toHaveBeenCalledWith(message);
     });
 
     test('should relay the negotiation signals to the targeted player', () => {
