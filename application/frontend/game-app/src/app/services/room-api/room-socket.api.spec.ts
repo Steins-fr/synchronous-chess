@@ -20,6 +20,8 @@ describe('RoomSocketApi', () => {
 
     async function sendRequest<T>(request: () => Promise<T>): Promise<{ response: Promise<T>; socket: WebSocketMock; id: number }> {
         const response: Promise<T> = request();
+        // A request left unanswered rejects once its timeout fires, possibly after the test
+        response.catch(() => undefined);
         const socket: WebSocketMock = WebSocketMock.last();
         socket.open();
         await flush();
@@ -181,10 +183,12 @@ describe('RoomSocketApi', () => {
         api.keepAlive();
 
         // When
-        const { socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+        const { response, socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
         vi.advanceTimersByTime(5 * 60_000);
 
         // Then
+        // The request got no answer meanwhile
+        await expect(response).rejects.toThrow('The request has timeout');
         expect(api.socketOpenedAt).toEqual(1000);
         expect(socket.sentPackets().at(-1)).toEqual({ message: 'ping' });
     });
