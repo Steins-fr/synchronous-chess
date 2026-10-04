@@ -131,6 +131,9 @@ export class Webrtc {
     }
 
     public close(): void {
+        // The packets waiting for their acknowledgement are lost with the connection: no longer resent
+        this.pendingAcknowledgement.forEach((timerId: ReturnType<typeof setTimeout>) => clearTimeout(timerId));
+        this.pendingAcknowledgement.clear();
         this.peerConnection.close();
     }
 
