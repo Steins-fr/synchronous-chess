@@ -5,12 +5,12 @@
     <h1 class="px-4 mx-auto text-2xl lg:text-3xl">{{ title() }}</h1>
     }
     @if (closable()) {
-    <!-- <app-icon-button
-        (click)="close.emit()"
-        size="xs"
-        iconName="close"
-        class="absolute top-1 right-1 text-neutral-400"
-        /> -->
+    <!-- Important: Material positions its buttons relative, out of any layer, so above the utilities -->
+    <button
+        (click)="close.emit()" aria-label="Fermer" class="absolute! top-1 right-1 text-app-text-muted"
+        id="dialog-close" mat-icon-button type="button">
+        <mat-icon>close</mat-icon>
+    </button>
     }
 
     <ng-container #container></ng-container>

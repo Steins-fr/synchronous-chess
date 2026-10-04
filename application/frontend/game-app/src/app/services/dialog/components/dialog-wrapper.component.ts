@@ -14,14 +14,14 @@ import {
     viewChild,
     ViewContainerRef
 } from '@angular/core';
+import { MatIconButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: 'app-dialog-wrapper',
     templateUrl: './dialog-wrapper.component.html',
     standalone: true,
-    imports: [
-        // IconButtonComponent
-    ],
+    imports: [MatIconButton, MatIcon],
 })
 export class DialogWrapperComponent<TChild, TResult = void> implements OnInit {
     container = viewChild.required<ViewContainerRef>('container', {

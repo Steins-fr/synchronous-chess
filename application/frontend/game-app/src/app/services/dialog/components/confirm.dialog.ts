@@ -1,11 +1,12 @@
 import { Component, input, output } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 
 export type ConfirmDialogButtonLabels = 'yes-no' | 'confirm-cancel';
 
 @Component({
     selector: 'app-confirm-dialog',
     templateUrl: './confirm.dialog.html',
-    imports: [],
+    imports: [MatButton],
     host: {
         class: 'flex flex-col gap-2',
     },

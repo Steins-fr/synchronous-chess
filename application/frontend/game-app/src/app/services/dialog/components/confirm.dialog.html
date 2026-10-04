@@ -1,9 +1,9 @@
 <p class="mb-2">{{ description() }}</p>
 <div class="flex gap-2 flex-wrap ml-auto">
-    <!-- <app-button class="block! min-w-[100px]" (click)="result.emit(false)" secondary>
+    <button (click)="result.emit(false)" class="min-w-[100px]" id="confirm-no" mat-stroked-button type="button">
         {{ buttonLabels() === 'yes-no' ? 'Non' : 'Annuler' }}
-        </app-button>
-        <app-button class="block! min-w-[100px]" (click)="result.emit(true)">
+    </button>
+    <button (click)="result.emit(true)" class="min-w-[100px]" id="confirm-yes" mat-flat-button type="button">
         {{ buttonLabels() === 'yes-no' ? 'Oui' : 'Confirmer' }}
-        </app-button> -->
+    </button>
 </div>
