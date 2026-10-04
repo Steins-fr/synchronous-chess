@@ -3,7 +3,7 @@ import { Negotiator } from '../negotiator/negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
@@ -44,12 +44,14 @@ class TestHostRoomNetwork extends HostRoomNetwork {
 const signal: RtcSignal = { sdp: { sdp: 'sdp', type: 'offer' }, ice: [] };
 
 describe('HostRoomNetwork', () => {
+    const replacementDelay: number = 100 * 60_000;
     let notification$: Subject<RoomSocketApiNotifications>;
+    let closed$: Subject<void>;
     let roomSocketApi: RoomSocketApi;
     let network: TestHostRoomNetwork;
 
     function createNetwork(maxPlayer: number = 2): TestHostRoomNetwork {
-        network = new TestHostRoomNetwork(roomSocketApi, 'room', maxPlayer, 'host');
+        network = new TestHostRoomNetwork(roomSocketApi, 'room', maxPlayer, 'host', 'token');
         return network;
     }
 
@@ -65,7 +67,14 @@ describe('HostRoomNetwork', () => {
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
         vi.spyOn(Negotiator.prototype, 'initiate').mockResolvedValue(undefined);
         notification$ = new Subject<RoomSocketApiNotifications>();
-        roomSocketApi = TestHelper.cast<RoomSocketApi>({ notification$, send: vi.fn().mockResolvedValue({}) });
+        closed$ = new Subject<void>();
+        roomSocketApi = TestHelper.cast<RoomSocketApi>({
+            notification$,
+            closed$,
+            send: vi.fn().mockResolvedValue({ players: ['host'] }),
+            reconnect: vi.fn().mockResolvedValue(undefined),
+            close: vi.fn(),
+        });
     });
 
     afterEach(() => {
@@ -115,34 +124,137 @@ describe('HostRoomNetwork', () => {
         expect(network.negotiators().size).toEqual(0);
     });
 
-    test('should synchronize the server players periodically', async () => {
-        // Given
-        createNetwork();
-        addRemotePlayer('remote');
-        vi.mocked(roomSocketApi.send).mockImplementation(async (type: RoomApiRequestTypeEnum) => {
-            return type === RoomApiRequestTypeEnum.PLAYER_GET_ALL ? { players: ['host', 'ghost'] } : { playerName: '' };
+    describe('room socket', () => {
+        test('should move the room to a new socket before API Gateway closes the current one, every 100 minutes', async () => {
+            // Given
+            createNetwork();
+
+            // When
+            await vi.advanceTimersByTimeAsync(replacementDelay - 1);
+            const before: number = vi.mocked(roomSocketApi.reconnect).mock.calls.length;
+            await vi.advanceTimersByTimeAsync(1 + replacementDelay);
+
+            // Then
+            expect(before).toEqual(0);
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
+            expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', hostToken: 'token' });
         });
 
-        // When
-        await vi.advanceTimersByTimeAsync(360000);
+        test('should synchronize the server players once reconnected', async () => {
+            // Given
+            createNetwork();
+            addRemotePlayer('remote');
+            vi.mocked(roomSocketApi.send).mockImplementation(async (type: RoomApiRequestTypeEnum) => {
+                return type === RoomApiRequestTypeEnum.PLAYER_GET_ALL ? { players: ['host', 'ghost'] } : { playerName: '' };
+            });
 
-        // Then
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' });
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'remote' });
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'ghost' });
-        expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
-    });
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(0);
 
-    test('should log the synchronization errors', async () => {
-        // Given
-        createNetwork();
-        vi.mocked(roomSocketApi.send).mockRejectedValue('sync failure');
+            // Then
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' });
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'remote' });
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'ghost' });
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
+        });
 
-        // When
-        await vi.advanceTimersByTimeAsync(360000);
+        test('should log the synchronization errors', async () => {
+            // Given
+            createNetwork();
+            vi.mocked(roomSocketApi.send).mockRejectedValue('sync failure');
 
-        // Then
-        expect(console.error).toHaveBeenCalledWith('sync failure');
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(console.error).toHaveBeenCalledWith('sync failure');
+        });
+
+        test('should reconnect the room once its socket closed, and replace the new socket 100 minutes later', async () => {
+            // Given
+            createNetwork();
+            await vi.advanceTimersByTimeAsync(replacementDelay / 2);
+
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(replacementDelay / 2);
+            const atFirstReplacement: number = vi.mocked(roomSocketApi.reconnect).mock.calls.length;
+            await vi.advanceTimersByTimeAsync(replacementDelay / 2);
+
+            // Then
+            expect(atFirstReplacement).toEqual(1);
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
+        });
+
+        test('should not reconnect the room twice at a time', async () => {
+            // Given
+            createNetwork();
+            vi.mocked(roomSocketApi.reconnect).mockReturnValue(new Promise<void>(() => undefined));
+
+            // When
+            closed$.next();
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(replacementDelay);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(1);
+        });
+
+        test('should retry a failed reconnection every 5 seconds', async () => {
+            // Given
+            createNetwork();
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
+            vi.mocked(roomSocketApi.reconnect)
+                .mockRejectedValueOnce(new Error('Socket connection failed'))
+                .mockRejectedValueOnce(new Error('Socket connection failed'));
+
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(10_000);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(3);
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' });
+            expect(roomLost).not.toHaveBeenCalled();
+        });
+
+        test('should lose the room after 10 minutes of failed reconnections', async () => {
+            // Given
+            createNetwork();
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
+            vi.mocked(roomSocketApi.reconnect).mockRejectedValue(new Error('Socket connection failed'));
+
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(10 * 60_000);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(121);
+            expect(roomLost).toHaveBeenCalledTimes(1);
+            expect(console.error).toHaveBeenCalledWith('HostRoom: the room could not move to a new socket', expect.any(Error));
+        });
+
+        test('should lose the room at once when the API refuses the reconnection, and no longer reconnect it', async () => {
+            // Given
+            createNetwork();
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
+            vi.mocked(roomSocketApi.reconnect).mockRejectedValue(new RoomApiError('Room \'room\' does not exist'));
+
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(0);
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(replacementDelay);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(1);
+            expect(roomLost).toHaveBeenCalledTimes(1);
+        });
     });
 
     test('should declare the connected and disconnected players to the server', () => {
@@ -210,17 +322,20 @@ describe('HostRoomNetwork', () => {
         expect(console.error).toHaveBeenCalledWith('HostRoom: invalid signal not relayed', expect.anything());
     });
 
-    test('clear should stop the notifications and the synchronization', async () => {
+    test('clear should stop the notifications and the reconnections, and close the socket', async () => {
         // Given
         createNetwork();
 
         // When
         network.clear();
         notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
-        await vi.advanceTimersByTimeAsync(360000);
+        await vi.advanceTimersByTimeAsync(replacementDelay);
 
         // Then
         expect(notification$.observed).toEqual(false);
+        expect(closed$.observed).toEqual(false);
+        expect(roomSocketApi.reconnect).not.toHaveBeenCalled();
         expect(roomSocketApi.send).not.toHaveBeenCalled();
+        expect(roomSocketApi.close).toHaveBeenCalledTimes(1);
     });
 });

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { RoomSocketApi, WEB_SOCKET_SERVER } from './room-socket.api';
+import { RoomApiError, RoomSocketApi, WEB_SOCKET_SERVER } from './room-socket.api';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { WebSocketMock } from '@testing/web-socket.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -39,6 +39,8 @@ describe('RoomSocketApi', () => {
     });
 
     afterEach(() => {
+        // Stops the pings of the open socket
+        api.close();
         vi.useRealTimers();
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
@@ -68,6 +70,7 @@ describe('RoomSocketApi', () => {
 
         // Then
         await expect(response).rejects.toThrow('Room already exists');
+        await expect(response).rejects.toBeInstanceOf(RoomApiError);
     });
 
     test('send should reject on unexpected response type', async () => {
@@ -124,6 +127,52 @@ describe('RoomSocketApi', () => {
         // Then
         expect(notifications).toEqual([{ id: -1, type: RoomSocketApiNotificationEnum.REMOTE_SIGNAL, data: { from: 'peer', signal: validSignal } }]);
         expect(console.error).toHaveBeenCalledWith('Received an invalid notification', expect.objectContaining({ data: { from: 'peer', signal: invalidSignal } }));
+    });
+
+    test('reconnect should move the room to a new socket, which replaces the current one', async () => {
+        // Given
+        const { response, socket: former, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+        former.receive({ id, type: 'players', data: { players: [] } });
+        await response;
+
+        // When
+        const reconnecting: Promise<void> = api.reconnect({ roomName: 'room', hostToken: 'token' });
+        const next: WebSocketMock = WebSocketMock.last();
+        next.open();
+        await flush();
+        const packet = next.sentPackets()[0] as SentPacket;
+        next.receive({ id: packet.data.id, type: 'reconnected', data: { roomName: 'room' } });
+        await reconnecting;
+
+        // Then
+        expect(packet).toEqual({ message: 'sendmessage', data: { id: packet.data.id, type: 'reconnect', data: { roomName: 'room', hostToken: 'token' } } });
+        expect(former.close).toHaveBeenCalledTimes(1);
+    });
+
+    test('reconnect should keep the current socket when the API refuses it', async () => {
+        // When
+        const reconnecting: Promise<void> = api.reconnect({ roomName: 'room', hostToken: 'token' });
+        const next: WebSocketMock = WebSocketMock.last();
+        next.open();
+        await flush();
+        next.receive({ id: (next.sentPackets()[0] as SentPacket).data.id, type: 'error', data: { message: 'Room \'room\' does not exist' } });
+
+        // Then
+        await expect(reconnecting).rejects.toBeInstanceOf(RoomApiError);
+        expect(next.close).toHaveBeenCalledTimes(1);
+    });
+
+    test('closed$ should emit when the server closes the socket', async () => {
+        // Given
+        const closed = vi.fn();
+        api.closed$.subscribe(closed);
+        const { socket } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+
+        // When
+        socket.closeFromServer();
+
+        // Then
+        expect(closed).toHaveBeenCalledTimes(1);
     });
 
     test('close should stop the pending requests and close the socket', async () => {

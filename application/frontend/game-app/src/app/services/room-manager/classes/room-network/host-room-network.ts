@@ -1,4 +1,4 @@
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessage, HostRoomMessageType, RemoteSignalPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
@@ -7,12 +7,17 @@ import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import JoinNotification from '@protocol/notifications/join-notification';
 import { isRtcSignal } from '@protocol/rtc-signal';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
-import { Subject, takeUntil } from 'rxjs';
+import { catchError, defer, EMPTY, exhaustMap, merge, Observable, retry, startWith, Subject, switchMap, takeUntil, throwError, timer } from 'rxjs';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { RoomNetwork } from './room-network';
 
 export class HostRoomNetwork extends RoomNetwork {
+    /** API Gateway closes any connection after 2 hours: the room moves to a new socket before */
+    private static readonly SOCKET_REPLACEMENT_DELAY: number = 100 * 60_000;
+    private static readonly RECONNECTION_RETRY_DELAY: number = 5000;
+    /** Retries for 10 minutes, as long as the API keeps the room of a disconnected host (RoomService.HOST_RECONNECTION_DELAY) */
+    private static readonly RECONNECTION_RETRIES: number = 120;
 
     public readonly initiator: boolean = true;
 
@@ -20,14 +25,18 @@ export class HostRoomNetwork extends RoomNetwork {
         return this.localPlayer.name;
     }
 
-    private readonly refreshId: ReturnType<typeof setInterval>;
     private destroyRef = new Subject<void>();
+    private readonly reconnectedSubject = new Subject<void>();
+    private readonly roomLostSubject = new Subject<void>();
+    /** The room could not move to a new socket: nobody can join it anymore */
+    public readonly roomLost$ = this.roomLostSubject.asObservable();
 
     public constructor(
         roomApi: RoomSocketApi,
         roomName: string,
         private readonly maxPlayer: number,
         localPlayerName: string,
+        private readonly hostToken: string,
     ) {
         super(roomApi, roomName, localPlayerName);
         this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
@@ -35,46 +44,77 @@ export class HostRoomNetwork extends RoomNetwork {
                 void this.onJoinNotification(notification.data);
             }
         });
-        this.refreshId = this.enableMatchmakingStateRefresh();
+        this.keepRoomConnected();
     }
 
-    private enableMatchmakingStateRefresh(): ReturnType<typeof setInterval> {
-        const refreshInterval: number = 360_000; // 6 minutes
-        return setInterval(async () => {
-            try {
-                const roomName: string = this.roomName;
-                const serverPlayers: string[] = (await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName })).players;
-                const localPlayers: ReadonlySet<string> = new Set(this.players.keys());
-                const missingPlayers: string[] = [];
-                const playersToRemove: string[] = [];
+    /** Moves the room to a new socket before API Gateway closes the current one, or once it closed */
+    private keepRoomConnected(): void {
+        const replacementDue$ = this.reconnectedSubject.pipe(
+            startWith(undefined),
+            switchMap(() => timer(HostRoomNetwork.SOCKET_REPLACEMENT_DELAY)),
+        );
 
-                // Check if the server has less players than the local
-                for (const player of this.players.values()) {
-                    if (!serverPlayers.includes(player.name)) {
-                        missingPlayers.push(player.name);
-                    }
-                }
+        merge(replacementDue$, this.roomSocketApi.closed$).pipe(
+            exhaustMap(() => this.reconnect()),
+            takeUntil(this.roomLost$),
+            takeUntil(this.destroyRef),
+        ).subscribe();
+    }
 
-                // Check if the server has more players than the local
-                for (const playerName of serverPlayers) {
-                    if (!localPlayers.has(playerName)) {
-                        playersToRemove.push(playerName);
-                    }
-                }
+    private reconnect(): Observable<void> {
+        return defer(() => this.roomSocketApi.reconnect({ roomName: this.roomName, hostToken: this.hostToken })).pipe(
+            retry({
+                count: HostRoomNetwork.RECONNECTION_RETRIES,
+                // Unless the API refused it: the room expired, or another room took its name
+                delay: (error: unknown) => error instanceof RoomApiError ? throwError(() => error) : timer(HostRoomNetwork.RECONNECTION_RETRY_DELAY),
+            }),
+            switchMap(() => {
+                this.reconnectedSubject.next();
+                return this.synchronizePlayers();
+            }),
+            catchError((error: unknown) => {
+                console.error('HostRoom: the room could not move to a new socket', error);
+                this.roomLostSubject.next();
+                return EMPTY;
+            }),
+        );
+    }
 
-                for (const playerName of missingPlayers) {
-                    // eslint-disable-next-line no-await-in-loop -- one update of the room at a time on the API
-                    await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName, playerName });
-                }
+    /** The players joining or leaving while the socket was closed never reached the API: tells it the players of the room */
+    private async synchronizePlayers(): Promise<void> {
+        try {
+            const roomName: string = this.roomName;
+            const serverPlayers: string[] = (await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName })).players;
+            const localPlayers: ReadonlySet<string> = new Set(this.players.keys());
+            const missingPlayers: string[] = [];
+            const playersToRemove: string[] = [];
 
-                for (const playerName of playersToRemove) {
-                    // eslint-disable-next-line no-await-in-loop -- the API removes a player by its index in the room: two removals at a time could remove the wrong one
-                    await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName, playerName });
+            // Check if the server has less players than the local
+            for (const player of this.players.values()) {
+                if (!serverPlayers.includes(player.name)) {
+                    missingPlayers.push(player.name);
                 }
-            } catch (e) {
-                console.error(e);
             }
-        }, refreshInterval);
+
+            // Check if the server has more players than the local
+            for (const playerName of serverPlayers) {
+                if (!localPlayers.has(playerName)) {
+                    playersToRemove.push(playerName);
+                }
+            }
+
+            for (const playerName of missingPlayers) {
+                // eslint-disable-next-line no-await-in-loop -- one update of the room at a time on the API
+                await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName, playerName });
+            }
+
+            for (const playerName of playersToRemove) {
+                // eslint-disable-next-line no-await-in-loop -- the API removes a player by its index in the room: two removals at a time could remove the wrong one
+                await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName, playerName });
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     private async onJoinNotification(data: JoinNotification): Promise<void> {
@@ -146,7 +186,10 @@ export class HostRoomNetwork extends RoomNetwork {
         this.destroyRef.next();
         this.destroyRef.complete();
         this.destroyRef = new Subject<void>();
-        clearInterval(this.refreshId);
+        this.reconnectedSubject.complete();
+        this.roomLostSubject.complete();
+        // The room then waits for its host on the API, until it expires: nobody can join it meanwhile
+        this.roomSocketApi.close();
         super.clear();
     }
 }

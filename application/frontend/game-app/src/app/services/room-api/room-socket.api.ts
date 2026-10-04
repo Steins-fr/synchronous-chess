@@ -1,6 +1,8 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { objectHasValue } from '@app/helpers/object.helper';
+import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
+import { RoomApiRoute } from '@protocol/room-api-route.enum';
 import { isRtcSignal } from '@protocol/rtc-signal';
 import {
     requestToResponse,
@@ -22,11 +24,13 @@ type SocketPacketAllPayload = SocketPacketResponsePayload | RoomSocketApiNotific
 // Injection token for WebSocketServer
 export const WEB_SOCKET_SERVER = new InjectionToken<string>('WebSocketServer');
 
+/** The error response of a request: the API refused it, retrying it as is fails again */
+export class RoomApiError extends Error {}
+
 @Injectable({
     providedIn: 'root'
 })
 export class RoomSocketApi {
-    private static readonly SOCKET_MESSAGE_KEY: string = 'sendmessage';
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
 
     private readonly webSocketService: WebSocketService;
@@ -58,12 +62,30 @@ export class RoomSocketApi {
         );
     }
 
+    /** The socket closed without close(): by the server or the network */
+    public get closed$(): Observable<void> {
+        return this.webSocketService.closed$;
+    }
+
+    /**
+     * Moves the room of its host to a new socket, which then replaces the current one: the current socket keeps the
+     * room until then, if still open
+     * @throws {RoomApiError} when the API refuses it: the room no longer exists, or is not the host's
+     */
+    public async reconnect(request: RoomReconnectRequest): Promise<void> {
+        await this.webSocketService.replace(async (send) => {
+            const packet = RoomSocketApi.buildPacket(RoomApiRequestTypeEnum.RECONNECT, request);
+            send(RoomApiRoute.SEND_MESSAGE, packet);
+            await this.followRequestResponse(packet.id, RoomApiResponseTypeEnum.RECONNECTED);
+        });
+    }
+
     public async send<RequestType extends RoomApiRequestTypeEnum>(
         requestType: RequestType,
         body: RoomSocketApiRequestTypedData[RequestType]
     ): Promise<RoomSocketApiResponseTypedData[RequestToResponseType<RequestType>]> {
         const packet = await this.webSocketService.send(
-            RoomSocketApi.SOCKET_MESSAGE_KEY,
+            RoomApiRoute.SEND_MESSAGE,
             RoomSocketApi.buildPacket(requestType, body)
         );
 
@@ -150,7 +172,7 @@ export class RoomSocketApi {
 
                         if (this.isSocketPacketErrorResponse(payload)) {
                             console.error(payload);
-                            reject(new Error(payload.data.message));
+                            reject(new RoomApiError(payload.data.message));
                         } else if (this.isSocketPacketResponseType(type, payload)) {
                             console.debug('Response received', payload);
                             resolve(payload.data);

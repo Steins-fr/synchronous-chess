@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import RoomManagerService from './room-manager.service';
 import { NotificationService } from '../notification/notification.service';
-import { RoomSocketApi } from '../room-api/room-socket.api';
+import { RoomApiError, RoomSocketApi } from '../room-api/room-socket.api';
 import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { HostRoomNetwork } from './classes/room-network/host-room-network';
@@ -21,7 +21,9 @@ describe('RoomManagerService', () => {
     beforeEach(() => {
         roomSocketApi = TestHelper.cast<RoomSocketApi>({
             notification$: new Subject<RoomSocketApiNotifications>(),
+            closed$: new Subject<void>(),
             send: vi.fn(),
+            reconnect: vi.fn(),
             close: vi.fn(),
         });
         notificationService = TestHelper.cast<NotificationService>({ error: vi.fn(), info: vi.fn() });
@@ -46,7 +48,7 @@ describe('RoomManagerService', () => {
 
     test('should create a room as host', async () => {
         // Given
-        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host' });
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host', hostToken: 'token' });
 
         // When
         room = await service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
@@ -56,6 +58,22 @@ describe('RoomManagerService', () => {
         expect(room.roomConnection).toBeInstanceOf(HostRoomNetwork);
         expect(room.localPlayer.name).toEqual('host');
         expect(BlockRoom.createKeys).toHaveBeenCalledWith('host');
+    });
+
+    test('should notify the host when its room can not move to a new socket', async () => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host', hostToken: 'token' });
+        vi.mocked(roomSocketApi.reconnect).mockRejectedValue(new RoomApiError('Room \'room\' does not exist'));
+        vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        room = await service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
+
+        // When
+        (roomSocketApi.closed$ as Subject<void>).next();
+        await vi.waitFor(() => expect(notificationService.error).toHaveBeenCalled());
+
+        // Then
+        expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', hostToken: 'token' });
+        expect(notificationService.error).toHaveBeenCalledWith('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
     });
 
     test.each([
