@@ -36,20 +36,26 @@ This is an Angular TypeScript project with the following characteristics:
 
 - Prefer Tailwind utilities in the templates to component stylesheets. Keep a stylesheet for what
   utilities cannot express simply (e.g. styles of Material or CDK internals)
-- Never hard-code a color: use the `--app-*` variables of `src/styles.scss`, light and dark, exposed as
-  Tailwind colors in `src/tailwind.css` (`bg-app-surface`, `text-app-accent-text`...). A new color gets
-  a variable in both themes, then its `--color-app-*` entry in `@theme inline`
+- Never hard-code a color: use the `--app-*` variables of `src/styles.scss`, exposed as Tailwind colors
+  in `src/tailwind.css` (`bg-app-surface`, `text-app-accent-text`...), or the `--mat-sys-*` variables of
+  Material. A new color gets a variable, a `light-dark()` pair when the dark theme needs another one (or
+  a system variable of Material), then its `--color-app-*` entry in `@theme inline`
 - Elements that look alike share a `@utility` of `src/tailwind.css` (e.g. `rule-card`, `toc-chip`),
   rather than repeating the same list of classes
 - Write the markup plainly: no `*:` child variants nor `[&_...]` arbitrary variants to style children
   from their parent, and no `@for` over a literal list only to avoid repeating elements
 - Material's typography sits in the `base` layer of Tailwind (`styles.scss`): out of any layer,
-  `.mat-typography h3` would win over the utilities of the elements, whatever their specificity
-- Material styles only the components listed in `$material-components` (`styles.scss`): add a
-  component there when the app starts using it, or it renders without its theme
+  `.mat-typography h3` would win over the utilities of the elements, whatever their specificity. It
+  follows the Material 3 scale, where `h1` to `h6` are display and headline sizes: a heading without a
+  size of its own takes a class of the scale (`mat-title-large`, `mat-title-medium`...)
+- Material 3 theme (`mat.theme()` in `styles.scss`, palettes generated from the blue of the board in
+  `_theme-colors.scss`): the components read the `--mat-sys-*` variables, so every component is themed
+  without any setup. The `color` input of the components has no effect in Material 3: customize a
+  component through its `mat.<component>-overrides()` mixin
 - The theme follows the system, or the user's pick. `ThemeService`, and the script of `index.html`
-  before the app starts, always set the theme shown in `data-theme` on the html element: the dark
-  styles go under `html[data-theme="dark"]` only. Check a visual change in both themes
+  before the app starts, always set the theme shown in `data-theme` on the html element, which sets
+  `color-scheme`: each color of Material and of the app is a `light-dark()` pair, resolved by it. Check
+  a visual change in both themes
 
 ## Forms
 

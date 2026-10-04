@@ -1,6 +1,6 @@
 @for (remotePlayer of webRtcPlayers(); track remotePlayer) {
 <section>
-    <h4>Debug connexion du joueur : {{ remotePlayer.name }}</h4>
+    <h4 class="mat-title-medium">Debug connexion du joueur : {{ remotePlayer.name }}</h4>
     <app-debug-webrtc-states
         [states]="remotePlayer.states | async"
         [playerName]="remotePlayer.name" />
@@ -8,7 +8,7 @@
 }
 @for (negotiator of negotiators(); track negotiator) {
 <section>
-    <h4>Debug connexion du négociateur : {{ negotiator.playerName }}</h4>
+    <h4 class="mat-title-medium">Debug connexion du négociateur : {{ negotiator.playerName }}</h4>
     <app-debug-webrtc-states
         [states]="negotiator.states | async"
         [playerName]="negotiator.playerName" />

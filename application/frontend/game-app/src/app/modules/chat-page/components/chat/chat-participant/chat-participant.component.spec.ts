@@ -29,7 +29,7 @@ describe('ChatParticipantComponent', () => {
 
         // Then
         expect(fixture.nativeElement.textContent.trim()).toEqual('local');
-        expect(fixture.nativeElement.querySelector('mat-chip').classList).toContain('mat-primary');
+        expect(fixture.nativeElement.querySelector('mat-chip').classList).toContain('mat-mdc-chip-highlighted');
     });
 
     test('should display the ping of a remote player', async () => {
@@ -43,7 +43,7 @@ describe('ChatParticipantComponent', () => {
 
         // Then
         expect(fixture.nativeElement.textContent.replace(/\s+/g, ' ').trim()).toEqual('remote - ping 12.5');
-        expect(fixture.nativeElement.querySelector('mat-chip').classList).toContain('mat-accent');
+        expect(fixture.nativeElement.querySelector('mat-chip').classList).not.toContain('mat-mdc-chip-highlighted');
     });
 
     test('should stop following the ping of a previous player', async () => {

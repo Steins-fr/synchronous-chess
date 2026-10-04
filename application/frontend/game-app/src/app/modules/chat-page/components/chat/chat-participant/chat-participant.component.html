@@ -1,4 +1,4 @@
-<mat-chip [color]="isMe() ? 'primary' : 'accent'">
+<mat-chip [highlighted]="isMe()">
     {{ player().name }}
     @if (ping(); as pingValue) {
     <span>{{ ' - ping ' + pingValue }}</span>

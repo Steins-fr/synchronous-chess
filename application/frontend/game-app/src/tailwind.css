@@ -44,7 +44,7 @@
 }
 
 @utility case-title {
-    @apply m-0 flex items-center gap-2 font-bold;
+    @apply m-0 flex items-center gap-2 text-base font-bold;
 }
 
 @utility case-letter {

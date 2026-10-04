@@ -1,7 +1,7 @@
 <div id="chat-app">
-    <h3>Webrtc chat</h3>
+    <h3 class="mat-title-large">Webrtc chat</h3>
     @if (room()) {
-    <h4>Salle ({{ roomName }})</h4>
+    <h4 class="mat-title-medium">Salle ({{ roomName }})</h4>
     }
     <div id="chat-container">
         <div id="chat">
@@ -10,7 +10,7 @@
             </cdk-virtual-scroll-viewport>
             @if (newMessage() > 0) {
             <div id="new-message-notification" class="chat-notification">
-                <button mat-flat-button color="primary" (click)="scrollDown(true)">
+                <button mat-flat-button (click)="scrollDown(true)">
                     <span>{{ newMessage() }} nouveaux messages</span>
                     <span>Voir.</span>
                 </button>
@@ -18,7 +18,7 @@
             }
             @if (viewingHistory()) {
             <div id="history-notification" class="chat-notification">
-                <button mat-flat-button color="primary" (click)="scrollDown(true)">
+                <button mat-flat-button (click)="scrollDown(true)">
                     <span>Tu es entrain de regarder des anciens messages.</span>
                     <span>Revenir aux messages les plus récents.</span>
                 </button>
@@ -26,7 +26,7 @@
             }
         </div>
         <div id="player-list">
-            <h4 class="list-title">Participants</h4>
+            <h4 class="list-title mat-title-medium">Participants</h4>
             {{ players().length }} participant(s) dans la salle
             <mat-chip-set class="mat-chip-list-stacked">
                 @for (participant of players(); track participant.name) {
@@ -42,7 +42,7 @@
     <div id="send-form">
         <app-text-field [field]="messageForm" class="flex-auto" label="Tape ton message" />
         <button
-            mat-raised-button color="primary" id="send" (click)="sendMessage()"
+            mat-raised-button id="send" (click)="sendMessage()"
             [disabled]="!room() || isSending()">Envoyer
         </button>
     </div>
