@@ -88,7 +88,7 @@ export function mockAws(): AwsMocks {
 
 /** The room DynamoDB finds by its name */
 export function storeRoom(dynamo: AwsClientStub<DynamoDBDocumentClient>, room: Room): void {
-    dynamo.on(GetCommand, { TableName: 'rooms', Key: { id: room.id } }).resolves({ Item: room });
+    dynamo.on(GetCommand, { TableName: 'room', Key: { id: room.id } }).resolves({ Item: room });
 }
 
 /** The error a request gets in reply */

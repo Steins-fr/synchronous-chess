@@ -48,10 +48,10 @@ module "sc_certificate_api_ws" {
 /**
  * Tables
  */
-module "sc_database_rooms" {
+module "sc_database_room" {
   source = "./modules/aws-dynamodb"
 
-  name       = "rooms"
+  name       = "room"
   hash-key   = "id"
   attributes = ["id"]
   # Set while the host is disconnected: deletes the rooms it never reconnected
@@ -60,10 +60,10 @@ module "sc_database_rooms" {
   stage = var.stage
 }
 
-module "sc_database_connections" {
+module "sc_database_connection" {
   source = "./modules/aws-dynamodb"
 
-  name           = "connections"
+  name           = "connection"
   hash-key       = "connectionId"
   read-capacity  = 2
   write-capacity = 2
@@ -110,8 +110,8 @@ module "sc_role_lambda_basic" {
 module "sc_database_policy" {
   source = "./modules/aws-dynamodb-iam-policy"
 
-  connections_table_arn = module.sc_database_connections.arn
-  rooms_table_arn       = module.sc_database_rooms.arn
+  connections_table_arn = module.sc_database_connection.arn
+  rooms_table_arn       = module.sc_database_room.arn
   stage                 = var.stage
 }
 
@@ -150,8 +150,8 @@ module "sc_lambda_ondisconnect" {
   role      = module.sc_role_lambda_dynamo.arn
   stage     = var.stage
   environment = {
-    TABLE_NAME_ROOMS       = module.sc_database_rooms.name
-    TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
+    TABLE_NAME_ROOMS       = module.sc_database_room.name
+    TABLE_NAME_CONNECTIONS = module.sc_database_connection.name
   }
 }
 
@@ -163,8 +163,8 @@ module "sc_lambda_sendmessage" {
   role      = module.sc_role_lambda_dynamo.arn
   stage     = var.stage
   environment = {
-    TABLE_NAME_ROOMS       = module.sc_database_rooms.name
-    TABLE_NAME_CONNECTIONS = module.sc_database_connections.name
+    TABLE_NAME_ROOMS       = module.sc_database_room.name
+    TABLE_NAME_CONNECTIONS = module.sc_database_connection.name
   }
 }
 

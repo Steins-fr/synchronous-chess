@@ -23,7 +23,7 @@ describe('JoinHandler', () => {
         await join({ roomName: 'room', playerName: 'other' });
 
         // Then
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connections', Item: { connectionId: connection, roomName: 'room' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: { connectionId: connection, roomName: 'room' } })).toHaveLength(1);
         expect(dynamo.commandCalls(UpdateCommand, {
             UpdateExpression: 'set queue = list_append(queue, :items)',
             ExpressionAttributeValues: { ':items': [{ playerName: 'other', connectionId: connection }] },

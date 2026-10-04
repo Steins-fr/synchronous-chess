@@ -6,8 +6,8 @@ export default defineConfig({
         environment: 'node',
         // Read by the repositories when the lambdas load
         env: {
-            TABLE_NAME_CONNECTIONS: 'connections',
-            TABLE_NAME_ROOMS: 'rooms',
+            TABLE_NAME_CONNECTIONS: 'connection',
+            TABLE_NAME_ROOMS: 'room',
         },
         restoreMocks: true,
         unstubEnvs: true,

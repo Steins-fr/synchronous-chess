@@ -26,7 +26,7 @@ describe('BaseRepository', () => {
 
         // Then
         expect(item).toBe(connection);
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connections', Item: connection, ReturnValues: 'NONE' })).toHaveLength(1);
+        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: connection, ReturnValues: 'NONE' })).toHaveLength(1);
     });
 
     test('should delete an item by its key', async () => {
@@ -34,7 +34,7 @@ describe('BaseRepository', () => {
         await repository.delete(connection);
 
         // Then
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: 'connection' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: 'connection' } })).toHaveLength(1);
     });
 
     test('should find an item by its key, with the projection of the repository', async () => {
@@ -47,7 +47,7 @@ describe('BaseRepository', () => {
         // Then
         expect(item).toEqual(connection);
         expect(dynamo.commandCalls(GetCommand, {
-            TableName: 'connections',
+            TableName: 'connection',
             Key: { connectionId: 'connection' },
             ProjectionExpression: 'connectionId, roomName',
         })).toHaveLength(1);
@@ -72,7 +72,7 @@ describe('BaseRepository', () => {
         // Then
         expect(item).toEqual(updated);
         expect(dynamo.commandCalls(UpdateCommand, {
-            TableName: 'connections',
+            TableName: 'connection',
             Key: { connectionId: 'connection' },
             UpdateExpression: 'set roomName = :roomName',
             ExpressionAttributeValues: { ':roomName': 'other' },
@@ -87,7 +87,7 @@ describe('BaseRepository', () => {
         // Then
         expect(written).toEqual(true);
         expect(dynamo.commandCalls(PutCommand, {
-            TableName: 'connections',
+            TableName: 'connection',
             Item: connection,
             ConditionExpression: 'roomName = :expected',
             ExpressionAttributeValues: { ':expected': 'room' },
@@ -102,7 +102,7 @@ describe('BaseRepository', () => {
         // Then
         expect(written).toEqual(true);
         expect(dynamo.commandCalls(UpdateCommand, {
-            TableName: 'connections',
+            TableName: 'connection',
             Key: { connectionId: 'connection' },
             UpdateExpression: 'set roomName = :roomName',
             ConditionExpression: 'roomName = :expected',

@@ -27,7 +27,7 @@ describe('RoomRepository', () => {
         // Then
         expect(found).toEqual(room);
         expect(dynamo.commandCalls(GetCommand, {
-            TableName: 'rooms',
+            TableName: 'room',
             Key: { id: 'room' },
             ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, hostTokenHash, expiresAt',
         })).toHaveLength(1);
@@ -40,7 +40,7 @@ describe('RoomRepository', () => {
         // Then
         expect(created).toEqual(true);
         expect(dynamo.commandCalls(PutCommand, {
-            TableName: 'rooms',
+            TableName: 'room',
             Item: room,
             ConditionExpression: 'attribute_not_exists(id) OR attribute_exists(expiresAt)',
         })).toHaveLength(1);

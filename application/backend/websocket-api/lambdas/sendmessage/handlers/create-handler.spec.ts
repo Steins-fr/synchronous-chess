@@ -23,9 +23,9 @@ describe('CreateHandler', () => {
         const [reply]: PostedPacket[] = postedPackets(apiGateway);
         const hostToken: string = (reply.packet as { data: { hostToken: string } }).data.hostToken;
         expect(reply).toEqual({ to: HOST_CONNECTION, packet: { id: 7, type: 'created', data: { ...request, hostToken: expect.any(String) } } });
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connections', Item: { connectionId: HOST_CONNECTION, roomName: 'room' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: { connectionId: HOST_CONNECTION, roomName: 'room' } })).toHaveLength(1);
         expect(dynamo.commandCalls(PutCommand, {
-            TableName: 'rooms',
+            TableName: 'room',
             Item: {
                 id: 'room',
                 connectionId: HOST_CONNECTION,
@@ -61,7 +61,7 @@ describe('CreateHandler', () => {
 
     test('should refuse a room name already taken', async () => {
         // Given: a room of that name, its host connected
-        dynamo.on(PutCommand, { TableName: 'rooms' }).rejects(aConditionFailure());
+        dynamo.on(PutCommand, { TableName: 'room' }).rejects(aConditionFailure());
 
         // When / Then
         await expect(create(request)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);

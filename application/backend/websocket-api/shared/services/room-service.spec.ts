@@ -33,7 +33,7 @@ describe('RoomService', () => {
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
-            TableName: 'rooms',
+            TableName: 'room',
             UpdateExpression: 'SET expiresAt = :expiresAt',
             ExpressionAttributeValues: { ':expiresAt': now + 600, ':hostConnectionId': HOST_CONNECTION },
         })).toHaveLength(1);
@@ -116,7 +116,7 @@ describe('RoomService', () => {
         // Then
         expect(hostToken).toMatch(/^[\w-]{43}$/);
         expect(dynamo.commandCalls(PutCommand, {
-            TableName: 'rooms',
+            TableName: 'room',
             Item: {
                 id: 'room',
                 connectionId: HOST_CONNECTION,

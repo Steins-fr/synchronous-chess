@@ -34,9 +34,9 @@ describe('ReconnectHandler', () => {
         await reconnect({ roomName: 'room', hostToken: HOST_TOKEN });
 
         // Then
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connections', Item: { connectionId: connection, roomName: 'room' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: { connectionId: connection, roomName: 'room' } })).toHaveLength(1);
         expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([expect.objectContaining({
-            TableName: 'rooms',
+            TableName: 'room',
             Key: { id: 'room' },
             UpdateExpression: 'SET connectionId = :connectionId REMOVE expiresAt',
             ExpressionAttributeValues: { ':connectionId': connection, ':hostTokenHash': hashHostToken(HOST_TOKEN), ':now': expect.any(Number) },

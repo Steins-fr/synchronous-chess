@@ -74,8 +74,8 @@ async function loadLambdas(): Promise<Lambdas> {
         AWS_ACCESS_KEY_ID: 'local',
         AWS_SECRET_ACCESS_KEY: 'local',
         AWS_ENDPOINT_URL_DYNAMODB: `http://${HOST}:${dynamoPort}`,
-        TABLE_NAME_CONNECTIONS: 'connections',
-        TABLE_NAME_ROOMS: 'rooms',
+        TABLE_NAME_CONNECTIONS: 'connection',
+        TABLE_NAME_ROOMS: 'room',
     });
 
     // The tables of infrastructure/main.tf

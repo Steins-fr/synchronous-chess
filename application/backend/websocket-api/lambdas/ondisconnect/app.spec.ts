@@ -8,7 +8,7 @@ describe('ondisconnect lambda', () => {
     const { dynamo }: AwsMocks = mockAws();
 
     function storeConnection(connection: Partial<Connection>): void {
-        dynamo.on(GetCommand, { TableName: 'connections' }).resolves({ Item: connection });
+        dynamo.on(GetCommand, { TableName: 'connection' }).resolves({ Item: connection });
     }
 
     test('should remove a disconnected guest from the queue, then its connection', async () => {
@@ -21,8 +21,8 @@ describe('ondisconnect lambda', () => {
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'rooms', UpdateExpression: 'REMOVE queue[0]' })).toHaveLength(1);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: GUEST_CONNECTION } })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'room', UpdateExpression: 'REMOVE queue[0]' })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: GUEST_CONNECTION } })).toHaveLength(1);
     });
 
     test('should let the room of a disconnected host wait for it', async () => {
@@ -35,9 +35,9 @@ describe('ondisconnect lambda', () => {
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'rooms', UpdateExpression: 'SET expiresAt = :expiresAt' })).toHaveLength(1);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'rooms' })).toHaveLength(0);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: HOST_CONNECTION } })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'room', UpdateExpression: 'SET expiresAt = :expiresAt' })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'room' })).toHaveLength(0);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: HOST_CONNECTION } })).toHaveLength(1);
     });
 
     test('should only delete a connection the room no longer has', async () => {
@@ -51,7 +51,7 @@ describe('ondisconnect lambda', () => {
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
         expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections', Key: { connectionId: 'former-host-connection' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: 'former-host-connection' } })).toHaveLength(1);
     });
 
     test('should delete the connection even when it can not leave its room', async () => {
@@ -66,7 +66,7 @@ describe('ondisconnect lambda', () => {
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
         expect(console.error).toHaveBeenCalled();
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connections' })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection' })).toHaveLength(1);
     });
 
     test('should fail without the room of the connection', async () => {
@@ -90,7 +90,7 @@ describe('ondisconnect lambda', () => {
         ['a connection stored without id', { roomName: 'room' }],
     ])('should fail for %s', async (_case: string, connection: Partial<Connection> | undefined) => {
         // Given
-        dynamo.on(GetCommand, { TableName: 'connections' }).resolves({ Item: connection });
+        dynamo.on(GetCommand, { TableName: 'connection' }).resolves({ Item: connection });
 
         // When / Then
         expect(await handler(anEvent(GUEST_CONNECTION))).toEqual({ statusCode: 500, body: 'Undefined connection' });
