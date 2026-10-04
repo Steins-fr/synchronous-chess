@@ -84,3 +84,23 @@ resource "aws_apigatewayv2_route" "sendmessage" {
 
   target = "integrations/${aws_apigatewayv2_integration.sendmessage.id}"
 }
+
+# Keeps a connection open (RoomApiRoute.PING of the room socket protocol): API Gateway closes a connection without
+# message for 10 minutes. A mock integration without route response, no lambda runs and nothing is answered
+resource "aws_apigatewayv2_integration" "ping" {
+  api_id           = var.api_gateway_id
+  integration_type = "MOCK"
+
+  description                   = "Ping integration"
+  template_selection_expression = "\\$default"
+  request_templates = {
+    "$default" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_apigatewayv2_route" "ping" {
+  api_id    = var.api_gateway_id
+  route_key = "ping"
+
+  target = "integrations/${aws_apigatewayv2_integration.ping.id}"
+}

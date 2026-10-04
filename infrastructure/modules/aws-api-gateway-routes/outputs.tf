@@ -28,6 +28,11 @@ output "sendmessage_route_id" {
   description = "Send message route ID"
 }
 
+output "ping_route_id" {
+  value       = aws_apigatewayv2_route.ping.id
+  description = "Ping route ID"
+}
+
 output "route_integration_jsonencode" {
   value = join(",", tolist([
     jsonencode(aws_apigatewayv2_integration.connect),
@@ -36,5 +41,7 @@ output "route_integration_jsonencode" {
     jsonencode(aws_apigatewayv2_route.disconnect),
     jsonencode(aws_apigatewayv2_integration.sendmessage),
     jsonencode(aws_apigatewayv2_route.sendmessage),
+    jsonencode(aws_apigatewayv2_integration.ping),
+    jsonencode(aws_apigatewayv2_route.ping),
   ]))
 }

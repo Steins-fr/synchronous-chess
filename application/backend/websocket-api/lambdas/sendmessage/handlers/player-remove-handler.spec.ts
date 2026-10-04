@@ -32,7 +32,7 @@ describe('PlayerRemoveHandler', () => {
         await remove({ roomName: 'room', playerName: 'player' });
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[1]' })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[1], tokenHashes.#playerName', ExpressionAttributeNames: { '#playerName': 'player' } })).toHaveLength(1);
         expect(postedPackets(apiGateway)).toEqual([{ to: HOST_CONNECTION, packet: { id: 7, type: 'removed', data: { roomName: 'room', playerName: 'player' } } }]);
     });
 

@@ -343,6 +343,24 @@ describe('Webrtc', () => {
         expect(console.error).toHaveBeenCalledTimes(3);
     });
 
+    test('should not resend the packets of a closed connection', () => {
+        // Given: a peer gone before acknowledging a packet
+        vi.useFakeTimers();
+        const webrtc: Webrtc = new Webrtc();
+        webrtc.configure(true);
+        const sendChannel: MockRTCDataChannel = lastPeerConnection().sendChannel;
+        sendChannel.readyState = 'open';
+        webrtc.sendMessage({ payload: 'unacknowledged' });
+
+        // When
+        webrtc.close();
+        vi.advanceTimersByTime(5000);
+
+        // Then
+        expect(sendChannel.send).toHaveBeenCalledTimes(1);
+        expect(console.error).not.toHaveBeenCalled();
+    });
+
     test('should not resend an acknowledged packet', () => {
         // Given
         vi.useFakeTimers();

@@ -42,6 +42,7 @@ npm run build        # production build (build:staging / build:dev for other con
 npm test             # Vitest in watch mode
 npm run test:ci      # single run with coverage (what CI runs)
 npm run lint         # ESLint (Angular, template, RxJS and stylistic rules)
+npm run e2e          # Playwright end-to-end tests of the rooms (see Browser testing), local only
 ```
 
 Run some specs: `npx ng test --watch=false --include='src/app/path/to/**/*.spec.ts'`. A plain
@@ -98,6 +99,22 @@ developed in WSL, which it does not support.
 - Before starting a new browser test, delete the screenshots of the previous one:
   `rm -f <repo root>/.playwright-mcp/screenshots/*.png`, with the absolute path of the repo and no
   `cd` in the command, or Claude Code's safety check blocks the removal.
+
+### End-to-end tests
+
+`npm run e2e` (game app) runs the Playwright suite of `e2e/` (`*.e2e.ts`, config in `playwright.config.ts`):
+the scenarios of the rooms, with one browser context per player connected through WebRTC. It starts the local API
+and the game app, or reuses the ones running on ports 3001 and 4200, and stops what it started. Local only, not
+run by the CI.
+
+- One-time setup: `npx playwright install chromium` in the game app (the browser of `@playwright/test`, apart
+  from the one of the MCP).
+- `e2e/test-room.ts` gives each test a room of its own (`room` fixture), `e2e/room-participant.ts` drives a player:
+  join, reload, messages, the participants it sees, and `cutConnections()` to close its WebRTC connections as a
+  network failure would.
+- A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`. The servers' logs are
+  not shown: start the servers apart to read them.
+- Run one scenario with `npx playwright test -g "<part of its name>"`.
 
 ### Testing a chess game
 

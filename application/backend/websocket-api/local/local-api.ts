@@ -10,6 +10,7 @@ import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http
 import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
+import { RoomApiRoute } from '@protocol/room-api-route.enum';
 
 interface LambdaResponse {
     statusCode: number;
@@ -43,8 +44,6 @@ export interface LocalApi {
 
 // Loopback only: the API has no authentication, nor the PostToConnection endpoint and the tables
 const HOST: string = '127.0.0.1';
-// The route of the requests, selected by `$request.body.message` like API Gateway (see infrastructure/modules/aws-api-gateway)
-const SEND_MESSAGE_ROUTE: string = 'sendmessage';
 // The maximum size of a message API Gateway posts to a connection
 const MAX_MESSAGE_BYTES: number = 128 * 1024;
 // The maximum size of a frame API Gateway receives. The browsers send each message in a single frame, so it limits
@@ -75,8 +74,8 @@ async function loadLambdas(): Promise<Lambdas> {
         AWS_ACCESS_KEY_ID: 'local',
         AWS_SECRET_ACCESS_KEY: 'local',
         AWS_ENDPOINT_URL_DYNAMODB: `http://${HOST}:${dynamoPort}`,
-        TABLE_NAME_CONNECTIONS: 'connections',
-        TABLE_NAME_ROOMS: 'rooms',
+        TABLE_NAME_CONNECTIONS: 'connection',
+        TABLE_NAME_ROOMS: 'room',
     });
 
     // The tables of infrastructure/main.tf
@@ -245,9 +244,13 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
             idleTimer.refresh();
             const body: string = (data as Buffer).toString('utf8');
 
-            if (routeOf(body) === SEND_MESSAGE_ROUTE) {
-                void invoke(SEND_MESSAGE_ROUTE, sendMessage, connectionId, body);
-            } else {
+            // Selected by `$request.body.message` like API Gateway (see infrastructure/modules/aws-api-gateway-routes).
+            // A ping runs a mock integration without response there: nothing to do
+            const route: unknown = routeOf(body);
+
+            if (route === RoomApiRoute.SEND_MESSAGE) {
+                void invoke(RoomApiRoute.SEND_MESSAGE, sendMessage, connectionId, body);
+            } else if (route !== RoomApiRoute.PING) {
                 // What API Gateway answers to a message matching no route, without $default route
                 console.warn(`No route for the message of ${connectionId}: ${body}`);
                 socket.send(JSON.stringify({ message: 'Forbidden', connectionId, requestId: randomUUID() }));

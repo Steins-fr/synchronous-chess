@@ -24,6 +24,7 @@ export default class SignalHandler extends MessageHandler {
         let fromPlayerName: string = room.hostPlayer;
 
         if (this.connectionId !== room.connectionId) { // Send the message to the host
+            this.roomService.hostConnectedGuard(room);
             toConnectionId = room.connectionId;
             const fromPlayer: Player | null = RoomHelper.getPlayerByConnectionId(room, this.connectionId);
 

@@ -12,6 +12,7 @@ import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { AntiCheatMessageType } from '@app/services/room-manager/classes/webrtc/messages/anti-cheat-message';
 import { BlockChainMessage, BlockChainMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-chain-message';
+import { RejoinResult } from '@app/services/room-manager/classes/room-network/room-network';
 import { BlockRoomParticipantMessageType } from '@app/services/room-manager/classes/webrtc/messages/block-room-participant-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { NetworkMessage, ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
@@ -73,6 +74,11 @@ describe('BlockRoom', () => {
 
     function createRemote(name: string): Player {
         return TestHelper.cast<Player>({ name, isLocal: false, sendData: vi.fn() });
+    }
+
+    /** A remote participant tells the participants it is connected to */
+    function connectedParticipants(from: string, participants: string[]): void {
+        network.onMessage$.next({ type: AntiCheatMessageType.CONNECTED_PARTICIPANTS, payload: { participants }, origin: MessageOriginType.ANTI_CHEAT, from });
     }
 
     test('createKeys should create a signing key pair', () => {
@@ -235,6 +241,7 @@ describe('BlockRoom', () => {
         expect(vi.mocked(remote.sendData).mock.calls).toEqual([
             [{ type: BlockRoomParticipantMessageType.NEGOTIATION_REQUEST, payload: { publicKey: keys.publicJwk }, origin: MessageOriginType.BLOCK_ROOM_PARTICIPANT }],
             [{ type: AntiCheatMessageType.SEQUENCER_STATE, payload: { sequencer: 'local', handovers: 0, distrusted: [] }, origin: MessageOriginType.ANTI_CHEAT }],
+            [{ type: AntiCheatMessageType.CONNECTED_PARTICIPANTS, payload: { participants: ['remote'] }, origin: MessageOriginType.ANTI_CHEAT }],
         ]);
     });
 
@@ -273,27 +280,330 @@ describe('BlockRoom', () => {
         expect(TimedLogger.warn).toHaveBeenCalledWith('Most of the participants follow b, after 1 handovers');
     });
 
-    test('should hand the ordering over to the first participant by name when the sequencer leaves', () => {
+    test('should hand the ordering over to the first participant by name once every participant lost the sequencer', () => {
         // Given
         network = new RoomNetworkMock('local', false, 'host');
         const onParticipantLeftSpy = vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
         const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
         const room: BlockRoom<TestPayloads> = createRoom();
         const host: Player = createRemote('host');
         const other: Player = createRemote('b');
         network.playerAdded$.next(host);
         network.playerAdded$.next(other);
 
-        // When
-        network.playerRemoved$.next(other);
-        network.playerAdded$.next(other);
+        // When this participant loses the sequencer, b still connected to it
         network.playerRemoved$.next(host);
+        connectedParticipants('b', ['host', 'local']);
+        const whileConnected: number = changeSequencerSpy.mock.calls.length;
+        // Then b loses it too
+        connectedParticipants('b', ['local']);
 
         // Then
+        expect(whileConnected).toEqual(0);
         expect(room.players()).toEqual([network.localPlayer, other]);
-        expect(onParticipantLeftSpy.mock.calls).toEqual([['b'], ['b'], ['host'], ['host']]);
+        expect(onParticipantLeftSpy.mock.calls).toEqual([['host'], ['host']]);
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
         expect(changeSequencerSpy.mock.contexts.map(chainName)).toEqual([BlockChainName.CHESS, BlockChainName.CHAT]);
+        expect(TimedLogger.warn).toHaveBeenCalledWith('host has left the room');
+        // The new sequencer takes the room over from the host, which leaves the room on the API
+        expect(network.changeHost.mock.calls).toEqual([['b']]);
+        expect(network.removeFromRoom.mock.calls).toEqual([['host']]);
+    });
+
+    test('should name the new host once the ordering handed over, the host and the sequencer leaving together', () => {
+        // Given a room whose host handed the ordering over to c
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        createRoom();
+        const host: Player = createRemote('host');
+        const c: Player = createRemote('c');
+        [host, c, createRemote('z')].forEach((player: Player) => network.playerAdded$.next(player));
+        ['host', 'z'].forEach((from: string) => network.onMessage$.next({
+            type: AntiCheatMessageType.SEQUENCER_STATE,
+            payload: { sequencer: 'c', handovers: 1, distrusted: [] },
+            origin: MessageOriginType.ANTI_CHEAT,
+            from,
+        }));
+
+        // When
+        network.playerRemoved$.next(host);
+        network.playerRemoved$.next(c);
+        connectedParticipants('z', ['local']);
+
+        // Then
+        expect(changeSequencerSpy.mock.calls).toEqual([['c'], ['c'], ['local'], ['local']]);
+        expect(network.changeHost.mock.calls).toEqual([['local']]);
+        expect(network.removeFromRoom.mock.calls).toEqual([['host'], ['c']]);
+    });
+
+    test('should keep the sequencer when another participant leaves the room', () => {
+        // Given
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        createRoom();
+        const b: Player = createRemote('b');
+        [createRemote('host'), b].forEach((player: Player) => network.playerAdded$.next(player));
+
+        // When
+        network.playerRemoved$.next(b);
+        connectedParticipants('host', ['local']);
+
+        // Then
+        expect(TimedLogger.warn).toHaveBeenCalledWith('b has left the room');
+        expect(changeSequencerSpy).not.toHaveBeenCalled();
+        expect(network.changeHost).not.toHaveBeenCalled();
+    });
+
+    test('should keep the sequencer a participant comes back to before the others lost it', () => {
+        // Given
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        createRoom();
+        const host: Player = createRemote('host');
+        network.playerAdded$.next(host);
+        network.playerAdded$.next(createRemote('b'));
+
+        // When this participant loses then gets back the sequencer, before b loses it later
+        network.playerRemoved$.next(host);
+        network.playerAdded$.next(host);
+        connectedParticipants('b', ['local']);
+
+        // Then
+        expect(changeSequencerSpy).not.toHaveBeenCalled();
+    });
+
+    test('should wait for the participants which did not tell whom they are connected to', () => {
+        // Given
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        createRoom();
+        const host: Player = createRemote('host');
+        const b: Player = createRemote('b');
+        [host, b, createRemote('c')].forEach((player: Player) => network.playerAdded$.next(player));
+
+        // When b lost the host, c told nothing, then c leaves
+        network.playerRemoved$.next(host);
+        connectedParticipants('b', ['c', 'local']);
+        const whileWaiting: number = changeSequencerSpy.mock.calls.length;
+        network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'c' }));
+
+        // Then
+        expect(whileWaiting).toEqual(0);
+        expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+    });
+
+    describe('connections lost', () => {
+        beforeEach(() => {
+            network = new RoomNetworkMock('local', false, 'host');
+            vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+            vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        });
+
+        test('should connect again through another participant to the participants lost it connects to first', () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            createRoom(ticks);
+            const b: Player = createRemote('b');
+            const z: Player = createRemote('z');
+            [createRemote('host'), b, z].forEach((player: Player) => network.playerAdded$.next(player));
+            connectedParticipants('host', ['b', 'local', 'z']);
+
+            // When b and z are lost, the host still connected to them
+            network.playerRemoved$.next(b);
+            network.playerRemoved$.next(z);
+            ticks.next(0);
+
+            // Then this participant connects to z only, b connects to it
+            expect(network.restoreLink.mock.calls).toEqual([['z', 'host'], ['z', 'host']]);
+        });
+
+        test('should join the room again once it lost all the participants', () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            network.rejoin.mockReturnValue(new Promise<RejoinResult>(() => undefined));
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+
+            // When
+            network.playerRemoved$.next(host);
+            ticks.next(0);
+
+            // Then once at a time, without deciding the host left
+            expect(network.rejoin).toHaveBeenCalledTimes(1);
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        test('should take the room over as its last participant, the host gone', async () => {
+            // Given
+            const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+            network.rejoin.mockResolvedValue(RejoinResult.HOST_LEFT);
+            createRoom();
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+
+            // When
+            network.playerRemoved$.next(host);
+
+            // Then
+            await vi.waitFor(() => expect(network.changeHost.mock.calls).toEqual([['local']]));
+            expect(changeSequencerSpy.mock.calls).toEqual([['local'], ['local']]);
+        });
+
+        test('should try again later when not joined again', async () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+            network.playerRemoved$.next(host);
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // When
+            ticks.next(0);
+
+            // Then
+            expect(network.rejoin).toHaveBeenCalledTimes(2);
+        });
+
+        test('should let the participants connect to it once joined again, as to a joining player', async () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            network.rejoin.mockResolvedValue(RejoinResult.JOINED);
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            [host, createRemote('z')].forEach((player: Player) => network.playerAdded$.next(player));
+            network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'z' }));
+            network.playerRemoved$.next(host);
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // When connected to the host again, which is connected to z
+            network.playerAdded$.next(host);
+            connectedParticipants('host', ['local', 'z']);
+            ticks.next(0);
+
+            // Then z connects to it, not the other way round
+            expect(network.restoreLink).not.toHaveBeenCalled();
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        test('should no longer join the room again once lost', async () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            network.rejoin.mockResolvedValue(RejoinResult.ROOM_LOST);
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+            network.playerRemoved$.next(host);
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // When
+            ticks.next(0);
+
+            // Then
+            expect(network.rejoin).toHaveBeenCalledTimes(1);
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        describe('as host', () => {
+            beforeEach(() => {
+                network = new RoomNetworkMock('local', true, 'local');
+            });
+
+            test('should decide the only participant it lost left: alone too, it joins the room again', () => {
+                // Given
+                createRoom();
+                const b: Player = createRemote('b');
+                network.playerAdded$.next(b);
+
+                // When
+                network.playerRemoved$.next(b);
+
+                // Then
+                expect(network.rejoin).not.toHaveBeenCalled();
+                expect(network.removeFromRoom.mock.calls).toEqual([['b']]);
+            });
+
+            test('should let the participants it lost take the room over, joining it again', () => {
+                // Given
+                network.rejoin.mockReturnValue(new Promise<RejoinResult>(() => undefined));
+                createRoom();
+                const b: Player = createRemote('b');
+                const c: Player = createRemote('c');
+                [b, c].forEach((player: Player) => network.playerAdded$.next(player));
+
+                // When
+                network.playerRemoved$.next(b);
+                network.playerRemoved$.next(c);
+
+                // Then without deciding they left
+                expect(network.rejoin).toHaveBeenCalledTimes(1);
+                expect(network.removeFromRoom).not.toHaveBeenCalled();
+            });
+
+            test('should take its room back once nobody took it over', async () => {
+                // Given
+                network.rejoin.mockResolvedValue(RejoinResult.HOST_LEFT);
+                createRoom();
+                const b: Player = createRemote('b');
+                const c: Player = createRemote('c');
+                [b, c].forEach((player: Player) => network.playerAdded$.next(player));
+
+                // When
+                network.playerRemoved$.next(b);
+                network.playerRemoved$.next(c);
+
+                // Then
+                await vi.waitFor(() => expect(network.changeHost.mock.calls).toEqual([['local']]));
+                expect(network.removeFromRoom.mock.calls).toEqual([['b'], ['c']]);
+            });
+        });
+
+        test('should not decide anything once cleared while joining again', async () => {
+            // Given
+            network.rejoin.mockResolvedValue(RejoinResult.HOST_LEFT);
+            const room: BlockRoom<TestPayloads> = createRoom();
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+            network.playerRemoved$.next(host);
+
+            // When
+            room.clear();
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // Then
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+    });
+
+    test('should ignore invalid connected participants', () => {
+        // Given
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        createRoom();
+        const host: Player = createRemote('host');
+        [host, createRemote('b')].forEach((player: Player) => network.playerAdded$.next(player));
+        network.playerRemoved$.next(host);
+
+        // When
+        network.onMessage$.next({ type: AntiCheatMessageType.CONNECTED_PARTICIPANTS, payload: { participants: 'local' as unknown as string[] }, origin: MessageOriginType.ANTI_CHEAT, from: 'b' });
+
+        // Then
+        expect(changeSequencerSpy).not.toHaveBeenCalled();
+        expect(TimedLogger.error).toHaveBeenCalledWith('Invalid connected participants from b', { participants: 'local' });
     });
 
     test('should order the names by their code units, the same in every browser whatever its locale', () => {
@@ -304,9 +614,12 @@ describe('BlockRoom', () => {
         createRoom();
         const host: Player = createRemote('host');
         [host, createRemote('a'), createRemote('B')].forEach((player: Player) => network.playerAdded$.next(player));
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
 
         // When
         network.playerRemoved$.next(host);
+        connectedParticipants('a', ['B', 'local']);
+        connectedParticipants('B', ['a', 'local']);
 
         // Then B (66) comes before a (97) and before local (108)
         expect(changeSequencerSpy.mock.calls).toEqual([['B'], ['B']]);
@@ -555,6 +868,29 @@ describe('BlockRoom', () => {
                 expect(bob.received).toEqual(alice.received);
             });
             expect(alice.room.cheatFlags()).toEqual([]);
+        });
+
+        test('should keep the host ordering when only the link between it and a participant broke', async () => {
+            // Given
+            const host: Peer = await createPeer('host', 'host');
+            const alice: Peer = await createPeer('alice', 'host');
+            const bob: Peer = await createPeer('bob', 'host');
+            connect(host, alice, bob);
+            const warn = vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+            const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer');
+            await vi.waitFor(() => expect(host.room.players()).toHaveLength(3));
+
+            // When the host and bob lose each other, alice still connected to both
+            host.network.playerRemoved$.next(host.links.get('bob') as WebRtcPlayer);
+            bob.network.playerRemoved$.next(bob.links.get('host') as WebRtcPlayer);
+            alice.room.transmitMessage('chat', 'still ordered by the host');
+
+            // Then
+            await vi.waitFor(() => expect(alice.received).toEqual([{ from: 'alice', type: 'chat', payload: 'still ordered by the host' }]));
+            expect(host.received).toEqual(alice.received);
+            expect(warn).not.toHaveBeenCalledWith('host has left the room');
+            // Not even bob, which can not reach the host
+            expect(changeSequencerSpy).not.toHaveBeenCalled();
         });
 
         test('should hand the ordering over when the host ignores the entries of a participant', async () => {

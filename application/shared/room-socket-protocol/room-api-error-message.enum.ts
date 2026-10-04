@@ -4,4 +4,8 @@ export enum RoomApiErrorMessage {
     /** A player of the same name is in the room, until the host tells it left */
     ALREADY_IN_GAME = 'Already in game',
     ALREADY_IN_QUEUE = 'Already in queue',
+    /** The host lost its connection: the room waits for it to reconnect */
+    HOST_DISCONNECTED = 'Host disconnected',
+    /** A player can not take over the room while its host is connected: until its former connection closes */
+    HOST_CONNECTED = 'Host connected',
 }

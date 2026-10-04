@@ -184,7 +184,11 @@ conventional chess.
 The player joins the room again under its name. The host notices at once that its former page left,
 since the data channels close with it, but the websocket API refuses the name (`Already in game`) until
 the host removed the former connection: the page asks to join again every 2 seconds, for 20 seconds
-at most (`RoomManagerService`), then tells the name is taken.
+at most (`joinRoom`), then tells the name is taken.
+
+The host reloading its page is no exception: once the others agree it left, the sequencer takes the
+room over (see [Taking the room over](blockchain-and-anti-cheat.md#changing-the-sequencer)), and the
+former host joins it with "Rejoindre", its seat kept.
 
 A reloaded page builds a new session, and the chain delivers again all its messages:
 

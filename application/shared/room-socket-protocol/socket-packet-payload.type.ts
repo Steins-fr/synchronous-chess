@@ -6,6 +6,7 @@ import PlayerRequest from './requests/player-request';
 import PlayersRequest from './requests/players-request';
 import RoomCreateRequest from './requests/room-create-request';
 import RoomJoinRequest from './requests/room-join-request';
+import RoomReconnectRequest from './requests/room-reconnect-request';
 import RtcSignalRequest from './requests/rtc-signal-request';
 import ErrorResponse from './responses/error-response';
 import FullResponse from './responses/full-response';
@@ -13,6 +14,7 @@ import PlayerResponse from './responses/player-response';
 import PlayersResponse from './responses/players-response';
 import RoomCreateResponse from './responses/room-create-response';
 import RoomJoinResponse from './responses/room-join-response';
+import RoomReconnectResponse from './responses/room-reconnect-response';
 import RtcSignalResponse from './responses/rtc-signal-response';
 
 export interface SocketPacketPayload<Type, Data> {
@@ -29,7 +31,8 @@ export enum RoomApiRequestTypeEnum {
     PLAYER_ADD = 'playerAdd',
     PLAYER_REMOVE = 'playerRemove',
     FULL = 'full',
-    SIGNAL = 'signal'
+    SIGNAL = 'signal',
+    RECONNECT = 'reconnect',
 }
 
 export type RoomSocketApiRequestTypedData = {
@@ -40,6 +43,7 @@ export type RoomSocketApiRequestTypedData = {
     'playerRemove': PlayerRequest,
     'signal': RtcSignalRequest,
     'full': FullRequest,
+    'reconnect': RoomReconnectRequest,
 };
 
 export type SocketPacketRequestPayload<Type extends RoomApiRequestTypeEnum = RoomApiRequestTypeEnum> = SocketPacketPayload<Type, RoomSocketApiRequestTypedData[Type]>;
@@ -53,6 +57,7 @@ export enum RoomApiResponseTypeEnum {
     FULL_SENT = 'fullSent',
     JOINING_ROOM = 'joiningRoom',
     PLAYERS = 'players',
+    RECONNECTED = 'reconnected',
     REMOVED = 'removed',
     SIGNAL_SENT = 'signalSent',
 }
@@ -65,6 +70,7 @@ export type RoomSocketApiResponseTypedData = {
     'fullSent': FullResponse,
     'joiningRoom': RoomJoinResponse,
     'players': PlayersResponse,
+    'reconnected': RoomReconnectResponse,
     'removed': PlayerResponse,
     'signalSent': RtcSignalResponse,
 };
@@ -81,6 +87,7 @@ export const requestToResponse = {
     [RoomApiRequestTypeEnum.PLAYER_REMOVE]: RoomApiResponseTypeEnum.REMOVED,
     [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
     [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
+    [RoomApiRequestTypeEnum.RECONNECT]: RoomApiResponseTypeEnum.RECONNECTED,
 } as const satisfies Record<RoomApiRequestTypeEnum, RoomApiResponseTypeEnum>;
 
 export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = (typeof requestToResponse)[Type];

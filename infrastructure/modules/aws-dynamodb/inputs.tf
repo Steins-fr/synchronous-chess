@@ -27,6 +27,12 @@ variable "write-capacity" {
   default     = 5
 }
 
+variable "ttl-attribute" {
+  type        = string
+  description = "Attribute holding the expiry of an item, in epoch seconds: DynamoDB deletes the expired items. No TTL when empty."
+  default     = ""
+}
+
 variable "attributes" {
   type        = list(string)
   description = "Table attributes values"

@@ -1,5 +1,4 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import Room from '@models/room';
 import RoomService from '@services/room-service';
 import ConnectionService from '@services/connection-service';
 
@@ -25,10 +24,10 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
             return { statusCode: 500, body: 'Undefined connection' };
         }
 
-        const room: Room = await ddb.getRoomByName(connection.roomName);
         try {
-            await ddb.removeConnectionFromRoom(room, connection);
+            await ddb.removeConnectionFromRoom(await ddb.getRoomByName(connection.roomName), connection);
         } catch (e) {
+            // The room expired, or could not be updated: the connection is deleted all the same
             console.error(e);
         }
         await connectionService.delete(connection);

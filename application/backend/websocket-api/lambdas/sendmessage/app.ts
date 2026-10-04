@@ -7,6 +7,7 @@ import MessageHandler from './handlers/message-handler';
 import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
+import ReconnectHandler from './handlers/reconnect-handler';
 import SignalHandler from './handlers/signal-handler';
 import { SocketPacketRequestPayload } from '@protocol/socket-packet-payload.type';
 import { getManagementApiEndpoint } from '@helpers/environment.helper';
@@ -24,6 +25,7 @@ interface MessageHandlers {
     playerGetAll: typeof PlayerGetAllHandler;
     playerAdd: typeof PlayerAddHandler;
     playerRemove: typeof PlayerRemoveHandler;
+    reconnect: typeof ReconnectHandler;
 }
 
 const messageHandlers: MessageHandlers = {
@@ -33,7 +35,8 @@ const messageHandlers: MessageHandlers = {
     signal: SignalHandler,
     playerGetAll: PlayerGetAllHandler,
     playerAdd: PlayerAddHandler,
-    playerRemove: PlayerRemoveHandler
+    playerRemove: PlayerRemoveHandler,
+    reconnect: ReconnectHandler,
 };
 
 export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {

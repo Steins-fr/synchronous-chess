@@ -26,7 +26,7 @@ describe('ConnectionService', () => {
 
         // Then
         expect(found).toEqual(connection);
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connections', Item: connection })).toHaveLength(1);
+        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: connection })).toHaveLength(1);
         expect(dynamo.commandCalls(GetCommand, { Key: { connectionId: 'connection' } })).toHaveLength(1);
         expect(dynamo.commandCalls(DeleteCommand, { Key: { connectionId: 'connection' } })).toHaveLength(1);
     });

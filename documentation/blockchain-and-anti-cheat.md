@@ -192,11 +192,31 @@ Every 2 seconds, the room ticks its chains:
 
 ## Changing the sequencer
 
-The sequencer changes when it leaves, or when **more than half of the other participants** reported
-it for a cheat only a sequencer can commit (see the table below). The next sequencer is the first
-participant by name among the connected ones, a distrusted sequencer never coming back: every
+The sequencer changes when it leaves the room, or when **more than half of the other participants**
+reported it for a cheat only a sequencer can commit (see the table below). The next sequencer is the
+first participant by name among the connected ones, a distrusted sequencer never coming back: every
 participant knows the same participants and reports, so they all name the same one. When no
 participant can take over, the sequencer stays.
+
+**Leaving the room.** A participant losing its connection to another one does not know whether the
+other left, or only their link broke. Each participant tells the others whom it is connected to
+(`connectedParticipants`), whenever a participant becomes ready or leaves. A participant has left the
+room once **every other connected participant** told it lost it too: a participant which did not tell
+yet is waited for, and a participant connected again before that has not left. So the participants
+all notice a departure, and change their sequencer, from the same participants; a single broken link
+changes nothing.
+
+**Restoring a connection.** Until then, the connection is negotiated again through a participant still
+connected to both: every participant relays the signals of two others, as the host does for a joining
+player. Of the two, the first by name connects, the other answers through the same relay; the attempt
+is repeated at each tick of the room (2 seconds) while the other is lost. A participant which lost
+all the others may have lost its own network: it joins the room again through the websocket, the
+others connecting to it as to a joining player. Refused for 20 seconds because the host is gone, it is
+the last participant: the participants it lost have left the room, and it takes it over. The host
+does so too once it lost several participants: they may still be connected to each other, so it closes
+the socket of its room for them to take it over, then joins it; nobody taking it over, it takes its
+room back. Having lost a single participant, the host decides at once that it left: alone too, the
+other one joins the room again.
 
 ```mermaid
 sequenceDiagram
@@ -233,7 +253,15 @@ which sequencer it follows, the number of changes it made and the distrusted seq
 follow, if they made more changes than itself; a single participant can not make it follow another
 sequencer.
 
-New players can not join once the host has left: joining goes through the host.
+**Taking the room over.** Joining goes through the host, which holds the room on the websocket API. Once
+the room agrees its host left, the sequencer, after the handover, takes it over: it moves the room of
+the API to a new socket of its own (`reconnect` with its name and the token it joined with, retried
+while the former host connection is still open), tells the API the players of the room (the former
+host leaves them), then lets the players join and relays their signals. The host removes a player from
+the room of the API once the room agrees it left, not when only its connection is lost: it may still
+take the room over. The other participants
+connect to the joining players through it. The former host, back on a reloaded page, joins the room
+like any player.
 
 ## Hidden moves: commit then reveal
 
@@ -325,6 +353,7 @@ report (`modules/room-layout/cheat-notifications.ts`).
 | `block_room_service` | `chainHead` | `{ index, hash, sequencer, sequencerSignature }` | a participant → everyone, every 2 seconds |
 | `anti_cheat` | `cheatReport` | `CheatReport` | a participant → everyone |
 | `anti_cheat` | `sequencerState` | `{ sequencer, handovers, distrusted }` | a participant → each participant whose key it receives |
+| `anti_cheat` | `connectedParticipants` | `{ participants }` (sender excluded) | a participant → everyone, when a participant becomes ready or leaves |
 
 The `block_room_service` messages carry the name of their chain in a `chain` field.
 `isNetworkMessage` validates the envelope of the received messages (origin, type, known chain name);
