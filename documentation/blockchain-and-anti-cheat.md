@@ -212,7 +212,11 @@ player. Of the two, the first by name connects, the other answers through the sa
 is repeated at each tick of the room (2 seconds) while the other is lost. A participant which lost
 all the others may have lost its own network: it joins the room again through the websocket, the
 others connecting to it as to a joining player. Refused for 20 seconds because the host is gone, it is
-the last participant: the participants it lost have left the room, and it takes it over.
+the last participant: the participants it lost have left the room, and it takes it over. The host
+does so too once it lost several participants: they may still be connected to each other, so it closes
+the socket of its room for them to take it over, then joins it; nobody taking it over, it takes its
+room back. Having lost a single participant, the host decides at once that it left: alone too, the
+other one joins the room again.
 
 ```mermaid
 sequenceDiagram
@@ -253,7 +257,9 @@ sequencer.
 the room agrees its host left, the sequencer, after the handover, takes it over: it moves the room of
 the API to a new socket of its own (`reconnect` with its name and the token it joined with, retried
 while the former host connection is still open), tells the API the players of the room (the former
-host leaves them), then lets the players join and relays their signals. The other participants
+host leaves them), then lets the players join and relays their signals. The host removes a player from
+the room of the API once the room agrees it left, not when only its connection is lost: it may still
+take the room over. The other participants
 connect to the joining players through it. The former host, back on a reloaded page, joins the room
 like any player.
 

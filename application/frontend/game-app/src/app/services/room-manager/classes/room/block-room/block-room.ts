@@ -72,7 +72,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private readonly connectedViews = new Map<string, ReadonlySet<string>>();
     /** The participants this participant lost its connection to, until all the other participants lost them too */
     private readonly lost = new Set<string>();
-    /** Joining the room again through the socket, having lost all the participants */
+    /** Joining the room again through the socket, having lost all the participants: for good once the room is lost */
     private rejoining: boolean = false;
     private cleared: boolean = false;
 
@@ -165,19 +165,23 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private checkDepartures(): void {
         const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== this.localPlayer.name);
 
-        if (others.length === 0 && this.lost.size > 0 && this.localPlayer.name !== this.hostName) {
+        if (others.length === 0 && this.mayHaveLostItsConnection()) {
             this.rejoinRoom();
             return;
         }
 
-        for (const name of this.lost) {
-            if (others.every((other: string) => this.connectedViews.get(other)?.has(name) === false)) {
-                this.lost.delete(name);
-                this.onDeparted(name);
-            }
-        }
-
+        const departed: ReadonlyArray<string> = [...this.lost].filter((name: string) => others.every((other: string) => this.connectedViews.get(other)?.has(name) === false));
+        departed.forEach((name: string) => this.lost.delete(name));
+        this.onDeparted(departed);
         this.restoreLinks(others);
+    }
+
+    /**
+     * Alone, this participant may have lost its own connection, rather than the others theirs. Except the host which
+     * lost a single participant: the other one is alone too, it joins the room again instead of taking it over
+     */
+    private mayHaveLostItsConnection(): boolean {
+        return this.lost.size > (this.localPlayer.name === this.hostName ? 1 : 0);
     }
 
     /**
@@ -196,8 +200,8 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     /**
      * Without any participant left, this participant may have lost its own connection: it joins the room again. Joined,
-     * the others connect to it as to a joining player, it does not connect to them. The host gone, it is the last one,
-     * and the participants lost have left the room
+     * the others connect to it as to a joining player, it does not connect to them. The room waiting for its host, this
+     * participant is the last one, and takes it over: the participants lost have left the room
      */
     private rejoinRoom(): void {
         if (this.rejoining) {
@@ -206,9 +210,9 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
         this.rejoining = true;
         void this.roomConnection.rejoin().then((result: RejoinResult) => {
-            this.rejoining = false;
+            this.rejoining = result === RejoinResult.ROOM_LOST;
 
-            if (this.cleared || result === RejoinResult.NOT_JOINED) {
+            if (this.cleared || result === RejoinResult.NOT_JOINED || result === RejoinResult.ROOM_LOST) {
                 return;
             }
 
@@ -216,25 +220,27 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
             this.lost.clear();
 
             if (result === RejoinResult.HOST_LEFT) {
-                lost.forEach((name: string) => this.onDeparted(name));
+                this.onDeparted(lost, true);
             }
         });
     }
 
     /**
      * Every participant notices it, from the same participants: they all take the same decisions. The sequencer takes
-     * the room over from a host which left
+     * the room over from a host which left, once it is named among the participants left
      */
-    private onDeparted(name: string): void {
-        TimedLogger.warn(`${ name } has left the room`);
+    private onDeparted(names: ReadonlyArray<string>, hostLeft: boolean = names.includes(this.hostName)): void {
+        names.forEach((name: string) => TimedLogger.warn(`${ name } has left the room`));
 
-        if (name === this.sequencer) {
+        if (names.includes(this.sequencer)) {
             this.handOver();
         }
 
-        if (name === this.hostName) {
+        if (hostLeft) {
             this.roomConnection.changeHost(this.sequencer);
         }
+
+        names.forEach((name: string) => this.roomConnection.removeFromRoom(name));
     }
 
     /** Most of the other participants reporting the sequencer as cheating take the ordering away from it */

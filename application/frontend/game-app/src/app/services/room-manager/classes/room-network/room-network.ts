@@ -21,8 +21,10 @@ export enum RejoinResult {
     JOINED = 'joined',
     /** The room waits for its host: this participant is the last one */
     HOST_LEFT = 'hostLeft',
-    /** Not joined, to try again later: the API failed, or this participant hosts or connects already */
+    /** Not joined, to try again later: the API failed, or this participant connects already */
     NOT_JOINED = 'notJoined',
+    /** The API refused the join for good, the room expired: nothing to join anymore */
+    ROOM_LOST = 'roomLost',
 }
 
 export abstract class RoomNetwork {
@@ -49,7 +51,7 @@ export abstract class RoomNetwork {
     private readonly queueRemovedSubject = new Subject<string>();
     public readonly queueRemoved$ = this.queueRemovedSubject.asObservable();
     protected readonly roomLostSubject = new Subject<void>();
-    /** The room this participant hosts could not move to a new socket: nobody can join it anymore */
+    /** The room this participant hosts could not move to a new socket, or could not be joined again: nobody can join it anymore */
     public readonly roomLost$ = this.roomLostSubject.asObservable();
 
     protected constructor(
@@ -67,11 +69,14 @@ export abstract class RoomNetwork {
      */
     public abstract changeHost(hostName: string): void;
 
-    /** Joins the room again through the socket, having lost the connections to all the participants */
-    public rejoin(): Promise<RejoinResult> {
-        // The host does not join its room: the players connect to it again
-        return Promise.resolve(RejoinResult.NOT_JOINED);
-    }
+    /**
+     * Joins the room again through the socket, having lost the connections to all the participants: the host lets them
+     * take the room over first
+     */
+    public abstract rejoin(): Promise<RejoinResult>;
+
+    /** The room agreed the participant left: its host removes it from the room on the API */
+    public abstract removeFromRoom(playerName: string): void;
 
     /**
      * Connects again to a participant still in the room, the connection to it lost, through a participant connected to

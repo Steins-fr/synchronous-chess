@@ -1,4 +1,4 @@
-import { HostRoomNetwork } from './host-room-network';
+import { PeerRoomNetwork } from './peer-room-network';
 import { Negotiator } from '../negotiator/negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
@@ -16,7 +16,8 @@ import { WebrtcMock } from '@testing/webrtc.mock';
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-class TestHostRoomNetwork extends HostRoomNetwork {
+/** The network of the player creating the room, which hosts it */
+class TestHostRoomNetwork extends PeerRoomNetwork {
     public override onPlayerConnected(player: Player): void {
         super.onPlayerConnected(player);
     }
@@ -30,8 +31,7 @@ class TestHostRoomNetwork extends HostRoomNetwork {
     }
 }
 
-
-describe('HostRoomNetwork', () => {
+describe('RoomHosting', () => {
     const replacementDelay: number = 100 * 60_000;
     let notification$: Subject<RoomSocketApiNotifications>;
     let closed$: Subject<void>;
@@ -39,7 +39,7 @@ describe('HostRoomNetwork', () => {
     let network: TestHostRoomNetwork;
 
     function createNetwork(maxPlayer: number = 2): TestHostRoomNetwork {
-        network = new TestHostRoomNetwork(roomSocketApi, 'room', maxPlayer, 'host', 'token');
+        network = new TestHostRoomNetwork(roomSocketApi, 'room', 'host', 'host', maxPlayer, 'token');
         return network;
     }
 
@@ -177,13 +177,16 @@ describe('HostRoomNetwork', () => {
             expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
         });
 
-        test('should synchronize the server players once reconnected', async () => {
+        test('should synchronize the server players once reconnected, keeping the ones lost but not agreed left', async () => {
             // Given
             createNetwork();
             addRemotePlayer('remote');
             vi.mocked(roomSocketApi.send).mockImplementation(async (type: RoomApiRequestTypeEnum) => {
-                return type === RoomApiRequestTypeEnum.PLAYER_GET_ALL ? { players: ['host', 'ghost'] } : { playerName: '' };
+                return type === RoomApiRequestTypeEnum.PLAYER_GET_ALL ? { players: ['host', 'ghost', 'lost'] } : { playerName: '' };
             });
+            closed$.next();
+            network.removeFromRoom('ghost');
+            vi.mocked(roomSocketApi.send).mockClear();
 
             // When
             closed$.next();
@@ -310,7 +313,7 @@ describe('HostRoomNetwork', () => {
         });
     });
 
-    test('should declare the connected and disconnected players to the server', () => {
+    test('should declare the connected players to the server, and remove the ones the room agreed left only', async () => {
         // Given
         createNetwork();
         const player = TestHelper.cast<Player>({ name: 'remote' });
@@ -318,10 +321,62 @@ describe('HostRoomNetwork', () => {
         // When
         network.onPlayerConnected(player);
         network.onPlayerDisconnected(player);
+        network.removeFromRoom('remote');
 
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'remote' });
         expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'remote' });
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
+    });
+
+    test('should log a failed removal', async () => {
+        // Given
+        createNetwork();
+        vi.mocked(roomSocketApi.send).mockRejectedValue('remove failure');
+
+        // When
+        network.removeFromRoom('remote');
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then
+        expect(console.error).toHaveBeenCalledWith('remove failure');
+    });
+
+    test('should remove a player which left while the socket was closed once the room moved to a new socket', async () => {
+        // Given
+        createNetwork();
+        let moved: () => void = () => undefined;
+        vi.mocked(roomSocketApi.reconnect).mockReturnValue(new Promise<void>((resolve) => moved = resolve));
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ players: ['host', 'remote'] });
+        closed$.next();
+
+        // When
+        network.removeFromRoom('remote');
+        const whileClosed: number = vi.mocked(roomSocketApi.send).mock.calls.length;
+        moved();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then
+        expect(whileClosed).toEqual(0);
+        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'remote' });
+    });
+
+    test('should not remove a player which connected again', async () => {
+        // Given
+        createNetwork();
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ players: ['host', 'remote'] });
+        closed$.next();
+        network.removeFromRoom('remote');
+        addRemotePlayer('remote');
+        network.onPlayerConnected(TestHelper.cast<Player>({ name: 'remote' }));
+        vi.mocked(roomSocketApi.send).mockClear();
+
+        // When
+        closed$.next();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then
+        expect(roomSocketApi.send).not.toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, expect.anything());
     });
 
     test('should tell the remote players, the new one included, that a player connected', () => {

@@ -9,7 +9,6 @@ import RoomCreateResponse from '@protocol/responses/room-create-response';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { HostRoomNetwork } from './classes/room-network/host-room-network';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
 import { RoomNetwork } from './classes/room-network/room-network';
 import { NotificationService } from '../notification/notification.service';
@@ -38,7 +37,7 @@ export default class RoomManagerService {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                roomConnection = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName, token);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, token);
             } else {
                 const response: RoomJoinResponse = await this.join(setup, token);
 
@@ -67,7 +66,6 @@ export default class RoomManagerService {
             this.notificationService.info(RoomManagerService.retryMessage(error));
         });
     }
-
 
     private static retryMessage(error: string): string {
         return error === RoomApiErrorMessage.HOST_DISCONNECTED ? 'L\'hôte de la salle se reconnecte…' : 'Ce nom est encore dans la salle, reconnexion en cours…';

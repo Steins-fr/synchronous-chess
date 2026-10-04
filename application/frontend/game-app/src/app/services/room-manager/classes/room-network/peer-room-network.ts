@@ -1,5 +1,5 @@
-import { joinRoom } from '@app/services/room-api/join-room';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { isTemporaryJoinError, joinRoom } from '@app/services/room-api/join-room';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
@@ -13,7 +13,10 @@ import { Player } from '../player/player';
 import { RoomHosting } from './room-hosting';
 import { RejoinResult, RoomNetwork } from './room-network';
 
-/** The network of a player joining the room, which takes it over when the room agrees its host left and elects it */
+/**
+ * The network of a participant of the room. The player creating the room hosts it, the others join it through the
+ * host; the room agreeing its host left, the participant it elects takes it over
+ */
 export class PeerRoomNetwork extends RoomNetwork {
     protected hostPlayer?: Player;
     private _hostName: string;
@@ -27,20 +30,32 @@ export class PeerRoomNetwork extends RoomNetwork {
         return this._hostName;
     }
 
+    /**
+     * @param hostName the name of the local player when it created the room
+     * @param token the token the player created or joined the room with, to reconnect it or take it over
+     */
     public constructor(
         roomApi: RoomSocketApi,
         roomName: string,
         localPlayerName: string,
         hostName: string,
         private readonly maxPlayer: number,
-        /** The token the player joined the room with, to take it over */
         private readonly token: string,
     ) {
         super(roomApi, roomName, localPlayerName);
         this._hostName = hostName;
 
-        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, hostName, new Webrtc(), roomApi);
-        this.addNegotiator(negotiator);
+        if (hostName === localPlayerName) { // The socket created the room
+            this.startHosting(true);
+        } else {
+            this.addNegotiator(new WebsocketNegotiator(roomName, hostName, new Webrtc(), roomApi));
+        }
+    }
+
+    private startHosting(holdsRoom: boolean): void {
+        this.hostPlayer = undefined;
+        this.hosting = new RoomHosting(this.hostingContext(this.maxPlayer, this.token), holdsRoom);
+        this.hosting.roomLost$.subscribe(() => this.roomLostSubject.next());
     }
 
     /** Takes the room over when elected, connects to the joining players through the new host otherwise */
@@ -52,12 +67,14 @@ export class PeerRoomNetwork extends RoomNetwork {
         this._hostName = hostName;
 
         if (hostName === this.localPlayer.name) {
-            this.hostPlayer = undefined;
-            this.hosting = new RoomHosting(this.hostingContext(this.maxPlayer, this.token));
-            this.hosting.roomLost$.subscribe(() => this.roomLostSubject.next());
+            this.startHosting(false);
         } else {
             this.hostPlayer = this.players.get(hostName);
         }
+    }
+
+    public removeFromRoom(playerName: string): void {
+        this.hosting?.removePlayer(playerName);
     }
 
     protected onPlayerConnected(player: Player): void {
@@ -72,8 +89,6 @@ export class PeerRoomNetwork extends RoomNetwork {
         if (this.hostPlayer?.name === player.name) {
             this.hostPlayer = undefined;
         }
-
-        this.hosting?.onPlayerDisconnected(player);
     }
 
     /** The signals relayed to this participant are negotiated by every network */
@@ -85,11 +100,19 @@ export class PeerRoomNetwork extends RoomNetwork {
 
     /**
      * Joins the room again through the socket, as on a reloaded page: the API refuses the name until the host removed
-     * the former connection, and while the host reconnects. The others connect to it again once connected to the host
+     * the former connection, and while the host reconnects. The others connect to it again once connected to the host.
+     * The host first closes the socket of its room: the participants it lost, still connected to each other, take the
+     * room over, and the room waits for its host when they all left
      */
     public override async rejoin(): Promise<RejoinResult> {
-        if (this.hosting || this.getNegotiatorSize() > 0) { // Hosting, or connecting again already
+        if (this.getNegotiatorSize() > 0) { // Connecting again already
             return RejoinResult.NOT_JOINED;
+        }
+
+        if (this.hosting) {
+            this.hosting.clear();
+            this.hosting = undefined;
+            this.roomSocketApi.close();
         }
 
         try {
@@ -98,17 +121,28 @@ export class PeerRoomNetwork extends RoomNetwork {
             this.addNegotiator(new WebsocketNegotiator(this.roomName, response.playerName, new Webrtc(), this.roomSocketApi));
             return RejoinResult.JOINED;
         } catch (e) {
-            if (e instanceof Error && e.message === RoomApiErrorMessage.HOST_DISCONNECTED) {
-                return RejoinResult.HOST_LEFT;
-            }
-
-            console.error('PeerRoom: the room could not be joined again', e);
-            return RejoinResult.NOT_JOINED;
+            return this.rejoinFailure(e);
         }
     }
 
+    private rejoinFailure(error: unknown): RejoinResult {
+        if (error instanceof RoomApiError && error.message === RoomApiErrorMessage.HOST_DISCONNECTED) {
+            return RejoinResult.HOST_LEFT;
+        }
+
+        console.error('PeerRoom: the room could not be joined again', error);
+
+        if (error instanceof RoomApiError && !isTemporaryJoinError(error)) { // The room expired
+            this.roomLostSubject.next();
+            return RejoinResult.ROOM_LOST;
+        }
+
+        return RejoinResult.NOT_JOINED;
+    }
+
     private async onNewPlayer(newPlayerPayload: NewPlayerPayload): Promise<void> {
-        if (this.localPlayer.name === newPlayerPayload.playerName) { // I am notified that I joined the room => close the socket
+        // I am notified that I joined the room => close the socket, unless it holds the room I host
+        if (this.localPlayer.name === newPlayerPayload.playerName && !this.hosting) {
             this.roomSocketApi.close();
         }
 

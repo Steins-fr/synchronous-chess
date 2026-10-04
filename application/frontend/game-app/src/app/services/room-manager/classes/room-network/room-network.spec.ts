@@ -1,4 +1,4 @@
-import { RejoinResult, RoomNetwork } from './room-network';
+import { RoomNetwork } from './room-network';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
@@ -23,6 +23,8 @@ class TestRoomNetwork extends RoomNetwork {
     public readonly onPlayerConnectedSpy = vi.fn();
     public readonly onPlayerDisconnectedSpy = vi.fn();
     public readonly changeHost = vi.fn();
+    public readonly rejoin = vi.fn();
+    public readonly removeFromRoom = vi.fn();
 
     public constructor() {
         super(TestHelper.cast<RoomSocketApi>({}), 'room', 'local');
@@ -302,10 +304,6 @@ describe('RoomNetwork', () => {
             expect([...network.negotiators().keys()]).toEqual(['lost']);
             expect(Negotiator.prototype.initiate).toHaveBeenCalledTimes(1);
         });
-    });
-
-    test('should not join the room again by default', async () => {
-        expect(await network.rejoin()).toEqual(RejoinResult.NOT_JOINED);
     });
 
     test('transmitMessage should send the message to the remote players', () => {

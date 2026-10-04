@@ -5,7 +5,6 @@ import { NotificationService } from '../notification/notification.service';
 import { RoomApiError, RoomSocketApi } from '../room-api/room-socket.api';
 import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
-import { HostRoomNetwork } from './classes/room-network/host-room-network';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
@@ -60,7 +59,8 @@ describe('RoomManagerService', () => {
 
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host', token: 'token' });
-        expect(room.roomConnection).toBeInstanceOf(HostRoomNetwork);
+        expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
+        expect(room.roomConnection.initiator).toEqual(true);
         expect(room.localPlayer.name).toEqual('host');
         expect(BlockRoom.createKeys).toHaveBeenCalledWith('host');
     });

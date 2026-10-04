@@ -11,11 +11,16 @@ import { RoomSocketApi } from './room-socket.api';
  */
 const JOIN_RETRY_DELAY: number = 2000;
 const JOIN_RETRIES: number = 10;
-const RETRIED_ERRORS: ReadonlySet<string | undefined> = new Set([
+const RETRIED_ERRORS: ReadonlySet<string> = new Set<string>([
     RoomApiErrorMessage.ALREADY_IN_GAME,
     RoomApiErrorMessage.ALREADY_IN_QUEUE,
     RoomApiErrorMessage.HOST_DISCONNECTED,
 ]);
+
+/** The API refuses the join for a while only: joining again later may succeed */
+export function isTemporaryJoinError(error: unknown): error is Error {
+    return error instanceof Error && RETRIED_ERRORS.has(error.message);
+}
 
 /**
  * Joins the room, asking again every 2 seconds for 20 seconds at most while the API refuses it for a while
@@ -28,14 +33,12 @@ export async function joinRoom(roomSocketApi: RoomSocketApi, request: RoomJoinRe
             // eslint-disable-next-line no-await-in-loop -- retries, one attempt after the other
             return await roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, request);
         } catch (e) {
-            const message: string | undefined = e instanceof Error ? e.message : undefined;
-
-            if (message === undefined || !RETRIED_ERRORS.has(message) || retry === JOIN_RETRIES) {
+            if (!isTemporaryJoinError(e) || retry === JOIN_RETRIES) {
                 throw e;
             }
 
             if (retry === 0) {
-                onRetry(message);
+                onRetry(e.message);
             }
 
             // eslint-disable-next-line no-await-in-loop -- the delay between two attempts

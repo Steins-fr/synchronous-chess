@@ -44,12 +44,14 @@ export class RoomHosting {
     private readonly roomLostSubject = new Subject<void>();
     /** The room could not move to a new socket: nobody can join it anymore */
     public readonly roomLost$ = this.roomLostSubject.asObservable();
+    /** The players the room agreed left, to remove from the room on the API */
+    private readonly departed = new Set<string>();
 
     /**
-     * Without an open socket, as a participant taking over whose socket closed once it joined, the room moves to a new
-     * socket at once
+     * @param holdsRoom whether the socket holds the room already, as the one of the player creating it: the room of a
+     * participant taking over moves to a new socket at once
      */
-    public constructor(private readonly context: HostingContext) {
+    public constructor(private readonly context: HostingContext, private holdsRoom: boolean) {
         this.roomSocketApi.notification$.pipe(takeUntil(this.destroyRef)).subscribe((notification) => {
             if (notification.type === RoomSocketApiNotificationEnum.JOIN_REQUEST) {
                 void this.onJoinNotification(notification.data);
@@ -67,10 +69,13 @@ export class RoomHosting {
     private keepRoomConnected(): void {
         const replacementDue$ = this.reconnectedSubject.pipe(
             startWith(undefined),
-            switchMap(() => timer(this.replacementDelay())),
+            switchMap(() => timer(this.holdsRoom ? this.replacementDelay() : 0)),
         );
+        const closed$ = this.roomSocketApi.closed$.pipe(tap(() => {
+            this.holdsRoom = false;
+        }));
 
-        merge(replacementDue$, this.roomSocketApi.closed$).pipe(
+        merge(replacementDue$, closed$).pipe(
             exhaustMap(() => this.reconnect()),
             takeUntil(this.roomLost$),
             takeUntil(this.destroyRef),
@@ -93,6 +98,7 @@ export class RoomHosting {
             }),
             // Not waited for: the new socket may close meanwhile, to reconnect again
             tap(() => {
+                this.holdsRoom = true;
                 this.reconnectedSubject.next();
                 void this.synchronizePlayers();
             }),
@@ -114,7 +120,7 @@ export class RoomHosting {
 
     /**
      * Tells the API the players of the room: the ones joining or leaving while the socket was closed never reached it,
-     * and the former host is removed after a takeover
+     * and the former host is removed after a takeover. The players lost but not agreed left stay in the room
      */
     private async synchronizePlayers(): Promise<void> {
         try {
@@ -122,7 +128,7 @@ export class RoomHosting {
             const players: ReadonlyMap<string, Player> = this.context.players();
             const serverPlayers: string[] = (await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName })).players;
             const missingPlayers: string[] = [...players.keys()].filter((playerName: string) => !serverPlayers.includes(playerName));
-            const playersToRemove: string[] = serverPlayers.filter((playerName: string) => !players.has(playerName));
+            const playersToRemove: string[] = serverPlayers.filter((playerName: string) => this.departed.has(playerName));
 
             for (const playerName of missingPlayers) {
                 // eslint-disable-next-line no-await-in-loop -- one update of the room at a time on the API
@@ -157,6 +163,7 @@ export class RoomHosting {
      * connect to it, the host relaying their signals, and the new player closes its socket
      */
     public onPlayerConnected(player: Player): void {
+        this.departed.delete(player.name);
         void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: this.context.roomName, playerName: player.name });
 
         const message: HostRoomMessage = {
@@ -167,8 +174,18 @@ export class RoomHosting {
         this.context.transmitMessage(message);
     }
 
-    public onPlayerDisconnected(player: Player): void {
-        void this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.context.roomName, playerName: player.name });
+    /**
+     * Removes the player the room agreed left, not the one whose connection is only lost: it may take the room over.
+     * Once the room moved to a new socket when the current one does not hold it
+     */
+    public removePlayer(playerName: string): void {
+        this.departed.add(playerName);
+
+        if (this.holdsRoom) {
+            this.roomSocketApi
+                .send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.context.roomName, playerName })
+                .catch((err: unknown) => console.error(err));
+        }
     }
 
     public clear(): void {

@@ -306,8 +306,37 @@ describe('BlockRoom', () => {
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
         expect(changeSequencerSpy.mock.contexts.map(chainName)).toEqual([BlockChainName.CHESS, BlockChainName.CHAT]);
         expect(TimedLogger.warn).toHaveBeenCalledWith('host has left the room');
-        // The new sequencer takes the room over from the host
+        // The new sequencer takes the room over from the host, which leaves the room on the API
         expect(network.changeHost.mock.calls).toEqual([['b']]);
+        expect(network.removeFromRoom.mock.calls).toEqual([['host']]);
+    });
+
+    test('should name the new host once the ordering handed over, the host and the sequencer leaving together', () => {
+        // Given a room whose host handed the ordering over to c
+        network = new RoomNetworkMock('local', false, 'host');
+        vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
+        const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
+        vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
+        createRoom();
+        const host: Player = createRemote('host');
+        const c: Player = createRemote('c');
+        [host, c, createRemote('z')].forEach((player: Player) => network.playerAdded$.next(player));
+        ['host', 'z'].forEach((from: string) => network.onMessage$.next({
+            type: AntiCheatMessageType.SEQUENCER_STATE,
+            payload: { sequencer: 'c', handovers: 1, distrusted: [] },
+            origin: MessageOriginType.ANTI_CHEAT,
+            from,
+        }));
+
+        // When
+        network.playerRemoved$.next(host);
+        network.playerRemoved$.next(c);
+        connectedParticipants('z', ['local']);
+
+        // Then
+        expect(changeSequencerSpy.mock.calls).toEqual([['c'], ['c'], ['local'], ['local']]);
+        expect(network.changeHost.mock.calls).toEqual([['local']]);
+        expect(network.removeFromRoom.mock.calls).toEqual([['host'], ['c']]);
     });
 
     test('should keep the sequencer when another participant leaves the room', () => {
@@ -466,6 +495,79 @@ describe('BlockRoom', () => {
             // Then z connects to it, not the other way round
             expect(network.restoreLink).not.toHaveBeenCalled();
             expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        test('should no longer join the room again once lost', async () => {
+            // Given
+            const ticks: Subject<number> = new Subject<number>();
+            network.rejoin.mockResolvedValue(RejoinResult.ROOM_LOST);
+            createRoom(ticks);
+            const host: Player = createRemote('host');
+            network.playerAdded$.next(host);
+            network.playerRemoved$.next(host);
+            await vi.waitFor(() => expect(network.rejoin).toHaveBeenCalledTimes(1));
+            await Promise.resolve();
+
+            // When
+            ticks.next(0);
+
+            // Then
+            expect(network.rejoin).toHaveBeenCalledTimes(1);
+            expect(network.changeHost).not.toHaveBeenCalled();
+        });
+
+        describe('as host', () => {
+            beforeEach(() => {
+                network = new RoomNetworkMock('local', true, 'local');
+            });
+
+            test('should decide the only participant it lost left: alone too, it joins the room again', () => {
+                // Given
+                createRoom();
+                const b: Player = createRemote('b');
+                network.playerAdded$.next(b);
+
+                // When
+                network.playerRemoved$.next(b);
+
+                // Then
+                expect(network.rejoin).not.toHaveBeenCalled();
+                expect(network.removeFromRoom.mock.calls).toEqual([['b']]);
+            });
+
+            test('should let the participants it lost take the room over, joining it again', () => {
+                // Given
+                network.rejoin.mockReturnValue(new Promise<RejoinResult>(() => undefined));
+                createRoom();
+                const b: Player = createRemote('b');
+                const c: Player = createRemote('c');
+                [b, c].forEach((player: Player) => network.playerAdded$.next(player));
+
+                // When
+                network.playerRemoved$.next(b);
+                network.playerRemoved$.next(c);
+
+                // Then without deciding they left
+                expect(network.rejoin).toHaveBeenCalledTimes(1);
+                expect(network.removeFromRoom).not.toHaveBeenCalled();
+            });
+
+            test('should take its room back once nobody took it over', async () => {
+                // Given
+                network.rejoin.mockResolvedValue(RejoinResult.HOST_LEFT);
+                createRoom();
+                const b: Player = createRemote('b');
+                const c: Player = createRemote('c');
+                [b, c].forEach((player: Player) => network.playerAdded$.next(player));
+
+                // When
+                network.playerRemoved$.next(b);
+                network.playerRemoved$.next(c);
+
+                // Then
+                await vi.waitFor(() => expect(network.changeHost.mock.calls).toEqual([['local']]));
+                expect(network.removeFromRoom.mock.calls).toEqual([['b'], ['c']]);
+            });
         });
 
         test('should not decide anything once cleared while joining again', async () => {

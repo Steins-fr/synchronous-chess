@@ -115,6 +115,17 @@ describe('PeerRoomNetwork', () => {
         expect(Negotiator.prototype.initiate).not.toHaveBeenCalled();
     });
 
+    test('should not remove a player from the room it does not host', () => {
+        // Given
+        roomSocketApi.send = vi.fn();
+
+        // When
+        network.removeFromRoom('alice');
+
+        // Then
+        expect(roomSocketApi.send).not.toHaveBeenCalled();
+    });
+
     test('should negotiate with a new player through the host', async () => {
         // Given
         network.onPlayerConnected(hostPlayer);
@@ -172,25 +183,64 @@ describe('PeerRoomNetwork', () => {
             expect(roomSocketApi.send).toHaveBeenCalledTimes(11);
         });
 
-        test('should log another failure, to join again later', async () => {
+        test('should log a failure of the socket, to join again later', async () => {
             // Given
             vi.spyOn(console, 'error').mockImplementation(() => undefined);
-            const error: Error = new RoomApiError('Room \'room\' does not exist');
+            const error: Error = new Error('Socket connection failed');
             vi.mocked(roomSocketApi.send).mockRejectedValue(error);
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
 
             // When / Then
             expect(await network.rejoin()).toEqual(RejoinResult.NOT_JOINED);
             expect(console.error).toHaveBeenCalledWith('PeerRoom: the room could not be joined again', error);
+            expect(roomLost).not.toHaveBeenCalled();
         });
 
-        test('should not join again once hosting', async () => {
+        test('should join again later while the API keeps the former connection in the room', async () => {
+            // Given
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Already in game'));
+
+            // When
+            const rejoining: Promise<RejoinResult> = network.rejoin();
+            await vi.advanceTimersByTimeAsync(20_000);
+
+            // Then
+            expect(await rejoining).toEqual(RejoinResult.NOT_JOINED);
+        });
+
+        test('should tell the room is lost when the API refuses the join for good', async () => {
+            // Given
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Room \'room\' does not exist'));
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
+
+            // When / Then
+            expect(await network.rejoin()).toEqual(RejoinResult.ROOM_LOST);
+            expect(roomLost).toHaveBeenCalledTimes(1);
+        });
+
+        test('should let the room it hosts go, then join it again', async () => {
             // Given
             vi.mocked(roomSocketApi.send).mockResolvedValue({ players: [] });
             network.changeHost('local');
+            await vi.advanceTimersByTimeAsync(0);
+            vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'alice' });
 
-            // When / Then
-            expect(await network.rejoin()).toEqual(RejoinResult.NOT_JOINED);
-            expect(roomSocketApi.send).not.toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, expect.anything());
+            // When
+            const result: RejoinResult = await network.rejoin();
+            TestHelper.cast<{ closed$: Subject<void> }>(roomSocketApi).closed$.next();
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(result).toEqual(RejoinResult.JOINED);
+            expect(roomSocketApi.close).toHaveBeenCalledTimes(1);
+            expect(network.initiator).toEqual(false);
+            expect(network.hostName).toEqual('alice');
+            // No longer moving the room to a new socket
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(1);
         });
 
         test('should not join again while connecting to a participant', async () => {
@@ -251,6 +301,7 @@ describe('PeerRoomNetwork', () => {
 
             // When
             network.changeHost('local');
+            network.removeFromRoom('host');
             await vi.advanceTimersByTimeAsync(0);
 
             // Then
@@ -263,6 +314,29 @@ describe('PeerRoomNetwork', () => {
             expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'host' });
         });
 
+        test('should move the room at once to a new socket, even with the socket of its last join open', async () => {
+            // Given
+            Object.assign(roomSocketApi, { socketOpenedAt: Date.now() });
+
+            // When
+            network.changeHost('local');
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(1);
+        });
+
+        test('should keep the socket of the room it hosts when told it joined', async () => {
+            // Given
+            network.changeHost('local');
+
+            // When
+            network.onRoomMessage(newPlayerMessage('local'));
+
+            // Then
+            expect(roomSocketApi.close).not.toHaveBeenCalled();
+        });
+
         test('should host the room once it took it over', async () => {
             // Given
             const alice: WebrtcMock = addRemotePlayer('alice');
@@ -273,7 +347,7 @@ describe('PeerRoomNetwork', () => {
             notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'newcomer' } });
             await vi.waitFor(() => expect(network.negotiators().get('newcomer')).toBeInstanceOf(WebsocketNegotiator));
             network.onPlayerConnected(TestHelper.cast<Player>({ name: 'newcomer' }));
-            network.onPlayerDisconnected(TestHelper.cast<Player>({ name: 'newcomer' }));
+            network.removeFromRoom('newcomer');
 
             // Then
             expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'newcomer' });
