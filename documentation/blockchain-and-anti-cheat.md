@@ -241,7 +241,13 @@ which sequencer it follows, the number of changes it made and the distrusted seq
 follow, if they made more changes than itself; a single participant can not make it follow another
 sequencer.
 
-New players can not join once the host has left: joining goes through the host.
+**Taking the room over.** Joining goes through the host, which holds the room on the websocket API. Once
+the room agrees its host left, the sequencer, after the handover, takes it over: it moves the room of
+the API to a new socket of its own (`reconnect` with its name and the token it joined with, retried
+while the former host connection is still open), tells the API the players of the room (the former
+host leaves them), then lets the players join and relays their signals. The other participants
+connect to the joining players through it. The former host, back on a reloaded page, joins the room
+like any player.
 
 ## Hidden moves: commit then reveal
 

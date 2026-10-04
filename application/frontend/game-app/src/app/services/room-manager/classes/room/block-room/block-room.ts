@@ -167,12 +167,19 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         }
     }
 
-    /** Every participant notices it, from the same participants: they all take the same decisions */
+    /**
+     * Every participant notices it, from the same participants: they all take the same decisions. The sequencer takes
+     * the room over from a host which left
+     */
     private onDeparted(name: string): void {
         TimedLogger.warn(`${ name } has left the room`);
 
         if (name === this.sequencer) {
             this.handOver();
+        }
+
+        if (name === this.hostName) {
+            this.roomConnection.changeHost(this.sequencer);
         }
     }
 

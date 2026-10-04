@@ -9,37 +9,75 @@ import { Negotiator } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
+import { RoomHosting } from './room-hosting';
 import { RoomNetwork } from './room-network';
 
+/** The network of a player joining the room, which takes it over when the room agrees its host left and elects it */
 export class PeerRoomNetwork extends RoomNetwork {
-    public readonly initiator: boolean = false;
     protected hostPlayer?: Player;
+    private _hostName: string;
+    private hosting?: RoomHosting;
+
+    public get initiator(): boolean {
+        return this.hosting !== undefined;
+    }
+
+    public get hostName(): string {
+        return this._hostName;
+    }
 
     public constructor(
         roomApi: RoomSocketApi,
         roomName: string,
         localPlayerName: string,
-        public readonly hostName: string,
+        hostName: string,
+        private readonly maxPlayer: number,
+        /** The token the player joined the room with, to take it over */
+        private readonly token: string,
     ) {
         super(roomApi, roomName, localPlayerName);
+        this._hostName = hostName;
 
         const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, hostName, new Webrtc(), roomApi);
         this.addNegotiator(negotiator);
+    }
+
+    /** Takes the room over when elected, connects to the joining players through the new host otherwise */
+    public changeHost(hostName: string): void {
+        if (this.hosting) { // Hosting already: the room only changes its host once this one leaves
+            return;
+        }
+
+        this._hostName = hostName;
+
+        if (hostName === this.localPlayer.name) {
+            this.hostPlayer = undefined;
+            this.hosting = new RoomHosting(this.hostingContext(this.maxPlayer, this.token));
+            this.hosting.roomLost$.subscribe(() => this.roomLostSubject.next());
+        } else {
+            this.hostPlayer = this.players.get(hostName);
+        }
     }
 
     protected onPlayerConnected(player: Player): void {
         if (player.name === this.hostName) {
             this.hostPlayer = player;
         }
+
+        this.hosting?.onPlayerConnected(player);
     }
 
     protected onPlayerDisconnected(player: Player): void {
         if (this.hostPlayer?.name === player.name) {
             this.hostPlayer = undefined;
         }
+
+        this.hosting?.onPlayerDisconnected(player);
     }
 
     protected onRoomMessage(message: ReceivedMessage): void {
+        this.hosting?.onRoomMessage(message);
+
         if (message.origin !== MessageOriginType.HOST_ROOM) {
             return;
         }
@@ -93,5 +131,10 @@ export class PeerRoomNetwork extends RoomNetwork {
 
         await negotiator.negotiationMessage(remoteSignalPayload);
         console.debug('Negotiation message sent');
+    }
+
+    public override clear(): void {
+        this.hosting?.clear();
+        super.clear();
     }
 }

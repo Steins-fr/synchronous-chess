@@ -18,6 +18,7 @@ class TestRoomNetwork extends RoomNetwork {
     public readonly onRoomMessageSpy = vi.fn();
     public readonly onPlayerConnectedSpy = vi.fn();
     public readonly onPlayerDisconnectedSpy = vi.fn();
+    public readonly changeHost = vi.fn();
 
     public constructor() {
         super(TestHelper.cast<RoomSocketApi>({}), 'room', 'local');

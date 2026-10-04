@@ -7,6 +7,7 @@ import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator'
 import { LocalPlayer } from '../player/local-player';
 import { Player } from '../player/player';
 import { WebRtcPlayer } from '../player/web-rtc-player';
+import { HostingContext } from './room-hosting';
 
 export abstract class RoomNetwork {
     private readonly _localPlayer: LocalPlayer;
@@ -31,6 +32,9 @@ export abstract class RoomNetwork {
     public readonly queueAdded$ = this.queueAddedSubject.asObservable();
     private readonly queueRemovedSubject = new Subject<string>();
     public readonly queueRemoved$ = this.queueRemovedSubject.asObservable();
+    protected readonly roomLostSubject = new Subject<void>();
+    /** The room this participant hosts could not move to a new socket: nobody can join it anymore */
+    public readonly roomLost$ = this.roomLostSubject.asObservable();
 
     protected constructor(
         protected readonly roomSocketApi: RoomSocketApi,
@@ -39,6 +43,27 @@ export abstract class RoomNetwork {
     ) {
         this._localPlayer = new LocalPlayer(localPlayerName);
         this.players.set(this._localPlayer.name, this._localPlayer);
+    }
+
+    /**
+     * The room agreed its host left: the participant named takes over, the others connect to the joining players
+     * through it
+     */
+    public abstract changeHost(hostName: string): void;
+
+    /** What the hosting of the room reads and changes of this network */
+    protected hostingContext(maxPlayer: number, token: string): HostingContext {
+        return {
+            roomSocketApi: this.roomSocketApi,
+            roomName: this.roomName,
+            localPlayerName: this.localPlayer.name,
+            maxPlayer,
+            token,
+            players: () => this.players,
+            occupancy: () => this.players.size + this.getNegotiatorSize(),
+            addNegotiator: (negotiator: Negotiator) => this.addNegotiator(negotiator),
+            transmitMessage: (message: NetworkMessage) => this.transmitMessage(message),
+        };
     }
 
     protected transmitMessage(message: NetworkMessage): void {
@@ -164,5 +189,6 @@ export abstract class RoomNetwork {
         this.playerRemovedSubject.complete();
         this.queueAddedSubject.complete();
         this.queueRemovedSubject.complete();
+        this.roomLostSubject.complete();
     }
 }

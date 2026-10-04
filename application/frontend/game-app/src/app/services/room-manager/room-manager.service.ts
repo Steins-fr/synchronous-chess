@@ -50,16 +50,17 @@ export default class RoomManagerService {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                const hostRoomNetwork = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName, token);
-                hostRoomNetwork.roomLost$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-                    this.notificationService.error('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
-                });
-                roomConnection = hostRoomNetwork;
+                roomConnection = new HostRoomNetwork(this.roomSocketApi, setup.roomName, maxPlayer, setup.playerName, token);
             } else {
                 const response: RoomJoinResponse = await this.join(setup, token);
 
-                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName, maxPlayer, token);
             }
+
+            // The participant taking the room over from a host which left hosts it too
+            roomConnection.roomLost$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+                this.notificationService.error('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+            });
 
             return new BlockRoom<M>(
                 this.roomSocketApi,

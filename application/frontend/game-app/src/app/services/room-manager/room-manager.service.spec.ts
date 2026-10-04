@@ -129,6 +129,18 @@ describe('RoomManagerService', () => {
         expect(room.queue()).toEqual(['host']);
     });
 
+    test('should notify a peer when the room it took over can not move to a new socket', async () => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // When
+        TestHelper.cast<{ roomLostSubject: Subject<void> }>(room.roomConnection).roomLostSubject.next();
+
+        // Then
+        expect(notificationService.error).toHaveBeenCalledWith('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+    });
+
     test('should notify when the room can not be joined', async () => {
         // Given
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error('full'));

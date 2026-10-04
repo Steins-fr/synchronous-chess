@@ -266,6 +266,22 @@ describe('HostRoomNetwork', () => {
             expect(roomLost).not.toHaveBeenCalled();
         });
 
+        test('should retry while the API tells the former host is still connected, as for a takeover', async () => {
+            // Given
+            createNetwork();
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
+            vi.mocked(roomSocketApi.reconnect).mockRejectedValueOnce(new RoomApiError('Host connected'));
+
+            // When
+            closed$.next();
+            await vi.advanceTimersByTimeAsync(5000);
+
+            // Then
+            expect(roomSocketApi.reconnect).toHaveBeenCalledTimes(2);
+            expect(roomLost).not.toHaveBeenCalled();
+        });
+
         test('should lose the room after 10 minutes of failed reconnections', async () => {
             // Given
             createNetwork();

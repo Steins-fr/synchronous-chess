@@ -305,6 +305,8 @@ describe('BlockRoom', () => {
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
         expect(changeSequencerSpy.mock.contexts.map(chainName)).toEqual([BlockChainName.CHESS, BlockChainName.CHAT]);
         expect(TimedLogger.warn).toHaveBeenCalledWith('host has left the room');
+        // The new sequencer takes the room over from the host
+        expect(network.changeHost.mock.calls).toEqual([['b']]);
     });
 
     test('should keep the sequencer when another participant leaves the room', () => {
@@ -324,6 +326,7 @@ describe('BlockRoom', () => {
         // Then
         expect(TimedLogger.warn).toHaveBeenCalledWith('b has left the room');
         expect(changeSequencerSpy).not.toHaveBeenCalled();
+        expect(network.changeHost).not.toHaveBeenCalled();
     });
 
     test('should keep the sequencer a participant comes back to before the others lost it', () => {
