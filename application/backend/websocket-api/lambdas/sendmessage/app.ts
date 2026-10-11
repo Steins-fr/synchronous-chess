@@ -60,7 +60,9 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
         const client = new ApiGatewayManagementApiClient({
             endpoint: getManagementApiEndpoint(event.requestContext.domainName),
         });
-        const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload);
+        // Given by API Gateway: without it, a private room tells the clients apart by their connection
+        const sourceIp: string = event.requestContext.identity?.sourceIp ?? connectionId;
+        const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload, sourceIp);
         await messageHandler.execute();
     } catch (e) {
         console.error(e);

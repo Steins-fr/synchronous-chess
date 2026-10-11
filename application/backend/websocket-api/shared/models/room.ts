@@ -11,10 +11,13 @@ export default interface Room {
     createdAt: string;
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash?: string;
-    /** The wrong passwords given in a row, until the right one, or until the room refuses the passwords for a while */
-    passwordFailures?: number;
-    /** Until when the room refuses the passwords, in epoch seconds, too many wrong ones given in a row */
-    passwordLockedUntil?: number;
+    /**
+     * Of a private room: the wrong passwords given in a row by each client, by the hash of its IP (source.helper), until
+     * its right one, or until the room refuses its passwords for a while
+     */
+    passwordFailures?: Record<string, number>;
+    /** Of a private room: until when the room refuses the passwords of a client, in epoch seconds, by the hash of its IP */
+    passwordLocks?: Record<string, number>;
     players: Player[];
     queue: Player[];
     /** SHA-256 of the token of each player of the room, by name: the host reconnects the room with its own */

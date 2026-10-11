@@ -119,8 +119,8 @@ let lambdas: Promise<Lambdas> | undefined;
  * lambdas reach the management API through MANAGEMENT_API_ENDPOINT
  * @returns the status code of the lambda, 500 when it throws
  */
-async function invoke(routeKey: string, lambda: Lambda, connectionId: string, body: string | null = null): Promise<number> {
-    const event = { body, requestContext: { connectionId, routeKey } } as unknown as APIGatewayProxyEvent;
+async function invoke(routeKey: string, lambda: Lambda, connectionId: string, body: string | null = null, sourceIp?: string): Promise<number> {
+    const event = { body, requestContext: { connectionId, routeKey, identity: { sourceIp } } } as unknown as APIGatewayProxyEvent;
 
     try {
         const response: LambdaResponse = await lambda(event);
@@ -249,7 +249,8 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
      * An opened connection: its messages run the sendmessage route, its closing the $disconnect route. Closed like API
      * Gateway once idle or too old
      */
-    function connect(connectionId: string, socket: WebSocket): void {
+    /** @param sourceIp the IP of the client, given to the lambdas like API Gateway does */
+    function connect(connectionId: string, socket: WebSocket, sourceIp: string | undefined): void {
         const idleTimer: NodeJS.Timeout = setTimeout((): void => socket.close(GOING_AWAY, 'Going away'), idleTimeoutMs);
         const lifetimeTimer: NodeJS.Timeout = setTimeout((): void => socket.close(GOING_AWAY, 'Going away'), maxConnectionMs);
         connections.set(connectionId, { socket, idleTimer });
@@ -264,7 +265,7 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
             const route: unknown = routeOf(body);
 
             if (route === RoomApiRoute.SEND_MESSAGE) {
-                void invoke(RoomApiRoute.SEND_MESSAGE, sendMessage, connectionId, body);
+                void invoke(RoomApiRoute.SEND_MESSAGE, sendMessage, connectionId, body, sourceIp);
             } else if (route !== RoomApiRoute.PING) {
                 // What API Gateway answers to a message matching no route, without $default route
                 console.warn(`No route for the message of ${connectionId}: ${body}`);
@@ -334,7 +335,7 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
 
         webSocketServer.handleUpgrade(request, socket, head, (webSocket: WebSocket): void => {
             socket.off('close', onClose);
-            connect(pending.connectionId as string, webSocket);
+            connect(pending.connectionId as string, webSocket, request.socket.remoteAddress);
         });
     });
 

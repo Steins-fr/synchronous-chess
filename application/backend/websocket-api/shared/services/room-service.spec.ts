@@ -1,5 +1,6 @@
 import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { hashPassword } from '@helpers/password.helper';
+import { hashSource } from '@helpers/source.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
@@ -18,6 +19,8 @@ describe('RoomService', () => {
 
     // In epoch seconds
     const now: number = 1_800_000_000;
+    // The IP of the client joining
+    const ip: string = '203.0.113.7';
     const createRequest: RoomCreateRequest = { roomName: 'room', playerName: 'host', maxPlayer: 4, game: RoomGame.CHAT, token: HOST_TOKEN };
 
     beforeEach(() => {
@@ -183,49 +186,60 @@ describe('RoomService', () => {
 
     test('should let a player join a private room with its password only', async () => {
         // Given
-        const privateRoom: Room = aRoom({ passwordHash: hashPassword('secret') });
-        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: 1 } });
+        const privateRoom: Room = aRoom({ passwordHash: hashPassword('secret'), passwordFailures: {}, passwordLocks: {} });
+        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: { [hashSource(ip)]: 1 } } });
 
         // When / Then
-        await expect(service.passwordGuard(privateRoom, 'secret')).resolves.toBeUndefined();
-        await expect(service.passwordGuard(room, undefined)).resolves.toBeUndefined();
-        await expect(service.passwordGuard(room, 'any')).resolves.toBeUndefined();
+        await expect(service.passwordGuard(privateRoom, 'secret', ip)).resolves.toBeUndefined();
+        await expect(service.passwordGuard(room, undefined, ip)).resolves.toBeUndefined();
+        await expect(service.passwordGuard(room, 'any', ip)).resolves.toBeUndefined();
         expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
-        await expect(service.passwordGuard(privateRoom, 'wrong')).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        await expect(service.passwordGuard(privateRoom, undefined)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        await expect(service.passwordGuard(privateRoom, 42 as unknown as string)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'SET passwordFailures = if_not_exists(passwordFailures, :zero) + :one' })).toHaveLength(3);
+        await expect(service.passwordGuard(privateRoom, 'wrong', ip)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(service.passwordGuard(privateRoom, undefined, ip)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(service.passwordGuard(privateRoom, 42 as unknown as string, ip)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        expect(dynamo.commandCalls(UpdateCommand, {
+            UpdateExpression: 'SET passwordFailures.#source = if_not_exists(passwordFailures.#source, :zero) + :one',
+            ExpressionAttributeNames: { '#source': hashSource(ip) },
+        })).toHaveLength(3);
     });
 
-    test('should refuse the passwords for a while once too many wrong ones were given in a row', async () => {
+    test('should refuse the passwords of a client for a while once it gave too many wrong ones, not of the others', async () => {
         // Given
-        const privateRoom: Room = aRoom({ passwordHash: hashPassword('secret') });
-        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: RoomService.MAX_PASSWORD_FAILURES } });
+        const privateRoom: Room = aRoom({ passwordHash: hashPassword('secret'), passwordFailures: {}, passwordLocks: {} });
+        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: { [hashSource(ip)]: RoomService.MAX_PASSWORD_FAILURES } } });
 
         // When
-        await expect(service.passwordGuard(privateRoom, 'wrong')).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(service.passwordGuard(privateRoom, 'wrong', ip)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
-            UpdateExpression: 'SET passwordLockedUntil = :lockedUntil REMOVE passwordFailures',
+            UpdateExpression: 'SET passwordLocks.#source = :lockedUntil REMOVE passwordFailures.#source',
             ExpressionAttributeValues: { ':lockedUntil': now + RoomService.PASSWORD_LOCK_DELAY },
+            ExpressionAttributeNames: { '#source': hashSource(ip) },
         })).toHaveLength(1);
 
-        // When the room is locked, the right password refused too
-        const lockedRoom: Room = { ...privateRoom, passwordLockedUntil: now + 1 };
+        // When the room is locked for the client
+        const lockedRoom: Room = { ...privateRoom, passwordLocks: { [hashSource(ip)]: now + 1 } };
         dynamo.resetHistory();
 
-        // Then
-        await expect(service.passwordGuard(lockedRoom, 'secret')).rejects.toThrow(RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS);
+        // Then its right password is refused, the one of another client checked
+        await expect(service.passwordGuard(lockedRoom, 'secret', ip)).rejects.toThrow(RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS);
+        await expect(service.passwordGuard(lockedRoom, 'secret', '198.51.100.2')).resolves.toBeUndefined();
         expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
     });
 
-    test('should forget the wrong passwords once the right one is given, the lock over', async () => {
+    test.each<[string, Partial<Room>]>([
+        ['its wrong passwords', { passwordFailures: { [hashSource(ip)]: 2 }, passwordLocks: {} }],
+        ['its lock over', { passwordFailures: {}, passwordLocks: { [hashSource(ip)]: now } }],
+    ])('should forget %s once a client gives the right password', async (_case: string, failures: Partial<Room>) => {
         // When
-        await service.passwordGuard(aRoom({ passwordHash: hashPassword('secret'), passwordFailures: 2, passwordLockedUntil: now }), 'secret');
+        await service.passwordGuard(aRoom({ passwordHash: hashPassword('secret'), ...failures }), 'secret', ip);
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE passwordFailures, passwordLockedUntil' })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, {
+            UpdateExpression: 'REMOVE passwordFailures.#source, passwordLocks.#source',
+            ExpressionAttributeNames: { '#source': hashSource(ip) },
+        })).toHaveLength(1);
     });
 
     test('should add and remove the players of the room', async () => {

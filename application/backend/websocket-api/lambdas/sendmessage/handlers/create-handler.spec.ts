@@ -59,6 +59,7 @@ describe('CreateHandler', () => {
         const room = command.input.Item as Room;
         expect(room.passwordHash).not.toContain('secret');
         expect(verifyPassword('secret', room.passwordHash as string)).toEqual(true);
+        expect(room).toMatchObject({ passwordFailures: {}, passwordLocks: {} });
     });
 
     test.each([

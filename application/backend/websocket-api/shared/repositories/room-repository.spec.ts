@@ -30,7 +30,7 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLockedUntil, tokenHashes, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt',
         })).toHaveLength(1);
     });
 
@@ -52,21 +52,29 @@ describe('RoomRepository', () => {
         })).toHaveLength(1);
     });
 
-    test('should count the wrong passwords, lock the room, then forget them', async () => {
+    test('should count the wrong passwords of a client, lock the room for it, then forget them', async () => {
         // Given
-        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: 3 } });
+        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: { source: 3, other: 1 } } });
 
         // When
-        const failures: number = await repository.recordPasswordFailure(room);
-        await repository.lockPassword(room, 900);
-        await repository.forgetPasswordFailures(room);
+        const failures: number = await repository.recordPasswordFailure(room, 'source');
+        await repository.lockPassword(room, 'source', 900);
+        await repository.forgetPasswordFailures(room, 'source');
 
         // Then
         expect(failures).toEqual(3);
         expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([
-            expect.objectContaining({ UpdateExpression: 'SET passwordFailures = if_not_exists(passwordFailures, :zero) + :one', ExpressionAttributeValues: { ':zero': 0, ':one': 1 } }),
-            expect.objectContaining({ UpdateExpression: 'SET passwordLockedUntil = :lockedUntil REMOVE passwordFailures', ExpressionAttributeValues: { ':lockedUntil': 900 } }),
-            expect.objectContaining({ UpdateExpression: 'REMOVE passwordFailures, passwordLockedUntil' }),
+            expect.objectContaining({
+                UpdateExpression: 'SET passwordFailures.#source = if_not_exists(passwordFailures.#source, :zero) + :one',
+                ExpressionAttributeValues: { ':zero': 0, ':one': 1 },
+                ExpressionAttributeNames: { '#source': 'source' },
+            }),
+            expect.objectContaining({
+                UpdateExpression: 'SET passwordLocks.#source = :lockedUntil REMOVE passwordFailures.#source',
+                ExpressionAttributeValues: { ':lockedUntil': 900 },
+                ExpressionAttributeNames: { '#source': 'source' },
+            }),
+            expect.objectContaining({ UpdateExpression: 'REMOVE passwordFailures.#source, passwordLocks.#source', ExpressionAttributeNames: { '#source': 'source' } }),
         ]);
     });
 

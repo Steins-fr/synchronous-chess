@@ -15,6 +15,8 @@ each restart.
 
 Then serve the game app against it, from `application/frontend/game-app`: `npm run serve:local`.
 
+The lambdas get the IP of the client, as from API Gateway.
+
 Emulated limits: 32 KB per message received (one frame of API Gateway, where a browser sends each message
 in a single frame), 128 KB per message posted to a connection, and the connections closed (1001) after
 10 minutes without message in either direction, or after 2 hours. Not emulated: the authorization and the
@@ -64,6 +66,9 @@ messages. A room created with a `password` is private: listed with `isPrivate`, 
 (`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private. A
 page sends the game and the password again each time it joins the room again.
 
-5 wrong passwords in a row lock the room for a minute (`passwordFailures`, `passwordLockedUntil`): the passwords are
-refused then (`Too many password attempts`), without being checked, the right one forgetting the wrong ones before. A
-password is not guessed by trying them all, and the wrong ones do not run scrypt without end.
+5 wrong passwords in a row from a client lock the room for this client only, for a minute: its passwords are refused
+then (`Too many password attempts`), without being checked, its right one forgetting its wrong ones before. A password is
+not guessed by trying them all, the wrong ones do not run scrypt without end, and the other players still join the room.
+The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
+connection without it: it keeps a short hash of it (`source.helper`), never the IP, in two maps created with a private
+room (`passwordFailures`, `passwordLocks`). The clients behind a same IP share their count.

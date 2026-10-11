@@ -13,7 +13,7 @@ export default class RoomRepository extends BaseRepository<Room> {
     public static readonly GAME_INDEX: string = 'game-index';
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLockedUntil, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -40,20 +40,27 @@ export default class RoomRepository extends BaseRepository<Room> {
         );
     }
 
-    /** @returns the wrong passwords given in a row, this one counted */
-    public async recordPasswordFailure(room: Room): Promise<number> {
-        const updated: Room = await this.updateItem(room, 'SET passwordFailures = if_not_exists(passwordFailures, :zero) + :one', { ':zero': 0, ':one': 1 });
-        return updated.passwordFailures as number;
+    /**
+     * Counts a wrong password of a client, in the maps a private room is created with
+     * @param source the hash of the IP of the client
+     * @returns the wrong passwords the client gave in a row, this one counted
+     */
+    public async recordPasswordFailure(room: Room, source: string): Promise<number> {
+        const updated: Room = await this.updateItem(room, 'SET passwordFailures.#source = if_not_exists(passwordFailures.#source, :zero) + :one', {
+            ':zero': 0,
+            ':one': 1,
+        }, { '#source': source });
+        return (updated.passwordFailures as Record<string, number>)[source];
     }
 
-    /** Refuses the passwords until `lockedUntil`, in epoch seconds: the count of the failures starts again then */
-    public async lockPassword(room: Room, lockedUntil: number): Promise<void> {
-        await this.updateItem(room, 'SET passwordLockedUntil = :lockedUntil REMOVE passwordFailures', { ':lockedUntil': lockedUntil });
+    /** Refuses the passwords of a client until `lockedUntil`, in epoch seconds: the count of its failures starts again then */
+    public async lockPassword(room: Room, source: string, lockedUntil: number): Promise<void> {
+        await this.updateItem(room, 'SET passwordLocks.#source = :lockedUntil REMOVE passwordFailures.#source', { ':lockedUntil': lockedUntil }, { '#source': source });
     }
 
-    /** The right password given: the wrong ones before are forgotten */
-    public async forgetPasswordFailures(room: Room): Promise<void> {
-        await this.updateItem(room, 'REMOVE passwordFailures, passwordLockedUntil');
+    /** The right password of a client given: its wrong ones before are forgotten */
+    public async forgetPasswordFailures(room: Room, source: string): Promise<void> {
+        await this.updateItem(room, 'REMOVE passwordFailures.#source, passwordLocks.#source', undefined, { '#source': source });
     }
 
     /**

@@ -361,7 +361,7 @@ describe('local websocket API', () => {
                 .toMatchObject({ type: 'joiningRoom', data: { playerName: 'alice' } });
         });
 
-        test('should refuse the passwords of a private room for a while once too many wrong ones were given', async () => {
+        test('should refuse the passwords of a client for a while once it gave too many wrong ones, by its IP', async () => {
             // Given
             expect(await reply(await connected(), 'create', { roomName: 'locked', maxPlayer: 2, game: 'chess', password: 'pass', playerName: 'alice', token: 'alice-token' }))
                 .toMatchObject({ type: 'created' });

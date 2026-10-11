@@ -1,5 +1,6 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { hashPassword, isPassword, verifyPassword } from '@helpers/password.helper';
+import { hashSource } from '@helpers/source.helper';
 import { hashToken } from '@helpers/token.helper';
 import RoomHelper from '@helpers/room-helper';
 import Connection from '@models/connection';
@@ -32,9 +33,9 @@ export default class RoomService {
     public static readonly MAX_OPEN_ROOMS: number = 30;
     /** The most recent rooms a search reads: the cost of a search is bounded, an older room is not found */
     public static readonly MAX_SEARCHED_ROOMS: number = 500;
-    /** The wrong passwords in a row a private room accepts, before refusing the passwords for PASSWORD_LOCK_DELAY */
+    /** The wrong passwords in a row a private room accepts of a client, before refusing its passwords for PASSWORD_LOCK_DELAY */
     public static readonly MAX_PASSWORD_FAILURES: number = 5;
-    /** How long a private room refuses the passwords, too many wrong ones given in a row, in seconds */
+    /** How long a private room refuses the passwords of a client, too many wrong ones given in a row, in seconds */
     public static readonly PASSWORD_LOCK_DELAY: number = 60;
 
     private readonly roomRepository: RoomRepository = new RoomRepository();
@@ -133,31 +134,34 @@ export default class RoomService {
 
     /**
      * Before a player joins a private room: a public room ignores the password. MAX_PASSWORD_FAILURES wrong passwords in
-     * a row lock the room for PASSWORD_LOCK_DELAY, the passwords refused without being checked: a password is not
-     * guessed by trying them all
-     * @throws {BadRequestException} when the room is locked (TOO_MANY_PASSWORD_ATTEMPTS), or the password is not the one
-     * of the private room (WRONG_PASSWORD)
+     * a row from a client lock the room for this client only, for PASSWORD_LOCK_DELAY, its passwords refused without
+     * being checked: a password is not guessed by trying them all, the other clients still join the room
+     * @param sourceIp the IP of the client, or its connection without it
+     * @throws {BadRequestException} when the room is locked for the client (TOO_MANY_PASSWORD_ATTEMPTS), or the password
+     * is not the one of the private room (WRONG_PASSWORD)
      */
-    public async passwordGuard(room: Room, password: string | undefined): Promise<void> {
+    public async passwordGuard(room: Room, password: string | undefined, sourceIp: string): Promise<void> {
         if (room.passwordHash === undefined) {
             return;
         }
 
         const now: number = RoomService.now();
+        const source: string = hashSource(sourceIp);
+        const lockedUntil: number | undefined = room.passwordLocks?.[source];
 
-        if (room.passwordLockedUntil !== undefined && room.passwordLockedUntil > now) {
+        if (lockedUntil !== undefined && lockedUntil > now) {
             throw new BadRequestException(RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS);
         }
 
         if (isPassword(password) && verifyPassword(password, room.passwordHash)) {
-            if (room.passwordFailures !== undefined) {
-                await this.roomRepository.forgetPasswordFailures(room);
+            if (room.passwordFailures?.[source] !== undefined || lockedUntil !== undefined) {
+                await this.roomRepository.forgetPasswordFailures(room, source);
             }
             return;
         }
 
-        if (await this.roomRepository.recordPasswordFailure(room) >= RoomService.MAX_PASSWORD_FAILURES) {
-            await this.roomRepository.lockPassword(room, now + RoomService.PASSWORD_LOCK_DELAY);
+        if (await this.roomRepository.recordPasswordFailure(room, source) >= RoomService.MAX_PASSWORD_FAILURES) {
+            await this.roomRepository.lockPassword(room, source, now + RoomService.PASSWORD_LOCK_DELAY);
         }
 
         throw new BadRequestException(RoomApiErrorMessage.WRONG_PASSWORD);
@@ -215,6 +219,9 @@ export default class RoomService {
 
         if (request.password !== undefined) {
             room.passwordHash = hashPassword(request.password);
+            // The maps the wrong passwords of each client are counted in: DynamoDB sets a key of an existing map only
+            room.passwordFailures = {};
+            room.passwordLocks = {};
         }
 
         const created: boolean = await this.roomRepository.create(room, RoomService.now());

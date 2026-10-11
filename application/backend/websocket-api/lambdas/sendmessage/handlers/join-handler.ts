@@ -23,7 +23,7 @@ export default class JoinHandler extends MessageHandler {
 
         const room: Room = await this.roomService.getRoomByName(data.roomName);
         this.roomService.gameGuard(room, data.game);
-        await this.roomService.passwordGuard(room, data.password);
+        await this.roomService.passwordGuard(room, data.password, this.sourceIp);
         this.roomService.hostConnectedGuard(room);
 
         if (RoomHelper.isInGame(room, data.playerName)) {
