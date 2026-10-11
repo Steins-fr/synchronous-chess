@@ -9,7 +9,7 @@ test.describe('Open rooms', () => {
         await alice.expectParticipants(['alice']);
 
         // When
-        const bob: RoomParticipant = await room.joinFromList('bob');
+        const bob: RoomParticipant = await room.join('bob');
 
         // Then
         await bob.expectConnected(['alice', 'bob']);
@@ -22,7 +22,7 @@ test.describe('Open rooms', () => {
         await alice.expectParticipants(['alice']);
 
         // When
-        const bob: RoomParticipant = await room.joinFromList('bob', 'wrong');
+        const bob: RoomParticipant = await room.join('bob', 'wrong');
 
         // Then
         await bob.expectNotification('Le mot de passe de la salle est incorrect.');

@@ -188,7 +188,7 @@ at most (`joinRoom`), then tells the name is taken.
 
 The host reloading its page is no exception: once the others agree it left, the sequencer takes the
 room over (see [Taking the room over](blockchain-and-anti-cheat.md#changing-the-sequencer)), and the
-former host joins it with "Rejoindre", its seat kept.
+former host joins it from the list of the open rooms, its seat kept.
 
 A reloaded page builds a new session, and the chain delivers again all its messages:
 

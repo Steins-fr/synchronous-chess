@@ -1,8 +1,12 @@
-<div class="flex items-center gap-2">
+<div class="flex flex-wrap items-center gap-2">
     <h2 class="m-0 mat-title-medium">Salles ouvertes</h2>
     <button (click)="refresh()" aria-label="Actualiser les salles" id="open-rooms-refresh" mat-icon-button type="button">
         <mat-icon>refresh</mat-icon>
     </button>
+    <!-- The actions of the page on the rooms, at the end of the title line -->
+    <div class="ml-auto">
+        <ng-content />
+    </div>
 </div>
 @if (failed()) {
 <p class="m-0 text-app-text-muted">Les salles n'ont pas pu être chargées.</p>

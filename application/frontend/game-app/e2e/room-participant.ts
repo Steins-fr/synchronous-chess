@@ -9,6 +9,9 @@ declare global {
 
 /** A player of the chat room, in a browser context of its own: as on its own computer */
 export class RoomParticipant {
+    // A room taken over from its host is listed again once its new host reconnected it
+    private static readonly LISTING_TIMEOUT: number = 60_000;
+
     private constructor(
         public readonly name: string,
         private readonly context: BrowserContext,
@@ -34,51 +37,66 @@ export class RoomParticipant {
     /** Creates the room, private with a password */
     public async create(roomName: string, password?: string): Promise<void> {
         await this.page.goto('/simple-chat');
+        await this.page.getByRole('button', { name: 'Créer une salle', exact: true }).click();
+        const dialog: Locator = this.page.locator('app-room-create-dialog');
+        await dialog.getByRole('textbox', { name: 'Nom de la salle' }).fill(roomName);
+        await dialog.getByRole('textbox', { name: 'Nom du joueur' }).fill(this.name);
         if (password !== undefined) {
-            await this.page.getByLabel('Mot de passe (salle privée)').fill(password);
+            await dialog.getByLabel('Mot de passe (salle privée)').fill(password);
         }
-        await this.enter(roomName, 'Nouvelle');
+        await dialog.getByRole('button', { name: 'Créer', exact: true }).click();
     }
 
-    public async join(roomName: string): Promise<void> {
+    /** Opens the page of the chat room, its list of the open rooms */
+    public async visit(): Promise<void> {
         await this.page.goto('/simple-chat');
-        await this.enter(roomName, 'Rejoindre');
     }
 
-    /** Joins a room of the list of the open rooms, giving the password asked for a private one */
-    public async joinFromList(roomName: string, password?: string): Promise<void> {
-        await this.page.goto('/simple-chat');
-        await this.page.getByRole('textbox', { name: 'Nom du joueur' }).fill(this.name);
+    /** Joins a room of the list of the open rooms, giving the password of a private one */
+    public async join(roomName: string, password?: string): Promise<void> {
+        await this.visit();
         await this.joinListedRoom(roomName, password);
     }
 
-    /** Joins a room of the list again, from the setup form */
-    public async joinListedRoom(roomName: string, password?: string): Promise<void> {
-        await this.page.getByRole('button', { name: `Rejoindre la salle ${ roomName }`, exact: true }).click();
-        if (password !== undefined) {
-            const dialog: Locator = this.page.locator('app-room-password-dialog');
-            await dialog.getByLabel('Mot de passe').fill(password);
-            await dialog.getByRole('button', { name: 'Rejoindre', exact: true }).click();
-        }
+    /** Reloads the page, then joins the room again from the list */
+    public async reloadAndJoin(roomName: string): Promise<void> {
+        await this.page.reload();
+        await this.joinListedRoom(roomName);
     }
 
-    /** The open rooms of the list, private or public */
+    /**
+     * Joins a room of the list, once listed: the list is refreshed until then, a room waiting for its host or taken
+     * over is not listed. The dialog asks the name of the player, and the password of a private room
+     */
+    public async joinListedRoom(roomName: string, password?: string): Promise<void> {
+        const joinButton: Locator = this.page.getByRole('button', { name: `Rejoindre la salle ${ roomName }`, exact: true });
+        await expect(async () => {
+            await this.page.getByRole('button', { name: 'Actualiser les salles' }).click();
+            await expect(joinButton).toBeVisible({ timeout: 2000 });
+        }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
+        await joinButton.click();
+
+        const dialog: Locator = this.page.locator('app-room-join-dialog');
+        await dialog.getByRole('textbox', { name: 'Nom du joueur' }).fill(this.name);
+        if (password !== undefined) {
+            await dialog.getByLabel('Mot de passe').fill(password);
+        }
+        await dialog.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+    }
+
+    /** A room of the list of the open rooms, private or public */
     public async expectOpenRoom(roomName: string, isPrivate: boolean): Promise<void> {
         const row: Locator = this.page.locator('app-open-rooms li').filter({ hasText: roomName });
         await expect(row.getByRole('img', { name: isPrivate ? 'Salle privée' : 'Salle publique' })).toBeVisible();
     }
 
-    /** Reloads the page, then joins the room again */
-    public async reloadAndJoin(roomName: string): Promise<void> {
-        await this.page.reload();
-        await this.enter(roomName, 'Rejoindre');
-    }
-
-    private async enter(roomName: string, action: string): Promise<void> {
-        await this.page.getByRole('textbox', { name: 'Nom de la salle' }).fill(roomName);
-        await this.page.getByRole('textbox', { name: 'Nom du joueur' }).fill(this.name);
-        // Not a button of the list of the open rooms: their names tell the room
-        await this.page.getByRole('button', { name: action, exact: true }).click();
+    /** The room is no longer listed: its host left, or it is full */
+    public async expectNotListed(roomName: string): Promise<void> {
+        const row: Locator = this.page.locator('app-open-rooms li').filter({ hasText: roomName });
+        await expect(async () => {
+            await this.page.getByRole('button', { name: 'Actualiser les salles' }).click();
+            await expect(row).toHaveCount(0, { timeout: 2000 });
+        }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
     }
 
     /** The participants this one is connected to, itself included, and the players joining */
@@ -118,9 +136,9 @@ export class RoomParticipant {
         await expect(this.page.locator('mat-snack-bar-container').getByText(text)).toBeVisible({ timeout });
     }
 
-    /** The room setup form is shown again: the player is in no room */
+    /** The room setup is shown again: the player is in no room */
     public async expectSetupForm(timeout?: number): Promise<void> {
-        await expect(this.page.getByRole('button', { name: 'Rejoindre', exact: true })).toBeVisible({ timeout });
+        await expect(this.page.getByRole('button', { name: 'Créer une salle', exact: true })).toBeVisible({ timeout });
     }
 
     /**

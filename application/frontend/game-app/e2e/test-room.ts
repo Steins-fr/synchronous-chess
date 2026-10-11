@@ -39,16 +39,17 @@ export class TestRoom {
         return player;
     }
 
-    public async join(playerName: string): Promise<RoomParticipant> {
+    /** Joins the room from the list of the open rooms, with the password of a private one */
+    public async join(playerName: string, password?: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.join(this.name);
+        await player.join(this.name, password);
         return player;
     }
 
-    /** Joins the room from the list of the open rooms */
-    public async joinFromList(playerName: string, password?: string): Promise<RoomParticipant> {
+    /** A player opening the page, the list of the open rooms */
+    public async visit(playerName: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.joinFromList(this.name, password);
+        await player.visit();
         return player;
     }
 

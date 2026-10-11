@@ -53,10 +53,10 @@ describe('RoomLayoutComponent', () => {
         const host: ComponentFixture<HostComponent> = TestBed.createComponent(HostComponent);
         await host.whenStable();
 
-        // Then the presentation comes before the setup form
+        // Then the presentation comes after the setup, the open rooms on top of the page
         const presentation: HTMLElement | null = host.nativeElement.querySelector('.presentation');
         expect(presentation).not.toBeNull();
-        expect(presentation?.compareDocumentPosition(host.nativeElement.querySelector('app-room-setup'))).toEqual(Node.DOCUMENT_POSITION_FOLLOWING);
+        expect(presentation?.compareDocumentPosition(host.nativeElement.querySelector('app-room-setup'))).toEqual(Node.DOCUMENT_POSITION_PRECEDING);
         expect(host.nativeElement.querySelector('#page-content .content')).not.toBeNull();
         expect(host.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 

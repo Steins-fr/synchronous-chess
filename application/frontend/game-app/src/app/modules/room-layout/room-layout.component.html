@@ -1,9 +1,10 @@
-@if (!isSetup()) {
-<ng-content select="[roomPresentation]"/>
-}
+<!-- The open rooms first, on top of the page -->
 <div class="container">
     <app-room-setup [game]="game()" [maxPlayer]="maxPlayer()"/>
 </div>
+@if (!isSetup()) {
+<ng-content select="[roomPresentation]"/>
+}
 <div id="room-content">
     <div id="page-content" class="container">
         <ng-content/>

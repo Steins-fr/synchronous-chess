@@ -26,13 +26,17 @@ test.describe('Room participants', () => {
         await alice.expectParticipants(['alice']);
     });
 
-    test('tells a player the room it joins does not exist', async ({ room }) => {
+    test('stops listing a room once its host left', async ({ room }) => {
+        // Given
+        const [alice]: RoomParticipant[] = await room.connect('alice');
+        const bob: RoomParticipant = await room.visit('bob');
+        await bob.expectOpenRoom(room.name, false);
+
         // When
-        const alice: RoomParticipant = await room.join('alice');
+        await alice.close();
 
         // Then
-        await alice.expectNotification('La salle est pleine ou elle n\'existe plus.');
-        await alice.expectSetupForm();
+        await bob.expectNotListed(room.name);
     });
 
     test('connects the players joining the room at the same time', async ({ room }) => {
@@ -64,17 +68,16 @@ test.describe('Room participants', () => {
         await bob.expectMessage('alice', 'still there?');
     });
 
-    test('tells a player the room is full, the participants not waiting for it', async ({ room }) => {
+    test('stops listing the room once full, the participants staying connected', async ({ room }) => {
         test.setTimeout(180_000);
         // Given the chat room accepts 6 players
         const participants: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave', 'eve', 'frank');
 
         // When
-        const grace: RoomParticipant = await room.join('grace');
+        const grace: RoomParticipant = await room.visit('grace');
 
         // Then
-        await grace.expectNotification('La salle est pleine.');
-        await grace.expectSetupForm();
+        await grace.expectNotListed(room.name);
         const names: string[] = participants.map((participant: RoomParticipant) => participant.name);
         await Promise.all(participants.map((participant: RoomParticipant) => participant.expectConnected(names)));
     });
