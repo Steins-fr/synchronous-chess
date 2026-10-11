@@ -1,0 +1,34 @@
+<div class="flex items-center gap-2">
+    <h2 class="m-0 mat-title-medium">Salles ouvertes</h2>
+    <button (click)="refresh()" aria-label="Actualiser les salles" id="open-rooms-refresh" mat-icon-button type="button">
+        <mat-icon>refresh</mat-icon>
+    </button>
+</div>
+@if (failed()) {
+<p class="m-0 text-app-text-muted">Les salles n'ont pas pu être chargées.</p>
+} @else if (rooms(); as openRooms) {
+@if (openRooms.length === 0) {
+<p class="m-0 text-app-text-muted">Aucune salle à rejoindre pour le moment : créez la vôtre !</p>
+} @else {
+<ul class="m-0 p-0 list-none flex flex-col gap-2">
+    @for (room of openRooms; track room.roomName) {
+    <li class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 border border-app-border rounded-lg bg-app-surface-raised">
+        <!-- Read by the screen readers: Material hides an icon otherwise -->
+        @if (room.isPrivate) {
+        <mat-icon aria-hidden="false" aria-label="Salle privée" class="text-app-accent-text" role="img">lock</mat-icon>
+        } @else {
+        <mat-icon aria-hidden="false" aria-label="Salle publique" class="text-app-text-muted" role="img">public</mat-icon>
+        }
+        <span class="font-bold">{{ room.roomName }}</span>
+        <span class="text-app-text-muted">Hôte : {{ room.hostPlayer }}</span>
+        <span class="ml-auto">{{ room.playerCount }} / {{ room.maxPlayer }}</span>
+        <button (click)="joinRoom.emit(room)" [attr.aria-label]="'Rejoindre la salle ' + room.roomName" mat-stroked-button type="button">
+            Rejoindre
+        </button>
+    </li>
+    }
+</ul>
+}
+} @else {
+<p class="m-0 text-app-text-muted">Chargement des salles…</p>
+}

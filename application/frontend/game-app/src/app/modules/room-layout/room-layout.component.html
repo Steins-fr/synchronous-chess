@@ -2,7 +2,7 @@
 <ng-content select="[roomPresentation]"/>
 }
 <div class="container">
-    <app-room-setup [maxPlayer]="maxPlayer()"/>
+    <app-room-setup [game]="game()" [maxPlayer]="maxPlayer()"/>
 </div>
 <div id="room-content">
     <div id="page-content" class="container">

@@ -1,4 +1,4 @@
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
 import Connection from '@models/connection';
 import { aConditionFailure, aDynamoError } from '@testing/api-mocks';
@@ -59,6 +59,28 @@ describe('BaseRepository', () => {
 
         // When / Then
         expect(await repository.find({ connectionId: 'unknown' })).toBeNull();
+    });
+
+    test('should scan the items meeting a filter, page after page', async () => {
+        // Given
+        dynamo.on(ScanCommand)
+            .resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } })
+            .resolvesOnce({});
+
+        // When
+        const items: Connection[] = await repository.scan(condition);
+
+        // Then
+        expect(items).toEqual([connection]);
+        expect(dynamo.commandCalls(ScanCommand).map(({ args: [command] }: { args: [ScanCommand] }) => command.input)).toEqual([
+            {
+                TableName: 'connection',
+                ProjectionExpression: 'connectionId, roomName',
+                FilterExpression: 'roomName = :expected',
+                ExpressionAttributeValues: { ':expected': 'room' },
+            },
+            expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' } }),
+        ]);
     });
 
     test('should update an item and return its new attributes', async () => {
@@ -138,6 +160,7 @@ describe('BaseRepository', () => {
         ['conditional put', DynamoCrudActionEnum.PUT, () => repository.putIf(connection, condition)],
         ['delete', DynamoCrudActionEnum.DELETE, () => repository.delete(connection)],
         ['get', DynamoCrudActionEnum.GET, () => repository.find(connection)],
+        ['scan', DynamoCrudActionEnum.SCAN, () => repository.scan(condition)],
         ['update', DynamoCrudActionEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
         ['conditional update', DynamoCrudActionEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
     ];

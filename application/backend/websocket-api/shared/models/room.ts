@@ -1,3 +1,4 @@
+import { RoomGame } from '@protocol/room-game.enum';
 import Player from './player';
 
 export default interface Room {
@@ -5,6 +6,9 @@ export default interface Room {
     connectionId: string;
     hostPlayer: string;
     maxPlayer: number;
+    game: RoomGame;
+    /** Set for a private room: the hash of its password (password.helper) */
+    passwordHash?: string;
     players: Player[];
     queue: Player[];
     /** SHA-256 of the token of each player of the room, by name: the host reconnects the room with its own */

@@ -7,6 +7,8 @@ export interface RoomSetupInterface {
     type: RoomSetupType;
     roomName: string;
     playerName: string;
+    /** The password making the created room private, or of the private room joined */
+    password?: string;
 }
 
 @Injectable()
@@ -20,9 +22,9 @@ export default class RoomSetupService {
     private readonly loadingSubject = new BehaviorSubject<boolean>(false);
     public readonly loading$ = this.loadingSubject.asObservable();
 
-    public setup(type: RoomSetupType, roomName: string, playerName: string): void {
+    public setup(type: RoomSetupType, roomName: string, playerName: string, password?: string): void {
         this.loadingSubject.next(true);
-        this.setupSubject.next({ type, roomName, playerName });
+        this.setupSubject.next({ type, roomName, playerName, password });
     }
 
     public roomIsSetup(roomIsSetup: boolean): void {

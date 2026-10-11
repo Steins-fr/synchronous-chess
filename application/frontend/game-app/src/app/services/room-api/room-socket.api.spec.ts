@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { RoomApiError, RoomSocketApi } from './room-socket.api';
 import { WEB_SOCKET_SERVER } from './web-socket-server.token';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
+import { RoomGame } from '@protocol/room-game.enum';
 import { WebSocketMock } from '@testing/web-socket.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -66,7 +67,7 @@ describe('RoomSocketApi', () => {
 
     test('send should reject on error response', async () => {
         // Given
-        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host', token: 'token' }));
+        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' }));
 
         // When
         socket.receive({ id, type: 'error', data: { message: 'Room already exists' } });

@@ -1,13 +1,14 @@
 import Player from '@models/player';
 import Room from '@models/room';
 import BadRequestException from '@exceptions/bad-request-exception';
+import { RoomGame } from '@protocol/room-game.enum';
 import { getRoomsTableName } from '@helpers/environment.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
 
 export default class RoomRepository extends BaseRepository<Room> {
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, passwordHash, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -17,6 +18,11 @@ export default class RoomRepository extends BaseRepository<Room> {
 
     public async getByName(roomName: string): Promise<Room | null> {
         return await this.find({ id: roomName });
+    }
+
+    /** The rooms of the game whose host is connected: a room waiting for its host has an expiry */
+    public async findHostedRooms(game: RoomGame): Promise<Room[]> {
+        return this.scan({ expression: 'game = :game AND attribute_not_exists(expiresAt)', attributeValues: { ':game': game } });
     }
 
     /**

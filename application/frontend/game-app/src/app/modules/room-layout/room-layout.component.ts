@@ -3,6 +3,7 @@ import { Component, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RoomSetupComponent } from '@app/modules/room-setup/room-setup.component';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { RoomGame } from '@protocol/room-game.enum';
 
 @Component({
     selector: 'app-room-layout',
@@ -11,6 +12,7 @@ import RoomSetupService from '@app/services/room-setup/room-setup.service';
     imports: [RoomSetupComponent],
 })
 export class RoomLayoutComponent {
+    public readonly game = input.required<RoomGame>();
     public readonly maxPlayer = input.required<number>();
     /** Whether the content is dimmed until the room is set up, as a preview of the page */
     public readonly dimContent = input<boolean>(true);

@@ -9,14 +9,16 @@ import {
     DeleteCommand,
     DeleteCommandOutput,
     GetCommand,
-    GetCommandOutput
+    GetCommandOutput,
+    ScanCommand,
+    ScanCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DocumentAttributes = Record<string, any>;
 
-/** A condition a write requires, with the values its expression compares to, and the names it uses */
+/** A condition a write requires, or a scanned item meets, with the values its expression compares to, and the names it uses */
 export interface WriteCondition {
     expression: string;
     attributeValues?: DocumentAttributes;
@@ -100,6 +102,32 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
 
         const data = await this.run(DynamoCrudActionEnum.GET, (): Promise<GetCommandOutput> => this.ddb.send(command));
         return (data.Item as Resource | undefined) ?? null;
+    }
+
+    /**
+     * The items matching the filter, read page after page: a scan reads the whole table
+     * @param filter the condition an item must meet, with the values it compares to
+     */
+    public async scan(filter: WriteCondition): Promise<Resource[]> {
+        const items: Resource[] = [];
+        let startKey: DocumentAttributes | undefined;
+
+        do {
+            const command = new ScanCommand({
+                TableName: this.tableName,
+                ProjectionExpression: this.defaultProjection,
+                FilterExpression: filter.expression,
+                ExpressionAttributeValues: filter.attributeValues,
+                ExpressionAttributeNames: filter.attributeNames,
+                ExclusiveStartKey: startKey,
+            });
+            // eslint-disable-next-line no-await-in-loop -- the pages, one after the other: each gives the start of the next
+            const page = await this.run(DynamoCrudActionEnum.SCAN, (): Promise<ScanCommandOutput> => this.ddb.send(command));
+            items.push(...(page.Items ?? []) as Resource[]);
+            startKey = page.LastEvaluatedKey;
+        } while (startKey);
+
+        return items;
     }
 
     /** @param attributeNames the names the expression uses: the attributes named by the players for instance */

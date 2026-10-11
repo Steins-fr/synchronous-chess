@@ -1,14 +1,20 @@
 import BadRequestException from '@exceptions/bad-request-exception';
+import { hashPassword, isPassword, verifyPassword } from '@helpers/password.helper';
 import { hashToken } from '@helpers/token.helper';
 import RoomHelper from '@helpers/room-helper';
 import Connection from '@models/connection';
 import Room from '@models/room';
+import RoomCreateRequest from '@protocol/requests/room-create-request';
+import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { RoomGame } from '@protocol/room-game.enum';
 import RoomRepository from '@repositories/room-repository';
 
 export default class RoomService {
     /** How long a room waits for its disconnected host to reconnect it, in seconds */
     public static readonly HOST_RECONNECTION_DELAY: number = 10 * 60;
+    /** The most open rooms listed: their response fits a message posted to a connection */
+    public static readonly MAX_OPEN_ROOMS: number = 100;
 
     private readonly roomRepository: RoomRepository = new RoomRepository();
 
@@ -58,6 +64,35 @@ export default class RoomService {
         }
     }
 
+    /**
+     * The rooms of the game a player can join, by name: their host is connected, and a place is left
+     */
+    public async getOpenRooms(game: RoomGame): Promise<OpenRoom[]> {
+        const rooms: Room[] = await this.roomRepository.findHostedRooms(game);
+
+        return rooms
+            .filter((room: Room): boolean => room.players.length < room.maxPlayer)
+            .sort((a: Room, b: Room): number => a.id.localeCompare(b.id))
+            .slice(0, RoomService.MAX_OPEN_ROOMS)
+            .map((room: Room): OpenRoom => ({
+                roomName: room.id,
+                hostPlayer: room.hostPlayer,
+                playerCount: room.players.length,
+                maxPlayer: room.maxPlayer,
+                isPrivate: room.passwordHash !== undefined,
+            }));
+    }
+
+    /**
+     * Before a player joins a private room: a public room ignores the password
+     * @throws {BadRequestException} when the password is not the one of the private room (WRONG_PASSWORD)
+     */
+    public passwordGuard(room: Room, password: string | undefined): void {
+        if (room.passwordHash !== undefined && !(isPassword(password) && verifyPassword(password, room.passwordHash))) {
+            throw new BadRequestException(RoomApiErrorMessage.WRONG_PASSWORD);
+        }
+    }
+
     public canEditRoomGuard(room: Room, connectionId: string): void {
         if (room.connectionId !== connectionId) {
             throw new BadRequestException('You are not the host of the room');
@@ -91,19 +126,27 @@ export default class RoomService {
     }
 
     /**
-     * @param token the token of the host, to reconnect the room later
+     * Creates the room of the request, hosted by the connection: private with a password, kept as a hash. The token of
+     * the host is kept as a hash too, to reconnect the room later
      * @throws {BadRequestException} when a room of that name exists, even waiting for its host
      */
-    public async create(roomName: string, connectionId: string, playerName: string, maxPlayer: number, token: string): Promise<void> {
-        const created: boolean = await this.roomRepository.create({
-            id: roomName,
+    public async create(request: RoomCreateRequest, connectionId: string): Promise<void> {
+        const room: Room = {
+            id: request.roomName,
             connectionId,
-            hostPlayer: playerName,
-            maxPlayer,
-            players: [{ playerName }],
+            hostPlayer: request.playerName,
+            maxPlayer: request.maxPlayer,
+            game: request.game,
+            players: [{ playerName: request.playerName }],
             queue: [],
-            tokenHashes: { [playerName]: hashToken(token) },
-        }, RoomService.now());
+            tokenHashes: { [request.playerName]: hashToken(request.token) },
+        };
+
+        if (request.password !== undefined) {
+            room.passwordHash = hashPassword(request.password);
+        }
+
+        const created: boolean = await this.roomRepository.create(room, RoomService.now());
 
         if (!created) {
             throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);

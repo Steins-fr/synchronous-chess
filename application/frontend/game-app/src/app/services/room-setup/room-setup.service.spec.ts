@@ -14,10 +14,14 @@ describe('RoomSetupService', () => {
 
         // When
         service.setup('create', 'room', 'player');
+        service.setup('join', 'private', 'player', 'secret');
 
         // Then
-        expect(setups).toEqual([{ type: 'create', roomName: 'room', playerName: 'player' }]);
-        expect(loadings).toEqual([false, true]);
+        expect(setups).toEqual([
+            { type: 'create', roomName: 'room', playerName: 'player' },
+            { type: 'join', roomName: 'private', playerName: 'player', password: 'secret' },
+        ]);
+        expect(loadings).toEqual([false, true, true]);
     });
 
     test('roomIsSetup should emit the room state and stop loading', () => {

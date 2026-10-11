@@ -1,5 +1,6 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import Room from '@models/room';
+import { RoomGame } from '@protocol/room-game.enum';
 import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION } from '@testing/api-mocks';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -29,7 +30,20 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, tokenHashes, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, passwordHash, tokenHashes, expiresAt',
+        })).toHaveLength(1);
+    });
+
+    test('should find the rooms of a game whose host is connected', async () => {
+        // Given
+        dynamo.on(ScanCommand).resolves({ Items: [room] });
+
+        // When / Then
+        expect(await repository.findHostedRooms(RoomGame.CHESS)).toEqual([room]);
+        expect(dynamo.commandCalls(ScanCommand, {
+            TableName: 'room',
+            FilterExpression: 'game = :game AND attribute_not_exists(expiresAt)',
+            ExpressionAttributeValues: { ':game': RoomGame.CHESS },
         })).toHaveLength(1);
     });
 

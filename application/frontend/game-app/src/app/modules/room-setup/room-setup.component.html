@@ -1,8 +1,10 @@
 @if (canDisplay()) {
 <div class="flex flex-col p-4 gap-4">
-    <div class="flex gap-4">
+    <div class="flex flex-wrap gap-x-4">
         <app-text-field [field]="setupForm.roomName" label="Nom de la salle" />
         <app-text-field [field]="setupForm.playerName" label="Nom du joueur" />
+        <!-- Wider than the default width of a field: its label would be cut -->
+        <app-text-field [field]="setupForm.password" class="w-64" label="Mot de passe (salle privée)" type="password" />
     </div>
     @if (!loading()) {
     <div class="flex items-center gap-4">
@@ -13,6 +15,7 @@
             Rejoindre
         </button>
     </div>
+    <app-open-rooms (joinRoom)="joinOpenRoom($event)" [game]="game()" />
     }
     @if (loading()) {
     <mat-spinner [diameter]="42" />

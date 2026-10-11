@@ -9,7 +9,9 @@ import RoomManagerService from '@app/services/room-manager/room-manager.service'
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { JoinFailure } from '@app/services/room-manager/classes/room-network/room-network';
 import { RoomNetworkMock } from '@testing/room-network.mock';
+import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
 import { TestHelper } from '@testing/test.helper';
+import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 describe('ChatPage', () => {
@@ -28,6 +30,7 @@ describe('ChatPage', () => {
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })
+            .overrideProvider(RoomSocketApi, { useValue: openRoomsSocketApi() })
             .compileComponents();
 
         fixture = TestBed.createComponent(ChatPage);
@@ -50,7 +53,7 @@ describe('ChatPage', () => {
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT });
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', roomName: 'room', playerName: 'local' }, RoomGame.CHAT, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT });
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 

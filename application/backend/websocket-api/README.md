@@ -36,3 +36,14 @@ host reconnects, and the room keeps its name until it expires. Meanwhile, a play
 `reconnect` and its own name and token: the room moves to its connection, and it becomes the host (`Host connected`
 while the former host connection is still open). The host declares again a player whose connection it restored:
 `playerAdd` of a player already in the room changes nothing.
+
+## Open rooms
+
+A page lists the rooms of its game (`game` of `create`: the chess rooms on the chess page, the chat rooms on the chat
+page) with `roomGetAll`, from any connection: the rooms whose host is connected and with a place left (fewer `players`
+than `maxPlayer`), by name, 100 at most. The request scans the rooms table, read whole: enough for the rooms of the
+game, a secondary index on `game` would avoid it once they grow.
+
+A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
+(`Wrong password`), before telling whether its host is connected. The room keeps a salted scrypt hash of it
+(`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private.

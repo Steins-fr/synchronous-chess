@@ -1,4 +1,5 @@
 import { PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { hashPassword } from '@helpers/password.helper';
 import { hashToken } from '@helpers/token.helper';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import RoomJoinRequest from '@protocol/requests/room-join-request';
@@ -59,5 +60,32 @@ describe('JoinHandler', () => {
         await expect(join({ roomName: 'room', playerName: 'other', token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
         expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
         expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.HOST_DISCONNECTED, connection)]);
+    });
+
+    test('should queue a player giving the password of a private room', async () => {
+        // Given
+        storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret') }));
+
+        // When
+        await join({ roomName: 'room', playerName: 'other', password: 'secret', token: 'other-token' });
+
+        // Then
+        expect(postedPackets(apiGateway)).toEqual([
+            { to: HOST_CONNECTION, packet: { type: 'joinRequest', data: { playerName: 'other' } } },
+            { to: connection, packet: { id: 7, type: 'joiningRoom', data: { playerName: 'host' } } },
+        ]);
+    });
+
+    test.each<[string, string | undefined]>([
+        ['a wrong password', 'wrong'],
+        ['no password', undefined],
+    ])('should refuse a player giving %s for a private room, before telling the host is disconnected', async (_case: string, password: string | undefined) => {
+        // Given
+        storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret'), expiresAt: Math.floor(Date.now() / 1000) + 60 }));
+
+        // When / Then
+        await expect(join({ roomName: 'room', playerName: 'other', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
+        expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.WRONG_PASSWORD, connection)]);
     });
 });

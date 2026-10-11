@@ -20,6 +20,8 @@ data "aws_iam_policy_document" "dynamodb_allows" {
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
       "dynamodb:Query",
+      # The open rooms (roomGetAll)
+      "dynamodb:Scan",
       "dynamodb:UpdateItem",
       "dynamodb:GetItem"
     ]
