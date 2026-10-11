@@ -2,8 +2,9 @@ import { Type } from '@angular/core';
 import { Route } from '@angular/router';
 import { ChatPage } from '@app/modules/chat-page/chat.page';
 import { SynchronousChess } from '@app/modules/chess/pages/synchronous-chess/synchronous-chess';
+import { HomePage } from '@app/modules/home-page/home.page';
 import { describe, expect, test } from 'vitest';
-import { chatPath, homePath, routes } from './app.routes';
+import { chatPath, chessPath, homePath, routes } from './app.routes';
 
 describe('routes', () => {
     async function loadedComponent(path: string): Promise<unknown> {
@@ -12,7 +13,8 @@ describe('routes', () => {
     }
 
     test.each<[string, Type<unknown>]>([
-        [homePath, SynchronousChess],
+        [homePath, HomePage],
+        [chessPath, SynchronousChess],
         [chatPath, ChatPage],
     ])('the route \'%s\' should load its page on demand', async (path: string, page: Type<unknown>) => {
         // When
