@@ -6,19 +6,26 @@ import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messa
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
-import { Negotiator } from '../negotiator/negotiator';
+import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { RoomHosting } from './room-hosting';
-import { RejoinResult, RoomNetwork } from './room-network';
+import { JoinFailure, RejoinResult, RoomNetwork } from './room-network';
 
 /**
  * The network of a participant of the room. The player creating the room hosts it, the others join it through the
  * host; the room agreeing its host left, the participant it elects takes it over
  */
 export class PeerRoomNetwork extends RoomNetwork {
+    /** The negotiations with the host failing in a row before the player gives up joining the room */
+    private static readonly JOIN_ATTEMPTS: number = 2;
+
     protected hostPlayer?: Player;
+    /** The negotiations with the host which failed since the player last connected to it */
+    private failedJoins: number = 0;
+    /** Joining the room through the socket, before negotiating with the host */
+    private joining: boolean = false;
     private _hostName: string;
     private hosting?: RoomHosting;
 
@@ -48,7 +55,49 @@ export class PeerRoomNetwork extends RoomNetwork {
         if (hostName === localPlayerName) { // The socket created the room
             this.startHosting(true);
         } else {
-            this.addNegotiator(new WebsocketNegotiator(roomName, hostName, new Webrtc(), roomApi));
+            this.negotiateWithHost(hostName);
+        }
+    }
+
+    /** Through the socket: once the negotiation failed, the player joins the room again, or gives it up */
+    private negotiateWithHost(hostName: string): void {
+        const negotiator: WebsocketNegotiator = new WebsocketNegotiator(this.roomName, hostName, new Webrtc(), this.roomSocketApi);
+        // Subscribed first: the network then removes the negotiator which failed. Replaced or connected, it is cleared
+        negotiator.connectionState$.subscribe((state: NegotiatorConnectionState) => {
+            if (state === NegotiatorConnectionState.DISCONNECTED) {
+                this.onJoinFailed(negotiator.roomFull);
+            }
+        });
+        this.addNegotiator(negotiator);
+    }
+
+    /** The host refused the player, or the connection to it failed: a lost connection may connect at the next attempt */
+    private onJoinFailed(roomFull: boolean): void {
+        this.failedJoins++;
+
+        if (roomFull || this.failedJoins >= PeerRoomNetwork.JOIN_ATTEMPTS) {
+            this.joinFailedSubject.next(roomFull ? JoinFailure.ROOM_FULL : JoinFailure.HOST_UNREACHABLE);
+            return;
+        }
+
+        this.joiningAgainSubject.next();
+        this.joinThroughSocket().catch((error: unknown) => {
+            console.error('PeerRoom: the room could not be joined again', error);
+            this.joinFailedSubject.next(JoinFailure.HOST_UNREACHABLE);
+        });
+    }
+
+    /** Joins the room through a new socket: the API forgets the former join, waiting for the host with the former socket */
+    private async joinThroughSocket(): Promise<void> {
+        this.joining = true;
+        this.roomSocketApi.close();
+
+        try {
+            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, token: this.token });
+            this._hostName = response.playerName;
+            this.negotiateWithHost(response.playerName);
+        } finally {
+            this.joining = false;
         }
     }
 
@@ -80,6 +129,7 @@ export class PeerRoomNetwork extends RoomNetwork {
     protected onPlayerConnected(player: Player): void {
         if (player.name === this.hostName) {
             this.hostPlayer = player;
+            this.failedJoins = 0;
         }
 
         this.hosting?.onPlayerConnected(player);
@@ -105,20 +155,16 @@ export class PeerRoomNetwork extends RoomNetwork {
      * room over, and the room waits for its host when they all left
      */
     public override async rejoin(): Promise<RejoinResult> {
-        if (this.getNegotiatorSize() > 0) { // Connecting again already
+        if (this.joining || this.getNegotiatorSize() > 0) { // Connecting again already
             return RejoinResult.NOT_JOINED;
         }
 
-        if (this.hosting) {
-            this.hosting.clear();
-            this.hosting = undefined;
-            this.roomSocketApi.close();
-        }
+        // The room it hosts is let go: the join closes its socket
+        this.hosting?.clear();
+        this.hosting = undefined;
 
         try {
-            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, token: this.token });
-            this._hostName = response.playerName;
-            this.addNegotiator(new WebsocketNegotiator(this.roomName, response.playerName, new Webrtc(), this.roomSocketApi));
+            await this.joinThroughSocket();
             return RejoinResult.JOINED;
         } catch (e) {
             return this.rejoinFailure(e);

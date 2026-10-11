@@ -3,7 +3,6 @@ import {
     SocketPacketRequestPayload,
     RoomApiRequestTypeEnum,
     RoomSocketApiRequestTypedData,
-    SocketPacketNotificationPayload,
     RoomSocketApiNotificationTypedData,
     RoomSocketApiResponseTypedData,
     SocketPacketResponsePayload,
@@ -12,6 +11,7 @@ import {
 } from '@protocol/socket-packet-payload.type';
 import BadRequestException from '@exceptions/bad-request-exception';
 import ExceptionTypeEnum from '@exceptions/exception-type.enum';
+import { notificationCommand } from '@helpers/notification.helper';
 import ConnectionService from '@services/connection-service';
 import RoomService from '@services/room-service';
 
@@ -71,13 +71,7 @@ export default abstract class MessageHandler {
     }
 
     protected notify<Type extends RoomSocketApiNotificationEnum>(type: Type, to: string, data: RoomSocketApiNotificationTypedData[Type]): Promise<object> {
-        const notification: SocketPacketNotificationPayload<Type> = {
-            type,
-            data,
-        };
-
-        const command = new PostToConnectionCommand({ ConnectionId: to, Data: JSON.stringify(notification) });
-        return this.apiGatewayManagementApiClient.send(command);
+        return this.apiGatewayManagementApiClient.send(notificationCommand(type, to, data));
     }
 
     protected reply<Type extends RoomApiResponseTypeEnum>(type: Type, data: RoomSocketApiResponseTypedData[Type]): Promise<object> {

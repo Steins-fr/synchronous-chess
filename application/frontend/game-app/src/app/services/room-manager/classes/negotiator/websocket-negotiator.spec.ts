@@ -48,11 +48,36 @@ describe('WebsocketNegotiator', () => {
         // When
         notification$.next({ type: RoomSocketApiNotificationEnum.FULL, data: { roomName: 'room', from: 'other' } });
         notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+
+        // Then
+        expect(negotiator.roomFull).toEqual(false);
+
+        // When
         notification$.next({ type: RoomSocketApiNotificationEnum.FULL, data: { roomName: 'room', from: 'remote' } });
         negotiator.clear();
 
         // Then
         expect(states).toEqual([NegotiatorConnectionState.DISCONNECTED]);
+        expect(negotiator.roomFull).toEqual(true);
+    });
+
+    test('should disconnect when the joining player cancelled its join', () => {
+        // Given
+        const { negotiator, notification$, states } = createNegotiator();
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_CANCELLED, data: { playerName: 'other' } });
+
+        // Then
+        expect(states).toEqual([]);
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_CANCELLED, data: { playerName: 'remote' } });
+        negotiator.clear();
+
+        // Then
+        expect(states).toEqual([NegotiatorConnectionState.DISCONNECTED]);
+        expect(negotiator.roomFull).toEqual(false);
     });
 
     test('should register the remote signals', async () => {

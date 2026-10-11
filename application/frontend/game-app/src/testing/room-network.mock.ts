@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { Negotiator } from '@app/services/room-manager/classes/negotiator/negotiator';
 import { LocalPlayer } from '@app/services/room-manager/classes/player/local-player';
 import { Player } from '@app/services/room-manager/classes/player/player';
-import { RejoinResult, RoomNetwork } from '@app/services/room-manager/classes/room-network/room-network';
+import { JoinFailure, RejoinResult, RoomNetwork } from '@app/services/room-manager/classes/room-network/room-network';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Subject } from 'rxjs';
 import { vi } from 'vitest';
@@ -20,6 +20,8 @@ export class RoomNetworkMock {
     public readonly queueAdded$ = new Subject<string>();
     public readonly queueRemoved$ = new Subject<string>();
     public readonly roomLost$ = new Subject<void>();
+    public readonly joiningAgain$ = new Subject<void>();
+    public readonly joinFailed$ = new Subject<JoinFailure>();
     public readonly roomName: string = 'room';
     public readonly clear = vi.fn();
     public readonly changeHost = vi.fn();

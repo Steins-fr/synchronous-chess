@@ -27,6 +27,12 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             }
             room.set(built);
             roomSetupService.roomIsSetup(true);
+            // Already notified: the form is available again, to try again or join another room
+            built.roomConnection.joinFailed$.subscribe(() => {
+                built.clear();
+                room.set(undefined);
+                roomSetupService.roomIsSetup(false);
+            });
         } catch {
             // Already notified: the form is available again, to try another room or name
             roomSetupService.roomIsSetup(false);

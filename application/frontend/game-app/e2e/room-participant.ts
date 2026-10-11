@@ -55,11 +55,20 @@ export class RoomParticipant {
 
     /** The participants this one is connected to, itself included, and the players joining */
     public async expectParticipants(names: ReadonlyArray<string>, timeout?: number): Promise<void> {
-        await expect.poll(() => this.participantNames(), { timeout }).toEqual([...names].sort(RoomParticipant.byName));
+        await expect.poll(() => this.participantNames('#player-list mat-chip'), { timeout }).toEqual([...names].sort(RoomParticipant.byName));
     }
 
-    private async participantNames(): Promise<string[]> {
-        const chips: Locator = this.page.locator('#player-list mat-chip');
+    /** The participants this one is connected to, itself included, none of them still joining */
+    public async expectConnected(names: ReadonlyArray<string>, timeout?: number): Promise<void> {
+        const sorted: string[] = [...names].sort(RoomParticipant.byName);
+        await expect.poll(async () => ({
+            participants: await this.participantNames('#player-list mat-chip'),
+            connected: await this.participantNames('#player-list app-chat-participant mat-chip'),
+        }), { timeout }).toEqual({ participants: sorted, connected: sorted });
+    }
+
+    private async participantNames(selector: string): Promise<string[]> {
+        const chips: Locator = this.page.locator(selector);
         return (await chips.allInnerTexts()).map((text: string) => text.split(' - ')[0].trim()).sort(RoomParticipant.byName);
     }
 
@@ -74,6 +83,16 @@ export class RoomParticipant {
 
     public async expectMessage(from: string, text: string): Promise<void> {
         await expect(this.page.locator('#chat')).toContainText(`${ from } : ${ text }`);
+    }
+
+    /** A notification shown to the player, among the ones queued one after the other */
+    public async expectNotification(text: string, timeout?: number): Promise<void> {
+        await expect(this.page.locator('mat-snack-bar-container').getByText(text)).toBeVisible({ timeout });
+    }
+
+    /** The room setup form is shown again: the player is in no room */
+    public async expectSetupForm(timeout?: number): Promise<void> {
+        await expect(this.page.getByRole('button', { name: 'Rejoindre' })).toBeVisible({ timeout });
     }
 
     /**

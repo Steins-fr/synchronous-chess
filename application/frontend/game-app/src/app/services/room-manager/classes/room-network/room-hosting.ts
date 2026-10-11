@@ -21,8 +21,8 @@ export interface HostingContext {
     readonly token: string;
     /** The connected players, the local one included */
     players(): ReadonlyMap<string, Player>;
-    /** The connected players and the ones negotiating */
-    occupancy(): number;
+    /** The connected players and the ones negotiating, but the negotiation of the player named: it joins again */
+    occupancy(playerName: string): number;
     addNegotiator(negotiator: Negotiator): void;
     transmitMessage(message: NetworkMessage): void;
 }
@@ -147,7 +147,7 @@ export class RoomHosting {
     private async onJoinNotification(data: JoinNotification): Promise<void> {
         const { roomName } = this.context;
 
-        if (this.context.occupancy() >= this.context.maxPlayer) {
+        if (this.context.occupancy(data.playerName) >= this.context.maxPlayer) {
             this.roomSocketApi
                 .send(RoomApiRequestTypeEnum.FULL, { to: data.playerName, roomName })
                 .catch((err: string) => console.error(err));
