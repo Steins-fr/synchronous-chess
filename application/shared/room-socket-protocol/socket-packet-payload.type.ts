@@ -97,6 +97,8 @@ export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = (typeof
 export enum RoomSocketApiNotificationEnum {
     FULL = 'full',
     JOIN_REQUEST = 'joinRequest',
+    /** To the host: the player waiting to join the room closed its connection */
+    JOIN_CANCELLED = 'joinCancelled',
     REMOTE_SIGNAL = 'remoteSignal'
 }
 
@@ -106,6 +108,7 @@ export type RoomSocketApiNotificationType = `${ RoomSocketApiNotificationEnum }`
 export type RoomSocketApiNotificationTypedData = {
     'full': FullNotification,
     'joinRequest': JoinNotification,
+    'joinCancelled': JoinNotification,
     'remoteSignal': SignalNotification,
 };
 
