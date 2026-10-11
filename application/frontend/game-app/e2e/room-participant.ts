@@ -90,13 +90,23 @@ export class RoomParticipant {
         await expect(row.getByRole('img', { name: isPrivate ? 'Salle privée' : 'Salle publique' })).toBeVisible();
     }
 
-    /** The room is no longer listed: its host left, or it is full */
-    public async expectNotListed(roomName: string): Promise<void> {
+    /** The state of a room of the list, once refreshed: full, or its host reconnecting */
+    public async expectRoomState(roomName: string, state: string): Promise<void> {
         const row: Locator = this.page.locator('app-open-rooms li').filter({ hasText: roomName });
         await expect(async () => {
             await this.page.getByRole('button', { name: 'Actualiser les salles' }).click();
-            await expect(row).toHaveCount(0, { timeout: 2000 });
+            await expect(row).toContainText(state, { timeout: 2000 });
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
+    }
+
+    /** Searches the rooms by the name of the room or of its host */
+    public async searchRooms(search: string): Promise<void> {
+        await this.page.getByRole('textbox', { name: 'Rechercher une salle ou un hôte' }).fill(search);
+    }
+
+    /** The names of the rooms listed */
+    public async expectListedRooms(roomNames: ReadonlyArray<string>): Promise<void> {
+        await expect(this.page.locator('app-open-rooms li .font-bold')).toHaveText([...roomNames]);
     }
 
     /** The participants this one is connected to, itself included, and the players joining */

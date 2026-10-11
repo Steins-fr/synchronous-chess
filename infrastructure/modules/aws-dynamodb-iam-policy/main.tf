@@ -20,14 +20,14 @@ data "aws_iam_policy_document" "dynamodb_allows" {
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
       "dynamodb:Query",
-      # The open rooms (roomGetAll)
-      "dynamodb:Scan",
       "dynamodb:UpdateItem",
       "dynamodb:GetItem"
     ]
 
     resources = [
-      var.rooms_table_arn
+      var.rooms_table_arn,
+      # The rooms of a game (roomGetAll), through the index by game
+      "${var.rooms_table_arn}/index/*"
     ]
   }
 }

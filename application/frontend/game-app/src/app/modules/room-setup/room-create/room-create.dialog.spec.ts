@@ -73,4 +73,17 @@ describe('RoomCreateDialog', () => {
         expect(errors()).toEqual(['Le nom de la salle est requis', 'Le nom du joueur est requis']);
         expect(fixture.nativeElement.querySelectorAll('.mat-mdc-form-field-required-marker')).toHaveLength(2);
     });
+
+    test('should refuse a password longer than the API accepts', async () => {
+        // Given
+        await createDialog({ roomName: 'room', playerName: 'alice' });
+        await typeIn('Mot de passe (salle privée)', 'p'.repeat(129));
+
+        // When
+        await create();
+
+        // Then
+        expect(rooms).toEqual([]);
+        expect(errors()).toEqual(['Le mot de passe fait 128 caractères au plus']);
+    });
 });

@@ -10,4 +10,6 @@ export enum RoomApiErrorMessage {
     HOST_CONNECTED = 'Host connected',
     /** The password is not the one of the private room */
     WRONG_PASSWORD = 'Wrong password',
+    /** The room joined is the one of another game than the page's */
+    OTHER_GAME = 'Room of another game',
 }

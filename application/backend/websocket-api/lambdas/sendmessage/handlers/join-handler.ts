@@ -1,5 +1,6 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { isToken } from '@helpers/token.helper';
+import { isRoomGame } from '@protocol/room-game.enum';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import {
     RoomApiRequestTypeEnum,
@@ -14,11 +15,12 @@ export default class JoinHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.JOIN);
 
-        if (!data.roomName || !data.playerName || !isToken(data.token)) {
+        if (!data.roomName || !data.playerName || !isToken(data.token) || !isRoomGame(data.game)) {
             throw new BadRequestException(JoinHandler.ERROR_PARSING);
         }
 
         const room: Room = await this.roomService.getRoomByName(data.roomName);
+        this.roomService.gameGuard(room, data.game);
         this.roomService.passwordGuard(room, data.password);
         this.roomService.hostConnectedGuard(room);
 

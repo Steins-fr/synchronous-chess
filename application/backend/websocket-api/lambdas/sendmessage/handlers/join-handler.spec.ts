@@ -3,6 +3,7 @@ import { hashPassword } from '@helpers/password.helper';
 import { hashToken } from '@helpers/token.helper';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import RoomJoinRequest from '@protocol/requests/room-join-request';
+import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { anApiGatewayClient, aRequest, aRoom, AwsMocks, errorReply, HOST_CONNECTION, mockAws, postedPackets, storeRoom } from '@testing/api-mocks';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -22,7 +23,7 @@ describe('JoinHandler', () => {
 
     test('should queue the player and ask the host', async () => {
         // When
-        await join({ roomName: 'room', playerName: 'other', token: 'other-token' });
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
 
         // Then
         expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: { connectionId: connection, roomName: 'room' } })).toHaveLength(1);
@@ -38,12 +39,14 @@ describe('JoinHandler', () => {
     });
 
     test.each([
-        ['room name', { roomName: '', playerName: 'other', token: 'other-token' }, 'Payload not valid'],
-        ['player name', { roomName: 'room', playerName: '', token: 'other-token' }, 'Payload not valid'],
-        ['token', { roomName: 'room', playerName: 'other', token: '' }, 'Payload not valid'],
-        ['player in the game', { roomName: 'room', playerName: 'host', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_GAME],
-        ['player in the queue', { roomName: 'room', playerName: 'guest', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_QUEUE],
-        ['room missing', { roomName: 'missing', playerName: 'other', token: 'other-token' }, 'Room \'missing\' does not exist'],
+        ['room name', { roomName: '', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
+        ['player name', { roomName: 'room', game: RoomGame.CHESS, playerName: '', token: 'other-token' }, 'Payload not valid'],
+        ['token', { roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: '' }, 'Payload not valid'],
+        ['player in the game', { roomName: 'room', game: RoomGame.CHESS, playerName: 'host', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_GAME],
+        ['player in the queue', { roomName: 'room', game: RoomGame.CHESS, playerName: 'guest', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_QUEUE],
+        ['game', { roomName: 'room', game: 'go' as RoomGame, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
+        ['room of another game', { roomName: 'room', game: RoomGame.CHAT, playerName: 'other', token: 'other-token' }, RoomApiErrorMessage.OTHER_GAME],
+        ['room missing', { roomName: 'missing', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Room \'missing\' does not exist'],
     ])('should refuse a request with its %s', async (_case: string, data: RoomJoinRequest, message: string) => {
         // When / Then
         await expect(join(data)).rejects.toThrow(message);
@@ -57,7 +60,7 @@ describe('JoinHandler', () => {
         storeRoom(dynamo, aRoom({ expiresAt: Math.floor(Date.now() / 1000) + 60 }));
 
         // When / Then
-        await expect(join({ roomName: 'room', playerName: 'other', token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
         expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
         expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.HOST_DISCONNECTED, connection)]);
     });
@@ -67,7 +70,7 @@ describe('JoinHandler', () => {
         storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret') }));
 
         // When
-        await join({ roomName: 'room', playerName: 'other', password: 'secret', token: 'other-token' });
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password: 'secret', token: 'other-token' });
 
         // Then
         expect(postedPackets(apiGateway)).toEqual([
@@ -84,7 +87,7 @@ describe('JoinHandler', () => {
         storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret'), expiresAt: Math.floor(Date.now() / 1000) + 60 }));
 
         // When / Then
-        await expect(join({ roomName: 'room', playerName: 'other', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
         expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
         expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.WRONG_PASSWORD, connection)]);
     });

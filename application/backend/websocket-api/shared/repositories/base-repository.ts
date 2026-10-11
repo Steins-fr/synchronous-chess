@@ -10,15 +10,15 @@ import {
     DeleteCommandOutput,
     GetCommand,
     GetCommandOutput,
-    ScanCommand,
-    ScanCommandOutput,
+    QueryCommand,
+    QueryCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DocumentAttributes = Record<string, any>;
 
-/** A condition a write requires, or a scanned item meets, with the values its expression compares to, and the names it uses */
+/** A condition a write requires, or a queried item meets, with the values its expression compares to, and the names it uses */
 export interface WriteCondition {
     expression: string;
     attributeValues?: DocumentAttributes;
@@ -105,25 +105,32 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     }
 
     /**
-     * The items matching the filter, read page after page: a scan reads the whole table
-     * @param filter the condition an item must meet, with the values it compares to
+     * The items of a secondary index matching the key condition and the filter, read page after page
+     * @param projection the attributes read: the ones the index holds
+     * @returns the attributes of the projection only
      */
-    public async scan(filter: WriteCondition): Promise<Resource[]> {
-        const items: Resource[] = [];
+    public async queryIndex<Item extends DocumentAttributes>(
+        indexName: string,
+        keyCondition: WriteCondition,
+        filter: WriteCondition,
+        projection: string,
+    ): Promise<Item[]> {
+        const items: Item[] = [];
         let startKey: DocumentAttributes | undefined;
 
         do {
-            const command = new ScanCommand({
+            const command = new QueryCommand({
                 TableName: this.tableName,
-                ProjectionExpression: this.defaultProjection,
+                IndexName: indexName,
+                KeyConditionExpression: keyCondition.expression,
                 FilterExpression: filter.expression,
-                ExpressionAttributeValues: filter.attributeValues,
-                ExpressionAttributeNames: filter.attributeNames,
+                ProjectionExpression: projection,
+                ExpressionAttributeValues: { ...keyCondition.attributeValues, ...filter.attributeValues },
                 ExclusiveStartKey: startKey,
             });
             // eslint-disable-next-line no-await-in-loop -- the pages, one after the other: each gives the start of the next
-            const page = await this.run(DynamoCrudActionEnum.SCAN, (): Promise<ScanCommandOutput> => this.ddb.send(command));
-            items.push(...(page.Items ?? []) as Resource[]);
+            const page = await this.run(DynamoCrudActionEnum.QUERY, (): Promise<QueryCommandOutput> => this.ddb.send(command));
+            items.push(...(page.Items ?? []) as Item[]);
             startKey = page.LastEvaluatedKey;
         } while (startKey);
 

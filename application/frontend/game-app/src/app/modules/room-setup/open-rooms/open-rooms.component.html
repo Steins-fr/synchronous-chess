@@ -8,11 +8,18 @@
         <ng-content />
     </div>
 </div>
+<app-text-field [field]="searchForm.text" class="max-w-md" label="Rechercher une salle ou un hôte" />
 @if (failed()) {
 <p class="m-0 text-app-text-muted">Les salles n'ont pas pu être chargées.</p>
 } @else if (rooms(); as openRooms) {
 @if (openRooms.length === 0) {
-<p class="m-0 text-app-text-muted">Aucune salle à rejoindre pour le moment : créez la vôtre !</p>
+<p class="m-0 text-app-text-muted">
+    @if (searched() === '') {
+    Aucune salle à rejoindre pour le moment : créez la vôtre !
+    } @else {
+    Aucune salle ne correspond à « {{ searched() }} ».
+    }
+</p>
 } @else {
 <ul class="m-0 p-0 list-none flex flex-col gap-2">
     @for (room of openRooms; track room.roomName) {
@@ -25,13 +32,22 @@
         }
         <span class="font-bold">{{ room.roomName }}</span>
         <span class="text-app-text-muted">Hôte : {{ room.hostPlayer }}</span>
+        @if (!room.hostConnected) {
+        <span class="room-state">Hôte en reconnexion</span>
+        } @else if (isFull(room)) {
+        <span class="room-state">Pleine</span>
+        }
         <span class="ml-auto">{{ room.playerCount }} / {{ room.maxPlayer }}</span>
+        <!-- Joinable even full or without its host: a participant joins its room again once it has its place back -->
         <button (click)="joinRoom.emit(room)" [attr.aria-label]="'Rejoindre la salle ' + room.roomName" mat-stroked-button type="button">
             Rejoindre
         </button>
     </li>
     }
 </ul>
+@if (hasMore()) {
+<p class="m-0 text-app-text-muted">D'autres salles correspondent : précisez la recherche pour les trouver.</p>
+}
 }
 } @else {
 <p class="m-0 text-app-text-muted">Chargement des salles…</p>

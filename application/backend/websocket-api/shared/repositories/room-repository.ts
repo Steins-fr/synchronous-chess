@@ -5,7 +5,12 @@ import { RoomGame } from '@protocol/room-game.enum';
 import { getRoomsTableName } from '@helpers/environment.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
 
+/** What the list of the rooms reads of a room: the attributes the index by game holds */
+export type ListedRoom = Pick<Room, 'id' | 'hostPlayer' | 'players' | 'maxPlayer' | 'passwordHash' | 'expiresAt'>;
+
 export default class RoomRepository extends BaseRepository<Room> {
+    /** The index of the rooms by game (infrastructure/main.tf), projecting the attributes of ListedRoom */
+    public static readonly GAME_INDEX: string = 'game-index';
 
     protected readonly tableName: string = getRoomsTableName();
     protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, passwordHash, tokenHashes, expiresAt';
@@ -20,9 +25,17 @@ export default class RoomRepository extends BaseRepository<Room> {
         return await this.find({ id: roomName });
     }
 
-    /** The rooms of the game whose host is connected: a room waiting for its host has an expiry */
-    public async findHostedRooms(game: RoomGame): Promise<Room[]> {
-        return this.scan({ expression: 'game = :game AND attribute_not_exists(expiresAt)', attributeValues: { ':game': game } });
+    /**
+     * The rooms of the game which did not expire at `now`, through the index by game: their host connected, or the room
+     * waiting for it
+     */
+    public async findGameRooms(game: RoomGame, now: number): Promise<ListedRoom[]> {
+        return this.queryIndex<ListedRoom>(
+            RoomRepository.GAME_INDEX,
+            { expression: 'game = :game', attributeValues: { ':game': game } },
+            { expression: 'attribute_not_exists(expiresAt) OR expiresAt > :now', attributeValues: { ':now': now } },
+            'id, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
+        );
     }
 
     /**

@@ -40,10 +40,17 @@ while the former host connection is still open). The host declares again a playe
 ## Open rooms
 
 A page lists the rooms of its game (`game` of `create`: the chess rooms on the chess page, the chat rooms on the chat
-page) with `roomGetAll`, from any connection: the rooms whose host is connected and with a place left (fewer `players`
-than `maxPlayer`), by name, 100 at most. The request scans the rooms table, read whole: enough for the rooms of the
-game, a secondary index on `game` would avoid it once they grow.
+page) with `roomGetAll`, from any connection: the rooms which did not expire, by name, 100 at most (`hasMore` when more
+match). The full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose
+page reloaded joins its room again from the list, the join retried until the room has its place back or its host
+reconnected. `search` keeps the rooms whose name, or the name of their host, holds it, whatever the case: the way to
+reach a room past the 100 first.
 
-A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
+The list queries `game-index`, a secondary index of the rooms table by `game` projecting what the list shows
+(`RoomRepository.findGameRooms`, the table and index of `infrastructure/main.tf`, and of `local/local-api.ts`).
+
+`join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
+messages. A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
 (`Wrong password`), before telling whether its host is connected. The room keeps a salted scrypt hash of it
-(`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private.
+(`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private. A
+page sends the game and the password again each time it joins the room again.

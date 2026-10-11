@@ -126,7 +126,7 @@ describe('RoomManagerService', () => {
         room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, RoomGame.CHESS, 2, { move: BlockChainName.CHESS });
 
         // Then
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHESS, token: 'token' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
         expect(room.queue()).toEqual(['host']);
     });
@@ -145,20 +145,23 @@ describe('RoomManagerService', () => {
         expect(roomSocketApi.send).toHaveBeenNthCalledWith(1, RoomApiRequestTypeEnum.CREATE, {
             roomName: 'room', maxPlayer: 6, game: RoomGame.CHAT, password: 'secret', playerName: 'host', token: 'token',
         });
-        expect(roomSocketApi.send).toHaveBeenNthCalledWith(2, RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', password: 'secret', token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenNthCalledWith(2, RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHAT, password: 'secret', token: 'token' });
     });
 
-    test('should notify a wrong password at once', async () => {
+    test.each([
+        { error: RoomApiErrorMessage.WRONG_PASSWORD, notification: 'Le mot de passe de la salle est incorrect.' },
+        { error: RoomApiErrorMessage.OTHER_GAME, notification: 'Cette salle est celle d\'un autre jeu.' },
+    ])('should notify a join refused for good at once, on $error', async ({ error, notification }) => {
         // Given
-        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.WRONG_PASSWORD));
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
 
         // When
         const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer', password: 'wrong' }, RoomGame.CHESS, 2, { move: BlockChainName.CHESS });
 
         // Then
-        await expect(build).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(build).rejects.toThrow(error);
         expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
-        expect(notificationService.error).toHaveBeenCalledWith('Le mot de passe de la salle est incorrect.');
+        expect(notificationService.error).toHaveBeenCalledWith(notification);
     });
 
     test('should notify a peer when the room it took over can not move to a new socket', async () => {

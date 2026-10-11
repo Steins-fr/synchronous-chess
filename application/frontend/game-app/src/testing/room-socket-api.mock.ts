@@ -5,5 +5,5 @@ import { TestHelper } from './test.helper';
 
 /** The socket of a page whose requests list the open rooms given: its setup form lists them */
 export function openRoomsSocketApi(rooms: OpenRoom[] = []): RoomSocketApi {
-    return TestHelper.cast<RoomSocketApi>({ send: vi.fn().mockResolvedValue({ rooms }) });
+    return TestHelper.cast<RoomSocketApi>({ send: vi.fn().mockResolvedValue({ rooms, hasMore: false }) });
 }

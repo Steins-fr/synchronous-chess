@@ -10,7 +10,7 @@ import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
+import { PeerRoomNetwork, RoomAccess } from './classes/room-network/peer-room-network';
 import { JoinFailure, RoomNetwork } from './classes/room-network/room-network';
 import { NotificationService } from '../notification/notification.service';
 
@@ -30,6 +30,7 @@ export default class RoomManagerService {
             const keys = await BlockRoom.createKeys(setup.playerName);
             // Proves to the API the player of this page: the host reconnects its room with it
             const token: string = CryptoHelper.randomHex(32);
+            const access: RoomAccess = { game, password: setup.password, token };
             let roomConnection: RoomNetwork;
 
             if (setup.type === 'create') {
@@ -46,11 +47,11 @@ export default class RoomManagerService {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, token);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, access);
             } else {
-                const response: RoomJoinResponse = await this.join(setup, token);
+                const response: RoomJoinResponse = await this.join(setup, access);
 
-                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName, maxPlayer, token);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName, maxPlayer, access);
             }
 
             // The participant taking the room over from a host which left hosts it too
@@ -77,8 +78,8 @@ export default class RoomManagerService {
         }
     }
 
-    private join(setup: RoomSetupInterface, token: string): Promise<RoomJoinResponse> {
-        return joinRoom(this.roomSocketApi, { roomName: setup.roomName, playerName: setup.playerName, password: setup.password, token }, (error: string) => {
+    private join(setup: RoomSetupInterface, access: RoomAccess): Promise<RoomJoinResponse> {
+        return joinRoom(this.roomSocketApi, { roomName: setup.roomName, playerName: setup.playerName, ...access }, (error: string) => {
             this.notificationService.info(RoomManagerService.retryMessage(error));
         });
     }
@@ -103,6 +104,8 @@ export default class RoomManagerService {
                 return 'L\'hôte de la salle s\'est déconnecté.';
             case RoomApiErrorMessage.WRONG_PASSWORD:
                 return 'Le mot de passe de la salle est incorrect.';
+            case RoomApiErrorMessage.OTHER_GAME:
+                return 'Cette salle est celle d\'un autre jeu.';
             default:
                 return 'La salle est pleine ou elle n\'existe plus.';
         }

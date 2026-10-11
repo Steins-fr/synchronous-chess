@@ -17,6 +17,7 @@ import { WebRtcPlayer } from '../player/web-rtc-player';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { RoomGame } from '@protocol/room-game.enum';
 
 class TestPeerRoomNetwork extends PeerRoomNetwork {
     public get host(): Player | undefined {
@@ -58,7 +59,7 @@ describe('PeerRoomNetwork', () => {
         vi.spyOn(Negotiator.prototype, 'initiate').mockResolvedValue(undefined);
         vi.spyOn(Negotiator.prototype, 'negotiationMessage').mockResolvedValue(undefined);
         roomSocketApi = TestHelper.cast<RoomSocketApi>({ notification$: new Subject<RoomSocketApiNotifications>(), close: vi.fn() });
-        network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, 'token');
+        network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, { game: RoomGame.CHESS, token: 'token' });
         hostPlayer = TestHelper.cast<Player>({ name: 'host', sendData: vi.fn() });
     });
 
@@ -160,7 +161,7 @@ describe('PeerRoomNetwork', () => {
                 send: vi.fn(),
                 socketOpenedAt: undefined,
             });
-            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, 'token');
+            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, { game: RoomGame.CHESS, token: 'token' });
             // The negotiation with the host is over: it connected, then the participant lost every connection
             connectToHost();
         });
@@ -174,9 +175,26 @@ describe('PeerRoomNetwork', () => {
 
             // Then
             expect(result).toEqual(RejoinResult.JOINED);
-            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'local', token: 'token' });
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'local', game: RoomGame.CHESS, token: 'token' });
             expect(network.hostName).toEqual('alice');
             expect(network.negotiators().get('alice')).toBeInstanceOf(WebsocketNegotiator);
+        });
+
+        test('should join a private room again with its password', async () => {
+            // Given
+            network.clear();
+            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, { game: RoomGame.CHAT, password: 'secret', token: 'token' });
+            connectToHost();
+            vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+
+            // When
+            const result: RejoinResult = await network.rejoin();
+
+            // Then
+            expect(result).toEqual(RejoinResult.JOINED);
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, {
+                roomName: 'room', playerName: 'local', game: RoomGame.CHAT, password: 'secret', token: 'token',
+            });
         });
 
         test('should tell the host is gone, the API refusing the join for 20 seconds', async () => {
@@ -271,7 +289,7 @@ describe('PeerRoomNetwork', () => {
             network.clear();
             notification$ = new Subject<RoomSocketApiNotifications>();
             roomSocketApi = TestHelper.cast<RoomSocketApi>({ notification$, close: vi.fn(), send: vi.fn().mockResolvedValue({ playerName: 'host' }) });
-            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, 'token');
+            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, { game: RoomGame.CHESS, token: 'token' });
             joinFailed = [];
             network.joinFailed$.subscribe((failure: JoinFailure) => joinFailed.push(failure));
         });
@@ -297,7 +315,7 @@ describe('PeerRoomNetwork', () => {
             // Then
             expect(joiningAgain).toHaveBeenCalledTimes(1);
             expect(roomSocketApi.close).toHaveBeenCalledTimes(1);
-            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'local', token: 'token' });
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'local', game: RoomGame.CHESS, token: 'token' });
             expect(network.negotiators().get('host')).toBeInstanceOf(WebsocketNegotiator);
             expect(joinFailed).toEqual([]);
 
@@ -380,7 +398,7 @@ describe('PeerRoomNetwork', () => {
                 send: vi.fn().mockResolvedValue({ players: ['host', 'local', 'alice'] }),
                 socketOpenedAt: undefined,
             });
-            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, 'token');
+            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, { game: RoomGame.CHESS, token: 'token' });
         });
 
         test('should connect to the joining players through the new host', async () => {

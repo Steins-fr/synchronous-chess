@@ -4,6 +4,7 @@ import { HostRoomMessageType, NewPlayerPayload } from '@app/services/room-manage
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
+import RoomJoinRequest from '@protocol/requests/room-join-request';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
@@ -12,6 +13,12 @@ import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
 import { RoomHosting } from './room-hosting';
 import { JoinFailure, RejoinResult, RoomNetwork } from './room-network';
+
+/**
+ * What the player joins the room with, beside its name: the game of the page, the password of a private room, and the
+ * token the player created or joined the room with, to reconnect it or take it over
+ */
+export type RoomAccess = Pick<RoomJoinRequest, 'game' | 'password' | 'token'>;
 
 /**
  * The network of a participant of the room. The player creating the room hosts it, the others join it through the
@@ -39,7 +46,7 @@ export class PeerRoomNetwork extends RoomNetwork {
 
     /**
      * @param hostName the name of the local player when it created the room
-     * @param token the token the player created or joined the room with, to reconnect it or take it over
+     * @param access sent again each time the player joins the room again: a private room refuses a join without its password
      */
     public constructor(
         roomApi: RoomSocketApi,
@@ -47,7 +54,7 @@ export class PeerRoomNetwork extends RoomNetwork {
         localPlayerName: string,
         hostName: string,
         private readonly maxPlayer: number,
-        private readonly token: string,
+        private readonly access: RoomAccess,
     ) {
         super(roomApi, roomName, localPlayerName);
         this._hostName = hostName;
@@ -93,7 +100,7 @@ export class PeerRoomNetwork extends RoomNetwork {
         this.roomSocketApi.close();
 
         try {
-            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, token: this.token });
+            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, ...this.access });
             this._hostName = response.playerName;
             this.negotiateWithHost(response.playerName);
         } finally {
@@ -103,7 +110,7 @@ export class PeerRoomNetwork extends RoomNetwork {
 
     private startHosting(holdsRoom: boolean): void {
         this.hostPlayer = undefined;
-        this.hosting = new RoomHosting(this.hostingContext(this.maxPlayer, this.token), holdsRoom);
+        this.hosting = new RoomHosting(this.hostingContext(this.maxPlayer, this.access.token), holdsRoom);
         this.hosting.roomLost$.subscribe(() => this.roomLostSubject.next());
     }
 

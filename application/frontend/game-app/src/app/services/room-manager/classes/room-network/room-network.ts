@@ -117,10 +117,20 @@ export abstract class RoomNetwork {
             maxPlayer,
             token,
             players: () => this.players,
-            occupancy: (playerName: string) => this.players.size + this.getNegotiatorSize() - Number(this._negotiators().has(playerName)),
+            occupancy: (playerName: string) => this.occupancy(playerName),
             addNegotiator: (negotiator: Negotiator) => this.addNegotiator(negotiator),
             transmitMessage: (message: NetworkMessage) => this.transmitMessage(message),
         };
+    }
+
+    /**
+     * The places the room counts for a player joining it: the participants and the players negotiating, each name once,
+     * the player itself left out. A participant joining again replaces its former connection, not counted yet as gone
+     */
+    private occupancy(playerName: string): number {
+        const names: Set<string> = new Set<string>([...this.players.keys(), ...this._negotiators().keys()]);
+        names.delete(playerName);
+        return names.size;
     }
 
     protected transmitMessage(message: NetworkMessage): void {

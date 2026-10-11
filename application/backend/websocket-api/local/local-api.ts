@@ -11,6 +11,7 @@ import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
+import RoomRepository from '@repositories/room-repository';
 
 interface LambdaResponse {
     statusCode: number;
@@ -81,14 +82,24 @@ async function loadLambdas(): Promise<Lambdas> {
     // The tables of infrastructure/main.tf
     const dynamo: DynamoDBClient = new DynamoDBClient();
     await Promise.all([
-        [process.env.TABLE_NAME_ROOMS, 'id'],
-        [process.env.TABLE_NAME_CONNECTIONS, 'connectionId'],
-    ].map(([tableName, key]: string[]): Promise<unknown> => dynamo.send(new CreateTableCommand({
-        TableName: tableName,
-        KeySchema: [{ AttributeName: key, KeyType: 'HASH' }],
-        AttributeDefinitions: [{ AttributeName: key, AttributeType: 'S' }],
-        BillingMode: 'PAY_PER_REQUEST',
-    }))));
+        dynamo.send(new CreateTableCommand({
+            TableName: process.env.TABLE_NAME_ROOMS,
+            KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+            AttributeDefinitions: [{ AttributeName: 'id', AttributeType: 'S' }, { AttributeName: 'game', AttributeType: 'S' }],
+            GlobalSecondaryIndexes: [{
+                IndexName: RoomRepository.GAME_INDEX,
+                KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }],
+                Projection: { ProjectionType: 'INCLUDE', NonKeyAttributes: ['hostPlayer', 'players', 'maxPlayer', 'passwordHash', 'expiresAt'] },
+            }],
+            BillingMode: 'PAY_PER_REQUEST',
+        })),
+        dynamo.send(new CreateTableCommand({
+            TableName: process.env.TABLE_NAME_CONNECTIONS,
+            KeySchema: [{ AttributeName: 'connectionId', KeyType: 'HASH' }],
+            AttributeDefinitions: [{ AttributeName: 'connectionId', AttributeType: 'S' }],
+            BillingMode: 'PAY_PER_REQUEST',
+        })),
+    ]);
 
     const { handler: onConnect }: { handler: Lambda } = await import('../lambdas/onconnect/app');
     const { handler: onDisconnect }: { handler: Lambda } = await import('../lambdas/ondisconnect/app');

@@ -14,8 +14,8 @@ import { RoomJoin, RoomJoinDialog } from './room-join/room-join.dialog';
 import { RoomSetupComponent } from './room-setup.component';
 
 describe('RoomSetupComponent', () => {
-    const publicRoom: OpenRoom = { roomName: 'public', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false };
-    const privateRoom: OpenRoom = { roomName: 'private', hostPlayer: 'bob', playerCount: 1, maxPlayer: 2, isPrivate: true };
+    const publicRoom: OpenRoom = { roomName: 'public', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true };
+    const privateRoom: OpenRoom = { roomName: 'private', hostPlayer: 'bob', playerCount: 1, maxPlayer: 2, isPrivate: true, hostConnected: true };
     let fixture: ComponentFixture<RoomSetupComponent>;
     let roomSetupService: RoomSetupService;
     let dialogService: DialogService;

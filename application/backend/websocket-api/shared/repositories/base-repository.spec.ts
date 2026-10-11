@@ -1,4 +1,4 @@
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
 import Connection from '@models/connection';
 import { aConditionFailure, aDynamoError } from '@testing/api-mocks';
@@ -61,23 +61,25 @@ describe('BaseRepository', () => {
         expect(await repository.find({ connectionId: 'unknown' })).toBeNull();
     });
 
-    test('should scan the items meeting a filter, page after page', async () => {
+    test('should query the items of an index meeting a filter, page after page', async () => {
         // Given
-        dynamo.on(ScanCommand)
+        dynamo.on(QueryCommand)
             .resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } })
             .resolvesOnce({});
 
         // When
-        const items: Connection[] = await repository.scan(condition);
+        const items: Connection[] = await repository.queryIndex<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId');
 
         // Then
         expect(items).toEqual([connection]);
-        expect(dynamo.commandCalls(ScanCommand).map(({ args: [command] }: { args: [ScanCommand] }) => command.input)).toEqual([
+        expect(dynamo.commandCalls(QueryCommand).map(({ args: [command] }: { args: [QueryCommand] }) => command.input)).toEqual([
             {
                 TableName: 'connection',
-                ProjectionExpression: 'connectionId, roomName',
+                IndexName: 'room-index',
+                KeyConditionExpression: 'roomName = :room',
                 FilterExpression: 'roomName = :expected',
-                ExpressionAttributeValues: { ':expected': 'room' },
+                ProjectionExpression: 'connectionId',
+                ExpressionAttributeValues: { ':room': 'room', ':expected': 'room' },
             },
             expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' } }),
         ]);
@@ -160,7 +162,7 @@ describe('BaseRepository', () => {
         ['conditional put', DynamoCrudActionEnum.PUT, () => repository.putIf(connection, condition)],
         ['delete', DynamoCrudActionEnum.DELETE, () => repository.delete(connection)],
         ['get', DynamoCrudActionEnum.GET, () => repository.find(connection)],
-        ['scan', DynamoCrudActionEnum.SCAN, () => repository.scan(condition)],
+        ['query', DynamoCrudActionEnum.QUERY, () => repository.queryIndex('room-index', condition, condition, 'connectionId')],
         ['update', DynamoCrudActionEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
         ['conditional update', DynamoCrudActionEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
     ];

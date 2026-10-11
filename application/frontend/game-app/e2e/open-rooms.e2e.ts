@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 import { test } from './test-room';
 
@@ -35,5 +36,24 @@ test.describe('Open rooms', () => {
         // Then
         await bob.expectConnected(['alice', 'bob']);
         await alice.expectConnected(['alice', 'bob']);
+    });
+
+    test('searches the rooms by name, whatever the case', async ({ room }) => {
+        // Given
+        const alice: RoomParticipant = await room.create('alice');
+        await alice.expectParticipants(['alice']);
+        const carol: RoomParticipant = await room.visit('carol');
+
+        // When
+        await carol.searchRooms(room.name.toUpperCase());
+
+        // Then
+        await carol.expectListedRooms([room.name]);
+
+        // When
+        await carol.searchRooms(`${ room.name }-missing`);
+
+        // Then
+        await expect(carol.page.getByText(`Aucune salle ne correspond à « ${ room.name }-missing ».`)).toBeVisible();
     });
 });

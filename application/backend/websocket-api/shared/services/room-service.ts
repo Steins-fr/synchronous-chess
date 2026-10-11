@@ -5,15 +5,15 @@ import RoomHelper from '@helpers/room-helper';
 import Connection from '@models/connection';
 import Room from '@models/room';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
-import { OpenRoom } from '@protocol/responses/rooms-response';
+import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
-import RoomRepository from '@repositories/room-repository';
+import RoomRepository, { ListedRoom } from '@repositories/room-repository';
 
 export default class RoomService {
     /** How long a room waits for its disconnected host to reconnect it, in seconds */
     public static readonly HOST_RECONNECTION_DELAY: number = 10 * 60;
-    /** The most open rooms listed: their response fits a message posted to a connection */
+    /** The most rooms listed: their response fits a message posted to a connection, a search narrows them */
     public static readonly MAX_OPEN_ROOMS: number = 100;
 
     private readonly roomRepository: RoomRepository = new RoomRepository();
@@ -65,22 +65,38 @@ export default class RoomService {
     }
 
     /**
-     * The rooms of the game a player can join, by name: their host is connected, and a place is left
+     * The rooms of the game, by name: the full ones and the ones waiting for their host included, a participant joining
+     * its room again once it has a place or its host is back
+     * @param search part of the name of the room or of its host, whatever the case: every room when empty
      */
-    public async getOpenRooms(game: RoomGame): Promise<OpenRoom[]> {
-        const rooms: Room[] = await this.roomRepository.findHostedRooms(game);
+    public async getOpenRooms(game: RoomGame, search: string = ''): Promise<RoomsResponse> {
+        const searched: string = search.trim().toLocaleLowerCase();
+        const rooms: ListedRoom[] = (await this.roomRepository.findGameRooms(game, RoomService.now()))
+            .filter((room: ListedRoom): boolean => room.id.toLocaleLowerCase().includes(searched)
+                || room.hostPlayer.toLocaleLowerCase().includes(searched))
+            .sort((a: ListedRoom, b: ListedRoom): number => a.id.localeCompare(b.id));
 
-        return rooms
-            .filter((room: Room): boolean => room.players.length < room.maxPlayer)
-            .sort((a: Room, b: Room): number => a.id.localeCompare(b.id))
-            .slice(0, RoomService.MAX_OPEN_ROOMS)
-            .map((room: Room): OpenRoom => ({
+        return {
+            rooms: rooms.slice(0, RoomService.MAX_OPEN_ROOMS).map((room: ListedRoom): OpenRoom => ({
                 roomName: room.id,
                 hostPlayer: room.hostPlayer,
                 playerCount: room.players.length,
                 maxPlayer: room.maxPlayer,
                 isPrivate: room.passwordHash !== undefined,
-            }));
+                hostConnected: room.expiresAt === undefined,
+            })),
+            hasMore: rooms.length > RoomService.MAX_OPEN_ROOMS,
+        };
+    }
+
+    /**
+     * Before a player joins the room, from a page of its game only: the room of another game runs other messages
+     * @throws {BadRequestException} when the room is of another game (OTHER_GAME)
+     */
+    public gameGuard(room: Room, game: RoomGame): void {
+        if (room.game !== game) {
+            throw new BadRequestException(RoomApiErrorMessage.OTHER_GAME);
+        }
     }
 
     /**

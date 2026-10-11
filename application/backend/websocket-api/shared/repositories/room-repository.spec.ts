@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
 import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION } from '@testing/api-mocks';
@@ -34,16 +34,19 @@ describe('RoomRepository', () => {
         })).toHaveLength(1);
     });
 
-    test('should find the rooms of a game whose host is connected', async () => {
+    test('should find the rooms of a game not expired, through its index', async () => {
         // Given
-        dynamo.on(ScanCommand).resolves({ Items: [room] });
+        dynamo.on(QueryCommand).resolves({ Items: [room] });
 
         // When / Then
-        expect(await repository.findHostedRooms(RoomGame.CHESS)).toEqual([room]);
-        expect(dynamo.commandCalls(ScanCommand, {
+        expect(await repository.findGameRooms(RoomGame.CHESS, 500)).toEqual([room]);
+        expect(dynamo.commandCalls(QueryCommand, {
             TableName: 'room',
-            FilterExpression: 'game = :game AND attribute_not_exists(expiresAt)',
-            ExpressionAttributeValues: { ':game': RoomGame.CHESS },
+            IndexName: 'game-index',
+            KeyConditionExpression: 'game = :game',
+            FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
+            ProjectionExpression: 'id, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
+            ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': 500 },
         })).toHaveLength(1);
     });
 

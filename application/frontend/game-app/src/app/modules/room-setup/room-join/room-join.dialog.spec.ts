@@ -93,4 +93,17 @@ describe('RoomJoinDialog', () => {
         expect(joins).toEqual([]);
         expect(errors()).toEqual(['Le nom du joueur est requis']);
     });
+
+    test('should refuse a password longer than the API accepts', async () => {
+        // Given
+        await createDialog(true, 'bob');
+        await typeIn('Mot de passe', 'p'.repeat(129));
+
+        // When
+        await join();
+
+        // Then
+        expect(joins).toEqual([]);
+        expect(errors()).toEqual(['Le mot de passe fait 128 caractères au plus']);
+    });
 });

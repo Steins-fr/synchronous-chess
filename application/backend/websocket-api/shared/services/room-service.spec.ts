@@ -1,8 +1,9 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { hashPassword } from '@helpers/password.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
+import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN } from '@testing/api-mocks';
@@ -103,31 +104,54 @@ describe('RoomService', () => {
         expect(() => service.hostConnectedGuard(aRoom({ expiresAt: now + 1 }))).toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
     });
 
-    test('should list the open rooms of a game by name, the full ones left out', async () => {
+    test('should list the rooms of a game by name, full or waiting for their host', async () => {
         // Given
-        dynamo.on(ScanCommand).resolves({
+        dynamo.on(QueryCommand).resolves({
             Items: [
                 aRoom({ id: 'zebra', maxPlayer: 4, players: [{ playerName: 'host' }, { playerName: 'guest' }], passwordHash: hashPassword('secret') }),
-                aRoom({ id: 'full', maxPlayer: 1 }),
+                aRoom({ id: 'full', maxPlayer: 1, expiresAt: now + 60 }),
                 aRoom({ id: 'alpha', hostPlayer: 'alice' }),
             ],
         });
 
         // When / Then
-        expect(await service.getOpenRooms(RoomGame.CHESS)).toEqual([
-            { roomName: 'alpha', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false },
-            { roomName: 'zebra', hostPlayer: 'host', playerCount: 2, maxPlayer: 4, isPrivate: true },
-        ]);
-        expect(dynamo.commandCalls(ScanCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS } })).toHaveLength(1);
+        expect(await service.getOpenRooms(RoomGame.CHESS)).toEqual({
+            rooms: [
+                { roomName: 'alpha', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true },
+                { roomName: 'full', hostPlayer: 'host', playerCount: 1, maxPlayer: 1, isPrivate: false, hostConnected: false },
+                { roomName: 'zebra', hostPlayer: 'host', playerCount: 2, maxPlayer: 4, isPrivate: true, hostConnected: true },
+            ],
+            hasMore: false,
+        });
+        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': now } })).toHaveLength(1);
     });
 
-    test('should list a limited count of open rooms', async () => {
+    test('should search the rooms by the name of the room or of its host, whatever the case', async () => {
         // Given
-        const rooms: Room[] = Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` }));
-        dynamo.on(ScanCommand).resolves({ Items: rooms });
+        dynamo.on(QueryCommand).resolves({
+            Items: [aRoom({ id: 'Evening game' }), aRoom({ id: 'other', hostPlayer: 'Eve' }), aRoom({ id: 'third' })],
+        });
 
         // When / Then
-        expect(await service.getOpenRooms(RoomGame.CHESS)).toHaveLength(RoomService.MAX_OPEN_ROOMS);
+        expect((await service.getOpenRooms(RoomGame.CHESS, ' eve ')).rooms.map((listed: OpenRoom) => listed.roomName)).toEqual(['Evening game', 'other']);
+    });
+
+    test('should list a limited count of rooms, telling more match', async () => {
+        // Given
+        const rooms: Room[] = Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` }));
+        dynamo.on(QueryCommand).resolves({ Items: rooms });
+
+        // When
+        const { rooms: listed, hasMore } = await service.getOpenRooms(RoomGame.CHESS);
+
+        // Then
+        expect(listed).toHaveLength(RoomService.MAX_OPEN_ROOMS);
+        expect(hasMore).toEqual(true);
+    });
+
+    test('should let a player join a room of its game only', () => {
+        expect(() => service.gameGuard(room, RoomGame.CHESS)).not.toThrow();
+        expect(() => service.gameGuard(room, RoomGame.CHAT)).toThrow(RoomApiErrorMessage.OTHER_GAME);
     });
 
     test('should let a player join a private room with its password only', () => {

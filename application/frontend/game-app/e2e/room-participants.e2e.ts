@@ -26,17 +26,19 @@ test.describe('Room participants', () => {
         await alice.expectParticipants(['alice']);
     });
 
-    test('stops listing a room once its host left', async ({ room }) => {
+    test('tells a player the host of the room it joins left', async ({ room }) => {
         // Given
         const [alice]: RoomParticipant[] = await room.connect('alice');
         const bob: RoomParticipant = await room.visit('bob');
-        await bob.expectOpenRoom(room.name, false);
+        await alice.close();
+        await bob.expectRoomState(room.name, 'Hôte en reconnexion');
 
         // When
-        await alice.close();
+        await bob.joinListedRoom(room.name);
 
         // Then
-        await bob.expectNotListed(room.name);
+        await bob.expectNotification('L\'hôte de la salle s\'est déconnecté.', REFUSED_JOIN_TIMEOUT);
+        await bob.expectSetupForm();
     });
 
     test('connects the players joining the room at the same time', async ({ room }) => {
@@ -68,16 +70,19 @@ test.describe('Room participants', () => {
         await bob.expectMessage('alice', 'still there?');
     });
 
-    test('stops listing the room once full, the participants staying connected', async ({ room }) => {
+    test('tells a player the room is full, the participants not waiting for it', async ({ room }) => {
         test.setTimeout(180_000);
         // Given the chat room accepts 6 players
         const participants: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave', 'eve', 'frank');
+        const grace: RoomParticipant = await room.visit('grace');
+        await grace.expectRoomState(room.name, 'Pleine');
 
         // When
-        const grace: RoomParticipant = await room.visit('grace');
+        await grace.joinListedRoom(room.name);
 
         // Then
-        await grace.expectNotListed(room.name);
+        await grace.expectNotification('La salle est pleine.');
+        await grace.expectSetupForm();
         const names: string[] = participants.map((participant: RoomParticipant) => participant.name);
         await Promise.all(participants.map((participant: RoomParticipant) => participant.expectConnected(names)));
     });

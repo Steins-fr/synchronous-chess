@@ -36,6 +36,11 @@
     @apply mt-auto flex items-center gap-1 font-medium text-app-accent-text;
 }
 
+/* The state of a room of the list keeping a player from joining it at once: full, or its host reconnecting */
+@utility room-state {
+    @apply px-2 rounded-xl border border-app-border text-[13px] text-app-text-muted;
+}
+
 /* The repeated blocks of the rules (ChessRulesComponent) */
 
 /* A section of the rules. It leaves room above it when the table of contents scrolls to it */
