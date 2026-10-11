@@ -40,6 +40,8 @@ describe('JoinHandler', () => {
 
     test.each([
         ['room name', { roomName: '', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
+        ['room name of a reasonable length', { roomName: 'r'.repeat(33), game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
+        ['player name of a reasonable length', { roomName: 'room', game: RoomGame.CHESS, playerName: 'p'.repeat(33), token: 'other-token' }, 'Payload not valid'],
         ['player name', { roomName: 'room', game: RoomGame.CHESS, playerName: '', token: 'other-token' }, 'Payload not valid'],
         ['token', { roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: '' }, 'Payload not valid'],
         ['player in the game', { roomName: 'room', game: RoomGame.CHESS, playerName: 'host', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_GAME],
@@ -85,6 +87,7 @@ describe('JoinHandler', () => {
     ])('should refuse a player giving %s for a private room, before telling the host is disconnected', async (_case: string, password: string | undefined) => {
         // Given
         storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret'), expiresAt: Math.floor(Date.now() / 1000) + 60 }));
+        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: 1 } });
 
         // When / Then
         await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);

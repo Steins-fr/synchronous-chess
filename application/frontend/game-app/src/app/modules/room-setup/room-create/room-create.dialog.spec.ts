@@ -86,4 +86,16 @@ describe('RoomCreateDialog', () => {
         expect(rooms).toEqual([]);
         expect(errors()).toEqual(['Le mot de passe fait 128 caractères au plus']);
     });
+
+    test('should refuse the names longer than the API accepts', async () => {
+        // Given
+        await createDialog({ roomName: 'r'.repeat(33), playerName: 'p'.repeat(33) });
+
+        // When
+        await create();
+
+        // Then
+        expect(rooms).toEqual([]);
+        expect(errors()).toEqual(['Le nom de la salle fait 32 caractères au plus', 'Le nom du joueur fait 32 caractères au plus']);
+    });
 });

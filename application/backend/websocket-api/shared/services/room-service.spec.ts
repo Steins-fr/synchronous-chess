@@ -104,8 +104,8 @@ describe('RoomService', () => {
         expect(() => service.hostConnectedGuard(aRoom({ expiresAt: now + 1 }))).toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
     });
 
-    test('should list the rooms of a game by name, full or waiting for their host', async () => {
-        // Given
+    test('should list the most recent rooms of a game, full or waiting for their host', async () => {
+        // Given the index gives the most recent first
         dynamo.on(QueryCommand).resolves({
             Items: [
                 aRoom({ id: 'zebra', maxPlayer: 4, players: [{ playerName: 'host' }, { playerName: 'guest' }], passwordHash: hashPassword('secret') }),
@@ -117,26 +117,16 @@ describe('RoomService', () => {
         // When / Then
         expect(await service.getOpenRooms(RoomGame.CHESS)).toEqual({
             rooms: [
-                { roomName: 'alpha', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true },
-                { roomName: 'full', hostPlayer: 'host', playerCount: 1, maxPlayer: 1, isPrivate: false, hostConnected: false },
                 { roomName: 'zebra', hostPlayer: 'host', playerCount: 2, maxPlayer: 4, isPrivate: true, hostConnected: true },
+                { roomName: 'full', hostPlayer: 'host', playerCount: 1, maxPlayer: 1, isPrivate: false, hostConnected: false },
+                { roomName: 'alpha', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true },
             ],
             hasMore: false,
         });
-        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': now } })).toHaveLength(1);
+        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': now }, Limit: RoomService.MAX_OPEN_ROOMS + 1 })).toHaveLength(1);
     });
 
-    test('should search the rooms by the name of the room or of its host, whatever the case', async () => {
-        // Given
-        dynamo.on(QueryCommand).resolves({
-            Items: [aRoom({ id: 'Evening game' }), aRoom({ id: 'other', hostPlayer: 'Eve' }), aRoom({ id: 'third' })],
-        });
-
-        // When / Then
-        expect((await service.getOpenRooms(RoomGame.CHESS, ' eve ')).rooms.map((listed: OpenRoom) => listed.roomName)).toEqual(['Evening game', 'other']);
-    });
-
-    test('should list a limited count of rooms, telling more match', async () => {
+    test('should list the 30 most recent rooms, telling more exist', async () => {
         // Given
         const rooms: Room[] = Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` }));
         dynamo.on(QueryCommand).resolves({ Items: rooms });
@@ -145,7 +135,44 @@ describe('RoomService', () => {
         const { rooms: listed, hasMore } = await service.getOpenRooms(RoomGame.CHESS);
 
         // Then
-        expect(listed).toHaveLength(RoomService.MAX_OPEN_ROOMS);
+        expect(listed).toHaveLength(30);
+        expect(listed[0].roomName).toEqual('room-0');
+        expect(hasMore).toEqual(true);
+    });
+
+    test('should search the rooms of the most recent ones, the best match first, whatever the case', async () => {
+        // Given the most recent first
+        dynamo.on(QueryCommand).resolves({
+            Items: [
+                aRoom({ id: 'my eve room', hostPlayer: 'zoe' }),
+                aRoom({ id: 'other', hostPlayer: 'Steve' }),
+                aRoom({ id: 'third', hostPlayer: 'zoe' }),
+                aRoom({ id: 'Evening', hostPlayer: 'zoe' }),
+                aRoom({ id: 'night', hostPlayer: 'Eve' }),
+                aRoom({ id: 'last', hostPlayer: 'Evelyn' }),
+                aRoom({ id: 'EVE', hostPlayer: 'zoe' }),
+            ],
+        });
+
+        // When
+        const { rooms, hasMore } = await service.getOpenRooms(RoomGame.CHESS, ' eve ');
+
+        // Then: the name whole, at its start, the host whole, at its start, the name within, the host within
+        expect(rooms.map((listed: OpenRoom) => listed.roomName)).toEqual(['EVE', 'Evening', 'night', 'last', 'my eve room', 'other']);
+        expect(hasMore).toEqual(false);
+        expect(dynamo.commandCalls(QueryCommand, { Limit: RoomService.MAX_SEARCHED_ROOMS })).toHaveLength(1);
+    });
+
+    test('should list the 30 best matches of a search, telling more match', async () => {
+        // Given
+        const rooms: Room[] = Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` }));
+        dynamo.on(QueryCommand).resolves({ Items: [aRoom({ id: 'unmatched' }), ...rooms] });
+
+        // When
+        const { rooms: listed, hasMore } = await service.getOpenRooms(RoomGame.CHESS, 'room-');
+
+        // Then
+        expect(listed).toHaveLength(30);
         expect(hasMore).toEqual(true);
     });
 
@@ -154,17 +181,51 @@ describe('RoomService', () => {
         expect(() => service.gameGuard(room, RoomGame.CHAT)).toThrow(RoomApiErrorMessage.OTHER_GAME);
     });
 
-    test('should let a player join a private room with its password only', () => {
+    test('should let a player join a private room with its password only', async () => {
         // Given
         const privateRoom: Room = aRoom({ passwordHash: hashPassword('secret') });
+        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: 1 } });
 
         // When / Then
-        expect(() => service.passwordGuard(privateRoom, 'secret')).not.toThrow();
-        expect(() => service.passwordGuard(privateRoom, 'wrong')).toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        expect(() => service.passwordGuard(privateRoom, undefined)).toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        expect(() => service.passwordGuard(privateRoom, 42 as unknown as string)).toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        expect(() => service.passwordGuard(room, undefined)).not.toThrow();
-        expect(() => service.passwordGuard(room, 'any')).not.toThrow();
+        await expect(service.passwordGuard(privateRoom, 'secret')).resolves.toBeUndefined();
+        await expect(service.passwordGuard(room, undefined)).resolves.toBeUndefined();
+        await expect(service.passwordGuard(room, 'any')).resolves.toBeUndefined();
+        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+        await expect(service.passwordGuard(privateRoom, 'wrong')).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(service.passwordGuard(privateRoom, undefined)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(service.passwordGuard(privateRoom, 42 as unknown as string)).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'SET passwordFailures = if_not_exists(passwordFailures, :zero) + :one' })).toHaveLength(3);
+    });
+
+    test('should refuse the passwords for a while once too many wrong ones were given in a row', async () => {
+        // Given
+        const privateRoom: Room = aRoom({ passwordHash: hashPassword('secret') });
+        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: RoomService.MAX_PASSWORD_FAILURES } });
+
+        // When
+        await expect(service.passwordGuard(privateRoom, 'wrong')).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+
+        // Then
+        expect(dynamo.commandCalls(UpdateCommand, {
+            UpdateExpression: 'SET passwordLockedUntil = :lockedUntil REMOVE passwordFailures',
+            ExpressionAttributeValues: { ':lockedUntil': now + RoomService.PASSWORD_LOCK_DELAY },
+        })).toHaveLength(1);
+
+        // When the room is locked, the right password refused too
+        const lockedRoom: Room = { ...privateRoom, passwordLockedUntil: now + 1 };
+        dynamo.resetHistory();
+
+        // Then
+        await expect(service.passwordGuard(lockedRoom, 'secret')).rejects.toThrow(RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS);
+        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+    });
+
+    test('should forget the wrong passwords once the right one is given, the lock over', async () => {
+        // When
+        await service.passwordGuard(aRoom({ passwordHash: hashPassword('secret'), passwordFailures: 2, passwordLockedUntil: now }), 'secret');
+
+        // Then
+        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE passwordFailures, passwordLockedUntil' })).toHaveLength(1);
     });
 
     test('should add and remove the players of the room', async () => {
@@ -208,6 +269,7 @@ describe('RoomService', () => {
                 hostPlayer: 'host',
                 maxPlayer: 4,
                 game: RoomGame.CHAT,
+                createdAt: new Date(now * 1000).toISOString(),
                 players: [{ playerName: 'host' }],
                 queue: [],
                 tokenHashes: { host: hashToken(HOST_TOKEN) },

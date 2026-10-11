@@ -8,7 +8,6 @@ import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service'
 import RoomCreateResponse from '@protocol/responses/room-create-response';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
-import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { PeerRoomNetwork, RoomAccess } from './classes/room-network/peer-room-network';
 import { JoinFailure, RoomNetwork } from './classes/room-network/room-network';
@@ -22,7 +21,6 @@ export default class RoomManagerService {
 
     public async buildBlockRoom<M extends object>(
         setup: RoomSetupInterface,
-        game: RoomGame,
         maxPlayer: number,
         routing: NonEmptyBlockChainRouting<M>,
     ): Promise<BlockRoom<M>> {
@@ -30,14 +28,14 @@ export default class RoomManagerService {
             const keys = await BlockRoom.createKeys(setup.playerName);
             // Proves to the API the player of this page: the host reconnects its room with it
             const token: string = CryptoHelper.randomHex(32);
-            const access: RoomAccess = { game, password: setup.password, token };
+            const access: RoomAccess = { game: setup.game, password: setup.password, token };
             let roomConnection: RoomNetwork;
 
             if (setup.type === 'create') {
                 const response: RoomCreateResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.CREATE, {
                     roomName: setup.roomName,
                     maxPlayer,
-                    game,
+                    game: setup.game,
                     password: setup.password,
                     playerName: setup.playerName,
                     token,
@@ -106,6 +104,8 @@ export default class RoomManagerService {
                 return 'Le mot de passe de la salle est incorrect.';
             case RoomApiErrorMessage.OTHER_GAME:
                 return 'Cette salle est celle d\'un autre jeu.';
+            case RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS:
+                return 'Trop de mots de passe incorrects pour cette salle : réessayez dans une minute.';
             default:
                 return 'La salle est pleine ou elle n\'existe plus.';
         }

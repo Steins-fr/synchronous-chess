@@ -37,7 +37,6 @@ describe('RoomSetupComponent', () => {
         vi.spyOn(CryptoHelper, 'randomNumber').mockReturnValue(123456);
         fixture = TestBed.createComponent(RoomSetupComponent);
         fixture.componentRef.setInput('game', RoomGame.CHESS);
-        fixture.componentRef.setInput('maxPlayer', 2);
         if (vi.isFakeTimers()) {
             fixture.detectChanges();
         } else {
@@ -86,7 +85,7 @@ describe('RoomSetupComponent', () => {
 
         // Then
         expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomCreateDialog, { title: 'Créer une salle', inputs: { roomName: '', playerName: '' } });
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith('create', 'room', 'player', room.password);
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: room.password });
     });
 
     test('should give the dialogs the names given last, to try again once the room failed', async () => {
@@ -124,7 +123,7 @@ describe('RoomSetupComponent', () => {
             title: 'Rejoindre la salle',
             inputs: { roomName: room.roomName, isPrivate: room.isPrivate, playerName: '' },
         });
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith('join', room.roomName, 'bob', join.password);
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: room.roomName, playerName: 'bob', password: join.password });
     });
 
     test('should set no room up once a dialog is closed', async () => {
@@ -146,7 +145,7 @@ describe('RoomSetupComponent', () => {
         expect(fixture.nativeElement.querySelector('app-open-rooms #room-create')).toBe(createButton());
 
         // When
-        roomSetupService.setup('create', 'room', 'player');
+        roomSetupService.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' });
         await fixture.whenStable();
 
         // Then
@@ -168,7 +167,7 @@ describe('RoomSetupComponent', () => {
         await createComponent({ 'auto-create': '', room: 'my-room' });
 
         // Then
-        expect(roomSetupService.setup).toHaveBeenCalledWith('create', 'my-room', '123456', undefined);
+        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHESS, roomName: 'my-room', playerName: '123456' });
     });
 
     test.each<[string, Params]>([
@@ -179,7 +178,7 @@ describe('RoomSetupComponent', () => {
         await createComponent(params);
 
         // Then
-        expect(roomSetupService.setup).toHaveBeenCalledWith('create', 'test', '123456', undefined);
+        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHESS, roomName: 'test', playerName: '123456' });
     });
 
     test('should automatically join the room after a delay', async () => {
@@ -192,7 +191,7 @@ describe('RoomSetupComponent', () => {
         // Then
         expect(roomSetupService.setup).not.toHaveBeenCalled();
         await vi.advanceTimersByTimeAsync(1000);
-        expect(roomSetupService.setup).toHaveBeenCalledWith('join', 'my-room', '123456', undefined);
+        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'my-room', playerName: '123456' });
     });
 
     test('should automatically join the default room', async () => {
@@ -204,6 +203,6 @@ describe('RoomSetupComponent', () => {
         await vi.advanceTimersByTimeAsync(1000);
 
         // Then
-        expect(roomSetupService.setup).toHaveBeenCalledWith('join', 'test', '123456', undefined);
+        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'test', playerName: '123456' });
     });
 });

@@ -38,6 +38,7 @@ export function aRoom(room: Partial<Room> = {}): Room {
         hostPlayer: 'host',
         maxPlayer: 2,
         game: RoomGame.CHESS,
+        createdAt: '2026-10-11T12:00:00.000Z',
         players: [{ playerName: 'host' }],
         queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }],
         tokenHashes: { host: hashToken(HOST_TOKEN), guest: hashToken(GUEST_TOKEN) },

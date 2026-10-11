@@ -52,12 +52,12 @@ describe('SynchronousChess', () => {
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
         // When
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local' });
         await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, RoomGame.CHESS, 4, {
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local' }, 4, {
             [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
             [SCGameSessionType.SEAT]: BlockChainName.CHESS,
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
@@ -90,7 +90,7 @@ describe('SynchronousChess', () => {
         roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
 
         // When
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local' });
 
         // Then
         await vi.waitFor(() => expect(loading).toEqual([false, true, false]));

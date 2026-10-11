@@ -1,9 +1,8 @@
 import { Component, input, linkedSignal, output } from '@angular/core';
-import { form, maxLength, schema, submit } from '@angular/forms/signals';
+import { form, schema, submit } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
-import { requiredText } from '@app/modules/form/rules/required-text.rule';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
-import { ROOM_PASSWORD_MAX_LENGTH } from '@protocol/room-limits';
+import { playerNameRules, roomNameRules, roomPasswordRules } from '../room-form.rules';
 
 /** The room to create, hosted by the player: private with a password */
 export interface RoomCreate {
@@ -22,10 +21,9 @@ type RoomCreateForm = {
 };
 
 const roomCreateSchema = schema<RoomCreateForm>((path) => {
-    requiredText(path.roomName, 'Le nom de la salle est requis');
-    requiredText(path.playerName, 'Le nom du joueur est requis');
-    // Refused by the API
-    maxLength(path.password, ROOM_PASSWORD_MAX_LENGTH, { message: `Le mot de passe fait ${ ROOM_PASSWORD_MAX_LENGTH } caractères au plus` });
+    roomNameRules(path.roomName);
+    playerNameRules(path.playerName);
+    roomPasswordRules(path.password);
 });
 
 /** Asks the name of the room to create, the name of its host, and the password making it private: its result */

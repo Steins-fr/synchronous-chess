@@ -99,12 +99,41 @@ describe('OpenRoomsComponent', () => {
         ]);
     });
 
-    test('should tell more rooms match than the ones listed', async () => {
+    test('should tell only the most recent rooms are listed, or more rooms match the search', async () => {
         // When
         await createComponent({ rooms: [publicRoom], hasMore: true });
 
         // Then
+        expect(text()).toContain('Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom ou celui de leur hôte.');
+
+        // When
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ rooms: [publicRoom], hasMore: true });
+        await typeSearch('pub');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then
         expect(text()).toContain('D\'autres salles correspondent : précisez la recherche pour les trouver.');
+    });
+
+    test('should show the list of the search typed last, the one of a former search received after it dropped', async () => {
+        // Given
+        await createComponent({ rooms: [publicRoom, privateRoom], hasMore: false });
+        let answerFormer: (response: RoomsResponse) => void = () => undefined;
+        vi.mocked(roomSocketApi.send)
+            .mockReturnValueOnce(new Promise<RoomsResponse>((resolve) => answerFormer = resolve))
+            .mockResolvedValueOnce({ rooms: [privateRoom], hasMore: false });
+        await typeSearch('pr');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // When the second search is answered first
+        await typeSearch('private');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        answerFormer({ rooms: [publicRoom], hasMore: false });
+        await render();
+
+        // Then
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
+        expect(rows()).toEqual(['lock private Hôte : bob 3 / 4 Rejoindre']);
     });
 
     test('should tell the rooms are loading, then that there is none', async () => {

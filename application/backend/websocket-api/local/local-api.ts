@@ -85,10 +85,14 @@ async function loadLambdas(): Promise<Lambdas> {
         dynamo.send(new CreateTableCommand({
             TableName: process.env.TABLE_NAME_ROOMS,
             KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
-            AttributeDefinitions: [{ AttributeName: 'id', AttributeType: 'S' }, { AttributeName: 'game', AttributeType: 'S' }],
+            AttributeDefinitions: [
+                { AttributeName: 'id', AttributeType: 'S' },
+                { AttributeName: 'game', AttributeType: 'S' },
+                { AttributeName: 'createdAt', AttributeType: 'S' },
+            ],
             GlobalSecondaryIndexes: [{
                 IndexName: RoomRepository.GAME_INDEX,
-                KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }],
+                KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }, { AttributeName: 'createdAt', KeyType: 'RANGE' }],
                 Projection: { ProjectionType: 'INCLUDE', NonKeyAttributes: ['hostPlayer', 'players', 'maxPlayer', 'passwordHash', 'expiresAt'] },
             }],
             BillingMode: 'PAY_PER_REQUEST',

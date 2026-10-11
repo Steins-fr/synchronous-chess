@@ -61,17 +61,18 @@ describe('BaseRepository', () => {
         expect(await repository.find({ connectionId: 'unknown' })).toBeNull();
     });
 
-    test('should query the items of an index meeting a filter, page after page', async () => {
+    test('should query the items of an index, the last first, page after page until enough match', async () => {
         // Given
+        const other: Connection = { connectionId: 'other', roomName: 'room' };
         dynamo.on(QueryCommand)
             .resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } })
-            .resolvesOnce({});
+            .resolvesOnce({ Items: [other], LastEvaluatedKey: { connectionId: 'other' } });
 
         // When
-        const items: Connection[] = await repository.queryIndex<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId');
+        const items: Connection[] = await repository.queryIndexLastFirst<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId', 2);
 
-        // Then
-        expect(items).toEqual([connection]);
+        // Then: the second page reads the item missing only, and is the last one once enough items matched
+        expect(items).toEqual([connection, other]);
         expect(dynamo.commandCalls(QueryCommand).map(({ args: [command] }: { args: [QueryCommand] }) => command.input)).toEqual([
             {
                 TableName: 'connection',
@@ -80,9 +81,20 @@ describe('BaseRepository', () => {
                 FilterExpression: 'roomName = :expected',
                 ProjectionExpression: 'connectionId',
                 ExpressionAttributeValues: { ':room': 'room', ':expected': 'room' },
+                ScanIndexForward: false,
+                Limit: 2,
             },
-            expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' } }),
+            expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' }, Limit: 1 }),
         ]);
+    });
+
+    test('should query the items of an index until its last page', async () => {
+        // Given a last page matching no item
+        dynamo.on(QueryCommand).resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } }).resolvesOnce({});
+
+        // When / Then
+        expect(await repository.queryIndexLastFirst<Connection>('room-index', condition, condition, 'connectionId', 5)).toEqual([connection]);
+        expect(dynamo.commandCalls(QueryCommand)).toHaveLength(2);
     });
 
     test('should update an item and return its new attributes', async () => {
@@ -162,7 +174,7 @@ describe('BaseRepository', () => {
         ['conditional put', DynamoCrudActionEnum.PUT, () => repository.putIf(connection, condition)],
         ['delete', DynamoCrudActionEnum.DELETE, () => repository.delete(connection)],
         ['get', DynamoCrudActionEnum.GET, () => repository.find(connection)],
-        ['query', DynamoCrudActionEnum.QUERY, () => repository.queryIndex('room-index', condition, condition, 'connectionId')],
+        ['query', DynamoCrudActionEnum.QUERY, () => repository.queryIndexLastFirst('room-index', condition, condition, 'connectionId', 1)],
         ['update', DynamoCrudActionEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
         ['conditional update', DynamoCrudActionEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
     ];

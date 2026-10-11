@@ -18,5 +18,5 @@ import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.compone
 export class ChatPage {
     public readonly game: RoomGame = RoomGame.CHAT;
     public maxPlayer: number = 6;
-    public readonly room = roomFromSetup<ChatPayloads>(this.game, this.maxPlayer, chatBlockChains);
+    public readonly room = roomFromSetup<ChatPayloads>(this.maxPlayer, chatBlockChains);
 }

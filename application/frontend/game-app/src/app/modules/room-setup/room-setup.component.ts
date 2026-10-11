@@ -21,7 +21,6 @@ import { RoomJoin, RoomJoinDialog } from './room-join/room-join.dialog';
 })
 export class RoomSetupComponent implements OnInit {
     public readonly game = input.required<RoomGame>();
-    public readonly maxPlayer = input.required<number>();
 
     private readonly roomSetupService = inject(RoomSetupService);
     private readonly route = inject(ActivatedRoute);
@@ -71,7 +70,7 @@ export class RoomSetupComponent implements OnInit {
 
     private setUp(type: RoomSetupType, roomName: string, playerName: string, password?: string): void {
         this.playerName = playerName;
-        this.roomSetupService.setup(type, roomName, playerName, password);
+        this.roomSetupService.setup({ type, game: this.game(), roomName, playerName, password });
     }
 
     // The room of an auto link: the default one when the link gives none, or an empty one

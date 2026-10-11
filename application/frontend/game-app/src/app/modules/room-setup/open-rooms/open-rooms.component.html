@@ -10,10 +10,10 @@
 </div>
 <app-text-field [field]="searchForm.text" class="max-w-md" label="Rechercher une salle ou un hôte" />
 @if (failed()) {
-<p class="m-0 text-app-text-muted">Les salles n'ont pas pu être chargées.</p>
+<p class="muted-note">Les salles n'ont pas pu être chargées.</p>
 } @else if (rooms(); as openRooms) {
 @if (openRooms.length === 0) {
-<p class="m-0 text-app-text-muted">
+<p class="muted-note">
     @if (searched() === '') {
     Aucune salle à rejoindre pour le moment : créez la vôtre !
     } @else {
@@ -46,9 +46,15 @@
     }
 </ul>
 @if (hasMore()) {
-<p class="m-0 text-app-text-muted">D'autres salles correspondent : précisez la recherche pour les trouver.</p>
+<p class="muted-note">
+    @if (searched() === '') {
+    Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom ou celui de leur hôte.
+    } @else {
+    D'autres salles correspondent : précisez la recherche pour les trouver.
+    }
+</p>
 }
 }
 } @else {
-<p class="m-0 text-app-text-muted">Chargement des salles…</p>
+<p class="muted-note">Chargement des salles…</p>
 }

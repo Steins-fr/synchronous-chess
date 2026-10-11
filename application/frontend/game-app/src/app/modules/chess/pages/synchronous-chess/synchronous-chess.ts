@@ -24,5 +24,5 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
 export class SynchronousChess {
     protected readonly game: RoomGame = RoomGame.CHESS;
     protected readonly maxPlayer: number = 4;
-    protected readonly room = roomFromSetup<ChatPayloads & ChessPayloads>(this.game, this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, chessBlockChains));
+    protected readonly room = roomFromSetup<ChatPayloads & ChessPayloads>(this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, chessBlockChains));
 }

@@ -53,13 +53,14 @@ module "sc_database_room" {
 
   name       = "room"
   hash-key   = "id"
-  attributes = ["id", "game"]
+  attributes = ["id", "game", "createdAt"]
   # Set while the host is disconnected: deletes the rooms it never reconnected
   ttl-attribute = "expiresAt"
-  # The rooms of a game, with what their list shows (RoomRepository.findGameRooms)
+  # The rooms of a game, the most recent first, with what their list shows (RoomRepository.findRecentRooms)
   global-secondary-indexes = [{
     name               = "game-index"
     hash_key           = "game"
+    range_key          = "createdAt"
     non_key_attributes = ["hostPlayer", "players", "maxPlayer", "passwordHash", "expiresAt"]
   }]
 

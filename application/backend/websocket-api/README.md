@@ -40,17 +40,30 @@ while the former host connection is still open). The host declares again a playe
 ## Open rooms
 
 A page lists the rooms of its game (`game` of `create`: the chess rooms on the chess page, the chat rooms on the chat
-page) with `roomGetAll`, from any connection: the rooms which did not expire, by name, 100 at most (`hasMore` when more
-match). The full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose
-page reloaded joins its room again from the list, the join retried until the room has its place back or its host
-reconnected. `search` keeps the rooms whose name, or the name of their host, holds it, whatever the case: the way to
-reach a room past the 100 first.
+page) with `roomGetAll`, from any connection: the rooms which did not expire, 30 at most, `hasMore` when more exist. The
+full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
+joins its room again from the list, the join retried until the room has its place back or its host reconnected.
 
-The list queries `game-index`, a secondary index of the rooms table by `game` projecting what the list shows
-(`RoomRepository.findGameRooms`, the table and index of `infrastructure/main.tf`, and of `local/local-api.ts`).
+- Without `search`, the 30 most recent rooms, the last created first.
+- With a `search`, the rooms whose name or the name of their host holds it, whatever the case, the best match first:
+  the name of the room whole, at its start, the name of its host whole, at its start, then within the name of the room,
+  of its host; the most recent first for a same match. A search reads the 500 most recent rooms of the game: an older
+  room is not found.
+
+The list queries `game-index`, a secondary index of the rooms table by `game`, sorted by `createdAt` (the ISO date of
+the creation, sorted as a text), projecting what the list shows (`RoomRepository.findRecentRooms`, the table and index
+of `infrastructure/main.tf`, and of `local/local-api.ts`). A query reads the rooms it lists, page after page: the 31
+most recent without search, the 500 most recent with one, not every room of the game.
+
+The names of the rooms and of the players are 32 characters at most, the passwords 128, the searches 64
+(`room-limits.ts` of the protocol): the API refuses longer ones, the list fits a message.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
 (`Wrong password`), before telling whether its host is connected. The room keeps a salted scrypt hash of it
 (`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private. A
 page sends the game and the password again each time it joins the room again.
+
+5 wrong passwords in a row lock the room for a minute (`passwordFailures`, `passwordLockedUntil`): the passwords are
+refused then (`Too many password attempts`), without being checked, the right one forgetting the wrong ones before. A
+password is not guessed by trying them all, and the wrong ones do not run scrypt without end.

@@ -105,15 +105,18 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     }
 
     /**
-     * The items of a secondary index matching the key condition and the filter, read page after page
+     * The items of a secondary index matching the key condition and the filter, the last of its sort key first, read
+     * page after page until enough match: a page reads as many items as are missing, the filtered ones counted
      * @param projection the attributes read: the ones the index holds
+     * @param maxItems the most items returned
      * @returns the attributes of the projection only
      */
-    public async queryIndex<Item extends DocumentAttributes>(
+    public async queryIndexLastFirst<Item extends DocumentAttributes>(
         indexName: string,
         keyCondition: WriteCondition,
         filter: WriteCondition,
         projection: string,
+        maxItems: number,
     ): Promise<Item[]> {
         const items: Item[] = [];
         let startKey: DocumentAttributes | undefined;
@@ -126,13 +129,15 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
                 FilterExpression: filter.expression,
                 ProjectionExpression: projection,
                 ExpressionAttributeValues: { ...keyCondition.attributeValues, ...filter.attributeValues },
+                ScanIndexForward: false,
+                Limit: maxItems - items.length,
                 ExclusiveStartKey: startKey,
             });
             // eslint-disable-next-line no-await-in-loop -- the pages, one after the other: each gives the start of the next
             const page = await this.run(DynamoCrudActionEnum.QUERY, (): Promise<QueryCommandOutput> => this.ddb.send(command));
             items.push(...(page.Items ?? []) as Item[]);
             startKey = page.LastEvaluatedKey;
-        } while (startKey);
+        } while (startKey && items.length < maxItems);
 
         return items;
     }

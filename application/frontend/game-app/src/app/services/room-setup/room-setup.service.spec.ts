@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import RoomSetupService, { RoomSetupInterface } from './room-setup.service';
+import { RoomGame } from '@protocol/room-game.enum';
 import { describe, expect, test } from 'vitest';
 
 describe('RoomSetupService', () => {
@@ -13,13 +14,13 @@ describe('RoomSetupService', () => {
         service.loading$.subscribe((loading: boolean) => loadings.push(loading));
 
         // When
-        service.setup('create', 'room', 'player');
-        service.setup('join', 'private', 'player', 'secret');
+        service.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' });
+        service.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'private', playerName: 'player', password: 'secret' });
 
         // Then
         expect(setups).toEqual([
-            { type: 'create', roomName: 'room', playerName: 'player' },
-            { type: 'join', roomName: 'private', playerName: 'player', password: 'secret' },
+            { type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' },
+            { type: 'join', game: RoomGame.CHAT, roomName: 'private', playerName: 'player', password: 'secret' },
         ]);
         expect(loadings).toEqual([false, true, true]);
     });
@@ -31,7 +32,7 @@ describe('RoomSetupService', () => {
         const loadings: boolean[] = [];
         service.roomIsSetup$.subscribe((roomIsSetup: boolean) => roomIsSetups.push(roomIsSetup));
         service.loading$.subscribe((loading: boolean) => loadings.push(loading));
-        service.setup('join', 'room', 'player');
+        service.setup({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' });
 
         // When
         service.roomIsSetup(true);

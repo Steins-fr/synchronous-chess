@@ -6,14 +6,14 @@ import { getRoomsTableName } from '@helpers/environment.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
 
 /** What the list of the rooms reads of a room: the attributes the index by game holds */
-export type ListedRoom = Pick<Room, 'id' | 'hostPlayer' | 'players' | 'maxPlayer' | 'passwordHash' | 'expiresAt'>;
+export type ListedRoom = Pick<Room, 'id' | 'createdAt' | 'hostPlayer' | 'players' | 'maxPlayer' | 'passwordHash' | 'expiresAt'>;
 
 export default class RoomRepository extends BaseRepository<Room> {
-    /** The index of the rooms by game (infrastructure/main.tf), projecting the attributes of ListedRoom */
+    /** The index of the rooms by game, sorted by creation (infrastructure/main.tf), projecting the attributes of ListedRoom */
     public static readonly GAME_INDEX: string = 'game-index';
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, passwordHash, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLockedUntil, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -26,16 +26,34 @@ export default class RoomRepository extends BaseRepository<Room> {
     }
 
     /**
-     * The rooms of the game which did not expire at `now`, through the index by game: their host connected, or the room
-     * waiting for it
+     * The most recent rooms of the game which did not expire at `now`, the last created first, through the index by
+     * game: their host connected, or the room waiting for it
+     * @param maxRooms the most rooms read: the cost of the query
      */
-    public async findGameRooms(game: RoomGame, now: number): Promise<ListedRoom[]> {
-        return this.queryIndex<ListedRoom>(
+    public async findRecentRooms(game: RoomGame, now: number, maxRooms: number): Promise<ListedRoom[]> {
+        return this.queryIndexLastFirst<ListedRoom>(
             RoomRepository.GAME_INDEX,
             { expression: 'game = :game', attributeValues: { ':game': game } },
             { expression: 'attribute_not_exists(expiresAt) OR expiresAt > :now', attributeValues: { ':now': now } },
-            'id, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
+            'id, createdAt, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
+            maxRooms,
         );
+    }
+
+    /** @returns the wrong passwords given in a row, this one counted */
+    public async recordPasswordFailure(room: Room): Promise<number> {
+        const updated: Room = await this.updateItem(room, 'SET passwordFailures = if_not_exists(passwordFailures, :zero) + :one', { ':zero': 0, ':one': 1 });
+        return updated.passwordFailures as number;
+    }
+
+    /** Refuses the passwords until `lockedUntil`, in epoch seconds: the count of the failures starts again then */
+    public async lockPassword(room: Room, lockedUntil: number): Promise<void> {
+        await this.updateItem(room, 'SET passwordLockedUntil = :lockedUntil REMOVE passwordFailures', { ':lockedUntil': lockedUntil });
+    }
+
+    /** The right password given: the wrong ones before are forgotten */
+    public async forgetPasswordFailures(room: Room): Promise<void> {
+        await this.updateItem(room, 'REMOVE passwordFailures, passwordLockedUntil');
     }
 
     /**

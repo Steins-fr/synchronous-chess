@@ -12,8 +12,8 @@ import { RoomGame } from '@protocol/room-game.enum';
     imports: [RoomSetupComponent],
 })
 export class RoomLayoutComponent {
+    /** The game of the page: its rooms are listed, created and joined */
     public readonly game = input.required<RoomGame>();
-    public readonly maxPlayer = input.required<number>();
     /** Whether the content is dimmed until the room is set up, as a preview of the page */
     public readonly dimContent = input<boolean>(true);
 

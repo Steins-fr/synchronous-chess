@@ -7,7 +7,7 @@ import { TextFieldComponent } from '@app/modules/form/text-field/text-field.comp
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { RoomGame } from '@protocol/room-game.enum';
 import { ROOM_SEARCH_MAX_LENGTH } from '@protocol/room-limits';
-import { OpenRoom } from '@protocol/responses/rooms-response';
+import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, fromEvent, merge, skip, Subject, switchMap, take, timer } from 'rxjs';
 
@@ -15,6 +15,9 @@ import { combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, 
 type RoomSearch = {
     text: string;
 };
+
+/** The rooms matching a search */
+type RoomsList = RoomsResponse & { search: string };
 
 const roomSearchSchema = schema<RoomSearch>((path) => {
     maxLength(path.text, ROOM_SEARCH_MAX_LENGTH, { message: `La recherche fait ${ ROOM_SEARCH_MAX_LENGTH } caractères au plus` });
@@ -73,7 +76,7 @@ export class OpenRoomsComponent {
                 this.refreshRequests,
             ).pipe(exhaustMap(() => this.load(game, search)))),
             takeUntilDestroyed(),
-        ).subscribe();
+        ).subscribe((list: RoomsList | undefined) => this.show(list));
     }
 
     protected refresh(): void {
@@ -84,16 +87,29 @@ export class OpenRoomsComponent {
         return room.playerCount >= room.maxPlayer;
     }
 
-    private async load(game: RoomGame, search: string): Promise<void> {
+    /**
+     * The rooms matching the search, undefined once the request failed (logged by the socket). Shown by the subscription
+     * only: switchMap drops the list of a former search, received after the one of the search typed since
+     */
+    private async load(game: RoomGame, search: string): Promise<RoomsList | undefined> {
         try {
-            const { rooms, hasMore } = await this.roomSocketApi.send(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game, search: search === '' ? undefined : search });
-            this.rooms.set(rooms);
-            this.hasMore.set(hasMore);
-            this.searched.set(search);
-            this.failed.set(false);
+            const response: RoomsResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game, search: search === '' ? undefined : search });
+            return { ...response, search };
         } catch {
-            // Logged by the socket: the next refresh may succeed
-            this.failed.set(true);
+            return undefined;
         }
+    }
+
+    /** The next refresh may succeed once the list failed */
+    private show(list: RoomsList | undefined): void {
+        if (list === undefined) {
+            this.failed.set(true);
+            return;
+        }
+
+        this.rooms.set(list.rooms);
+        this.hasMore.set(list.hasMore);
+        this.searched.set(list.search);
+        this.failed.set(false);
     }
 }

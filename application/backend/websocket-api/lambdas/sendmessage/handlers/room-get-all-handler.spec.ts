@@ -15,22 +15,39 @@ describe('RoomGetAllHandler', () => {
         return new RoomGetAllHandler(anApiGatewayClient(), connection, aRequest(RoomApiRequestTypeEnum.ROOM_GET_ALL, data)).execute();
     }
 
-    test.each<[string, RoomsRequest, string]>([
-        ['every room', { game: RoomGame.CHESS }, 'room'],
-        ['the rooms searched', { game: RoomGame.CHESS, search: 'ROO' }, 'room'],
-    ])('should reply %s of the game', async (_case: string, data: RoomsRequest, roomName: string) => {
+    test('should reply the most recent rooms of the game', async () => {
         // Given
         dynamo.on(QueryCommand).resolves({ Items: [aRoom(), aRoom({ id: 'other', hostPlayer: 'other' })] });
 
         // When
-        await getAll(data);
+        await getAll({ game: RoomGame.CHESS });
 
         // Then
-        const rooms: unknown[] = [{ roomName, hostPlayer: 'host', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true }];
-        if (data.search === undefined) {
-            rooms.unshift({ roomName: 'other', hostPlayer: 'other', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true });
-        }
-        expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: { id: 7, type: 'rooms', data: { rooms, hasMore: false } } }]);
+        expect(postedPackets(apiGateway)).toEqual([{
+            to: connection,
+            packet: {
+                id: 7,
+                type: 'rooms',
+                data: {
+                    rooms: [
+                        { roomName: 'room', hostPlayer: 'host', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true },
+                        { roomName: 'other', hostPlayer: 'other', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true },
+                    ],
+                    hasMore: false,
+                },
+            },
+        }]);
+    });
+
+    test('should reply the rooms matching the search', async () => {
+        // Given
+        dynamo.on(QueryCommand).resolves({ Items: [aRoom(), aRoom({ id: 'other', hostPlayer: 'other' })] });
+
+        // When
+        await getAll({ game: RoomGame.CHESS, search: 'OTH' });
+
+        // Then
+        expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: expect.objectContaining({ data: { rooms: [expect.objectContaining({ roomName: 'other' })], hasMore: false } }) }]);
     });
 
     test.each<[string, RoomsRequest]>([

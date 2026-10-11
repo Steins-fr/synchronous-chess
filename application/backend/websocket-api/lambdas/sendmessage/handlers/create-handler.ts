@@ -1,6 +1,8 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { isPassword } from '@helpers/password.helper';
+import { isName } from '@helpers/name.helper';
 import { isToken } from '@helpers/token.helper';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
 import { isRoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
@@ -9,7 +11,7 @@ export default class CreateHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.CREATE);
 
-        if (!data.roomName || !data.maxPlayer || !data.playerName || !isToken(data.token) || !isRoomGame(data.game)
+        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !data.maxPlayer || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isRoomGame(data.game)
             || (data.password !== undefined && !isPassword(data.password))) {
             throw new BadRequestException(CreateHandler.ERROR_PARSING);
         }

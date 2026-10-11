@@ -36,6 +36,11 @@
     @apply mt-auto flex items-center gap-1 font-medium text-app-accent-text;
 }
 
+/* A text of second rank: the description of a card, the state of a list */
+@utility muted-note {
+    @apply m-0 text-app-text-muted;
+}
+
 /* The state of a room of the list keeping a player from joining it at once: full, or its host reconnecting */
 @utility room-state {
     @apply px-2 rounded-xl border border-app-border text-[13px] text-app-text-muted;

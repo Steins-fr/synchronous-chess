@@ -20,7 +20,6 @@ describe('RoomLayoutComponent', () => {
         roomSetupService = TestBed.inject(RoomSetupService);
         fixture = TestBed.createComponent(RoomLayoutComponent);
         fixture.componentRef.setInput('game', RoomGame.CHESS);
-        fixture.componentRef.setInput('maxPlayer', 2);
         await fixture.whenStable();
     });
 
@@ -42,7 +41,7 @@ describe('RoomLayoutComponent', () => {
         @Component({
             imports: [RoomLayoutComponent],
             template: `
-<app-room-layout [game]="game" [maxPlayer]="2" [dimContent]="false">
+<app-room-layout [game]="game" [dimContent]="false">
     <p class="presentation" roomPresentation>Presentation</p>
     <p class="content">Content</p>
 </app-room-layout>`,

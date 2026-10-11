@@ -9,8 +9,8 @@ declare global {
 
 /** A player of the chat room, in a browser context of its own: as on its own computer */
 export class RoomParticipant {
-    // A room taken over from its host is listed again once its new host reconnected it
-    private static readonly LISTING_TIMEOUT: number = 60_000;
+    // The list of a page refreshes every 15 seconds: refreshed on demand, a room is listed at once
+    private static readonly LISTING_TIMEOUT: number = 30_000;
 
     private constructor(
         public readonly name: string,
@@ -65,8 +65,9 @@ export class RoomParticipant {
     }
 
     /**
-     * Joins a room of the list, once listed: the list is refreshed until then, a room waiting for its host or taken
-     * over is not listed. The dialog asks the name of the player, and the password of a private room
+     * Joins a room of the list, once listed: the list is refreshed until then, a room is listed once created. A room
+     * full or waiting for its host is listed too, its join retried by the page until it has a place or its host is back.
+     * The dialog asks the name of the player, and the password of a private room
      */
     public async joinListedRoom(roomName: string, password?: string): Promise<void> {
         const joinButton: Locator = this.page.getByRole('button', { name: `Rejoindre la salle ${ roomName }`, exact: true });

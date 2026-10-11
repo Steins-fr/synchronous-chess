@@ -37,9 +37,10 @@ variable "global-secondary-indexes" {
   type = list(object({
     name               = string
     hash_key           = string
+    range_key          = optional(string)
     non_key_attributes = list(string)
   }))
-  description = "Secondary indexes, each one holding the key of the table and the non-key attributes listed. Their keys are defined as attributes as well. Provisioned like the table."
+  description = "Secondary indexes, each one holding the key of the table and the non-key attributes listed, sorted by their range key if any. Their keys are defined as attributes as well. Provisioned like the table."
   default     = []
 }
 

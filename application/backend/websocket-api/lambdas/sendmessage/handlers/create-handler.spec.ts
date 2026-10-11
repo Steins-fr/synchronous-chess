@@ -7,7 +7,7 @@ import RoomCreateRequest from '@protocol/requests/room-create-request';
 import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { aConditionFailure, anApiGatewayClient, aRequest, aRoom, AwsMocks, errorReply, HOST_CONNECTION, HOST_TOKEN, mockAws, postedPackets, storeRoom } from '@testing/api-mocks';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import CreateHandler from './create-handler';
 
 describe('CreateHandler', () => {
@@ -18,7 +18,14 @@ describe('CreateHandler', () => {
         return new CreateHandler(anApiGatewayClient(), HOST_CONNECTION, aRequest(RoomApiRequestTypeEnum.CREATE, data)).execute();
     }
 
-    test('should create the room of its host, keeping the hash of its token', async () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    test('should create the room of its host, keeping the hash of its token and its creation date', async () => {
+        // Given
+        vi.useFakeTimers({ now: new Date('2026-10-11T12:00:00.000Z'), toFake: ['Date'] });
+
         // When
         await create(request);
 
@@ -35,6 +42,7 @@ describe('CreateHandler', () => {
                 hostPlayer: 'host',
                 maxPlayer: 4,
                 game: RoomGame.CHESS,
+                createdAt: '2026-10-11T12:00:00.000Z',
                 players: [{ playerName: 'host' }],
                 queue: [],
                 tokenHashes: { host: hashToken(HOST_TOKEN) },
@@ -55,6 +63,8 @@ describe('CreateHandler', () => {
 
     test.each([
         ['room name', { ...request, roomName: '' }],
+        ['room name of a reasonable length', { ...request, roomName: 'r'.repeat(33) }],
+        ['player name of a reasonable length', { ...request, playerName: 'p'.repeat(33) }],
         ['player name', { ...request, playerName: '' }],
         ['player count', { ...request, maxPlayer: 0 }],
         ['token', { ...request, token: '' }],

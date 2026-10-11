@@ -11,8 +11,8 @@ export interface OpenRoom {
 }
 
 export default interface RoomsResponse {
-    /** By name, a limited count */
+    /** The most recent first, or the best match of the search first: a limited count */
     rooms: OpenRoom[];
-    /** More rooms match than the ones listed: a search narrows them */
+    /** More rooms exist, or match the search, than the ones listed */
     hasMore: boolean;
 }
