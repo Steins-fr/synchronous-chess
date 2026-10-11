@@ -59,6 +59,9 @@ export default class RoomManagerService {
             roomConnection.joiningAgain$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 this.notificationService.info('La connexion à l\'hôte de la salle a échoué, nouvelle tentative…');
             });
+            roomConnection.joinDelayed$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error: string) => {
+                this.notificationService.info(RoomManagerService.retryMessage(error));
+            });
             // Before the page gives the room up
             roomConnection.joinFailed$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((failure: JoinFailure) => {
                 this.notificationService.error(failure === JoinFailure.ROOM_FULL ? 'La salle est pleine.' : 'La connexion à l\'hôte de la salle a échoué.');
@@ -77,13 +80,20 @@ export default class RoomManagerService {
     }
 
     private join(setup: RoomSetupInterface, access: RoomAccess): Promise<RoomJoinResponse> {
-        return joinRoom(this.roomSocketApi, { roomName: setup.roomName, playerName: setup.playerName, ...access }, (error: string) => {
-            this.notificationService.info(RoomManagerService.retryMessage(error));
+        return joinRoom(this.roomSocketApi, { roomName: setup.roomName, playerName: setup.playerName, ...access }, {
+            onRetry: (error: string) => this.notificationService.info(RoomManagerService.retryMessage(error)),
         });
     }
 
     private static retryMessage(error: string): string {
-        return error === RoomApiErrorMessage.HOST_DISCONNECTED ? 'L\'hôte de la salle se reconnecte…' : 'Ce nom est encore dans la salle, reconnexion en cours…';
+        switch (error) {
+            case RoomApiErrorMessage.HOST_DISCONNECTED:
+                return 'L\'hôte de la salle se reconnecte…';
+            case RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS:
+                return 'Trop de mots de passe incorrects depuis votre réseau : nouvelle tentative dans une minute…';
+            default:
+                return 'Ce nom est encore dans la salle, reconnexion en cours…';
+        }
     }
 
     private static failureMessage(setup: RoomSetupInterface, error: unknown): string {

@@ -114,7 +114,8 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
 
     /**
      * The items of a secondary index matching the key condition and the filter, in the order of its sort key, read page
-     * after page until enough match: a page reads as many items as are missing, the filtered ones counted
+     * after page until enough match. The filter drops the items a page read: the first page reads `maxItems` items, each
+     * next one twice as many as the one before, so that many items filtered out cost a few queries only
      * @param projection the attributes read: the ones the index holds
      * @returns the attributes of the projection only
      */
@@ -127,6 +128,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     ): Promise<Item[]> {
         const items: Item[] = [];
         let startKey: DocumentAttributes | undefined;
+        let pageSize: number = maxItems;
 
         do {
             const command = new QueryCommand({
@@ -137,16 +139,17 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
                 ProjectionExpression: projection,
                 ExpressionAttributeValues: { ...keyCondition.attributeValues, ...filter.attributeValues },
                 ScanIndexForward: !lastFirst,
-                Limit: maxItems - items.length,
+                Limit: pageSize,
                 ExclusiveStartKey: startKey,
             });
             // eslint-disable-next-line no-await-in-loop -- the pages, one after the other: each gives the start of the next
             const page = await this.run(DynamoCrudActionEnum.QUERY, (): Promise<QueryCommandOutput> => this.ddb.send(command));
             items.push(...(page.Items ?? []) as Item[]);
             startKey = page.LastEvaluatedKey;
+            pageSize *= 2;
         } while (startKey && items.length < maxItems);
 
-        return items;
+        return items.slice(0, maxItems);
     }
 
     /** @param attributeNames the names the expression uses: the attributes named by the players for instance */

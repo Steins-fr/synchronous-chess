@@ -23,8 +23,10 @@ export default class JoinHandler extends MessageHandler {
 
         const room: Room = await this.roomService.getRoomByName(data.roomName);
         this.roomService.gameGuard(room, data.game);
-        await this.roomService.passwordGuard(room, data.password, this.sourceIp);
+        // Before the password, a join refused anyway not counted as an attempt: the list of the rooms tells it already
         this.roomService.hostConnectedGuard(room);
+        // Before the names of the room: they are told to the players giving its password only
+        await this.roomService.passwordGuard(room, data.password, this.sourceIp);
 
         if (RoomHelper.isInGame(room, data.playerName)) {
             throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_GAME);

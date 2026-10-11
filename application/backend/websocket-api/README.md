@@ -59,7 +59,9 @@ matching rooms only. The rooms table has two secondary indexes by `game`, projec
 | `game-index` | `createdAt`, the ISO date of the creation, sorted as a text | the most recent rooms |
 | `game-name-index` | `nameKey`, the name of the room in lower case (`search.helper`) | a search |
 
-A query reads the rooms it lists, page after page: 31 at most, the last one telling more exist. Each write of a room
+A query reads the rooms it lists, page after page: 31 at most, the last one telling more exist. The expired rooms
+stay in the indexes until the TTL deletes them, within a few days, dropped by the filter of the query after being read:
+each page reads twice as many rooms as the one before, so that many expired rooms cost a few queries only. Each write of a room
 updates its two indexes.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 128, the
@@ -68,9 +70,11 @@ fits a message.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
-(`Wrong password`), before telling whether its host is connected. The room keeps a salted scrypt hash of it
+(`Wrong password`), before telling whether a name is in the room. The room keeps a salted scrypt hash of its password
 (`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private. A
-page sends the game and the password again each time it joins the room again.
+page sends the game and the password again each time it joins the room again. A host disconnected is told before the
+password is checked, as the list of the rooms tells it: the joins retried while the host reconnects are not counted as
+attempts.
 
 A client gives 5 passwords in a row at most, then the room refuses its passwords for this client only (`Too many
 password attempts`), without checking them, until a minute after the last one: each password is counted before being

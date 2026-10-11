@@ -107,6 +107,22 @@ describe('RoomHosting', () => {
         expect(Negotiator.prototype.initiate).toHaveBeenCalledTimes(1);
     });
 
+    test('should stop negotiating with a player cancelling its join while the negotiation starts', async () => {
+        // Given an offer being created
+        createNetwork();
+        let offerCreated: () => void = () => undefined;
+        vi.mocked(Negotiator.prototype.initiate).mockReturnValue(new Promise<void>((resolve) => offerCreated = resolve));
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_CANCELLED, data: { playerName: 'remote' } });
+        offerCreated();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then: no place kept for it
+        expect(network.negotiators().size).toEqual(0);
+    });
+
     test('should refuse a joining player when the room is full', async () => {
         // Given
         createNetwork(1);

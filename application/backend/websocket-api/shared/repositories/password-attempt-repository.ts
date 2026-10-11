@@ -8,21 +8,21 @@ import BaseRepository, { DocumentAttributes } from './base-repository';
  */
 export default class PasswordAttemptRepository extends BaseRepository<PasswordAttempt> {
     protected readonly tableName: string = getPasswordAttemptsTableName();
-    protected readonly defaultProjection: string = 'roomName, source, attempts, expiresAt';
+    protected readonly defaultProjection: string = 'roomName, sourceHash, attempts, expiresAt';
 
     protected override getKey(item: Partial<PasswordAttempt>): DocumentAttributes {
-        return { roomName: item.roomName, source: item.source };
+        return { roomName: item.roomName, sourceHash: item.sourceHash };
     }
 
     /**
      * Counts an attempt of the client at the password of the room, unless it made `maxAttempts` before: atomic, so that
      * the attempts sent at once are counted all, before any password is checked. Each attempt counted pushes the end of
      * the count back to `expiresAt`, an attempt after its end counted again from one
-     * @param source the hash of the IP of the client
+     * @param sourceHash the hash of the IP of the client
      * @returns false when the client made `maxAttempts` attempts, the count not over at `now`: this one is not counted
      */
-    public async countAttempt(roomName: string, source: string, maxAttempts: number, now: number, expiresAt: number): Promise<boolean> {
-        const key: Partial<PasswordAttempt> = { roomName, source };
+    public async countAttempt(roomName: string, sourceHash: string, maxAttempts: number, now: number, expiresAt: number): Promise<boolean> {
+        const key: Partial<PasswordAttempt> = { roomName, sourceHash };
 
         return await this.updateItemIf(key, 'SET attempts = if_not_exists(attempts, :zero) + :one, expiresAt = :expiresAt', {
             expression: 'attribute_not_exists(attempts) OR (attempts < :maxAttempts AND expiresAt > :now)',
@@ -35,7 +35,7 @@ export default class PasswordAttemptRepository extends BaseRepository<PasswordAt
     }
 
     /** The right password of a client given: its attempts before are forgotten */
-    public async forgetAttempts(roomName: string, source: string): Promise<void> {
-        await this.delete({ roomName, source });
+    public async forgetAttempts(roomName: string, sourceHash: string): Promise<void> {
+        await this.delete({ roomName, sourceHash });
     }
 }

@@ -156,8 +156,9 @@ export class RoomHosting {
                 .catch((err: string) => console.error(err));
         } else {
             const negotiator: WebsocketNegotiator = new WebsocketNegotiator(roomName, data.playerName, new Webrtc(), this.roomSocketApi);
-            await negotiator.initiate();
+            // Before initiating it: the network handles a cancellation of the join meanwhile
             this.context.addNegotiator(negotiator);
+            await negotiator.initiate();
         }
     }
 

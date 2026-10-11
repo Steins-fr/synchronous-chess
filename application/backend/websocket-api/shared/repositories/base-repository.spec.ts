@@ -66,12 +66,12 @@ describe('BaseRepository', () => {
         const other: Connection = { connectionId: 'other', roomName: 'room' };
         dynamo.on(QueryCommand)
             .resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } })
-            .resolvesOnce({ Items: [other], LastEvaluatedKey: { connectionId: 'other' } });
+            .resolvesOnce({ Items: [other, connection], LastEvaluatedKey: { connectionId: 'other' } });
 
         // When
         const items: Connection[] = await repository.queryIndex<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId', { maxItems: 2, lastFirst: true });
 
-        // Then: the second page reads the item missing only, and is the last one once enough items matched
+        // Then: the second page reads twice as many items, and is the last one once enough items matched, cut to their number
         expect(items).toEqual([connection, other]);
         expect(dynamo.commandCalls(QueryCommand).map(({ args: [command] }: { args: [QueryCommand] }) => command.input)).toEqual([
             {
@@ -84,7 +84,7 @@ describe('BaseRepository', () => {
                 ScanIndexForward: false,
                 Limit: 2,
             },
-            expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' }, Limit: 1 }),
+            expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' }, Limit: 4 }),
         ]);
     });
 

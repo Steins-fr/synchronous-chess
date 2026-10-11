@@ -190,6 +190,21 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
+        { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, message: 'Trop de mots de passe incorrects depuis votre réseau : nouvelle tentative dans une minute…' },
+        { error: RoomApiErrorMessage.ALREADY_IN_GAME, message: 'Ce nom est encore dans la salle, reconnexion en cours…' },
+    ])('should tell a peer the API refuses it joining the room again for a while, $error', async ({ error, message }) => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // When
+        TestHelper.cast<{ joinDelayedSubject: Subject<string> }>(room.roomConnection).joinDelayedSubject.next(error);
+
+        // Then
+        expect(notificationService.info).toHaveBeenCalledWith(message);
+    });
+
+    test.each([
         { failure: JoinFailure.ROOM_FULL, message: 'La salle est pleine.' },
         { failure: JoinFailure.HOST_UNREACHABLE, message: 'La connexion à l\'hôte de la salle a échoué.' },
     ])('should notify a peer giving the room up, $failure', async ({ failure, message }) => {

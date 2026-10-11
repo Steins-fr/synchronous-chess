@@ -76,8 +76,8 @@ module "sc_database_password_attempt" {
 
   name           = "password-attempt"
   hash-key       = "roomName"
-  range-key      = "source"
-  attributes     = ["roomName", "source"]
+  range-key      = "sourceHash"
+  attributes     = ["roomName", "sourceHash"]
   read-capacity  = 1
   write-capacity = 5
   # Pushed back by each password given: deletes the counts over

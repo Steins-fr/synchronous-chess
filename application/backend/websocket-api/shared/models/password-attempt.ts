@@ -2,7 +2,7 @@
 export default interface PasswordAttempt {
     roomName: string;
     /** The hash of the IP of the client (source.helper) */
-    source: string;
+    sourceHash: string;
     attempts: number;
     /**
      * In epoch seconds, pushed back by each attempt counted: the count starts again then. The TTL of the table deletes

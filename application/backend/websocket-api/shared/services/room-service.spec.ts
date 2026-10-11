@@ -188,11 +188,11 @@ describe('RoomService', () => {
         await expect(service.passwordGuard(privateRoom, 'secret', ip)).resolves.toBeUndefined();
         expect(dynamo.commandCalls(UpdateCommand, {
             TableName: 'password-attempt',
-            Key: { roomName: 'room', source: hashSource(ip) },
+            Key: { roomName: 'room', sourceHash: hashSource(ip) },
             ExpressionAttributeValues: { ':maxAttempts': RoomService.MAX_PASSWORD_ATTEMPTS, ':now': now, ':zero': 0, ':one': 1, ':expiresAt': now + 60 },
         })).toHaveLength(4);
         // The right one forgets the wrong ones
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'password-attempt', Key: { roomName: 'room', source: hashSource(ip) } })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'password-attempt', Key: { roomName: 'room', sourceHash: hashSource(ip) } })).toHaveLength(1);
     });
 
     test('should refuse the passwords of a client without checking them, once it gave too many', async () => {

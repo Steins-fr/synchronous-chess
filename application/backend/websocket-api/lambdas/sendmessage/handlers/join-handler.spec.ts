@@ -84,13 +84,22 @@ describe('JoinHandler', () => {
     test.each<[string, string | undefined]>([
         ['a wrong password', 'wrong'],
         ['no password', undefined],
-    ])('should refuse a player giving %s for a private room, before telling the host is disconnected', async (_case: string, password: string | undefined) => {
+    ])('should refuse a player giving %s for a private room, before telling a name is in the room', async (_case: string, password: string | undefined) => {
+        // Given
+        storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret') }));
+
+        // When / Then
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'host', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
+        expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.WRONG_PASSWORD, connection)]);
+    });
+
+    test('should tell the host of a private room is disconnected without counting the password', async () => {
         // Given
         storeRoom(dynamo, aRoom({ passwordHash: hashPassword('secret'), expiresAt: Math.floor(Date.now() / 1000) + 60 }));
 
         // When / Then
-        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        expect(dynamo.commandCalls(PutCommand)).toHaveLength(0);
-        expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.WRONG_PASSWORD, connection)]);
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password: 'secret', token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
+        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
     });
 });

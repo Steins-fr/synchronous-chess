@@ -24,7 +24,7 @@ describe('PasswordAttemptRepository', () => {
         expect(await repository.countAttempt('room', 'source', 5, 500, 560)).toEqual(true);
         expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([{
             TableName: 'password-attempt',
-            Key: { roomName: 'room', source: 'source' },
+            Key: { roomName: 'room', sourceHash: 'source' },
             UpdateExpression: COUNT,
             ConditionExpression: 'attribute_not_exists(attempts) OR (attempts < :maxAttempts AND expiresAt > :now)',
             ExpressionAttributeValues: { ':zero': 0, ':one': 1, ':expiresAt': 560, ':maxAttempts': 5, ':now': 500 },
@@ -59,6 +59,6 @@ describe('PasswordAttemptRepository', () => {
         await repository.forgetAttempts('room', 'source');
 
         // Then
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'password-attempt', Key: { roomName: 'room', source: 'source' } })).toHaveLength(1);
+        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'password-attempt', Key: { roomName: 'room', sourceHash: 'source' } })).toHaveLength(1);
     });
 });

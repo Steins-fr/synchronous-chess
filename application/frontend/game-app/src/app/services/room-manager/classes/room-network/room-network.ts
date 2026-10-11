@@ -64,8 +64,11 @@ export abstract class RoomNetwork {
     protected readonly joiningAgainSubject = new Subject<void>();
     /** The connection to the host failed: the player joins the room again */
     public readonly joiningAgain$ = this.joiningAgainSubject.asObservable();
+    protected readonly joinDelayedSubject = new Subject<string>();
+    /** The API refuses the player joining the room again for a while, with this error: the player asks again later */
+    public readonly joinDelayed$ = this.joinDelayedSubject.asObservable();
     protected readonly joinFailedSubject = new Subject<JoinFailure>();
-    /** The player gave up joining the room, alone in it */
+    /** The player gave up joining the room, never connected to it: a participant joining it again stays in it */
     public readonly joinFailed$ = this.joinFailedSubject.asObservable();
 
     protected constructor(
@@ -311,6 +314,7 @@ export abstract class RoomNetwork {
         this.queueRemovedSubject.complete();
         this.roomLostSubject.complete();
         this.joiningAgainSubject.complete();
+        this.joinDelayedSubject.complete();
         this.joinFailedSubject.complete();
     }
 }

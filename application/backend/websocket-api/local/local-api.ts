@@ -102,8 +102,8 @@ async function loadLambdas(): Promise<Lambdas> {
         })),
         dynamo.send(new CreateTableCommand({
             TableName: process.env.TABLE_NAME_PASSWORD_ATTEMPTS,
-            KeySchema: [{ AttributeName: 'roomName', KeyType: 'HASH' }, { AttributeName: 'source', KeyType: 'RANGE' }],
-            AttributeDefinitions: ['roomName', 'source']
+            KeySchema: [{ AttributeName: 'roomName', KeyType: 'HASH' }, { AttributeName: 'sourceHash', KeyType: 'RANGE' }],
+            AttributeDefinitions: ['roomName', 'sourceHash']
                 .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
             BillingMode: 'PAY_PER_REQUEST',
         })),
