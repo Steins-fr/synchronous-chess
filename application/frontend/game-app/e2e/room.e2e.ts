@@ -1,5 +1,5 @@
 import { RoomParticipant } from './room-participant';
-import { test } from './test-room';
+import { SLOW, test } from './test-room';
 
 /** The connections of a room: the participants leaving, reloading their page, or losing their connections */
 test.describe('Room', () => {
@@ -35,7 +35,7 @@ test.describe('Room', () => {
         await carol.expectMessage('alice', 'back');
     });
 
-    test('lets a player join the room its host takes back once all the participants left', async ({ room }) => {
+    test('lets a player join the room its host takes back once all the participants left', SLOW, async ({ room }) => {
         // Given
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 

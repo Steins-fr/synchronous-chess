@@ -1,4 +1,4 @@
-import { test as base, Browser } from '@playwright/test';
+import { test as base, Browser, TestDetails } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 
 /** A chat room of its own for a test, its players closed after it */
@@ -57,6 +57,12 @@ export class TestRoom {
         await Promise.all(this.participants.map((participant: RoomParticipant) => participant.close()));
     }
 }
+
+/**
+ * A scenario waiting for a delay of the room, which lasts it 20 seconds or more: the joins the API refuses for 20
+ * seconds, the 15 seconds a negotiation takes to time out, or the room handed over. `npm run e2e:fast` runs the others
+ */
+export const SLOW: TestDetails = { tag: '@slow' };
 
 export const test = base.extend<{ room: TestRoom }>({
     room: async ({ browser }, use) => {
