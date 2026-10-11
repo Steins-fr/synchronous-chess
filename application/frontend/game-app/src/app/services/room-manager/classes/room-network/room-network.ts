@@ -27,6 +27,14 @@ export enum RejoinResult {
     ROOM_LOST = 'roomLost',
 }
 
+/** Why the player gave up joining the room: nobody connected it to the room */
+export enum JoinFailure {
+    /** The host refused the player, its room full */
+    ROOM_FULL = 'roomFull',
+    /** The connection to the host failed, the player joining the room again too */
+    HOST_UNREACHABLE = 'hostUnreachable',
+}
+
 export abstract class RoomNetwork {
     private readonly _localPlayer: LocalPlayer;
 
@@ -53,6 +61,12 @@ export abstract class RoomNetwork {
     protected readonly roomLostSubject = new Subject<void>();
     /** The room this participant hosts could not move to a new socket, or could not be joined again: nobody can join it anymore */
     public readonly roomLost$ = this.roomLostSubject.asObservable();
+    protected readonly joiningAgainSubject = new Subject<void>();
+    /** The connection to the host failed: the player joins the room again */
+    public readonly joiningAgain$ = this.joiningAgainSubject.asObservable();
+    protected readonly joinFailedSubject = new Subject<JoinFailure>();
+    /** The player gave up joining the room, alone in it */
+    public readonly joinFailed$ = this.joinFailedSubject.asObservable();
 
     protected constructor(
         protected readonly roomSocketApi: RoomSocketApi,
@@ -103,7 +117,7 @@ export abstract class RoomNetwork {
             maxPlayer,
             token,
             players: () => this.players,
-            occupancy: () => this.players.size + this.getNegotiatorSize(),
+            occupancy: (playerName: string) => this.players.size + this.getNegotiatorSize() - Number(this._negotiators().has(playerName)),
             addNegotiator: (negotiator: Negotiator) => this.addNegotiator(negotiator),
             transmitMessage: (message: NetworkMessage) => this.transmitMessage(message),
         };
@@ -286,5 +300,7 @@ export abstract class RoomNetwork {
         this.queueAddedSubject.complete();
         this.queueRemovedSubject.complete();
         this.roomLostSubject.complete();
+        this.joiningAgainSubject.complete();
+        this.joinFailedSubject.complete();
     }
 }

@@ -1,6 +1,7 @@
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import FullNotification from '@protocol/notifications/full-notification';
+import JoinNotification from '@protocol/notifications/join-notification';
 import SignalNotification from '@protocol/notifications/signal-notification';
 import { RtcSignal } from '@protocol/rtc-signal';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum } from '@protocol/socket-packet-payload.type';
@@ -9,6 +10,12 @@ import { Negotiator, NegotiatorConnectionState } from './negotiator';
 
 export class WebsocketNegotiator extends Negotiator {
     private destroyRef = new Subject<void>();
+    private _roomFull: boolean = false;
+
+    /** The host refused the player, its room full */
+    public get roomFull(): boolean {
+        return this._roomFull;
+    }
 
     public constructor(
         private readonly roomName: string,
@@ -23,12 +30,22 @@ export class WebsocketNegotiator extends Negotiator {
                 this.onFull(notification.data);
             } else if (notification.type === RoomSocketApiNotificationEnum.REMOTE_SIGNAL) {
                 this.onRemoteSignal(notification.data);
+            } else if (notification.type === RoomSocketApiNotificationEnum.JOIN_CANCELLED) {
+                this.onJoinCancelled(notification.data);
             }
         });
     }
 
     private onFull(data: FullNotification): void {
         if (data.from === this.playerName) {
+            this._roomFull = true;
+            this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
+        }
+    }
+
+    /** The host stops negotiating with a joining player which closed its page */
+    private onJoinCancelled(data: JoinNotification): void {
+        if (data.playerName === this.playerName) {
             this.setConnectionState(NegotiatorConnectionState.DISCONNECTED);
         }
     }

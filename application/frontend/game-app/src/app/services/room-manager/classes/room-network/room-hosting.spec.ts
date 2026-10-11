@@ -122,6 +122,24 @@ describe('RoomHosting', () => {
         expect(network.negotiators().size).toEqual(0);
     });
 
+    test('should let a player negotiating join again, the room full otherwise', async () => {
+        // Given
+        createNetwork(2);
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+        await vi.waitFor(() => expect(network.negotiators().get('remote')).toBeInstanceOf(WebsocketNegotiator));
+        const former: Readonly<Negotiator> | undefined = network.negotiators().get('remote');
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+        await vi.waitFor(() => expect(network.negotiators().get('remote')).not.toBe(former));
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'other' } });
+
+        // Then
+        await vi.waitFor(() => expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.FULL, { to: 'other', roomName: 'room' }));
+        expect(roomSocketApi.send).not.toHaveBeenCalledWith(RoomApiRequestTypeEnum.FULL, { to: 'remote', roomName: 'room' });
+        expect([...network.negotiators().keys()]).toEqual(['remote']);
+    });
+
     describe('room socket', () => {
         test('should move the room to a new socket before API Gateway closes the current one, every 100 minutes', async () => {
             // Given

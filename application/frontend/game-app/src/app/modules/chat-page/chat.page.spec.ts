@@ -7,6 +7,7 @@ import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { JoinFailure } from '@app/services/room-manager/classes/room-network/room-network';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -92,6 +93,23 @@ describe('ChatPage', () => {
         // Then
         await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
         expect(fixture.componentInstance.room()).toBeUndefined();
+    });
+
+    test('should give the room up and make the setup form available again once the join failed', async () => {
+        // Given
+        const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
+        roomSetupService.setup('join', 'room', 'local');
+        await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
+        const clearSpy = vi.spyOn(room, 'clear');
+
+        // When
+        TestHelper.cast<RoomNetworkMock>(room.roomConnection).joinFailed$.next(JoinFailure.ROOM_FULL);
+        await fixture.whenStable();
+
+        // Then
+        expect(clearSpy).toHaveBeenCalledTimes(1);
+        expect(fixture.componentInstance.room()).toBeUndefined();
+        expect(fixture.nativeElement.querySelector('#room-content-overlay')).not.toBeNull();
     });
 
     test('should be destroyed without room', () => {

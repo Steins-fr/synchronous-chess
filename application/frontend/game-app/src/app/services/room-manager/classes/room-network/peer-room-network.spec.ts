@@ -1,6 +1,6 @@
 import { PeerRoomNetwork } from './peer-room-network';
-import { RejoinResult } from './room-network';
-import { Negotiator } from '../negotiator/negotiator';
+import { JoinFailure, RejoinResult } from './room-network';
+import { Negotiator, NegotiatorConnectionState } from '../negotiator/negotiator';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { WebsocketNegotiator } from '../negotiator/websocket-negotiator';
 import { Player } from '../player/player';
@@ -11,6 +11,7 @@ import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { RtcSignal } from '@protocol/rtc-signal';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
+import { Webrtc } from '@app/services/room-manager/classes/webrtc/webrtc';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { WebRtcPlayer } from '../player/web-rtc-player';
 import { TestHelper } from '@testing/test.helper';
@@ -66,6 +67,14 @@ describe('PeerRoomNetwork', () => {
         vi.useRealTimers();
         vi.restoreAllMocks();
     });
+
+    /** The negotiation with the host succeeds: the host player replaces its negotiator */
+    function connectToHost(): void {
+        vi.spyOn(Webrtc.prototype, 'sendMessage').mockReturnValue(1);
+        vi.spyOn(Webrtc.prototype, 'close').mockImplementation(() => undefined);
+        TestHelper.cast<{ setConnectionState(state: NegotiatorConnectionState): void }>(network.negotiators().get('host'))
+            .setConnectionState(NegotiatorConnectionState.CONNECTED);
+    }
 
     test('should negotiate with the host through the socket', () => {
         expect(network.initiator).toEqual(false);
@@ -153,7 +162,7 @@ describe('PeerRoomNetwork', () => {
             });
             network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, 'token');
             // The negotiation with the host is over: it connected, then the participant lost every connection
-            vi.advanceTimersByTime(15_000);
+            connectToHost();
         });
 
         test('should join the room again, and connect to the host the API names', async () => {
@@ -251,6 +260,101 @@ describe('PeerRoomNetwork', () => {
             // When / Then
             expect(await network.rejoin()).toEqual(RejoinResult.NOT_JOINED);
             expect(roomSocketApi.send).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('join failure', () => {
+        let notification$: Subject<RoomSocketApiNotifications>;
+        let joinFailed: JoinFailure[];
+
+        beforeEach(() => {
+            network.clear();
+            notification$ = new Subject<RoomSocketApiNotifications>();
+            roomSocketApi = TestHelper.cast<RoomSocketApi>({ notification$, close: vi.fn(), send: vi.fn().mockResolvedValue({ playerName: 'host' }) });
+            network = new TestPeerRoomNetwork(roomSocketApi, 'room', 'local', 'host', 4, 'token');
+            joinFailed = [];
+            network.joinFailed$.subscribe((failure: JoinFailure) => joinFailed.push(failure));
+        });
+
+        test('should give the room up when the host refuses the player, its room full', () => {
+            // When
+            notification$.next({ type: RoomSocketApiNotificationEnum.FULL, data: { roomName: 'room', from: 'host' } });
+
+            // Then
+            expect(joinFailed).toEqual([JoinFailure.ROOM_FULL]);
+            expect(roomSocketApi.send).not.toHaveBeenCalled();
+            expect(network.negotiators().size).toEqual(0);
+        });
+
+        test('should join the room again through a new socket once the negotiation with the host failed, then give it up', async () => {
+            // Given
+            const joiningAgain = vi.fn();
+            network.joiningAgain$.subscribe(joiningAgain);
+
+            // When
+            await vi.advanceTimersByTimeAsync(15_000);
+
+            // Then
+            expect(joiningAgain).toHaveBeenCalledTimes(1);
+            expect(roomSocketApi.close).toHaveBeenCalledTimes(1);
+            expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'local', token: 'token' });
+            expect(network.negotiators().get('host')).toBeInstanceOf(WebsocketNegotiator);
+            expect(joinFailed).toEqual([]);
+
+            // When
+            await vi.advanceTimersByTimeAsync(15_000);
+
+            // Then
+            expect(joinFailed).toEqual([JoinFailure.HOST_UNREACHABLE]);
+            expect(joiningAgain).toHaveBeenCalledTimes(1);
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+            expect(network.negotiators().size).toEqual(0);
+        });
+
+        test('should join the room again after each failure following a connection to the host', async () => {
+            // Given the second negotiation connects
+            await vi.advanceTimersByTimeAsync(15_000);
+            connectToHost();
+            // Having lost the host, the participant joins the room again
+            expect(await network.rejoin()).toEqual(RejoinResult.JOINED);
+
+            // When
+            await vi.advanceTimersByTimeAsync(15_000);
+
+            // Then
+            expect(joinFailed).toEqual([]);
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
+        });
+
+        test('should give the room up when it can not be joined again', async () => {
+            // Given
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            const error: RoomApiError = new RoomApiError('Room \'room\' does not exist');
+            vi.mocked(roomSocketApi.send).mockRejectedValue(error);
+
+            // When
+            await vi.advanceTimersByTimeAsync(15_000);
+
+            // Then
+            expect(joinFailed).toEqual([JoinFailure.HOST_UNREACHABLE]);
+            expect(console.error).toHaveBeenCalledWith('PeerRoom: the room could not be joined again', error);
+        });
+
+        test('should not join again while joining the room', async () => {
+            // Given
+            let join: (response: { playerName: string }) => void = () => undefined;
+            vi.mocked(roomSocketApi.send).mockReturnValue(TestHelper.cast(new Promise((resolve) => join = resolve)));
+            await vi.advanceTimersByTimeAsync(15_000);
+
+            // When
+            const result: RejoinResult = await network.rejoin();
+            join({ playerName: 'host' });
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(result).toEqual(RejoinResult.NOT_JOINED);
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+            expect(network.negotiators().get('host')).toBeInstanceOf(WebsocketNegotiator);
         });
     });
 

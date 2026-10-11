@@ -6,6 +6,7 @@ import { RoomApiError, RoomSocketApi } from '../room-api/room-socket.api';
 import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
+import { JoinFailure } from './classes/room-network/room-network';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { TestHelper } from '@testing/test.helper';
@@ -139,6 +140,33 @@ describe('RoomManagerService', () => {
 
         // Then
         expect(notificationService.error).toHaveBeenCalledWith('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+    });
+
+    test('should tell a peer it joins the room again, the connection to the host failed', async () => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // When
+        TestHelper.cast<{ joiningAgainSubject: Subject<void> }>(room.roomConnection).joiningAgainSubject.next();
+
+        // Then
+        expect(notificationService.info).toHaveBeenCalledWith('La connexion à l\'hôte de la salle a échoué, nouvelle tentative…');
+    });
+
+    test.each([
+        { failure: JoinFailure.ROOM_FULL, message: 'La salle est pleine.' },
+        { failure: JoinFailure.HOST_UNREACHABLE, message: 'La connexion à l\'hôte de la salle a échoué.' },
+    ])('should notify a peer giving the room up, $failure', async ({ failure, message }) => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // When
+        TestHelper.cast<{ joinFailedSubject: Subject<JoinFailure> }>(room.roomConnection).joinFailedSubject.next(failure);
+
+        // Then
+        expect(notificationService.error).toHaveBeenCalledWith(message);
     });
 
     test('should notify when the room can not be joined', async () => {

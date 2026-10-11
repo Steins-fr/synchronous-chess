@@ -10,7 +10,7 @@ import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
-import { RoomNetwork } from './classes/room-network/room-network';
+import { JoinFailure, RoomNetwork } from './classes/room-network/room-network';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -47,6 +47,13 @@ export default class RoomManagerService {
             // The participant taking the room over from a host which left hosts it too
             roomConnection.roomLost$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
                 this.notificationService.error('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+            });
+            roomConnection.joiningAgain$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+                this.notificationService.info('La connexion à l\'hôte de la salle a échoué, nouvelle tentative…');
+            });
+            // Before the page gives the room up
+            roomConnection.joinFailed$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((failure: JoinFailure) => {
+                this.notificationService.error(failure === JoinFailure.ROOM_FULL ? 'La salle est pleine.' : 'La connexion à l\'hôte de la salle a échoué.');
             });
 
             return new BlockRoom<M>(
