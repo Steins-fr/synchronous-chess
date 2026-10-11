@@ -33,15 +33,22 @@ export class TestRoom {
     }
 
     /** Creates the room under the name of the test, whether another player created it already or not */
-    public async create(playerName: string): Promise<RoomParticipant> {
+    public async create(playerName: string, password?: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.create(this.name);
+        await player.create(this.name, password);
         return player;
     }
 
     public async join(playerName: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
         await player.join(this.name);
+        return player;
+    }
+
+    /** Joins the room from the list of the open rooms */
+    public async joinFromList(playerName: string, password?: string): Promise<RoomParticipant> {
+        const player: RoomParticipant = await this.open(playerName);
+        await player.joinFromList(this.name, password);
         return player;
     }
 

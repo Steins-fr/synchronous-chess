@@ -1,0 +1,39 @@
+import { RoomParticipant } from './room-participant';
+import { test } from './test-room';
+
+/** The list of the open rooms: joining a room from it, public or private */
+test.describe('Open rooms', () => {
+    test('lists a public room, joined from the list', async ({ room }) => {
+        // Given
+        const alice: RoomParticipant = await room.create('alice');
+        await alice.expectParticipants(['alice']);
+
+        // When
+        const bob: RoomParticipant = await room.joinFromList('bob');
+
+        // Then
+        await bob.expectConnected(['alice', 'bob']);
+        await alice.expectConnected(['alice', 'bob']);
+    });
+
+    test('lists a private room, joined with its password only', async ({ room }) => {
+        // Given
+        const alice: RoomParticipant = await room.create('alice', 'secret');
+        await alice.expectParticipants(['alice']);
+
+        // When
+        const bob: RoomParticipant = await room.joinFromList('bob', 'wrong');
+
+        // Then
+        await bob.expectNotification('Le mot de passe de la salle est incorrect.');
+        await bob.expectSetupForm();
+        await bob.expectOpenRoom(room.name, true);
+
+        // When
+        await bob.joinListedRoom(room.name, 'secret');
+
+        // Then
+        await bob.expectConnected(['alice', 'bob']);
+        await alice.expectConnected(['alice', 'bob']);
+    });
+});
