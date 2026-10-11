@@ -69,7 +69,7 @@ describe('BaseRepository', () => {
             .resolvesOnce({ Items: [other], LastEvaluatedKey: { connectionId: 'other' } });
 
         // When
-        const items: Connection[] = await repository.queryIndexLastFirst<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId', 2);
+        const items: Connection[] = await repository.queryIndex<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId', { maxItems: 2, lastFirst: true });
 
         // Then: the second page reads the item missing only, and is the last one once enough items matched
         expect(items).toEqual([connection, other]);
@@ -88,13 +88,14 @@ describe('BaseRepository', () => {
         ]);
     });
 
-    test('should query the items of an index until its last page', async () => {
+    test('should query the items of an index, the first first, until its last page', async () => {
         // Given a last page matching no item
         dynamo.on(QueryCommand).resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } }).resolvesOnce({});
 
         // When / Then
-        expect(await repository.queryIndexLastFirst<Connection>('room-index', condition, condition, 'connectionId', 5)).toEqual([connection]);
+        expect(await repository.queryIndex<Connection>('room-index', condition, condition, 'connectionId', { maxItems: 5, lastFirst: false })).toEqual([connection]);
         expect(dynamo.commandCalls(QueryCommand)).toHaveLength(2);
+        expect(dynamo.commandCalls(QueryCommand, { ScanIndexForward: true })).toHaveLength(2);
     });
 
     test('should update an item and return its new attributes', async () => {
@@ -174,7 +175,7 @@ describe('BaseRepository', () => {
         ['conditional put', DynamoCrudActionEnum.PUT, () => repository.putIf(connection, condition)],
         ['delete', DynamoCrudActionEnum.DELETE, () => repository.delete(connection)],
         ['get', DynamoCrudActionEnum.GET, () => repository.find(connection)],
-        ['query', DynamoCrudActionEnum.QUERY, () => repository.queryIndexLastFirst('room-index', condition, condition, 'connectionId', 1)],
+        ['query', DynamoCrudActionEnum.QUERY, () => repository.queryIndex('room-index', condition, condition, 'connectionId', { maxItems: 1, lastFirst: true })],
         ['update', DynamoCrudActionEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
         ['conditional update', DynamoCrudActionEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
     ];

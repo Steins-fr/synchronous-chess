@@ -47,7 +47,7 @@ describe('OpenRoomsComponent', () => {
     }
 
     async function typeSearch(search: string): Promise<void> {
-        const input: HTMLInputElement = fixture.nativeElement.querySelector('app-text-field[label="Rechercher une salle ou un hôte"] input');
+        const input: HTMLInputElement = fixture.nativeElement.querySelector('app-text-field[label="Rechercher une salle"] input');
         input.value = search;
         input.dispatchEvent(new Event('input'));
         // Touched: Material shows its error
@@ -104,7 +104,7 @@ describe('OpenRoomsComponent', () => {
         await createComponent({ rooms: [publicRoom], hasMore: true });
 
         // Then
-        expect(text()).toContain('Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom ou celui de leur hôte.');
+        expect(text()).toContain('Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.');
 
         // When
         vi.mocked(roomSocketApi.send).mockResolvedValue({ rooms: [publicRoom], hasMore: true });
@@ -112,7 +112,7 @@ describe('OpenRoomsComponent', () => {
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
 
         // Then
-        expect(text()).toContain('D\'autres salles correspondent : précisez la recherche pour les trouver.');
+        expect(text()).toContain('D\'autres salles commencent par « pub » : précisez la recherche pour les trouver.');
     });
 
     test('should show the list of the search typed last, the one of a former search received after it dropped', async () => {
@@ -174,12 +174,21 @@ describe('OpenRoomsComponent', () => {
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
         expect(roomSocketApi.send).toHaveBeenLastCalledWith(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game: RoomGame.CHESS, search: 'bob' });
-        expect(text()).toContain('Aucune salle ne correspond à « bob ».');
+        expect(text()).toContain('Aucune salle ne commence par « bob ».');
 
-        // When the list refreshes
+        // When the time of a refresh passes, the page visible again
+        document.dispatchEvent(new Event('visibilitychange'));
         await render(OpenRoomsComponent.REFRESH_INTERVAL);
 
+        // Then a search is not asked again
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
+
+        // When
+        refreshButton().click();
+        await render();
+
         // Then
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
         expect(roomSocketApi.send).toHaveBeenLastCalledWith(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game: RoomGame.CHESS, search: 'bob' });
     });
 

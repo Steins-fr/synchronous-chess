@@ -46,16 +46,21 @@ page) with `roomGetAll`, from any connection: the rooms which did not expire, 30
 full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
 joins its room again from the list, the join retried until the room has its place back or its host reconnected.
 
-- Without `search`, the 30 most recent rooms, the last created first.
-- With a `search`, the rooms whose name or the name of their host holds it, whatever the case, the best match first:
-  the name of the room whole, at its start, the name of its host whole, at its start, then within the name of the room,
-  of its host; the most recent first for a same match. A search reads the 500 most recent rooms of the game: an older
-  room is not found.
+- Without `search`, the 30 most recent rooms, the last created first. A page asks it again every 15 seconds.
+- With a `search`, the rooms whose name starts with it, whatever the case, by name: the name equal to the search
+  first. A page asks a search once typed, or on demand, not every 15 seconds.
 
-The list queries `game-index`, a secondary index of the rooms table by `game`, sorted by `createdAt` (the ISO date of
-the creation, sorted as a text), projecting what the list shows (`RoomRepository.findRecentRooms`, the table and index
-of `infrastructure/main.tf`, and of `local/local-api.ts`). A query reads the rooms it lists, page after page: the 31
-most recent without search, the 500 most recent with one, not every room of the game.
+DynamoDB has no search within a text: the search is a prefix of a sort key (`begins_with`), so that DynamoDB reads the
+matching rooms only. The rooms table has two secondary indexes by `game`, projecting what the list shows
+(`LISTED_ROOM_ATTRIBUTES` of `RoomRepository`; the indexes of `infrastructure/main.tf`, and of `local/local-api.ts`):
+
+| Index | Sort key | Read by |
+|---|---|---|
+| `game-index` | `createdAt`, the ISO date of the creation, sorted as a text | the most recent rooms |
+| `game-name-index` | `nameKey`, the name of the room in lower case (`search.helper`) | a search |
+
+A query reads the rooms it lists, page after page: 31 at most, the last one telling more exist. Each write of a room
+updates its two indexes.
 
 The names of the rooms and of the players are 32 characters at most, the passwords 128, the searches 64
 (`room-limits.ts` of the protocol): the API refuses longer ones, the list fits a message.

@@ -2,7 +2,7 @@
  * The websocket API run locally, without AWS: API Gateway emulated around the lambdas, DynamoDB by dynalite, in
  * memory. Nothing is kept from one process to the next.
  */
-import { CreateTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { AttributeDefinition, CreateTableCommand, DynamoDBClient, GlobalSecondaryIndex } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import dynalite from 'dynalite';
 import { randomUUID } from 'node:crypto';
@@ -11,7 +11,7 @@ import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
-import RoomRepository from '@repositories/room-repository';
+import RoomRepository, { LISTED_ROOM_ATTRIBUTES } from '@repositories/room-repository';
 
 interface LambdaResponse {
     statusCode: number;
@@ -85,16 +85,16 @@ async function loadLambdas(): Promise<Lambdas> {
         dynamo.send(new CreateTableCommand({
             TableName: process.env.TABLE_NAME_ROOMS,
             KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
-            AttributeDefinitions: [
-                { AttributeName: 'id', AttributeType: 'S' },
-                { AttributeName: 'game', AttributeType: 'S' },
-                { AttributeName: 'createdAt', AttributeType: 'S' },
-            ],
-            GlobalSecondaryIndexes: [{
-                IndexName: RoomRepository.GAME_INDEX,
-                KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }, { AttributeName: 'createdAt', KeyType: 'RANGE' }],
-                Projection: { ProjectionType: 'INCLUDE', NonKeyAttributes: ['hostPlayer', 'players', 'maxPlayer', 'passwordHash', 'expiresAt'] },
-            }],
+            AttributeDefinitions: ['id', 'game', 'createdAt', 'nameKey']
+                .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
+            GlobalSecondaryIndexes: [
+                [RoomRepository.GAME_INDEX, 'createdAt'],
+                [RoomRepository.NAME_INDEX, 'nameKey'],
+            ].map(([indexName, sortKey]: string[]): GlobalSecondaryIndex => ({
+                IndexName: indexName,
+                KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }, { AttributeName: sortKey, KeyType: 'RANGE' }],
+                Projection: { ProjectionType: 'INCLUDE', NonKeyAttributes: [...LISTED_ROOM_ATTRIBUTES] },
+            })),
             BillingMode: 'PAY_PER_REQUEST',
         })),
         dynamo.send(new CreateTableCommand({

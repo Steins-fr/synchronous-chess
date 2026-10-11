@@ -40,8 +40,8 @@ describe('RoomGetAllHandler', () => {
     });
 
     test('should reply the rooms matching the search', async () => {
-        // Given
-        dynamo.on(QueryCommand).resolves({ Items: [aRoom(), aRoom({ id: 'other', hostPlayer: 'other' })] });
+        // Given the index by name finds the room named 'other', the index by host none
+        dynamo.on(QueryCommand, { IndexName: 'game-name-index' }).resolves({ Items: [aRoom({ id: 'other', hostPlayer: 'other' })] });
 
         // When
         await getAll({ game: RoomGame.CHESS, search: 'OTH' });

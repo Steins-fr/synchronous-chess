@@ -1,5 +1,6 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { hashPassword, isPassword, verifyPassword } from '@helpers/password.helper';
+import { searchKey } from '@helpers/search.helper';
 import { hashSource } from '@helpers/source.helper';
 import { hashToken } from '@helpers/token.helper';
 import RoomHelper from '@helpers/room-helper';
@@ -11,28 +12,11 @@ import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import RoomRepository, { ListedRoom } from '@repositories/room-repository';
 
-/** A room matching a search, and how well: 0 the best */
-interface RankedRoom {
-    room: ListedRoom;
-    rank: number;
-}
-
-/**
- * How well a room matches a search, by its name then the name of its host, all in lower case: whole, at the start, then
- * within. 0 the best, -1 for no match
- */
-function matchRank(name: string, host: string, search: string): number {
-    return [name === search, name.startsWith(search), host === search, host.startsWith(search), name.includes(search), host.includes(search)]
-        .indexOf(true);
-}
-
 export default class RoomService {
     /** How long a room waits for its disconnected host to reconnect it, in seconds */
     public static readonly HOST_RECONNECTION_DELAY: number = 10 * 60;
     /** The most rooms listed: a search finds the others */
     public static readonly MAX_OPEN_ROOMS: number = 30;
-    /** The most recent rooms a search reads: the cost of a search is bounded, an older room is not found */
-    public static readonly MAX_SEARCHED_ROOMS: number = 500;
     /** The wrong passwords in a row a private room accepts of a client, before refusing its passwords for PASSWORD_LOCK_DELAY */
     public static readonly MAX_PASSWORD_FAILURES: number = 5;
     /** How long a private room refuses the passwords of a client, too many wrong ones given in a row, in seconds */
@@ -88,26 +72,18 @@ export default class RoomService {
 
     /**
      * The rooms of the game, the full ones and the ones waiting for their host included: a participant joins its room
-     * again once it has a place or its host is back. Without search, the most recent first; with a search, the best
-     * match first (matchRank), then the most recent, among the MAX_SEARCHED_ROOMS most recent rooms
-     * @param search part of the name of the room or of its host, whatever the case: none when empty
+     * again once it has a place or its host is back. Without search, the most recent first. With a search, the rooms
+     * whose name starts with it, whatever the case, by name, the name equal to the search first: the index by name reads
+     * the matching rooms only
+     * @param search the start of the name of the room: none when empty
      */
     public async getOpenRooms(game: RoomGame, search: string = ''): Promise<RoomsResponse> {
-        const searched: string = search.trim().toLocaleLowerCase();
-        let rooms: ListedRoom[];
-
-        if (searched === '') {
-            // One more room tells more exist
-            rooms = await this.roomRepository.findRecentRooms(game, RoomService.now(), RoomService.MAX_OPEN_ROOMS + 1);
-        } else {
-            const recentRooms: ListedRoom[] = await this.roomRepository.findRecentRooms(game, RoomService.now(), RoomService.MAX_SEARCHED_ROOMS);
-            rooms = recentRooms
-                .map((room: ListedRoom): RankedRoom => ({ room, rank: matchRank(room.id.toLocaleLowerCase(), room.hostPlayer.toLocaleLowerCase(), searched) }))
-                .filter((ranked: RankedRoom): boolean => ranked.rank !== -1)
-                // A stable sort: the most recent first among the matches of a rank
-                .sort((a: RankedRoom, b: RankedRoom): number => a.rank - b.rank)
-                .map((ranked: RankedRoom): ListedRoom => ranked.room);
-        }
+        const searched: string = searchKey(search);
+        // One more room tells more exist
+        const maxRooms: number = RoomService.MAX_OPEN_ROOMS + 1;
+        const rooms: ListedRoom[] = searched === ''
+            ? await this.roomRepository.findRecentRooms(game, RoomService.now(), maxRooms)
+            : await this.roomRepository.findRoomsStartingWith(game, searched, RoomService.now(), maxRooms);
 
         return {
             rooms: rooms.slice(0, RoomService.MAX_OPEN_ROOMS).map((room: ListedRoom): OpenRoom => ({
@@ -212,6 +188,7 @@ export default class RoomService {
             maxPlayer: request.maxPlayer,
             game: request.game,
             createdAt: new Date().toISOString(),
+            nameKey: searchKey(request.roomName),
             players: [{ playerName: request.playerName }],
             queue: [],
             tokenHashes: { [request.playerName]: hashToken(request.token) },

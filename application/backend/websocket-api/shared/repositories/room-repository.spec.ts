@@ -30,7 +30,7 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt',
         })).toHaveLength(1);
     });
 
@@ -45,10 +45,26 @@ describe('RoomRepository', () => {
             IndexName: 'game-index',
             KeyConditionExpression: 'game = :game',
             FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
-            ProjectionExpression: 'id, createdAt, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
+            ProjectionExpression: 'id, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
             ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': 500 },
             ScanIndexForward: false,
             Limit: 30,
+        })).toHaveLength(1);
+    });
+
+    test('should find the rooms of a game whose name starts with a search, whatever the case, through its index', async () => {
+        // Given
+        dynamo.on(QueryCommand).resolves({ Items: [room] });
+
+        // When / Then
+        expect(await repository.findRoomsStartingWith(RoomGame.CHESS, ' EvE ', 500, 31)).toEqual([room]);
+        expect(dynamo.commandCalls(QueryCommand, {
+            IndexName: 'game-name-index',
+            KeyConditionExpression: 'game = :game AND begins_with(nameKey, :search)',
+            FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
+            ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':search': 'eve', ':now': 500 },
+            ScanIndexForward: true,
+            Limit: 31,
         })).toHaveLength(1);
     });
 

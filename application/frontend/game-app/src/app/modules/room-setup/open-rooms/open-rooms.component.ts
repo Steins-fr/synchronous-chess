@@ -9,7 +9,7 @@ import { RoomGame } from '@protocol/room-game.enum';
 import { ROOM_SEARCH_MAX_LENGTH } from '@protocol/room-limits';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, fromEvent, merge, skip, Subject, switchMap, take, timer } from 'rxjs';
+import { combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, fromEvent, merge, of, skip, Subject, switchMap, take, timer } from 'rxjs';
 
 // The model of the search of the rooms
 type RoomSearch = {
@@ -24,8 +24,9 @@ const roomSearchSchema = schema<RoomSearch>((path) => {
 });
 
 /**
- * The rooms of a game, searched by the name of the room or of its host, through the socket of the page: asked again
- * every 15 seconds while the page is visible, once it is visible again, or on demand
+ * The rooms of a game, searched by the start of their name, through the socket of the page.
+ * Without search, asked again every 15 seconds while the page is visible, and once it is visible again; a search is
+ * asked once typed. Asked again on demand too
  */
 @Component({
     selector: 'app-open-rooms',
@@ -70,9 +71,11 @@ export class OpenRoomsComponent {
 
         combineLatest([toObservable(this.game), search$]).pipe(
             switchMap(([game, search]: [RoomGame, string]) => merge(
-                // The first list even in a hidden page: it is shown once visible
-                timer(0, OpenRoomsComponent.REFRESH_INTERVAL).pipe(filter((tick: number) => tick === 0 || !this.document.hidden)),
-                visible$,
+                search === ''
+                    // The first list even in a hidden page: it is shown once visible
+                    ? merge(timer(0, OpenRoomsComponent.REFRESH_INTERVAL).pipe(filter((tick: number) => tick === 0 || !this.document.hidden)), visible$)
+                    // A search is a query of its own, not repeated
+                    : of(undefined),
                 this.refreshRequests,
             ).pipe(exhaustMap(() => this.load(game, search)))),
             takeUntilDestroyed(),

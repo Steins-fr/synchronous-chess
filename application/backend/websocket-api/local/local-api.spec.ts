@@ -338,7 +338,7 @@ describe('local websocket API', () => {
 
             // When
             const rooms = await reply(visitor, 'roomGetAll', { game: 'chat' });
-            const searched = await reply(visitor, 'roomGetAll', { game: 'chat', search: 'CAROL' });
+            const searched = await reply(visitor, 'roomGetAll', { game: 'chat', search: 'Chat-L' });
 
             // Then
             expect(rooms).toEqual({
@@ -352,7 +352,7 @@ describe('local websocket API', () => {
                     hasMore: false,
                 },
             });
-            expect(searched).toMatchObject({ data: { rooms: [{ roomName: 'chat-waiting' }], hasMore: false } });
+            expect(searched).toMatchObject({ data: { rooms: [{ roomName: 'chat-listed' }], hasMore: false } });
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chess', playerName: 'bob', password: 'pass', token: 'bob-token' }))
                 .toMatchObject({ type: 'error', data: { message: 'Room of another game' } });
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'wrong', token: 'bob-token' }))

@@ -143,39 +143,28 @@ describe('RoomService', () => {
         expect(hasMore).toEqual(true);
     });
 
-    test('should search the rooms of the most recent ones, the best match first, whatever the case', async () => {
-        // Given the most recent first
-        dynamo.on(QueryCommand).resolves({
-            Items: [
-                aRoom({ id: 'my eve room', hostPlayer: 'zoe' }),
-                aRoom({ id: 'other', hostPlayer: 'Steve' }),
-                aRoom({ id: 'third', hostPlayer: 'zoe' }),
-                aRoom({ id: 'Evening', hostPlayer: 'zoe' }),
-                aRoom({ id: 'night', hostPlayer: 'Eve' }),
-                aRoom({ id: 'last', hostPlayer: 'Evelyn' }),
-                aRoom({ id: 'EVE', hostPlayer: 'zoe' }),
-            ],
-        });
+    test('should search the rooms by the start of their name, whatever the case, in the order of the index', async () => {
+        // Given the index gives the rooms by name, the name equal to the search first
+        dynamo.on(QueryCommand, { IndexName: 'game-name-index' }).resolves({ Items: [aRoom({ id: 'EVE' }), aRoom({ id: 'Evening' })] });
 
         // When
         const { rooms, hasMore } = await service.getOpenRooms(RoomGame.CHESS, ' eve ');
 
-        // Then: the name whole, at its start, the host whole, at its start, the name within, the host within
-        expect(rooms.map((listed: OpenRoom) => listed.roomName)).toEqual(['EVE', 'Evening', 'night', 'last', 'my eve room', 'other']);
+        // Then
+        expect(rooms.map((listed: OpenRoom) => listed.roomName)).toEqual(['EVE', 'Evening']);
         expect(hasMore).toEqual(false);
-        expect(dynamo.commandCalls(QueryCommand, { Limit: RoomService.MAX_SEARCHED_ROOMS })).toHaveLength(1);
+        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':search': 'eve', ':now': now }, Limit: 31 })).toHaveLength(1);
     });
 
-    test('should list the 30 best matches of a search, telling more match', async () => {
+    test('should list the 30 first rooms of a search, telling more match', async () => {
         // Given
-        const rooms: Room[] = Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` }));
-        dynamo.on(QueryCommand).resolves({ Items: [aRoom({ id: 'unmatched' }), ...rooms] });
+        dynamo.on(QueryCommand).resolves({ Items: Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` })) });
 
         // When
-        const { rooms: listed, hasMore } = await service.getOpenRooms(RoomGame.CHESS, 'room-');
+        const { rooms, hasMore } = await service.getOpenRooms(RoomGame.CHESS, 'room');
 
         // Then
-        expect(listed).toHaveLength(30);
+        expect(rooms).toHaveLength(30);
         expect(hasMore).toEqual(true);
     });
 

@@ -18,6 +18,13 @@ import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-except
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DocumentAttributes = Record<string, any>;
 
+/** How an index is read: the most items, and in which order of its sort key */
+export interface IndexReading {
+    maxItems: number;
+    /** The last of the sort key first, the first otherwise */
+    lastFirst: boolean;
+}
+
 /** A condition a write requires, or a queried item meets, with the values its expression compares to, and the names it uses */
 export interface WriteCondition {
     expression: string;
@@ -105,18 +112,17 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     }
 
     /**
-     * The items of a secondary index matching the key condition and the filter, the last of its sort key first, read
-     * page after page until enough match: a page reads as many items as are missing, the filtered ones counted
+     * The items of a secondary index matching the key condition and the filter, in the order of its sort key, read page
+     * after page until enough match: a page reads as many items as are missing, the filtered ones counted
      * @param projection the attributes read: the ones the index holds
-     * @param maxItems the most items returned
      * @returns the attributes of the projection only
      */
-    public async queryIndexLastFirst<Item extends DocumentAttributes>(
+    public async queryIndex<Item extends DocumentAttributes>(
         indexName: string,
         keyCondition: WriteCondition,
         filter: WriteCondition,
         projection: string,
-        maxItems: number,
+        { maxItems, lastFirst }: IndexReading,
     ): Promise<Item[]> {
         const items: Item[] = [];
         let startKey: DocumentAttributes | undefined;
@@ -129,7 +135,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
                 FilterExpression: filter.expression,
                 ProjectionExpression: projection,
                 ExpressionAttributeValues: { ...keyCondition.attributeValues, ...filter.attributeValues },
-                ScanIndexForward: false,
+                ScanIndexForward: !lastFirst,
                 Limit: maxItems - items.length,
                 ExclusiveStartKey: startKey,
             });

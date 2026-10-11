@@ -3,17 +3,26 @@ import Room from '@models/room';
 import BadRequestException from '@exceptions/bad-request-exception';
 import { RoomGame } from '@protocol/room-game.enum';
 import { getRoomsTableName } from '@helpers/environment.helper';
+import { searchKey } from '@helpers/search.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
 
-/** What the list of the rooms reads of a room: the attributes the index by game holds */
-export type ListedRoom = Pick<Room, 'id' | 'createdAt' | 'hostPlayer' | 'players' | 'maxPlayer' | 'passwordHash' | 'expiresAt'>;
+/** What the list of the rooms reads of a room: the attributes the indexes by game hold */
+export type ListedRoom = Pick<Room, 'id' | 'hostPlayer' | 'players' | 'maxPlayer' | 'passwordHash' | 'expiresAt'>;
+
+/** The attributes of a room the indexes by game project, beside their keys (infrastructure/main.tf, local/local-api.ts) */
+export const LISTED_ROOM_ATTRIBUTES: readonly string[] = ['hostPlayer', 'players', 'maxPlayer', 'passwordHash', 'expiresAt'];
+
+/** A room not expired at `:now`: its host connected, or the room waiting for it */
+const NOT_EXPIRED: string = 'attribute_not_exists(expiresAt) OR expiresAt > :now';
 
 export default class RoomRepository extends BaseRepository<Room> {
-    /** The index of the rooms by game, sorted by creation (infrastructure/main.tf), projecting the attributes of ListedRoom */
+    /** The index of the rooms by game, sorted by creation */
     public static readonly GAME_INDEX: string = 'game-index';
+    /** The index of the rooms by game, sorted by the search key of their name: searched by its start */
+    public static readonly NAME_INDEX: string = 'game-name-index';
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -27,17 +36,36 @@ export default class RoomRepository extends BaseRepository<Room> {
 
     /**
      * The most recent rooms of the game which did not expire at `now`, the last created first, through the index by
-     * game: their host connected, or the room waiting for it
+     * game and creation: their host connected, or the room waiting for it
      * @param maxRooms the most rooms read: the cost of the query
      */
     public async findRecentRooms(game: RoomGame, now: number, maxRooms: number): Promise<ListedRoom[]> {
-        return this.queryIndexLastFirst<ListedRoom>(
+        return this.queryIndex<ListedRoom>(
             RoomRepository.GAME_INDEX,
             { expression: 'game = :game', attributeValues: { ':game': game } },
-            { expression: 'attribute_not_exists(expiresAt) OR expiresAt > :now', attributeValues: { ':now': now } },
-            'id, createdAt, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
-            maxRooms,
+            { expression: NOT_EXPIRED, attributeValues: { ':now': now } },
+            RoomRepository.listedRoomProjection(),
+            { maxItems: maxRooms, lastFirst: true },
         );
+    }
+
+    /**
+     * The rooms of the game not expired at `now` whose name starts with the search, whatever the case, through the index
+     * by game and name: DynamoDB reads the matching rooms only, by name, the name equal to the search first
+     * @param maxRooms the most rooms read: the cost of the query
+     */
+    public async findRoomsStartingWith(game: RoomGame, search: string, now: number, maxRooms: number): Promise<ListedRoom[]> {
+        return this.queryIndex<ListedRoom>(
+            RoomRepository.NAME_INDEX,
+            { expression: 'game = :game AND begins_with(nameKey, :search)', attributeValues: { ':game': game, ':search': searchKey(search) } },
+            { expression: NOT_EXPIRED, attributeValues: { ':now': now } },
+            RoomRepository.listedRoomProjection(),
+            { maxItems: maxRooms, lastFirst: false },
+        );
+    }
+
+    private static listedRoomProjection(): string {
+        return ['id', ...LISTED_ROOM_ATTRIBUTES].join(', ');
     }
 
     /**

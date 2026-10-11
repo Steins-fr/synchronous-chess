@@ -9,6 +9,8 @@ export default interface Room {
     game: RoomGame;
     /** When the room was created, an ISO 8601 date in UTC: its order as a text is its order in time */
     createdAt: string;
+    /** The search key of its name (search.helper): the sort key of the index by name */
+    nameKey: string;
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash?: string;
     /**

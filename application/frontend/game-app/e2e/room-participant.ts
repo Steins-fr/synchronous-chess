@@ -100,9 +100,9 @@ export class RoomParticipant {
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
     }
 
-    /** Searches the rooms by the name of the room or of its host */
+    /** Searches the rooms by the start of their name */
     public async searchRooms(search: string): Promise<void> {
-        await this.page.getByRole('textbox', { name: 'Rechercher une salle ou un hôte' }).fill(search);
+        await this.page.getByRole('textbox', { name: 'Rechercher une salle' }).fill(search);
     }
 
     /** The names of the rooms listed */
