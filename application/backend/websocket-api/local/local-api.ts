@@ -5,7 +5,7 @@
 import { AttributeDefinition, CreateTableCommand, DynamoDBClient, GlobalSecondaryIndex } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import dynalite from 'dynalite';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
@@ -77,6 +77,9 @@ async function loadLambdas(): Promise<Lambdas> {
         AWS_ENDPOINT_URL_DYNAMODB: `http://${HOST}:${dynamoPort}`,
         TABLE_NAME_CONNECTIONS: 'connection',
         TABLE_NAME_ROOMS: 'room',
+        TABLE_NAME_PASSWORD_ATTEMPTS: 'password-attempt',
+        // The hashes of the IPs are kept by the process only
+        SOURCE_HASH_SECRET: randomBytes(32).toString('hex'),
     });
 
     // The tables of infrastructure/main.tf
@@ -95,6 +98,13 @@ async function loadLambdas(): Promise<Lambdas> {
                 KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }, { AttributeName: sortKey, KeyType: 'RANGE' }],
                 Projection: { ProjectionType: 'INCLUDE', NonKeyAttributes: [...LISTED_ROOM_ATTRIBUTES] },
             })),
+            BillingMode: 'PAY_PER_REQUEST',
+        })),
+        dynamo.send(new CreateTableCommand({
+            TableName: process.env.TABLE_NAME_PASSWORD_ATTEMPTS,
+            KeySchema: [{ AttributeName: 'roomName', KeyType: 'HASH' }, { AttributeName: 'source', KeyType: 'RANGE' }],
+            AttributeDefinitions: ['roomName', 'source']
+                .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
             BillingMode: 'PAY_PER_REQUEST',
         })),
         dynamo.send(new CreateTableCommand({

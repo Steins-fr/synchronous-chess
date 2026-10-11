@@ -237,6 +237,23 @@ describe('PeerRoomNetwork', () => {
             expect(await rejoining).toEqual(RejoinResult.NOT_JOINED);
         });
 
+        test('should wait for the end of a lock of the passwords caused by another client of its IP, to join again', async () => {
+            // Given
+            vi.mocked(roomSocketApi.send)
+                .mockRejectedValueOnce(new RoomApiError('Too many password attempts'))
+                .mockResolvedValue({ playerName: 'host' });
+
+            // When
+            const rejoining: Promise<RejoinResult> = network.rejoin();
+            await vi.advanceTimersByTimeAsync(59_999);
+
+            // Then
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+            await vi.advanceTimersByTimeAsync(1);
+            expect(await rejoining).toEqual(RejoinResult.JOINED);
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
+        });
+
         test('should tell the room is lost when the API refuses the join for good', async () => {
             // Given
             vi.spyOn(console, 'error').mockImplementation(() => undefined);

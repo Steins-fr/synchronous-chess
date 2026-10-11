@@ -377,6 +377,22 @@ describe('local websocket API', () => {
             // Then
             expect(refused).toMatchObject({ type: 'error', data: { message: 'Too many password attempts' } });
         });
+
+        test('should check 5 passwords at most of a client sending them all at once', async () => {
+            // Given
+            expect(await reply(await connected(), 'create', { roomName: 'rushed', maxPlayer: 2, game: 'chess', password: 'pass', playerName: 'alice', token: 'alice-token' }))
+                .toMatchObject({ type: 'created' });
+            const guessers = await Promise.all(Array.from({ length: 8 }, () => connected()));
+
+            // When
+            const replies = await Promise.all(guessers.map((guesser: WebSocket, attempt: number) =>
+                reply(guesser, 'join', { roomName: 'rushed', game: 'chess', playerName: `bob-${ attempt }`, password: `guess-${ attempt }`, token: 'bob-token' })));
+
+            // Then
+            const messages: unknown[] = replies.map(({ data }: { data: Record<string, unknown> }) => data['message']);
+            expect(messages.filter((message: unknown) => message === 'Wrong password')).toHaveLength(5);
+            expect(messages.filter((message: unknown) => message === 'Too many password attempts')).toHaveLength(3);
+        });
     });
 
     describe('handshake', () => {

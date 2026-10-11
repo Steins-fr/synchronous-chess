@@ -91,7 +91,8 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
         return this.runIf(DynamoCrudActionEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item, condition)));
     }
 
-    public async delete(item: Resource): Promise<void> {
+    /** @param item its key at least */
+    public async delete(item: Partial<Resource>): Promise<void> {
         const command = new DeleteCommand({
             TableName: this.tableName,
             Key: this.getKey(item),
@@ -168,8 +169,11 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
         return data.Attributes as Resource;
     }
 
-    /** @returns false when the condition does not hold: nothing updated */
-    public async updateItemIf(item: Resource, expression: string, condition: WriteCondition, attributeValues?: DocumentAttributes): Promise<boolean> {
+    /**
+     * @param item its key at least
+     * @returns false when the condition does not hold: nothing updated
+     */
+    public async updateItemIf(item: Partial<Resource>, expression: string, condition: WriteCondition, attributeValues?: DocumentAttributes): Promise<boolean> {
         const command = new UpdateCommand({
             TableName: this.tableName,
             Key: this.getKey(item),

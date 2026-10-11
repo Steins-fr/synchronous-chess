@@ -3,7 +3,6 @@ import Room from '@models/room';
 import BadRequestException from '@exceptions/bad-request-exception';
 import { RoomGame } from '@protocol/room-game.enum';
 import { getRoomsTableName } from '@helpers/environment.helper';
-import { searchKey } from '@helpers/search.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
 
 /** What the list of the rooms reads of a room: the attributes the indexes by game hold */
@@ -22,7 +21,7 @@ export default class RoomRepository extends BaseRepository<Room> {
     public static readonly NAME_INDEX: string = 'game-name-index';
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -52,12 +51,13 @@ export default class RoomRepository extends BaseRepository<Room> {
     /**
      * The rooms of the game not expired at `now` whose name starts with the search, whatever the case, through the index
      * by game and name: DynamoDB reads the matching rooms only, by name, the name equal to the search first
+     * @param search the search key (search.helper) of the start of the name
      * @param maxRooms the most rooms read: the cost of the query
      */
     public async findRoomsStartingWith(game: RoomGame, search: string, now: number, maxRooms: number): Promise<ListedRoom[]> {
         return this.queryIndex<ListedRoom>(
             RoomRepository.NAME_INDEX,
-            { expression: 'game = :game AND begins_with(nameKey, :search)', attributeValues: { ':game': game, ':search': searchKey(search) } },
+            { expression: 'game = :game AND begins_with(nameKey, :search)', attributeValues: { ':game': game, ':search': search } },
             { expression: NOT_EXPIRED, attributeValues: { ':now': now } },
             RoomRepository.listedRoomProjection(),
             { maxItems: maxRooms, lastFirst: false },
@@ -66,29 +66,6 @@ export default class RoomRepository extends BaseRepository<Room> {
 
     private static listedRoomProjection(): string {
         return ['id', ...LISTED_ROOM_ATTRIBUTES].join(', ');
-    }
-
-    /**
-     * Counts a wrong password of a client, in the maps a private room is created with
-     * @param source the hash of the IP of the client
-     * @returns the wrong passwords the client gave in a row, this one counted
-     */
-    public async recordPasswordFailure(room: Room, source: string): Promise<number> {
-        const updated: Room = await this.updateItem(room, 'SET passwordFailures.#source = if_not_exists(passwordFailures.#source, :zero) + :one', {
-            ':zero': 0,
-            ':one': 1,
-        }, { '#source': source });
-        return (updated.passwordFailures as Record<string, number>)[source];
-    }
-
-    /** Refuses the passwords of a client until `lockedUntil`, in epoch seconds: the count of its failures starts again then */
-    public async lockPassword(room: Room, source: string, lockedUntil: number): Promise<void> {
-        await this.updateItem(room, 'SET passwordLocks.#source = :lockedUntil REMOVE passwordFailures.#source', { ':lockedUntil': lockedUntil }, { '#source': source });
-    }
-
-    /** The right password of a client given: its wrong ones before are forgotten */
-    public async forgetPasswordFailures(room: Room, source: string): Promise<void> {
-        await this.updateItem(room, 'REMOVE passwordFailures.#source, passwordLocks.#source', undefined, { '#source': source });
     }
 
     /**

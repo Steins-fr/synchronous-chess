@@ -30,7 +30,7 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, passwordFailures, passwordLocks, tokenHashes, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, tokenHashes, expiresAt',
         })).toHaveLength(1);
     });
 
@@ -52,12 +52,12 @@ describe('RoomRepository', () => {
         })).toHaveLength(1);
     });
 
-    test('should find the rooms of a game whose name starts with a search, whatever the case, through its index', async () => {
+    test('should find the rooms of a game whose name starts with a search key, through its index', async () => {
         // Given
         dynamo.on(QueryCommand).resolves({ Items: [room] });
 
         // When / Then
-        expect(await repository.findRoomsStartingWith(RoomGame.CHESS, ' EvE ', 500, 31)).toEqual([room]);
+        expect(await repository.findRoomsStartingWith(RoomGame.CHESS, 'eve', 500, 31)).toEqual([room]);
         expect(dynamo.commandCalls(QueryCommand, {
             IndexName: 'game-name-index',
             KeyConditionExpression: 'game = :game AND begins_with(nameKey, :search)',
@@ -66,32 +66,6 @@ describe('RoomRepository', () => {
             ScanIndexForward: true,
             Limit: 31,
         })).toHaveLength(1);
-    });
-
-    test('should count the wrong passwords of a client, lock the room for it, then forget them', async () => {
-        // Given
-        dynamo.on(UpdateCommand).resolves({ Attributes: { passwordFailures: { source: 3, other: 1 } } });
-
-        // When
-        const failures: number = await repository.recordPasswordFailure(room, 'source');
-        await repository.lockPassword(room, 'source', 900);
-        await repository.forgetPasswordFailures(room, 'source');
-
-        // Then
-        expect(failures).toEqual(3);
-        expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([
-            expect.objectContaining({
-                UpdateExpression: 'SET passwordFailures.#source = if_not_exists(passwordFailures.#source, :zero) + :one',
-                ExpressionAttributeValues: { ':zero': 0, ':one': 1 },
-                ExpressionAttributeNames: { '#source': 'source' },
-            }),
-            expect.objectContaining({
-                UpdateExpression: 'SET passwordLocks.#source = :lockedUntil REMOVE passwordFailures.#source',
-                ExpressionAttributeValues: { ':lockedUntil': 900 },
-                ExpressionAttributeNames: { '#source': 'source' },
-            }),
-            expect.objectContaining({ UpdateExpression: 'REMOVE passwordFailures.#source, passwordLocks.#source', ExpressionAttributeNames: { '#source': 'source' } }),
-        ]);
     });
 
     test('should create a room unless one of that name exists, expired', async () => {

@@ -21,7 +21,10 @@ export interface HostingContext {
     readonly token: string;
     /** The connected players, the local one included */
     players(): ReadonlyMap<string, Player>;
-    /** The connected players and the ones negotiating, but the negotiation of the player named: it joins again */
+    /**
+     * The connected players and the ones negotiating, each name once, but the player named, connected or negotiating:
+     * joining again, it replaces its former connection
+     */
     occupancy(playerName: string): number;
     addNegotiator(negotiator: Negotiator): void;
     transmitMessage(message: NetworkMessage): void;

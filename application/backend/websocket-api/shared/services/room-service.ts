@@ -10,6 +10,8 @@ import RoomCreateRequest from '@protocol/requests/room-create-request';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
+import { ROOM_PASSWORD_LOCK_DELAY } from '@protocol/room-limits';
+import PasswordAttemptRepository from '@repositories/password-attempt-repository';
 import RoomRepository, { ListedRoom } from '@repositories/room-repository';
 
 export default class RoomService {
@@ -17,12 +19,11 @@ export default class RoomService {
     public static readonly HOST_RECONNECTION_DELAY: number = 10 * 60;
     /** The most rooms listed: a search finds the others */
     public static readonly MAX_OPEN_ROOMS: number = 30;
-    /** The wrong passwords in a row a private room accepts of a client, before refusing its passwords for PASSWORD_LOCK_DELAY */
-    public static readonly MAX_PASSWORD_FAILURES: number = 5;
-    /** How long a private room refuses the passwords of a client, too many wrong ones given in a row, in seconds */
-    public static readonly PASSWORD_LOCK_DELAY: number = 60;
+    /** The passwords in a row a private room checks of a client, before refusing its passwords for ROOM_PASSWORD_LOCK_DELAY */
+    public static readonly MAX_PASSWORD_ATTEMPTS: number = 5;
 
     private readonly roomRepository: RoomRepository = new RoomRepository();
+    private readonly passwordAttemptRepository: PasswordAttemptRepository = new PasswordAttemptRepository();
 
     /** In epoch seconds, the unit of the TTL of DynamoDB */
     private static now(): number {
@@ -109,12 +110,14 @@ export default class RoomService {
     }
 
     /**
-     * Before a player joins a private room: a public room ignores the password. MAX_PASSWORD_FAILURES wrong passwords in
-     * a row from a client lock the room for this client only, for PASSWORD_LOCK_DELAY, its passwords refused without
-     * being checked: a password is not guessed by trying them all, the other clients still join the room
+     * Before a player joins a private room: a public room ignores the password. A client gives MAX_PASSWORD_ATTEMPTS
+     * passwords in a row at most, each one counted before being checked, then the room refuses its passwords without
+     * checking them, for this client only, until ROOM_PASSWORD_LOCK_DELAY after the last one counted: a password is not
+     * guessed by trying them all, even all at once, and the other clients still join the room. Its right password
+     * forgets its attempts before
      * @param sourceIp the IP of the client, or its connection without it
-     * @throws {BadRequestException} when the room is locked for the client (TOO_MANY_PASSWORD_ATTEMPTS), or the password
-     * is not the one of the private room (WRONG_PASSWORD)
+     * @throws {BadRequestException} when the client gave too many passwords (TOO_MANY_PASSWORD_ATTEMPTS), or the
+     * password is not the one of the private room (WRONG_PASSWORD)
      */
     public async passwordGuard(room: Room, password: string | undefined, sourceIp: string): Promise<void> {
         if (room.passwordHash === undefined) {
@@ -123,24 +126,16 @@ export default class RoomService {
 
         const now: number = RoomService.now();
         const source: string = hashSource(sourceIp);
-        const lockedUntil: number | undefined = room.passwordLocks?.[source];
 
-        if (lockedUntil !== undefined && lockedUntil > now) {
+        if (!await this.passwordAttemptRepository.countAttempt(room.id, source, RoomService.MAX_PASSWORD_ATTEMPTS, now, now + ROOM_PASSWORD_LOCK_DELAY)) {
             throw new BadRequestException(RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS);
         }
 
-        if (isPassword(password) && verifyPassword(password, room.passwordHash)) {
-            if (room.passwordFailures?.[source] !== undefined || lockedUntil !== undefined) {
-                await this.roomRepository.forgetPasswordFailures(room, source);
-            }
-            return;
+        if (!isPassword(password) || !verifyPassword(password, room.passwordHash)) {
+            throw new BadRequestException(RoomApiErrorMessage.WRONG_PASSWORD);
         }
 
-        if (await this.roomRepository.recordPasswordFailure(room, source) >= RoomService.MAX_PASSWORD_FAILURES) {
-            await this.roomRepository.lockPassword(room, source, now + RoomService.PASSWORD_LOCK_DELAY);
-        }
-
-        throw new BadRequestException(RoomApiErrorMessage.WRONG_PASSWORD);
+        await this.passwordAttemptRepository.forgetAttempts(room.id, source);
     }
 
     public canEditRoomGuard(room: Room, connectionId: string): void {
@@ -196,9 +191,6 @@ export default class RoomService {
 
         if (request.password !== undefined) {
             room.passwordHash = hashPassword(request.password);
-            // The maps the wrong passwords of each client are counted in: DynamoDB sets a key of an existing map only
-            room.passwordFailures = {};
-            room.passwordLocks = {};
         }
 
         const created: boolean = await this.roomRepository.create(room, RoomService.now());

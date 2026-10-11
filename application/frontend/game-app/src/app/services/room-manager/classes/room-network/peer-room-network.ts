@@ -94,13 +94,16 @@ export class PeerRoomNetwork extends RoomNetwork {
         });
     }
 
-    /** Joins the room through a new socket: the API forgets the former join, waiting for the host with the former socket */
+    /**
+     * Joins the room through a new socket: the API forgets the former join, waiting for the host with the former socket.
+     * Its password accepted already, the player waits for the end of a lock of the passwords caused by another client
+     */
     private async joinThroughSocket(): Promise<void> {
         this.joining = true;
         this.roomSocketApi.close();
 
         try {
-            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, ...this.access });
+            const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, ...this.access }, undefined, true);
             this._hostName = response.playerName;
             this.negotiateWithHost(response.playerName);
         } finally {

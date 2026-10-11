@@ -70,6 +70,22 @@ module "sc_database_room" {
   stage = var.stage
 }
 
+# The passwords each client gives a private room in a row (PasswordAttemptRepository), apart from the rooms
+module "sc_database_password_attempt" {
+  source = "./modules/aws-dynamodb"
+
+  name           = "password-attempt"
+  hash-key       = "roomName"
+  range-key      = "source"
+  attributes     = ["roomName", "source"]
+  read-capacity  = 1
+  write-capacity = 5
+  # Pushed back by each password given: deletes the counts over
+  ttl-attribute = "expiresAt"
+
+  stage = var.stage
+}
+
 module "sc_database_connection" {
   source = "./modules/aws-dynamodb"
 
@@ -120,9 +136,10 @@ module "sc_role_lambda_basic" {
 module "sc_database_policy" {
   source = "./modules/aws-dynamodb-iam-policy"
 
-  connections_table_arn = module.sc_database_connection.arn
-  rooms_table_arn       = module.sc_database_room.arn
-  stage                 = var.stage
+  connections_table_arn       = module.sc_database_connection.arn
+  rooms_table_arn             = module.sc_database_room.arn
+  password_attempts_table_arn = module.sc_database_password_attempt.arn
+  stage                       = var.stage
 }
 
 module "sc_api_gateway_iam_policy" {
@@ -165,6 +182,13 @@ module "sc_lambda_ondisconnect" {
   }
 }
 
+# The key of the hashes of the IPs of the clients (source.helper of the websocket API): without it, the IP of a hash is
+# found by hashing the 2^32 IPv4 addresses in turn
+resource "random_password" "source_hash_secret" {
+  length  = 64
+  special = false
+}
+
 module "sc_lambda_sendmessage" {
   source = "./modules/aws-lambda-api"
 
@@ -173,8 +197,10 @@ module "sc_lambda_sendmessage" {
   role      = module.sc_role_lambda_dynamo.arn
   stage     = var.stage
   environment = {
-    TABLE_NAME_ROOMS       = module.sc_database_room.name
-    TABLE_NAME_CONNECTIONS = module.sc_database_connection.name
+    TABLE_NAME_ROOMS             = module.sc_database_room.name
+    TABLE_NAME_CONNECTIONS       = module.sc_database_connection.name
+    TABLE_NAME_PASSWORD_ATTEMPTS = module.sc_database_password_attempt.name
+    SOURCE_HASH_SECRET           = random_password.source_hash_secret.result
   }
 }
 

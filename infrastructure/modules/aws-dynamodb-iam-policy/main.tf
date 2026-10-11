@@ -30,6 +30,20 @@ data "aws_iam_policy_document" "dynamodb_allows" {
       "${var.rooms_table_arn}/index/*"
     ]
   }
+
+  statement {
+    effect = "Allow"
+
+    # Counted by conditional updates, forgotten by a deletion: never read
+    actions = [
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem"
+    ]
+
+    resources = [
+      var.password_attempts_table_arn
+    ]
+  }
 }
 
 resource "aws_iam_policy" "policy" {

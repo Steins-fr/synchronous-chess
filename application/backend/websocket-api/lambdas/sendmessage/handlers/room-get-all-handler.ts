@@ -1,4 +1,5 @@
 import BadRequestException from '@exceptions/bad-request-exception';
+import { isText } from '@helpers/text.helper';
 import { isRoomGame } from '@protocol/room-game.enum';
 import { ROOM_SEARCH_MAX_LENGTH } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
@@ -18,6 +19,6 @@ export default class RoomGetAllHandler extends MessageHandler {
 
     /** No search, or a text of a reasonable length */
     private static isSearch(value: unknown): value is string | undefined {
-        return value === undefined || (typeof value === 'string' && value.length <= ROOM_SEARCH_MAX_LENGTH);
+        return value === undefined || isText(value, ROOM_SEARCH_MAX_LENGTH, 0);
     }
 }

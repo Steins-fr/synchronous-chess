@@ -59,15 +59,18 @@ describe('CreateHandler', () => {
         const room = command.input.Item as Room;
         expect(room.passwordHash).not.toContain('secret');
         expect(verifyPassword('secret', room.passwordHash as string)).toEqual(true);
-        expect(room).toMatchObject({ passwordFailures: {}, passwordLocks: {} });
     });
 
     test.each([
         ['room name', { ...request, roomName: '' }],
+        ['room name of other characters than spaces', { ...request, roomName: '   ' }],
         ['room name of a reasonable length', { ...request, roomName: 'r'.repeat(33) }],
         ['player name of a reasonable length', { ...request, playerName: 'p'.repeat(33) }],
         ['player name', { ...request, playerName: '' }],
         ['player count', { ...request, maxPlayer: 0 }],
+        ['player count of a reasonable size', { ...request, maxPlayer: 17 }],
+        ['whole player count', { ...request, maxPlayer: 2.5 }],
+        ['player count as a number', { ...request, maxPlayer: 'p'.repeat(1000) as unknown as number }],
         ['token', { ...request, token: '' }],
         ['token of a reasonable length', { ...request, token: 't'.repeat(129) }],
         ['token as a string', { ...request, token: 42 as unknown as string }],

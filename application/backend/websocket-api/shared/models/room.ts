@@ -13,13 +13,6 @@ export default interface Room {
     nameKey: string;
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash?: string;
-    /**
-     * Of a private room: the wrong passwords given in a row by each client, by the hash of its IP (source.helper), until
-     * its right one, or until the room refuses its passwords for a while
-     */
-    passwordFailures?: Record<string, number>;
-    /** Of a private room: until when the room refuses the passwords of a client, in epoch seconds, by the hash of its IP */
-    passwordLocks?: Record<string, number>;
     players: Player[];
     queue: Player[];
     /** SHA-256 of the token of each player of the room, by name: the host reconnects the room with its own */

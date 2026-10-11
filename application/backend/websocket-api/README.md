@@ -62,8 +62,9 @@ matching rooms only. The rooms table has two secondary indexes by `game`, projec
 A query reads the rooms it lists, page after page: 31 at most, the last one telling more exist. Each write of a room
 updates its two indexes.
 
-The names of the rooms and of the players are 32 characters at most, the passwords 128, the searches 64
-(`room-limits.ts` of the protocol): the API refuses longer ones, the list fits a message.
+The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 128, the
+searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones, the list
+fits a message.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
@@ -71,9 +72,16 @@ messages. A room created with a `password` is private: listed with `isPrivate`, 
 (`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private. A
 page sends the game and the password again each time it joins the room again.
 
-5 wrong passwords in a row from a client lock the room for this client only, for a minute: its passwords are refused
-then (`Too many password attempts`), without being checked, its right one forgetting its wrong ones before. A password is
-not guessed by trying them all, the wrong ones do not run scrypt without end, and the other players still join the room.
+A client gives 5 passwords in a row at most, then the room refuses its passwords for this client only (`Too many
+password attempts`), without checking them, until a minute after the last one: each password is counted before being
+checked, by a conditional update, so that the passwords sent all at once are not all checked. Its right password
+forgets its attempts before. A password is not guessed by trying them all, the wrong ones do not run scrypt without
+end, and the other players still join the room. A participant joining its room again waits for the end of a lock caused
+by another client of its IP, its password accepted before.
+
 The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
-connection without it: it keeps a short hash of it (`source.helper`), never the IP, in two maps created with a private
-room (`passwordFailures`, `passwordLocks`). The clients behind a same IP share their count.
+connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by `SOURCE_HASH_SECRET` (a
+`random_password` of Terraform), never the IP. The attempts are counted apart from the rooms, in the
+`password-attempt` table (`PasswordAttemptRepository`, by room name and client): each room read by every request does
+not grow with the clients trying its password, and the TTL of the table (`expiresAt`) deletes the counts over. The
+clients behind a same IP share their count.
