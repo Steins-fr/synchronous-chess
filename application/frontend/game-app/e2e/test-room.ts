@@ -17,8 +17,7 @@ export class TestRoom {
 
     /** The host creates the room, then the players join it one after the other, each connecting to the others */
     public async connect(hostName: string, ...playerNames: string[]): Promise<RoomParticipant[]> {
-        const host: RoomParticipant = await this.open(hostName);
-        await host.create(this.name);
+        const host: RoomParticipant = await this.create(hostName);
         await host.expectParticipants([hostName]);
         const connected: RoomParticipant[] = [host];
 
@@ -27,10 +26,17 @@ export class TestRoom {
             connected.push(await this.join(playerName));
             const names: string[] = connected.map((participant: RoomParticipant) => participant.name);
             // eslint-disable-next-line no-await-in-loop -- connected before the next one joins
-            await Promise.all(connected.map((participant: RoomParticipant) => participant.expectParticipants(names)));
+            await Promise.all(connected.map((participant: RoomParticipant) => participant.expectConnected(names)));
         }
 
         return connected;
+    }
+
+    /** Creates the room under the name of the test, whether another player created it already or not */
+    public async create(playerName: string): Promise<RoomParticipant> {
+        const player: RoomParticipant = await this.open(playerName);
+        await player.create(this.name);
+        return player;
     }
 
     public async join(playerName: string): Promise<RoomParticipant> {
