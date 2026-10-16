@@ -190,7 +190,6 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
-        { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, message: 'Trop de mots de passe incorrects depuis votre réseau : nouvelle tentative dans une minute…' },
         { error: RoomApiErrorMessage.ALREADY_IN_GAME, message: 'Ce nom est encore dans la salle, reconnexion en cours…' },
     ])('should tell a peer the API refuses it joining the room again for a while, $error', async ({ error, message }) => {
         // Given

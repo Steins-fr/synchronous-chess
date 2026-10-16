@@ -1,7 +1,8 @@
 /** A room of the list: a player joins it, or joins it again once the room has a place for it or its host is back */
 export interface OpenRoom {
     roomName: string;
-    hostPlayer: string;
+    /** Of a public room only: the names of a private room are told to the players giving its password */
+    hostPlayer?: string;
     playerCount: number;
     maxPlayer: number;
     /** Joined with its password only */

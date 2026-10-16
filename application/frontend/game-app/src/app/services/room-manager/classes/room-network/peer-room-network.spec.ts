@@ -252,47 +252,24 @@ describe('PeerRoomNetwork', () => {
             expect(await rejoining).toEqual(RejoinResult.NOT_JOINED);
         });
 
-        test('should wait once for the end of a lock of the passwords caused by another client of its IP, to join again', async () => {
+        test('should tell once the API refuses it joining again for a while', async () => {
             // Given
             vi.mocked(roomSocketApi.send)
                 .mockRejectedValueOnce(new RoomApiError('Already in game'))
-                .mockRejectedValueOnce(new RoomApiError('Too many password attempts'))
+                .mockRejectedValueOnce(new RoomApiError('Already in game'))
                 .mockResolvedValue({ playerName: 'host' });
             const joinDelayed: string[] = [];
             network.joinDelayed$.subscribe((error: string) => joinDelayed.push(error));
 
             // When
             const rejoining: Promise<RejoinResult> = network.rejoin();
-            await vi.advanceTimersByTimeAsync(2000 + 59_999);
-
-            // Then
-            expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
-            expect(joinDelayed).toEqual(['Already in game', 'Too many password attempts']);
-
-            // When
-            await vi.advanceTimersByTimeAsync(1);
+            await vi.advanceTimersByTimeAsync(4000);
             connectToHost();
 
             // Then
             expect(await rejoining).toEqual(RejoinResult.JOINED);
             expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
-        });
-
-        test('should stay in the room when the passwords are still locked, another client of its IP guessing', async () => {
-            // Given
-            vi.spyOn(console, 'error').mockImplementation(() => undefined);
-            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Too many password attempts'));
-            const roomLost = vi.fn();
-            network.roomLost$.subscribe(roomLost);
-
-            // When
-            const rejoining: Promise<RejoinResult> = network.rejoin();
-            await vi.advanceTimersByTimeAsync(60_000);
-
-            // Then
-            expect(await rejoining).toEqual(RejoinResult.NOT_JOINED);
-            expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
-            expect(roomLost).not.toHaveBeenCalled();
+            expect(joinDelayed).toEqual(['Already in game']);
         });
 
         test('should tell the host is gone once the negotiation with the host failed and the API refuses the join', async () => {

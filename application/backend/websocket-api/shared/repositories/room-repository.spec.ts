@@ -147,7 +147,7 @@ describe('RoomRepository', () => {
         })).toHaveLength(1);
     });
 
-    test('should remove a player from the room by its index', async () => {
+    test('should remove a player from the room by its index, keeping the hash of its token', async () => {
         // Given
         room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'guest' }] });
 
@@ -157,8 +157,7 @@ describe('RoomRepository', () => {
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
             Key: { id: 'room' },
-            UpdateExpression: 'REMOVE players[1], tokenHashes.#playerName',
-            ExpressionAttributeNames: { '#playerName': 'guest' },
+            UpdateExpression: 'REMOVE players[1]',
         })).toHaveLength(1);
     });
 

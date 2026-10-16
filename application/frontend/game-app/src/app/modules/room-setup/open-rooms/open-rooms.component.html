@@ -31,7 +31,10 @@
         <mat-icon aria-hidden="false" aria-label="Salle publique" class="text-app-text-muted" role="img">public</mat-icon>
         }
         <span class="font-bold">{{ room.roomName }}</span>
+        <!-- Not told for a private room: its names are told to the players giving its password only -->
+        @if (room.hostPlayer !== undefined) {
         <span class="text-app-text-muted">Hôte : {{ room.hostPlayer }}</span>
+        }
         @if (!room.hostConnected) {
         <span class="room-state">Hôte en reconnexion</span>
         } @else if (isFull(room)) {

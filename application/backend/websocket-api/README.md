@@ -30,7 +30,7 @@ mocks of DynamoDB in the other specs do not evaluate.
 
 API Gateway closes any connection after 2 hours, and the host keeps its connection open while it waits for the
 players. Each page sends a secret token of its own with `create` and `join` (the room keeps its SHA-256 by player,
-`tokenHashes`, until the player is removed). Every 100 minutes, or as soon as its socket closes, the host opens a new
+`tokenHashes`, kept once the player is removed: it joins a private room again without its password). Every 100 minutes, or as soon as its socket closes, the host opens a new
 socket and sends it `reconnect` with its name and token: the room moves
 to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
 the room for 10 minutes (`expiresAt`, also the TTL of the table): joins are refused (`Host disconnected`) until the
@@ -69,23 +69,26 @@ searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol
 fits a message.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
-messages. A room created with a `password` is private: listed with `isPrivate`, `join` refuses it without its password
-(`Wrong password`), before telling whether a name is in the room. The room keeps a salted scrypt hash of its password
+messages. A room created with a `password` is private: listed with `isPrivate`, without the name of its host, `join` refuses it
+without its password (`Wrong password`), before telling whether a name is in the room. The room keeps a salted scrypt hash of its password
 (`passwordHash`), never the password, as long as the room exists: the player taking the room over keeps it private. A
-page sends the game and the password again each time it joins the room again. A host disconnected is told before the
+page sends the game and the password again each time it joins the room again, but a player who joined the room before
+does not need it: its token matches the hash the room keeps (`tokenHashes`). A host disconnected is told before the
 password is checked, as the list of the rooms tells it: the joins retried while the host reconnects are not counted as
 attempts.
 
 A client gives 5 passwords in a row at most, then the room refuses its passwords for this client only (`Too many
 password attempts`), without checking them, until a minute after the last one: each password is counted before being
-checked, by a conditional update, so that the passwords sent all at once are not all checked. Its right password
-forgets its attempts before. A password is not guessed by trying them all, the wrong ones do not run scrypt without
-end, and the other players still join the room. A participant joining its room again waits for the end of a lock caused
-by another client of its IP, its password accepted before.
+checked, by a conditional update, so that the passwords sent all at once are not all checked. Its right password is
+not counted once checked, the wrong ones before stay: a client guessing the password from the IP of a player keeps its
+count. A password is not guessed by trying them all, the wrong ones do not run scrypt without end, and the other players
+still join the room. A participant joining its room again is not locked by another client of its IP: its token spares it
+the password.
 
 The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
 connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by `SOURCE_HASH_SECRET` (a
 `random_password` of Terraform), never the IP. The attempts are counted apart from the rooms, in the
-`password-attempt` table (`PasswordAttemptRepository`, by room name and client): each room read by every request does
+`password-attempt` table (`PasswordAttemptRepository`, by room and client: the room by its name and its creation date,
+a room created again under the name of an expired one starts without the attempts of the former one): each room read by every request does
 not grow with the clients trying its password, and the TTL of the table (`expiresAt`) deletes the counts over. The
 clients behind a same IP share their count.

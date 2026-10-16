@@ -86,14 +86,7 @@ export default class RoomManagerService {
     }
 
     private static retryMessage(error: string): string {
-        switch (error) {
-            case RoomApiErrorMessage.HOST_DISCONNECTED:
-                return 'L\'hôte de la salle se reconnecte…';
-            case RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS:
-                return 'Trop de mots de passe incorrects depuis votre réseau : nouvelle tentative dans une minute…';
-            default:
-                return 'Ce nom est encore dans la salle, reconnexion en cours…';
-        }
+        return error === RoomApiErrorMessage.HOST_DISCONNECTED ? 'L\'hôte de la salle se reconnecte…' : 'Ce nom est encore dans la salle, reconnexion en cours…';
     }
 
     private static failureMessage(setup: RoomSetupInterface, error: unknown): string {

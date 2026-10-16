@@ -105,13 +105,14 @@ export default class RoomRepository extends BaseRepository<Room> {
         });
     }
 
+    /** The hash of its token is kept: the player joins the room again without its password */
     public async removePlayerFromRoom(playerName: string, room: Room): Promise<void> {
         const index: number = room.players.findIndex((player: Player): boolean => player.playerName === playerName);
         if (index === -1) {
             throw new BadRequestException('Player not in the room');
         }
 
-        await this.updateItem(room, `REMOVE players[${ index }], tokenHashes.#playerName`, undefined, { '#playerName': playerName });
+        await this.updateItem(room, `REMOVE players[${ index }]`);
     }
 
     /** Queues the player, keeping the hash of its token */

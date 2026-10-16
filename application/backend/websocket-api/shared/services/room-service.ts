@@ -7,6 +7,7 @@ import RoomHelper from '@helpers/room-helper';
 import Connection from '@models/connection';
 import Room from '@models/room';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
+import RoomJoinRequest from '@protocol/requests/room-join-request';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
@@ -89,7 +90,8 @@ export default class RoomService {
         return {
             rooms: rooms.slice(0, RoomService.MAX_OPEN_ROOMS).map((room: ListedRoom): OpenRoom => ({
                 roomName: room.id,
-                hostPlayer: room.hostPlayer,
+                // The names of a private room are told to the players giving its password only
+                hostPlayer: room.passwordHash === undefined ? room.hostPlayer : undefined,
                 playerCount: room.players.length,
                 maxPlayer: room.maxPlayer,
                 isPrivate: room.passwordHash !== undefined,
@@ -110,32 +112,33 @@ export default class RoomService {
     }
 
     /**
-     * Before a player joins a private room: a public room ignores the password. A client gives MAX_PASSWORD_ATTEMPTS
-     * passwords in a row at most, each one counted before being checked, then the room refuses its passwords without
-     * checking them, for this client only, until ROOM_PASSWORD_LOCK_DELAY after the last one counted: a password is not
-     * guessed by trying them all, even all at once, and the other clients still join the room. Its right password
-     * forgets its attempts before
+     * Before a player joins a private room: a public room ignores the password, and so does a private one for a player
+     * of the room, its token proving it gave the password before (a page reloaded or joining again). A client gives
+     * MAX_PASSWORD_ATTEMPTS passwords in a row at most, each one counted before being checked, then the room refuses its
+     * passwords without checking them, for this client only, until ROOM_PASSWORD_LOCK_DELAY after the last one counted:
+     * a password is not guessed by trying them all, even all at once, and the other clients still join the room. The
+     * right password is not counted once checked
      * @param sourceIp the IP of the client, or its connection without it
      * @throws {BadRequestException} when the client gave too many passwords (TOO_MANY_PASSWORD_ATTEMPTS), or the
      * password is not the one of the private room (WRONG_PASSWORD)
      */
-    public async passwordGuard(room: Room, password: string | undefined, sourceIp: string): Promise<void> {
-        if (room.passwordHash === undefined) {
+    public async passwordGuard(room: Room, request: Pick<RoomJoinRequest, 'playerName' | 'password' | 'token'>, sourceIp: string): Promise<void> {
+        if (room.passwordHash === undefined || room.tokenHashes[request.playerName] === hashToken(request.token)) {
             return;
         }
 
         const now: number = RoomService.now();
         const source: string = hashSource(sourceIp);
 
-        if (!await this.passwordAttemptRepository.countAttempt(room.id, source, RoomService.MAX_PASSWORD_ATTEMPTS, now, now + ROOM_PASSWORD_LOCK_DELAY)) {
+        if (!await this.passwordAttemptRepository.countAttempt(room, source, RoomService.MAX_PASSWORD_ATTEMPTS, now, now + ROOM_PASSWORD_LOCK_DELAY)) {
             throw new BadRequestException(RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS);
         }
 
-        if (!isPassword(password) || !verifyPassword(password, room.passwordHash)) {
+        if (!isPassword(request.password) || !verifyPassword(request.password, room.passwordHash)) {
             throw new BadRequestException(RoomApiErrorMessage.WRONG_PASSWORD);
         }
 
-        await this.passwordAttemptRepository.forgetAttempts(room.id, source);
+        await this.passwordAttemptRepository.uncountAttempt(room, source);
     }
 
     public canEditRoomGuard(room: Room, connectionId: string): void {

@@ -9,7 +9,7 @@ import { OpenRoomsComponent } from './open-rooms.component';
 
 describe('OpenRoomsComponent', () => {
     const publicRoom: OpenRoom = { roomName: 'public', hostPlayer: 'alice', playerCount: 1, maxPlayer: 4, isPrivate: false, hostConnected: true };
-    const privateRoom: OpenRoom = { roomName: 'private', hostPlayer: 'bob', playerCount: 3, maxPlayer: 4, isPrivate: true, hostConnected: true };
+    const privateRoom: OpenRoom = { roomName: 'private', playerCount: 3, maxPlayer: 4, isPrivate: true, hostConnected: true };
     let fixture: ComponentFixture<OpenRoomsComponent>;
     let roomSocketApi: RoomSocketApi;
 
@@ -75,7 +75,7 @@ describe('OpenRoomsComponent', () => {
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledExactlyOnceWith(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game: RoomGame.CHESS, search: undefined });
         expect(rows()).toEqual([
-            'lock private Hôte : bob 3 / 4 Rejoindre',
+            'lock private 3 / 4 Rejoindre',
             'public public Hôte : alice 1 / 4 Rejoindre',
         ]);
         expect(Array.from(fixture.nativeElement.querySelectorAll('li mat-icon:not([aria-hidden="true"])'), (icon: Element) => icon.getAttribute('aria-label')))
@@ -95,7 +95,7 @@ describe('OpenRoomsComponent', () => {
         // Then
         expect(rows()).toEqual([
             'public public Hôte : alice Pleine 4 / 4 Rejoindre',
-            'lock private Hôte : bob Hôte en reconnexion 4 / 4 Rejoindre',
+            'lock private Hôte en reconnexion 4 / 4 Rejoindre',
         ]);
     });
 
@@ -133,7 +133,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
-        expect(rows()).toEqual(['lock private Hôte : bob 3 / 4 Rejoindre']);
+        expect(rows()).toEqual(['lock private 3 / 4 Rejoindre']);
     });
 
     test('should tell the rooms are loading, then that there is none', async () => {

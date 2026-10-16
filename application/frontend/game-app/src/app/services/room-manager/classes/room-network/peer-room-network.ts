@@ -146,7 +146,7 @@ export class PeerRoomNetwork extends RoomNetwork {
 
     /**
      * Joins the room through a new socket: the API forgets the former join, waiting for the host with the former socket.
-     * Its password accepted already, the player waits for the end of a lock of the passwords caused by another client
+     * Its token spares it the password of a private room, and so the lock of the passwords caused by another client
      * @returns the name of the host
      * @throws {Error} the error of the API refusing the join, or an AbortError once the network is cleared
      */
@@ -155,7 +155,6 @@ export class PeerRoomNetwork extends RoomNetwork {
 
         const response: RoomJoinResponse = await joinRoom(this.roomSocketApi, { roomName: this.roomName, playerName: this.localPlayer.name, ...this.access }, {
             onRetry: (error: string) => this.joinDelayedSubject.next(error),
-            passwordAccepted: true,
             signal: this.cleared.signal,
         });
         this.cleared.signal.throwIfAborted();
@@ -246,10 +245,7 @@ export class PeerRoomNetwork extends RoomNetwork {
 
         console.error('PeerRoom: the room could not be joined again', error);
 
-        // The passwords still locked: another client of its IP keeps guessing, the room is not lost
-        const passwordsLocked: boolean = error instanceof Error && error.message === RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS;
-
-        if (error instanceof RoomApiError && !passwordsLocked && !isTemporaryJoinError(error)) { // The room expired
+        if (error instanceof RoomApiError && !isTemporaryJoinError(error)) { // The room expired
             this.roomLostSubject.next();
             return RejoinResult.ROOM_LOST;
         }

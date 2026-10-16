@@ -75,9 +75,9 @@ module "sc_database_password_attempt" {
   source = "./modules/aws-dynamodb"
 
   name           = "password-attempt"
-  hash-key       = "roomName"
+  hash-key       = "roomKey"
   range-key      = "sourceHash"
-  attributes     = ["roomName", "sourceHash"]
+  attributes     = ["roomKey", "sourceHash"]
   read-capacity  = 1
   write-capacity = 5
   # Pushed back by each password given: deletes the counts over
