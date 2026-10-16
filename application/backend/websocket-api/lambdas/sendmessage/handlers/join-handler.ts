@@ -12,8 +12,11 @@ import {
 import MessageHandler from './message-handler';
 import Room from '@models/room';
 import RoomHelper from '@helpers/room-helper';
+import RoomPasswordService from '@services/room-password-service';
 
 export default class JoinHandler extends MessageHandler {
+    private readonly roomPasswordService: RoomPasswordService = new RoomPasswordService();
+
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.JOIN);
 
@@ -26,7 +29,7 @@ export default class JoinHandler extends MessageHandler {
         // Before the password, a join refused anyway not counted as an attempt: the list of the rooms tells it already
         this.roomService.hostConnectedGuard(room);
         // Before the names of the room: they are told to the players giving its password only
-        await this.roomService.passwordGuard(room, data, this.sourceIp);
+        await this.roomPasswordService.passwordGuard(room, data, this.sourceIp);
 
         if (RoomHelper.isInGame(room, data.playerName)) {
             throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_GAME);

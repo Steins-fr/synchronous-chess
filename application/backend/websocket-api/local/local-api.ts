@@ -12,6 +12,7 @@ import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
 import RoomRepository, { LISTED_ROOM_ATTRIBUTES } from '@repositories/room-repository';
+import { getConnectionsTableName, getPasswordAttemptsTableName, getRoomsTableName } from '@helpers/environment.helper';
 
 interface LambdaResponse {
     statusCode: number;
@@ -86,7 +87,7 @@ async function loadLambdas(): Promise<Lambdas> {
     const dynamo: DynamoDBClient = new DynamoDBClient();
     await Promise.all([
         dynamo.send(new CreateTableCommand({
-            TableName: process.env.TABLE_NAME_ROOMS,
+            TableName: getRoomsTableName(),
             KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
             AttributeDefinitions: ['id', 'game', 'createdAt', 'nameKey']
                 .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
@@ -101,14 +102,14 @@ async function loadLambdas(): Promise<Lambdas> {
             BillingMode: 'PAY_PER_REQUEST',
         })),
         dynamo.send(new CreateTableCommand({
-            TableName: process.env.TABLE_NAME_PASSWORD_ATTEMPTS,
+            TableName: getPasswordAttemptsTableName(),
             KeySchema: [{ AttributeName: 'roomKey', KeyType: 'HASH' }, { AttributeName: 'sourceHash', KeyType: 'RANGE' }],
             AttributeDefinitions: ['roomKey', 'sourceHash']
                 .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
             BillingMode: 'PAY_PER_REQUEST',
         })),
         dynamo.send(new CreateTableCommand({
-            TableName: process.env.TABLE_NAME_CONNECTIONS,
+            TableName: getConnectionsTableName(),
             KeySchema: [{ AttributeName: 'connectionId', KeyType: 'HASH' }],
             AttributeDefinitions: [{ AttributeName: 'connectionId', AttributeType: 'S' }],
             BillingMode: 'PAY_PER_REQUEST',

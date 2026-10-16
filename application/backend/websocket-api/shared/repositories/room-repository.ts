@@ -4,12 +4,16 @@ import BadRequestException from '@exceptions/bad-request-exception';
 import { RoomGame } from '@protocol/room-game.enum';
 import { getRoomsTableName } from '@helpers/environment.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
+import listedRoomAttributes from './listed-room-attributes.json';
 
 /** What the list of the rooms reads of a room: the attributes the indexes by game hold */
-export type ListedRoom = Pick<Room, 'id' | 'hostPlayer' | 'players' | 'maxPlayer' | 'passwordHash' | 'expiresAt'>;
+export type ListedRoom = Pick<Room, 'id' | 'hostPlayer' | 'players' | 'maxPlayer' | 'isPrivate' | 'expiresAt'>;
 
-/** The attributes of a room the indexes by game project, beside their keys (infrastructure/main.tf, local/local-api.ts) */
-export const LISTED_ROOM_ATTRIBUTES: readonly string[] = ['hostPlayer', 'players', 'maxPlayer', 'passwordHash', 'expiresAt'];
+/**
+ * The attributes of a room the indexes by game project, beside their keys: read from a JSON file by infrastructure/main.tf
+ * too, so that the indexes of AWS project the attributes the list reads (and local/local-api.ts)
+ */
+export const LISTED_ROOM_ATTRIBUTES: readonly string[] = listedRoomAttributes;
 
 /** A room not expired at `:now`: its host connected, or the room waiting for it */
 const NOT_EXPIRED: string = 'attribute_not_exists(expiresAt) OR expiresAt > :now';
@@ -21,7 +25,7 @@ export default class RoomRepository extends BaseRepository<Room> {
     public static readonly NAME_INDEX: string = 'game-name-index';
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, isPrivate, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {

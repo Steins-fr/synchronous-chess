@@ -30,7 +30,7 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, tokenHashes, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, isPrivate, tokenHashes, expiresAt',
         })).toHaveLength(1);
     });
 
@@ -45,7 +45,7 @@ describe('RoomRepository', () => {
             IndexName: 'game-index',
             KeyConditionExpression: 'game = :game',
             FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
-            ProjectionExpression: 'id, hostPlayer, players, maxPlayer, passwordHash, expiresAt',
+            ProjectionExpression: 'id, hostPlayer, players, maxPlayer, isPrivate, expiresAt',
             ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': 500 },
             ScanIndexForward: false,
             Limit: 30,

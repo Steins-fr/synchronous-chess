@@ -46,6 +46,7 @@ describe('CreateHandler', () => {
                 players: [{ playerName: 'host' }],
                 queue: [],
                 tokenHashes: { host: hashToken(HOST_TOKEN) },
+                isPrivate: false,
             },
         })).toHaveLength(1);
     });
@@ -59,6 +60,7 @@ describe('CreateHandler', () => {
         const room = command.input.Item as Room;
         expect(room.passwordHash).not.toContain('secret');
         expect(verifyPassword('secret', room.passwordHash as string)).toEqual(true);
+        expect(room.isPrivate).toEqual(true);
     });
 
     test.each([

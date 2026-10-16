@@ -43,6 +43,7 @@ export function aRoom(room: Partial<Room> = {}): Room {
         players: [{ playerName: 'host' }],
         queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }],
         tokenHashes: { host: hashToken(HOST_TOKEN), guest: hashToken(GUEST_TOKEN) },
+        isPrivate: room.passwordHash !== undefined,
         ...room,
     };
 }

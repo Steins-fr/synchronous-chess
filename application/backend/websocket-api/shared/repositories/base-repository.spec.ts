@@ -98,6 +98,29 @@ describe('BaseRepository', () => {
         expect(dynamo.commandCalls(QueryCommand, { ScanIndexForward: true })).toHaveLength(2);
     });
 
+    test('should read a few pages of an index at most, the items filtered out not costing more reads', async () => {
+        // Given: pages of items filtered out only
+        dynamo.on(QueryCommand).resolves({ Items: [], LastEvaluatedKey: { connectionId: 'connection' } });
+
+        // When / Then
+        expect(await repository.queryIndex<Connection>('room-index', condition, condition, 'connectionId', { maxItems: 5, lastFirst: false })).toEqual([]);
+        expect(dynamo.commandCalls(QueryCommand).map(({ args: [command] }: { args: [QueryCommand] }) => command.input.Limit)).toEqual([5, 10, 20]);
+    });
+
+    test('should query an index with the names its conditions use', async () => {
+        // When
+        await repository.queryIndex<Connection>(
+            'room-index',
+            { expression: '#room = :room', attributeValues: { ':room': 'room' }, attributeNames: { '#room': 'roomName' } },
+            { expression: '#id <> :id', attributeValues: { ':id': 'other' }, attributeNames: { '#id': 'connectionId' } },
+            'connectionId',
+            { maxItems: 1, lastFirst: false },
+        );
+
+        // Then
+        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeNames: { '#room': 'roomName', '#id': 'connectionId' } })).toHaveLength(1);
+    });
+
     test('should update an item and return its new attributes', async () => {
         // Given
         const updated: Connection = { ...connection, roomName: 'other' };

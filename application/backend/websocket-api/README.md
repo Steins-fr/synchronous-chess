@@ -52,7 +52,9 @@ joins its room again from the list, the join retried until the room has its plac
 
 DynamoDB has no search within a text: the search is a prefix of a sort key (`begins_with`), so that DynamoDB reads the
 matching rooms only. The rooms table has two secondary indexes by `game`, projecting what the list shows
-(`LISTED_ROOM_ATTRIBUTES` of `RoomRepository`; the indexes of `infrastructure/main.tf`, and of `local/local-api.ts`):
+(`LISTED_ROOM_ATTRIBUTES` of `RoomRepository`, from `listed-room-attributes.json`, read by the indexes of
+`infrastructure/main.tf` too, and of `local/local-api.ts`). A private room is listed by `isPrivate`, the indexes do not
+copy the hash of its password:
 
 | Index | Sort key | Read by |
 |---|---|---|
@@ -61,7 +63,8 @@ matching rooms only. The rooms table has two secondary indexes by `game`, projec
 
 A query reads the rooms it lists, page after page: 31 at most, the last one telling more exist. The expired rooms
 stay in the indexes until the TTL deletes them, within a few days, dropped by the filter of the query after being read:
-each page reads twice as many rooms as the one before, so that many expired rooms cost a few queries only. Each write of a room
+each page reads twice as many rooms as the one before, 3 pages at most (31, 62 and 124 rooms), so that many expired
+rooms cost a few queries only: past them, the list may miss rooms. Each write of a room
 updates its two indexes.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
@@ -78,7 +81,9 @@ password is checked, as the list of the rooms tells it: the joins retried while 
 attempts.
 
 A client gives 5 passwords in a row at most, then the room refuses its passwords for this client only (`Too many
-password attempts`), without checking them, until a minute after the last one: each password is counted before being
+password attempts`), without checking them, until a minute after the last one. A missing password, or one of a length
+the room refuses, is never the right one: refused without being counted, a room listed as public before it became private
+does not cost an attempt. Each other password is counted before being
 checked, by a conditional update, so that the passwords sent all at once are not all checked. Its right password is
 not counted once checked, the wrong ones before stay: a client guessing the password from the IP of a player keeps its
 count. A password is not guessed by trying them all, the wrong ones do not run scrypt without end, and the other players
@@ -88,7 +93,8 @@ the password.
 The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
 connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by `SOURCE_HASH_SECRET` (a
 `random_password` of Terraform), never the IP. The attempts are counted apart from the rooms, in the
-`password-attempt` table (`PasswordAttemptRepository`, by room and client: the room by its name and its creation date,
+`password-attempt` table (`PasswordAttemptRepository` of `RoomPasswordService`, read by `sendmessage` only: the
+other lambdas are not given its name, and a lambda missing the name of a table it reads fails at once; by room and client: the room by its name and its creation date,
 a room created again under the name of an expired one starts without the attempts of the former one): each room read by every request does
 not grow with the clients trying its password, and the TTL of the table (`expiresAt`) deletes the counts over. The
 clients behind a same IP share their count.

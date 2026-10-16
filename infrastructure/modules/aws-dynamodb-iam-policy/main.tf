@@ -34,10 +34,9 @@ data "aws_iam_policy_document" "dynamodb_allows" {
   statement {
     effect = "Allow"
 
-    # Counted by conditional updates, forgotten by a deletion: never read
+    # Counted and uncounted by conditional updates, deleted by the TTL: never read nor deleted
     actions = [
-      "dynamodb:UpdateItem",
-      "dynamodb:DeleteItem"
+      "dynamodb:UpdateItem"
     ]
 
     resources = [

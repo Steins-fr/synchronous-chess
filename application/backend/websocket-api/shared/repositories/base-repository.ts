@@ -33,6 +33,11 @@ export interface WriteCondition {
 }
 
 export default abstract class BaseRepository<Resource extends DocumentAttributes> {
+    /**
+     * The most pages a query of an index reads, `maxItems` then twice as many each: the items filtered out until the TTL
+     * deletes them, within a few days, do not cost more reads
+     */
+    public static readonly MAX_INDEX_PAGES: number = 3;
 
     private readonly client = new DynamoDBClient();
     private readonly ddb = DynamoDBDocumentClient.from(this.client);
@@ -115,7 +120,8 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     /**
      * The items of a secondary index matching the key condition and the filter, in the order of its sort key, read page
      * after page until enough match. The filter drops the items a page read: the first page reads `maxItems` items, each
-     * next one twice as many as the one before, so that many items filtered out cost a few queries only
+     * next one twice as many as the one before, MAX_INDEX_PAGES pages at most, so that many items filtered out cost a few
+     * queries only. Past them, fewer items than `maxItems` may be returned, although more match
      * @param projection the attributes read: the ones the index holds
      * @returns the attributes of the projection only
      */
@@ -129,6 +135,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
         const items: Item[] = [];
         let startKey: DocumentAttributes | undefined;
         let pageSize: number = maxItems;
+        let pages: number = 0;
 
         do {
             const command = new QueryCommand({
@@ -138,6 +145,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
                 FilterExpression: filter.expression,
                 ProjectionExpression: projection,
                 ExpressionAttributeValues: { ...keyCondition.attributeValues, ...filter.attributeValues },
+                ExpressionAttributeNames: BaseRepository.attributeNames(keyCondition, filter),
                 ScanIndexForward: !lastFirst,
                 Limit: pageSize,
                 ExclusiveStartKey: startKey,
@@ -147,9 +155,16 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             items.push(...(page.Items ?? []) as Item[]);
             startKey = page.LastEvaluatedKey;
             pageSize *= 2;
-        } while (startKey && items.length < maxItems);
+            pages++;
+        } while (startKey && items.length < maxItems && pages < BaseRepository.MAX_INDEX_PAGES);
 
         return items.slice(0, maxItems);
+    }
+
+    /** The names the conditions use, undefined without any: DynamoDB refuses an empty map */
+    private static attributeNames(...conditions: WriteCondition[]): Record<string, string> | undefined {
+        const names: Record<string, string> = Object.assign({}, ...conditions.map((condition: WriteCondition): Record<string, string> | undefined => condition.attributeNames));
+        return Object.keys(names).length > 0 ? names : undefined;
     }
 
     /** @param attributeNames the names the expression uses: the attributes named by the players for instance */

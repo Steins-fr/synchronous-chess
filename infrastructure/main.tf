@@ -56,14 +56,14 @@ module "sc_database_room" {
   attributes = ["id", "game", "createdAt", "nameKey"]
   # Set while the host is disconnected: deletes the rooms it never reconnected
   ttl-attribute = "expiresAt"
-  # The rooms of a game, with what their list shows (LISTED_ROOM_ATTRIBUTES of RoomRepository): the most recent first,
-  # then searched by the start of their name, in lower case
+  # The rooms of a game, with what their list shows (LISTED_ROOM_ATTRIBUTES of RoomRepository, read from its JSON file):
+  # the most recent first, then searched by the start of their name, in lower case
   global-secondary-indexes = [
     for index in [["game-index", "createdAt"], ["game-name-index", "nameKey"]] : {
       name               = index[0]
       hash_key           = "game"
       range_key          = index[1]
-      non_key_attributes = ["hostPlayer", "players", "maxPlayer", "passwordHash", "expiresAt"]
+      non_key_attributes = jsondecode(file("${path.module}/../application/backend/websocket-api/shared/repositories/listed-room-attributes.json"))
     }
   ]
 

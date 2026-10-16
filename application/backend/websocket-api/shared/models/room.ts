@@ -13,6 +13,8 @@ export default interface Room {
     nameKey: string;
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash?: string;
+    /** Whether the room has a password: what the list of the rooms reads, never the hash */
+    isPrivate: boolean;
     players: Player[];
     queue: Player[];
     /**
