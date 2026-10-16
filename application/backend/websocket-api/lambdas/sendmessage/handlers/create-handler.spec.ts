@@ -76,6 +76,7 @@ describe('CreateHandler', () => {
         ['token as a string', { ...request, token: 42 as unknown as string }],
         ['known game', { ...request, game: 'go' as RoomGame }],
         ['password not empty', { ...request, password: '' }],
+        ['password long enough', { ...request, password: 'p'.repeat(5) }],
         ['password of a reasonable length', { ...request, password: 'p'.repeat(129) }],
     ])('should refuse a request without %s', async (_field: string, data: RoomCreateRequest) => {
         // When / Then

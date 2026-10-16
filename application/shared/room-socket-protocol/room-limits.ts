@@ -4,6 +4,12 @@ export const ROOM_NAME_MAX_LENGTH: number = 32;
 /** The longest name of a player: the API refuses a longer one */
 export const PLAYER_NAME_MAX_LENGTH: number = 32;
 
+/**
+ * The shortest password of a private room: the API refuses a shorter one. The passwords are limited by client, a client
+ * trying them from many IPs does not guess a long one
+ */
+export const ROOM_PASSWORD_MIN_LENGTH: number = 6;
+
 /** The longest password of a private room: the API refuses a longer one */
 export const ROOM_PASSWORD_MAX_LENGTH: number = 128;
 

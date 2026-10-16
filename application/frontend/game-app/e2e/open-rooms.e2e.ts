@@ -23,7 +23,7 @@ test.describe('Open rooms', () => {
         await alice.expectParticipants(['alice']);
 
         // When
-        const bob: RoomParticipant = await room.join('bob', 'wrong');
+        const bob: RoomParticipant = await room.join('bob', 'wrong-password');
 
         // Then
         await bob.expectNotification('Le mot de passe de la salle est incorrect.');

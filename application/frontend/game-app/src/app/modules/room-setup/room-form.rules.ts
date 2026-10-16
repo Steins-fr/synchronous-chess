@@ -1,6 +1,6 @@
-import { maxLength, PathKind, SchemaPath, SchemaPathRules } from '@angular/forms/signals';
+import { maxLength, minLength, PathKind, SchemaPath, SchemaPathRules } from '@angular/forms/signals';
 import { requiredText } from '@app/modules/form/rules/required-text.rule';
-import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH, ROOM_PASSWORD_MAX_LENGTH } from '@protocol/room-limits';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH, ROOM_PASSWORD_MAX_LENGTH, ROOM_PASSWORD_MIN_LENGTH } from '@protocol/room-limits';
 
 /** The fields of the rooms, checked as the API checks them: the dialogs refuse what the API would */
 type TextPath<TPathKind extends PathKind> = SchemaPath<string, SchemaPathRules.Supported, TPathKind>;
@@ -17,7 +17,8 @@ export function playerNameRules<TPathKind extends PathKind = PathKind.Root>(path
     maxLength(path, PLAYER_NAME_MAX_LENGTH, { message: `Le nom du joueur fait ${ PLAYER_NAME_MAX_LENGTH } caractères au plus` });
 }
 
-/** The password of a room, of the length the API accepts: required only where a rule says so */
+/** The password of a room, of the length the API accepts: required only where a rule says so, empty when not */
 export function roomPasswordRules<TPathKind extends PathKind = PathKind.Root>(path: TextPath<TPathKind>): void {
+    minLength(path, ROOM_PASSWORD_MIN_LENGTH, { message: `Le mot de passe fait ${ ROOM_PASSWORD_MIN_LENGTH } caractères au moins` });
     maxLength(path, ROOM_PASSWORD_MAX_LENGTH, { message: `Le mot de passe fait ${ ROOM_PASSWORD_MAX_LENGTH } caractères au plus` });
 }

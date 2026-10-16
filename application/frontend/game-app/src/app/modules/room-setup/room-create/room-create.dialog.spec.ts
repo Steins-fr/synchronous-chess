@@ -74,6 +74,19 @@ describe('RoomCreateDialog', () => {
         expect(fixture.nativeElement.querySelectorAll('.mat-mdc-form-field-required-marker')).toHaveLength(2);
     });
 
+    test('should refuse a password shorter than the API accepts', async () => {
+        // Given
+        await createDialog({ roomName: 'room', playerName: 'alice' });
+        await typeIn('Mot de passe (salle privée)', 'p'.repeat(5));
+
+        // When
+        await create();
+
+        // Then
+        expect(rooms).toEqual([]);
+        expect(errors()).toEqual(['Le mot de passe fait 6 caractères au moins']);
+    });
+
     test('should refuse a password longer than the API accepts', async () => {
         // Given
         await createDialog({ roomName: 'room', playerName: 'alice' });

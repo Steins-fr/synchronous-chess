@@ -64,7 +64,7 @@ stay in the indexes until the TTL deletes them, within a few days, dropped by th
 each page reads twice as many rooms as the one before, so that many expired rooms cost a few queries only. Each write of a room
 updates its two indexes.
 
-The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 128, the
+The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
 searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones, the list
 fits a message.
 

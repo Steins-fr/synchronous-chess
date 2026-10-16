@@ -293,10 +293,10 @@ describe('local websocket API', () => {
         test('should let a player the host removed join its private room again without the password, by its token', async () => {
             // Given
             const host = await connected();
-            expect(await reply(host, 'create', { roomName: 'left', maxPlayer: 2, game: 'chess', password: 'pass', playerName: 'alice', token: 'alice-token' }))
+            expect(await reply(host, 'create', { roomName: 'left', maxPlayer: 2, game: 'chess', password: 'secret', playerName: 'alice', token: 'alice-token' }))
                 .toMatchObject({ type: 'created' });
             const bob = await connected();
-            expect(await reply(bob, 'join', { roomName: 'left', game: 'chess', playerName: 'bob', password: 'pass', token: 'bob-token' }))
+            expect(await reply(bob, 'join', { roomName: 'left', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' }))
                 .toMatchObject({ type: 'joiningRoom' });
             expect(await reply(host, 'playerAdd', { roomName: 'left', playerName: 'bob' })).toMatchObject({ type: 'added' });
             await disconnect(bob);
@@ -331,7 +331,7 @@ describe('local websocket API', () => {
         test('should list the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
             // Given
             const host = await connected();
-            expect(await reply(host, 'create', { roomName: 'chat-listed', maxPlayer: 6, game: 'chat', password: 'pass', playerName: 'alice', token: 'alice-token' }))
+            expect(await reply(host, 'create', { roomName: 'chat-listed', maxPlayer: 6, game: 'chat', password: 'secret', playerName: 'alice', token: 'alice-token' }))
                 .toMatchObject({ type: 'created' });
             const waiting = await connected();
             expect(await reply(waiting, 'create', { roomName: 'chat-waiting', maxPlayer: 6, game: 'chat', playerName: 'carol', token: 'carol-token' }))
@@ -358,17 +358,17 @@ describe('local websocket API', () => {
                 },
             });
             expect(searched).toMatchObject({ data: { rooms: [{ roomName: 'chat-listed' }], hasMore: false } });
-            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chess', playerName: 'bob', password: 'pass', token: 'bob-token' }))
+            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' }))
                 .toMatchObject({ type: 'error', data: { message: 'Room of another game' } });
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'wrong', token: 'bob-token' }))
                 .toMatchObject({ type: 'error', data: { message: 'Wrong password' } });
-            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'pass', token: 'bob-token' }))
+            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'secret', token: 'bob-token' }))
                 .toMatchObject({ type: 'joiningRoom', data: { playerName: 'alice' } });
         });
 
         test('should refuse the passwords of a client for a while once it gave too many wrong ones, by its IP', async () => {
             // Given
-            expect(await reply(await connected(), 'create', { roomName: 'locked', maxPlayer: 2, game: 'chess', password: 'pass', playerName: 'alice', token: 'alice-token' }))
+            expect(await reply(await connected(), 'create', { roomName: 'locked', maxPlayer: 2, game: 'chess', password: 'secret', playerName: 'alice', token: 'alice-token' }))
                 .toMatchObject({ type: 'created' });
             const guesser = await connected();
             for (let attempt = 0; attempt < 5; attempt++) {
@@ -377,7 +377,7 @@ describe('local websocket API', () => {
             }
 
             // When
-            const refused = await reply(guesser, 'join', { roomName: 'locked', game: 'chess', playerName: 'bob', password: 'pass', token: 'bob-token' });
+            const refused = await reply(guesser, 'join', { roomName: 'locked', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' });
 
             // Then
             expect(refused).toMatchObject({ type: 'error', data: { message: 'Too many password attempts' } });
@@ -385,7 +385,7 @@ describe('local websocket API', () => {
 
         test('should check 5 passwords at most of a client sending them all at once', async () => {
             // Given
-            expect(await reply(await connected(), 'create', { roomName: 'rushed', maxPlayer: 2, game: 'chess', password: 'pass', playerName: 'alice', token: 'alice-token' }))
+            expect(await reply(await connected(), 'create', { roomName: 'rushed', maxPlayer: 2, game: 'chess', password: 'secret', playerName: 'alice', token: 'alice-token' }))
                 .toMatchObject({ type: 'created' });
             const guessers = await Promise.all(Array.from({ length: 8 }, () => connected()));
 

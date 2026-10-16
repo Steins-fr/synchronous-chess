@@ -1,13 +1,13 @@
 import { isText } from '@helpers/text.helper';
-import { ROOM_PASSWORD_MAX_LENGTH } from '@protocol/room-limits';
+import { ROOM_PASSWORD_MAX_LENGTH, ROOM_PASSWORD_MIN_LENGTH } from '@protocol/room-limits';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 const SALT_BYTES: number = 16;
 const KEY_BYTES: number = 32;
 
-/** The password of a private room, from the network: a string of a reasonable length */
+/** The password of a private room, from the network: a string long enough not to be guessed, of a reasonable length */
 export function isPassword(value: unknown): value is string {
-    return isText(value, ROOM_PASSWORD_MAX_LENGTH);
+    return isText(value, ROOM_PASSWORD_MAX_LENGTH, ROOM_PASSWORD_MIN_LENGTH);
 }
 
 /**
