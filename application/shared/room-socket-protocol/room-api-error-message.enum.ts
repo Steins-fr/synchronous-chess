@@ -8,4 +8,10 @@ export enum RoomApiErrorMessage {
     HOST_DISCONNECTED = 'Host disconnected',
     /** A player can not take over the room while its host is connected: until its former connection closes */
     HOST_CONNECTED = 'Host connected',
+    /** The password is not the one of the private room */
+    WRONG_PASSWORD = 'Wrong password',
+    /** The room joined is the one of another game than the page's */
+    OTHER_GAME = 'Room of another game',
+    /** Too many wrong passwords in a row: the private room refuses the passwords for a while */
+    TOO_MANY_PASSWORD_ATTEMPTS = 'Too many password attempts',
 }

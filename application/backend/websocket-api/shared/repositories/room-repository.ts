@@ -1,13 +1,31 @@
 import Player from '@models/player';
 import Room from '@models/room';
 import BadRequestException from '@exceptions/bad-request-exception';
+import { RoomGame } from '@protocol/room-game.enum';
 import { getRoomsTableName } from '@helpers/environment.helper';
 import BaseRepository, { DocumentAttributes } from './base-repository';
+import listedRoomAttributes from './listed-room-attributes.json';
+
+/** What the list of the rooms reads of a room: the attributes the indexes by game hold */
+export type ListedRoom = Pick<Room, 'id' | 'hostPlayer' | 'players' | 'maxPlayer' | 'isPrivate' | 'expiresAt'>;
+
+/**
+ * The attributes of a room the indexes by game project, beside their keys: read from a JSON file by infrastructure/main.tf
+ * too, so that the indexes of AWS project the attributes the list reads (and local/local-api.ts)
+ */
+export const LISTED_ROOM_ATTRIBUTES: readonly string[] = listedRoomAttributes;
+
+/** A room not expired at `:now`: its host connected, or the room waiting for it */
+const NOT_EXPIRED: string = 'attribute_not_exists(expiresAt) OR expiresAt > :now';
 
 export default class RoomRepository extends BaseRepository<Room> {
+    /** The index of the rooms by game, sorted by creation */
+    public static readonly GAME_INDEX: string = 'game-index';
+    /** The index of the rooms by game, sorted by the search key of their name: searched by its start */
+    public static readonly NAME_INDEX: string = 'game-name-index';
 
     protected readonly tableName: string = getRoomsTableName();
-    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, tokenHashes, expiresAt';
+    protected readonly defaultProjection: string = 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, isPrivate, tokenHashes, expiresAt';
 
     protected override getKey(item: Room): DocumentAttributes {
         return {
@@ -17,6 +35,41 @@ export default class RoomRepository extends BaseRepository<Room> {
 
     public async getByName(roomName: string): Promise<Room | null> {
         return await this.find({ id: roomName });
+    }
+
+    /**
+     * The most recent rooms of the game which did not expire at `now`, the last created first, through the index by
+     * game and creation: their host connected, or the room waiting for it
+     * @param maxRooms the most rooms read: the cost of the query
+     */
+    public async findRecentRooms(game: RoomGame, now: number, maxRooms: number): Promise<ListedRoom[]> {
+        return this.queryIndex<ListedRoom>(
+            RoomRepository.GAME_INDEX,
+            { expression: 'game = :game', attributeValues: { ':game': game } },
+            { expression: NOT_EXPIRED, attributeValues: { ':now': now } },
+            RoomRepository.listedRoomProjection(),
+            { maxItems: maxRooms, lastFirst: true },
+        );
+    }
+
+    /**
+     * The rooms of the game not expired at `now` whose name starts with the search, whatever the case, through the index
+     * by game and name: DynamoDB reads the matching rooms only, by name, the name equal to the search first
+     * @param search the search key (search.helper) of the start of the name
+     * @param maxRooms the most rooms read: the cost of the query
+     */
+    public async findRoomsStartingWith(game: RoomGame, search: string, now: number, maxRooms: number): Promise<ListedRoom[]> {
+        return this.queryIndex<ListedRoom>(
+            RoomRepository.NAME_INDEX,
+            { expression: 'game = :game AND begins_with(nameKey, :search)', attributeValues: { ':game': game, ':search': search } },
+            { expression: NOT_EXPIRED, attributeValues: { ':now': now } },
+            RoomRepository.listedRoomProjection(),
+            { maxItems: maxRooms, lastFirst: false },
+        );
+    }
+
+    private static listedRoomProjection(): string {
+        return ['id', ...LISTED_ROOM_ATTRIBUTES].join(', ');
     }
 
     /**
@@ -56,13 +109,14 @@ export default class RoomRepository extends BaseRepository<Room> {
         });
     }
 
+    /** The hash of its token is kept: the page of the player joins the room again without its password */
     public async removePlayerFromRoom(playerName: string, room: Room): Promise<void> {
         const index: number = room.players.findIndex((player: Player): boolean => player.playerName === playerName);
         if (index === -1) {
             throw new BadRequestException('Player not in the room');
         }
 
-        await this.updateItem(room, `REMOVE players[${ index }], tokenHashes.#playerName`, undefined, { '#playerName': playerName });
+        await this.updateItem(room, `REMOVE players[${ index }]`);
     }
 
     /** Queues the player, keeping the hash of its token */

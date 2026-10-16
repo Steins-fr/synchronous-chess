@@ -23,7 +23,7 @@ export enum RejoinResult {
     HOST_LEFT = 'hostLeft',
     /** Not joined, to try again later: the API failed, or this participant connects already */
     NOT_JOINED = 'notJoined',
-    /** The API refused the join for good, the room expired: nothing to join anymore */
+    /** Nothing to join anymore: the API refused the join for good, the room expired, or the host its full room */
     ROOM_LOST = 'roomLost',
 }
 
@@ -64,8 +64,14 @@ export abstract class RoomNetwork {
     protected readonly joiningAgainSubject = new Subject<void>();
     /** The connection to the host failed: the player joins the room again */
     public readonly joiningAgain$ = this.joiningAgainSubject.asObservable();
+    protected readonly joinDelayedSubject = new Subject<string>();
+    /** The API refuses the player joining the room again for a while, with this error: the player asks again later */
+    public readonly joinDelayed$ = this.joinDelayedSubject.asObservable();
     protected readonly joinFailedSubject = new Subject<JoinFailure>();
-    /** The player gave up joining the room, alone in it */
+    /**
+     * The player gave up joining the room, never connected to it, or its place given to another player meanwhile: a
+     * participant joining it again stays in it otherwise
+     */
     public readonly joinFailed$ = this.joinFailedSubject.asObservable();
 
     protected constructor(
@@ -117,10 +123,20 @@ export abstract class RoomNetwork {
             maxPlayer,
             token,
             players: () => this.players,
-            occupancy: (playerName: string) => this.players.size + this.getNegotiatorSize() - Number(this._negotiators().has(playerName)),
+            occupancy: (playerName: string) => this.occupancy(playerName),
             addNegotiator: (negotiator: Negotiator) => this.addNegotiator(negotiator),
             transmitMessage: (message: NetworkMessage) => this.transmitMessage(message),
         };
+    }
+
+    /**
+     * The places the room counts for a player joining it: the participants and the players negotiating, each name once,
+     * the player itself left out. A participant joining again replaces its former connection, not counted yet as gone
+     */
+    private occupancy(playerName: string): number {
+        const names: Set<string> = new Set<string>([...this.players.keys(), ...this._negotiators().keys()]);
+        names.delete(playerName);
+        return names.size;
     }
 
     protected transmitMessage(message: NetworkMessage): void {
@@ -301,6 +317,7 @@ export abstract class RoomNetwork {
         this.queueRemovedSubject.complete();
         this.roomLostSubject.complete();
         this.joiningAgainSubject.complete();
+        this.joinDelayedSubject.complete();
         this.joinFailedSubject.complete();
     }
 }

@@ -15,6 +15,7 @@ import { TestHelper } from '@testing/test.helper';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { RoomGame } from '@protocol/room-game.enum';
 
 /** The network of the player creating the room, which hosts it */
 class TestHostRoomNetwork extends PeerRoomNetwork {
@@ -39,7 +40,7 @@ describe('RoomHosting', () => {
     let network: TestHostRoomNetwork;
 
     function createNetwork(maxPlayer: number = 2): TestHostRoomNetwork {
-        network = new TestHostRoomNetwork(roomSocketApi, 'room', 'host', 'host', maxPlayer, 'token');
+        network = new TestHostRoomNetwork(roomSocketApi, 'room', 'host', 'host', maxPlayer, { game: RoomGame.CHESS, token: 'token' });
         return network;
     }
 
@@ -106,6 +107,22 @@ describe('RoomHosting', () => {
         expect(Negotiator.prototype.initiate).toHaveBeenCalledTimes(1);
     });
 
+    test('should stop negotiating with a player cancelling its join while the negotiation starts', async () => {
+        // Given an offer being created
+        createNetwork();
+        let offerCreated: () => void = () => undefined;
+        vi.mocked(Negotiator.prototype.initiate).mockReturnValue(new Promise<void>((resolve) => offerCreated = resolve));
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_CANCELLED, data: { playerName: 'remote' } });
+        offerCreated();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then: no place kept for it
+        expect(network.negotiators().size).toEqual(0);
+    });
+
     test('should refuse a joining player when the room is full', async () => {
         // Given
         createNetwork(1);
@@ -138,6 +155,21 @@ describe('RoomHosting', () => {
         await vi.waitFor(() => expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.FULL, { to: 'other', roomName: 'room' }));
         expect(roomSocketApi.send).not.toHaveBeenCalledWith(RoomApiRequestTypeEnum.FULL, { to: 'remote', roomName: 'room' });
         expect([...network.negotiators().keys()]).toEqual(['remote']);
+    });
+
+    test('should let a participant of the full room join again, its former connection not gone yet', async () => {
+        // Given
+        createNetwork(2);
+        addRemotePlayer('remote');
+
+        // When
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+        notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'other' } });
+
+        // Then
+        await vi.waitFor(() => expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.FULL, { to: 'other', roomName: 'room' }));
+        expect(roomSocketApi.send).not.toHaveBeenCalledWith(RoomApiRequestTypeEnum.FULL, { to: 'remote', roomName: 'room' });
+        expect(network.negotiators().get('remote')).toBeInstanceOf(WebsocketNegotiator);
     });
 
     describe('room socket', () => {

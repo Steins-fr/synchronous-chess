@@ -2,15 +2,17 @@
  * The websocket API run locally, without AWS: API Gateway emulated around the lambdas, DynamoDB by dynalite, in
  * memory. Nothing is kept from one process to the next.
  */
-import { CreateTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { AttributeDefinition, CreateTableCommand, DynamoDBClient, GlobalSecondaryIndex } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import dynalite from 'dynalite';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
+import RoomRepository, { LISTED_ROOM_ATTRIBUTES } from '@repositories/room-repository';
+import { getConnectionsTableName, getPasswordAttemptsTableName, getRoomsTableName } from '@helpers/environment.helper';
 
 interface LambdaResponse {
     statusCode: number;
@@ -76,19 +78,43 @@ async function loadLambdas(): Promise<Lambdas> {
         AWS_ENDPOINT_URL_DYNAMODB: `http://${HOST}:${dynamoPort}`,
         TABLE_NAME_CONNECTIONS: 'connection',
         TABLE_NAME_ROOMS: 'room',
+        TABLE_NAME_PASSWORD_ATTEMPTS: 'password-attempt',
+        // The hashes of the IPs are kept by the process only
+        SOURCE_HASH_SECRET: randomBytes(32).toString('hex'),
     });
 
     // The tables of infrastructure/main.tf
     const dynamo: DynamoDBClient = new DynamoDBClient();
     await Promise.all([
-        [process.env.TABLE_NAME_ROOMS, 'id'],
-        [process.env.TABLE_NAME_CONNECTIONS, 'connectionId'],
-    ].map(([tableName, key]: string[]): Promise<unknown> => dynamo.send(new CreateTableCommand({
-        TableName: tableName,
-        KeySchema: [{ AttributeName: key, KeyType: 'HASH' }],
-        AttributeDefinitions: [{ AttributeName: key, AttributeType: 'S' }],
-        BillingMode: 'PAY_PER_REQUEST',
-    }))));
+        dynamo.send(new CreateTableCommand({
+            TableName: getRoomsTableName(),
+            KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
+            AttributeDefinitions: ['id', 'game', 'createdAt', 'nameKey']
+                .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
+            GlobalSecondaryIndexes: [
+                [RoomRepository.GAME_INDEX, 'createdAt'],
+                [RoomRepository.NAME_INDEX, 'nameKey'],
+            ].map(([indexName, sortKey]: string[]): GlobalSecondaryIndex => ({
+                IndexName: indexName,
+                KeySchema: [{ AttributeName: 'game', KeyType: 'HASH' }, { AttributeName: sortKey, KeyType: 'RANGE' }],
+                Projection: { ProjectionType: 'INCLUDE', NonKeyAttributes: [...LISTED_ROOM_ATTRIBUTES] },
+            })),
+            BillingMode: 'PAY_PER_REQUEST',
+        })),
+        dynamo.send(new CreateTableCommand({
+            TableName: getPasswordAttemptsTableName(),
+            KeySchema: [{ AttributeName: 'roomKey', KeyType: 'HASH' }, { AttributeName: 'sourceHash', KeyType: 'RANGE' }],
+            AttributeDefinitions: ['roomKey', 'sourceHash']
+                .map((name: string): AttributeDefinition => ({ AttributeName: name, AttributeType: 'S' })),
+            BillingMode: 'PAY_PER_REQUEST',
+        })),
+        dynamo.send(new CreateTableCommand({
+            TableName: getConnectionsTableName(),
+            KeySchema: [{ AttributeName: 'connectionId', KeyType: 'HASH' }],
+            AttributeDefinitions: [{ AttributeName: 'connectionId', AttributeType: 'S' }],
+            BillingMode: 'PAY_PER_REQUEST',
+        })),
+    ]);
 
     const { handler: onConnect }: { handler: Lambda } = await import('../lambdas/onconnect/app');
     const { handler: onDisconnect }: { handler: Lambda } = await import('../lambdas/ondisconnect/app');
@@ -104,8 +130,8 @@ let lambdas: Promise<Lambdas> | undefined;
  * lambdas reach the management API through MANAGEMENT_API_ENDPOINT
  * @returns the status code of the lambda, 500 when it throws
  */
-async function invoke(routeKey: string, lambda: Lambda, connectionId: string, body: string | null = null): Promise<number> {
-    const event = { body, requestContext: { connectionId, routeKey } } as unknown as APIGatewayProxyEvent;
+async function invoke(routeKey: string, lambda: Lambda, connectionId: string, body: string | null = null, sourceIp?: string): Promise<number> {
+    const event = { body, requestContext: { connectionId, routeKey, identity: { sourceIp } } } as unknown as APIGatewayProxyEvent;
 
     try {
         const response: LambdaResponse = await lambda(event);
@@ -234,7 +260,8 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
      * An opened connection: its messages run the sendmessage route, its closing the $disconnect route. Closed like API
      * Gateway once idle or too old
      */
-    function connect(connectionId: string, socket: WebSocket): void {
+    /** @param sourceIp the IP of the client, given to the lambdas like API Gateway does */
+    function connect(connectionId: string, socket: WebSocket, sourceIp: string | undefined): void {
         const idleTimer: NodeJS.Timeout = setTimeout((): void => socket.close(GOING_AWAY, 'Going away'), idleTimeoutMs);
         const lifetimeTimer: NodeJS.Timeout = setTimeout((): void => socket.close(GOING_AWAY, 'Going away'), maxConnectionMs);
         connections.set(connectionId, { socket, idleTimer });
@@ -249,7 +276,7 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
             const route: unknown = routeOf(body);
 
             if (route === RoomApiRoute.SEND_MESSAGE) {
-                void invoke(RoomApiRoute.SEND_MESSAGE, sendMessage, connectionId, body);
+                void invoke(RoomApiRoute.SEND_MESSAGE, sendMessage, connectionId, body, sourceIp);
             } else if (route !== RoomApiRoute.PING) {
                 // What API Gateway answers to a message matching no route, without $default route
                 console.warn(`No route for the message of ${connectionId}: ${body}`);
@@ -319,7 +346,7 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
 
         webSocketServer.handleUpgrade(request, socket, head, (webSocket: WebSocket): void => {
             socket.off('close', onClose);
-            connect(pending.connectionId as string, webSocket);
+            connect(pending.connectionId as string, webSocket, request.socket.remoteAddress);
         });
     });
 

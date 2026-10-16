@@ -1,3 +1,4 @@
+import { wait } from '@app/helpers/wait.helper';
 import RoomJoinRequest from '@protocol/requests/room-join-request';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
@@ -22,13 +23,21 @@ export function isTemporaryJoinError(error: unknown): error is Error {
     return error instanceof Error && RETRIED_ERRORS.has(error.message);
 }
 
+export interface JoinOptions {
+    /** Called with the error refusing the first attempt, before asking again */
+    onRetry?: (error: string) => void;
+    /** Stops asking once aborted, the player left the room: rejects with an AbortError */
+    signal?: AbortSignal;
+}
+
 /**
  * Joins the room, asking again every 2 seconds for 20 seconds at most while the API refuses it for a while
- * @param onRetry called with the error refusing the first attempt, before asking again
- * @throws {Error} the error refusing the last attempt, or another one
+ * @throws {Error} the error refusing the last attempt, or another one, or an AbortError once the signal aborted
  */
-export async function joinRoom(roomSocketApi: RoomSocketApi, request: RoomJoinRequest, onRetry: (error: string) => void = (): void => undefined): Promise<RoomJoinResponse> {
+export async function joinRoom(roomSocketApi: RoomSocketApi, request: RoomJoinRequest, { onRetry, signal }: JoinOptions = {}): Promise<RoomJoinResponse> {
     for (let retry = 0; ; retry++) {
+        signal?.throwIfAborted();
+
         try {
             // eslint-disable-next-line no-await-in-loop -- retries, one attempt after the other
             return await roomSocketApi.send(RoomApiRequestTypeEnum.JOIN, request);
@@ -38,11 +47,11 @@ export async function joinRoom(roomSocketApi: RoomSocketApi, request: RoomJoinRe
             }
 
             if (retry === 0) {
-                onRetry(e.message);
+                onRetry?.(e.message);
             }
 
             // eslint-disable-next-line no-await-in-loop -- the delay between two attempts
-            await new Promise<void>((resolve) => setTimeout(resolve, JOIN_RETRY_DELAY));
+            await wait(JOIN_RETRY_DELAY, signal);
         }
     }
 }

@@ -1,4 +1,4 @@
-import { test as base, Browser } from '@playwright/test';
+import { test as base, Browser, TestDetails } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 
 /** A chat room of its own for a test, its players closed after it */
@@ -33,15 +33,23 @@ export class TestRoom {
     }
 
     /** Creates the room under the name of the test, whether another player created it already or not */
-    public async create(playerName: string): Promise<RoomParticipant> {
+    public async create(playerName: string, password?: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.create(this.name);
+        await player.create(this.name, password);
         return player;
     }
 
-    public async join(playerName: string): Promise<RoomParticipant> {
+    /** Joins the room from the list of the open rooms, with the password of a private one */
+    public async join(playerName: string, password?: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.join(this.name);
+        await player.join(this.name, password);
+        return player;
+    }
+
+    /** A player opening the page, the list of the open rooms */
+    public async visit(playerName: string): Promise<RoomParticipant> {
+        const player: RoomParticipant = await this.open(playerName);
+        await player.visit();
         return player;
     }
 
@@ -49,6 +57,12 @@ export class TestRoom {
         await Promise.all(this.participants.map((participant: RoomParticipant) => participant.close()));
     }
 }
+
+/**
+ * A scenario waiting for a delay of the room, which lasts it 20 seconds or more: the joins the API refuses for 20
+ * seconds, the 15 seconds a negotiation takes to time out, or the room handed over. `npm run e2e:fast` runs the others
+ */
+export const SLOW: TestDetails = { tag: '@slow' };
 
 export const test = base.extend<{ room: TestRoom }>({
     room: async ({ browser }, use) => {

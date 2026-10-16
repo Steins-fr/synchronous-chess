@@ -1,6 +1,6 @@
 <mat-form-field appearance="outline" class="w-full">
     <mat-label>{{ label() }}</mat-label>
-    <input [formField]="field()" autocomplete="off" matInput type="text" />
+    <input [formField]="field()" [type]="type()" autocomplete="off" matInput />
     <!-- Shown by Material once the field is touched and invalid: the message given by the rule of the schema -->
     @if (field()().errors()[0]; as error) {
     <mat-error>{{ error.message }}</mat-error>

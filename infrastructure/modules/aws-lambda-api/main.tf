@@ -18,7 +18,8 @@ resource "aws_lambda_function" "lambda" {
 
   source_code_hash = data.archive_file.archive.output_base64sha256
 
-  runtime = "nodejs22.x"
+  runtime     = "nodejs22.x"
+  memory_size = var.memory_size
 
   environment {
     variables = merge(var.environment, { FUNCTION_NAME = local.lambda_name })

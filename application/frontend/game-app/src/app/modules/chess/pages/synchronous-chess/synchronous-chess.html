@@ -1,4 +1,4 @@
-<app-room-layout [maxPlayer]="maxPlayer" [dimContent]="false">
+<app-room-layout [game]="game" [dimContent]="false">
     <app-chess-presentation roomPresentation />
     @if (room(); as myRoom) {
     <app-debug-webrtc [room]="myRoom"/>

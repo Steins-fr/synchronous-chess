@@ -9,6 +9,7 @@ await esbuild.build({
     bundle: true,
     write: true,
     outdir: "dist",
+    platform: "node",
     target: ["node22"],
     legalComments: "none",
     format: "esm",

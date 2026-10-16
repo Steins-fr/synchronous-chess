@@ -43,6 +43,7 @@ npm test             # Vitest in watch mode
 npm run test:ci      # single run with coverage (what CI runs)
 npm run lint         # ESLint (Angular, template, RxJS and stylistic rules)
 npm run e2e          # Playwright end-to-end tests of the rooms (see Browser testing), local only
+npm run e2e:fast     # the e2e scenarios but the slow ones (1.5 minute), e2e:slow for these only (4 minutes)
 ```
 
 Run some specs: `npx ng test --watch=false --include='src/app/path/to/**/*.spec.ts'`. A plain
@@ -115,9 +116,15 @@ run by the CI.
 - A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`. The servers' logs are
   not shown: start the servers apart to read them.
 - Run one scenario with `npx playwright test -g "<part of its name>"`.
+- Two suites: `npm run e2e:fast` runs the quick scenarios, `npm run e2e:slow` the ones tagged `SLOW` (`@slow`,
+  `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing
+  out after 15 seconds, the room handed over. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
+- Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
+  the game app apart (`npm run serve:local` in each), then stop them.
 
 ### Testing a chess game
 
+- The chess page is `/synchronous-chess`, the chat page `/simple-chat`: the home page only links to them.
 - Each participant, the host included, takes a seat with the `Jouer les blancs` / `Jouer les noirs`
   buttons: two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from

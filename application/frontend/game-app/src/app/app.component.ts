@@ -4,7 +4,7 @@ import { MatIcon } from '@angular/material/icon';
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { ThemeModeEnum } from '@app/services/theme/enums/theme-mode.enum';
 import { ShownTheme, ThemeService } from '@app/services/theme/theme.service';
-import { chatPath, homePath } from './app.routes';
+import { chatPath, chessPath, homePath } from './app.routes';
 
 type ThemeButton = {
     icon: string;
@@ -26,6 +26,7 @@ export class AppComponent {
     protected readonly title: string = 'synchronous-chess';
 
     protected readonly homePath: string = `/${homePath}`;
+    protected readonly chessPath: string = `/${chessPath}`;
     protected readonly chatPath: string = `/${chatPath}`;
 
     protected readonly themeService = inject(ThemeService);

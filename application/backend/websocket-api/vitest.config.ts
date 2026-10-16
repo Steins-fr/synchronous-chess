@@ -8,6 +8,8 @@ export default defineConfig({
         env: {
             TABLE_NAME_CONNECTIONS: 'connection',
             TABLE_NAME_ROOMS: 'room',
+            TABLE_NAME_PASSWORD_ATTEMPTS: 'password-attempt',
+            SOURCE_HASH_SECRET: 'source-secret',
         },
         restoreMocks: true,
         unstubEnvs: true,

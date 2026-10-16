@@ -12,6 +12,7 @@
         "esModuleInterop": true,
         "declaration": false,
         "moduleResolution": "bundler",
+        "resolveJsonModule": true,
         "typeRoots": ["node_modules/@types"],
         "types": ["node"],
         "paths": {

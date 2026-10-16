@@ -51,6 +51,26 @@ describe('sendmessage lambda', () => {
         expect(execute).toHaveBeenCalledTimes(1);
     });
 
+    test.each<[string, object, string]>([
+        ['its IP', { identity: { sourceIp: '203.0.113.7' } }, '203.0.113.7'],
+        ['its connection, without IP', {}, GUEST_CONNECTION],
+    ])('should tell the handler the client by %s', async (_case: string, context: object, source: string) => {
+        // Given
+        const sources: string[] = [];
+        vi.spyOn(JoinHandler.prototype, 'execute').mockImplementation(function (this: JoinHandler): Promise<void> {
+            sources.push((this as unknown as { sourceIp: string }).sourceIp);
+            return Promise.resolve();
+        });
+        const event = anEvent(GUEST_CONNECTION, body(RoomApiRequestTypeEnum.JOIN));
+        Object.assign(event.requestContext, context);
+
+        // When
+        await handler(event);
+
+        // Then
+        expect(sources).toEqual([source]);
+    });
+
     test('should refuse a request without connection', async () => {
         expect(await handler(anEvent(undefined, body(RoomApiRequestTypeEnum.PLAYER_GET_ALL)))).toEqual({ statusCode: 401, body: 'Unauthorized request.' });
     });

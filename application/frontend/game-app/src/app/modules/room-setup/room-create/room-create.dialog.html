@@ -1,0 +1,8 @@
+<!-- Validated by the form of the dialog: the browser would show its own message for the required fields -->
+<form (submit)="create($event)" class="flex flex-col gap-2" novalidate>
+    <p class="mb-2">Les autres joueurs la trouveront dans la liste des salles ouvertes : avec un mot de passe, elle est privée.</p>
+    <app-text-field [field]="createForm.roomName" label="Nom de la salle" />
+    <app-text-field [field]="createForm.playerName" label="Nom du joueur" />
+    <app-text-field [field]="createForm.password" label="Mot de passe (salle privée)" type="password" />
+    <button class="ml-auto min-w-[100px]" id="room-create-submit" mat-flat-button type="submit">Créer</button>
+</form>

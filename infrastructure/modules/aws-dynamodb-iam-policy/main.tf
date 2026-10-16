@@ -25,7 +25,22 @@ data "aws_iam_policy_document" "dynamodb_allows" {
     ]
 
     resources = [
-      var.rooms_table_arn
+      var.rooms_table_arn,
+      # The rooms of a game (roomGetAll), through the index by game
+      "${var.rooms_table_arn}/index/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+
+    # Counted and uncounted by conditional updates, deleted by the TTL: never read nor deleted
+    actions = [
+      "dynamodb:UpdateItem"
+    ]
+
+    resources = [
+      var.password_attempts_table_arn
     ]
   }
 }

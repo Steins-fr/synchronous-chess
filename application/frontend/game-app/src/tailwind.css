@@ -20,6 +20,32 @@
     --color-app-link-active: var(--app-link-active);
 }
 
+/* A game of the home page: the whole card links to its page */
+@utility game-card {
+    @apply flex flex-col gap-3 p-5 border border-app-border rounded-xl bg-app-surface-raised text-app-text no-underline
+        hover:border-app-accent-text focus-visible:border-app-accent-text;
+}
+
+/* The picture of a game, on top of its card */
+@utility game-card-visual {
+    @apply flex justify-center items-center h-32 rounded-lg;
+}
+
+/* What a click on the card does, at its bottom */
+@utility game-card-action {
+    @apply mt-auto flex items-center gap-1 font-medium text-app-accent-text;
+}
+
+/* A text of second rank: the description of a card, the state of a list */
+@utility muted-note {
+    @apply m-0 text-app-text-muted;
+}
+
+/* The state of a room of the list keeping a player from joining it at once: full, or its host reconnecting */
+@utility room-state {
+    @apply px-2 rounded-xl border border-app-border text-[13px] text-app-text-muted;
+}
+
 /* The repeated blocks of the rules (ChessRulesComponent) */
 
 /* A section of the rules. It leaves room above it when the table of contents scrolls to it */

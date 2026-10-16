@@ -9,7 +9,9 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { RoomNetworkMock } from '@testing/room-network.mock';
+import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
 import { TestHelper } from '@testing/test.helper';
+import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 describe('SynchronousChess', () => {
@@ -28,6 +30,7 @@ describe('SynchronousChess', () => {
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })
+            .overrideProvider(RoomSocketApi, { useValue: openRoomsSocketApi() })
             .compileComponents();
 
         fixture = TestBed.createComponent(SynchronousChess);
@@ -49,17 +52,17 @@ describe('SynchronousChess', () => {
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
         // When
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local' });
         await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', roomName: 'room', playerName: 'local' }, 4, {
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local' }, 4, {
             [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
             [SCGameSessionType.SEAT]: BlockChainName.CHESS,
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
-        });
+        }, expect.any(AbortSignal));
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull());
 
         // Then the game replaces the presentation, the rules are folded below it, without their own title
@@ -87,7 +90,7 @@ describe('SynchronousChess', () => {
         roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
 
         // When
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local' });
 
         // Then
         await vi.waitFor(() => expect(loading).toEqual([false, true, false]));

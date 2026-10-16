@@ -1,5 +1,5 @@
 import { RoomParticipant } from './room-participant';
-import { test } from './test-room';
+import { SLOW, test } from './test-room';
 
 /**
  * The participants joining and leaving a room: refused joins, players joining together, departures for good and the
@@ -26,13 +26,19 @@ test.describe('Room participants', () => {
         await alice.expectParticipants(['alice']);
     });
 
-    test('tells a player the room it joins does not exist', async ({ room }) => {
+    test('tells a player the host of the room it joins left', SLOW, async ({ room }) => {
+        // Given
+        const [alice]: RoomParticipant[] = await room.connect('alice');
+        const bob: RoomParticipant = await room.visit('bob');
+        await alice.close();
+        await bob.expectRoomState(room.name, 'Hôte en reconnexion');
+
         // When
-        const alice: RoomParticipant = await room.join('alice');
+        await bob.joinListedRoom(room.name);
 
         // Then
-        await alice.expectNotification('La salle est pleine ou elle n\'existe plus.');
-        await alice.expectSetupForm();
+        await bob.expectNotification('L\'hôte de la salle s\'est déconnecté.', REFUSED_JOIN_TIMEOUT);
+        await bob.expectSetupForm();
     });
 
     test('connects the players joining the room at the same time', async ({ room }) => {
@@ -49,7 +55,7 @@ test.describe('Room participants', () => {
         await Promise.all(everyone.map((participant: RoomParticipant) => participant.expectMessage('dave', 'hello')));
     });
 
-    test('refuses a player joining under the name of a participant, the participant staying in the room', async ({ room }) => {
+    test('refuses a player joining under the name of a participant, the participant staying in the room', SLOW, async ({ room }) => {
         // Given
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
@@ -68,9 +74,11 @@ test.describe('Room participants', () => {
         test.setTimeout(180_000);
         // Given the chat room accepts 6 players
         const participants: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave', 'eve', 'frank');
+        const grace: RoomParticipant = await room.visit('grace');
+        await grace.expectRoomState(room.name, 'Pleine');
 
         // When
-        const grace: RoomParticipant = await room.join('grace');
+        await grace.joinListedRoom(room.name);
 
         // Then
         await grace.expectNotification('La salle est pleine.');
@@ -79,7 +87,7 @@ test.describe('Room participants', () => {
         await Promise.all(participants.map((participant: RoomParticipant) => participant.expectConnected(names)));
     });
 
-    test('lets a player join the room once a participant of the full room left', async ({ room }) => {
+    test('lets a player join the room once a participant of the full room left', SLOW, async ({ room }) => {
         test.setTimeout(180_000);
         // Given
         const [alice, bob, carol, dave, eve, frank]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave', 'eve', 'frank');
@@ -142,7 +150,7 @@ test.describe('Room participants', () => {
         await carol.expectMessage('dave', 'hello');
     });
 
-    test('hands the room over twice, to the participants left, then lets a player join it', async ({ room }) => {
+    test('hands the room over twice, to the participants left, then lets a player join it', SLOW, async ({ room }) => {
         test.setTimeout(180_000);
         // Given
         const [alice, bob, carol, dave]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave');
@@ -161,7 +169,7 @@ test.describe('Room participants', () => {
         await dave.expectMessage('eve', 'hello');
     });
 
-    test('lets the last participant take over the room its host left, then a player join it', async ({ room }) => {
+    test('lets the last participant take over the room its host left, then a player join it', SLOW, async ({ room }) => {
         // Given
         const [alice, bob]: RoomParticipant[] = await room.connect('alice', 'bob');
 
@@ -204,7 +212,7 @@ test.describe('Room participants', () => {
         await bob.expectMessage('alice', 'back');
     });
 
-    test('lets a player which lost its connection to the host while joining the room join it again', async ({ room }) => {
+    test('lets a player which lost its connection to the host while joining the room join it again', SLOW, async ({ room }) => {
         // Given
         const [alice]: RoomParticipant[] = await room.connect('alice');
         const bob: RoomParticipant = await room.join('bob');
@@ -218,7 +226,7 @@ test.describe('Room participants', () => {
         await Promise.all([alice, bob].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob'], RECONNECTION_TIMEOUT)));
     });
 
-    test('lets two players reloading their page at the same time join the room again', async ({ room }) => {
+    test('lets two players reloading their page at the same time join the room again', SLOW, async ({ room }) => {
         // Given
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 

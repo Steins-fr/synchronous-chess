@@ -8,6 +8,7 @@ import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 import ReconnectHandler from './handlers/reconnect-handler';
+import RoomGetAllHandler from './handlers/room-get-all-handler';
 import SignalHandler from './handlers/signal-handler';
 import { SocketPacketRequestPayload } from '@protocol/socket-packet-payload.type';
 import { getManagementApiEndpoint } from '@helpers/environment.helper';
@@ -26,6 +27,7 @@ interface MessageHandlers {
     playerAdd: typeof PlayerAddHandler;
     playerRemove: typeof PlayerRemoveHandler;
     reconnect: typeof ReconnectHandler;
+    roomGetAll: typeof RoomGetAllHandler;
 }
 
 const messageHandlers: MessageHandlers = {
@@ -37,6 +39,7 @@ const messageHandlers: MessageHandlers = {
     playerAdd: PlayerAddHandler,
     playerRemove: PlayerRemoveHandler,
     reconnect: ReconnectHandler,
+    roomGetAll: RoomGetAllHandler,
 };
 
 export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {
@@ -57,7 +60,9 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
         const client = new ApiGatewayManagementApiClient({
             endpoint: getManagementApiEndpoint(event.requestContext.domainName),
         });
-        const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload);
+        // Given by API Gateway: without it, a private room tells the clients apart by their connection
+        const sourceIp: string = event.requestContext.identity?.sourceIp ?? connectionId;
+        const messageHandler: MessageHandler = new messageHandlers[payload.type](client, connectionId, payload, sourceIp);
         await messageHandler.execute();
     } catch (e) {
         console.error(e);

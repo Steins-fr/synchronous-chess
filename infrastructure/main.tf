@@ -53,8 +53,34 @@ module "sc_database_room" {
 
   name       = "room"
   hash-key   = "id"
-  attributes = ["id"]
+  attributes = ["id", "game", "createdAt", "nameKey"]
   # Set while the host is disconnected: deletes the rooms it never reconnected
+  ttl-attribute = "expiresAt"
+  # The rooms of a game, with what their list shows (LISTED_ROOM_ATTRIBUTES of RoomRepository, read from its JSON file):
+  # the most recent first, then searched by the start of their name, in lower case
+  global-secondary-indexes = [
+    for index in [["game-index", "createdAt"], ["game-name-index", "nameKey"]] : {
+      name               = index[0]
+      hash_key           = "game"
+      range_key          = index[1]
+      non_key_attributes = jsondecode(file("${path.module}/../application/backend/websocket-api/shared/repositories/listed-room-attributes.json"))
+    }
+  ]
+
+  stage = var.stage
+}
+
+# The passwords each client gives a private room in a row (PasswordAttemptRepository), apart from the rooms
+module "sc_database_password_attempt" {
+  source = "./modules/aws-dynamodb"
+
+  name           = "password-attempt"
+  hash-key       = "roomKey"
+  range-key      = "sourceHash"
+  attributes     = ["roomKey", "sourceHash"]
+  read-capacity  = 1
+  write-capacity = 5
+  # Pushed back by each password given: deletes the counts over
   ttl-attribute = "expiresAt"
 
   stage = var.stage
@@ -110,9 +136,10 @@ module "sc_role_lambda_basic" {
 module "sc_database_policy" {
   source = "./modules/aws-dynamodb-iam-policy"
 
-  connections_table_arn = module.sc_database_connection.arn
-  rooms_table_arn       = module.sc_database_room.arn
-  stage                 = var.stage
+  connections_table_arn       = module.sc_database_connection.arn
+  rooms_table_arn             = module.sc_database_room.arn
+  password_attempts_table_arn = module.sc_database_password_attempt.arn
+  stage                       = var.stage
 }
 
 module "sc_api_gateway_iam_policy" {
@@ -155,6 +182,13 @@ module "sc_lambda_ondisconnect" {
   }
 }
 
+# The key of the hashes of the IPs of the clients (source.helper of the websocket API): without it, the IP of a hash is
+# found by hashing the 2^32 IPv4 addresses in turn
+resource "random_password" "source_hash_secret" {
+  length  = 64
+  special = false
+}
+
 module "sc_lambda_sendmessage" {
   source = "./modules/aws-lambda-api"
 
@@ -162,9 +196,14 @@ module "sc_lambda_sendmessage" {
   name      = "sendmessage"
   role      = module.sc_role_lambda_dynamo.arn
   stage     = var.stage
+  # The passwords of the private rooms are hashed and checked by scrypt (16 MB, CPU bound): 128 MB give it a fraction of a
+  # vCPU, a cold start then nears the 3 seconds of the timeout (the app waits 5), the attempt counted but never uncounted
+  memory_size = 512
   environment = {
-    TABLE_NAME_ROOMS       = module.sc_database_room.name
-    TABLE_NAME_CONNECTIONS = module.sc_database_connection.name
+    TABLE_NAME_ROOMS             = module.sc_database_room.name
+    TABLE_NAME_CONNECTIONS       = module.sc_database_connection.name
+    TABLE_NAME_PASSWORD_ATTEMPTS = module.sc_database_password_attempt.name
+    SOURCE_HASH_SECRET           = random_password.source_hash_secret.result
   }
 }
 

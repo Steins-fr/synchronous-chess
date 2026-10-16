@@ -10,6 +10,7 @@ import { roomFromSetup } from '@app/modules/room-layout/room-from-setup';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-debug.component';
 
@@ -21,6 +22,7 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
     providers: [RoomSetupService, RoomManagerService, RoomSocketApi],
 })
 export class SynchronousChess {
+    protected readonly game: RoomGame = RoomGame.CHESS;
     protected readonly maxPlayer: number = 4;
     protected readonly room = roomFromSetup<ChatPayloads & ChessPayloads>(this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, chessBlockChains));
 }

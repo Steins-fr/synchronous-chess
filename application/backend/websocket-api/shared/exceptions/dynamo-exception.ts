@@ -5,7 +5,8 @@ export enum DynamoCrudActionEnum {
     GET = 'get',
     PUT = 'put',
     UPDATE = 'update',
-    DELETE = 'delete'
+    DELETE = 'delete',
+    QUERY = 'query',
 }
 
 export default class DynamoException extends Exception {

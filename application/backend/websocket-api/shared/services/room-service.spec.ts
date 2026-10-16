@@ -1,7 +1,11 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { hashPassword } from '@helpers/password.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
+import RoomCreateRequest from '@protocol/requests/room-create-request';
+import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { RoomGame } from '@protocol/room-game.enum';
 import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN } from '@testing/api-mocks';
 import { mockClient } from 'aws-sdk-client-mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -14,6 +18,7 @@ describe('RoomService', () => {
 
     // In epoch seconds
     const now: number = 1_800_000_000;
+    const createRequest: RoomCreateRequest = { roomName: 'room', playerName: 'host', maxPlayer: 4, game: RoomGame.CHAT, token: HOST_TOKEN };
 
     beforeEach(() => {
         // DynamoDB answers every command with an object, empty without data
@@ -99,6 +104,72 @@ describe('RoomService', () => {
         expect(() => service.hostConnectedGuard(aRoom({ expiresAt: now + 1 }))).toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
     });
 
+    test('should list the most recent rooms of a game, full or waiting for their host, the host of a private one untold', async () => {
+        // Given the index gives the most recent first
+        dynamo.on(QueryCommand).resolves({
+            Items: [
+                aRoom({ id: 'zebra', maxPlayer: 4, players: [{ playerName: 'host' }, { playerName: 'guest' }], passwordHash: hashPassword('secret') }),
+                aRoom({ id: 'full', maxPlayer: 1, expiresAt: now + 60 }),
+                aRoom({ id: 'alpha', hostPlayer: 'alice' }),
+            ],
+        });
+
+        // When / Then
+        expect(await service.getOpenRooms(RoomGame.CHESS)).toEqual({
+            rooms: [
+                { roomName: 'zebra', playerCount: 2, maxPlayer: 4, isPrivate: true, hostConnected: true },
+                { roomName: 'full', hostPlayer: 'host', playerCount: 1, maxPlayer: 1, isPrivate: false, hostConnected: false },
+                { roomName: 'alpha', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true },
+            ],
+            hasMore: false,
+        });
+        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': now }, Limit: RoomService.MAX_OPEN_ROOMS + 1 })).toHaveLength(1);
+    });
+
+    test('should list the 30 most recent rooms, telling more exist', async () => {
+        // Given
+        const rooms: Room[] = Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` }));
+        dynamo.on(QueryCommand).resolves({ Items: rooms });
+
+        // When
+        const { rooms: listed, hasMore } = await service.getOpenRooms(RoomGame.CHESS);
+
+        // Then
+        expect(listed).toHaveLength(30);
+        expect(listed[0].roomName).toEqual('room-0');
+        expect(hasMore).toEqual(true);
+    });
+
+    test('should search the rooms by the start of their name, whatever the case, in the order of the index', async () => {
+        // Given the index gives the rooms by name, the name equal to the search first
+        dynamo.on(QueryCommand, { IndexName: 'game-name-index' }).resolves({ Items: [aRoom({ id: 'EVE' }), aRoom({ id: 'Evening' })] });
+
+        // When
+        const { rooms, hasMore } = await service.getOpenRooms(RoomGame.CHESS, ' eve ');
+
+        // Then
+        expect(rooms.map((listed: OpenRoom) => listed.roomName)).toEqual(['EVE', 'Evening']);
+        expect(hasMore).toEqual(false);
+        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':search': 'eve', ':now': now }, Limit: 31 })).toHaveLength(1);
+    });
+
+    test('should list the 30 first rooms of a search, telling more match', async () => {
+        // Given
+        dynamo.on(QueryCommand).resolves({ Items: Array.from({ length: RoomService.MAX_OPEN_ROOMS + 1 }, (_room: unknown, index: number) => aRoom({ id: `room-${ index }` })) });
+
+        // When
+        const { rooms, hasMore } = await service.getOpenRooms(RoomGame.CHESS, 'room');
+
+        // Then
+        expect(rooms).toHaveLength(30);
+        expect(hasMore).toEqual(true);
+    });
+
+    test('should let a player join a room of its game only', () => {
+        expect(() => service.gameGuard(room, RoomGame.CHESS)).not.toThrow();
+        expect(() => service.gameGuard(room, RoomGame.CHAT)).toThrow(RoomApiErrorMessage.OTHER_GAME);
+    });
+
     test('should add and remove the players of the room', async () => {
         // When
         await service.addPlayerToRoom('guest', room);
@@ -106,7 +177,7 @@ describe('RoomService', () => {
 
         // Then
         expect(dynamo.commandCalls(UpdateCommand, { ExpressionAttributeValues: { ':items': [{ playerName: 'guest' }] } })).toHaveLength(1);
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[0], tokenHashes.#playerName' })).toHaveLength(1);
+        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[0]' })).toHaveLength(1);
     });
 
     test('should not add a player twice to the room', async () => {
@@ -129,7 +200,7 @@ describe('RoomService', () => {
 
     test('should create a room with its host as only player, keeping the hash of its token', async () => {
         // When
-        await service.create('room', HOST_CONNECTION, 'host', 4, HOST_TOKEN);
+        await service.create(createRequest, HOST_CONNECTION);
 
         // Then
         expect(dynamo.commandCalls(PutCommand, {
@@ -139,9 +210,12 @@ describe('RoomService', () => {
                 connectionId: HOST_CONNECTION,
                 hostPlayer: 'host',
                 maxPlayer: 4,
+                game: RoomGame.CHAT,
+                createdAt: new Date(now * 1000).toISOString(),
                 players: [{ playerName: 'host' }],
                 queue: [],
                 tokenHashes: { host: hashToken(HOST_TOKEN) },
+                isPrivate: false,
             },
             ExpressionAttributeValues: { ':now': now },
         })).toHaveLength(1);
@@ -152,7 +226,7 @@ describe('RoomService', () => {
         dynamo.on(PutCommand).rejects(aConditionFailure());
 
         // When / Then
-        await expect(service.create('room', HOST_CONNECTION, 'host', 4, HOST_TOKEN)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
+        await expect(service.create(createRequest, HOST_CONNECTION)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
     });
 
     test('should move a room to another connection of its host', async () => {

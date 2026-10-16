@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { RoomApiError, RoomSocketApi } from './room-socket.api';
 import { WEB_SOCKET_SERVER } from './web-socket-server.token';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotificationEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
+import { RoomGame } from '@protocol/room-game.enum';
 import { WebSocketMock } from '@testing/web-socket.mock';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -51,7 +52,7 @@ describe('RoomSocketApi', () => {
 
     test('send should resolve with the response of the request', async () => {
         // Given
-        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', token: 'token' }));
+        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', game: RoomGame.CHESS, playerName: 'peer', token: 'token' }));
 
         // When
         socket.receive({ notAPacket: true });
@@ -60,13 +61,13 @@ describe('RoomSocketApi', () => {
 
         // Then
         await expect(response).resolves.toEqual({ playerName: 'host' });
-        expect(socket.sentPackets()[0]).toEqual({ message: 'sendmessage', data: { id, type: 'join', data: { roomName: 'room', playerName: 'peer', token: 'token' } } });
+        expect(socket.sentPackets()[0]).toEqual({ message: 'sendmessage', data: { id, type: 'join', data: { roomName: 'room', game: 'chess', playerName: 'peer', token: 'token' } } });
         expect(console.error).toHaveBeenCalledWith('Received payload is not a packet', { notAPacket: true });
     });
 
     test('send should reject on error response', async () => {
         // Given
-        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host', token: 'token' }));
+        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' }));
 
         // When
         socket.receive({ id, type: 'error', data: { message: 'Room already exists' } });

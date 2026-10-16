@@ -23,10 +23,12 @@ export default abstract class MessageHandler {
     protected readonly roomService: RoomService;
     protected readonly connectionService: ConnectionService = new ConnectionService();
 
+    /** @param sourceIp the IP of the client, or its connection without it: the clients a private room tells apart */
     public constructor(
         private readonly apiGatewayManagementApiClient: ApiGatewayManagementApiClient,
         public readonly connectionId: string,
-        private readonly payload: SocketPacketRequestPayload) {
+        private readonly payload: SocketPacketRequestPayload,
+        protected readonly sourceIp: string = connectionId) {
         this.roomService = new RoomService();
     }
 

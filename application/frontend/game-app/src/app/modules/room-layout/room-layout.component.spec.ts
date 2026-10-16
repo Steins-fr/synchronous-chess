@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RoomLayoutComponent } from './room-layout.component';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { RoomGame } from '@protocol/room-game.enum';
+import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 describe('RoomLayoutComponent', () => {
@@ -11,12 +14,12 @@ describe('RoomLayoutComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [RoomLayoutComponent],
-            providers: [RoomSetupService],
+            providers: [RoomSetupService, { provide: RoomSocketApi, useValue: openRoomsSocketApi() }],
         }).compileComponents();
 
         roomSetupService = TestBed.inject(RoomSetupService);
         fixture = TestBed.createComponent(RoomLayoutComponent);
-        fixture.componentRef.setInput('maxPlayer', 2);
+        fixture.componentRef.setInput('game', RoomGame.CHESS);
         await fixture.whenStable();
     });
 
@@ -38,19 +41,21 @@ describe('RoomLayoutComponent', () => {
         @Component({
             imports: [RoomLayoutComponent],
             template: `
-<app-room-layout [maxPlayer]="2" [dimContent]="false">
+<app-room-layout [game]="game" [dimContent]="false">
     <p class="presentation" roomPresentation>Presentation</p>
     <p class="content">Content</p>
 </app-room-layout>`,
         })
-        class HostComponent {}
+        class HostComponent {
+            protected readonly game: RoomGame = RoomGame.CHESS;
+        }
         const host: ComponentFixture<HostComponent> = TestBed.createComponent(HostComponent);
         await host.whenStable();
 
-        // Then the presentation comes before the setup form
+        // Then the presentation comes after the setup, the open rooms on top of the page
         const presentation: HTMLElement | null = host.nativeElement.querySelector('.presentation');
         expect(presentation).not.toBeNull();
-        expect(presentation?.compareDocumentPosition(host.nativeElement.querySelector('app-room-setup'))).toEqual(Node.DOCUMENT_POSITION_FOLLOWING);
+        expect(presentation?.compareDocumentPosition(host.nativeElement.querySelector('app-room-setup'))).toEqual(Node.DOCUMENT_POSITION_PRECEDING);
         expect(host.nativeElement.querySelector('#page-content .content')).not.toBeNull();
         expect(host.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 

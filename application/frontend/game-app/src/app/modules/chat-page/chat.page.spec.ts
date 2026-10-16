@@ -9,7 +9,9 @@ import RoomManagerService from '@app/services/room-manager/room-manager.service'
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { JoinFailure } from '@app/services/room-manager/classes/room-network/room-network';
 import { RoomNetworkMock } from '@testing/room-network.mock';
+import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
 import { TestHelper } from '@testing/test.helper';
+import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 describe('ChatPage', () => {
@@ -28,6 +30,7 @@ describe('ChatPage', () => {
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })
+            .overrideProvider(RoomSocketApi, { useValue: openRoomsSocketApi() })
             .compileComponents();
 
         fixture = TestBed.createComponent(ChatPage);
@@ -45,12 +48,12 @@ describe('ChatPage', () => {
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
         // When
-        roomSetupService.setup('create', 'room', 'local');
+        roomSetupService.setup({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
         await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT });
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal));
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 
@@ -68,14 +71,15 @@ describe('ChatPage', () => {
         let build: (built: Room<object>) => void = () => undefined;
         vi.mocked(roomManagerService.buildBlockRoom).mockReturnValue(TestHelper.cast(new Promise<Room<object>>((resolve) => build = resolve)));
         const clearSpy = vi.spyOn(room, 'clear');
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
         await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
 
         // When: the page leaves, then the room is built
         fixture.destroy();
         build(room);
 
-        // Then
+        // Then: the join asked again stops
+        expect(vi.mocked(roomManagerService.buildBlockRoom).mock.calls[0][3]?.aborted).toEqual(true);
         await vi.waitFor(() => expect(clearSpy).toHaveBeenCalledTimes(1));
         expect(fixture.componentInstance.room()).toBeUndefined();
     });
@@ -88,7 +92,7 @@ describe('ChatPage', () => {
         roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
 
         // When
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
 
         // Then
         await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
@@ -98,7 +102,7 @@ describe('ChatPage', () => {
     test('should give the room up and make the setup form available again once the join failed', async () => {
         // Given
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
-        roomSetupService.setup('join', 'room', 'local');
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
         await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
         const clearSpy = vi.spyOn(room, 'clear');
 

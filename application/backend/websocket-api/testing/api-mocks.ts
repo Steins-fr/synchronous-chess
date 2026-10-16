@@ -3,6 +3,7 @@ import { ConditionalCheckFailedException, DynamoDBServiceException } from '@aws-
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
+import { RoomGame } from '@protocol/room-game.enum';
 import {
     RoomApiRequestTypeEnum,
     RoomSocketApiRequestTypedData,
@@ -36,9 +37,13 @@ export function aRoom(room: Partial<Room> = {}): Room {
         connectionId: HOST_CONNECTION,
         hostPlayer: 'host',
         maxPlayer: 2,
+        game: RoomGame.CHESS,
+        createdAt: '2026-10-11T12:00:00.000Z',
+        nameKey: 'room',
         players: [{ playerName: 'host' }],
         queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }],
         tokenHashes: { host: hashToken(HOST_TOKEN), guest: hashToken(GUEST_TOKEN) },
+        isPrivate: room.passwordHash !== undefined,
         ...room,
     };
 }

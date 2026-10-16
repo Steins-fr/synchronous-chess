@@ -7,7 +7,9 @@ import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
 import { JoinFailure } from './classes/room-network/room-network';
+import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
 import { TestHelper } from '@testing/test.helper';
 import { Subject } from 'rxjs';
@@ -56,10 +58,10 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host' });
 
         // When
-        room = await service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
+        room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
 
         // Then
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, playerName: 'host', token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
         expect(room.roomConnection.initiator).toEqual(true);
         expect(room.localPlayer.name).toEqual('host');
@@ -71,7 +73,7 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host' });
         vi.mocked(roomSocketApi.reconnect).mockRejectedValue(new RoomApiError('Room \'room\' does not exist'));
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
-        room = await service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
+        room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
 
         // When
         (roomSocketApi.closed$ as Subject<void>).next();
@@ -91,7 +93,7 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockResolvedValue(response);
 
         // When
-        const build = service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
 
         // Then
         await expect(build).rejects.toThrow('Room creation failed, mismatched parameters');
@@ -103,7 +105,7 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.ROOM_ALREADY_EXISTS));
 
         // When
-        const build = service.buildBlockRoom({ type: 'create', roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
 
         // Then
         await expect(build).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
@@ -112,7 +114,7 @@ describe('RoomManagerService', () => {
 
     test('should reject an empty routing at compile time', () => {
         // @ts-expect-error a routing without message type could not carry any message
-        const build = (): Promise<BlockRoom<object>> => service.buildBlockRoom<object>({ type: 'create', roomName: 'room', playerName: 'host' }, 2, {});
+        const build = (): Promise<BlockRoom<object>> => service.buildBlockRoom<object>({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, {});
 
         expect(build).toBeTypeOf('function');
     });
@@ -122,18 +124,64 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
 
         // When
-        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
 
         // Then
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHESS, token: 'token' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
         expect(room.queue()).toEqual(['host']);
+    });
+
+    test('should create a private room, and join it with its password', async () => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValueOnce({ roomName: 'room', maxPlayer: 6, playerName: 'host' });
+        vi.mocked(roomSocketApi.send).mockResolvedValueOnce({ playerName: 'host' });
+
+        // When
+        room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'host', password: 'secret' }, 6, { move: BlockChainName.CHAT });
+        room.clear();
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'peer', password: 'secret' }, 6, { move: BlockChainName.CHAT });
+
+        // Then
+        expect(roomSocketApi.send).toHaveBeenNthCalledWith(1, RoomApiRequestTypeEnum.CREATE, {
+            roomName: 'room', maxPlayer: 6, game: RoomGame.CHAT, password: 'secret', playerName: 'host', token: 'token',
+        });
+        expect(roomSocketApi.send).toHaveBeenNthCalledWith(2, RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHAT, password: 'secret', token: 'token' });
+    });
+
+    test.each([
+        { error: RoomApiErrorMessage.WRONG_PASSWORD, notification: 'Le mot de passe de la salle est incorrect.' },
+        { error: RoomApiErrorMessage.OTHER_GAME, notification: 'Cette salle est celle d\'un autre jeu.' },
+        { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, notification: 'Trop de mots de passe incorrects pour cette salle : réessayez dans une minute.' },
+    ])('should notify a join refused for good at once, on $error', async ({ error, notification }) => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer', password: 'wrong' }, 2, { move: BlockChainName.CHESS });
+
+        // Then
+        await expect(build).rejects.toThrow(error);
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        expect(notificationService.error).toHaveBeenCalledWith(notification);
+    });
+
+    test('should notify a peer joining a private room without its password', async () => {
+        // Given: the room listed as public before it became private
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.WRONG_PASSWORD));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // Then
+        await expect(build).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        expect(notificationService.error).toHaveBeenCalledWith('Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.');
     });
 
     test('should notify a peer when the room it took over can not move to a new socket', async () => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
-        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
 
         // When
         TestHelper.cast<{ roomLostSubject: Subject<void> }>(room.roomConnection).roomLostSubject.next();
@@ -145,7 +193,7 @@ describe('RoomManagerService', () => {
     test('should tell a peer it joins the room again, the connection to the host failed', async () => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
-        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
 
         // When
         TestHelper.cast<{ joiningAgainSubject: Subject<void> }>(room.roomConnection).joiningAgainSubject.next();
@@ -155,12 +203,26 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
+        { error: RoomApiErrorMessage.ALREADY_IN_GAME, message: 'Ce nom est encore dans la salle, reconnexion en cours…' },
+    ])('should tell a peer the API refuses it joining the room again for a while, $error', async ({ error, message }) => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // When
+        TestHelper.cast<{ joinDelayedSubject: Subject<string> }>(room.roomConnection).joinDelayedSubject.next(error);
+
+        // Then
+        expect(notificationService.info).toHaveBeenCalledWith(message);
+    });
+
+    test.each([
         { failure: JoinFailure.ROOM_FULL, message: 'La salle est pleine.' },
         { failure: JoinFailure.HOST_UNREACHABLE, message: 'La connexion à l\'hôte de la salle a échoué.' },
     ])('should notify a peer giving the room up, $failure', async ({ failure, message }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
-        room = await service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
 
         // When
         TestHelper.cast<{ joinFailedSubject: Subject<JoinFailure> }>(room.roomConnection).joinFailedSubject.next(failure);
@@ -174,7 +236,7 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error('full'));
 
         // When
-        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
 
         // Then
         await expect(build).rejects.toThrow('full');
@@ -190,7 +252,7 @@ describe('RoomManagerService', () => {
             .mockResolvedValue({ playerName: 'host' });
 
         // When
-        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
         await vi.advanceTimersByTimeAsync(4000);
         room = await build;
 
@@ -201,6 +263,43 @@ describe('RoomManagerService', () => {
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
     });
 
+    test('should stop joining once the page left, without notifying it', async () => {
+        // Given
+        vi.useFakeTimers();
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.ALREADY_IN_GAME));
+        const left: AbortController = new AbortController();
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS }, left.signal);
+        const rejected = expect(build).rejects.toThrow(DOMException);
+        await vi.advanceTimersByTimeAsync(0);
+
+        // When
+        left.abort();
+        await vi.advanceTimersByTimeAsync(20_000);
+
+        // Then
+        await rejected;
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        expect(notificationService.error).not.toHaveBeenCalled();
+    });
+
+    test('should not connect to the host once the page left while the join was sent', async () => {
+        // Given
+        let joined: (response: RoomJoinResponse) => void = () => undefined;
+        vi.mocked(roomSocketApi.send).mockReturnValue(new Promise<RoomJoinResponse>((resolve) => joined = resolve));
+        const left: AbortController = new AbortController();
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS }, left.signal);
+        await vi.waitFor(() => expect(roomSocketApi.send).toHaveBeenCalled());
+
+        // When
+        left.abort();
+        joined({ playerName: 'host' });
+
+        // Then
+        await expect(build).rejects.toMatchObject({ name: 'AbortError' });
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        expect(notificationService.error).not.toHaveBeenCalled();
+    });
+
     test('should join again while the host reconnects its room', async () => {
         // Given
         vi.useFakeTimers();
@@ -209,7 +308,7 @@ describe('RoomManagerService', () => {
             .mockResolvedValue({ playerName: 'host' });
 
         // When
-        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
         await vi.advanceTimersByTimeAsync(2000);
         room = await build;
 
@@ -229,7 +328,7 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
 
         // When
-        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
         const rejected = expect(build).rejects.toThrow(error);
         await vi.advanceTimersByTimeAsync(20000);
 
@@ -244,7 +343,7 @@ describe('RoomManagerService', () => {
         vi.mocked(roomSocketApi.send).mockRejectedValue('closed');
 
         // When
-        const build = service.buildBlockRoom({ type: 'join', roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
 
         // Then
         await expect(build).rejects.toEqual('closed');

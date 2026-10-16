@@ -1,5 +1,6 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import Room from '@models/room';
+import { RoomGame } from '@protocol/room-game.enum';
 import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION } from '@testing/api-mocks';
 import { mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -29,7 +30,41 @@ describe('RoomRepository', () => {
         expect(dynamo.commandCalls(GetCommand, {
             TableName: 'room',
             Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, tokenHashes, expiresAt',
+            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, isPrivate, tokenHashes, expiresAt',
+        })).toHaveLength(1);
+    });
+
+    test('should find the most recent rooms of a game not expired, through its index', async () => {
+        // Given
+        dynamo.on(QueryCommand).resolves({ Items: [room] });
+
+        // When / Then
+        expect(await repository.findRecentRooms(RoomGame.CHESS, 500, 30)).toEqual([room]);
+        expect(dynamo.commandCalls(QueryCommand, {
+            TableName: 'room',
+            IndexName: 'game-index',
+            KeyConditionExpression: 'game = :game',
+            FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
+            ProjectionExpression: 'id, hostPlayer, players, maxPlayer, isPrivate, expiresAt',
+            ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': 500 },
+            ScanIndexForward: false,
+            Limit: 30,
+        })).toHaveLength(1);
+    });
+
+    test('should find the rooms of a game whose name starts with a search key, through its index', async () => {
+        // Given
+        dynamo.on(QueryCommand).resolves({ Items: [room] });
+
+        // When / Then
+        expect(await repository.findRoomsStartingWith(RoomGame.CHESS, 'eve', 500, 31)).toEqual([room]);
+        expect(dynamo.commandCalls(QueryCommand, {
+            IndexName: 'game-name-index',
+            KeyConditionExpression: 'game = :game AND begins_with(nameKey, :search)',
+            FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
+            ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':search': 'eve', ':now': 500 },
+            ScanIndexForward: true,
+            Limit: 31,
         })).toHaveLength(1);
     });
 
@@ -112,7 +147,7 @@ describe('RoomRepository', () => {
         })).toHaveLength(1);
     });
 
-    test('should remove a player from the room by its index', async () => {
+    test('should remove a player from the room by its index, keeping the hash of its token', async () => {
         // Given
         room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'guest' }] });
 
@@ -122,8 +157,7 @@ describe('RoomRepository', () => {
         // Then
         expect(dynamo.commandCalls(UpdateCommand, {
             Key: { id: 'room' },
-            UpdateExpression: 'REMOVE players[1], tokenHashes.#playerName',
-            ExpressionAttributeNames: { '#playerName': 'guest' },
+            UpdateExpression: 'REMOVE players[1]',
         })).toHaveLength(1);
     });
 

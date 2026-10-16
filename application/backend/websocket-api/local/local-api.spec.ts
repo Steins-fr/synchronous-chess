@@ -146,13 +146,13 @@ describe('local websocket API', () => {
             const host = await connected();
             const guest = await connected();
             const created = nextMessage(host);
-            request(host, 'create', { roomName: 'flow', maxPlayer: 2, playerName: 'alice', token: 'alice-token' });
+            request(host, 'create', { roomName: 'flow', maxPlayer: 2, game: 'chess', playerName: 'alice', token: 'alice-token' });
             expect(JSON.parse(await created)).toMatchObject({ type: 'created' });
 
             // When
             const joinRequest = nextMessage(host);
             const joining = nextMessage(guest);
-            request(guest, 'join', { roomName: 'flow', playerName: 'bob', token: 'bob-token' });
+            request(guest, 'join', { roomName: 'flow', game: 'chess', playerName: 'bob', token: 'bob-token' });
 
             // Then
             expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'bob' } });
@@ -216,7 +216,7 @@ describe('local websocket API', () => {
         async function hostedRoom(roomName: string): Promise<{ host: WebSocket; token: string }> {
             const host = await connected();
             const token = `${ roomName }-token`;
-            expect(await reply(host, 'create', { roomName, maxPlayer: 2, playerName: 'alice', token })).toMatchObject({ type: 'created' });
+            expect(await reply(host, 'create', { roomName, maxPlayer: 2, game: 'chess', playerName: 'alice', token })).toMatchObject({ type: 'created' });
             return { host, token };
         }
 
@@ -238,7 +238,7 @@ describe('local websocket API', () => {
             // Then
             expect(reconnected).toMatchObject({ type: 'reconnected', data: { roomName: 'moved' } });
             const joinRequest = nextMessage(newHost);
-            expect(await reply(await connected(), 'join', { roomName: 'moved', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(await connected(), 'join', { roomName: 'moved', game: 'chess', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
             expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'bob' } });
         });
 
@@ -247,14 +247,14 @@ describe('local websocket API', () => {
             const { host, token } = await hostedRoom('waiting');
             await disconnect(host);
             const guest = await connected();
-            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'error', data: { message: 'Host disconnected' } });
+            expect(await reply(guest, 'join', { roomName: 'waiting', game: 'chess', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'error', data: { message: 'Host disconnected' } });
 
             // When
             const reconnected = await reply(await connected(), 'reconnect', { roomName: 'waiting', playerName: 'alice', token });
 
             // Then
             expect(reconnected).toMatchObject({ type: 'reconnected' });
-            expect(await reply(guest, 'join', { roomName: 'waiting', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(guest, 'join', { roomName: 'waiting', game: 'chess', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
         });
 
         test('should not move a room for another token', async () => {
@@ -272,7 +272,7 @@ describe('local websocket API', () => {
             // Given: bob in the room
             const { host } = await hostedRoom('handed');
             const player = await connected();
-            expect(await reply(player, 'join', { roomName: 'handed', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(player, 'join', { roomName: 'handed', game: 'chess', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
             expect(await reply(host, 'playerAdd', { roomName: 'handed', playerName: 'bob' })).toMatchObject({ type: 'added' });
             const newHost = await connected();
             const refused = await reply(newHost, 'reconnect', { roomName: 'handed', playerName: 'bob', token: 'bob-token' });
@@ -285,26 +285,31 @@ describe('local websocket API', () => {
             expect(refused).toMatchObject({ type: 'error', data: { message: 'Host connected' } });
             expect(reconnected).toMatchObject({ type: 'reconnected' });
             const joinRequest = nextMessage(newHost);
-            expect(await reply(await connected(), 'join', { roomName: 'handed', playerName: 'carol', token: 'carol-token' }))
+            expect(await reply(await connected(), 'join', { roomName: 'handed', game: 'chess', playerName: 'carol', token: 'carol-token' }))
                 .toMatchObject({ type: 'joiningRoom', data: { playerName: 'bob' } });
             expect(JSON.parse(await joinRequest)).toEqual({ type: 'joinRequest', data: { playerName: 'carol' } });
         });
 
-        test('should forget the token of a player the host removed', async () => {
+        test('should let a player the host removed join its private room again without the password, by its token', async () => {
             // Given
-            const { host } = await hostedRoom('left');
-            expect(await reply(await connected(), 'join', { roomName: 'left', playerName: 'bob', token: 'bob-token' })).toMatchObject({ type: 'joiningRoom' });
+            const host = await connected();
+            expect(await reply(host, 'create', { roomName: 'left', maxPlayer: 2, game: 'chess', password: 'secret', playerName: 'alice', token: 'alice-token' }))
+                .toMatchObject({ type: 'created' });
+            const bob = await connected();
+            expect(await reply(bob, 'join', { roomName: 'left', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' }))
+                .toMatchObject({ type: 'joiningRoom' });
             expect(await reply(host, 'playerAdd', { roomName: 'left', playerName: 'bob' })).toMatchObject({ type: 'added' });
+            await disconnect(bob);
 
-            // When: bob back in the room, without joining it again
+            // When
             const removed = await reply(host, 'playerRemove', { roomName: 'left', playerName: 'bob' });
-            expect(await reply(host, 'playerAdd', { roomName: 'left', playerName: 'bob' })).toMatchObject({ type: 'added' });
-            await disconnect(host);
 
-            // Then: its former token no longer takes the room over
+            // Then: another page of the name needs the password
             expect(removed).toMatchObject({ type: 'removed' });
-            expect(await reply(await connected(), 'reconnect', { roomName: 'left', playerName: 'bob', token: 'bob-token' }))
-                .toMatchObject({ type: 'error', data: { message: 'You are not the host of the room' } });
+            expect(await reply(await connected(), 'join', { roomName: 'left', game: 'chess', playerName: 'bob', token: 'other-token' }))
+                .toMatchObject({ type: 'error', data: { message: 'Wrong password' } });
+            expect(await reply(await connected(), 'join', { roomName: 'left', game: 'chess', playerName: 'bob', token: 'bob-token' }))
+                .toMatchObject({ type: 'joiningRoom', data: { playerName: 'alice' } });
         });
 
         test('should keep the name of a room waiting for its host', async () => {
@@ -313,11 +318,85 @@ describe('local websocket API', () => {
             await disconnect(host);
 
             // When
-            const created = await reply(await connected(), 'create', { roomName: 'taken', maxPlayer: 2, playerName: 'bob', token: 'bob-token' });
+            const created = await reply(await connected(), 'create', { roomName: 'taken', maxPlayer: 2, game: 'chess', playerName: 'bob', token: 'bob-token' });
 
             // Then
             expect(created).toMatchObject({ type: 'error', data: { message: 'Room already exists' } });
             expect(await reply(await connected(), 'reconnect', { roomName: 'taken', playerName: 'alice', token })).toMatchObject({ type: 'reconnected' });
+        });
+    });
+
+    describe('open rooms', () => {
+        // The game of no other test: DynamoDB keeps the rooms of the previous tests
+        test('should list the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
+            // Given
+            const host = await connected();
+            expect(await reply(host, 'create', { roomName: 'chat-listed', maxPlayer: 6, game: 'chat', password: 'secret', playerName: 'alice', token: 'alice-token' }))
+                .toMatchObject({ type: 'created' });
+            const waiting = await connected();
+            expect(await reply(waiting, 'create', { roomName: 'chat-waiting', maxPlayer: 6, game: 'chat', playerName: 'carol', token: 'carol-token' }))
+                .toMatchObject({ type: 'created' });
+            const waitingId = await connectionIdOf(waiting);
+            waiting.close();
+            await vi.waitFor(() => expect(routeRuns('$disconnect')).toContain(waitingId));
+            const visitor = await connected();
+
+            // When
+            const rooms = await reply(visitor, 'roomGetAll', { game: 'chat' });
+            const searched = await reply(visitor, 'roomGetAll', { game: 'chat', search: 'Chat-L' });
+
+            // Then
+            expect(rooms).toEqual({
+                id: 1,
+                type: 'rooms',
+                data: {
+                    rooms: [
+                        { roomName: 'chat-waiting', hostPlayer: 'carol', playerCount: 1, maxPlayer: 6, isPrivate: false, hostConnected: false },
+                        { roomName: 'chat-listed', playerCount: 1, maxPlayer: 6, isPrivate: true, hostConnected: true },
+                    ],
+                    hasMore: false,
+                },
+            });
+            expect(searched).toMatchObject({ data: { rooms: [{ roomName: 'chat-listed' }], hasMore: false } });
+            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' }))
+                .toMatchObject({ type: 'error', data: { message: 'Room of another game' } });
+            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'wrong', token: 'bob-token' }))
+                .toMatchObject({ type: 'error', data: { message: 'Wrong password' } });
+            expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'secret', token: 'bob-token' }))
+                .toMatchObject({ type: 'joiningRoom', data: { playerName: 'alice' } });
+        });
+
+        test('should refuse the passwords of a client for a while once it gave too many wrong ones, by its IP', async () => {
+            // Given
+            expect(await reply(await connected(), 'create', { roomName: 'locked', maxPlayer: 2, game: 'chess', password: 'secret', playerName: 'alice', token: 'alice-token' }))
+                .toMatchObject({ type: 'created' });
+            const guesser = await connected();
+            for (let attempt = 0; attempt < 5; attempt++) {
+                expect(await reply(guesser, 'join', { roomName: 'locked', game: 'chess', playerName: 'bob', password: `guess-${ attempt }`, token: 'bob-token' }))
+                    .toMatchObject({ data: { message: 'Wrong password' } });
+            }
+
+            // When
+            const refused = await reply(guesser, 'join', { roomName: 'locked', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' });
+
+            // Then
+            expect(refused).toMatchObject({ type: 'error', data: { message: 'Too many password attempts' } });
+        });
+
+        test('should check 5 passwords at most of a client sending them all at once', async () => {
+            // Given
+            expect(await reply(await connected(), 'create', { roomName: 'rushed', maxPlayer: 2, game: 'chess', password: 'secret', playerName: 'alice', token: 'alice-token' }))
+                .toMatchObject({ type: 'created' });
+            const guessers = await Promise.all(Array.from({ length: 8 }, () => connected()));
+
+            // When
+            const replies = await Promise.all(guessers.map((guesser: WebSocket, attempt: number) =>
+                reply(guesser, 'join', { roomName: 'rushed', game: 'chess', playerName: `bob-${ attempt }`, password: `guess-${ attempt }`, token: 'bob-token' })));
+
+            // Then
+            const messages: unknown[] = replies.map(({ data }: { data: Record<string, unknown> }) => data['message']);
+            expect(messages.filter((message: unknown) => message === 'Wrong password')).toHaveLength(5);
+            expect(messages.filter((message: unknown) => message === 'Too many password attempts')).toHaveLength(3);
         });
     });
 

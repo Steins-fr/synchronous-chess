@@ -5,6 +5,7 @@ import { roomFromSetup } from '../room-layout/room-from-setup';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatComponent, ChatPayloads } from './components/chat/chat.component';
 import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.component';
 
@@ -15,6 +16,7 @@ import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.compone
     providers: [RoomSetupService, RoomManagerService, RoomSocketApi],
 })
 export class ChatPage {
+    public readonly game: RoomGame = RoomGame.CHAT;
     public maxPlayer: number = 6;
     public readonly room = roomFromSetup<ChatPayloads>(this.maxPlayer, chatBlockChains);
 }

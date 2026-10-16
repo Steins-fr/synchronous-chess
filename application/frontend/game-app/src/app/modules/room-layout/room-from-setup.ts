@@ -15,12 +15,13 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     const roomSetupService: RoomSetupService = inject(RoomSetupService);
     const roomManagerService: RoomManagerService = inject(RoomManagerService);
     const room = signal<BlockRoom<M> | undefined>(undefined);
-    let destroyed: boolean = false;
+    // Aborted once the page left: stops the join asked again for a while
+    const destroyed: AbortController = new AbortController();
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
         try {
-            const built: BlockRoom<M> = await roomManagerService.buildBlockRoom<M>(setup, maxPlayer, routing);
-            if (destroyed) {
+            const built: BlockRoom<M> = await roomManagerService.buildBlockRoom<M>(setup, maxPlayer, routing, destroyed.signal);
+            if (destroyed.signal.aborted) {
                 // The page left while the room was built: nothing else would clear its socket, peers and timers
                 built.clear();
                 return;
@@ -41,7 +42,7 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
 
     roomSetupService.setup$.pipe(takeUntilDestroyed()).subscribe((setup: RoomSetupInterface) => void buildRoom(setup));
     inject(DestroyRef).onDestroy(() => {
-        destroyed = true;
+        destroyed.abort();
         room()?.clear();
     });
     notifyCheatFlags(() => room()?.cheatFlags());

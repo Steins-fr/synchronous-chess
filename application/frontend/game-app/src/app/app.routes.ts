@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const homePath: string = '';
+export const chessPath: string = 'synchronous-chess';
 export const chatPath: string = 'simple-chat';
 
 // The pages are loaded on their first visit, each in a chunk of its own: the initial bundle only holds the shell of the
@@ -8,6 +9,10 @@ export const chatPath: string = 'simple-chat';
 export const routes: Routes = [
     {
         path: homePath,
+        loadComponent: () => import('@app/modules/home-page/home.page').then((page) => page.HomePage),
+    },
+    {
+        path: chessPath,
         loadComponent: () => import('@app/modules/chess/pages/synchronous-chess/synchronous-chess')
             .then((page) => page.SynchronousChess),
     },

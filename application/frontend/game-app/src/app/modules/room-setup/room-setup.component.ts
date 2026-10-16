@@ -1,70 +1,76 @@
-
-import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { Component, OnInit, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { form, schema, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
-import { requiredText } from '@app/modules/form/rules/required-text.rule';
-import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
+import { DialogService } from '@app/services/dialog/dialog.service';
 import RoomSetupService, { RoomSetupType } from '@app/services/room-setup/room-setup.service';
+import { OpenRoom } from '@protocol/responses/rooms-response';
+import { RoomGame } from '@protocol/room-game.enum';
 import { map } from 'rxjs';
+import { OpenRoomsComponent } from './open-rooms/open-rooms.component';
+import { RoomCreate, RoomCreateDialog } from './room-create/room-create.dialog';
+import { RoomJoin, RoomJoinDialog } from './room-join/room-join.dialog';
 
-// The model of the form of the setup
-type RoomSetup = {
-    roomName: string;
-    playerName: string;
-};
-
-const roomSetupSchema = schema<RoomSetup>((path) => {
-    requiredText(path.roomName, 'Le nom de la salle est requis');
-    requiredText(path.playerName, 'Le nom du joueur est requis');
-});
-
+/** Creates a room, or joins one of the list, each through a dialog */
 @Component({
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
-    imports: [TextFieldComponent, MatButtonModule, MatProgressSpinnerModule],
+    imports: [OpenRoomsComponent, MatButtonModule, MatProgressSpinnerModule],
 })
 export class RoomSetupComponent implements OnInit {
-    public readonly maxPlayer = input.required<number>();
-
-    protected readonly setup = signal<RoomSetup>({ roomName: '', playerName: '' });
-    protected readonly setupForm = form(this.setup, roomSetupSchema, { name: 'room-setup' });
+    public readonly game = input.required<RoomGame>();
 
     private readonly roomSetupService = inject(RoomSetupService);
     private readonly route = inject(ActivatedRoute);
+    private readonly dialogService = inject(DialogService);
     protected readonly canDisplay = toSignal(this.roomSetupService.roomIsSetup$.pipe(map((roomIsSetup: boolean) => !roomIsSetup)));
     protected readonly loading = toSignal(this.roomSetupService.loading$);
+
+    // Given again to the dialogs, to try again once the room failed
+    private createdRoomName: string = '';
+    private playerName: string = '';
 
     public ngOnInit(): void {
         const params = this.route.snapshot.queryParamMap;
         if (params.has('auto-create')) {
-            this.setup.set({ roomName: this.linkRoom(params), playerName: this.randomPlayerName() });
-            void this.hostRoom();
+            this.setUp('create', this.linkRoom(params), this.randomPlayerName());
         } else if (params.has('auto-join')) {
-            this.setup.set({ roomName: this.linkRoom(params), playerName: this.randomPlayerName() });
-            setTimeout(() => this.joinRoom(), 1000);
+            const roomName: string = this.linkRoom(params);
+            const playerName: string = this.randomPlayerName();
+            setTimeout(() => this.setUp('join', roomName, playerName), 1000);
         }
     }
 
-    protected hostRoom(): Promise<boolean> {
-        return this.send('create');
-    }
-
-    protected joinRoom(): Promise<boolean> {
-        return this.send('join');
-    }
-
-    // Sets the room up once both names are typed: submit() touches the fields, showing the error of an empty one
-    private send(type: RoomSetupType): Promise<boolean> {
-        return submit(this.setupForm, {
-            action: () => {
-                this.roomSetupService.setup(type, this.setup().roomName, this.setup().playerName);
-                return Promise.resolve(undefined);
-            },
+    protected async createRoom(): Promise<void> {
+        const room: RoomCreate | void = await this.dialogService.open(RoomCreateDialog, {
+            title: 'Créer une salle',
+            inputs: { roomName: this.createdRoomName, playerName: this.playerName },
         });
+
+        // Not once the dialog is closed
+        if (room) {
+            this.createdRoomName = room.roomName;
+            this.setUp('create', room.roomName, room.playerName, room.password);
+        }
+    }
+
+    /** Joins a room of the list under the name asked, with the password of a private one */
+    protected async joinOpenRoom(room: Readonly<OpenRoom>): Promise<void> {
+        const join: RoomJoin | void = await this.dialogService.open(RoomJoinDialog, {
+            title: 'Rejoindre la salle',
+            inputs: { roomName: room.roomName, isPrivate: room.isPrivate, playerName: this.playerName },
+        });
+
+        if (join) {
+            this.setUp('join', room.roomName, join.playerName, join.password);
+        }
+    }
+
+    private setUp(type: RoomSetupType, roomName: string, playerName: string, password?: string): void {
+        this.playerName = playerName;
+        this.roomSetupService.setup({ type, game: this.game(), roomName, playerName, password });
     }
 
     // The room of an auto link: the default one when the link gives none, or an empty one

@@ -19,4 +19,6 @@ import { MatInput } from '@angular/material/input';
 export class TextFieldComponent {
     public readonly label = input.required<string>();
     public readonly field = input.required<FieldTree<string>>();
+    /** A password hides what is typed */
+    public readonly type = input<'text' | 'password'>('text');
 }
