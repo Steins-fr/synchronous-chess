@@ -165,6 +165,18 @@ describe('RoomManagerService', () => {
         expect(notificationService.error).toHaveBeenCalledWith(notification);
     });
 
+    test('should notify a peer joining a private room without its password', async () => {
+        // Given: the room listed as public before it became private
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.WRONG_PASSWORD));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS });
+
+        // Then
+        await expect(build).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        expect(notificationService.error).toHaveBeenCalledWith('Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.');
+    });
+
     test('should notify a peer when the room it took over can not move to a new socket', async () => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
@@ -248,6 +260,25 @@ describe('RoomManagerService', () => {
         expect(notificationService.info).toHaveBeenCalledTimes(1);
         expect(notificationService.error).not.toHaveBeenCalled();
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
+    });
+
+    test('should stop joining once the page left, without notifying it', async () => {
+        // Given
+        vi.useFakeTimers();
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.ALREADY_IN_GAME));
+        const left: AbortController = new AbortController();
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS }, left.signal);
+        const rejected = expect(build).rejects.toThrow(DOMException);
+        await vi.advanceTimersByTimeAsync(0);
+
+        // When
+        left.abort();
+        await vi.advanceTimersByTimeAsync(20_000);
+
+        // Then
+        await rejected;
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        expect(notificationService.error).not.toHaveBeenCalled();
     });
 
     test('should join again while the host reconnects its room', async () => {

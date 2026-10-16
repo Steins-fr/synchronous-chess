@@ -23,7 +23,7 @@ export enum RejoinResult {
     HOST_LEFT = 'hostLeft',
     /** Not joined, to try again later: the API failed, or this participant connects already */
     NOT_JOINED = 'notJoined',
-    /** The API refused the join for good, the room expired: nothing to join anymore */
+    /** Nothing to join anymore: the API refused the join for good, the room expired, or the host its full room */
     ROOM_LOST = 'roomLost',
 }
 
@@ -68,7 +68,10 @@ export abstract class RoomNetwork {
     /** The API refuses the player joining the room again for a while, with this error: the player asks again later */
     public readonly joinDelayed$ = this.joinDelayedSubject.asObservable();
     protected readonly joinFailedSubject = new Subject<JoinFailure>();
-    /** The player gave up joining the room, never connected to it: a participant joining it again stays in it */
+    /**
+     * The player gave up joining the room, never connected to it, or its place given to another player meanwhile: a
+     * participant joining it again stays in it otherwise
+     */
     public readonly joinFailed$ = this.joinFailedSubject.asObservable();
 
     protected constructor(

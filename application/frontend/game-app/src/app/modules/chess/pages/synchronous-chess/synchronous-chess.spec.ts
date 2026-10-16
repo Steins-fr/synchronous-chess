@@ -62,7 +62,7 @@ describe('SynchronousChess', () => {
             [SCGameSessionType.SEAT]: BlockChainName.CHESS,
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
-        });
+        }, expect.any(AbortSignal));
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull());
 
         // Then the game replaces the presentation, the rules are folded below it, without their own title

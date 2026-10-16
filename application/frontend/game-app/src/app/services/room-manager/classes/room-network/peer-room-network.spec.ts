@@ -305,6 +305,24 @@ describe('PeerRoomNetwork', () => {
             expect(joinFailed).not.toHaveBeenCalled();
         });
 
+        test('should give the room up when the host refuses it joining again, its room full', async () => {
+            // Given
+            vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
+            const joinFailed = vi.fn();
+            network.joinFailed$.subscribe(joinFailed);
+
+            // When
+            const rejoining: Promise<RejoinResult> = network.rejoin();
+            await vi.advanceTimersByTimeAsync(0);
+            TestHelper.cast<{ notification$: Subject<RoomSocketApiNotifications> }>(roomSocketApi).notification$
+                .next({ type: RoomSocketApiNotificationEnum.FULL, data: { roomName: 'room', from: 'host' } });
+
+            // Then
+            expect(await rejoining).toEqual(RejoinResult.ROOM_LOST);
+            expect(joinFailed).toHaveBeenCalledWith(JoinFailure.ROOM_FULL);
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        });
+
         test('should stop joining again once cleared', async () => {
             // Given
             vi.spyOn(console, 'error').mockImplementation(() => undefined);

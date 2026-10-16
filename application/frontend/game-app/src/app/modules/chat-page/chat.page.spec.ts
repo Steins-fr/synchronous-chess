@@ -53,7 +53,7 @@ describe('ChatPage', () => {
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT });
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal));
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 
@@ -78,7 +78,8 @@ describe('ChatPage', () => {
         fixture.destroy();
         build(room);
 
-        // Then
+        // Then: the join asked again stops
+        expect(vi.mocked(roomManagerService.buildBlockRoom).mock.calls[0][3]?.aborted).toEqual(true);
         await vi.waitFor(() => expect(clearSpy).toHaveBeenCalledTimes(1));
         expect(fixture.componentInstance.room()).toBeUndefined();
     });

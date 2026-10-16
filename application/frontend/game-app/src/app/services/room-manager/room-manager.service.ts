@@ -19,10 +19,15 @@ export default class RoomManagerService {
     private readonly notificationService = inject(NotificationService);
     private readonly destroyRef = inject(DestroyRef);
 
+    /**
+     * @param signal aborted once the page left: the join asked again for a while stops, rejecting with an AbortError, not
+     * notified
+     */
     public async buildBlockRoom<M extends object>(
         setup: RoomSetupInterface,
         maxPlayer: number,
         routing: NonEmptyBlockChainRouting<M>,
+        signal?: AbortSignal,
     ): Promise<BlockRoom<M>> {
         try {
             const keys = await BlockRoom.createKeys(setup.playerName);
@@ -47,7 +52,7 @@ export default class RoomManagerService {
 
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, access);
             } else {
-                const response: RoomJoinResponse = await this.join(setup, access);
+                const response: RoomJoinResponse = await this.join(setup, access, signal);
 
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName, maxPlayer, access);
             }
@@ -74,14 +79,18 @@ export default class RoomManagerService {
                 routing,
             );
         } catch (e) {
-            this.notificationService.error(RoomManagerService.failureMessage(setup, e));
+            if (!signal?.aborted) {
+                this.notificationService.error(RoomManagerService.failureMessage(setup, e));
+            }
+
             throw e;
         }
     }
 
-    private join(setup: RoomSetupInterface, access: RoomAccess): Promise<RoomJoinResponse> {
+    private join(setup: RoomSetupInterface, access: RoomAccess, signal: AbortSignal | undefined): Promise<RoomJoinResponse> {
         return joinRoom(this.roomSocketApi, { roomName: setup.roomName, playerName: setup.playerName, ...access }, {
             onRetry: (error: string) => this.notificationService.info(RoomManagerService.retryMessage(error)),
+            signal,
         });
     }
 
@@ -104,7 +113,10 @@ export default class RoomManagerService {
             case RoomApiErrorMessage.HOST_DISCONNECTED:
                 return 'L\'hôte de la salle s\'est déconnecté.';
             case RoomApiErrorMessage.WRONG_PASSWORD:
-                return 'Le mot de passe de la salle est incorrect.';
+                // Listed as public before it became private, or joined through a link
+                return setup.password === undefined
+                    ? 'Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.'
+                    : 'Le mot de passe de la salle est incorrect.';
             case RoomApiErrorMessage.OTHER_GAME:
                 return 'Cette salle est celle d\'un autre jeu.';
             case RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS:

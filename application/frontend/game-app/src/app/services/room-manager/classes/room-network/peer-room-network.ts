@@ -213,7 +213,8 @@ export class PeerRoomNetwork extends RoomNetwork {
      * name until the host removed the former connection, and while the host reconnects. The others connect to it again
      * once connected to the host. The host first closes the socket of its room: the participants it lost, still
      * connected to each other, take the room over, and the room waits for its host when they all left. Not connected to
-     * the host, the participant stays in the room
+     * the host, the participant stays in the room, to join it again later; refused by the host, its room full, the
+     * participant gives it up: the room gave its place to another player
      */
     public override async rejoin(): Promise<RejoinResult> {
         if (this.joining || this.getNegotiatorSize() > 0) { // Connecting again already
@@ -226,12 +227,21 @@ export class PeerRoomNetwork extends RoomNetwork {
         this.joining = true;
 
         try {
-            return await this.connectToHost(await this.joinThroughSocket()) === undefined ? RejoinResult.JOINED : RejoinResult.NOT_JOINED;
+            return this.rejoinResult(await this.connectToHost(await this.joinThroughSocket()));
         } catch (e) {
             return this.rejoinFailure(e);
         } finally {
             this.joining = false;
         }
+    }
+
+    private rejoinResult(failure: JoinFailure | undefined): RejoinResult {
+        if (failure === JoinFailure.ROOM_FULL) {
+            this.joinFailedSubject.next(failure);
+            return RejoinResult.ROOM_LOST;
+        }
+
+        return failure === undefined ? RejoinResult.JOINED : RejoinResult.NOT_JOINED;
     }
 
     private rejoinFailure(error: unknown): RejoinResult {
