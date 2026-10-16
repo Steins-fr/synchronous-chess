@@ -31,7 +31,7 @@ export class RoomJoinDialog {
     /** The name typed in the setup form, if any */
     public readonly playerName = input<string>('');
 
-    protected readonly model = linkedSignal<RoomJoinForm>(() => ({ playerName: this.playerName(), password: '' }));
+    protected readonly model = linkedSignal<Readonly<RoomJoinForm>>(() => ({ playerName: this.playerName(), password: '' }));
     protected readonly joinForm = form(this.model, (path) => {
         playerNameRules(path.playerName);
         // Not a required text: a password may be made of spaces

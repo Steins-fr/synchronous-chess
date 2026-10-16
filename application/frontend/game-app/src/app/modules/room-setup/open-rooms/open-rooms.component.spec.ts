@@ -222,6 +222,28 @@ describe('OpenRoomsComponent', () => {
         expect(rows()).toHaveLength(1);
     });
 
+    test('should keep the rooms listed when a refresh fails', async () => {
+        // Given
+        await createComponent({ rooms: [publicRoom], hasMore: false });
+        vi.mocked(roomSocketApi.send).mockRejectedValueOnce(new Error('The request has timeout.'));
+
+        // When
+        refreshButton().click();
+        await render();
+
+        // Then
+        expect(rows()).toHaveLength(1);
+        expect(text()).toContain('Les salles n\'ont pas pu être actualisées.');
+        expect(text()).not.toContain('Les salles n\'ont pas pu être chargées.');
+
+        // When
+        refreshButton().click();
+        await render();
+
+        // Then
+        expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
+    });
+
     test('should list the rooms again every 15 seconds while the page is visible, and once visible again', async () => {
         // Given
         await createComponent({ rooms: [publicRoom], hasMore: false });

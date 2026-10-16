@@ -53,6 +53,8 @@ export default class RoomManagerService {
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, access);
             } else {
                 const response: RoomJoinResponse = await this.join(setup, access, signal);
+                // The page left while the join was sent: no negotiation with the host
+                signal?.throwIfAborted();
 
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName, maxPlayer, access);
             }

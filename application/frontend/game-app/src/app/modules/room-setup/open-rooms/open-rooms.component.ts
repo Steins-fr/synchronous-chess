@@ -50,7 +50,7 @@ export class OpenRoomsComponent {
     protected readonly hasMore = signal<boolean>(false);
     protected readonly failed = signal<boolean>(false);
 
-    protected readonly search = signal<RoomSearch>({ text: '' });
+    protected readonly search = signal<Readonly<RoomSearch>>({ text: '' });
     protected readonly searchForm = form(this.search, roomSearchSchema, { name: 'room-search' });
     /** The search the list shows */
     protected readonly searched = signal<string>('');

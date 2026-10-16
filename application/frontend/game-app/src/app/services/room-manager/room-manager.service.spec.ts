@@ -7,6 +7,7 @@ import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
 import { JoinFailure } from './classes/room-network/room-network';
+import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum, RoomSocketApiNotifications } from '@protocol/socket-packet-payload.type';
@@ -277,6 +278,24 @@ describe('RoomManagerService', () => {
 
         // Then
         await rejected;
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        expect(notificationService.error).not.toHaveBeenCalled();
+    });
+
+    test('should not connect to the host once the page left while the join was sent', async () => {
+        // Given
+        let joined: (response: RoomJoinResponse) => void = () => undefined;
+        vi.mocked(roomSocketApi.send).mockReturnValue(new Promise<RoomJoinResponse>((resolve) => joined = resolve));
+        const left: AbortController = new AbortController();
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer' }, 2, { move: BlockChainName.CHESS }, left.signal);
+        await vi.waitFor(() => expect(roomSocketApi.send).toHaveBeenCalled());
+
+        // When
+        left.abort();
+        joined({ playerName: 'host' });
+
+        // Then
+        await expect(build).rejects.toMatchObject({ name: 'AbortError' });
         expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
         expect(notificationService.error).not.toHaveBeenCalled();
     });

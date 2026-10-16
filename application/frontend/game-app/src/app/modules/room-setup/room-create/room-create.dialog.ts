@@ -39,7 +39,7 @@ export class RoomCreateDialog {
     public readonly roomName = input<string>('');
     public readonly playerName = input<string>('');
 
-    protected readonly model = linkedSignal<RoomCreateForm>(() => ({ roomName: this.roomName(), playerName: this.playerName(), password: '' }));
+    protected readonly model = linkedSignal<Readonly<RoomCreateForm>>(() => ({ roomName: this.roomName(), playerName: this.playerName(), password: '' }));
     protected readonly createForm = form(this.model, roomCreateSchema, { name: 'room-create' });
 
     protected create(event: Event): Promise<boolean> {

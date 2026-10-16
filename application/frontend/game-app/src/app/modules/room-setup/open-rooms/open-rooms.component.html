@@ -9,9 +9,11 @@
     </div>
 </div>
 <app-text-field [field]="searchForm.text" class="max-w-md" label="Rechercher une salle" />
+@if (rooms(); as openRooms) {
+<!-- The list loaded before stays: a failed refresh does not take it away -->
 @if (failed()) {
-<p class="muted-note">Les salles n'ont pas pu être chargées.</p>
-} @else if (rooms(); as openRooms) {
+<p class="muted-note">Les salles n'ont pas pu être actualisées.</p>
+}
 @if (openRooms.length === 0) {
 <p class="muted-note">
     @if (searched() === '') {
@@ -58,6 +60,8 @@
 </p>
 }
 }
+} @else if (failed()) {
+<p class="muted-note">Les salles n'ont pas pu être chargées.</p>
 } @else {
 <p class="muted-note">Chargement des salles…</p>
 }
