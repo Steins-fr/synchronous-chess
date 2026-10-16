@@ -19,7 +19,8 @@ export default interface Room {
     queue: Player[];
     /**
      * SHA-256 of the token of each player who joined the room, by name, kept once it left: the host reconnects the room
-     * with its own, a player of a private room joins it again without its password
+     * with its own, the page of a player joins a private room again without its password (not once reloaded: its token
+     * is new)
      */
     tokenHashes: Record<string, string>;
     /**

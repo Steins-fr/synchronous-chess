@@ -1,6 +1,7 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { isPassword, verifyPassword } from '@helpers/password.helper';
 import { hashSource } from '@helpers/source.helper';
+import { epochSeconds } from '@helpers/time.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import RoomJoinRequest from '@protocol/requests/room-join-request';
@@ -20,7 +21,8 @@ export default class RoomPasswordService {
 
     /**
      * Before a player joins a private room: a public room ignores the password, and so does a private one for a player
-     * of the room, its token proving it gave the password before (a page reloaded or joining again). A client gives
+     * of the room, its token proving its page gave the password before (joining again after losing its connections; a
+     * page reloaded has a new token, and gives the password again). A client gives
      * MAX_PASSWORD_ATTEMPTS passwords in a row at most, each one counted before being checked, then the room refuses its
      * passwords without checking them, for this client only, until ROOM_PASSWORD_LOCK_DELAY after the last one counted:
      * a password is not guessed by trying them all, even all at once, and the other clients still join the room. The
@@ -39,8 +41,7 @@ export default class RoomPasswordService {
             throw new BadRequestException(RoomApiErrorMessage.WRONG_PASSWORD);
         }
 
-        // In epoch seconds, the unit of the TTL of DynamoDB
-        const now: number = Math.floor(Date.now() / 1000);
+        const now: number = epochSeconds();
         const source: string = hashSource(sourceIp);
 
         if (!await this.passwordAttemptRepository.countAttempt(room, source, RoomPasswordService.MAX_PASSWORD_ATTEMPTS, now, now + ROOM_PASSWORD_LOCK_DELAY)) {

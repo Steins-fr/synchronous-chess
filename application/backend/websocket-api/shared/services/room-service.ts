@@ -1,6 +1,7 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { hashPassword } from '@helpers/password.helper';
 import { searchKey } from '@helpers/search.helper';
+import { epochSeconds } from '@helpers/time.helper';
 import { hashToken } from '@helpers/token.helper';
 import RoomHelper from '@helpers/room-helper';
 import Connection from '@models/connection';
@@ -19,19 +20,14 @@ export default class RoomService {
 
     private readonly roomRepository: RoomRepository = new RoomRepository();
 
-    /** In epoch seconds, the unit of the TTL of DynamoDB */
-    private static now(): number {
-        return Math.floor(Date.now() / 1000);
-    }
-
     private static isExpired(room: Room): boolean {
-        return room.expiresAt !== undefined && room.expiresAt <= RoomService.now();
+        return room.expiresAt !== undefined && room.expiresAt <= epochSeconds();
     }
 
     /** The room of a disconnected host waits for it to reconnect, a disconnected guest leaves the queue */
     public async removeConnectionFromRoom(room: Room, connection: Connection): Promise<void> {
         if (room.connectionId === connection.connectionId) {
-            await this.roomRepository.waitForHost(room, connection.connectionId, RoomService.now() + RoomService.HOST_RECONNECTION_DELAY);
+            await this.roomRepository.waitForHost(room, connection.connectionId, epochSeconds() + RoomService.HOST_RECONNECTION_DELAY);
         } else if (RoomHelper.findPlayerConnectionId(room.queue, connection.connectionId) !== null) {
             await this.removePlayerFromQueue(connection.connectionId, room);
         }
@@ -77,8 +73,8 @@ export default class RoomService {
         // One more room tells more exist
         const maxRooms: number = RoomService.MAX_OPEN_ROOMS + 1;
         const rooms: ListedRoom[] = searched === ''
-            ? await this.roomRepository.findRecentRooms(game, RoomService.now(), maxRooms)
-            : await this.roomRepository.findRoomsStartingWith(game, searched, RoomService.now(), maxRooms);
+            ? await this.roomRepository.findRecentRooms(game, epochSeconds(), maxRooms)
+            : await this.roomRepository.findRoomsStartingWith(game, searched, epochSeconds(), maxRooms);
 
         return {
             rooms: rooms.slice(0, RoomService.MAX_OPEN_ROOMS).map((room: ListedRoom): OpenRoom => ({
@@ -160,7 +156,7 @@ export default class RoomService {
             room.passwordHash = hashPassword(request.password);
         }
 
-        const created: boolean = await this.roomRepository.create(room, RoomService.now());
+        const created: boolean = await this.roomRepository.create(room, epochSeconds());
 
         if (!created) {
             throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
@@ -191,7 +187,7 @@ export default class RoomService {
      * @throws {BadRequestException} when the token is not the one of the player, or the host reconnected meanwhile
      */
     public async reconnectHost(room: Room, connectionId: string, playerName: string, token: string): Promise<void> {
-        if (!await this.roomRepository.reconnectHost(room, connectionId, playerName, hashToken(token), RoomService.now())) {
+        if (!await this.roomRepository.reconnectHost(room, connectionId, playerName, hashToken(token), epochSeconds())) {
             throw new BadRequestException('You are not the host of the room');
         }
     }

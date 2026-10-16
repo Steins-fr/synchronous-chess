@@ -109,7 +109,7 @@ export default class RoomRepository extends BaseRepository<Room> {
         });
     }
 
-    /** The hash of its token is kept: the player joins the room again without its password */
+    /** The hash of its token is kept: the page of the player joins the room again without its password */
     public async removePlayerFromRoom(playerName: string, room: Room): Promise<void> {
         const index: number = room.players.findIndex((player: Player): boolean => player.playerName === playerName);
         if (index === -1) {
