@@ -23,3 +23,9 @@ variable "environment" {
   type        = map(string)
   default     = {}
 }
+
+variable "memory_size" {
+  description = "Memory of the function, in MB: Lambda gives it CPU in proportion"
+  type        = number
+  default     = 128
+}

@@ -196,6 +196,9 @@ module "sc_lambda_sendmessage" {
   name      = "sendmessage"
   role      = module.sc_role_lambda_dynamo.arn
   stage     = var.stage
+  # The passwords of the private rooms are hashed and checked by scrypt (16 MB, CPU bound): 128 MB give it a fraction of a
+  # vCPU, a cold start then nears the 3 seconds of the timeout (the app waits 5), the attempt counted but never uncounted
+  memory_size = 512
   environment = {
     TABLE_NAME_ROOMS             = module.sc_database_room.name
     TABLE_NAME_CONNECTIONS       = module.sc_database_connection.name
