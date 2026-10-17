@@ -9,6 +9,7 @@
         "test": "vitest",
         "test:ci": "vitest run --coverage",
         "db:generate": "drizzle-kit generate",
+        "smoke:data-api": "bash local/data-api-smoke.sh",
         "db:check": "drizzle-kit check && drizzle-kit generate && git diff --exit-code -- drizzle && test -z \"$(git status --porcelain -- drizzle)\""
     },
     "dependencies": {
