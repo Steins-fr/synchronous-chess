@@ -29,8 +29,10 @@ resource "aws_apigatewayv2_stage" "stage" {
     detailed_metrics_enabled = false
     logging_level            = "INFO"
     data_trace_enabled       = false
-    throttling_burst_limit   = 1000
-    throttling_rate_limit    = 5000
+    # Each message runs a lambda, and wakes the paused database: the API refuses (429) the messages past 100 a second,
+    # 500 at once. A room of 16 players connecting at once sends a few hundred signals
+    throttling_burst_limit = 500
+    throttling_rate_limit  = 100
   }
 
   tags = {

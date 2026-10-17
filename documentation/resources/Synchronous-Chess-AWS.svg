@@ -216,7 +216,7 @@
   <rect x="616" y="358" width="256" height="92" rx="6" class="dat"/>
   <text x="628" y="376" class="h dat-t">CloudWatch Logs</text>
   <text x="628" y="391" class="s">/aws/lambda/sc_{name}_{stage}</text>
-  <text x="640" y="404" class="s">a group per lambda, retention not set</text>
+  <text x="640" y="404" class="s">a group per lambda, 14 days</text>
   <text x="628" y="419" class="s">/aws/apigateway/synchronous-chess-{stage}</text>
   <text x="640" y="432" class="s">access logs, 14 days</text>
   <text x="628" y="445" class="s">+ execution logs of API Gateway (INFO)</text>

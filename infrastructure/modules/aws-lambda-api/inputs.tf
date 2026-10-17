@@ -41,3 +41,9 @@ variable "bundle_directory" {
   type        = bool
   default     = false
 }
+
+variable "log_retention_days" {
+  description = "Days the logs of the function are kept"
+  type        = number
+  default     = 14
+}

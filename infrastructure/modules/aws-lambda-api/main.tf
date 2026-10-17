@@ -11,6 +11,19 @@ data "archive_file" "archive" {
   output_path = local.archive_path
 }
 
+# The group Lambda writes the logs of the function to, created before it with a retention: Lambda would create it
+# without one, its logs kept forever
+resource "aws_cloudwatch_log_group" "logs" {
+  name              = "/aws/lambda/${local.lambda_name}"
+  retention_in_days = var.log_retention_days
+
+  tags = {
+    Application = "Synchronous chess"
+    Tool        = "Terraform"
+    Environment = var.stage
+  }
+}
+
 resource "aws_lambda_function" "lambda" {
   filename      = local.archive_path
   function_name = local.lambda_name
@@ -27,6 +40,8 @@ resource "aws_lambda_function" "lambda" {
   environment {
     variables = merge(var.environment, { FUNCTION_NAME = local.lambda_name })
   }
+
+  depends_on = [aws_cloudwatch_log_group.logs]
 
   tags = {
     Name        = "Lambda API - ${var.name}"
