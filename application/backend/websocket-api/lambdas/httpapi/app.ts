@@ -1,4 +1,4 @@
-import BadRequestException from '@exceptions/bad-request-exception';
+import { isBadRequestException } from '@exceptions/bad-request-exception';
 import ErrorResponse from '@protocol/responses/error-response';
 import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
 import { APIGatewayProxyEventV2 } from 'aws-lambda';
@@ -48,7 +48,7 @@ export const handler = async function (event: APIGatewayProxyEventV2): Promise<R
     } catch (e) {
         console.error(e);
 
-        if (e instanceof BadRequestException) {
+        if (isBadRequestException(e)) {
             return jsonResponse(400, { message: e.message } satisfies ErrorResponse);
         }
 

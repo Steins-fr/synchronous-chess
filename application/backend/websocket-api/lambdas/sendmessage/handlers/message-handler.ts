@@ -9,8 +9,7 @@ import {
     RoomApiResponseTypeEnum,
     RoomSocketApiNotificationEnum
 } from '@protocol/socket-packet-payload.type';
-import BadRequestException from '@exceptions/bad-request-exception';
-import ExceptionTypeEnum from '@exceptions/exception-type.enum';
+import BadRequestException, { isBadRequestException } from '@exceptions/bad-request-exception';
 import { notificationCommand } from '@helpers/notification.helper';
 import ConnectionService from '@services/connection-service';
 import RoomService from '@services/room-service';
@@ -42,15 +41,11 @@ export default abstract class MessageHandler {
             await this.handle();
         } catch (e) {
             console.error(e);
-            if (this.isBadRequestException(e)) {
+            if (isBadRequestException(e)) {
                 await this.replyError(e.message);
             }
             throw (e);
         }
-    }
-
-    protected isBadRequestException(e: unknown): e is BadRequestException {
-        return !!e && typeof e === 'object' && 'type' in e && e.type === ExceptionTypeEnum.BAD_REQUEST;
     }
 
     protected getPayloadData<RequestType extends RoomApiRequestTypeEnum>(type: RequestType): RoomSocketApiRequestTypedData[RequestType] {
