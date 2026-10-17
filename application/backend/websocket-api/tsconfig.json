@@ -10,12 +10,16 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "esModuleInterop": true,
+        // The declarations of drizzle-orm 1.0 RC and PGlite do not compile under TypeScript 6 (the drivers of the other
+        // databases, the DOM types of PGlite): checked as they are used only
+        "skipLibCheck": true,
         "declaration": false,
         "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "typeRoots": ["node_modules/@types"],
         "types": ["node"],
         "paths": {
+            "@database/*": ["./shared/database/*"],
             "@exceptions/*": ["./shared/exceptions/*"],
             "@helpers/*": ["./shared/helpers/*"],
             "@models/*": ["./shared/models/*"],

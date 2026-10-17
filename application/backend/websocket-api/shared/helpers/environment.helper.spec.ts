@@ -1,5 +1,13 @@
 import { describe, expect, test, vi } from 'vitest';
-import { getConnectionsTableName, getManagementApiEndpoint, getPasswordAttemptsTableName, getRoomsTableName } from './environment.helper';
+import {
+    getConnectionsTableName,
+    getDatabaseName,
+    getDatabaseResourceArn,
+    getDatabaseSecretArn,
+    getManagementApiEndpoint,
+    getPasswordAttemptsTableName,
+    getRoomsTableName,
+} from './environment.helper';
 
 describe('environment helper', () => {
     test.each([
@@ -43,5 +51,31 @@ describe('environment helper', () => {
 
     test('should give the tables of the environment', () => {
         expect([getConnectionsTableName(), getRoomsTableName(), getPasswordAttemptsTableName()]).toEqual(['connection', 'room', 'password-attempt']);
+    });
+
+    test.each([
+        ['DATABASE_RESOURCE_ARN', getDatabaseResourceArn, 'the ARN of the Aurora cluster'],
+        ['DATABASE_SECRET_ARN', getDatabaseSecretArn, 'the ARN of the secret of the Aurora cluster'],
+        ['DATABASE_NAME', getDatabaseName, 'the database of the Aurora cluster'],
+    ])('should fail at once without %s in the environment', (variable: string, setting: () => string, purpose: string) => {
+        // Given
+        vi.stubEnv(variable, undefined);
+
+        // When / Then
+        expect(setting).toThrow(`No ${ variable }: ${ purpose }`);
+    });
+
+    test('should give the database of the environment', () => {
+        // Given
+        vi.stubEnv('DATABASE_RESOURCE_ARN', 'arn:aws:rds:eu-west-1:123456789012:cluster:sc-dev');
+        vi.stubEnv('DATABASE_SECRET_ARN', 'arn:aws:secretsmanager:eu-west-1:123456789012:secret:sc-dev');
+        vi.stubEnv('DATABASE_NAME', 'synchronous_chess');
+
+        // When / Then
+        expect([getDatabaseResourceArn(), getDatabaseSecretArn(), getDatabaseName()]).toEqual([
+            'arn:aws:rds:eu-west-1:123456789012:cluster:sc-dev',
+            'arn:aws:secretsmanager:eu-west-1:123456789012:secret:sc-dev',
+            'synchronous_chess',
+        ]);
     });
 });

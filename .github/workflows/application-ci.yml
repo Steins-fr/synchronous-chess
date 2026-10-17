@@ -131,6 +131,10 @@ jobs:
             - name: Run type check
               run: npm run typecheck
 
+            - name: Check the migrations of the database
+              # Fails when the schema changed without its migration (npm run db:generate)
+              run: npm run db:check
+
     websocket-api-test:
         needs: [websocket-api-lint]
         # Runs after the lint, or without it when the lint is skipped

@@ -101,7 +101,7 @@ describe('MessageHandler', () => {
 
     test.each([
         ['an error', new Error('Internal')],
-        ['an object of another type', { type: 'dynamo_db' }],
+        ['an object of another type', { type: 'database' }],
         ['an object without type', { message: 'Internal' }],
         ['a string', 'Internal'],
         ['nothing', undefined],

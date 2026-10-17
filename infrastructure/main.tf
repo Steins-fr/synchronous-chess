@@ -99,6 +99,27 @@ module "sc_database_connection" {
 }
 
 /**
+ * Database: Aurora PostgreSQL Serverless v2, through its Data API. Beside the tables until the lambdas move to it
+ */
+module "sc_database" {
+  source = "./modules/aws-aurora-serverless"
+
+  name = "database"
+  # Its major version is the one of PGlite, the database of the local API and the specs (package.json of the API)
+  engine_version = "17.10"
+  database_name  = "synchronous_chess"
+  stage          = var.stage
+}
+
+module "sc_database_data_api_policy" {
+  source = "./modules/aws-rds-data-iam-policy"
+
+  cluster_arn = module.sc_database.arn
+  secret_arn  = module.sc_database.secret_arn
+  stage       = var.stage
+}
+
+/**
  * API Gateway
  */
 

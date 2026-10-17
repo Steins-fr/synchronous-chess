@@ -151,3 +151,93 @@
         }
     ]
 }
+// Deployment role of GitHub Actions (OIDC, secrets.AWS_ROLE_ARN): what the Aurora cluster adds, for each stage
+// (sc-database-<stage>). Terraform creates its network, the cluster, its instance and its Data API policy; RDS creates
+// the secret of the master user, describing its KMS key (aws/secretsmanager) with the rights of the caller
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DatabaseNetwork",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateVpc",
+                "ec2:DeleteVpc",
+                "ec2:ModifyVpcAttribute",
+                "ec2:CreateSubnet",
+                "ec2:DeleteSubnet",
+                "ec2:CreateTags",
+                "ec2:DeleteTags",
+                "ec2:Describe*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "DatabaseCluster",
+            "Effect": "Allow",
+            "Action": [
+                "rds:CreateDBCluster",
+                "rds:ModifyDBCluster",
+                "rds:DeleteDBCluster",
+                "rds:CreateDBInstance",
+                "rds:ModifyDBInstance",
+                "rds:DeleteDBInstance",
+                "rds:CreateDBSubnetGroup",
+                "rds:ModifyDBSubnetGroup",
+                "rds:DeleteDBSubnetGroup",
+                "rds:EnableHttpEndpoint",
+                "rds:DisableHttpEndpoint",
+                "rds:AddTagsToResource",
+                "rds:RemoveTagsFromResource",
+                "rds:ListTagsForResource",
+                "rds:Describe*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "DatabaseServiceRole",
+            "Effect": "Allow",
+            "Action": "iam:CreateServiceLinkedRole",
+            "Resource": "arn:aws:iam::404273159415:role/aws-service-role/rds.amazonaws.com/AWSServiceRoleForRDS",
+            "Condition": {
+                "StringEquals": {
+                    "iam:AWSServiceName": "rds.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "DatabaseSecret",
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:CreateSecret",
+                "secretsmanager:DeleteSecret",
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:UpdateSecret",
+                "secretsmanager:RotateSecret",
+                "secretsmanager:TagResource"
+            ],
+            "Resource": "arn:aws:secretsmanager:eu-west-1:404273159415:secret:rds!cluster-*"
+        },
+        {
+            "Sid": "DatabaseSecretKey",
+            "Effect": "Allow",
+            "Action": "kms:DescribeKey",
+            "Resource": "*"
+        },
+        {
+            "Sid": "DatabasePolicy",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:ListPolicyVersions",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicyVersion",
+                "iam:TagPolicy"
+            ],
+            "Resource": "arn:aws:iam::404273159415:policy/sc-database-*"
+        }
+    ]
+}
