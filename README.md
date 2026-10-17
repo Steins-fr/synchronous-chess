@@ -32,13 +32,13 @@ The displayed errors are generics, this need some more works.
 ### **Backend**
 ---
 
-The backend is designed to run on AWS lambda (lambda functions/layers).
+The backend is designed to run on AWS Lambda, in `application/backend/websocket-api` (see its [README](application/backend/websocket-api/README.md)).
 
 **Language**: Typescript.
 
-#### Room Manager Layer
+#### Services
 
-Layer that helps lambdas for managing the rooms. It exposes two services:
+The code the lambdas share, in `shared/`, bundled into each lambda by esbuild:
 
 **Room service**: Manage the room (create/update/remove).
 
@@ -46,9 +46,7 @@ Layer that helps lambdas for managing the rooms. It exposes two services:
 
 #### Websocket API Lambdas
 
-**Required**: Room Manager Layer.
-
-The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, and a 4th applying the migrations of the database on deploy. The disconnection and message lambdas use the *room manager layer* and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
+The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, and a 4th applying the migrations of the database on deploy. The disconnection and message lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
 
 **onconnect** - Handle and log new websocket opened connection.
 
@@ -124,18 +122,18 @@ The options of each service, the regions, the network of the database and the ro
 [detailed diagram](documentation/resources/Synchronous-Chess-AWS.svg).
 
 #### Services:
- - S3: Stores the frontend files and their access logs;
+ - S3: Stores the frontend files, and the Terraform states;
  - CloudFront: Serves the frontend from S3 and manage the cache;
  - Lambda: Run the Room API designed for Websocket;
  - API Gateway: Manages Websocket connection and API calls, then transmits calls to the lambdas;
  - Aurora Serverless v2 (PostgreSQL): Stores the Rooms informations for the API, reached by the lambdas through its Data API;
+ - Secrets Manager: Keeps the password of the database, which the Data API reads;
  - Route 53: Manage the DNS records;
  - CloudWatch: Monitors and logs;
  - ACM: Manage the certificates.
 
- A data-source is used for the certificate from AWS Certificate Manager. I prefer creating manually the certificate, its more easier. 
-
- The API Gateway is not provisioned by Terraform because the AWS provider do not permits Websocket API creation. 
+Terraform provisions every resource but the Route 53 zone of the main domain, which must exist: it reads it, then adds
+the DNS records of the app, of the websocket API, and the ones validating their ACM certificates.
 
 #### Terraform init backend configuration
 
@@ -148,46 +146,29 @@ The Terraform backend configuration variables:
 
 #### Terraform plan vars
 
-- stage: Stage name. Ex: 'dev';
-- acm_certificate_arn: AWS arn of the certificate that CloudFront have to serve.
+- stage: Stage name: `production`, `staging` or `development`;
 - main_domain_name: Domain name principal. As example, 'steins.fr'
 
-The app will be deployed by adding automatically sub-domains.
+The app will be deployed by adding automatically sub-domains, which its environment of the stage targets
+(`application/frontend/game-app/src/environments`).
 - frontend: sc-{stage}.{main_domain_name};
-- backend: Currently managed manually.
+- backend: sc-ws-{stage}.{main_domain_name}, the websocket API.
+
+The lambdas and the app are built before the plan: `npm run build` in `application/backend/websocket-api`, and
+`npm run build -- --configuration=<stage>` in `application/frontend/game-app` (`dist/game-app/browser`).
 
 ## **CI/CD**
 
-This project started with the new CI/CD GitHub solution named GitHub Actions then migrated to CircleCI. GitHub Actions is good but miss a lot of features like:
-- Manual trigger;
-- Docker image caching when pulling images;
-- Save dependencies in cache to avoid installing them in each jobs;
-- Control on the volume work directory mount path when using Docker images.
+GitHub Actions, in `.github/workflows`:
+- `application-pull-request.yml`, on the pull requests changing `application/**`: the lint, type check and tests with
+  coverage of the game app and of the websocket API (`application-ci.yml`), then one SonarCloud scan of both;
+- `application-main.yml`, on `main`: the same without the lint, for the badges;
+- `terraform-plan.yml`, run by hand for a stage: builds the lambdas and the app, plans the infrastructure, and keeps
+  the plan with the builds;
+- `terraform-apply.yml`, run by hand with the run of a plan: applies it.
 
-### CircleCI jobs
-
-```
-Frontend Lint --\                 HOLD - manual trigger
-                 \                          \
-Frontend Test ----|--|- TF init -- TF plan --|-- TF apply
-                 /  /
-Frontend Build -/  /
-                  /
-Backend Build----/
-```
-To improve:
-- Add Backend Test
-- Add Frontend sonarscan
-- Add Backend lint & sonarscan
-
-### Github Actions jobs
-
-It was impossible to achieve a working sonarscan on CircleCI. 
-It detected CircleCI auto-configuration but throw error that the pull request ID was not provided. Same if it was given as option.
-
-```
-Frontend Test ----- SonarQube scan
-```
+The Terraform workflows assume an AWS role through OIDC (`secrets.AWS_ROLE_ARN`), and read the bucket of the states in
+`vars.TF_STATE_BUCKET`.
 
 ## QA - SonarCloud
 
