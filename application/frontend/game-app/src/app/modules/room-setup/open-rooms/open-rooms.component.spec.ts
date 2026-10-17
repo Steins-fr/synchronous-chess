@@ -242,30 +242,6 @@ describe('OpenRoomsComponent', () => {
         expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
     });
 
-    test('should list the rooms again once a request could not be built', async () => {
-        // Given
-        await createComponent({ rooms: [publicRoom], hasMore: false });
-        // What HttpParams throws building the request of a search it cannot encode (a lone surrogate)
-        vi.mocked(roomHttpApi.getOpenRooms).mockImplementationOnce((): Observable<RoomsResponse> => {
-            throw new URIError('URI malformed');
-        });
-
-        // When
-        refreshButton().click();
-        await render();
-
-        // Then
-        expect(text()).toContain('Les salles n\'ont pas pu être actualisées.');
-
-        // When
-        refreshButton().click();
-        await render();
-
-        // Then
-        expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(3);
-    });
-
     test('should list the rooms again every 15 seconds while the page is visible, and once visible again', async () => {
         // Given
         await createComponent({ rooms: [publicRoom], hasMore: false });

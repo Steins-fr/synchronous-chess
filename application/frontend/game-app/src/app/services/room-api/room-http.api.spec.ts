@@ -68,4 +68,18 @@ describe('RoomHttpApi', () => {
         expect(failure).toMatchObject({ status: 400 });
         expect(console.error).toHaveBeenCalledExactlyOnceWith('The open rooms could not be listed', failure);
     });
+
+    test('getOpenRooms should log, then emit, the failure of a request it cannot build', () => {
+        // Given
+        let failure: unknown;
+
+        // When: a search holding a lone surrogate, which HttpParams cannot encode
+        const response = api.getOpenRooms({ game: RoomGame.CHESS, search: '\uD800' });
+        response.subscribe({ error: (error: unknown) => failure = error });
+
+        // Then
+        expect(failure).toBeInstanceOf(URIError);
+        expect(console.error).toHaveBeenCalledExactlyOnceWith('The open rooms could not be listed', failure);
+        httpTesting.expectNone(() => true);
+    });
 });

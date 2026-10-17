@@ -8,7 +8,7 @@ import { RoomHttpApi } from '@app/services/room-api/room-http.api';
 import { RoomGame } from '@protocol/room-game.enum';
 import { ROOM_SEARCH_MAX_LENGTH } from '@protocol/room-limits';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
-import { catchError, combineLatest, debounceTime, defer, distinctUntilChanged, exhaustMap, filter, fromEvent, map, merge, Observable, of, skip, Subject, switchMap, take, timer } from 'rxjs';
+import { catchError, combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, fromEvent, map, merge, Observable, of, skip, Subject, switchMap, take, timer } from 'rxjs';
 
 // The model of the search of the rooms
 type RoomSearch = {
@@ -92,11 +92,11 @@ export class OpenRoomsComponent {
 
     /**
      * The rooms matching the search, undefined once the request failed (logged by RoomHttpApi): the next requests are
-     * sent all the same, the request built at the subscription, its failure to be built caught too. Shown by the
-     * subscription only: switchMap cancels the request of a former search once another one is typed
+     * sent all the same. Shown by the subscription only: switchMap cancels the request of a former search once another
+     * one is typed
      */
     private load(game: RoomGame, search: string): Observable<RoomsList | undefined> {
-        return defer(() => this.roomHttpApi.getOpenRooms({ game, search: search === '' ? undefined : search })).pipe(
+        return this.roomHttpApi.getOpenRooms({ game, search: search === '' ? undefined : search }).pipe(
             map((response: RoomsResponse): RoomsList => ({ ...response, search })),
             catchError(() => of(undefined)),
         );
