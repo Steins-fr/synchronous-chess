@@ -164,6 +164,10 @@ resource "aws_lambda_invocation" "migrate" {
     cluster    = module.sc_database.arn
     migrations = sha1(join("", [for file in sort(fileset(local.migrations_path, "**/migration.sql")) : filesha1("${local.migrations_path}/${file}")]))
   }
+
+  # The writer instance of the cluster answers the Data API, and the role of the lambda its policies: the ARN of the
+  # cluster and the role exist before them
+  depends_on = [module.sc_database, module.sc_role_lambda_migrate]
 }
 
 module "sc_lambda_onconnect" {

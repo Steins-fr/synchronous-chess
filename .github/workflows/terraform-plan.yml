@@ -134,9 +134,12 @@ jobs:
               uses: actions/upload-artifact@v6
               with:
                   name: terraform-plan-${{ inputs.stage }}-${{ github.run_id }}
+                  # The zips of the lambdas the plan was made with: applying a saved plan does not zip them again
                   path: |
                       infrastructure/tfplan
                       infrastructure/plan-report.txt
+                      infrastructure/.out/lambda-api/
+                  include-hidden-files: true
                   retention-days: 7
 
             - name: Upload backend dist artifact
