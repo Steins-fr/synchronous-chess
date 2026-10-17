@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Params } from '@angular/router';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomHttpApi } from '@app/services/room-api/room-http.api';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
-import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
+import { openRoomsHttpApi } from '@testing/room-http-api.mock';
 import { TestHelper } from '@testing/test.helper';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { RoomCreate, RoomCreateDialog } from './room-create/room-create.dialog';
@@ -26,7 +26,7 @@ describe('RoomSetupComponent', () => {
             imports: [RoomSetupComponent],
             providers: [
                 RoomSetupService,
-                { provide: RoomSocketApi, useValue: openRoomsSocketApi([publicRoom, privateRoom]) },
+                { provide: RoomHttpApi, useValue: openRoomsHttpApi([publicRoom, privateRoom]) },
                 { provide: DialogService, useValue: dialogService },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
             ],

@@ -3,13 +3,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatPage } from './chat.page';
 import { ChatMessengerType } from './components/chat/chat.component';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
+import { RoomHttpApi } from '@app/services/room-api/room-http.api';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { JoinFailure } from '@app/services/room-manager/classes/room-network/room-network';
 import { RoomNetworkMock } from '@testing/room-network.mock';
-import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
+import { openRoomsHttpApi } from '@testing/room-http-api.mock';
 import { TestHelper } from '@testing/test.helper';
 import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -27,10 +28,11 @@ describe('ChatPage', () => {
 
         await TestBed.configureTestingModule({
             imports: [ChatPage],
+            // Provided in the root, not by the page: provided to the testing module
+            providers: [{ provide: RoomHttpApi, useValue: openRoomsHttpApi() }],
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })
-            .overrideProvider(RoomSocketApi, { useValue: openRoomsSocketApi() })
             .compileComponents();
 
         fixture = TestBed.createComponent(ChatPage);

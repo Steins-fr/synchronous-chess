@@ -4,12 +4,11 @@ import { form, maxLength, schema } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomHttpApi } from '@app/services/room-api/room-http.api';
 import { RoomGame } from '@protocol/room-game.enum';
 import { ROOM_SEARCH_MAX_LENGTH } from '@protocol/room-limits';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
-import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, fromEvent, merge, of, skip, Subject, switchMap, take, timer } from 'rxjs';
+import { catchError, combineLatest, debounceTime, defer, distinctUntilChanged, exhaustMap, filter, fromEvent, map, merge, Observable, of, skip, Subject, switchMap, take, timer } from 'rxjs';
 
 // The model of the search of the rooms
 type RoomSearch = {
@@ -24,7 +23,8 @@ const roomSearchSchema = schema<RoomSearch>((path) => {
 });
 
 /**
- * The rooms of a game, searched by a part of their name, through the socket of the page.
+ * The rooms of a game, searched by a part of their name, through the HTTP API: the page opens its socket once a room
+ * is created or joined only.
  * Without search, asked again every 15 seconds while the page is visible, and once it is visible again; a search is
  * asked once typed. Asked again on demand too
  */
@@ -55,7 +55,7 @@ export class OpenRoomsComponent {
     /** The search the list shows */
     protected readonly searched = signal<string>('');
 
-    private readonly roomSocketApi = inject(RoomSocketApi);
+    private readonly roomHttpApi = inject(RoomHttpApi);
     private readonly document = inject(DOCUMENT);
     private readonly refreshRequests = new Subject<void>();
 
@@ -91,16 +91,15 @@ export class OpenRoomsComponent {
     }
 
     /**
-     * The rooms matching the search, undefined once the request failed (logged by the socket). Shown by the subscription
-     * only: switchMap drops the list of a former search, received after the one of the search typed since
+     * The rooms matching the search, undefined once the request failed (logged by RoomHttpApi): the next requests are
+     * sent all the same, the request built at the subscription, its failure to be built caught too. Shown by the
+     * subscription only: switchMap cancels the request of a former search once another one is typed
      */
-    private async load(game: RoomGame, search: string): Promise<RoomsList | undefined> {
-        try {
-            const response: RoomsResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game, search: search === '' ? undefined : search });
-            return { ...response, search };
-        } catch {
-            return undefined;
-        }
+    private load(game: RoomGame, search: string): Observable<RoomsList | undefined> {
+        return defer(() => this.roomHttpApi.getOpenRooms({ game, search: search === '' ? undefined : search })).pipe(
+            map((response: RoomsResponse): RoomsList => ({ ...response, search })),
+            catchError(() => of(undefined)),
+        );
     }
 
     /** The next refresh may succeed once the list failed */
