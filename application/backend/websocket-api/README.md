@@ -2,16 +2,43 @@
 
 ## Build
 
-`npm run build` bundles the three lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`,
-`sendmessage.mjs`), deployed by Terraform.
+`npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`,
+and `migrate/` with the migrations it applies), deployed by Terraform. It refuses to bundle PGlite, the database of the
+local API and the specs.
+
+## Database
+
+The rooms, their players, queue and tokens, the password attempts and the connections live in PostgreSQL: on AWS an
+Aurora Serverless v2 cluster (`modules/aws-aurora-serverless` of `infrastructure`), which the lambdas reach through its
+Data API, over HTTPS, outside any VPC. The cluster pauses at 0 ACU 5 minutes after the last request, and costs nothing
+but its storage and secret while nobody plays. A request to the paused cluster waits for it to resume, about 15
+seconds (30 or more after a day): the Data API refuses it meanwhile, and the lambdas send it again
+(`shared/database/resume-retry.ts`), 28 seconds at most, the timeout of the lambdas, under the 29 of API Gateway.
+
+The schema is written with [Drizzle](https://orm.drizzle.team) (`shared/database/schema.ts`), the repositories query it
+through its query builder and its relational queries (`shared/repositories`). `getDatabase()` builds the Data API client
+from `DATABASE_RESOURCE_ARN`, `DATABASE_SECRET_ARN` and `DATABASE_NAME`, set by `infrastructure/main.tf`.
+
+- `npm run db:generate` writes the migration of a change of the schema to `drizzle/` (`drizzle-kit generate`). Commit
+  both: `npm run db:check`, run by the CI, fails on a schema without its migration.
+- The `migrate` lambda applies the migrations the cluster misses, in one transaction, invoked by Terraform each time
+  they change, before the other lambdas deploy.
+- A conditional write tells whether it wrote from the rows it returns (`RETURNING`): the creation of a room, the
+  reconnection of its host, the count of a password attempt.
+- No TTL: the queries ignore the expired rooms, and the creation of a room deletes them, with their rows. No scheduled
+  cleanup wakes the cluster.
+
+`npm run smoke:data-api -- <stage>` runs the statements of the repositories on the cluster of a stage, with the AWS
+credentials of the shell (`AWS_PROFILE`), in a database of their own, then waits for the cluster to pause and times a
+statement sent to it: what the specs on PGlite do not check, the codecs of the Data API and a real concurrency.
 
 ## Development server
 
 `npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` (loopback only), and
 restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the websocket
 routes (`$connect`, `sendmessage`, `ping`, `$disconnect`) and the `PostToConnection` endpoint of the management API.
-DynamoDB is emulated by [dynalite](https://github.com/architect/dynalite), in memory: the rooms are lost at
-each restart.
+The database is [PGlite](https://pglite.dev), PostgreSQL compiled to WASM, in memory, with the migrations of
+`drizzle/`, and the major version of the cluster: the rooms are lost at each restart.
 
 Then serve the game app against it, from `application/frontend/game-app`: `npm run serve:local`.
 
@@ -22,9 +49,9 @@ in a single frame), 128 KB per message posted to a connection, and the connectio
 10 minutes without message in either direction, or after 2 hours. Not emulated: the authorization and the
 throttling. The staging environment on AWS remains the reference.
 
-The emulation is tested by `local/local-api.spec.ts`, run with the specs of the lambdas. Through dynalite, it also
-checks the condition expressions of the writes (the room creation and the reconnection of its host), which the
-mocks of DynamoDB in the other specs do not evaluate.
+The emulation is tested by `local/local-api.spec.ts`, run with the specs of the lambdas. The other specs run on
+PGlite too, a database per spec file emptied before each test (`testing/database.ts`): the conditional writes are
+evaluated by PostgreSQL in every spec.
 
 ## Host reconnection
 
@@ -33,7 +60,7 @@ players. Each page sends a secret token of its own with `create` and `join` (the
 `tokenHashes`, kept once the player is removed: the same page joins a private room again without its password). Every 100 minutes, or as soon as its socket closes, the host opens a new
 socket and sends it `reconnect` with its name and token: the room moves
 to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
-the room for 10 minutes (`expiresAt`, also the TTL of the table): joins are refused (`Host disconnected`) until the
+the room for 10 minutes (`expiresAt`): joins are refused (`Host disconnected`) until the
 host reconnects, and the room keeps its name until it expires. Meanwhile, a player of the room can take it over with
 `reconnect` and its own name and token: the room moves to its connection, and it becomes the host (`Host connected`
 while the former host connection is still open). The host declares again a player whose connection it restored:
@@ -47,25 +74,19 @@ full rooms and the ones waiting for their host (`hostConnected: false`) are list
 joins its room again from the list, the join retried until the room has its place back or its host reconnected.
 
 - Without `search`, the 30 most recent rooms, the last created first. A page asks it again every 15 seconds.
-- With a `search`, the rooms whose name starts with it, whatever the case, by name: the name equal to the search
-  first. A page asks a search once typed, or on demand, not every 15 seconds.
+- With a `search`, the rooms whose name holds it, whatever the case: the names starting with it first, then by name,
+  the name equal to the search first. A page asks a search once typed, or on demand, not every 15 seconds.
 
-DynamoDB has no search within a text: the search is a prefix of a sort key (`begins_with`), so that DynamoDB reads the
-matching rooms only. The rooms table has two secondary indexes by `game`, projecting what the list shows
-(`LISTED_ROOM_ATTRIBUTES` of `RoomRepository`, from `listed-room-attributes.json`, read by the indexes of
-`infrastructure/main.tf` too, and of `local/local-api.ts`). A private room is listed by `isPrivate`, the indexes do not
-copy the hash of its password:
+A query reads 31 rooms at most, the last one telling more exist, with the count of their players. A private room is
+listed by `isPrivate`, never the hash of its password. The indexes of the `rooms` table:
 
-| Index | Sort key | Read by |
+| Index | Columns | Read by |
 |---|---|---|
-| `game-index` | `createdAt`, the ISO date of the creation, sorted as a text | the most recent rooms |
-| `game-name-index` | `nameKey`, the name of the room in lower case (`search.helper`) | a search |
+| `rooms_game_created_at` | `game`, `created_at` (the ISO date of the creation, sorted as a text) | the most recent rooms |
+| `rooms_name_key_trgm` | `name_key`, the name in lower case (`search.helper`), by trigram (`pg_trgm`) | a search |
+| `rooms_expires_at` | `expires_at`, of the rooms waiting for their host | the cleanup of the expired rooms |
 
-A query reads the rooms it lists, page after page: 31 at most, the last one telling more exist. The expired rooms
-stay in the indexes until the TTL deletes them, within a few days, dropped by the filter of the query after being read:
-each page reads twice as many rooms as the one before, 3 pages at most (31, 62 and 124 rooms), so that many expired
-rooms cost a few queries only: past them, the list may miss rooms. Each write of a room
-updates its two indexes.
+The list refreshed every 15 seconds keeps the cluster awake while a page shows it.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
 searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones, the list
@@ -85,7 +106,7 @@ A client gives 5 passwords in a row at most, then the room refuses its passwords
 password attempts`), without checking them, until a minute after the last one. A missing password, or one of a length
 the room refuses, is never the right one: refused without being counted, a room listed as public before it became private
 does not cost an attempt. Each other password is counted before being
-checked, by a conditional update, so that the passwords sent all at once are not all checked. Its right password is
+checked, by one conditional upsert, so that the passwords sent all at once are not all checked. Its right password is
 not counted once checked, the wrong ones before stay: a client guessing the password from the IP of a player keeps its
 count. A password is not guessed by trying them all, the wrong ones do not run scrypt without end, and the other players
 still join the room. A participant joining its room again, without leaving its page, is not locked by another client of its IP: its token spares it
@@ -94,8 +115,7 @@ the password.
 The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
 connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by `SOURCE_HASH_SECRET` (a
 `random_password` of Terraform), never the IP. The attempts are counted apart from the rooms, in the
-`password-attempt` table (`PasswordAttemptRepository` of `RoomPasswordService`, read by `sendmessage` only: the
-other lambdas are not given its name, and a lambda missing the name of a table it reads fails at once; by room and client: the room by its name and its creation date,
-a room created again under the name of an expired one starts without the attempts of the former one): each room read by every request does
-not grow with the clients trying its password, and the TTL of the table (`expiresAt`) deletes the counts over. The
-clients behind a same IP share their count.
+`room_password_attempts` table (`PasswordAttemptRepository` of `RoomPasswordService`, by room and client), deleted with
+their room: a room created again under the name of an expired one starts without the attempts of the former one. The
+row of a room, read by every request, does not grow with the clients trying its password. The clients behind a same IP
+share their count. The lambdas reaching the cluster all read every table: the Data API grants a cluster, not a table.

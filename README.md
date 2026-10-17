@@ -48,7 +48,7 @@ Layer that helps lambdas for managing the rooms. It exposes two services:
 
 **Required**: Room Manager Layer.
 
-The API is composed of 3 lambdas for managing websocket connection, disconnection and messages. The two last lambdas uses the *room manager layer* and the two *dynamoDB tables*.
+The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, and a 4th applying the migrations of the database on deploy. The disconnection and message lambdas use the *room manager layer* and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
 
 **onconnect** - Handle and log new websocket opened connection.
 
@@ -60,7 +60,7 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
  - **create** - Create a new room if the room name is available (or its room expired), with a secret token of the host;
  - **reconnect** - Move the room to the connection sending it, with the name and token of the player: the host, before API Gateway closes its connection (2 hours at most) or once it closed, or a player of the room taking it over while the room waits for its host (refused with `Host connected` before), which becomes the host;
  - **add player** - only host - Add a new player to the room player list;
- - **remove player** - only host - Remove a player from the room player list, and the hash of its token;
+ - **remove player** - only host - Remove a player from the room player list, keeping the hash of its token: its page joins a private room again without its password;
  - **get players** - only host - Get the room player list
  - **signal to peer** - only host - Send the RTC signal to a specific peer waiting in the room queue;
  - **join** - Ask to join a room and add the player in the room queue, with a secret token of the player;
@@ -86,36 +86,49 @@ See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md) an
 ### **Databases**
 ---
 
-#### Room Table
+A PostgreSQL database: Aurora Serverless v2 on AWS, paused when nobody plays, PGlite in memory locally and in the specs.
+The schema is written with Drizzle in `application/backend/websocket-api/shared/database/schema.ts`, its migrations in
+`drizzle/` (see the [README of the API](application/backend/websocket-api/README.md#database)).
+
+#### Rooms
 
 - id: Id of the room also the room name;
-- connectionId: Websocket connection id of the host;
-- hostPlayer: Player name of the host;
-- maxPlayer: Maximum of player that can join the room;
-- players: List of players currently in the room;
-- queue: List of joining players;
-- tokenHashes: SHA-256 of the token of each player, by name, sent with create or join: the host reconnects the room with its own;
-- expiresAt: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the TTL of the table deletes it.
+- connection_id: Websocket connection id of the host;
+- host_player: Player name of the host;
+- max_player: Maximum of player that can join the room;
+- game: The game of the room, chess or chat;
+- created_at, name_key: The date of its creation and its name in lower case, to list and search the rooms;
+- password_hash, is_private: The salted hash of the password of a private room;
+- expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.
 
-#### Connection Table
+Deleted with their room:
+- room_players: The players currently in the room, in the order they joined;
+- room_queue: The joining players, with their connection;
+- room_tokens: SHA-256 of the token of each player, by name, sent with create or join: the host reconnects the room with its own;
+- room_password_attempts: The passwords each client gave a private room in a row.
 
-The connection table is used as a relation table. Given a connectionId, we can found the room ID in which the player is participating.
+#### Connections
 
-- connectionId: Websocket connection id of a peer or host;
-- roomName: Room ID.
+A relation table: given a connectionId, we can found the room ID in which the player is participating.
+
+- connection_id: Websocket connection id of a peer or host;
+- room_name: Room ID.
 
 ## **Infrastructure**
 
 The project is hosted on Amazon Web Services and uses Terraform to provision and manage the cloud infrastructure.
 
-![AWS diagram](documentation/resources/Synchronous-Chess-AWS.svg)
+![AWS diagram](documentation/resources/Synchronous-Chess-AWS-simple.svg)
+
+The options of each service, the regions, the network of the database and the roles of the lambdas:
+[detailed diagram](documentation/resources/Synchronous-Chess-AWS.svg).
 
 #### Services:
  - S3: Stores the frontend files and their access logs;
  - CloudFront: Serves the frontend from S3 and manage the cache;
  - Lambda: Run the Room API designed for Websocket;
  - API Gateway: Manages Websocket connection and API calls, then transmits calls to the lambdas;
- - DynamoDB: Stores the Rooms informations for the API;
+ - Aurora Serverless v2 (PostgreSQL): Stores the Rooms informations for the API, reached by the lambdas through its Data API;
  - Route 53: Manage the DNS records;
  - CloudWatch: Monitors and logs;
  - ACM: Manage the certificates.

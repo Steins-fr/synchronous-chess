@@ -22,7 +22,8 @@ equivalent, so treat `game-app.instructions.md` as applying only to
 Mono-repo, no root package.json — each package is installed and run from its own directory.
 
 - `application/frontend/game-app` — Angular 21 app (the main project)
-- `application/backend/websocket-api` — AWS Lambda WebSocket API (TypeScript, esbuild, DynamoDB)
+- `application/backend/websocket-api` — AWS Lambda WebSocket API (TypeScript, esbuild, PostgreSQL with Drizzle: Aurora
+  Serverless v2 through its Data API)
 - `application/shared/room-socket-protocol` — the WebSocket message types (requests, responses,
   notifications, error messages), imported by both packages as `@protocol/*`. Plain TypeScript with
   no dependency nor package.json: each package compiles it through its own tsconfig alias
@@ -53,18 +54,24 @@ templates, nor type-check the specs as `ng test` does.
 Backend, from `application/backend/websocket-api`:
 
 ```bash
-npm run serve:local  # the API on ws://127.0.0.1:3001, without AWS (local/server.ts, DynamoDB in memory)
+npm run serve:local  # the API on ws://127.0.0.1:3001, without AWS (local/server.ts, PGlite in memory)
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
 npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
 npm test             # Vitest in watch mode
 npm run test:ci      # single run with coverage, 100% required (vitest.config.ts)
+npm run db:generate  # the migration of a change of shared/database/schema.ts, to commit with it (drizzle/)
+npm run db:check     # fails on a schema without its migration (CI)
+npm run smoke:data-api -- <stage>  # the statements of the repositories on the Aurora cluster of a stage (AWS_PROFILE)
 ```
 
-The API specs sit next to their file and mock DynamoDB and API Gateway with `aws-sdk-client-mock`:
-`mockAws()` of `testing/api-mocks.ts` (alias `@testing/*`) resets both before each test, with the room
-fixtures and a reader of the packets posted to the connections. Except `local/local-api.spec.ts`: it starts
-the local API on a free port, with dynalite and real websocket clients, out of the coverage threshold.
+The API specs sit next to their file and run on PGlite, PostgreSQL in memory with the migrations of `drizzle/`:
+`useTestDatabase()` of `testing/database.ts` gives each spec file its database, emptied before each test.
+`mockAws()` of `testing/api-mocks.ts` (alias `@testing/*`) adds it to the mock of API Gateway
+(`aws-sdk-client-mock`), with the room fixtures, `storeRoom()` / `readRoom()` and a reader of the packets posted
+to the connections. The specs assert the rows, never the SQL. `aws-sdk-client-mock` mocks the Data API client in
+`shared/database` only. `local/local-api.spec.ts` starts the local API on a free port, with real websocket
+clients, out of the coverage threshold.
 
 ## Frontend specifics
 
