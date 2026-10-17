@@ -29,3 +29,15 @@ variable "memory_size" {
   type        = number
   default     = 128
 }
+
+variable "timeout" {
+  description = "Time the function runs at most, in seconds"
+  type        = number
+  default     = 3
+}
+
+variable "bundle_directory" {
+  description = "Whether the bundle is the directory dist/<name>, with the files it reads, rather than the file dist/<name>.mjs"
+  type        = bool
+  default     = false
+}

@@ -1,10 +1,13 @@
 import * as esbuild from "esbuild";
+import { cpSync, rmSync } from "node:fs";
 
 const { metafile } = await esbuild.build({
     entryPoints: [
         { out: "onconnect", in: "./lambdas/onconnect/app.ts" },
         { out: "ondisconnect", in: "./lambdas/ondisconnect/app.ts" },
         { out: "sendmessage", in: "./lambdas/sendmessage/app.ts" },
+        // A directory, with the migrations it reads
+        { out: "migrate/migrate", in: "./lambdas/migrate/app.ts" },
     ],
     bundle: true,
     write: true,
@@ -26,3 +29,7 @@ const localDatabase = Object.keys(metafile.inputs).filter((input) => /@electric-
 if (localDatabase.length > 0) {
     throw new Error(`The lambdas bundle the local database: ${localDatabase.join(", ")}`);
 }
+
+// The migrations the migrate lambda applies, read from its directory
+rmSync("dist/migrate/drizzle", { recursive: true, force: true });
+cpSync("drizzle", "dist/migrate/drizzle", { recursive: true });

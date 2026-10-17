@@ -1,11 +1,13 @@
 locals {
   archive_path = ".out/lambda-api/${var.name}.zip"
   lambda_name  = "sc_${var.name}_${var.stage}"
+  dist_path    = "${path.module}/../../../application/backend/${var.directory}/dist"
 }
 
 data "archive_file" "archive" {
   type        = "zip"
-  source_file = "${path.module}/../../../application/backend/${var.directory}/dist/${var.name}.mjs"
+  source_file = var.bundle_directory ? null : "${local.dist_path}/${var.name}.mjs"
+  source_dir  = var.bundle_directory ? "${local.dist_path}/${var.name}" : null
   output_path = local.archive_path
 }
 
@@ -20,6 +22,7 @@ resource "aws_lambda_function" "lambda" {
 
   runtime     = "nodejs22.x"
   memory_size = var.memory_size
+  timeout     = var.timeout
 
   environment {
     variables = merge(var.environment, { FUNCTION_NAME = local.lambda_name })

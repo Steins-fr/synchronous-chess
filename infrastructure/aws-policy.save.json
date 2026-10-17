@@ -153,7 +153,9 @@
 }
 // Deployment role of GitHub Actions (OIDC, secrets.AWS_ROLE_ARN): what the Aurora cluster adds, for each stage
 // (sc-database-<stage>). Terraform creates its network, the cluster, its instance and its Data API policy; RDS creates
-// the secret of the master user, describing its KMS key (aws/secretsmanager) with the rights of the caller
+// the secret of the master user, describing its KMS key (aws/secretsmanager) with the rights of the caller. Terraform
+// invokes the migrate lambda, and creates the roles sc_lambda_database_<stage> and sc_lambda_migrate_<stage> (the
+// lambda roles of the statements above)
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -223,6 +225,12 @@
             "Effect": "Allow",
             "Action": "kms:DescribeKey",
             "Resource": "*"
+        },
+        {
+            "Sid": "DatabaseMigrations",
+            "Effect": "Allow",
+            "Action": "lambda:InvokeFunction",
+            "Resource": "arn:aws:lambda:eu-west-1:404273159415:function:sc_migrate_*"
         },
         {
             "Sid": "DatabasePolicy",

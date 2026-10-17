@@ -46,60 +46,7 @@ module "sc_certificate_api_ws" {
 
 
 /**
- * Tables
- */
-module "sc_database_room" {
-  source = "./modules/aws-dynamodb"
-
-  name       = "room"
-  hash-key   = "id"
-  attributes = ["id", "game", "createdAt", "nameKey"]
-  # Set while the host is disconnected: deletes the rooms it never reconnected
-  ttl-attribute = "expiresAt"
-  # The rooms of a game, with what their list shows (LISTED_ROOM_ATTRIBUTES of RoomRepository, read from its JSON file):
-  # the most recent first, then searched by the start of their name, in lower case
-  global-secondary-indexes = [
-    for index in [["game-index", "createdAt"], ["game-name-index", "nameKey"]] : {
-      name               = index[0]
-      hash_key           = "game"
-      range_key          = index[1]
-      non_key_attributes = jsondecode(file("${path.module}/../application/backend/websocket-api/shared/repositories/listed-room-attributes.json"))
-    }
-  ]
-
-  stage = var.stage
-}
-
-# The passwords each client gives a private room in a row (PasswordAttemptRepository), apart from the rooms
-module "sc_database_password_attempt" {
-  source = "./modules/aws-dynamodb"
-
-  name           = "password-attempt"
-  hash-key       = "roomKey"
-  range-key      = "sourceHash"
-  attributes     = ["roomKey", "sourceHash"]
-  read-capacity  = 1
-  write-capacity = 5
-  # Pushed back by each password given: deletes the counts over
-  ttl-attribute = "expiresAt"
-
-  stage = var.stage
-}
-
-module "sc_database_connection" {
-  source = "./modules/aws-dynamodb"
-
-  name           = "connection"
-  hash-key       = "connectionId"
-  read-capacity  = 2
-  write-capacity = 2
-  attributes     = ["connectionId"]
-
-  stage = var.stage
-}
-
-/**
- * Database: Aurora PostgreSQL Serverless v2, through its Data API. Beside the tables until the lambdas move to it
+ * Database: Aurora PostgreSQL Serverless v2, reached by the lambdas through its Data API
  */
 module "sc_database" {
   source = "./modules/aws-aurora-serverless"
@@ -154,15 +101,6 @@ module "sc_role_lambda_basic" {
   stage    = var.stage
 }
 
-module "sc_database_policy" {
-  source = "./modules/aws-dynamodb-iam-policy"
-
-  connections_table_arn       = module.sc_database_connection.arn
-  rooms_table_arn             = module.sc_database_room.arn
-  password_attempts_table_arn = module.sc_database_password_attempt.arn
-  stage                       = var.stage
-}
-
 module "sc_api_gateway_iam_policy" {
   source = "./modules/aws-api-gateway-iam-policy"
 
@@ -170,15 +108,63 @@ module "sc_api_gateway_iam_policy" {
   stage           = var.stage
 }
 
-module "sc_role_lambda_dynamo" {
+module "sc_role_lambda_database" {
   source = "./modules/aws-iam-lambda-role"
-  name   = "sc_lambda_dynamo_${var.stage}"
+  name   = "sc_lambda_database_${var.stage}"
   policies = [
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-    module.sc_database_policy.arn,
+    module.sc_database_data_api_policy.arn,
     module.sc_api_gateway_iam_policy.arn
   ]
   stage = var.stage
+}
+
+module "sc_role_lambda_migrate" {
+  source = "./modules/aws-iam-lambda-role"
+  name   = "sc_lambda_migrate_${var.stage}"
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    module.sc_database_data_api_policy.arn
+  ]
+  stage = var.stage
+}
+
+locals {
+  # The cluster the lambdas reach through its Data API
+  database_environment = {
+    DATABASE_RESOURCE_ARN = module.sc_database.arn
+    DATABASE_SECRET_ARN   = module.sc_database.secret_arn
+    DATABASE_NAME         = module.sc_database.database_name
+  }
+  # A paused cluster takes 15 seconds to resume, which the lambdas wait for (resume-retry.ts of the API): API Gateway
+  # waits 29 seconds for them at most
+  database_lambda_timeout = 28
+  migrations_path         = "${path.module}/../application/backend/websocket-api/drizzle"
+}
+
+# Applies the migrations the database misses (drizzle folder of the API), before the lambdas reading the database
+# deploy: each time the migrations change, and once the cluster is created
+module "sc_lambda_migrate" {
+  source = "./modules/aws-lambda-api"
+
+  directory        = "websocket-api"
+  name             = "migrate"
+  bundle_directory = true
+  role             = module.sc_role_lambda_migrate.arn
+  stage            = var.stage
+  # The cluster resuming, then all the migrations in a transaction
+  timeout     = 300
+  environment = local.database_environment
+}
+
+resource "aws_lambda_invocation" "migrate" {
+  function_name = module.sc_lambda_migrate.name
+  input         = jsonencode({})
+
+  triggers = {
+    cluster    = module.sc_database.arn
+    migrations = sha1(join("", [for file in sort(fileset(local.migrations_path, "**/migration.sql")) : filesha1("${local.migrations_path}/${file}")]))
+  }
 }
 
 module "sc_lambda_onconnect" {
@@ -193,14 +179,13 @@ module "sc_lambda_onconnect" {
 module "sc_lambda_ondisconnect" {
   source = "./modules/aws-lambda-api"
 
-  directory = "websocket-api"
-  name      = "ondisconnect"
-  role      = module.sc_role_lambda_dynamo.arn
-  stage     = var.stage
-  environment = {
-    TABLE_NAME_ROOMS       = module.sc_database_room.name
-    TABLE_NAME_CONNECTIONS = module.sc_database_connection.name
-  }
+  directory   = "websocket-api"
+  name        = "ondisconnect"
+  role        = module.sc_role_lambda_database.arn
+  stage       = var.stage
+  timeout     = local.database_lambda_timeout
+  environment = local.database_environment
+  depends_on  = [aws_lambda_invocation.migrate]
 }
 
 # The key of the hashes of the IPs of the clients (source.helper of the websocket API): without it, the IP of a hash is
@@ -215,17 +200,16 @@ module "sc_lambda_sendmessage" {
 
   directory = "websocket-api"
   name      = "sendmessage"
-  role      = module.sc_role_lambda_dynamo.arn
+  role      = module.sc_role_lambda_database.arn
   stage     = var.stage
+  timeout   = local.database_lambda_timeout
   # The passwords of the private rooms are hashed and checked by scrypt (16 MB, CPU bound): 128 MB give it a fraction of a
-  # vCPU, a cold start then nears the 3 seconds of the timeout (the app waits 5), the attempt counted but never uncounted
+  # vCPU, a cold start then takes seconds, the attempt counted but never uncounted
   memory_size = 512
-  environment = {
-    TABLE_NAME_ROOMS             = module.sc_database_room.name
-    TABLE_NAME_CONNECTIONS       = module.sc_database_connection.name
-    TABLE_NAME_PASSWORD_ATTEMPTS = module.sc_database_password_attempt.name
-    SOURCE_HASH_SECRET           = random_password.source_hash_secret.result
-  }
+  environment = merge(local.database_environment, {
+    SOURCE_HASH_SECRET = random_password.source_hash_secret.result
+  })
+  depends_on = [aws_lambda_invocation.migrate]
 }
 
 /**
