@@ -1,4 +1,3 @@
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import PlayerRequest from '@protocol/requests/player-request';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import {
@@ -11,20 +10,21 @@ import {
     HOST_CONNECTION,
     mockAws,
     postedPackets,
+    readRoom,
     storeRoom,
 } from '@testing/api-mocks';
 import { beforeEach, describe, expect, test } from 'vitest';
 import PlayerAddHandler from './player-add-handler';
 
 describe('PlayerAddHandler', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
 
     function add(data: PlayerRequest, connection: string = HOST_CONNECTION): Promise<void> {
         return new PlayerAddHandler(anApiGatewayClient(), connection, aRequest(RoomApiRequestTypeEnum.PLAYER_ADD, data)).execute();
     }
 
-    beforeEach(() => {
-        storeRoom(dynamo, aRoom());
+    beforeEach(async () => {
+        await storeRoom(aRoom());
     });
 
     test('should add a player to the game of the host', async () => {
@@ -32,10 +32,7 @@ describe('PlayerAddHandler', () => {
         await add({ roomName: 'room', playerName: 'guest' });
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, {
-            UpdateExpression: 'set players = list_append(players, :items)',
-            ExpressionAttributeValues: { ':items': [{ playerName: 'guest' }] },
-        })).toHaveLength(1);
+        expect(await readRoom('room')).toStrictEqual(aRoom({ players: [{ playerName: 'host' }, { playerName: 'guest' }] }));
         expect(postedPackets(apiGateway)).toEqual([{ to: HOST_CONNECTION, packet: { id: 7, type: 'added', data: { roomName: 'room', playerName: 'guest' } } }]);
     });
 
@@ -46,7 +43,7 @@ describe('PlayerAddHandler', () => {
     ])('should refuse a request %s', async (_case: string, data: PlayerRequest, connection: string, message: string) => {
         // When / Then
         await expect(add(data, connection)).rejects.toThrow(message);
-        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+        expect(await readRoom('room')).toStrictEqual(aRoom());
         expect(postedPackets(apiGateway)).toEqual([errorReply(message, connection)]);
     });
 });

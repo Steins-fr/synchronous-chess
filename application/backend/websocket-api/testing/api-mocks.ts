@@ -1,7 +1,10 @@
 import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
-import { ConditionalCheckFailedException, DynamoDBServiceException } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { getDatabase } from '@database/database';
+import { connections, roomPlayers, roomQueue, rooms, roomTokens } from '@database/schema';
+import DatabaseException, { DatabaseOperationEnum } from '@exceptions/database-exception';
 import { hashToken } from '@helpers/token.helper';
+import Connection from '@models/connection';
+import Player from '@models/player';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
 import {
@@ -9,9 +12,11 @@ import {
     RoomSocketApiRequestTypedData,
     SocketPacketRequestPayload,
 } from '@protocol/socket-packet-payload.type';
+import RoomRepository from '@repositories/room-repository';
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, vi } from 'vitest';
+import { TestDatabase, useTestDatabase } from './database';
 
 /** A packet the API posted to a websocket connection */
 export interface PostedPacket {
@@ -20,8 +25,9 @@ export interface PostedPacket {
 }
 
 export interface AwsMocks {
-    dynamo: AwsClientStub<DynamoDBDocumentClient>;
     apiGateway: AwsClientStub<ApiGatewayManagementApiClient>;
+    /** In memory (PGlite), emptied before each test */
+    database: TestDatabase;
 }
 
 export const HOST_CONNECTION: string = 'host-connection';
@@ -57,13 +63,9 @@ export function anEvent(connectionId: string | undefined, body: string | null = 
     return { body, requestContext: { connectionId, domainName: 'api.test' } } as unknown as APIGatewayProxyEvent;
 }
 
-export function aDynamoError(): DynamoDBServiceException {
-    return new DynamoDBServiceException({ name: 'InternalServerError', $fault: 'server', $metadata: {}, message: 'DynamoDB failed' });
-}
-
-/** What DynamoDB throws when the condition of a write does not hold */
-export function aConditionFailure(): ConditionalCheckFailedException {
-    return new ConditionalCheckFailedException({ $metadata: {}, message: 'The conditional request failed' });
+/** What a repository throws when the database fails */
+export function aDatabaseFailure(operation: DatabaseOperationEnum = DatabaseOperationEnum.UPDATE): DatabaseException {
+    return new DatabaseException(operation, 'The database failed');
 }
 
 export function anApiGatewayClient(): ApiGatewayManagementApiClient {
@@ -78,12 +80,14 @@ export function postedPackets(apiGateway: AwsClientStub<ApiGatewayManagementApiC
     }));
 }
 
-/** Mocks DynamoDB and API Gateway in a describe block: reset before each test, they answer every command with an empty object */
+/**
+ * Mocks API Gateway in a describe block, reset before each test: it answers every command with an empty object. Gives
+ * the repositories a database in memory, emptied before each test
+ */
 export function mockAws(): AwsMocks {
-    const mocks: AwsMocks = { dynamo: mockClient(DynamoDBDocumentClient), apiGateway: mockClient(ApiGatewayManagementApiClient) };
+    const mocks: AwsMocks = { apiGateway: mockClient(ApiGatewayManagementApiClient), database: useTestDatabase() };
 
     beforeEach((): void => {
-        mocks.dynamo.reset().onAnyCommand().resolves({});
         mocks.apiGateway.reset().onAnyCommand().resolves({});
         // The handlers log their failures
         vi.spyOn(console, 'error').mockImplementation((): void => undefined);
@@ -92,9 +96,50 @@ export function mockAws(): AwsMocks {
     return mocks;
 }
 
-/** The room DynamoDB finds by its name */
-export function storeRoom(dynamo: AwsClientStub<DynamoDBDocumentClient>, room: Room): void {
-    dynamo.on(GetCommand, { TableName: 'room', Key: { id: room.id } }).resolves({ Item: room });
+/** Stores the room, its players and its queue in their order, and the hashes of its tokens */
+export async function storeRoom(room: Room): Promise<void> {
+    await getDatabase().insert(rooms).values({
+        id: room.id,
+        connectionId: room.connectionId,
+        hostPlayer: room.hostPlayer,
+        maxPlayer: room.maxPlayer,
+        game: room.game,
+        createdAt: room.createdAt,
+        nameKey: room.nameKey,
+        passwordHash: room.passwordHash,
+        expiresAt: room.expiresAt,
+    });
+
+    if (room.players.length > 0) {
+        await getDatabase().insert(roomPlayers).values(room.players.map(({ playerName }: Player): typeof roomPlayers.$inferInsert => ({ roomId: room.id, playerName })));
+    }
+
+    if (room.queue.length > 0) {
+        await getDatabase().insert(roomQueue).values(room.queue.map(({ playerName, connectionId }: Player): typeof roomQueue.$inferInsert => ({
+            roomId: room.id,
+            playerName,
+            connectionId: connectionId as string,
+        })));
+    }
+
+    const tokenHashes: [string, string][] = Object.entries(room.tokenHashes);
+    if (tokenHashes.length > 0) {
+        await getDatabase().insert(roomTokens).values(tokenHashes.map(([playerName, tokenHash]: [string, string]): typeof roomTokens.$inferInsert => ({ roomId: room.id, playerName, tokenHash })));
+    }
+}
+
+/** The room as stored, null without it */
+export function readRoom(roomName: string): Promise<Room | null> {
+    return new RoomRepository().getByName(roomName);
+}
+
+export async function storeConnection(connection: Connection): Promise<void> {
+    await getDatabase().insert(connections).values(connection);
+}
+
+/** The connections stored, by their id */
+export function readConnections(): Promise<Connection[]> {
+    return getDatabase().select().from(connections).orderBy(connections.connectionId);
 }
 
 /** The error a request gets in reply */

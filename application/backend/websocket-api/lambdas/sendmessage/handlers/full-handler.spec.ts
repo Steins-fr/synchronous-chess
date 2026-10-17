@@ -16,14 +16,14 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import FullHandler from './full-handler';
 
 describe('FullHandler', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
 
     function full(data: FullRequest, connection: string = HOST_CONNECTION): Promise<void> {
         return new FullHandler(anApiGatewayClient(), connection, aRequest(RoomApiRequestTypeEnum.FULL, data)).execute();
     }
 
-    beforeEach(() => {
-        storeRoom(dynamo, aRoom());
+    beforeEach(async () => {
+        await storeRoom(aRoom());
     });
 
     test('should tell a queued player that the room is full', async () => {

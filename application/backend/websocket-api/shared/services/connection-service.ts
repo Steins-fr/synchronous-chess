@@ -9,10 +9,10 @@ export default class ConnectionService {
     }
 
     public async get(connectionId: string): Promise<Connection | null> {
-        return this.connectionRepository.find({ connectionId });
+        return this.connectionRepository.find(connectionId);
     }
 
     public async delete(connection: Connection): Promise<void> {
-        await this.connectionRepository.delete(connection);
+        await this.connectionRepository.delete(connection.connectionId);
     }
 }

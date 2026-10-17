@@ -9,10 +9,7 @@ import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { ROOM_PASSWORD_LOCK_DELAY } from '@protocol/room-limits';
 import PasswordAttemptRepository from '@repositories/password-attempt-repository';
 
-/**
- * The passwords of the private rooms, apart from RoomService: only the lambda joining the rooms reads the table of the
- * attempts, the others are not given its name
- */
+/** The passwords of the private rooms, apart from RoomService: only the lambda joining the rooms counts the attempts */
 export default class RoomPasswordService {
     /** The passwords in a row a private room checks of a client, before refusing its passwords for ROOM_PASSWORD_LOCK_DELAY */
     public static readonly MAX_PASSWORD_ATTEMPTS: number = 5;

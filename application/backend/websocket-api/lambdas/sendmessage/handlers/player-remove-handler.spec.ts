@@ -1,4 +1,4 @@
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import Room from '@models/room';
 import PlayerRequest from '@protocol/requests/player-request';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import {
@@ -11,20 +11,22 @@ import {
     HOST_CONNECTION,
     mockAws,
     postedPackets,
+    readRoom,
     storeRoom,
 } from '@testing/api-mocks';
 import { beforeEach, describe, expect, test } from 'vitest';
 import PlayerRemoveHandler from './player-remove-handler';
 
 describe('PlayerRemoveHandler', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
+    const room: Room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'player' }] });
 
     function remove(data: PlayerRequest, connection: string = HOST_CONNECTION): Promise<void> {
         return new PlayerRemoveHandler(anApiGatewayClient(), connection, aRequest(RoomApiRequestTypeEnum.PLAYER_REMOVE, data)).execute();
     }
 
-    beforeEach(() => {
-        storeRoom(dynamo, aRoom({ players: [{ playerName: 'host' }, { playerName: 'player' }] }));
+    beforeEach(async () => {
+        await storeRoom(room);
     });
 
     test('should remove a player from the game of the host', async () => {
@@ -32,7 +34,7 @@ describe('PlayerRemoveHandler', () => {
         await remove({ roomName: 'room', playerName: 'player' });
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: 'REMOVE players[1]' })).toHaveLength(1);
+        expect(await readRoom('room')).toStrictEqual({ ...room, players: [{ playerName: 'host' }] });
         expect(postedPackets(apiGateway)).toEqual([{ to: HOST_CONNECTION, packet: { id: 7, type: 'removed', data: { roomName: 'room', playerName: 'player' } } }]);
     });
 
@@ -44,7 +46,7 @@ describe('PlayerRemoveHandler', () => {
     ])('should refuse a request %s', async (_case: string, data: PlayerRequest, connection: string, message: string) => {
         // When / Then
         await expect(remove(data, connection)).rejects.toThrow(message);
-        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+        expect(await readRoom('room')).toStrictEqual(room);
         expect(postedPackets(apiGateway)).toEqual([errorReply(message, connection)]);
     });
 });

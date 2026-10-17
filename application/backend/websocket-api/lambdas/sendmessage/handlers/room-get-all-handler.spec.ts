@@ -1,13 +1,13 @@
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { RoomGame } from '@protocol/room-game.enum';
 import RoomsRequest from '@protocol/requests/rooms-request';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { anApiGatewayClient, aRequest, aRoom, AwsMocks, errorReply, mockAws, postedPackets } from '@testing/api-mocks';
-import { describe, expect, test } from 'vitest';
+import RoomRepository from '@repositories/room-repository';
+import { anApiGatewayClient, aRequest, aRoom, AwsMocks, errorReply, mockAws, postedPackets, storeRoom } from '@testing/api-mocks';
+import { describe, expect, test, vi } from 'vitest';
 import RoomGetAllHandler from './room-get-all-handler';
 
 describe('RoomGetAllHandler', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
     // A connection in no room
     const connection: string = 'visitor-connection';
 
@@ -17,7 +17,8 @@ describe('RoomGetAllHandler', () => {
 
     test('should reply the most recent rooms of the game', async () => {
         // Given
-        dynamo.on(QueryCommand).resolves({ Items: [aRoom(), aRoom({ id: 'other', hostPlayer: 'other' })] });
+        await storeRoom(aRoom({ id: 'other', nameKey: 'other', hostPlayer: 'other', createdAt: '2026-10-11T11:00:00.000Z' }));
+        await storeRoom(aRoom());
 
         // When
         await getAll({ game: RoomGame.CHESS });
@@ -40,8 +41,9 @@ describe('RoomGetAllHandler', () => {
     });
 
     test('should reply the rooms matching the search', async () => {
-        // Given the index by name finds the room named 'other', the index by host none
-        dynamo.on(QueryCommand, { IndexName: 'game-name-index' }).resolves({ Items: [aRoom({ id: 'other', hostPlayer: 'other' })] });
+        // Given a room whose name holds the search, whatever its case, and a room whose name does not
+        await storeRoom(aRoom());
+        await storeRoom(aRoom({ id: 'other', nameKey: 'other', hostPlayer: 'other' }));
 
         // When
         await getAll({ game: RoomGame.CHESS, search: 'OTH' });
@@ -55,9 +57,14 @@ describe('RoomGetAllHandler', () => {
         ['a search not a text', { game: RoomGame.CHESS, search: 42 as unknown as string }],
         ['a too long search', { game: RoomGame.CHESS, search: 's'.repeat(65) }],
     ])('should refuse a request for %s', async (_case: string, data: RoomsRequest) => {
+        // Given
+        const findRecentRooms = vi.spyOn(RoomRepository.prototype, 'findRecentRooms');
+        const findRoomsContaining = vi.spyOn(RoomRepository.prototype, 'findRoomsContaining');
+
         // When / Then
         await expect(getAll(data)).rejects.toThrow('Payload not valid');
-        expect(dynamo.commandCalls(QueryCommand)).toHaveLength(0);
+        expect(findRecentRooms).not.toHaveBeenCalled();
+        expect(findRoomsContaining).not.toHaveBeenCalled();
         expect(postedPackets(apiGateway)).toEqual([errorReply('Payload not valid', connection)]);
     });
 });
