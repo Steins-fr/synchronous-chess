@@ -1,9 +1,9 @@
 import { HttpResourceRef } from '@angular/common/http';
-import { Component, computed, effect, inject, input, output, Signal, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, Resource, Signal, signal, untracked } from '@angular/core';
 import { form, maxLength, schema } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { debouncedSignal, lastDefinedSignal, resourceFailedSignal } from '@app/helpers/signal.helper';
+import { debouncedSignal, lastDefinedSignal, withPreviousValue } from '@app/helpers/signal.helper';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { openRoomsResource } from '@app/services/room-api/room-http.api';
@@ -16,8 +16,6 @@ type RoomSearch = {
     text: string;
 };
 
-/** The rooms matching a search */
-type RoomsList = RoomsResponse & { search: string };
 
 const roomSearchSchema = schema<RoomSearch>((path) => {
     maxLength(path.text, ROOM_SEARCH_MAX_LENGTH, { message: `La recherche fait ${ ROOM_SEARCH_MAX_LENGTH } caractères au plus` });
@@ -65,17 +63,10 @@ export class OpenRoomsComponent {
         return { game: this.game(), search: search === '' ? undefined : search };
     });
 
-    /**
-     * The list shown, with the search it answers: the last one received, kept while the next one loads or once it
-     * failed. Undefined until the first one is received
-     */
-    // The value of the resource, of the search asked: a new search resets it while it loads
-    protected readonly list: Signal<RoomsList | undefined> = lastDefinedSignal(
-        () => this.roomsResource.hasValue() ? { ...this.roomsResource.value(), search: this.query() } : undefined,
-    );
-
-    /** Until a list is received: a refresh may succeed once the list failed */
-    protected readonly failed: Signal<boolean> = resourceFailedSignal(this.roomsResource);
+    /** The rooms shown: the list of a former search kept until the new one is answered, none once the list failed */
+    protected readonly rooms: Resource<RoomsResponse | undefined> = withPreviousValue(this.roomsResource);
+    /** The search the list shows: the one asked when the list was last received. Undefined until the first one */
+    protected readonly searched: Signal<string | undefined> = lastDefinedSignal(() => this.rooms.status() === 'resolved' ? this.query() : undefined);
 
     public constructor() {
         effect((onCleanup: (cleanup: () => void) => void) => {

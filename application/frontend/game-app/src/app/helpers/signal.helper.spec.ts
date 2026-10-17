@@ -1,7 +1,7 @@
-import { Injector, ResourceStatus, runInInjectionContext, signal, Signal, WritableSignal } from '@angular/core';
+import { Injector, Resource, ResourceSnapshot, runInInjectionContext, signal, Signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { debouncedSignal, lastDefinedSignal, resourceFailedSignal } from './signal.helper';
+import { debouncedSignal, lastDefinedSignal, withPreviousValue } from './signal.helper';
 
 describe('debouncedSignal', () => {
     const DELAY: number = 300;
@@ -95,20 +95,69 @@ describe('lastDefinedSignal', () => {
     });
 });
 
-describe('resourceFailedSignal', () => {
-    test('should tell the resource failed, while it loads again, until a load succeeds', () => {
-        // Given
-        const status: WritableSignal<ResourceStatus> = signal<ResourceStatus>('loading');
-        const failed: Signal<boolean> = resourceFailedSignal({ status });
-        const values: boolean[] = [failed()];
+describe('withPreviousValue', () => {
+    let snapshot: WritableSignal<ResourceSnapshot<string | undefined>>;
+    let kept: Resource<string | undefined>;
+
+    beforeEach(() => {
+        snapshot = signal<ResourceSnapshot<string | undefined>>({ status: 'loading', value: undefined });
+        kept = withPreviousValue({ snapshot });
+    });
+
+    /** The status and the value of the resource kept, undefined once it failed */
+    function state(): { status: string; value: string | undefined } {
+        return { status: kept.status(), value: kept.hasValue() ? kept.value() : undefined };
+    }
+
+    test('should load without value until the first one', () => {
+        expect(state()).toEqual({ status: 'loading', value: undefined });
+    });
+
+    test.each<[string, ResourceSnapshot<string | undefined>]>([
+        ['loads a new one', { status: 'loading', value: undefined }],
+        ['waits without request', { status: 'idle', value: undefined }],
+    ])('should keep the previous value while it %s', (_case: string, next: ResourceSnapshot<string | undefined>) => {
+        // Given: read, like a template does, the previous value of a linkedSignal being the last one computed
+        snapshot.set({ status: 'resolved', value: 'first' });
+        state();
 
         // When
-        for (const next of ['error', 'loading', 'error', 'reloading', 'resolved', 'reloading'] as ResourceStatus[]) {
-            status.set(next);
-            values.push(failed());
-        }
+        snapshot.set(next);
 
         // Then
-        expect(values).toEqual([false, true, true, true, true, false, false]);
+        expect(state()).toEqual({ status: next.status, value: 'first' });
+    });
+
+    test('should give the new value once resolved', () => {
+        // Given
+        snapshot.set({ status: 'resolved', value: 'first' });
+        state();
+        snapshot.set({ status: 'loading', value: undefined });
+        state();
+
+        // When
+        snapshot.set({ status: 'resolved', value: 'second' });
+
+        // Then
+        expect(state()).toEqual({ status: 'resolved', value: 'second' });
+    });
+
+    test('should fail without value, then load without the value lost', () => {
+        // Given
+        snapshot.set({ status: 'resolved', value: 'first' });
+        state();
+
+        // When
+        snapshot.set({ status: 'error', error: new Error('Failed') });
+
+        // Then
+        expect(state()).toEqual({ status: 'error', value: undefined });
+        expect(kept.error()).toEqual(new Error('Failed'));
+
+        // When
+        snapshot.set({ status: 'loading', value: undefined });
+
+        // Then
+        expect(state()).toEqual({ status: 'loading', value: undefined });
     });
 });

@@ -253,7 +253,7 @@ describe('OpenRoomsComponent', () => {
         expect(rows()).toHaveLength(1);
     });
 
-    test('should keep the rooms listed when a refresh fails', async () => {
+    test('should keep the rooms listed while a refresh is awaited, then hide them once it failed', async () => {
         // Given
         await createComponent();
         await answer({ rooms: [publicRoom], hasMore: false });
@@ -261,20 +261,29 @@ describe('OpenRoomsComponent', () => {
         // When
         refreshButton().click();
         await render();
-        await fail();
 
         // Then
         expect(rows()).toHaveLength(1);
-        expect(text()).toContain('Les salles n\'ont pas pu être actualisées.');
-        expect(text()).not.toContain('Les salles n\'ont pas pu être chargées.');
+
+        // When
+        await fail();
+
+        // Then
+        expect(rows()).toEqual([]);
+        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
 
         // When
         refreshButton().click();
         await render();
+
+        // Then
+        expect(text()).toContain('Chargement des salles…');
+
+        // When
         await answer({ rooms: [publicRoom], hasMore: false });
 
         // Then
-        expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
+        expect(rows()).toHaveLength(1);
     });
 
     test('should list the rooms again once a search cannot be sent', async () => {
@@ -288,7 +297,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(pendingRequests()).toEqual([]);
-        expect(text()).toContain('Les salles n\'ont pas pu être actualisées.');
+        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
 
         // When
         await typeSearch('');
@@ -296,7 +305,7 @@ describe('OpenRoomsComponent', () => {
         await answer({ rooms: [publicRoom], hasMore: false });
 
         // Then
-        expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
+        expect(rows()).toHaveLength(1);
     });
 
     test('should list the rooms again every 15 seconds while the page is visible, and once visible again', async () => {

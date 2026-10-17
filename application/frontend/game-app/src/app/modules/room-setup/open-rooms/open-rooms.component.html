@@ -9,17 +9,14 @@
     </div>
 </div>
 <app-text-field [field]="searchForm.text" class="max-w-md" label="Rechercher une salle" />
-@if (list(); as shown) {
-<!-- The list loaded before stays: a failed refresh does not take it away -->
-@if (failed()) {
-<p class="muted-note">Les salles n'ont pas pu être actualisées.</p>
-}
+<!-- No value once the list failed: value() would throw -->
+@if (rooms.hasValue() && rooms.value(); as shown) {
 @if (shown.rooms.length === 0) {
 <p class="muted-note">
-    @if (shown.search === '') {
+    @if (searched() === '') {
     Aucune salle à rejoindre pour le moment : créez la vôtre !
     } @else {
-    Aucune salle ne contient « {{ shown.search }} ».
+    Aucune salle ne contient « {{ searched() }} ».
     }
 </p>
 } @else {
@@ -52,15 +49,15 @@
 </ul>
 @if (shown.hasMore) {
 <p class="muted-note">
-    @if (shown.search === '') {
+    @if (searched() === '') {
     Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.
     } @else {
-    D'autres salles contiennent « {{ shown.search }} » : précisez la recherche pour les trouver.
+    D'autres salles contiennent « {{ searched() }} » : précisez la recherche pour les trouver.
     }
 </p>
 }
 }
-} @else if (failed()) {
+} @else if (rooms.error()) {
 <p class="muted-note">Les salles n'ont pas pu être chargées.</p>
 } @else {
 <p class="muted-note">Chargement des salles…</p>

@@ -1,4 +1,4 @@
-import { effect, linkedSignal, Resource, ResourceStatus, Signal, signal, untracked } from '@angular/core';
+import { effect, linkedSignal, Resource, resourceFromSnapshots, ResourceSnapshot, Signal, signal, untracked } from '@angular/core';
 
 /**
  * The value of the source, at once the first one, then once it stopped changing for the delay given: each change
@@ -30,12 +30,18 @@ export function lastDefinedSignal<T>(source: () => T | undefined): Signal<T | un
 }
 
 /**
- * Whether the last load of the resource failed: true once it failed, until a load succeeds, so kept while it loads
- * again. To tell a list failed while showing the one loaded before
+ * The resource, its previous value kept while it loads a new one, or waits without request (idle): a new search keeps
+ * the list of the former one until answered. Unlike once it failed: an error has no value
+ * @see https://angular.dev/guide/signals/resource#resource-composition-with-snapshots
  */
-export function resourceFailedSignal(resource: Pick<Resource<unknown>, 'status'>): Signal<boolean> {
-    return linkedSignal<ResourceStatus, boolean>({
-        source: resource.status,
-        computation: (status: ResourceStatus, previous?: { value: boolean }) => status === 'error' || (status !== 'resolved' && (previous?.value ?? false)),
-    }).asReadonly();
+export function withPreviousValue<T>(input: Pick<Resource<T>, 'snapshot'>): Resource<T> {
+    const snapshot = linkedSignal<ResourceSnapshot<T>, ResourceSnapshot<T>>({
+        source: input.snapshot,
+        computation: (snap: ResourceSnapshot<T>, previous?: { value: ResourceSnapshot<T> }) =>
+            (snap.status === 'loading' || snap.status === 'idle') && previous !== undefined && previous.value.status !== 'error'
+                ? { status: snap.status, value: previous.value.value }
+                : snap,
+    });
+
+    return resourceFromSnapshots(snapshot);
 }
