@@ -5,10 +5,11 @@ terraform {
 }
 
 locals {
-  region             = "eu-west-1"
-  front_domain_name  = "sc-${var.stage}.${var.main_domain_name}"
-  api_ws_domain_name = "sc-ws-${var.stage}.${var.main_domain_name}"
-  zone_name          = "${var.main_domain_name}."
+  region               = "eu-west-1"
+  front_domain_name    = "sc-${var.stage}.${var.main_domain_name}"
+  api_ws_domain_name   = "sc-ws-${var.stage}.${var.main_domain_name}"
+  api_http_domain_name = "sc-api-${var.stage}.${var.main_domain_name}"
+  zone_name            = "${var.main_domain_name}."
 }
 
 data "aws_route53_zone" "site" {
@@ -33,6 +34,21 @@ module "sc_certificate_api_ws" {
   source = "./modules/aws-certificate"
 
   domain_name      = local.api_ws_domain_name
+  route_53_zone_id = data.aws_route53_zone.site.zone_id
+  stage            = var.stage
+
+  providers = {
+    aws.acm     = aws
+    aws.route53 = aws
+  }
+}
+
+# The HTTP API has a domain of its own: API Gateway maps a custom domain to WebSocket APIs, or to HTTP and REST APIs,
+# never to both
+module "sc_certificate_api_http" {
+  source = "./modules/aws-certificate"
+
+  domain_name      = local.api_http_domain_name
   route_53_zone_id = data.aws_route53_zone.site.zone_id
   stage            = var.stage
 
@@ -84,10 +100,10 @@ module "sc_api_gateway" {
 module "sc_api_gateway_domain" {
   source = "./modules/aws-api-gateway-domain"
 
-  api_ws_domain_name = local.api_ws_domain_name
-  certificate_arn    = module.sc_certificate_api_ws.certificate_arn
-  route_53_zone_id   = data.aws_route53_zone.site.zone_id
-  stage              = var.stage
+  domain_name      = local.api_ws_domain_name
+  certificate_arn  = module.sc_certificate_api_ws.certificate_arn
+  route_53_zone_id = data.aws_route53_zone.site.zone_id
+  stage            = var.stage
 }
 
 /**
@@ -121,6 +137,18 @@ module "sc_role_lambda_database" {
 module "sc_role_lambda_migrate" {
   source = "./modules/aws-iam-lambda-role"
   name   = "sc_lambda_migrate_${var.stage}"
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    module.sc_database_data_api_policy.arn
+  ]
+  stage = var.stage
+}
+
+# The lambda of the HTTP API reaches the database only, no connection of the WebSocket API to push to: the policies of
+# migrate, in a role of its own
+module "sc_role_lambda_httpapi" {
+  source = "./modules/aws-iam-lambda-role"
+  name   = "sc_lambda_httpapi_${var.stage}"
   policies = [
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     module.sc_database_data_api_policy.arn
@@ -215,6 +243,20 @@ module "sc_lambda_sendmessage" {
   depends_on = [aws_lambda_invocation.migrate]
 }
 
+# Serves every route of the HTTP API (sc_api_gateway_http_routes), today the list of the open rooms. Its memory is the
+# 128 MB by default: a route hashing passwords (scrypt) would raise it to 512 MB, like sendmessage
+module "sc_lambda_httpapi" {
+  source = "./modules/aws-lambda-api"
+
+  directory   = "websocket-api"
+  name        = "httpapi"
+  role        = module.sc_role_lambda_httpapi.arn
+  stage       = var.stage
+  timeout     = local.database_lambda_timeout
+  environment = local.database_environment
+  depends_on  = [aws_lambda_invocation.migrate]
+}
+
 /**
  * API Gateway routes / deployments
  */
@@ -260,6 +302,46 @@ module "sc_api_gateway_mapping" {
   api_id    = module.sc_api_gateway.api_gateway_id
   domain_id = module.sc_api_gateway_domain.id
   stage_id  = module.sc_api_gateway_stage.api_gateway_stage_id
+}
+
+/**
+ * HTTP API: what is not the connectivity of a room, today the list of the open rooms. The WebSocket API above serves
+ * the connectivity of the rooms only
+ */
+
+module "sc_api_gateway_http" {
+  source = "./modules/aws-api-gateway-http"
+
+  api_http_name = "sc-http"
+  # The app of the stage, and on the development stage the dev server of the game app (npm run serve:dev)
+  allow_origins = concat(["https://${local.front_domain_name}"], var.stage == "development" ? ["http://localhost:4200"] : [])
+  stage         = var.stage
+}
+
+module "sc_api_gateway_http_routes" {
+  source = "./modules/aws-api-gateway-http-routes"
+
+  api_gateway_id            = module.sc_api_gateway_http.api_gateway_id
+  api_gateway_execution_arn = module.sc_api_gateway_http.execution_arn
+  lambda_httpapi_arn        = module.sc_lambda_httpapi.invoke_arn
+  lambda_httpapi_name       = module.sc_lambda_httpapi.name
+}
+
+module "sc_api_gateway_http_domain" {
+  source = "./modules/aws-api-gateway-domain"
+
+  domain_name      = local.api_http_domain_name
+  certificate_arn  = module.sc_certificate_api_http.certificate_arn
+  route_53_zone_id = data.aws_route53_zone.site.zone_id
+  stage            = var.stage
+}
+
+module "sc_api_gateway_http_mapping" {
+  source = "./modules/aws-api-gateway-mapping"
+
+  api_id    = module.sc_api_gateway_http.api_gateway_id
+  domain_id = module.sc_api_gateway_http_domain.id
+  stage_id  = module.sc_api_gateway_http.api_gateway_stage_id
 }
 
 /**

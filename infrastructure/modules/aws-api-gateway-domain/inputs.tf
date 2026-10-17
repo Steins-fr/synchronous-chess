@@ -1,6 +1,6 @@
-variable "api_ws_domain_name" {
+variable "domain_name" {
   type        = string
-  description = "Domain name of the api websocket"
+  description = "Domain name of the API"
 }
 
 variable "certificate_arn" {

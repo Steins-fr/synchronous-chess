@@ -249,3 +249,32 @@
         }
     ]
 }
+// Deployment role of GitHub Actions (OIDC, secrets.AWS_ROLE_ARN): what the HTTP API adds, for each stage
+// (sc-http-<stage>, on sc-api-<stage>), to grant by hand before its first apply. Its stage $default writes its access
+// logs through a log delivery of CloudWatch Logs, set up with the rights of the caller, where the WebSocket stage
+// writes them with the role of the API Gateway account (api_gateway_cloudwatch_global): the statement below, from
+// "HTTP API logging" of the API Gateway guide, but logs:CreateLogGroup and the reads of the log groups, which the role
+// has for the groups it creates. Where its statements are scoped by name, the role also needs the function
+// sc_httpapi_<stage> and the role sc_lambda_httpapi_<stage> (create, tag, PassRole, attach AWSLambdaBasicExecutionRole
+// and sc-database-<stage>), like the lambdas and the roles of the statements above; API Gateway on the new API (its
+// stage, integration, route and mapping) and its domain sc-api-<stage>; ACM and Route 53 for the certificate of
+// sc-api-<stage> and its records, like the ones of sc-ws-<stage>
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "HttpApiAccessLogs",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogDelivery",
+                "logs:GetLogDelivery",
+                "logs:UpdateLogDelivery",
+                "logs:DeleteLogDelivery",
+                "logs:ListLogDeliveries",
+                "logs:PutResourcePolicy",
+                "logs:DescribeResourcePolicies"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

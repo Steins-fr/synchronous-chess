@@ -2,16 +2,16 @@
 <!--
   Synchronous Chess: the AWS infrastructure Terraform deploys (infrastructure/main.tf and its modules), for one stage.
   Hand-written SVG 1.1: edit the coordinates directly. {stage} is the Terraform variable stage, {Stage} the same
-  capitalized (the name of the API Gateway stage), {domain} the variable main_domain_name.
+  capitalized (the name of the stage of the WebSocket API), {domain} the variable main_domain_name.
   Colors, one per kind: network and edge (violet), compute (orange), data and storage (blue),
   security and identity (red), external to AWS (slate). Boundaries: AWS region (cyan, dashed), VPC (green, dashed).
 -->
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1200" height="1140" viewBox="0 0 1200 1140"
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1200" height="1320" viewBox="0 0 1200 1320"
      font-family="Helvetica, Arial, sans-serif">
   <title>Synchronous Chess — AWS infrastructure</title>
-  <desc>The players' browsers load the Angular app from CloudFront and a private S3 bucket, talk to a WebSocket API of
-    API Gateway backed by Lambda functions, which store the rooms in Aurora PostgreSQL Serverless v2 through its Data API.
-    The game itself runs peer to peer over WebRTC.</desc>
+  <desc>The players' browsers load the Angular app from CloudFront and a private S3 bucket, list the rooms through an
+    HTTP API and join them through a WebSocket API of API Gateway, both backed by Lambda functions, which store the
+    rooms in Aurora PostgreSQL Serverless v2 through its Data API. The game itself runs peer to peer over WebRTC.</desc>
 
   <defs>
     <style type="text/css"><![CDATA[
@@ -81,7 +81,7 @@
   </defs>
 
   <!-- Light background, so that the drawing reads on the light and the dark pages of GitHub -->
-  <rect x="0" y="0" width="1200" height="1140" fill="#ffffff"/>
+  <rect x="0" y="0" width="1200" height="1320" fill="#ffffff"/>
 
   <!-- ===================================================================== Title -->
   <text x="16" y="34" class="title">Synchronous Chess — AWS infrastructure</text>
@@ -118,8 +118,9 @@
   <text x="38" y="438" class="s">+ the other participants</text>
 
   <text x="28" y="496" class="s">Each browser opens:</text>
-  <text x="28" y="510" class="s">DNS, HTTPS (the app), WSS</text>
-  <text x="28" y="523" class="s">(the rooms) and WebRTC</text>
+  <text x="28" y="510" class="s">DNS, HTTPS (the app and the</text>
+  <text x="28" y="523" class="s">room list), WSS (the rooms it</text>
+  <text x="28" y="536" class="s">joins) and WebRTC</text>
 
   <!-- STUN -->
   <line x1="106" y1="600" x2="106" y2="648" class="flow" marker-end="url(#ah)"/>
@@ -130,28 +131,30 @@
   <text x="28" y="693" class="s">public address of a peer (ICE)</text>
 
   <!-- Deployment -->
-  <rect x="16" y="904" width="180" height="108" rx="6" class="ext"/>
-  <text x="28" y="922" class="h ext-t">GitHub Actions</text>
-  <text x="28" y="937" class="s">terraform plan, then apply</text>
-  <text x="28" y="950" class="s">AWS role assumed by OIDC</text>
-  <text x="28" y="963" class="s">builds the lambdas and the</text>
-  <text x="28" y="976" class="s">app, uploads its files to the</text>
-  <text x="28" y="989" class="s">app bucket (aws_s3_object)</text>
+  <rect x="16" y="1084" width="180" height="108" rx="6" class="ext"/>
+  <text x="28" y="1102" class="h ext-t">GitHub Actions</text>
+  <text x="28" y="1117" class="s">terraform plan, then apply</text>
+  <text x="28" y="1130" class="s">AWS role assumed by OIDC</text>
+  <text x="28" y="1143" class="s">builds the lambdas and the</text>
+  <text x="28" y="1156" class="s">app, uploads its files to the</text>
+  <text x="28" y="1169" class="s">app bucket (aws_s3_object)</text>
 
   <!-- ===================================================================== AWS Cloud -->
-  <rect x="284" y="72" width="900" height="976" rx="10" class="aws"/>
+  <rect x="284" y="72" width="900" height="1156" rx="10" class="aws"/>
   <text x="296" y="90" class="boundary aws-t">AWS Cloud</text>
 
   <!-- Route 53 (global) -->
-  <rect x="316" y="100" width="496" height="80" rx="6" class="net"/>
+  <rect x="316" y="100" width="496" height="82" rx="6" class="net"/>
   <text x="328" y="118" class="h net-t">Route 53</text>
   <text x="390" y="118" class="tag">GLOBAL · HOSTED ZONE {domain}, EXISTING (DATA SOURCE)</text>
-  <text x="328" y="135" class="d">A alias</text>
-  <text x="384" y="135" class="d">sc-{stage}.{domain}  →  the CloudFront distribution</text>
-  <text x="328" y="150" class="d">A alias</text>
-  <text x="384" y="150" class="d">sc-ws-{stage}.{domain}  →  the custom domain of API Gateway</text>
-  <text x="328" y="165" class="d">CNAME</text>
-  <text x="384" y="165" class="d">DNS validation of the two ACM certificates</text>
+  <text x="328" y="133" class="d">A alias</text>
+  <text x="384" y="133" class="d">sc-{stage}.{domain}  →  the CloudFront distribution</text>
+  <text x="328" y="146" class="d">A alias</text>
+  <text x="384" y="146" class="d">sc-ws-{stage}.{domain}  →  the custom domain of the WebSocket API</text>
+  <text x="328" y="159" class="d">A alias</text>
+  <text x="384" y="159" class="d">sc-api-{stage}.{domain}  →  the custom domain of the HTTP API</text>
+  <text x="328" y="172" class="d">CNAME</text>
+  <text x="384" y="172" class="d">DNS validation of the three ACM certificates</text>
 
   <!-- CloudFront (edge) -->
   <rect x="316" y="196" width="196" height="108" rx="6" class="net"/>
@@ -177,25 +180,27 @@
   <text x="548" y="250" class="lbl" text-anchor="middle">TLS cert</text>
 
   <!-- IAM (global) -->
-  <rect x="836" y="100" width="334" height="210" rx="6" class="sec"/>
+  <rect x="836" y="100" width="334" height="216" rx="6" class="sec"/>
   <text x="848" y="118" class="h sec-t">IAM</text>
   <text x="878" y="118" class="tag">GLOBAL · ROLES OF THE LAMBDAS</text>
-  <text x="848" y="135" class="h2 sec-t">sc_lambda_basic_{stage}<tspan class="d" font-weight="normal"> → onconnect</tspan></text>
-  <text x="860" y="148" class="s">AWSLambdaBasicExecutionRole (CloudWatch logs)</text>
-  <text x="848" y="163" class="h2 sec-t">sc_lambda_database_{stage}<tspan class="d" font-weight="normal"> → ondisconnect, sendmessage</tspan></text>
-  <text x="860" y="176" class="s">basic + sc-database + sc-manage-connection</text>
-  <text x="848" y="191" class="h2 sec-t">sc_lambda_migrate_{stage}<tspan class="d" font-weight="normal"> → migrate</tspan></text>
-  <text x="860" y="204" class="s">basic + sc-database</text>
-  <text x="848" y="219" class="h2 sec-t">policy sc-database-{stage}</text>
-  <text x="860" y="232" class="s">rds-data: ExecuteStatement, BatchExecuteStatement,</text>
-  <text x="860" y="244" class="s">Begin / Commit / RollbackTransaction on the cluster;</text>
-  <text x="860" y="256" class="s">secretsmanager:GetSecretValue on its secret</text>
-  <text x="848" y="271" class="h2 sec-t">policy sc-manage-connection-{stage}</text>
-  <text x="860" y="284" class="s">execute-api:ManageConnections on the API</text>
-  <text x="848" y="300" class="s">role api_gateway_cloudwatch_global: API Gateway → logs</text>
+  <text x="848" y="133" class="h2 sec-t">sc_lambda_basic_{stage}<tspan class="d" font-weight="normal"> → onconnect</tspan></text>
+  <text x="860" y="145" class="s">AWSLambdaBasicExecutionRole (CloudWatch logs)</text>
+  <text x="848" y="158" class="h2 sec-t">sc_lambda_database_{stage}<tspan class="d" font-weight="normal"> → ondisconnect, sendmessage</tspan></text>
+  <text x="860" y="170" class="s">basic + sc-database + sc-manage-connection</text>
+  <text x="848" y="183" class="h2 sec-t">sc_lambda_migrate_{stage}<tspan class="d" font-weight="normal"> → migrate</tspan></text>
+  <text x="860" y="195" class="s">basic + sc-database</text>
+  <text x="848" y="208" class="h2 sec-t">sc_lambda_httpapi_{stage}<tspan class="d" font-weight="normal"> → httpapi</tspan></text>
+  <text x="860" y="220" class="s">basic + sc-database</text>
+  <text x="848" y="233" class="h2 sec-t">policy sc-database-{stage}</text>
+  <text x="860" y="245" class="s">rds-data: ExecuteStatement, BatchExecuteStatement,</text>
+  <text x="860" y="256" class="s">Begin / Commit / RollbackTransaction on the cluster;</text>
+  <text x="860" y="267" class="s">secretsmanager:GetSecretValue on its secret</text>
+  <text x="848" y="281" class="h2 sec-t">policy sc-manage-connection-{stage}</text>
+  <text x="860" y="293" class="s">execute-api:ManageConnections on the WebSocket API</text>
+  <text x="848" y="306" class="s">role api_gateway_cloudwatch_global: WebSocket API → logs</text>
 
   <!-- ===================================================================== eu-west-1 -->
-  <rect x="300" y="326" width="870" height="706" rx="8" class="region"/>
+  <rect x="300" y="326" width="870" height="886" rx="8" class="region"/>
   <text x="312" y="343" class="boundary region-t">eu-west-1 · Europe (Ireland)</text>
 
   <!-- S3: the app -->
@@ -213,13 +218,15 @@
   <text x="500" y="352" class="lbl">OAC · SigV4</text>
 
   <!-- CloudWatch Logs -->
-  <rect x="616" y="358" width="256" height="92" rx="6" class="dat"/>
+  <rect x="616" y="358" width="256" height="124" rx="6" class="dat"/>
   <text x="628" y="376" class="h dat-t">CloudWatch Logs</text>
   <text x="628" y="391" class="s">/aws/lambda/sc_{name}_{stage}</text>
   <text x="640" y="404" class="s">a group per lambda, 14 days</text>
   <text x="628" y="419" class="s">/aws/apigateway/synchronous-chess-{stage}</text>
-  <text x="640" y="432" class="s">access logs, 14 days</text>
-  <text x="628" y="445" class="s">+ execution logs of API Gateway (INFO)</text>
+  <text x="640" y="432" class="s">WebSocket access logs, 14 days</text>
+  <text x="640" y="445" class="s">+ its execution logs (INFO)</text>
+  <text x="628" y="460" class="s">/aws/apigateway/synchronous-chess-http-{stage}</text>
+  <text x="640" y="473" class="s">HTTP API access logs, 14 days</text>
 
   <!-- Secrets Manager -->
   <rect x="896" y="358" width="258" height="92" rx="6" class="sec"/>
@@ -231,7 +238,7 @@
   <text x="908" y="444" class="s">of the calling lambda</text>
 
   <!-- API Gateway -->
-  <rect x="316" y="474" width="196" height="432" rx="6" class="net"/>
+  <rect x="316" y="474" width="196" height="606" rx="6" class="net"/>
   <text x="328" y="492" class="h net-t">API Gateway · WebSocket</text>
   <text x="328" y="506" class="s">sc-websocket-{stage} · stage {Stage}</text>
 
@@ -257,7 +264,7 @@
   <rect x="326" y="716" width="176" height="48" rx="4" class="net-in"/>
   <text x="334" y="731" class="h2 net-t">sendmessage → sendmessage</text>
   <text x="334" y="745" class="s">Lambda proxy · create, join,</text>
-  <text x="334" y="757" class="s">signal, reconnect, roomGetAll…</text>
+  <text x="334" y="757" class="s">signal, reconnect, players…</text>
 
   <rect x="326" y="772" width="176" height="48" rx="4" class="net-in"/>
   <text x="334" y="787" class="h2 net-t">ping → mock integration</text>
@@ -269,6 +276,23 @@
   <text x="334" y="866" class="s">management API, on the</text>
   <text x="334" y="878" class="s">custom domain: pushes a message</text>
   <text x="334" y="890" class="s">to the socket of a client</text>
+
+  <!-- The HTTP API, in the same box: what is not the connectivity of a room, today the list of the open rooms -->
+  <line x1="316" y1="906" x2="512" y2="906" stroke="#6d28d9" stroke-width="1.4"/>
+  <text x="328" y="924" class="h net-t">API Gateway · HTTP</text>
+  <text x="328" y="938" class="s">sc-http-{stage} · stage $default</text>
+
+  <rect x="326" y="944" width="176" height="48" rx="4" class="net-in"/>
+  <text x="334" y="959" class="h2 net-t">GET /rooms → httpapi</text>
+  <text x="334" y="973" class="s">Lambda proxy · payload 2.0</text>
+  <text x="334" y="985" class="s">CORS: GET, the app's origin</text>
+
+  <rect x="326" y="1000" width="176" height="70" rx="4" class="net-in"/>
+  <text x="334" y="1014" class="h2 net-t">custom domain</text>
+  <text x="334" y="1027" class="s">sc-api-{stage}.{domain}</text>
+  <text x="334" y="1040" class="s">regional · TLS 1.2 · API mapping</text>
+  <rect x="334" y="1047" width="160" height="17" rx="3" class="sec"/>
+  <text x="342" y="1059" class="s">ACM certificate · eu-west-1</text>
 
   <!-- Browsers to the edge and the API -->
   <line x1="196" y1="140" x2="316" y2="140" class="flow" marker-end="url(#ah)"/>
@@ -283,12 +307,16 @@
   <text x="240" y="560" class="lbl" text-anchor="middle">rooms, WebRTC</text>
   <text x="240" y="572" class="lbl" text-anchor="middle">signals, ping</text>
 
+  <polyline points="196,588 266,588 266,1035 326,1035" class="flow" marker-end="url(#ah)"/>
+  <text x="231" y="800" class="lbl-b" text-anchor="middle">HTTPS</text>
+  <text x="231" y="814" class="lbl" text-anchor="middle">the room list</text>
+
   <!-- API Gateway to CloudWatch -->
   <polyline points="512,492 566,492 566,404 616,404" class="flow" marker-end="url(#ah)"/>
   <text x="560" y="452" class="lbl" text-anchor="end">logs</text>
 
   <!-- Lambda -->
-  <rect x="616" y="556" width="196" height="350" rx="8" class="cmp-group"/>
+  <rect x="616" y="556" width="196" height="504" rx="8" class="cmp-group"/>
   <text x="628" y="574" class="h cmp-t">Lambda functions</text>
   <text x="628" y="588" class="s">Node.js 22 · arm64 · outside any VPC</text>
 
@@ -307,15 +335,20 @@
   <text x="636" y="745" class="s">512 MB (scrypt) · 28 s</text>
   <text x="636" y="757" class="s">role sc_lambda_database_{stage}</text>
 
-  <rect x="626" y="772" width="176" height="48" rx="5" class="cmp"/>
-  <text x="636" y="787" class="h2 cmp-t">migrate</text>
-  <text x="636" y="801" class="s">128 MB · 300 s · migrations</text>
-  <text x="636" y="813" class="s">role sc_lambda_migrate_{stage}</text>
-
   <text x="628" y="838" class="s">named sc_{name}_{stage}</text>
   <text x="628" y="853" class="s">timeout 28 s: API Gateway waits</text>
   <text x="628" y="865" class="s">29 s at most, a paused cluster</text>
   <text x="628" y="877" class="s">takes ~15 s to resume</text>
+
+  <rect x="626" y="944" width="176" height="48" rx="5" class="cmp"/>
+  <text x="636" y="959" class="h2 cmp-t">httpapi</text>
+  <text x="636" y="973" class="s">128 MB · 28 s · the HTTP routes</text>
+  <text x="636" y="985" class="s">role sc_lambda_httpapi_{stage}</text>
+
+  <rect x="626" y="1000" width="176" height="48" rx="5" class="cmp"/>
+  <text x="636" y="1015" class="h2 cmp-t">migrate</text>
+  <text x="636" y="1029" class="s">128 MB · 300 s · migrations</text>
+  <text x="636" y="1041" class="s">role sc_lambda_migrate_{stage}</text>
 
   <!-- Routes to the lambdas -->
   <line x1="502" y1="628" x2="626" y2="628" class="flow" marker-end="url(#ah)"/>
@@ -324,6 +357,8 @@
   <text x="564" y="678" class="lbl" text-anchor="middle">invoke</text>
   <line x1="502" y1="740" x2="626" y2="740" class="flow" marker-end="url(#ah)"/>
   <text x="564" y="734" class="lbl" text-anchor="middle">invoke</text>
+  <line x1="502" y1="968" x2="626" y2="968" class="flow" marker-end="url(#ah)"/>
+  <text x="564" y="962" class="lbl" text-anchor="middle">invoke</text>
 
   <!-- Lambdas to @connections -->
   <line x1="616" y1="866" x2="502" y2="866" class="flow" marker-end="url(#ah)"/>
@@ -331,8 +366,8 @@
   <text x="559" y="880" class="lbl" text-anchor="middle">HTTPS</text>
 
   <!-- Lambdas to CloudWatch -->
-  <line x1="714" y1="556" x2="714" y2="450" class="flow" marker-end="url(#ah)"/>
-  <text x="722" y="506" class="lbl">logs</text>
+  <line x1="714" y1="556" x2="714" y2="482" class="flow" marker-end="url(#ah)"/>
+  <text x="722" y="522" class="lbl">logs</text>
 
   <!-- RDS Data API -->
   <rect x="896" y="474" width="258" height="84" rx="6" class="dat"/>
@@ -346,9 +381,11 @@
   <!-- Lambdas reading the database to the Data API -->
   <polyline points="802,684 836,684" class="flow"/>
   <polyline points="802,740 836,740" class="flow"/>
-  <polyline points="802,796 836,796 836,512 896,512" class="flow" marker-end="url(#ah)"/>
+  <polyline points="802,968 836,968" class="flow"/>
+  <polyline points="802,1024 836,1024 836,512 896,512" class="flow" marker-end="url(#ah)"/>
   <circle cx="836" cy="684" r="2.6" class="dot"/>
   <circle cx="836" cy="740" r="2.6" class="dot"/>
+  <circle cx="836" cy="968" r="2.6" class="dot"/>
   <text x="844" y="600" class="lbl-b">Data API</text>
   <text x="844" y="612" class="lbl">HTTPS</text>
 
@@ -402,53 +439,53 @@
   <text x="1041" y="957" class="s">second zone</text>
 
   <!-- Terraform state -->
-  <rect x="316" y="916" width="196" height="68" rx="6" class="dat"/>
-  <text x="328" y="933" class="h dat-t">S3 bucket · Terraform state</text>
-  <text x="328" y="947" class="s">synchronous-chess-terraform</text>
-  <text x="328" y="960" class="s">key {stage}/terraform.tfstate</text>
-  <text x="328" y="973" class="s">+ the key SOURCE_HASH_SECRET</text>
+  <rect x="316" y="1096" width="196" height="68" rx="6" class="dat"/>
+  <text x="328" y="1113" class="h dat-t">S3 bucket · Terraform state</text>
+  <text x="328" y="1127" class="s">synchronous-chess-terraform</text>
+  <text x="328" y="1140" class="s">key {stage}/terraform.tfstate</text>
+  <text x="328" y="1153" class="s">+ the key SOURCE_HASH_SECRET</text>
 
-  <line x1="196" y1="944" x2="316" y2="944" class="flow" marker-start="url(#ah-s)" marker-end="url(#ah)"/>
-  <text x="240" y="938" class="lbl" text-anchor="middle">Terraform state</text>
+  <line x1="196" y1="1124" x2="316" y2="1124" class="flow" marker-start="url(#ah-s)" marker-end="url(#ah)"/>
+  <text x="240" y="1118" class="lbl" text-anchor="middle">Terraform state</text>
 
   <!-- Terraform invokes migrate -->
-  <polyline points="196,1000 790,1000 790,820" class="flow" marker-end="url(#ah)"/>
-  <text x="240" y="994" class="lbl" text-anchor="middle">Lambda Invoke</text>
-  <text x="780" y="930" class="lbl-b" text-anchor="end">invoke on deploy</text>
-  <text x="780" y="943" class="s" text-anchor="end">aws_lambda_invocation, when the</text>
-  <text x="780" y="956" class="s" text-anchor="end">migrations or the cluster change,</text>
-  <text x="780" y="969" class="s" text-anchor="end">before the lambdas reading the</text>
-  <text x="780" y="982" class="s" text-anchor="end">database deploy</text>
+  <polyline points="196,1180 790,1180 790,1048" class="flow" marker-end="url(#ah)"/>
+  <text x="240" y="1174" class="lbl" text-anchor="middle">Lambda Invoke</text>
+  <text x="780" y="1100" class="lbl-b" text-anchor="end">invoke on deploy</text>
+  <text x="780" y="1113" class="s" text-anchor="end">aws_lambda_invocation, when the</text>
+  <text x="780" y="1126" class="s" text-anchor="end">migrations or the cluster change,</text>
+  <text x="780" y="1139" class="s" text-anchor="end">before the lambdas reading the</text>
+  <text x="780" y="1152" class="s" text-anchor="end">database deploy</text>
 
   <!-- ===================================================================== Legend -->
-  <text x="16" y="1076" class="h">Legend</text>
+  <text x="16" y="1256" class="h">Legend</text>
 
-  <rect x="80" y="1065" width="16" height="12" rx="2" class="net"/>
-  <text x="102" y="1075" class="d">network and edge</text>
-  <rect x="210" y="1065" width="16" height="12" rx="2" class="cmp"/>
-  <text x="232" y="1075" class="d">compute</text>
-  <rect x="296" y="1065" width="16" height="12" rx="2" class="dat"/>
-  <text x="318" y="1075" class="d">data, storage and logs</text>
-  <rect x="446" y="1065" width="16" height="12" rx="2" class="sec"/>
-  <text x="468" y="1075" class="d">security and identity</text>
-  <rect x="590" y="1065" width="16" height="12" rx="2" class="ext"/>
-  <text x="612" y="1075" class="d">outside AWS</text>
-  <rect x="700" y="1065" width="24" height="12" rx="2" class="region"/>
-  <text x="730" y="1075" class="d">AWS region</text>
-  <rect x="806" y="1065" width="24" height="12" rx="2" class="vpc"/>
-  <text x="836" y="1075" class="d">VPC</text>
-  <rect x="878" y="1065" width="24" height="12" rx="2" class="cmp-group"/>
-  <text x="908" y="1075" class="d">group of resources</text>
+  <rect x="80" y="1245" width="16" height="12" rx="2" class="net"/>
+  <text x="102" y="1255" class="d">network and edge</text>
+  <rect x="210" y="1245" width="16" height="12" rx="2" class="cmp"/>
+  <text x="232" y="1255" class="d">compute</text>
+  <rect x="296" y="1245" width="16" height="12" rx="2" class="dat"/>
+  <text x="318" y="1255" class="d">data, storage and logs</text>
+  <rect x="446" y="1245" width="16" height="12" rx="2" class="sec"/>
+  <text x="468" y="1255" class="d">security and identity</text>
+  <rect x="590" y="1245" width="16" height="12" rx="2" class="ext"/>
+  <text x="612" y="1255" class="d">outside AWS</text>
+  <rect x="700" y="1245" width="24" height="12" rx="2" class="region"/>
+  <text x="730" y="1255" class="d">AWS region</text>
+  <rect x="806" y="1245" width="24" height="12" rx="2" class="vpc"/>
+  <text x="836" y="1255" class="d">VPC</text>
+  <rect x="878" y="1245" width="24" height="12" rx="2" class="cmp-group"/>
+  <text x="908" y="1255" class="d">group of resources</text>
 
-  <line x1="80" y1="1100" x2="120" y2="1100" class="flow" marker-end="url(#ah)"/>
-  <text x="128" y="1104" class="d">request or data, labelled with what flows (two heads: both ways)</text>
-  <line x1="460" y1="1100" x2="500" y2="1100" class="rtc" marker-end="url(#rtc)"/>
-  <text x="508" y="1104" class="d">WebRTC, browser to browser</text>
-  <line x1="680" y1="1100" x2="720" y2="1100" class="cert" marker-end="url(#cert)"/>
-  <text x="728" y="1104" class="d">certificate attached to</text>
-  <circle cx="866" cy="1100" r="2.6" class="dot"/>
-  <line x1="856" y1="1100" x2="876" y2="1100" class="flow"/>
-  <text x="884" y="1104" class="d">lines joining</text>
+  <line x1="80" y1="1280" x2="120" y2="1280" class="flow" marker-end="url(#ah)"/>
+  <text x="128" y="1284" class="d">request or data, labelled with what flows (two heads: both ways)</text>
+  <line x1="460" y1="1280" x2="500" y2="1280" class="rtc" marker-end="url(#rtc)"/>
+  <text x="508" y="1284" class="d">WebRTC, browser to browser</text>
+  <line x1="680" y1="1280" x2="720" y2="1280" class="cert" marker-end="url(#cert)"/>
+  <text x="728" y="1284" class="d">certificate attached to</text>
+  <circle cx="866" cy="1280" r="2.6" class="dot"/>
+  <line x1="856" y1="1280" x2="876" y2="1280" class="flow"/>
+  <text x="884" y="1284" class="d">lines joining</text>
 
-  <text x="16" y="1128" class="s">{Stage}: the stage capitalized, the name of the API Gateway stage · drawn from infrastructure/*.tf, application/backend/websocket-api and application/frontend/game-app</text>
+  <text x="16" y="1308" class="s">{Stage}: the stage capitalized, the name of the stage of the WebSocket API (the HTTP API serves $default) · drawn from infrastructure/*.tf, application/backend/websocket-api and application/frontend/game-app</text>
 </svg>
