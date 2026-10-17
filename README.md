@@ -44,9 +44,9 @@ The code the lambdas share, in `shared/`, bundled into each lambda by esbuild:
 
 **Connection service**: Manage the websocket connections and links connections to a room. That permits to identify the room for connection id. Used for removing a player from the room queue or detect room host disconnection.
 
-#### Websocket API Lambdas
+#### API Lambdas
 
-The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, and a 4th applying the migrations of the database on deploy. The disconnection and message lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
+The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, a 4th serving the routes of the HTTP API, and a 5th applying the migrations of the database on deploy. The websocket serves the connectivity of the rooms only (create, join, reconnect, the players, the WebRTC signals and the notifications of the room), everything else goes through HTTPS. The disconnection, message and HTTP API lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
 
 **onconnect** - Handle and log new websocket opened connection.
 
@@ -64,6 +64,9 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
  - **join** - Ask to join a room and add the player in the room queue, with a secret token of the player;
  - **signal to host** - only peer - Send the RTC signal to the room host. The peer have to be in the waiting queue.
 
+**httpapi** - Behind the HTTP API, a handler per route, selected by its method and path. Available routes:
+ - **`GET /rooms?game=<game>&search=<text>`** - The open rooms of a game, without connection: the most recent first, or the ones whose name holds the search.
+
 
 ### **Frontend**
 ---
@@ -75,7 +78,7 @@ which the other participants watch for cheats. The moves stay hidden until both 
 See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md) and
 [Chess game session](documentation/chess-game-session.md).
 
-**Required**: Backend Websocket API.
+**Required**: Backend API (its websocket API and its HTTP API).
 
 **Technology**: Angular 17+.
 
@@ -124,8 +127,8 @@ The options of each service, the regions, the network of the database and the ro
 #### Services:
  - S3: Stores the frontend files, and the Terraform states;
  - CloudFront: Serves the frontend from S3 and manage the cache;
- - Lambda: Run the Room API designed for Websocket;
- - API Gateway: Manages Websocket connection and API calls, then transmits calls to the lambdas;
+ - Lambda: Run the Room API, behind the WebSocket API and the HTTP API;
+ - API Gateway: Manages the Websocket connections and messages (the connectivity of the rooms), and the HTTPS requests of the HTTP API (the list of the rooms), then transmits them to the lambdas;
  - Aurora Serverless v2 (PostgreSQL): Stores the Rooms informations for the API, reached by the lambdas through its Data API;
  - Secrets Manager: Keeps the password of the database, which the Data API reads;
  - Route 53: Manage the DNS records;
@@ -133,7 +136,7 @@ The options of each service, the regions, the network of the database and the ro
  - ACM: Manage the certificates.
 
 Terraform provisions every resource but the Route 53 zone of the main domain, which must exist: it reads it, then adds
-the DNS records of the app, of the websocket API, and the ones validating their ACM certificates.
+the DNS records of the app, of the websocket API, of the HTTP API, and the ones validating their ACM certificates.
 
 #### Terraform init backend configuration
 
@@ -152,7 +155,10 @@ The Terraform backend configuration variables:
 The app will be deployed by adding automatically sub-domains, which its environment of the stage targets
 (`application/frontend/game-app/src/environments`).
 - frontend: sc-{stage}.{main_domain_name};
-- backend: sc-ws-{stage}.{main_domain_name}, the websocket API.
+- backend: sc-ws-{stage}.{main_domain_name}, the websocket API;
+- backend: sc-api-{stage}.{main_domain_name}, the HTTP API, a domain of its own: API Gateway does not map a websocket
+  API and an HTTP API to the same domain. Readable by the pages of its stage only (CORS), and by `http://localhost:4200`
+  on the development stage, for `npm run serve:dev` of the game app.
 
 The lambdas and the app are built before the plan: `npm run build` in `application/backend/websocket-api`, and
 `npm run build -- --configuration=<stage>` in `application/frontend/game-app` (`dist/game-app/browser`).

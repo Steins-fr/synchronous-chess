@@ -22,10 +22,11 @@ equivalent, so treat `game-app.instructions.md` as applying only to
 Mono-repo, no root package.json — each package is installed and run from its own directory.
 
 - `application/frontend/game-app` — Angular 21 app (the main project)
-- `application/backend/websocket-api` — AWS Lambda WebSocket API (TypeScript, esbuild, PostgreSQL with Drizzle: Aurora
-  Serverless v2 through its Data API)
+- `application/backend/websocket-api` — AWS Lambda API: a WebSocket API for the connectivity of the rooms, an HTTP API
+  for the rest, the list of the rooms (TypeScript, esbuild, PostgreSQL with Drizzle: Aurora Serverless v2 through its
+  Data API)
 - `application/shared/room-socket-protocol` — the WebSocket message types (requests, responses,
-  notifications, error messages), imported by both packages as `@protocol/*`. Plain TypeScript with
+  notifications, error messages) and the paths of the HTTP API, imported by both packages as `@protocol/*`. Plain TypeScript with
   no dependency nor package.json: each package compiles it through its own tsconfig alias
 - `application/shared/sonar-eslint-rules` — the ESLint rules of the SonarCloud quality profile
   (`sonar-way.json`), used by the ESLint configs of both packages, and the script generating them
@@ -54,7 +55,7 @@ templates, nor type-check the specs as `ng test` does.
 Backend, from `application/backend/websocket-api`:
 
 ```bash
-npm run serve:local  # the API on ws://127.0.0.1:3001, without AWS (local/server.ts, PGlite in memory)
+npm run serve:local  # the API on ws:// and http://127.0.0.1:3001, without AWS (local/server.ts, PGlite in memory)
 npm run build        # esbuild bundle
 npm run lint         # ESLint, then the shared protocol (lint:protocol)
 npm run typecheck    # tsc, the API then the shared protocol (esbuild does not check types)
@@ -71,13 +72,13 @@ The API specs sit next to their file and run on PGlite, PostgreSQL in memory wit
 (`aws-sdk-client-mock`), with the room fixtures, `storeRoom()` / `readRoom()` and a reader of the packets posted
 to the connections. The specs assert the rows, never the SQL. `aws-sdk-client-mock` mocks the Data API client in
 `shared/database` only. `local/local-api.spec.ts` starts the local API on a free port, with real websocket
-clients, out of the coverage threshold.
+clients and HTTP requests, out of the coverage threshold.
 
 ## Frontend specifics
 
 - Tests use **Vitest** with jsdom (`vitest.config.ts`, `test-setup.ts`), not Karma/Jasmine.
   Shared test providers are in `src/test-providers.ts`, helpers under `src/testing`.
-- Path aliases: `@app/*`, `@environments/*`, `@testing/*`, `@protocol/*` (the shared WebSocket protocol).
+- Path aliases: `@app/*`, `@environments/*`, `@testing/*`, `@protocol/*` (the shared protocol of the API).
 - Code lives under `src/app/{modules,services,pages,helpers,types}`.
 - Tailwind v4 is wired through PostCSS (`src/tailwind.css`); global styles in `src/styles.scss`.
 

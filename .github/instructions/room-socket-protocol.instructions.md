@@ -5,7 +5,10 @@ applyTo: 'application/shared/room-socket-protocol/**'
 
 The message types exchanged between the game app (`application/frontend/game-app`) and the websocket
 API (`application/backend/websocket-api`): requests, responses, notifications, error messages and the
-relayed WebRTC signal. Both packages import it as `@protocol/*`; it is never duplicated in either.
+relayed WebRTC signal. It also holds the paths of the HTTP API (`room-api-http-route.enum.ts`), whose query
+string and body types stay with the message types (`requests/rooms-request.ts`, `responses/rooms-response.ts`):
+the websocket serves the connectivity of a room only. Both packages import it as `@protocol/*`; it is never
+duplicated in either.
 
 ## Constraints
 
