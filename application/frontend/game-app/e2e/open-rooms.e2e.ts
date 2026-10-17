@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 import { test } from './test-room';
 
-/** The list of the open rooms: joining a room from it, public or private */
+/** The list of the open rooms, listed by the HTTP API: joining a room from it, public or private */
 test.describe('Open rooms', () => {
     test('lists a public room, joined from the list', async ({ room }) => {
         // Given
@@ -15,6 +15,7 @@ test.describe('Open rooms', () => {
         // Then
         await bob.expectConnected(['alice', 'bob']);
         await alice.expectConnected(['alice', 'bob']);
+        await bob.expectApiSocket();
     });
 
     test('lists a private room, joined with its password only', async ({ room }) => {
@@ -55,5 +56,7 @@ test.describe('Open rooms', () => {
 
         // Then
         await expect(carol.page.getByText(`Aucune salle ne contient « ${ room.name }-missing ».`)).toBeVisible();
+        // The list, searched or not, opened no socket: the socket serves the connectivity of a room only
+        carol.expectNoApiSocket();
     });
 });
