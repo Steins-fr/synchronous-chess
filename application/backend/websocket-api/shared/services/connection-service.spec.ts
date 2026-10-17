@@ -1,33 +1,32 @@
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import Connection from '@models/connection';
-import { mockClient } from 'aws-sdk-client-mock';
+import { readConnections, storeConnection } from '@testing/api-mocks';
+import { useTestDatabase } from '@testing/database';
 import { beforeEach, describe, expect, test } from 'vitest';
 import ConnectionService from './connection-service';
 
 describe('ConnectionService', () => {
-    const dynamo = mockClient(DynamoDBDocumentClient);
+    useTestDatabase();
     const connection: Connection = { connectionId: 'connection', roomName: 'room' };
+    const other: Connection = { connectionId: 'other', roomName: 'other' };
     let service: ConnectionService;
 
     beforeEach(() => {
-        // DynamoDB answers every command with an object, empty without data
-        dynamo.reset().onAnyCommand().resolves({});
         service = new ConnectionService();
     });
 
     test('should create, get and delete a connection', async () => {
         // Given
-        dynamo.on(GetCommand).resolves({ Item: connection });
+        await storeConnection(other);
 
         // When
         await service.create(connection);
+        const created: Connection[] = await readConnections();
         const found: Connection | null = await service.get('connection');
         await service.delete(connection);
 
         // Then
+        expect(created).toEqual([connection, other]);
         expect(found).toEqual(connection);
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: connection })).toHaveLength(1);
-        expect(dynamo.commandCalls(GetCommand, { Key: { connectionId: 'connection' } })).toHaveLength(1);
-        expect(dynamo.commandCalls(DeleteCommand, { Key: { connectionId: 'connection' } })).toHaveLength(1);
+        expect(await readConnections()).toEqual([other]);
     });
 });

@@ -1,13 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import {
-    getConnectionsTableName,
-    getDatabaseName,
-    getDatabaseResourceArn,
-    getDatabaseSecretArn,
-    getManagementApiEndpoint,
-    getPasswordAttemptsTableName,
-    getRoomsTableName,
-} from './environment.helper';
+import { getDatabaseName, getDatabaseResourceArn, getDatabaseSecretArn, getManagementApiEndpoint } from './environment.helper';
 
 describe('environment helper', () => {
     test.each([
@@ -35,22 +27,6 @@ describe('environment helper', () => {
 
         // When / Then
         expect(() => getManagementApiEndpoint(undefined)).toThrow('No endpoint for the management API');
-    });
-
-    test.each([
-        ['TABLE_NAME_CONNECTIONS', getConnectionsTableName],
-        ['TABLE_NAME_ROOMS', getRoomsTableName],
-        ['TABLE_NAME_PASSWORD_ATTEMPTS', getPasswordAttemptsTableName],
-    ])('should fail at once without %s in the environment', (variable: string, tableName: () => string) => {
-        // Given
-        vi.stubEnv(variable, undefined);
-
-        // When / Then
-        expect(tableName).toThrow(`No ${ variable }: the table of the`);
-    });
-
-    test('should give the tables of the environment', () => {
-        expect([getConnectionsTableName(), getRoomsTableName(), getPasswordAttemptsTableName()]).toEqual(['connection', 'room', 'password-attempt']);
     });
 
     test.each([

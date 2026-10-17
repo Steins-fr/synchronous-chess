@@ -14,9 +14,7 @@
     },
     "dependencies": {
         "@aws-sdk/client-apigatewaymanagementapi": "^3.1131.0",
-        "@aws-sdk/client-dynamodb": "^3.1131.0",
         "@aws-sdk/client-rds-data": "^3.1152.0",
-        "@aws-sdk/lib-dynamodb": "^3.1131.0",
         "drizzle-orm": "1.0.0-rc.4"
     },
     "devDependencies": {
@@ -31,7 +29,6 @@
         "@vitest/coverage-v8": "^4.1.11",
         "aws-sdk-client-mock": "^4.1.0",
         "drizzle-kit": "1.0.0-rc.4",
-        "dynalite": "^4.0.0",
         "esbuild": "^0.28.2",
         "eslint": "^10.10.0",
         "eslint-plugin-import-x": "^4.17.1",

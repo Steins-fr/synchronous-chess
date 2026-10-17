@@ -4,14 +4,15 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     test: {
         environment: 'node',
-        // Read by the repositories when the lambdas load
+        // Read by the hashes of the IPs of the clients (source.helper)
         env: {
-            TABLE_NAME_CONNECTIONS: 'connection',
-            TABLE_NAME_ROOMS: 'room',
-            TABLE_NAME_PASSWORD_ATTEMPTS: 'password-attempt',
             SOURCE_HASH_SECRET: 'source-secret',
         },
         restoreMocks: true,
+        // Each spec file starts PGlite in a hook, in a second alone: a worker by CPU compiling its WASM at once takes
+        // longer than with a few, and times out on a machine of many CPUs
+        maxWorkers: 8,
+        hookTimeout: 30_000,
         unstubEnvs: true,
         coverage: {
             provider: 'v8',

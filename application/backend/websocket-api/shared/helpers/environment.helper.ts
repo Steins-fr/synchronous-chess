@@ -1,11 +1,8 @@
 declare global {
     namespace NodeJS {
         interface ProcessEnv {
-            // Set by infrastructure/main.tf for each lambda using them only, and by the specs and the local server
-            TABLE_NAME_CONNECTIONS?: string;
-            TABLE_NAME_ROOMS?: string;
-            TABLE_NAME_PASSWORD_ATTEMPTS?: string;
-            // The Aurora cluster the lambdas reach through its Data API, set by infrastructure/main.tf
+            // The Aurora cluster the lambdas reach through its Data API, set by infrastructure/main.tf for each lambda
+            // reading the database. The local server and the specs give their database instead (useDatabase)
             DATABASE_RESOURCE_ARN?: string;
             DATABASE_SECRET_ARN?: string;
             DATABASE_NAME?: string;
@@ -17,12 +14,11 @@ declare global {
     }
 }
 
-type RequiredVariable = 'TABLE_NAME_CONNECTIONS' | 'TABLE_NAME_ROOMS' | 'TABLE_NAME_PASSWORD_ATTEMPTS' | 'SOURCE_HASH_SECRET'
-    | 'DATABASE_RESOURCE_ARN' | 'DATABASE_SECRET_ARN' | 'DATABASE_NAME';
+type RequiredVariable = 'DATABASE_RESOURCE_ARN' | 'DATABASE_SECRET_ARN' | 'DATABASE_NAME' | 'SOURCE_HASH_SECRET';
 
 /**
- * A variable a lambda can not run without: missing, the lambda fails at once, as it builds what reads it, rather than
- * once DynamoDB refuses a command without table
+ * A variable a lambda can not run without: missing, the lambda fails as soon as it reads it, rather than once AWS refuses
+ * a request without it
  * @throws {Error} when the environment does not give it, or gives it empty
  */
 function requiredVariable(name: RequiredVariable, purpose: string): string {
@@ -33,21 +29,6 @@ function requiredVariable(name: RequiredVariable, purpose: string): string {
     }
 
     return value;
-}
-
-/** @throws {Error} when the environment of the lambda does not give it */
-export function getConnectionsTableName(): string {
-    return requiredVariable('TABLE_NAME_CONNECTIONS', 'the table of the connections, set by infrastructure/main.tf for the lambdas reading it');
-}
-
-/** @throws {Error} when the environment of the lambda does not give it */
-export function getRoomsTableName(): string {
-    return requiredVariable('TABLE_NAME_ROOMS', 'the table of the rooms, set by infrastructure/main.tf for the lambdas reading it');
-}
-
-/** @throws {Error} when the environment of the lambda does not give it: only the lambda joining the rooms has it */
-export function getPasswordAttemptsTableName(): string {
-    return requiredVariable('TABLE_NAME_PASSWORD_ATTEMPTS', 'the table of the password attempts, set by infrastructure/main.tf for the lambda joining the rooms');
 }
 
 /** @throws {Error} when the environment of the lambda does not give it */

@@ -64,9 +64,8 @@ export default class RoomService {
     /**
      * The rooms of the game, the full ones and the ones waiting for their host included: a participant joins its room
      * again once it has a place or its host is back. Without search, the most recent first. With a search, the rooms
-     * whose name starts with it, whatever the case, by name, the name equal to the search first: the index by name reads
-     * the matching rooms only
-     * @param search the start of the name of the room: none when empty
+     * whose name holds it, whatever the case: the names starting with it first, then by name
+     * @param search a part of the name of the room: none when empty
      */
     public async getOpenRooms(game: RoomGame, search: string = ''): Promise<RoomsResponse> {
         const searched: string = searchKey(search);
@@ -74,14 +73,14 @@ export default class RoomService {
         const maxRooms: number = RoomService.MAX_OPEN_ROOMS + 1;
         const rooms: ListedRoom[] = searched === ''
             ? await this.roomRepository.findRecentRooms(game, epochSeconds(), maxRooms)
-            : await this.roomRepository.findRoomsStartingWith(game, searched, epochSeconds(), maxRooms);
+            : await this.roomRepository.findRoomsContaining(game, searched, epochSeconds(), maxRooms);
 
         return {
             rooms: rooms.slice(0, RoomService.MAX_OPEN_ROOMS).map((room: ListedRoom): OpenRoom => ({
                 roomName: room.id,
                 // The names of a private room are told to the players giving its password only
                 hostPlayer: room.isPrivate ? undefined : room.hostPlayer,
-                playerCount: room.players.length,
+                playerCount: room.playerCount,
                 maxPlayer: room.maxPlayer,
                 isPrivate: room.isPrivate,
                 hostConnected: room.expiresAt === undefined,
@@ -128,8 +127,11 @@ export default class RoomService {
         await this.roomRepository.removePlayerFromQueue(connectionId, room);
     }
 
+    /** @throws {BadRequestException} when a player of that name joined at the same time, and is queued (ALREADY_IN_QUEUE) */
     public async addPlayerToQueue(playerName: string, connectionId: string, token: string, room: Room): Promise<void> {
-        await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), room);
+        if (!await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), room)) {
+            throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_QUEUE);
+        }
     }
 
     /**

@@ -134,9 +134,12 @@ jobs:
               uses: actions/upload-artifact@v6
               with:
                   name: terraform-plan-${{ inputs.stage }}-${{ github.run_id }}
+                  # The zips of the lambdas the plan was made with: applying a saved plan does not zip them again
                   path: |
                       infrastructure/tfplan
                       infrastructure/plan-report.txt
+                      infrastructure/.out/lambda-api/
+                  include-hidden-files: true
                   retention-days: 7
 
             - name: Upload backend dist artifact
@@ -150,5 +153,6 @@ jobs:
               uses: actions/upload-artifact@v6
               with:
                   name: frontend-dist-${{ inputs.stage }}-${{ github.run_id }}
-                  path: application/frontend/game-app/dist/synchronous-chess/
+                  # Where Angular builds the app, and the bucket module of Terraform reads it
+                  path: application/frontend/game-app/dist/game-app/browser/
                   retention-days: 7

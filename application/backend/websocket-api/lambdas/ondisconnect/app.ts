@@ -15,7 +15,7 @@ interface Response {
     body: string;
 }
 
-const ddb: RoomService = new RoomService();
+const roomService: RoomService = new RoomService();
 const connectionService: ConnectionService = new ConnectionService();
 
 /**
@@ -49,14 +49,14 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
 
     try {
         const connection = await connectionService.get(connectionId);
-        if (connection?.connectionId === undefined) {
+        if (connection === null) {
             return { statusCode: 500, body: 'Undefined connection' };
         }
 
         try {
-            const room: Room = await ddb.getRoomByName(connection.roomName);
+            const room: Room = await roomService.getRoomByName(connection.roomName);
             await notifyCancelledJoin(event, room, connection);
-            await ddb.removeConnectionFromRoom(room, connection);
+            await roomService.removeConnectionFromRoom(room, connection);
         } catch (e) {
             // The room expired, or could not be updated: the connection is deleted all the same
             console.error(e);

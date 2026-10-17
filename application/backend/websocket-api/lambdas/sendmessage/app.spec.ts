@@ -10,10 +10,11 @@ import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 import ReconnectHandler from './handlers/reconnect-handler';
+import RoomGetAllHandler from './handlers/room-get-all-handler';
 import SignalHandler from './handlers/signal-handler';
 
 describe('sendmessage lambda', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
 
     function body(type: string, data: object = { roomName: 'room' }): string {
         return JSON.stringify({ action: 'sendmessage', data: { id: 7, type, data } });
@@ -21,7 +22,7 @@ describe('sendmessage lambda', () => {
 
     test('should handle a request and reply to it', async () => {
         // Given
-        storeRoom(dynamo, aRoom());
+        await storeRoom(aRoom());
 
         // When
         const response = await handler(anEvent(GUEST_CONNECTION, body(RoomApiRequestTypeEnum.PLAYER_GET_ALL)));
@@ -40,6 +41,7 @@ describe('sendmessage lambda', () => {
         [RoomApiRequestTypeEnum.PLAYER_ADD, PlayerAddHandler],
         [RoomApiRequestTypeEnum.PLAYER_REMOVE, PlayerRemoveHandler],
         [RoomApiRequestTypeEnum.RECONNECT, ReconnectHandler],
+        [RoomApiRequestTypeEnum.ROOM_GET_ALL, RoomGetAllHandler],
     ])('should hand a %s request to its handler', async (type: RoomApiRequestTypeEnum, messageHandler: typeof MessageHandler) => {
         // Given
         const execute = vi.spyOn(messageHandler.prototype, 'execute').mockResolvedValue();

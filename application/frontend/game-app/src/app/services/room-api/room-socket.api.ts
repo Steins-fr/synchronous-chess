@@ -29,6 +29,11 @@ export class RoomApiError extends Error {}
 @Injectable()
 export class RoomSocketApi implements OnDestroy {
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
+    /**
+     * How long a request waits for its response, in milliseconds: the lambdas wait for the paused database to resume,
+     * 28 seconds at most, and API Gateway gives up on them after 29
+     */
+    private static readonly REQUEST_TIMEOUT: number = 30_000;
 
     private readonly webSocketService: WebSocketService;
     private destroyRef = new Subject<void>();
@@ -158,13 +163,12 @@ export class RoomSocketApi implements OnDestroy {
             (resolve: (value: RoomSocketApiResponseTypedData[ResponseType]) => void, reject: (err: Error) => void): void => {
                 const closeSub = new Subject<void>();
 
-                const lambdaTimeout: number = 5000; // 3 seconds is the lambda AWS timeout, so add two more seconds to it
                 const timerId = setTimeout(() => {
                     closeSub.next();
                     closeSub.complete();
                     reject(new Error(`${ RoomSocketApi.ERROR_REQUEST_TIMEOUT } ${ id }`));
                     console.error(`${ RoomSocketApi.ERROR_REQUEST_TIMEOUT } ${ id }`);
-                }, lambdaTimeout); // 3 seconds is the lambda AWS timeout, so add one more minute to it
+                }, RoomSocketApi.REQUEST_TIMEOUT);
 
                 this.getPayloadMessage()
                     .pipe(

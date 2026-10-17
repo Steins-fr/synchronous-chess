@@ -1,196 +1,321 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { getDatabase } from '@database/database';
+import { roomPasswordAttempts } from '@database/schema';
+import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
-import { aConditionFailure, aRoom, GUEST_CONNECTION, HOST_CONNECTION } from '@testing/api-mocks';
-import { mockClient } from 'aws-sdk-client-mock';
+import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeRoom } from '@testing/api-mocks';
+import { useTestDatabase } from '@testing/database';
 import { beforeEach, describe, expect, test } from 'vitest';
-import RoomRepository from './room-repository';
+import RoomRepository, { ListedRoom } from './room-repository';
+
+// In epoch seconds
+const NOW: number = 1_800_000_000;
+
+/** A room listed, of `aRoom()` by default: its host, alone in its game, connected */
+function aListedRoom(room: Partial<ListedRoom> = {}): ListedRoom {
+    return { id: 'room', hostPlayer: 'host', maxPlayer: 2, isPrivate: false, playerCount: 1, ...room };
+}
 
 describe('RoomRepository', () => {
-    const dynamo = mockClient(DynamoDBDocumentClient);
+    useTestDatabase();
     let repository: RoomRepository;
-    let room: Room;
 
     beforeEach(() => {
-        // DynamoDB answers every command with an object, empty without data
-        dynamo.reset().onAnyCommand().resolves({});
         repository = new RoomRepository();
-        room = aRoom();
     });
 
-    test('should get a room by its name', async () => {
-        // Given
-        dynamo.on(GetCommand).resolves({ Item: room });
+    describe('getByName', () => {
+        test('should get a room with its players and its queue in the order they joined, and the hashes of its tokens', async () => {
+            // Given
+            const room: Room = aRoom({
+                players: [{ playerName: 'zoe' }, { playerName: 'host' }],
+                queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }, { playerName: 'alice', connectionId: 'alice-connection' }],
+                tokenHashes: { host: 'host-hash', zoe: 'zoe-hash', guest: 'guest-hash', alice: 'alice-hash', left: 'left-hash' },
+            });
+            await storeRoom(room);
 
-        // When
-        const found: Room | null = await repository.getByName('room');
+            // When / Then
+            expect(await repository.getByName('room')).toStrictEqual(room);
+        });
 
-        // Then
-        expect(found).toEqual(room);
-        expect(dynamo.commandCalls(GetCommand, {
-            TableName: 'room',
-            Key: { id: 'room' },
-            ProjectionExpression: 'id, connectionId, players, queue, hostPlayer, maxPlayer, game, createdAt, nameKey, passwordHash, isPrivate, tokenHashes, expiresAt',
-        })).toHaveLength(1);
+        test('should get a private room waiting for its host', async () => {
+            // Given
+            const room: Room = aRoom({ passwordHash: 'password-hash', expiresAt: NOW + 600 });
+            await storeRoom(room);
+
+            // When / Then
+            expect(await repository.getByName('room')).toStrictEqual(room);
+        });
+
+        test('should get no room without one of that name', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'other', nameKey: 'other' }));
+
+            // When / Then
+            expect(await repository.getByName('room')).toBeNull();
+        });
     });
 
-    test('should find the most recent rooms of a game not expired, through its index', async () => {
-        // Given
-        dynamo.on(QueryCommand).resolves({ Items: [room] });
+    describe('findRecentRooms', () => {
+        test('should find the rooms of a game not expired, the last created first, the most rooms asked', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'oldest', nameKey: 'oldest', createdAt: '2026-10-11T10:00:00.000Z' }));
+            await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', createdAt: '2026-10-11T11:00:00.000Z', expiresAt: NOW + 1 }));
+            await storeRoom(aRoom({ id: 'expired', nameKey: 'expired', createdAt: '2026-10-11T12:00:00.000Z', expiresAt: NOW }));
+            await storeRoom(aRoom({ id: 'chat', nameKey: 'chat', createdAt: '2026-10-11T13:00:00.000Z', game: RoomGame.CHAT }));
+            await storeRoom(aRoom({ id: 'newest', nameKey: 'newest', createdAt: '2026-10-11T14:00:00.000Z', passwordHash: 'hash' }));
 
-        // When / Then
-        expect(await repository.findRecentRooms(RoomGame.CHESS, 500, 30)).toEqual([room]);
-        expect(dynamo.commandCalls(QueryCommand, {
-            TableName: 'room',
-            IndexName: 'game-index',
-            KeyConditionExpression: 'game = :game',
-            FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
-            ProjectionExpression: 'id, hostPlayer, players, maxPlayer, isPrivate, expiresAt',
-            ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':now': 500 },
-            ScanIndexForward: false,
-            Limit: 30,
-        })).toHaveLength(1);
+            // When / Then
+            expect(await repository.findRecentRooms(RoomGame.CHESS, NOW, 30)).toStrictEqual([
+                aListedRoom({ id: 'newest', isPrivate: true }),
+                aListedRoom({ id: 'waiting', expiresAt: NOW + 1 }),
+                aListedRoom({ id: 'oldest' }),
+            ]);
+            expect(await repository.findRecentRooms(RoomGame.CHESS, NOW, 2)).toHaveLength(2);
+        });
+
+        test('should count the players in the game of a room, not its queue', async () => {
+            // Given
+            await storeRoom(aRoom({ players: [{ playerName: 'host' }, { playerName: 'zoe' }] }));
+
+            // When / Then
+            expect(await repository.findRecentRooms(RoomGame.CHESS, NOW, 30)).toStrictEqual([aListedRoom({ playerCount: 2 })]);
+        });
     });
 
-    test('should find the rooms of a game whose name starts with a search key, through its index', async () => {
-        // Given
-        dynamo.on(QueryCommand).resolves({ Items: [room] });
+    describe('findRoomsContaining', () => {
+        test('should find the rooms of a game whose name holds the search, the names starting with it first, then by name', async () => {
+            // Given
+            for (const name of ['the evening', 'zeve', 'eve', 'evening', 'aaeve', 'adam']) {
+                await storeRoom(aRoom({ id: name, nameKey: name }));
+            }
+            await storeRoom(aRoom({ id: 'eve-expired', nameKey: 'eve-expired', expiresAt: NOW }));
+            await storeRoom(aRoom({ id: 'eve-chat', nameKey: 'eve-chat', game: RoomGame.CHAT }));
 
-        // When / Then
-        expect(await repository.findRoomsStartingWith(RoomGame.CHESS, 'eve', 500, 31)).toEqual([room]);
-        expect(dynamo.commandCalls(QueryCommand, {
-            IndexName: 'game-name-index',
-            KeyConditionExpression: 'game = :game AND begins_with(nameKey, :search)',
-            FilterExpression: 'attribute_not_exists(expiresAt) OR expiresAt > :now',
-            ExpressionAttributeValues: { ':game': RoomGame.CHESS, ':search': 'eve', ':now': 500 },
-            ScanIndexForward: true,
-            Limit: 31,
-        })).toHaveLength(1);
+            // When
+            const found: ListedRoom[] = await repository.findRoomsContaining(RoomGame.CHESS, 'eve', NOW, 30);
+
+            // Then
+            expect(found.map(({ id }: ListedRoom) => id)).toEqual(['eve', 'evening', 'aaeve', 'the evening', 'zeve']);
+            expect(await repository.findRoomsContaining(RoomGame.CHESS, 'eve', NOW, 1)).toStrictEqual([aListedRoom({ id: 'eve' })]);
+        });
+
+        test.each([
+            ['%', 'any text'],
+            ['_', 'any character'],
+            ['\\', 'the escape character'],
+        ])('should find the rooms whose name holds %s, not %s', async (character: string) => {
+            // Given
+            await storeRoom(aRoom({ id: `a${ character }b`, nameKey: `a${ character }b` }));
+            await storeRoom(aRoom({ id: 'axxb', nameKey: 'axxb' }));
+
+            // When / Then
+            expect(await repository.findRoomsContaining(RoomGame.CHESS, `a${ character }`, NOW, 30)).toStrictEqual([aListedRoom({ id: `a${ character }b` })]);
+        });
     });
 
-    test('should create a room unless one of that name exists, expired', async () => {
-        // When
-        const created: boolean = await repository.create(room, 500);
+    describe('create', () => {
+        test('should create a room with its host and the hash of its token', async () => {
+            // Given
+            const room: Room = aRoom({ queue: [], tokenHashes: { host: hashToken(HOST_TOKEN) }, passwordHash: 'password-hash' });
 
-        // Then
-        expect(created).toEqual(true);
-        expect(dynamo.commandCalls(PutCommand, {
-            TableName: 'room',
-            Item: room,
-            ConditionExpression: 'attribute_not_exists(id) OR expiresAt <= :now',
-            ExpressionAttributeValues: { ':now': 500 },
-        })).toHaveLength(1);
+            // When
+            expect(await repository.create(room, NOW)).toEqual(true);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual(room);
+        });
+
+        test.each([
+            ['its host connected', {}],
+            ['waiting for its host', { expiresAt: NOW + 1 }],
+        ])('should not create a room whose name is taken by a room %s', async (_case: string, waiting: Partial<Room>) => {
+            // Given
+            const existing: Room = aRoom({ connectionId: 'other-connection', ...waiting });
+            await storeRoom(existing);
+
+            // When
+            expect(await repository.create(aRoom({ queue: [] }), NOW)).toEqual(false);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual(existing);
+        });
+
+        test('should replace an expired room of the same name, without its players, queue, tokens and password attempts', async () => {
+            // Given
+            await storeRoom(aRoom({ players: [{ playerName: 'zoe' }], expiresAt: NOW }));
+            await getDatabase().insert(roomPasswordAttempts).values({ roomId: 'room', sourceHash: 'source', attempts: 5, expiresAt: NOW + 60 });
+            const room: Room = aRoom({ queue: [], tokenHashes: { host: 'new-hash' } });
+
+            // When
+            expect(await repository.create(room, NOW)).toEqual(true);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual(room);
+            expect(await getDatabase().select().from(roomPasswordAttempts)).toEqual([]);
+        });
+
+        test('should delete the other rooms expired', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'expired', nameKey: 'expired', expiresAt: NOW }));
+            await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', expiresAt: NOW + 1 }));
+
+            // When
+            await repository.create(aRoom({ queue: [] }), NOW);
+
+            // Then
+            expect(await readRoom('expired')).toBeNull();
+            expect(await readRoom('waiting')).not.toBeNull();
+        });
     });
 
-    test('should not create a room whose name is taken', async () => {
-        // Given
-        dynamo.on(PutCommand).rejects(aConditionFailure());
+    describe('waitForHost', () => {
+        test('should let a room wait for its host', async () => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
 
-        // When / Then
-        expect(await repository.create(room, 500)).toEqual(false);
+            // When
+            await repository.waitForHost(room, HOST_CONNECTION, NOW + 600);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual({ ...room, expiresAt: NOW + 600 });
+        });
+
+        test('should leave a room its host already moved to another connection', async () => {
+            // Given: the room read before the host reconnected it
+            const room: Room = aRoom();
+            await storeRoom({ ...room, connectionId: 'new-host-connection' });
+
+            // When
+            await repository.waitForHost(room, HOST_CONNECTION, NOW + 600);
+
+            // Then
+            expect((await readRoom('room'))?.expiresAt).toBeUndefined();
+        });
     });
 
-    test('should let a room wait for its host, unless the host moved it to another connection', async () => {
-        // When
-        await repository.waitForHost(room, HOST_CONNECTION, 1000);
+    describe('reconnectHost', () => {
+        test.each([
+            ['its host, connected', 'host', 'host-hash', {}],
+            ['its host, waited for', 'host', 'host-hash', { expiresAt: NOW + 1 }],
+            ['a player while it waits for its host', 'zoe', 'zoe-hash', { expiresAt: NOW + 1 }],
+        ])('should move a room to a connection of %s, no longer waiting for its host', async (_case: string, playerName: string, tokenHash: string, waiting: Partial<Room>) => {
+            // Given
+            const room: Room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'zoe' }], tokenHashes: { host: 'host-hash', zoe: 'zoe-hash' } });
+            await storeRoom({ ...room, ...waiting });
 
-        // Then
-        expect(dynamo.commandCalls(UpdateCommand, {
-            Key: { id: 'room' },
-            UpdateExpression: 'SET expiresAt = :expiresAt',
-            ConditionExpression: 'connectionId = :hostConnectionId',
-            ExpressionAttributeValues: { ':expiresAt': 1000, ':hostConnectionId': HOST_CONNECTION },
-        })).toHaveLength(1);
+            // When
+            expect(await repository.reconnectHost(room, 'new-connection', playerName, tokenHash, NOW)).toEqual(true);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: 'new-connection', hostPlayer: playerName });
+        });
+
+        test.each([
+            ['the token of another player', 'host', 'zoe-hash', {}],
+            ['a token unknown', 'host', 'other-hash', {}],
+            ['a player while its host is connected', 'zoe', 'zoe-hash', {}],
+            ['the host once the room expired', 'host', 'host-hash', { expiresAt: NOW }],
+        ])('should not move a room for %s', async (_case: string, playerName: string, tokenHash: string, waiting: Partial<Room>) => {
+            // Given
+            const room: Room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'zoe' }], tokenHashes: { host: 'host-hash', zoe: 'zoe-hash' }, ...waiting });
+            await storeRoom(room);
+
+            // When
+            expect(await repository.reconnectHost(room, 'new-connection', playerName, tokenHash, NOW)).toEqual(false);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual(room);
+        });
     });
 
-    test('should leave a room its host already moved to another connection', async () => {
-        // Given
-        dynamo.on(UpdateCommand).rejects(aConditionFailure());
+    describe('players', () => {
+        test('should add a player to the game of the room once, after the others', async () => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
 
-        // When / Then
-        await expect(repository.waitForHost(room, HOST_CONNECTION, 1000)).resolves.toBeUndefined();
+            // When
+            await repository.addPlayerToRoom({ playerName: 'guest' }, room);
+            await repository.addPlayerToRoom({ playerName: 'guest' }, room);
+
+            // Then
+            expect((await readRoom('room'))?.players).toEqual([{ playerName: 'host' }, { playerName: 'guest' }]);
+        });
+
+        test('should remove a player from the game of the room, keeping the hash of its token', async () => {
+            // Given
+            const room: Room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'zoe' }], tokenHashes: { host: 'host-hash', zoe: 'zoe-hash' } });
+            await storeRoom(room);
+
+            // When
+            await repository.removePlayerFromRoom('zoe', room);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual({ ...room, players: [{ playerName: 'host' }] });
+        });
+
+        test('should not remove a player out of the game of the room', async () => {
+            await expect(repository.removePlayerFromRoom('guest', aRoom())).rejects.toThrow('Player not in the room');
+        });
     });
 
-    test('should move a room to a connection of its host, or of a player while it waits for its host, before it expires', async () => {
-        // When
-        const reconnected: boolean = await repository.reconnectHost(room, 'new-connection', 'host', 'hash', 500);
+    describe('queue', () => {
+        test('should queue a player after the others, with the hash of its token', async () => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
 
-        // Then
-        expect(reconnected).toEqual(true);
-        expect(dynamo.commandCalls(UpdateCommand, {
-            Key: { id: 'room' },
-            UpdateExpression: 'SET connectionId = :connectionId, hostPlayer = :playerName REMOVE expiresAt',
-            ConditionExpression: 'tokenHashes.#playerName = :tokenHash AND (attribute_not_exists(expiresAt) OR expiresAt > :now)'
-                + ' AND (hostPlayer = :playerName OR attribute_exists(expiresAt))',
-            ExpressionAttributeValues: { ':connectionId': 'new-connection', ':playerName': 'host', ':tokenHash': 'hash', ':now': 500 },
-            ExpressionAttributeNames: { '#playerName': 'host' },
-        })).toHaveLength(1);
-    });
+            // When / Then
+            expect(await repository.addPlayerToQueue({ playerName: 'zoe', connectionId: 'zoe-connection' }, 'zoe-hash', room)).toEqual(true);
+            expect(await readRoom('room')).toStrictEqual({
+                ...room,
+                queue: [...room.queue, { playerName: 'zoe', connectionId: 'zoe-connection' }],
+                tokenHashes: { ...room.tokenHashes, zoe: 'zoe-hash' },
+            });
+        });
 
-    test('should not move a room for another token, or once expired', async () => {
-        // Given
-        dynamo.on(UpdateCommand).rejects(aConditionFailure());
+        test('should not queue a player of a name already queued, keeping the hash of its token', async () => {
+            // Given: the guest joined under that name at the same time, the room read before
+            const room: Room = aRoom();
+            await storeRoom(room);
 
-        // When / Then
-        expect(await repository.reconnectHost(room, 'new-connection', 'host', 'hash', 500)).toEqual(false);
-    });
+            // When / Then
+            expect(await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'other-connection' }, 'other-hash', aRoom({ queue: [] }))).toEqual(false);
+            expect(await readRoom('room')).toStrictEqual(room);
+        });
 
-    test('should append a player to the room', async () => {
-        // When
-        await repository.addPlayerToRoom({ playerName: 'guest' }, room);
+        test('should replace the hash of the token of a player joining the room again', async () => {
+            // Given: the guest left the queue, its token kept
+            const room: Room = aRoom({ queue: [] });
+            await storeRoom(room);
 
-        // Then
-        expect(dynamo.commandCalls(UpdateCommand, {
-            Key: { id: 'room' },
-            UpdateExpression: 'set players = list_append(players, :items)',
-            ExpressionAttributeValues: { ':items': [{ playerName: 'guest' }] },
-        })).toHaveLength(1);
-    });
+            // When
+            await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'new-guest-connection' }, 'new-guest-hash', room);
 
-    test('should remove a player from the room by its index, keeping the hash of its token', async () => {
-        // Given
-        room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'guest' }] });
+            // Then
+            expect(await readRoom('room')).toStrictEqual({
+                ...room,
+                queue: [{ playerName: 'guest', connectionId: 'new-guest-connection' }],
+                tokenHashes: { ...room.tokenHashes, guest: 'new-guest-hash' },
+            });
+        });
 
-        // When
-        await repository.removePlayerFromRoom('guest', room);
+        test('should remove a player from the queue by its connection', async () => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
 
-        // Then
-        expect(dynamo.commandCalls(UpdateCommand, {
-            Key: { id: 'room' },
-            UpdateExpression: 'REMOVE players[1]',
-        })).toHaveLength(1);
-    });
+            // When
+            await repository.removePlayerFromQueue(GUEST_CONNECTION, room);
 
-    test('should not remove a player out of the room', async () => {
-        // When / Then
-        await expect(repository.removePlayerFromRoom('unknown', room)).rejects.toThrow('Player not in the room');
-        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
-    });
+            // Then
+            expect(await readRoom('room')).toStrictEqual({ ...room, queue: [] });
+        });
 
-    test('should append a player to the queue, with the hash of its token', async () => {
-        // When
-        await repository.addPlayerToQueue({ playerName: 'other', connectionId: 'other-connection' }, 'hash', room);
-
-        // Then
-        expect(dynamo.commandCalls(UpdateCommand, {
-            Key: { id: 'room' },
-            UpdateExpression: 'set queue = list_append(queue, :items), tokenHashes.#playerName = :tokenHash',
-            ExpressionAttributeValues: { ':items': [{ playerName: 'other', connectionId: 'other-connection' }], ':tokenHash': 'hash' },
-            ExpressionAttributeNames: { '#playerName': 'other' },
-        })).toHaveLength(1);
-    });
-
-    test('should remove a player from the queue by the index of its connection', async () => {
-        // When
-        await repository.removePlayerFromQueue(GUEST_CONNECTION, room);
-
-        // Then
-        expect(dynamo.commandCalls(UpdateCommand, { Key: { id: 'room' }, UpdateExpression: 'REMOVE queue[0]' })).toHaveLength(1);
-    });
-
-    test('should not remove a connection out of the queue', async () => {
-        // When / Then
-        await expect(repository.removePlayerFromQueue('unknown', room)).rejects.toThrow('Player not in the queue');
-        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
+        test('should not remove a connection out of the queue', async () => {
+            await expect(repository.removePlayerFromQueue(HOST_CONNECTION, aRoom())).rejects.toThrow('Player not in the queue');
+        });
     });
 });

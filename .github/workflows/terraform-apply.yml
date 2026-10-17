@@ -50,7 +50,8 @@ jobs:
               uses: actions/download-artifact@v6
               with:
                   name: frontend-dist-${{ inputs.stage }}-${{ inputs.plan_run_id }}
-                  path: application/frontend/game-app/dist/synchronous-chess/
+                  # Where Angular builds the app, and the bucket module of Terraform reads it
+                  path: application/frontend/game-app/dist/game-app/browser/
                   run-id: ${{ inputs.plan_run_id }}
                   github-token: ${{ secrets.GITHUB_TOKEN }}
 

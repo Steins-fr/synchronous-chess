@@ -141,7 +141,7 @@ describe('local websocket API', () => {
     });
 
     describe('websocket routes', () => {
-        test('should answer a request through the lambdas and DynamoDB, and notify the other connections', async () => {
+        test('should answer a request through the lambdas and the database, and notify the other connections', async () => {
             // Given
             const host = await connected();
             const guest = await connected();
@@ -210,7 +210,7 @@ describe('local websocket API', () => {
         });
     });
 
-    // Through DynamoDB (dynalite), which evaluates the conditions of the writes. Its tables outlive the APIs of the
+    // Through the database (PGlite), which evaluates the conditions of the writes. Its tables outlive the APIs of the
     // tests: each test has its own room
     describe('host reconnection', () => {
         async function hostedRoom(roomName: string): Promise<{ host: WebSocket; token: string }> {
@@ -327,7 +327,7 @@ describe('local websocket API', () => {
     });
 
     describe('open rooms', () => {
-        // The game of no other test: DynamoDB keeps the rooms of the previous tests
+        // The game of no other test: the database keeps the rooms of the previous tests
         test('should list the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
             // Given
             const host = await connected();

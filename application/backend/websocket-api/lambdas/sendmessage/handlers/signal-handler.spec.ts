@@ -1,3 +1,6 @@
+import { getDatabase } from '@database/database';
+import { rooms } from '@database/schema';
+import { epochSeconds } from '@helpers/time.helper';
 import RtcSignalRequest from '@protocol/requests/rtc-signal-request';
 import { RtcSignal } from '@protocol/rtc-signal';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
@@ -14,19 +17,20 @@ import {
     postedPackets,
     storeRoom,
 } from '@testing/api-mocks';
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, test } from 'vitest';
 import SignalHandler from './signal-handler';
 
 describe('SignalHandler', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
     const signal: RtcSignal = { sdp: { type: 'offer', sdp: 'v=0' }, ice: [{ candidate: 'candidate', sdpMid: '0' }] };
 
     function relay(data: RtcSignalRequest, connection: string): Promise<void> {
         return new SignalHandler(anApiGatewayClient(), connection, aRequest(RoomApiRequestTypeEnum.SIGNAL, data)).execute();
     }
 
-    beforeEach(() => {
-        storeRoom(dynamo, aRoom());
+    beforeEach(async () => {
+        await storeRoom(aRoom());
     });
 
     test('should relay the signal of a queued player to the host', async () => {
@@ -54,6 +58,8 @@ describe('SignalHandler', () => {
     test.each([
         ['without room name', { roomName: '', to: 'host', signal }, GUEST_CONNECTION, 'Payload not valid'],
         ['without player', { roomName: 'room', to: '', signal }, GUEST_CONNECTION, 'Payload not valid'],
+        ['to a room name with the NUL character', { roomName: 'room\u0000', to: 'host', signal }, GUEST_CONNECTION, 'Payload not valid'],
+        ['to a too long player name', { roomName: 'room', to: 'p'.repeat(33), signal }, GUEST_CONNECTION, 'Payload not valid'],
         ['with an invalid signal', { roomName: 'room', to: 'host', signal: { sdp: { type: 'unknown' }, ice: [] } as unknown as RtcSignal }, GUEST_CONNECTION, 'Payload not valid'],
         ['from a connection out of the room', { roomName: 'room', to: 'host', signal }, 'unknown-connection', 'You were not in the queue!'],
         ['from the host to an unknown player', { roomName: 'room', to: 'unknown', signal }, HOST_CONNECTION, 'The player was not in the queue!'],
@@ -65,8 +71,8 @@ describe('SignalHandler', () => {
     });
 
     test('should refuse the signal of a queued player while the host is disconnected', async () => {
-        // Given
-        storeRoom(dynamo, aRoom({ expiresAt: Math.floor(Date.now() / 1000) + 60 }));
+        // Given the room waits for its host
+        await getDatabase().update(rooms).set({ expiresAt: epochSeconds() + 60 }).where(eq(rooms.id, 'room'));
 
         // When / Then
         await expect(relay({ roomName: 'room', to: 'host', signal }, GUEST_CONNECTION)).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);

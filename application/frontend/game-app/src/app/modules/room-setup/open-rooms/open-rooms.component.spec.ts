@@ -112,7 +112,7 @@ describe('OpenRoomsComponent', () => {
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
 
         // Then
-        expect(text()).toContain('D\'autres salles commencent par « pub » : précisez la recherche pour les trouver.');
+        expect(text()).toContain('D\'autres salles contiennent « pub » : précisez la recherche pour les trouver.');
     });
 
     test('should show the list of the search typed last, the one of a former search received after it dropped', async () => {
@@ -174,7 +174,7 @@ describe('OpenRoomsComponent', () => {
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
         expect(roomSocketApi.send).toHaveBeenLastCalledWith(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game: RoomGame.CHESS, search: 'bob' });
-        expect(text()).toContain('Aucune salle ne commence par « bob ».');
+        expect(text()).toContain('Aucune salle ne contient « bob ».');
 
         // When the time of a refresh passes, the page visible again
         document.dispatchEvent(new Event('visibilitychange'));

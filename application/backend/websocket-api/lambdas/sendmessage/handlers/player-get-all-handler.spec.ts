@@ -5,14 +5,14 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import PlayerGetAllHandler from './player-get-all-handler';
 
 describe('PlayerGetAllHandler', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+    const { apiGateway }: AwsMocks = mockAws();
 
     function getAll(data: PlayersRequest): Promise<void> {
         return new PlayerGetAllHandler(anApiGatewayClient(), GUEST_CONNECTION, aRequest(RoomApiRequestTypeEnum.PLAYER_GET_ALL, data)).execute();
     }
 
-    beforeEach(() => {
-        storeRoom(dynamo, aRoom({ players: [{ playerName: 'host' }, { playerName: 'player' }] }));
+    beforeEach(async () => {
+        await storeRoom(aRoom({ players: [{ playerName: 'host' }, { playerName: 'player' }] }));
     });
 
     test('should reply the players in the game, not the queued ones', async () => {

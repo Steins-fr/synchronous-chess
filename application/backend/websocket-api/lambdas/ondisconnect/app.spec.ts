@@ -1,68 +1,91 @@
 import { PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
-import { DeleteCommand, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import Connection from '@models/connection';
+import DatabaseException, { DatabaseOperationEnum } from '@exceptions/database-exception';
+import Player from '@models/player';
 import Room from '@models/room';
-import { aRoom, AwsMocks, anEvent, GUEST_CONNECTION, HOST_CONNECTION, mockAws, postedPackets, storeRoom } from '@testing/api-mocks';
-import { describe, expect, test } from 'vitest';
+import ConnectionRepository from '@repositories/connection-repository';
+import RoomRepository from '@repositories/room-repository';
+import RoomService from '@services/room-service';
+import {
+    aDatabaseFailure,
+    aRoom,
+    AwsMocks,
+    anEvent,
+    GUEST_CONNECTION,
+    HOST_CONNECTION,
+    mockAws,
+    postedPackets,
+    readConnections,
+    readRoom,
+    storeConnection,
+    storeRoom,
+} from '@testing/api-mocks';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { handler } from './app';
 
-describe('ondisconnect lambda', () => {
-    const { dynamo, apiGateway }: AwsMocks = mockAws();
+// In epoch seconds
+const NOW: number = 1_800_000_000;
 
-    function storeConnection(connection: Partial<Connection>): void {
-        dynamo.on(GetCommand, { TableName: 'connection' }).resolves({ Item: connection });
-    }
+describe('ondisconnect lambda', () => {
+    const { apiGateway }: AwsMocks = mockAws();
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
 
     test('should remove a disconnected guest from the queue, then its connection', async () => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, aRoom());
+        await storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
 
         // When
         const response = await handler(anEvent(GUEST_CONNECTION));
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'room', UpdateExpression: 'REMOVE queue[0]' })).toHaveLength(1);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: GUEST_CONNECTION } })).toHaveLength(1);
+        expect(await readRoom('room')).toStrictEqual(aRoom({ queue: [] }));
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room' }]);
     });
 
     test('should tell the host a guest waiting to join left, before the guest leaves the queue', async () => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, aRoom());
-        const steps: string[] = [];
-        apiGateway.on(PostToConnectionCommand).callsFake(() => steps.push('notified'));
-        dynamo.on(UpdateCommand, { TableName: 'room' }).callsFake(() => steps.push('removed'));
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
+        const queuesWhenNotified: Player[][] = [];
+        apiGateway.on(PostToConnectionCommand).callsFake(async (): Promise<object> => {
+            queuesWhenNotified.push((await readRoom('room'))?.queue ?? []);
+            return {};
+        });
 
         // When
         await handler(anEvent(GUEST_CONNECTION));
 
         // Then
         expect(postedPackets(apiGateway)).toEqual([{ to: HOST_CONNECTION, packet: { type: 'joinCancelled', data: { playerName: 'guest' } } }]);
-        expect(steps).toEqual(['notified', 'removed']);
+        expect(queuesWhenNotified).toEqual([[{ playerName: 'guest', connectionId: GUEST_CONNECTION }]]);
+        expect((await readRoom('room'))?.queue).toEqual([]);
     });
 
     test.each([
-        ['a player of the room, which closed its socket once connected', aRoom({ players: [{ playerName: 'host' }, { playerName: 'guest' }] })],
-        ['a guest of a room waiting for its host', aRoom({ expiresAt: Math.floor(Date.now() / 1000) + 600 })],
-    ])('should not tell the host of %s', async (_case: string, room: Room) => {
+        ['a player of the room, which closed its socket once connected', { players: [{ playerName: 'host' }, { playerName: 'guest' }] }],
+        ['a guest of a room waiting for its host', { expiresAt: Math.floor(Date.now() / 1000) + 600 }],
+    ])('should not tell the host of %s', async (_case: string, state: Partial<Room>) => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, room);
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom(state));
 
         // When
         await handler(anEvent(GUEST_CONNECTION));
 
         // Then
         expect(postedPackets(apiGateway)).toEqual([]);
-        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'room', UpdateExpression: 'REMOVE queue[0]' })).toHaveLength(1);
+        expect(await readRoom('room')).toStrictEqual(aRoom({ ...state, queue: [] }));
     });
 
     test('should remove the guest from the queue even when the host can not be told', async () => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, aRoom());
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
         const failure: Error = new Error('Gone');
         apiGateway.on(PostToConnectionCommand).rejects(failure);
 
@@ -72,88 +95,92 @@ describe('ondisconnect lambda', () => {
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
         expect(console.error).toHaveBeenCalledWith(failure);
-        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'room', UpdateExpression: 'REMOVE queue[0]' })).toHaveLength(1);
+        expect((await readRoom('room'))?.queue).toEqual([]);
     });
 
     test('should let the room of a disconnected host wait for it', async () => {
         // Given
-        storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, aRoom());
+        vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] });
+        await storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
 
         // When
         const response = await handler(anEvent(HOST_CONNECTION));
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(UpdateCommand, { TableName: 'room', UpdateExpression: 'SET expiresAt = :expiresAt' })).toHaveLength(1);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'room' })).toHaveLength(0);
+        expect(await readRoom('room')).toStrictEqual(aRoom({ expiresAt: NOW + RoomService.HOST_RECONNECTION_DELAY }));
         expect(postedPackets(apiGateway)).toEqual([]);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: HOST_CONNECTION } })).toHaveLength(1);
+        expect(await readConnections()).toEqual([]);
     });
 
     test('should only delete a connection the room no longer has', async () => {
         // Given: a former connection of the host, which reconnected the room to another one
-        storeConnection({ connectionId: 'former-host-connection', roomName: 'room' });
-        storeRoom(dynamo, aRoom());
+        await storeConnection({ connectionId: 'former-host-connection', roomName: 'room' });
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
+        const waitForHost = vi.spyOn(RoomRepository.prototype, 'waitForHost');
 
         // When
         const response = await handler(anEvent('former-host-connection'));
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(UpdateCommand)).toHaveLength(0);
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: 'former-host-connection' } })).toHaveLength(1);
+        expect(waitForHost).not.toHaveBeenCalled();
+        expect(await readRoom('room')).toStrictEqual(aRoom());
+        expect(await readConnections()).toEqual([{ connectionId: GUEST_CONNECTION, roomName: 'room' }]);
     });
 
     test('should delete the connection even when it can not leave its room', async () => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, aRoom());
-        dynamo.on(UpdateCommand).rejects(new Error('Network down'));
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
+        const failure: DatabaseException = aDatabaseFailure();
+        vi.spyOn(RoomRepository.prototype, 'removePlayerFromQueue').mockRejectedValue(failure);
 
         // When
         const response = await handler(anEvent(GUEST_CONNECTION));
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(console.error).toHaveBeenCalled();
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection' })).toHaveLength(1);
+        expect(console.error).toHaveBeenCalledWith(failure);
+        expect(await readConnections()).toEqual([]);
     });
 
     test('should delete the connection of a room which no longer exists, or expired', async () => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'missing' });
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'missing' });
 
         // When
         const response = await handler(anEvent(GUEST_CONNECTION));
 
         // Then
         expect(response).toEqual({ statusCode: 200, body: 'Closed' });
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: GUEST_CONNECTION } })).toHaveLength(1);
+        expect(await readConnections()).toEqual([]);
     });
 
     test('should fail when the connection can not be deleted', async () => {
         // Given
-        storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
-        storeRoom(dynamo, aRoom());
-        dynamo.on(DeleteCommand).rejects(new Error('Network down'));
+        await storeConnection({ connectionId: GUEST_CONNECTION, roomName: 'room' });
+        await storeRoom(aRoom());
+        const failure: DatabaseException = aDatabaseFailure(DatabaseOperationEnum.DELETE);
+        vi.spyOn(ConnectionRepository.prototype, 'delete').mockRejectedValue(failure);
 
         // When / Then
         expect(await handler(anEvent(GUEST_CONNECTION))).toEqual({ statusCode: 500, body: 'Internal server error' });
+        expect(console.error).toHaveBeenCalledWith(failure);
     });
 
     test('should fail without connection id', async () => {
         expect(await handler(anEvent(undefined))).toEqual({ statusCode: 500, body: 'Undefined connection' });
     });
 
-    test.each([
-        ['an unknown connection', undefined],
-        ['a connection stored without id', { roomName: 'room' }],
-    ])('should fail for %s', async (_case: string, connection: Partial<Connection> | undefined) => {
+    test('should fail for an unknown connection', async () => {
         // Given
-        dynamo.on(GetCommand, { TableName: 'connection' }).resolves({ Item: connection });
+        await storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
 
         // When / Then
         expect(await handler(anEvent(GUEST_CONNECTION))).toEqual({ statusCode: 500, body: 'Undefined connection' });
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room' }]);
     });
 });

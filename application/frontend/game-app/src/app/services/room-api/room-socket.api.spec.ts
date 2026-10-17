@@ -88,17 +88,24 @@ describe('RoomSocketApi', () => {
         await expect(response).rejects.toThrow('Unexpected response type');
     });
 
-    test('send should reject after the request timeout', async () => {
+    test('send should reject after the request timeout, longer than the database resuming', async () => {
         // Given
         vi.useFakeTimers();
         const { response } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.FULL, { to: 'peer', roomName: 'room' }));
-        const rejection = expect(response).rejects.toThrow('The request has timeout');
+        let rejected: boolean = false;
+        const rejection = expect(response.catch((error: unknown) => {
+            rejected = true;
+            throw error;
+        })).rejects.toThrow('The request has timeout');
 
         // When
-        vi.advanceTimersByTime(5000);
+        await vi.advanceTimersByTimeAsync(29_999);
+        expect(rejected).toEqual(false);
+        await vi.advanceTimersByTimeAsync(1);
 
         // Then
         await rejection;
+        expect(rejected).toEqual(true);
     });
 
     test('notification$ should only emit the notifications', async () => {

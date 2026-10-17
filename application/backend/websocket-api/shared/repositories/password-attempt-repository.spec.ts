@@ -1,98 +1,112 @@
-import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { aConditionFailure, aRoom } from '@testing/api-mocks';
-import { mockClient } from 'aws-sdk-client-mock';
+import { getDatabase } from '@database/database';
+import { roomPasswordAttempts, rooms } from '@database/schema';
+import { aRoom, storeRoom } from '@testing/api-mocks';
+import { useTestDatabase } from '@testing/database';
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, test } from 'vitest';
 import PasswordAttemptRepository from './password-attempt-repository';
 
+// In epoch seconds
+const NOW: number = 1_800_000_000;
+const MAX_ATTEMPTS: number = 5;
+
 describe('PasswordAttemptRepository', () => {
-    const dynamo = mockClient(DynamoDBDocumentClient);
+    useTestDatabase();
     let repository: PasswordAttemptRepository;
 
-    /** The update counting one more attempt, while the count goes on */
-    const COUNT: string = 'SET attempts = if_not_exists(attempts, :zero) + :one, expiresAt = :expiresAt';
-    /** The update counting the attempts again from one, once the count is over */
-    const COUNT_AGAIN: string = 'SET attempts = :one, expiresAt = :expiresAt';
-    /** The room of the attempts, by its name and its creation date */
-    const KEY = { roomKey: 'room#2026-10-11T12:00:00.000Z', sourceHash: 'source' };
+    function count(now: number = NOW, sourceHash: string = 'source'): Promise<boolean> {
+        return repository.countAttempt({ id: 'room' }, sourceHash, MAX_ATTEMPTS, now, now + 60);
+    }
 
-    beforeEach(() => {
-        // DynamoDB answers every command with an object, empty without data
-        dynamo.reset().onAnyCommand().resolves({});
+    function attempts(): Promise<unknown[]> {
+        return getDatabase().select().from(roomPasswordAttempts).orderBy(roomPasswordAttempts.sourceHash);
+    }
+
+    beforeEach(async () => {
         repository = new PasswordAttemptRepository();
+        await storeRoom(aRoom({ passwordHash: 'hash' }));
     });
 
-    test('should count an attempt of a client while it made less than the most attempts, atomically', async () => {
-        // When / Then
-        expect(await repository.countAttempt(aRoom(), 'source', 5, 500, 560)).toEqual(true);
-        expect(dynamo.commandCalls(UpdateCommand).map(({ args: [command] }: { args: [UpdateCommand] }) => command.input)).toEqual([{
-            TableName: 'password-attempt',
-            Key: KEY,
-            UpdateExpression: COUNT,
-            ConditionExpression: 'attribute_not_exists(attempts) OR (attempts < :maxAttempts AND expiresAt > :now)',
-            ExpressionAttributeValues: { ':zero': 0, ':one': 1, ':expiresAt': 560, ':maxAttempts': 5, ':now': 500 },
-            ExpressionAttributeNames: undefined,
-            ReturnValues: 'NONE',
-        }]);
-    });
-
-    test('should count the attempts of a room created again under the same name apart', async () => {
+    test('should count the attempts of a client while it made less than the most attempts, each one pushing its count back', async () => {
         // When
-        await repository.countAttempt(aRoom({ createdAt: '2026-10-12T08:00:00.000Z' }), 'source', 5, 500, 560);
+        expect(await count(NOW)).toEqual(true);
+        expect(await count(NOW + 10)).toEqual(true);
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, { Key: { roomKey: 'room#2026-10-12T08:00:00.000Z', sourceHash: 'source' } })).toHaveLength(1);
+        expect(await attempts()).toEqual([{ roomId: 'room', sourceHash: 'source', attempts: 2, expiresAt: NOW + 70 }]);
     });
 
-    test('should count the attempts of a client again from one once its count is over', async () => {
-        // Given
-        dynamo.on(UpdateCommand, { UpdateExpression: COUNT }).rejects(aConditionFailure());
+    test('should count the attempts sent at once, the most attempts at most', async () => {
+        // When
+        const counted: boolean[] = await Promise.all(Array.from({ length: 8 }, () => count()));
 
-        // When / Then
-        expect(await repository.countAttempt(aRoom(), 'source', 5, 500, 560)).toEqual(true);
-        expect(dynamo.commandCalls(UpdateCommand, {
-            UpdateExpression: COUNT_AGAIN,
-            ConditionExpression: 'expiresAt <= :now',
-            ExpressionAttributeValues: { ':one': 1, ':expiresAt': 560, ':now': 500 },
-        })).toHaveLength(1);
-    });
-
-    test('should count an attempt after another one counted again from one at the same time', async () => {
-        // Given: the count over, another attempt counts again from one before this one
-        dynamo.on(UpdateCommand, { UpdateExpression: COUNT }).rejectsOnce(aConditionFailure()).resolves({});
-        dynamo.on(UpdateCommand, { UpdateExpression: COUNT_AGAIN }).rejects(aConditionFailure());
-
-        // When / Then
-        expect(await repository.countAttempt(aRoom(), 'source', 5, 500, 560)).toEqual(true);
-        expect(dynamo.commandCalls(UpdateCommand, { UpdateExpression: COUNT })).toHaveLength(2);
+        // Then
+        expect(counted.filter(Boolean)).toHaveLength(MAX_ATTEMPTS);
+        expect(await attempts()).toEqual([{ roomId: 'room', sourceHash: 'source', attempts: MAX_ATTEMPTS, expiresAt: NOW + 60 }]);
     });
 
     test('should not count an attempt of a client which made the most attempts, its count not over', async () => {
         // Given
-        dynamo.on(UpdateCommand).rejects(aConditionFailure());
+        await getDatabase().insert(roomPasswordAttempts).values({ roomId: 'room', sourceHash: 'source', attempts: MAX_ATTEMPTS, expiresAt: NOW + 1 });
 
         // When / Then
-        expect(await repository.countAttempt(aRoom(), 'source', 5, 500, 560)).toEqual(false);
+        expect(await count()).toEqual(false);
+        expect(await attempts()).toEqual([{ roomId: 'room', sourceHash: 'source', attempts: MAX_ATTEMPTS, expiresAt: NOW + 1 }]);
+    });
+
+    test('should count the attempts of a client again from one once its count is over', async () => {
+        // Given
+        await getDatabase().insert(roomPasswordAttempts).values({ roomId: 'room', sourceHash: 'source', attempts: MAX_ATTEMPTS, expiresAt: NOW });
+
+        // When / Then
+        expect(await count()).toEqual(true);
+        expect(await attempts()).toEqual([{ roomId: 'room', sourceHash: 'source', attempts: 1, expiresAt: NOW + 60 }]);
+    });
+
+    test('should count the attempts of each client apart', async () => {
+        // Given
+        await getDatabase().insert(roomPasswordAttempts).values({ roomId: 'room', sourceHash: 'source', attempts: MAX_ATTEMPTS, expiresAt: NOW + 1 });
+
+        // When / Then
+        expect(await count(NOW, 'other-source')).toEqual(true);
     });
 
     test('should uncount the attempt of a client, keeping the others', async () => {
+        // Given
+        await count();
+        await count();
+        await count(NOW, 'other-source');
+
         // When
-        await repository.uncountAttempt(aRoom(), 'source');
+        await repository.uncountAttempt({ id: 'room' }, 'source');
 
         // Then
-        expect(dynamo.commandCalls(UpdateCommand, {
-            TableName: 'password-attempt',
-            Key: KEY,
-            UpdateExpression: 'SET attempts = attempts - :one',
-            ConditionExpression: 'attempts > :zero',
-            ExpressionAttributeValues: { ':one': 1, ':zero': 0 },
-        })).toHaveLength(1);
+        expect(await attempts()).toEqual([
+            { roomId: 'room', sourceHash: 'other-source', attempts: 1, expiresAt: NOW + 60 },
+            { roomId: 'room', sourceHash: 'source', attempts: 1, expiresAt: NOW + 60 },
+        ]);
     });
 
-    test('should not uncount an attempt of a count deleted', async () => {
+    test('should not uncount an attempt below none', async () => {
         // Given
-        dynamo.on(UpdateCommand).rejects(aConditionFailure());
+        await getDatabase().insert(roomPasswordAttempts).values({ roomId: 'room', sourceHash: 'source', attempts: 0, expiresAt: NOW });
 
-        // When / Then
-        await expect(repository.uncountAttempt(aRoom(), 'source')).resolves.toBeUndefined();
+        // When
+        await repository.uncountAttempt({ id: 'room' }, 'source');
+        await repository.uncountAttempt({ id: 'room' }, 'unknown-source');
+
+        // Then
+        expect(await attempts()).toEqual([{ roomId: 'room', sourceHash: 'source', attempts: 0, expiresAt: NOW }]);
+    });
+
+    test('should delete the attempts with their room: a room created again under its name starts without them', async () => {
+        // Given
+        await count();
+
+        // When
+        await getDatabase().delete(rooms).where(eq(rooms.id, 'room'));
+
+        // Then
+        expect(await attempts()).toEqual([]);
     });
 });

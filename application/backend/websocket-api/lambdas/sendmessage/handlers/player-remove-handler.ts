@@ -1,6 +1,8 @@
 import BadRequestException from '@exceptions/bad-request-exception';
+import { isName } from '@helpers/text.helper';
 import RoomHelper from '@helpers/room-helper';
 import Room from '@models/room';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 
@@ -8,7 +10,7 @@ export default class PlayerRemoveHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.PLAYER_REMOVE);
 
-        if (!data.playerName || !data.roomName) {
+        if (!isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isName(data.roomName, ROOM_NAME_MAX_LENGTH)) {
             throw new BadRequestException(PlayerRemoveHandler.ERROR_PARSING);
         }
 

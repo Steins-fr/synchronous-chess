@@ -100,7 +100,7 @@ export class RoomParticipant {
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
     }
 
-    /** Searches the rooms by the start of their name */
+    /** Searches the rooms by a part of their name */
     public async searchRooms(search: string): Promise<void> {
         await this.page.getByRole('textbox', { name: 'Rechercher une salle' }).fill(search);
     }

@@ -1,224 +1,63 @@
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DatabaseErrorException } from '@aws-sdk/client-rds-data';
 import DatabaseException, { DatabaseOperationEnum } from '@exceptions/database-exception';
-import Connection from '@models/connection';
-import { aConditionFailure, aDynamoError } from '@testing/api-mocks';
-import { mockClient } from 'aws-sdk-client-mock';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { WriteCondition } from './base-repository';
-import ConnectionRepository from './connection-repository';
+import { DrizzleQueryError } from 'drizzle-orm';
+import { describe, expect, test } from 'vitest';
+import BaseRepository from './base-repository';
 
-// Tested through the connection repository, its simplest subclass
+class TestRepository extends BaseRepository {
+    public runStatements<Output>(statements: () => Promise<Output>): Promise<Output> {
+        return this.run(DatabaseOperationEnum.UPDATE, statements);
+    }
+
+    public static wrote(rows: unknown[]): boolean {
+        return TestRepository.written(rows);
+    }
+}
+
 describe('BaseRepository', () => {
-    const dynamo = mockClient(DynamoDBDocumentClient);
-    const connection: Connection = { connectionId: 'connection', roomName: 'room' };
-    const condition: WriteCondition = { expression: 'roomName = :expected', attributeValues: { ':expected': 'room' } };
-    let repository: ConnectionRepository;
+    const repository: TestRepository = new TestRepository();
 
-    beforeEach(() => {
-        // DynamoDB answers every command with an object, empty without data
-        dynamo.reset().onAnyCommand().resolves({});
-        repository = new ConnectionRepository();
+    test('should give the output of the statements', async () => {
+        expect(await repository.runStatements(() => Promise.resolve('output'))).toEqual('output');
     });
 
-    test('should put an item in its table', async () => {
-        // When
-        const item: Connection = await repository.put(connection);
-
-        // Then
-        expect(item).toBe(connection);
-        expect(dynamo.commandCalls(PutCommand, { TableName: 'connection', Item: connection, ReturnValues: 'NONE' })).toHaveLength(1);
-    });
-
-    test('should delete an item by its key', async () => {
-        // When
-        await repository.delete(connection);
-
-        // Then
-        expect(dynamo.commandCalls(DeleteCommand, { TableName: 'connection', Key: { connectionId: 'connection' } })).toHaveLength(1);
-    });
-
-    test('should find an item by its key, with the projection of the repository', async () => {
+    test('should report the failure of a statement with the error of the database, without the statement nor its parameters', async () => {
         // Given
-        dynamo.on(GetCommand).resolves({ Item: connection });
-
-        // When
-        const item: Connection | null = await repository.find({ connectionId: 'connection' });
-
-        // Then
-        expect(item).toEqual(connection);
-        expect(dynamo.commandCalls(GetCommand, {
-            TableName: 'connection',
-            Key: { connectionId: 'connection' },
-            ProjectionExpression: 'connectionId, roomName',
-        })).toHaveLength(1);
-    });
-
-    test('should find no item', async () => {
-        // Given
-        dynamo.on(GetCommand).resolves({});
+        const cause: Error = new Error('duplicate key value violates unique constraint');
+        const failure: DrizzleQueryError = new DrizzleQueryError('insert into "rooms" values ($1)', ['token-hash'], cause);
 
         // When / Then
-        expect(await repository.find({ connectionId: 'unknown' })).toBeNull();
+        const reported: Promise<unknown> = repository.runStatements(() => Promise.reject(failure));
+        await expect(reported).rejects.toBeInstanceOf(DatabaseException);
+        await expect(reported).rejects.toEqual(expect.objectContaining({ operation: DatabaseOperationEnum.UPDATE, message: cause.message, cause }));
     });
 
-    test('should query the items of an index, the last first, page after page until enough match', async () => {
+    test('should report the failure of a statement without cause', async () => {
+        await expect(repository.runStatements(() => Promise.reject(new DrizzleQueryError('select 1', [])))).rejects
+            .toEqual(expect.objectContaining({ operation: DatabaseOperationEnum.UPDATE, message: 'The statement failed' }));
+    });
+
+    test('should report the failure of the Data API starting or ending a transaction', async () => {
         // Given
-        const other: Connection = { connectionId: 'other', roomName: 'room' };
-        dynamo.on(QueryCommand)
-            .resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } })
-            .resolvesOnce({ Items: [other, connection], LastEvaluatedKey: { connectionId: 'other' } });
-
-        // When
-        const items: Connection[] = await repository.queryIndex<Connection>('room-index', { expression: 'roomName = :room', attributeValues: { ':room': 'room' } }, condition, 'connectionId', { maxItems: 2, lastFirst: true });
-
-        // Then: the second page reads twice as many items, and is the last one once enough items matched, cut to their number
-        expect(items).toEqual([connection, other]);
-        expect(dynamo.commandCalls(QueryCommand).map(({ args: [command] }: { args: [QueryCommand] }) => command.input)).toEqual([
-            {
-                TableName: 'connection',
-                IndexName: 'room-index',
-                KeyConditionExpression: 'roomName = :room',
-                FilterExpression: 'roomName = :expected',
-                ProjectionExpression: 'connectionId',
-                ExpressionAttributeValues: { ':room': 'room', ':expected': 'room' },
-                ScanIndexForward: false,
-                Limit: 2,
-            },
-            expect.objectContaining({ ExclusiveStartKey: { connectionId: 'connection' }, Limit: 4 }),
-        ]);
-    });
-
-    test('should query the items of an index, the first first, until its last page', async () => {
-        // Given a last page matching no item
-        dynamo.on(QueryCommand).resolvesOnce({ Items: [connection], LastEvaluatedKey: { connectionId: 'connection' } }).resolvesOnce({});
+        const failure: DatabaseErrorException = new DatabaseErrorException({ $metadata: {}, message: 'Transaction not found' });
 
         // When / Then
-        expect(await repository.queryIndex<Connection>('room-index', condition, condition, 'connectionId', { maxItems: 5, lastFirst: false })).toEqual([connection]);
-        expect(dynamo.commandCalls(QueryCommand)).toHaveLength(2);
-        expect(dynamo.commandCalls(QueryCommand, { ScanIndexForward: true })).toHaveLength(2);
+        await expect(repository.runStatements(() => Promise.reject(failure))).rejects
+            .toEqual(expect.objectContaining({ operation: DatabaseOperationEnum.UPDATE, message: 'Transaction not found', cause: failure }));
     });
 
-    test('should read a few pages of an index at most, the items filtered out not costing more reads', async () => {
-        // Given: pages of items filtered out only
-        dynamo.on(QueryCommand).resolves({ Items: [], LastEvaluatedKey: { connectionId: 'connection' } });
+    test('should rethrow another failure', async () => {
+        // Given
+        const failure: Error = new Error('Player not in the room');
 
         // When / Then
-        expect(await repository.queryIndex<Connection>('room-index', condition, condition, 'connectionId', { maxItems: 5, lastFirst: false })).toEqual([]);
-        expect(dynamo.commandCalls(QueryCommand).map(({ args: [command] }: { args: [QueryCommand] }) => command.input.Limit)).toEqual([5, 10, 20]);
-    });
-
-    test('should query an index with the names its conditions use', async () => {
-        // When
-        await repository.queryIndex<Connection>(
-            'room-index',
-            { expression: '#room = :room', attributeValues: { ':room': 'room' }, attributeNames: { '#room': 'roomName' } },
-            { expression: '#id <> :id', attributeValues: { ':id': 'other' }, attributeNames: { '#id': 'connectionId' } },
-            'connectionId',
-            { maxItems: 1, lastFirst: false },
-        );
-
-        // Then
-        expect(dynamo.commandCalls(QueryCommand, { ExpressionAttributeNames: { '#room': 'roomName', '#id': 'connectionId' } })).toHaveLength(1);
-    });
-
-    test('should update an item and return its new attributes', async () => {
-        // Given
-        const updated: Connection = { ...connection, roomName: 'other' };
-        dynamo.on(UpdateCommand).resolves({ Attributes: updated });
-
-        // When
-        const item: Connection = await repository.updateItem(connection, 'set roomName = :roomName', { ':roomName': 'other' });
-
-        // Then
-        expect(item).toEqual(updated);
-        expect(dynamo.commandCalls(UpdateCommand, {
-            TableName: 'connection',
-            Key: { connectionId: 'connection' },
-            UpdateExpression: 'set roomName = :roomName',
-            ExpressionAttributeValues: { ':roomName': 'other' },
-            ReturnValues: 'ALL_NEW',
-        })).toHaveLength(1);
-    });
-
-    test('should put an item if its condition holds', async () => {
-        // When
-        const written: boolean = await repository.putIf(connection, condition);
-
-        // Then
-        expect(written).toEqual(true);
-        expect(dynamo.commandCalls(PutCommand, {
-            TableName: 'connection',
-            Item: connection,
-            ConditionExpression: 'roomName = :expected',
-            ExpressionAttributeValues: { ':expected': 'room' },
-            ReturnValues: 'NONE',
-        })).toHaveLength(1);
-    });
-
-    test('should put an item if its condition on attribute names holds', async () => {
-        // When
-        await repository.putIf(connection, { expression: '#room = :expected', attributeValues: { ':expected': 'room' }, attributeNames: { '#room': 'roomName' } });
-
-        // Then
-        expect(dynamo.commandCalls(PutCommand, {
-            ConditionExpression: '#room = :expected',
-            ExpressionAttributeNames: { '#room': 'roomName' },
-        })).toHaveLength(1);
-    });
-
-    test('should update an item if its condition holds', async () => {
-        // When
-        const written: boolean = await repository.updateItemIf(connection, 'set roomName = :roomName', condition, { ':roomName': 'other' });
-
-        // Then
-        expect(written).toEqual(true);
-        expect(dynamo.commandCalls(UpdateCommand, {
-            TableName: 'connection',
-            Key: { connectionId: 'connection' },
-            UpdateExpression: 'set roomName = :roomName',
-            ConditionExpression: 'roomName = :expected',
-            ExpressionAttributeValues: { ':roomName': 'other', ':expected': 'room' },
-            ReturnValues: 'NONE',
-        })).toHaveLength(1);
+        await expect(repository.runStatements(() => Promise.reject(failure))).rejects.toBe(failure);
     });
 
     test.each([
-        ['put', () => repository.putIf(connection, condition)],
-        ['update', () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
-    ])('should not %s an item if its condition does not hold', async (_operation: string, write: () => Promise<boolean>) => {
-        // Given
-        dynamo.onAnyCommand().rejects(aConditionFailure());
-
-        // When / Then
-        expect(await write()).toEqual(false);
-    });
-
-    const operations: [string, DatabaseOperationEnum, () => Promise<unknown>][] = [
-        ['put', DatabaseOperationEnum.PUT, () => repository.put(connection)],
-        ['conditional put', DatabaseOperationEnum.PUT, () => repository.putIf(connection, condition)],
-        ['delete', DatabaseOperationEnum.DELETE, () => repository.delete(connection)],
-        ['get', DatabaseOperationEnum.GET, () => repository.find(connection)],
-        ['query', DatabaseOperationEnum.QUERY, () => repository.queryIndex('room-index', condition, condition, 'connectionId', { maxItems: 1, lastFirst: true })],
-        ['update', DatabaseOperationEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
-        ['conditional update', DatabaseOperationEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
-    ];
-
-    test.each(operations)('should report the DynamoDB failure of a %s', async (_operation: string, databaseOperation: DatabaseOperationEnum, operation: () => Promise<unknown>) => {
-        // Given
-        const error = aDynamoError();
-        dynamo.onAnyCommand().rejects(error);
-
-        // When / Then
-        await expect(operation()).rejects.toEqual(expect.objectContaining({ operation: databaseOperation, message: 'DynamoDB failed', cause: error }));
-        await expect(operation()).rejects.toBeInstanceOf(DatabaseException);
-    });
-
-    test.each(operations)('should rethrow another failure of a %s', async (_operation: string, _databaseOperation: DatabaseOperationEnum, operation: () => Promise<unknown>) => {
-        // Given
-        const error: Error = new Error('Network down');
-        dynamo.onAnyCommand().rejects(error);
-
-        // When / Then
-        await expect(operation()).rejects.toBe(error);
+        ['wrote', [{ id: 'room' }], true],
+        ['did not write', [], false],
+    ])('should tell a conditional write %s from the rows it returned', (_case: string, rows: unknown[], written: boolean) => {
+        expect(TestRepository.wrote(rows)).toEqual(written);
     });
 });
