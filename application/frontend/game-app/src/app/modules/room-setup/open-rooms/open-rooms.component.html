@@ -9,22 +9,22 @@
     </div>
 </div>
 <app-text-field [field]="searchForm.text" class="max-w-md" label="Rechercher une salle" />
-@if (rooms(); as openRooms) {
+@if (list(); as shown) {
 <!-- The list loaded before stays: a failed refresh does not take it away -->
 @if (failed()) {
 <p class="muted-note">Les salles n'ont pas pu être actualisées.</p>
 }
-@if (openRooms.length === 0) {
+@if (shown.rooms.length === 0) {
 <p class="muted-note">
-    @if (searched() === '') {
+    @if (shown.search === '') {
     Aucune salle à rejoindre pour le moment : créez la vôtre !
     } @else {
-    Aucune salle ne contient « {{ searched() }} ».
+    Aucune salle ne contient « {{ shown.search }} ».
     }
 </p>
 } @else {
 <ul class="m-0 p-0 list-none flex flex-col gap-2">
-    @for (room of openRooms; track room.roomName) {
+    @for (room of shown.rooms; track room.roomName) {
     <li class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 border border-app-border rounded-lg bg-app-surface-raised">
         <!-- Read by the screen readers: Material hides an icon otherwise -->
         @if (room.isPrivate) {
@@ -50,12 +50,12 @@
     </li>
     }
 </ul>
-@if (hasMore()) {
+@if (shown.hasMore) {
 <p class="muted-note">
-    @if (searched() === '') {
+    @if (shown.search === '') {
     Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.
     } @else {
-    D'autres salles contiennent « {{ searched() }} » : précisez la recherche pour les trouver.
+    D'autres salles contiennent « {{ shown.search }} » : précisez la recherche pour les trouver.
     }
 </p>
 }

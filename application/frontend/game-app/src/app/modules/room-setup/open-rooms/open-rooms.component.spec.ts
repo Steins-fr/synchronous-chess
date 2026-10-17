@@ -1,23 +1,21 @@
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RoomHttpApi } from '@app/services/room-api/room-http.api';
+import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
-import { openRoomsHttpApi } from '@testing/room-http-api.mock';
-import { NEVER, Observable, of, Subject, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { OpenRoomsComponent } from './open-rooms.component';
 
 describe('OpenRoomsComponent', () => {
+    const API: string = 'https://api.test';
     const publicRoom: OpenRoom = { roomName: 'public', hostPlayer: 'alice', playerCount: 1, maxPlayer: 4, isPrivate: false, hostConnected: true };
     const privateRoom: OpenRoom = { roomName: 'private', playerCount: 3, maxPlayer: 4, isPrivate: true, hostConnected: true };
     let fixture: ComponentFixture<OpenRoomsComponent>;
-    let roomHttpApi: RoomHttpApi;
+    let httpTesting: HttpTestingController;
 
-    /** Creates the component, the HTTP API answering its first request as given */
-    async function createComponent(firstAnswer: Observable<RoomsResponse> | RoomsResponse, game: RoomGame = RoomGame.CHESS): Promise<void> {
-        roomHttpApi = openRoomsHttpApi([publicRoom]);
-        vi.mocked(roomHttpApi.getOpenRooms).mockReturnValueOnce(firstAnswer instanceof Observable ? firstAnswer : of(firstAnswer));
-        TestBed.configureTestingModule({ providers: [{ provide: RoomHttpApi, useValue: roomHttpApi }] });
+    async function createComponent(game: RoomGame = RoomGame.CHESS): Promise<void> {
+        TestBed.configureTestingModule({ providers: [{ provide: HTTP_API_SERVER, useValue: API }] });
+        httpTesting = TestBed.inject(HttpTestingController);
         fixture = TestBed.createComponent(OpenRoomsComponent);
         fixture.componentRef.setInput('game', game);
         await render();
@@ -28,6 +26,26 @@ describe('OpenRoomsComponent', () => {
         TestBed.tick();
         await vi.advanceTimersByTimeAsync(time);
         TestBed.tick();
+    }
+
+    /** The request of the list awaited, of the search given */
+    function listRequest(search?: string, game: RoomGame = RoomGame.CHESS): TestRequest {
+        return httpTesting.expectOne(search === undefined ? `${ API }/rooms?game=${ game }` : `${ API }/rooms?game=${ game }&search=${ search }`);
+    }
+
+    async function answer(response: RoomsResponse, search?: string): Promise<void> {
+        listRequest(search).flush(response);
+        await render();
+    }
+
+    async function fail(search?: string): Promise<void> {
+        listRequest(search).flush({ message: 'Server error.' }, { status: 500, statusText: 'Internal Server Error' });
+        await render();
+    }
+
+    /** The requests awaited, none of them answered */
+    function pendingRequests(): TestRequest[] {
+        return httpTesting.match(() => true);
     }
 
     function text(): string {
@@ -65,11 +83,16 @@ describe('OpenRoomsComponent', () => {
     });
 
     test('should list the rooms of the game, telling the private ones', async () => {
+        // Given
+        await createComponent();
+        const request: TestRequest = listRequest();
+
         // When
-        await createComponent({ rooms: [privateRoom, publicRoom], hasMore: false });
+        request.flush({ rooms: [privateRoom, publicRoom], hasMore: false });
+        await render();
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledExactlyOnceWith({ game: RoomGame.CHESS, search: undefined });
+        expect(request.request.timeout).toEqual(30_000);
         expect(rows()).toEqual([
             'lock private 3 / 4 Rejoindre',
             'public public Hôte : alice 1 / 4 Rejoindre',
@@ -83,7 +106,8 @@ describe('OpenRoomsComponent', () => {
 
     test('should tell the full rooms and the ones waiting for their host, still joinable', async () => {
         // When
-        await createComponent({
+        await createComponent();
+        await answer({
             rooms: [{ ...publicRoom, playerCount: 4 }, { ...privateRoom, playerCount: 4, hostConnected: false }],
             hasMore: false,
         });
@@ -97,55 +121,49 @@ describe('OpenRoomsComponent', () => {
 
     test('should tell only the most recent rooms are listed, or more rooms match the search', async () => {
         // When
-        await createComponent({ rooms: [publicRoom], hasMore: true });
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: true });
 
         // Then
         expect(text()).toContain('Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.');
 
         // When
-        vi.mocked(roomHttpApi.getOpenRooms).mockReturnValue(of({ rooms: [publicRoom], hasMore: true }));
         await typeSearch('pub');
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [publicRoom], hasMore: true }, 'pub');
 
         // Then
         expect(text()).toContain('D\'autres salles contiennent « pub » : précisez la recherche pour les trouver.');
     });
 
     test('should show the list of the search typed last, the request of a former search cancelled', async () => {
-        // Given a search awaiting its list
-        await createComponent({ rooms: [publicRoom, privateRoom], hasMore: false });
-        const former = new Subject<RoomsResponse>();
-        vi.mocked(roomHttpApi.getOpenRooms)
-            .mockReturnValueOnce(former)
-            .mockReturnValueOnce(of({ rooms: [privateRoom], hasMore: false }));
+        // Given a search awaiting its list, the former list kept meanwhile
+        await createComponent();
+        await answer({ rooms: [publicRoom, privateRoom], hasMore: false });
         await typeSearch('pr');
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
-        expect(former.observed).toBe(true);
+        const former: TestRequest = listRequest('pr');
+        expect(rows()).toHaveLength(2);
 
         // When another search is typed
         await typeSearch('private');
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [privateRoom], hasMore: false }, 'private');
 
         // Then
-        expect(former.observed).toBe(false);
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(3);
+        expect(former.cancelled).toBe(true);
         expect(rows()).toEqual(['lock private 3 / 4 Rejoindre']);
     });
 
     test('should tell the rooms are loading, then that there is none', async () => {
-        // Given
-        const answer = new Subject<RoomsResponse>();
-
         // When
-        await createComponent(answer, RoomGame.CHAT);
+        await createComponent(RoomGame.CHAT);
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledExactlyOnceWith({ game: RoomGame.CHAT, search: undefined });
         expect(text()).toContain('Chargement des salles…');
 
         // When
-        answer.next({ rooms: [], hasMore: false });
-        answer.complete();
+        listRequest(undefined, RoomGame.CHAT).flush({ rooms: [], hasMore: false });
         await render();
 
         // Then
@@ -155,23 +173,22 @@ describe('OpenRoomsComponent', () => {
 
     test('should search the rooms once the player stops typing', async () => {
         // Given
-        await createComponent({ rooms: [publicRoom, privateRoom], hasMore: false });
-        vi.mocked(roomHttpApi.getOpenRooms).mockReturnValue(of({ rooms: [], hasMore: false }));
+        await createComponent();
+        await answer({ rooms: [publicRoom, privateRoom], hasMore: false });
 
         // When
         await typeSearch(' bo');
         await typeSearch(' bob ');
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(1);
+        expect(pendingRequests()).toEqual([]);
 
         // When the player stops typing: the request follows the search by a millisecond, the fake timers delaying a
         // timer of 0 scheduled while they run
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [], hasMore: false }, 'bob');
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(2);
-        expect(roomHttpApi.getOpenRooms).toHaveBeenLastCalledWith({ game: RoomGame.CHESS, search: 'bob' });
         expect(text()).toContain('Aucune salle ne contient « bob ».');
 
         // When the time of a refresh passes, the page visible again
@@ -179,34 +196,49 @@ describe('OpenRoomsComponent', () => {
         await render(OpenRoomsComponent.REFRESH_INTERVAL);
 
         // Then a search is not asked again
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(2);
+        expect(pendingRequests()).toEqual([]);
 
         // When
         refreshButton().click();
         await render();
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(3);
-        expect(roomHttpApi.getOpenRooms).toHaveBeenLastCalledWith({ game: RoomGame.CHESS, search: 'bob' });
+        await answer({ rooms: [], hasMore: false }, 'bob');
+    });
+
+    test('should search the rooms by a part of their name, its plus sign not read as a space by the API', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
+
+        // When
+        await typeSearch('a+b & c#');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then
+        await answer({ rooms: [], hasMore: false }, 'a%2Bb%20%26%20c%23');
+        expect(text()).toContain('Aucune salle ne contient « a+b & c# ».');
     });
 
     test('should not send a too long search, the list kept', async () => {
         // Given
-        await createComponent({ rooms: [publicRoom], hasMore: false });
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
 
         // When
         await typeSearch('s'.repeat(65));
         await render(OpenRoomsComponent.SEARCH_DELAY);
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(1);
+        expect(pendingRequests()).toEqual([]);
         expect(rows()).toHaveLength(1);
         expect(fixture.nativeElement.querySelector('mat-error').textContent.trim()).toEqual('La recherche fait 64 caractères au plus');
     });
 
     test('should tell the rooms could not be loaded, until a refresh lists them', async () => {
         // When
-        await createComponent(throwError(() => new Error('Http failure response')));
+        await createComponent();
+        await fail();
 
         // Then
         expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
@@ -214,6 +246,7 @@ describe('OpenRoomsComponent', () => {
         // When
         refreshButton().click();
         await render();
+        await answer({ rooms: [publicRoom], hasMore: false });
 
         // Then
         expect(text()).not.toContain('Les salles n\'ont pas pu être chargées.');
@@ -222,12 +255,13 @@ describe('OpenRoomsComponent', () => {
 
     test('should keep the rooms listed when a refresh fails', async () => {
         // Given
-        await createComponent({ rooms: [publicRoom], hasMore: false });
-        vi.mocked(roomHttpApi.getOpenRooms).mockReturnValueOnce(throwError(() => new Error('Http failure response')));
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
 
         // When
         refreshButton().click();
         await render();
+        await fail();
 
         // Then
         expect(rows()).toHaveLength(1);
@@ -237,6 +271,29 @@ describe('OpenRoomsComponent', () => {
         // When
         refreshButton().click();
         await render();
+        await answer({ rooms: [publicRoom], hasMore: false });
+
+        // Then
+        expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
+    });
+
+    test('should list the rooms again once a search cannot be sent', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
+
+        // When a search holding a lone surrogate, which HttpParams cannot encode
+        await typeSearch('\uD800');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then
+        expect(pendingRequests()).toEqual([]);
+        expect(text()).toContain('Les salles n\'ont pas pu être actualisées.');
+
+        // When
+        await typeSearch('');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [publicRoom], hasMore: false });
 
         // Then
         expect(text()).not.toContain('Les salles n\'ont pas pu être actualisées.');
@@ -244,14 +301,14 @@ describe('OpenRoomsComponent', () => {
 
     test('should list the rooms again every 15 seconds while the page is visible, and once visible again', async () => {
         // Given
-        await createComponent({ rooms: [publicRoom], hasMore: false });
-        vi.mocked(roomHttpApi.getOpenRooms).mockReturnValue(of({ rooms: [publicRoom, privateRoom], hasMore: false }));
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
 
         // When
         await render(OpenRoomsComponent.REFRESH_INTERVAL);
+        await answer({ rooms: [publicRoom, privateRoom], hasMore: false });
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(2);
         expect(rows()).toHaveLength(2);
 
         // When
@@ -260,7 +317,7 @@ describe('OpenRoomsComponent', () => {
         await render(OpenRoomsComponent.REFRESH_INTERVAL);
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(2);
+        expect(pendingRequests()).toEqual([]);
 
         // When
         hide(false);
@@ -268,7 +325,7 @@ describe('OpenRoomsComponent', () => {
         await render();
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(3);
+        await answer({ rooms: [publicRoom, privateRoom], hasMore: false });
     });
 
     test('should list the rooms of a page opened hidden', async () => {
@@ -276,7 +333,8 @@ describe('OpenRoomsComponent', () => {
         hide(true);
 
         // When
-        await createComponent({ rooms: [publicRoom], hasMore: false });
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
 
         // Then
         expect(rows()).toHaveLength(1);
@@ -284,21 +342,25 @@ describe('OpenRoomsComponent', () => {
 
     test('should not ask the rooms again while a list is awaited', async () => {
         // Given
-        await createComponent({ rooms: [publicRoom], hasMore: false });
-        vi.mocked(roomHttpApi.getOpenRooms).mockReturnValue(NEVER);
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
+
+        await render(OpenRoomsComponent.REFRESH_INTERVAL);
+        const awaited: TestRequest = listRequest();
 
         // When
-        await render(OpenRoomsComponent.REFRESH_INTERVAL);
         refreshButton().click();
         await render(OpenRoomsComponent.REFRESH_INTERVAL);
 
         // Then
-        expect(roomHttpApi.getOpenRooms).toHaveBeenCalledTimes(2);
+        expect(awaited.cancelled).toBe(false);
+        expect(pendingRequests()).toEqual([]);
     });
 
     test('should ask to join a room', async () => {
         // Given
-        await createComponent({ rooms: [privateRoom], hasMore: false });
+        await createComponent();
+        await answer({ rooms: [privateRoom], hasMore: false });
         const joined: OpenRoom[] = [];
         fixture.componentInstance.joinRoom.subscribe((room: OpenRoom) => joined.push(room));
 

@@ -3,14 +3,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatPage } from './chat.page';
 import { ChatMessengerType } from './components/chat/chat.component';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
-import { RoomHttpApi } from '@app/services/room-api/room-http.api';
+import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { JoinFailure } from '@app/services/room-manager/classes/room-network/room-network';
 import { RoomNetworkMock } from '@testing/room-network.mock';
-import { openRoomsHttpApi } from '@testing/room-http-api.mock';
+import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { TestHelper } from '@testing/test.helper';
 import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -28,14 +28,15 @@ describe('ChatPage', () => {
 
         await TestBed.configureTestingModule({
             imports: [ChatPage],
-            // Provided in the root, not by the page: provided to the testing module
-            providers: [{ provide: RoomHttpApi, useValue: openRoomsHttpApi() }],
+            // Provided by the config of the app
+            providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }],
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })
             .compileComponents();
 
         fixture = TestBed.createComponent(ChatPage);
+        answerOpenRooms();
         await fixture.whenStable();
     });
 
@@ -110,6 +111,8 @@ describe('ChatPage', () => {
 
         // When
         TestHelper.cast<RoomNetworkMock>(room.roomConnection).joinFailed$.next(JoinFailure.ROOM_FULL);
+        // The setup form shown again lists the rooms again
+        answerOpenRooms();
         await fixture.whenStable();
 
         // Then

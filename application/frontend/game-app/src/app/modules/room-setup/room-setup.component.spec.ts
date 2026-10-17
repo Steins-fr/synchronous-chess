@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Params } from '@angular/router';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
-import { RoomHttpApi } from '@app/services/room-api/room-http.api';
+import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
-import { openRoomsHttpApi } from '@testing/room-http-api.mock';
+import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { TestHelper } from '@testing/test.helper';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { RoomCreate, RoomCreateDialog } from './room-create/room-create.dialog';
@@ -26,7 +26,7 @@ describe('RoomSetupComponent', () => {
             imports: [RoomSetupComponent],
             providers: [
                 RoomSetupService,
-                { provide: RoomHttpApi, useValue: openRoomsHttpApi([publicRoom, privateRoom]) },
+                { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 { provide: DialogService, useValue: dialogService },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
             ],
@@ -37,6 +37,7 @@ describe('RoomSetupComponent', () => {
         vi.spyOn(CryptoHelper, 'randomNumber').mockReturnValue(123456);
         fixture = TestBed.createComponent(RoomSetupComponent);
         fixture.componentRef.setInput('game', RoomGame.CHESS);
+        answerOpenRooms([publicRoom, privateRoom]);
         if (vi.isFakeTimers()) {
             fixture.detectChanges();
         } else {
@@ -93,6 +94,8 @@ describe('RoomSetupComponent', () => {
         await createComponent();
         await createRoom({ roomName: 'room', playerName: 'player' });
         roomSetupService.roomIsSetup(false);
+        // The form shown again lists the rooms again
+        answerOpenRooms([publicRoom, privateRoom]);
         await fixture.whenStable();
 
         // When
