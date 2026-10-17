@@ -1,5 +1,5 @@
 import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
+import DatabaseException, { DatabaseOperationEnum } from '@exceptions/database-exception';
 import Connection from '@models/connection';
 import { aConditionFailure, aDynamoError } from '@testing/api-mocks';
 import { mockClient } from 'aws-sdk-client-mock';
@@ -193,26 +193,27 @@ describe('BaseRepository', () => {
         expect(await write()).toEqual(false);
     });
 
-    const operations: [string, DynamoCrudActionEnum, () => Promise<unknown>][] = [
-        ['put', DynamoCrudActionEnum.PUT, () => repository.put(connection)],
-        ['conditional put', DynamoCrudActionEnum.PUT, () => repository.putIf(connection, condition)],
-        ['delete', DynamoCrudActionEnum.DELETE, () => repository.delete(connection)],
-        ['get', DynamoCrudActionEnum.GET, () => repository.find(connection)],
-        ['query', DynamoCrudActionEnum.QUERY, () => repository.queryIndex('room-index', condition, condition, 'connectionId', { maxItems: 1, lastFirst: true })],
-        ['update', DynamoCrudActionEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
-        ['conditional update', DynamoCrudActionEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
+    const operations: [string, DatabaseOperationEnum, () => Promise<unknown>][] = [
+        ['put', DatabaseOperationEnum.PUT, () => repository.put(connection)],
+        ['conditional put', DatabaseOperationEnum.PUT, () => repository.putIf(connection, condition)],
+        ['delete', DatabaseOperationEnum.DELETE, () => repository.delete(connection)],
+        ['get', DatabaseOperationEnum.GET, () => repository.find(connection)],
+        ['query', DatabaseOperationEnum.QUERY, () => repository.queryIndex('room-index', condition, condition, 'connectionId', { maxItems: 1, lastFirst: true })],
+        ['update', DatabaseOperationEnum.UPDATE, () => repository.updateItem(connection, 'set roomName = :roomName')],
+        ['conditional update', DatabaseOperationEnum.UPDATE, () => repository.updateItemIf(connection, 'set roomName = :roomName', condition)],
     ];
 
-    test.each(operations)('should report the DynamoDB failure of a %s', async (_operation: string, action: DynamoCrudActionEnum, operation: () => Promise<unknown>) => {
+    test.each(operations)('should report the DynamoDB failure of a %s', async (_operation: string, databaseOperation: DatabaseOperationEnum, operation: () => Promise<unknown>) => {
         // Given
-        dynamo.onAnyCommand().rejects(aDynamoError());
+        const error = aDynamoError();
+        dynamo.onAnyCommand().rejects(error);
 
         // When / Then
-        await expect(operation()).rejects.toEqual(expect.objectContaining({ action, message: 'DynamoDB failed' }));
-        await expect(operation()).rejects.toBeInstanceOf(DynamoException);
+        await expect(operation()).rejects.toEqual(expect.objectContaining({ operation: databaseOperation, message: 'DynamoDB failed', cause: error }));
+        await expect(operation()).rejects.toBeInstanceOf(DatabaseException);
     });
 
-    test.each(operations)('should rethrow another failure of a %s', async (_operation: string, _action: DynamoCrudActionEnum, operation: () => Promise<unknown>) => {
+    test.each(operations)('should rethrow another failure of a %s', async (_operation: string, _databaseOperation: DatabaseOperationEnum, operation: () => Promise<unknown>) => {
         // Given
         const error: Error = new Error('Network down');
         dynamo.onAnyCommand().rejects(error);

@@ -1,5 +1,5 @@
 enum ExceptionTypeEnum {
-    DYNAMO_DB = 'dynamo_db',
+    DATABASE = 'database',
     BAD_REQUEST = 'bad_request'
 }
 

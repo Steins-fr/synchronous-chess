@@ -13,7 +13,7 @@ import {
     QueryCommand,
     QueryCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
-import DynamoException, { DynamoCrudActionEnum } from '@exceptions/dynamo-exception';
+import DatabaseException, { DatabaseOperationEnum } from '@exceptions/database-exception';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DocumentAttributes = Record<string, any>;
@@ -46,13 +46,13 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
 
     protected abstract getKey(item: Partial<Resource>): DocumentAttributes;
 
-    /** Runs a command, its DynamoDB failure reported as a DynamoException of the action */
-    private async run<Output>(action: DynamoCrudActionEnum, command: () => Promise<Output>): Promise<Output> {
+    /** Runs a command, its DynamoDB failure reported as a DatabaseException of the operation */
+    private async run<Output>(operation: DatabaseOperationEnum, command: () => Promise<Output>): Promise<Output> {
         try {
             return await command();
         } catch (err) {
             if (err instanceof DynamoDBServiceException) {
-                throw new DynamoException(action, err.message);
+                throw new DatabaseException(operation, err.message, { cause: err });
             }
 
             throw err;
@@ -60,8 +60,8 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     }
 
     /** @returns false when the condition of the command does not hold: nothing written */
-    private async runIf(action: DynamoCrudActionEnum, command: () => Promise<unknown>): Promise<boolean> {
-        return this.run(action, async (): Promise<boolean> => {
+    private async runIf(operation: DatabaseOperationEnum, command: () => Promise<unknown>): Promise<boolean> {
+        return this.run(operation, async (): Promise<boolean> => {
             try {
                 await command();
                 return true;
@@ -87,13 +87,13 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
     }
 
     public async put(item: Resource): Promise<Resource> {
-        await this.run(DynamoCrudActionEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item)));
+        await this.run(DatabaseOperationEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item)));
         return item;
     }
 
     /** @returns false when the condition does not hold: nothing written */
     public async putIf(item: Resource, condition: WriteCondition): Promise<boolean> {
-        return this.runIf(DynamoCrudActionEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item, condition)));
+        return this.runIf(DatabaseOperationEnum.PUT, (): Promise<PutCommandOutput> => this.ddb.send(this.putCommand(item, condition)));
     }
 
     /** @param item its key at least */
@@ -103,7 +103,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             Key: this.getKey(item),
         });
 
-        await this.run(DynamoCrudActionEnum.DELETE, (): Promise<DeleteCommandOutput> => this.ddb.send(command));
+        await this.run(DatabaseOperationEnum.DELETE, (): Promise<DeleteCommandOutput> => this.ddb.send(command));
     }
 
     public async find(item: Partial<Resource>): Promise<Resource | null> {
@@ -113,7 +113,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             ProjectionExpression: this.defaultProjection,
         });
 
-        const data = await this.run(DynamoCrudActionEnum.GET, (): Promise<GetCommandOutput> => this.ddb.send(command));
+        const data = await this.run(DatabaseOperationEnum.GET, (): Promise<GetCommandOutput> => this.ddb.send(command));
         return (data.Item as Resource | undefined) ?? null;
     }
 
@@ -151,7 +151,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
                 ExclusiveStartKey: startKey,
             });
             // eslint-disable-next-line no-await-in-loop -- the pages, one after the other: each gives the start of the next
-            const page = await this.run(DynamoCrudActionEnum.QUERY, (): Promise<QueryCommandOutput> => this.ddb.send(command));
+            const page = await this.run(DatabaseOperationEnum.QUERY, (): Promise<QueryCommandOutput> => this.ddb.send(command));
             items.push(...(page.Items ?? []) as Item[]);
             startKey = page.LastEvaluatedKey;
             pageSize *= 2;
@@ -183,7 +183,7 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             ReturnValues: 'ALL_NEW',
         });
 
-        const data = await this.run(DynamoCrudActionEnum.UPDATE, (): Promise<UpdateCommandOutput> => this.ddb.send(command));
+        const data = await this.run(DatabaseOperationEnum.UPDATE, (): Promise<UpdateCommandOutput> => this.ddb.send(command));
         return data.Attributes as Resource;
     }
 
@@ -202,6 +202,6 @@ export default abstract class BaseRepository<Resource extends DocumentAttributes
             ReturnValues: 'NONE',
         });
 
-        return this.runIf(DynamoCrudActionEnum.UPDATE, (): Promise<UpdateCommandOutput> => this.ddb.send(command));
+        return this.runIf(DatabaseOperationEnum.UPDATE, (): Promise<UpdateCommandOutput> => this.ddb.send(command));
     }
 }
