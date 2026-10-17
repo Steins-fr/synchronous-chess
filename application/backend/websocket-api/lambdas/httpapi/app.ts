@@ -21,7 +21,7 @@ const ERROR_SERVER: string = 'Server error.';
 
 /**
  * The handlers of the routes, by their route key (`<method> <path>`): the routes of aws-api-gateway-http-routes in the
- * infrastructure, and HTTP_ROUTES of the local API
+ * infrastructure
  */
 const routeHandlers: ReadonlyMap<string, RouteHandler> = new Map<string, RouteHandler>([
     [`GET ${ RoomApiHttpRoute.ROOMS }`, getRoomsHandler],
@@ -33,8 +33,9 @@ function jsonResponse(statusCode: number, body: object): Response {
 }
 
 /**
- * The routes of the HTTP API: what is not the connectivity of a room, which the websocket API serves. API Gateway
- * answers the routes it does not declare itself: a route without handler is answered not found all the same
+ * The routes of the HTTP API: what is not the connectivity of a room, which the websocket API serves. A route without
+ * handler is answered not found: on the local API, which hands the lambda any request but PostToConnection. API Gateway
+ * answers the routes it does not declare itself
  */
 export const handler = async function (event: APIGatewayProxyEventV2): Promise<Response> {
     const routeHandler: RouteHandler | undefined = routeHandlers.get(event.routeKey);

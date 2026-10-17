@@ -9,8 +9,8 @@ import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http
 import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
-import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
+import type { handler as httpApiHandler } from '../lambdas/httpapi/app';
 import { createLocalDatabase } from './local-database';
 
 interface LambdaResponse {
@@ -20,11 +20,7 @@ interface LambdaResponse {
 
 type Lambda = (event: APIGatewayProxyEvent) => Promise<LambdaResponse>;
 
-interface HttpLambdaResponse extends LambdaResponse {
-    headers: Record<string, string>;
-}
-
-type HttpLambda = (event: APIGatewayProxyEventV2) => Promise<HttpLambdaResponse>;
+type HttpLambda = typeof httpApiHandler;
 
 interface Lambdas {
     onConnect: Lambda;
@@ -62,13 +58,20 @@ const MAX_FRAME_BYTES: number = 32 * 1024;
 const IDLE_TIMEOUT_MS: number = 10 * 60 * 1000;
 const MAX_CONNECTION_MS: number = 2 * 60 * 60 * 1000;
 const GOING_AWAY: number = 1001;
+const CONNECTIONS_PREFIX: string = '/@connections/';
 const CONNECTIONS_PATH: RegExp = /^\/@connections\/([^/]+)$/;
-// The routes of the HTTP API (aws-api-gateway-http-routes of the infrastructure), by their route key: API Gateway runs
-// the lambda for them only
-const HTTP_ROUTES: ReadonlySet<string> = new Set<string>([`GET ${ RoomApiHttpRoute.ROOMS }`]);
-// The game app served locally (npm run serve:local of the game app, and its e2e), of another origin than the API: it
-// reads the HTTP API, like the app of a stage on AWS (cors_configuration of the HTTP API)
-const APP_ORIGIN: string = 'http://localhost:4200';
+// The game app served locally (npm run serve:local of the game app, and its e2e), of another origin than the API, on
+// localhost or 127.0.0.1 and any port: it reads the HTTP API, like the app of a stage on AWS (cors_configuration of the
+// HTTP API)
+const APP_ORIGIN: RegExp = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
+/** The CORS headers of a response of the HTTP API: readable by a page of the game app served locally only */
+function corsHeaders(request: IncomingMessage): Record<string, string> {
+    const origin: string | undefined = request.headers.origin;
+
+    // Vary: the response depends on the page asking it
+    return origin !== undefined && APP_ORIGIN.test(origin) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : { Vary: 'Origin' };
+}
 
 function listen(httpServer: Server, port: number): Promise<number> {
     return new Promise((resolve: (port: number) => void, reject: (error: Error) => void): void => {
@@ -232,17 +235,19 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
     }
 
     /**
-     * A route of the HTTP API, run by its lambda: public like on AWS, so not guarded like PostToConnection. Read by the
-     * game app served locally, of another origin: a simple request, sent without preflight, and this server answers
-     * none, which PostToConnection relies on
+     * A request to the HTTP API, run by its lambda, which answers its routes, and not found to the others: public like
+     * on AWS, so not guarded like PostToConnection. Read by the game app served locally, of another origin: a simple
+     * request, sent without preflight. A preflight is answered not found too, like by PostToConnection, which relies on
+     * it
      * @param rawQueryString the query string as sent, still encoded, like API Gateway gives it to the lambda
      */
-    async function invokeHttp(routeKey: string, rawQueryString: string, response: ServerResponse): Promise<void> {
+    async function invokeHttp(routeKey: string, rawQueryString: string, cors: Record<string, string>, response: ServerResponse): Promise<void> {
         const event = { routeKey, rawQueryString } as unknown as APIGatewayProxyEventV2;
-        const { statusCode, headers, body }: HttpLambdaResponse = await httpApi(event);
+        const { statusCode, headers, body }: Awaited<ReturnType<HttpLambda>> = await httpApi(event);
 
-        console.log(`${ routeKey }?${ rawQueryString }: ${ statusCode }`);
-        response.writeHead(statusCode, { ...headers, 'Access-Control-Allow-Origin': APP_ORIGIN }).end(body);
+        // Never the query, the search of a visitor, like the access logs of the HTTP API on AWS
+        console.log(`${ routeKey }: ${ statusCode }`);
+        response.writeHead(statusCode, { ...headers, ...cors }).end(body);
     }
 
     /**
@@ -315,14 +320,17 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
         const queryStart: number = url.indexOf('?');
         const path: string = queryStart === -1 ? url : url.slice(0, queryStart);
         const routeKey: string = `${ request.method } ${ path }`;
-        const served: Promise<void> = HTTP_ROUTES.has(routeKey)
-            ? invokeHttp(routeKey, url.slice(path.length + 1), response)
-            : postToConnection(request, response);
+        const toConnection: boolean = path.startsWith(CONNECTIONS_PREFIX);
+        // A failure of the HTTP API readable by the app too: a server error, not a response it is denied
+        const cors: Record<string, string> = toConnection ? {} : corsHeaders(request);
+        const served: Promise<void> = toConnection
+            ? postToConnection(request, response)
+            : invokeHttp(routeKey, url.slice(path.length + 1), cors, response);
 
         served.catch((e: unknown): void => {
             console.error(`${ routeKey } failed`, e);
             if (!response.headersSent) {
-                response.writeHead(500);
+                response.writeHead(500, cors);
             }
             response.end();
         });

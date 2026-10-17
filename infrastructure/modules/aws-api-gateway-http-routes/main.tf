@@ -23,9 +23,9 @@ resource "aws_lambda_permission" "lambda_permission_httpapi" {
 }
 
 # The list of the open rooms of a game: RoomApiHttpRoute.ROOMS of the room socket protocol
-# (application/shared/room-socket-protocol/room-api-http-route.enum.ts), among the HTTP_ROUTES of the local API
-# (application/backend/websocket-api/local/local-api.ts). A new route adds an aws_apigatewayv2_route to the same
-# integration, and its path to both
+# (application/shared/room-socket-protocol/room-api-http-route.enum.ts), a handler of the lambda (routeHandlers of
+# application/backend/websocket-api/lambdas/httpapi/app.ts). A new route adds an aws_apigatewayv2_route to the same
+# integration, and its handler to the lambda
 resource "aws_apigatewayv2_route" "rooms" {
   api_id    = var.api_gateway_id
   route_key = "GET /rooms"

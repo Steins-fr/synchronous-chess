@@ -37,8 +37,9 @@ statement sent to it: what the specs on PGlite do not check, the codecs of the D
 `npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` and `http://127.0.0.1:3001`
 (loopback only), and restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the
 websocket routes (`$connect`, `sendmessage`, `ping`, `$disconnect`), the `PostToConnection` endpoint of the management
-API, and the routes of the HTTP API (`GET /rooms`), read by the game app served on `http://localhost:4200`
-(`Access-Control-Allow-Origin`). It answers no preflight: the app sends simple requests.
+API, and the HTTP API: any other request runs the `httpapi` lambda, which answers its routes (`GET /rooms`) and not
+found to the others, preflights included (the app sends simple requests). Readable by the game app served on
+`localhost` or `127.0.0.1`, on any port (`Access-Control-Allow-Origin`), its failures too.
 The database is [PGlite](https://pglite.dev), PostgreSQL compiled to WASM, in memory, with the migrations of
 `drizzle/`, and the major version of the cluster: the rooms are lost at each restart.
 
