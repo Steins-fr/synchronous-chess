@@ -5,6 +5,10 @@ declare global {
             TABLE_NAME_CONNECTIONS?: string;
             TABLE_NAME_ROOMS?: string;
             TABLE_NAME_PASSWORD_ATTEMPTS?: string;
+            // The Aurora cluster the lambdas reach through its Data API, set by infrastructure/main.tf
+            DATABASE_RESOURCE_ARN?: string;
+            DATABASE_SECRET_ARN?: string;
+            DATABASE_NAME?: string;
             /** The key of the hashes of the IPs of the clients (source.helper), kept secret */
             SOURCE_HASH_SECRET?: string;
             // Set by the local server only (local/server.ts): API Gateway is reached through its domain otherwise
@@ -13,7 +17,8 @@ declare global {
     }
 }
 
-type RequiredVariable = 'TABLE_NAME_CONNECTIONS' | 'TABLE_NAME_ROOMS' | 'TABLE_NAME_PASSWORD_ATTEMPTS' | 'SOURCE_HASH_SECRET';
+type RequiredVariable = 'TABLE_NAME_CONNECTIONS' | 'TABLE_NAME_ROOMS' | 'TABLE_NAME_PASSWORD_ATTEMPTS' | 'SOURCE_HASH_SECRET'
+    | 'DATABASE_RESOURCE_ARN' | 'DATABASE_SECRET_ARN' | 'DATABASE_NAME';
 
 /**
  * A variable a lambda can not run without: missing, the lambda fails at once, as it builds what reads it, rather than
@@ -43,6 +48,21 @@ export function getRoomsTableName(): string {
 /** @throws {Error} when the environment of the lambda does not give it: only the lambda joining the rooms has it */
 export function getPasswordAttemptsTableName(): string {
     return requiredVariable('TABLE_NAME_PASSWORD_ATTEMPTS', 'the table of the password attempts, set by infrastructure/main.tf for the lambda joining the rooms');
+}
+
+/** @throws {Error} when the environment of the lambda does not give it */
+export function getDatabaseResourceArn(): string {
+    return requiredVariable('DATABASE_RESOURCE_ARN', 'the ARN of the Aurora cluster, set by infrastructure/main.tf for the lambdas reading it');
+}
+
+/** @throws {Error} when the environment of the lambda does not give it */
+export function getDatabaseSecretArn(): string {
+    return requiredVariable('DATABASE_SECRET_ARN', 'the ARN of the secret of the Aurora cluster, set by infrastructure/main.tf for the lambdas reading it');
+}
+
+/** @throws {Error} when the environment of the lambda does not give it */
+export function getDatabaseName(): string {
+    return requiredVariable('DATABASE_NAME', 'the database of the Aurora cluster, set by infrastructure/main.tf for the lambdas reading it');
 }
 
 /**

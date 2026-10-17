@@ -1,6 +1,6 @@
 import * as esbuild from "esbuild";
 
-await esbuild.build({
+const { metafile } = await esbuild.build({
     entryPoints: [
         { out: "onconnect", in: "./lambdas/onconnect/app.ts" },
         { out: "ondisconnect", in: "./lambdas/ondisconnect/app.ts" },
@@ -18,4 +18,11 @@ await esbuild.build({
     external: ["@aws-sdk"],
     treeShaking: true,
     sourcemap: false,
+    metafile: true,
 });
+
+// PGlite (WASM) runs the database of the local API and the specs only: the lambdas reach the Aurora cluster
+const localDatabase = Object.keys(metafile.inputs).filter((input) => /@electric-sql\/pglite|drizzle-orm\/pglite/.test(input));
+if (localDatabase.length > 0) {
+    throw new Error(`The lambdas bundle the local database: ${localDatabase.join(", ")}`);
+}

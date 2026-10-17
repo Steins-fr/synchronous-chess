@@ -7,14 +7,19 @@
         "lint:protocol": "cd ../../shared/room-socket-protocol && eslint",
         "typecheck": "tsc --noEmit && tsc -p ../../shared/room-socket-protocol",
         "test": "vitest",
-        "test:ci": "vitest run --coverage"
+        "test:ci": "vitest run --coverage",
+        "db:generate": "drizzle-kit generate",
+        "db:check": "drizzle-kit check && drizzle-kit generate && git diff --exit-code -- drizzle && test -z \"$(git status --porcelain -- drizzle)\""
     },
     "dependencies": {
         "@aws-sdk/client-apigatewaymanagementapi": "^3.1131.0",
         "@aws-sdk/client-dynamodb": "^3.1131.0",
-        "@aws-sdk/lib-dynamodb": "^3.1131.0"
+        "@aws-sdk/client-rds-data": "^3.1152.0",
+        "@aws-sdk/lib-dynamodb": "^3.1131.0",
+        "drizzle-orm": "1.0.0-rc.4"
     },
     "devDependencies": {
+        "@electric-sql/pglite": "0.4.6",
         "@eslint/js": "^10.0.1",
         "@stylistic/eslint-plugin": "^5.10.0",
         "@types/aws-lambda": "^8.10.163",
@@ -24,6 +29,7 @@
         "@typescript-eslint/parser": "^8.70.0",
         "@vitest/coverage-v8": "^4.1.11",
         "aws-sdk-client-mock": "^4.1.0",
+        "drizzle-kit": "1.0.0-rc.4",
         "dynalite": "^4.0.0",
         "esbuild": "^0.28.2",
         "eslint": "^10.10.0",

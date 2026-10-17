@@ -29,6 +29,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
+            '@database': path.resolve(import.meta.dirname, 'shared/database'),
             '@exceptions': path.resolve(import.meta.dirname, 'shared/exceptions'),
             '@helpers': path.resolve(import.meta.dirname, 'shared/helpers'),
             '@models': path.resolve(import.meta.dirname, 'shared/models'),
