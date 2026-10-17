@@ -1,14 +1,15 @@
 /**
- * The websocket API run locally, without AWS: API Gateway emulated around the lambdas, the database by PGlite, in
- * memory. Nothing is kept from one process to the next.
+ * The websocket API and the HTTP API run locally, without AWS: API Gateway emulated around the lambdas, the database
+ * by PGlite, in memory. Nothing is kept from one process to the next.
  */
 import { useDatabase } from '@database/database';
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyEventV2 } from 'aws-lambda';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
+import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
 import { RoomApiRoute } from '@protocol/room-api-route.enum';
 import { createLocalDatabase } from './local-database';
 
@@ -19,10 +20,17 @@ interface LambdaResponse {
 
 type Lambda = (event: APIGatewayProxyEvent) => Promise<LambdaResponse>;
 
+interface HttpLambdaResponse extends LambdaResponse {
+    headers: Record<string, string>;
+}
+
+type HttpLambda = (event: APIGatewayProxyEventV2) => Promise<HttpLambdaResponse>;
+
 interface Lambdas {
     onConnect: Lambda;
     onDisconnect: Lambda;
     sendMessage: Lambda;
+    httpApi: HttpLambda;
 }
 
 export interface LocalApiOptions {
@@ -38,6 +46,8 @@ export interface LocalApi {
     readonly port: number;
     /** The websocket URL of the API */
     readonly endpoint: string;
+    /** The URL of the HTTP API, served by the same server */
+    readonly httpEndpoint: string;
     close(): Promise<void>;
 }
 
@@ -53,6 +63,12 @@ const IDLE_TIMEOUT_MS: number = 10 * 60 * 1000;
 const MAX_CONNECTION_MS: number = 2 * 60 * 60 * 1000;
 const GOING_AWAY: number = 1001;
 const CONNECTIONS_PATH: RegExp = /^\/@connections\/([^/]+)$/;
+// The routes of the HTTP API (aws-api-gateway-http-routes of the infrastructure), by their route key: API Gateway runs
+// the lambda for them only
+const HTTP_ROUTES: ReadonlySet<string> = new Set<string>([`GET ${ RoomApiHttpRoute.ROOMS }`]);
+// The game app served locally (npm run serve:local of the game app, and its e2e), of another origin than the API: it
+// reads the HTTP API, like the app of a stage on AWS (cors_configuration of the HTTP API)
+const APP_ORIGIN: string = 'http://localhost:4200';
 
 function listen(httpServer: Server, port: number): Promise<number> {
     return new Promise((resolve: (port: number) => void, reject: (error: Error) => void): void => {
@@ -77,8 +93,9 @@ async function loadLambdas(): Promise<Lambdas> {
     const { handler: onConnect }: { handler: Lambda } = await import('../lambdas/onconnect/app');
     const { handler: onDisconnect }: { handler: Lambda } = await import('../lambdas/ondisconnect/app');
     const { handler: sendMessage }: { handler: Lambda } = await import('../lambdas/sendmessage/app');
+    const { handler: httpApi }: { handler: HttpLambda } = await import('../lambdas/httpapi/app');
 
-    return { onConnect, onDisconnect, sendMessage };
+    return { onConnect, onDisconnect, sendMessage, httpApi };
 }
 
 let lambdas: Promise<Lambdas> | undefined;
@@ -164,7 +181,7 @@ interface PendingConnection {
  */
 export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi> {
     lambdas ??= loadLambdas();
-    const { onConnect, onDisconnect, sendMessage }: Lambdas = await lambdas;
+    const { onConnect, onDisconnect, sendMessage, httpApi }: Lambdas = await lambdas;
     const idleTimeoutMs: number = options.idleTimeoutMs ?? IDLE_TIMEOUT_MS;
     const maxConnectionMs: number = options.maxConnectionMs ?? MAX_CONNECTION_MS;
     const connections: Map<string, Connection> = new Map<string, Connection>();
@@ -212,6 +229,20 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
         connection.socket.send(body);
         connection.idleTimer.refresh();
         response.writeHead(200).end();
+    }
+
+    /**
+     * A route of the HTTP API, run by its lambda: public like on AWS, so not guarded like PostToConnection. Read by the
+     * game app served locally, of another origin: a simple request, sent without preflight, and this server answers
+     * none, which PostToConnection relies on
+     * @param rawQueryString the query string as sent, still encoded, like API Gateway gives it to the lambda
+     */
+    async function invokeHttp(routeKey: string, rawQueryString: string, response: ServerResponse): Promise<void> {
+        const event = { routeKey, rawQueryString } as unknown as APIGatewayProxyEventV2;
+        const { statusCode, headers, body }: HttpLambdaResponse = await httpApi(event);
+
+        console.log(`${ routeKey }?${ rawQueryString }: ${ statusCode }`);
+        response.writeHead(statusCode, { ...headers, 'Access-Control-Allow-Origin': APP_ORIGIN }).end(body);
     }
 
     /**
@@ -279,8 +310,17 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
     });
 
     const server: Server = createServer((request: IncomingMessage, response: ServerResponse): void => {
-        postToConnection(request, response).catch((e: unknown): void => {
-            console.error('PostToConnection failed', e);
+        const url: string = request.url ?? '';
+        // The path, then the query string as sent after the first `?`: what API Gateway routes, and gives the lambdas
+        const queryStart: number = url.indexOf('?');
+        const path: string = queryStart === -1 ? url : url.slice(0, queryStart);
+        const routeKey: string = `${ request.method } ${ path }`;
+        const served: Promise<void> = HTTP_ROUTES.has(routeKey)
+            ? invokeHttp(routeKey, url.slice(path.length + 1), response)
+            : postToConnection(request, response);
+
+        served.catch((e: unknown): void => {
+            console.error(`${ routeKey } failed`, e);
             if (!response.headersSent) {
                 response.writeHead(500);
             }
@@ -314,6 +354,7 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
     return {
         port,
         endpoint: `ws://${HOST}:${port}`,
+        httpEndpoint: `http://${HOST}:${port}`,
         close: (): Promise<void> => new Promise((resolve: () => void): void => {
             for (const { socket } of connections.values()) {
                 socket.terminate();

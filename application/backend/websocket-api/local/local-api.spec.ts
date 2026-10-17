@@ -33,6 +33,14 @@ interface PostResponse {
     errorType: string | string[] | undefined;
 }
 
+interface HttpResponse {
+    status: number | undefined;
+    contentType: string | undefined;
+    allowedOrigin: string | undefined;
+    /** Parsed, undefined without */
+    body: unknown;
+}
+
 function open(api: LocalApi): Promise<WebSocket> {
     return new Promise((resolve: (socket: WebSocket) => void, reject: (error: Error) => void) => {
         const socket = new WebSocket(api.endpoint);
@@ -101,6 +109,24 @@ function post(api: LocalApi, options: { method?: string; path?: string; headers?
     });
 }
 
+/** A request to the HTTP API, like a page sends it */
+function sendHttp(api: LocalApi, method: string, path: string, headers: Record<string, string> = {}): Promise<HttpResponse> {
+    return new Promise((resolve: (response: HttpResponse) => void, reject: (error: Error) => void) => {
+        const outgoing = httpRequest({ host: '127.0.0.1', port: api.port, method, path, headers }, (response: IncomingMessage) => {
+            let body = '';
+            response.on('data', (chunk: Buffer) => body += chunk.toString('utf8'));
+            response.on('end', () => resolve({
+                status: response.statusCode,
+                contentType: response.headers['content-type'],
+                allowedOrigin: response.headers['access-control-allow-origin'],
+                body: body === '' ? undefined : JSON.parse(body),
+            }));
+        });
+        outgoing.on('error', reject);
+        outgoing.end();
+    });
+}
+
 function managementApi(api: LocalApi): ApiGatewayManagementApiClient {
     return new ApiGatewayManagementApiClient({
         endpoint: `http://127.0.0.1:${api.port}`,
@@ -117,7 +143,7 @@ function routeRuns(routeKey: string): string[] {
         .map((line: string) => line.split(' ')[1].replace(':', ''));
 }
 
-describe('local websocket API', () => {
+describe('local API', () => {
     let api: LocalApi;
     const sockets: WebSocket[] = [];
 
@@ -328,7 +354,7 @@ describe('local websocket API', () => {
 
     describe('open rooms', () => {
         // The game of no other test: the database keeps the rooms of the previous tests
-        test('should list the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
+        test('should list over HTTP the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
             // Given
             const host = await connected();
             expect(await reply(host, 'create', { roomName: 'chat-listed', maxPlayer: 6, game: 'chat', password: 'secret', playerName: 'alice', token: 'alice-token' }))
@@ -339,17 +365,17 @@ describe('local websocket API', () => {
             const waitingId = await connectionIdOf(waiting);
             waiting.close();
             await vi.waitFor(() => expect(routeRuns('$disconnect')).toContain(waitingId));
-            const visitor = await connected();
 
             // When
-            const rooms = await reply(visitor, 'roomGetAll', { game: 'chat' });
-            const searched = await reply(visitor, 'roomGetAll', { game: 'chat', search: 'Chat-L' });
+            const rooms = await sendHttp(api, 'GET', '/rooms?game=chat');
+            const searched = await sendHttp(api, 'GET', '/rooms?game=chat&search=Chat-L');
 
             // Then
             expect(rooms).toEqual({
-                id: 1,
-                type: 'rooms',
-                data: {
+                status: 200,
+                contentType: 'application/json',
+                allowedOrigin: 'http://localhost:4200',
+                body: {
                     rooms: [
                         { roomName: 'chat-waiting', hostPlayer: 'carol', playerCount: 1, maxPlayer: 6, isPrivate: false, hostConnected: false },
                         { roomName: 'chat-listed', playerCount: 1, maxPlayer: 6, isPrivate: true, hostConnected: true },
@@ -357,7 +383,8 @@ describe('local websocket API', () => {
                     hasMore: false,
                 },
             });
-            expect(searched).toMatchObject({ data: { rooms: [{ roomName: 'chat-listed' }], hasMore: false } });
+            expect(searched.body).toEqual({ rooms: [expect.objectContaining({ roomName: 'chat-listed' })], hasMore: false });
+            const visitor = await connected();
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' }))
                 .toMatchObject({ type: 'error', data: { message: 'Room of another game' } });
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'wrong', token: 'bob-token' }))
@@ -473,6 +500,21 @@ describe('local websocket API', () => {
         test('should give the SDK its exceptions', async () => {
             await expect(managementApi(api).send(new PostToConnectionCommand({ ConnectionId: 'unknown', Data: 'hello' })))
                 .rejects.toMatchObject({ name: 'GoneException' });
+        });
+    });
+
+    describe('HTTP API', () => {
+        test('should answer a refused request, readable by the game app', async () => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=go'))
+                .toEqual({ status: 400, contentType: 'application/json', allowedOrigin: 'http://localhost:4200', body: { message: 'Payload not valid' } });
+        });
+
+        test.each<[string, string, string, Record<string, string>]>([
+            ['another method', 'POST', '/rooms?game=chat', {}],
+            ['a preflight, which PostToConnection relies on', 'OPTIONS', '/rooms?game=chat', { 'Access-Control-Request-Method': 'GET', Origin: 'http://localhost:4200' }],
+            ['another path', 'GET', '/rooms/chat', {}],
+        ])('should not answer %s', async (_case: string, method: string, path: string, headers: Record<string, string>) => {
+            expect(await sendHttp(api, method, path, headers)).toEqual({ status: 404, contentType: undefined, allowedOrigin: undefined, body: undefined });
         });
     });
 

@@ -34,15 +34,18 @@ statement sent to it: what the specs on PGlite do not check, the codecs of the D
 
 ## Development server
 
-`npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` (loopback only), and
-restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the websocket
-routes (`$connect`, `sendmessage`, `ping`, `$disconnect`) and the `PostToConnection` endpoint of the management API.
+`npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` and `http://127.0.0.1:3001`
+(loopback only), and restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the
+websocket routes (`$connect`, `sendmessage`, `ping`, `$disconnect`), the `PostToConnection` endpoint of the management
+API, and the routes of the HTTP API (`GET /rooms`), read by the game app served on `http://localhost:4200`
+(`Access-Control-Allow-Origin`). It answers no preflight: the app sends simple requests.
 The database is [PGlite](https://pglite.dev), PostgreSQL compiled to WASM, in memory, with the migrations of
 `drizzle/`, and the major version of the cluster: the rooms are lost at each restart.
 
 Then serve the game app against it, from `application/frontend/game-app`: `npm run serve:local`.
 
-The lambdas get the IP of the client, as from API Gateway.
+The websocket lambdas get the IP of the client, as from API Gateway. The events of the HTTP API carry their route key
+and raw query string only.
 
 Emulated limits: 32 KB per message received (one frame of API Gateway, where a browser sends each message
 in a single frame), 128 KB per message posted to a connection, and the connections closed (1001) after
