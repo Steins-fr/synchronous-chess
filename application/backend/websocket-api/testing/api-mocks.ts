@@ -13,7 +13,7 @@ import {
     SocketPacketRequestPayload,
 } from '@protocol/socket-packet-payload.type';
 import RoomRepository from '@repositories/room-repository';
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyEventV2 } from 'aws-lambda';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, vi } from 'vitest';
 import { TestDatabase, useTestDatabase } from './database';
@@ -61,6 +61,11 @@ export function aRequest<Type extends RoomApiRequestTypeEnum>(type: Type, data: 
 /** The event of a websocket route, with only what the lambdas read */
 export function anEvent(connectionId: string | undefined, body: string | null = null): APIGatewayProxyEvent {
     return { body, requestContext: { connectionId, domainName: 'api.test' } } as unknown as APIGatewayProxyEvent;
+}
+
+/** The event of a route of the HTTP API, with only what the lambdas read: the query string as sent, still encoded */
+export function anHttpEvent(routeKey: string, rawQueryString: string = ''): APIGatewayProxyEventV2 {
+    return { routeKey, rawQueryString } as unknown as APIGatewayProxyEventV2;
 }
 
 /** What a repository throws when the database fails */

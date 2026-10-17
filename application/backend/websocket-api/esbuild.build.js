@@ -6,6 +6,8 @@ const { metafile } = await esbuild.build({
         { out: "onconnect", in: "./lambdas/onconnect/app.ts" },
         { out: "ondisconnect", in: "./lambdas/ondisconnect/app.ts" },
         { out: "sendmessage", in: "./lambdas/sendmessage/app.ts" },
+        // The routes of the HTTP API
+        { out: "httpapi", in: "./lambdas/httpapi/app.ts" },
         // A directory, with the migrations it reads
         { out: "migrate/migrate", in: "./lambdas/migrate/app.ts" },
     ],

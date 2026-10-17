@@ -2,9 +2,9 @@
 
 ## Build
 
-`npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`,
-and `migrate/` with the migrations it applies), deployed by Terraform. It refuses to bundle PGlite, the database of the
-local API and the specs.
+`npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`
+of the websocket API, `httpapi.mjs` of the HTTP API, and `migrate/` with the migrations it applies), deployed by
+Terraform. It refuses to bundle PGlite, the database of the local API and the specs.
 
 ## Database
 
