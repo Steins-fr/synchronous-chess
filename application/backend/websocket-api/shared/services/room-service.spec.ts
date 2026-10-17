@@ -223,6 +223,15 @@ describe('RoomService', () => {
         expect(await readRoom('room')).toStrictEqual(room);
     });
 
+    test('should refuse to queue a player of a name queued at the same time', async () => {
+        // Given: the room read before the other player joined
+        await storeRoom(room);
+
+        // When / Then
+        await expect(service.addPlayerToQueue('guest', 'other-connection', 'other-token', aRoom({ queue: [] }))).rejects.toThrow(RoomApiErrorMessage.ALREADY_IN_QUEUE);
+        expect(await readRoom('room')).toStrictEqual(room);
+    });
+
     test('should queue a player with its connection, and the hash of its token', async () => {
         // Given
         await storeRoom(room);

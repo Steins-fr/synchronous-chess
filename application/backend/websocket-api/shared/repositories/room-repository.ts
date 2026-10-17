@@ -206,15 +206,24 @@ export default class RoomRepository extends BaseRepository {
             .where(and(eq(roomPlayers.roomId, room.id), eq(roomPlayers.playerName, playerName))));
     }
 
-    /** Queues the player, keeping the hash of its token: a single statement */
-    public async addPlayerToQueue(player: Required<Player>, tokenHash: string, room: Room): Promise<void> {
+    /**
+     * Queues the player, keeping the hash of its token: a single statement, the token written only for the player it
+     * queued
+     * @returns false when a player of that name is queued already, joining at the same time: nothing written
+     */
+    public async addPlayerToQueue(player: Required<Player>, tokenHash: string, room: Room): Promise<boolean> {
         const queued = this.db.$with('queued').as(this.db.insert(roomQueue)
             .values({ roomId: room.id, playerName: player.playerName, connectionId: player.connectionId })
-            .onConflictDoNothing());
+            .onConflictDoNothing()
+            .returning({ roomId: roomQueue.roomId, playerName: roomQueue.playerName }));
 
-        await this.run(DatabaseOperationEnum.UPDATE, (): Promise<unknown> => this.db.with(queued).insert(roomTokens)
-            .values({ roomId: room.id, playerName: player.playerName, tokenHash })
-            .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash } }));
+        const tokens: { playerName: string }[] = await this.run(DatabaseOperationEnum.UPDATE, (): Promise<{ playerName: string }[]> => this.db.with(queued)
+            .insert(roomTokens)
+            .select(this.db.select({ roomId: queued.roomId, playerName: queued.playerName, tokenHash: sql<string>`${ tokenHash }::text`.as('token_hash') }).from(queued))
+            .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash } })
+            .returning({ playerName: roomTokens.playerName }));
+
+        return RoomRepository.written(tokens);
     }
 
     public async removePlayerFromQueue(connectionId: string, room: Room): Promise<void> {

@@ -267,15 +267,23 @@ describe('RoomRepository', () => {
             const room: Room = aRoom();
             await storeRoom(room);
 
-            // When
-            await repository.addPlayerToQueue({ playerName: 'zoe', connectionId: 'zoe-connection' }, 'zoe-hash', room);
-
-            // Then
+            // When / Then
+            expect(await repository.addPlayerToQueue({ playerName: 'zoe', connectionId: 'zoe-connection' }, 'zoe-hash', room)).toEqual(true);
             expect(await readRoom('room')).toStrictEqual({
                 ...room,
                 queue: [...room.queue, { playerName: 'zoe', connectionId: 'zoe-connection' }],
                 tokenHashes: { ...room.tokenHashes, zoe: 'zoe-hash' },
             });
+        });
+
+        test('should not queue a player of a name already queued, keeping the hash of its token', async () => {
+            // Given: the guest joined under that name at the same time, the room read before
+            const room: Room = aRoom();
+            await storeRoom(room);
+
+            // When / Then
+            expect(await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'other-connection' }, 'other-hash', aRoom({ queue: [] }))).toEqual(false);
+            expect(await readRoom('room')).toStrictEqual(room);
         });
 
         test('should replace the hash of the token of a player joining the room again', async () => {

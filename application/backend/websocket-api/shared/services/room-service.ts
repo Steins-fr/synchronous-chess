@@ -127,8 +127,11 @@ export default class RoomService {
         await this.roomRepository.removePlayerFromQueue(connectionId, room);
     }
 
+    /** @throws {BadRequestException} when a player of that name joined at the same time, and is queued (ALREADY_IN_QUEUE) */
     public async addPlayerToQueue(playerName: string, connectionId: string, token: string, room: Room): Promise<void> {
-        await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), room);
+        if (!await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), room)) {
+            throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_QUEUE);
+        }
     }
 
     /**
