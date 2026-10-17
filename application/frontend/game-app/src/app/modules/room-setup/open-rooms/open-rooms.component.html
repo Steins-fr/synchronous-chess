@@ -19,7 +19,7 @@
     @if (searched() === '') {
     Aucune salle à rejoindre pour le moment : créez la vôtre !
     } @else {
-    Aucune salle ne commence par « {{ searched() }} ».
+    Aucune salle ne contient « {{ searched() }} ».
     }
 </p>
 } @else {
@@ -55,7 +55,7 @@
     @if (searched() === '') {
     Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.
     } @else {
-    D'autres salles commencent par « {{ searched() }} » : précisez la recherche pour les trouver.
+    D'autres salles contiennent « {{ searched() }} » : précisez la recherche pour les trouver.
     }
 </p>
 }

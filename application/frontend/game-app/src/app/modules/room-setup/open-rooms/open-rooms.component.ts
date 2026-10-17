@@ -24,7 +24,7 @@ const roomSearchSchema = schema<RoomSearch>((path) => {
 });
 
 /**
- * The rooms of a game, searched by the start of their name, through the socket of the page.
+ * The rooms of a game, searched by a part of their name, through the socket of the page.
  * Without search, asked again every 15 seconds while the page is visible, and once it is visible again; a search is
  * asked once typed. Asked again on demand too
  */

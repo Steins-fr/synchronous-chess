@@ -38,7 +38,7 @@ test.describe('Open rooms', () => {
         await alice.expectConnected(['alice', 'bob']);
     });
 
-    test('searches the rooms by the start of their name, whatever the case', async ({ room }) => {
+    test('searches the rooms by a part of their name, whatever the case', async ({ room }) => {
         // Given
         const alice: RoomParticipant = await room.create('alice');
         await alice.expectParticipants(['alice']);
@@ -54,6 +54,6 @@ test.describe('Open rooms', () => {
         await carol.searchRooms(`${ room.name }-missing`);
 
         // Then
-        await expect(carol.page.getByText(`Aucune salle ne commence par « ${ room.name }-missing ».`)).toBeVisible();
+        await expect(carol.page.getByText(`Aucune salle ne contient « ${ room.name }-missing ».`)).toBeVisible();
     });
 });
