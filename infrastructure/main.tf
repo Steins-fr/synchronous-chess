@@ -8,7 +8,6 @@ locals {
   region             = "eu-west-1"
   front_domain_name  = "sc-${var.stage}.${var.main_domain_name}"
   api_ws_domain_name = "sc-ws-${var.stage}.${var.main_domain_name}"
-  frontend_path      = "../application/frontend/game-app/dist/synchronous-chess"
   zone_name          = "${var.main_domain_name}."
 }
 

@@ -150,5 +150,6 @@ jobs:
               uses: actions/upload-artifact@v6
               with:
                   name: frontend-dist-${{ inputs.stage }}-${{ github.run_id }}
-                  path: application/frontend/game-app/dist/synchronous-chess/
+                  # Where Angular builds the app, and the bucket module of Terraform reads it
+                  path: application/frontend/game-app/dist/game-app/browser/
                   retention-days: 7
