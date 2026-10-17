@@ -56,6 +56,7 @@ describe('RoomGetAllHandler', () => {
         ['an unknown game', { game: 'go' as RoomGame }],
         ['a search not a text', { game: RoomGame.CHESS, search: 42 as unknown as string }],
         ['a too long search', { game: RoomGame.CHESS, search: 's'.repeat(65) }],
+        ['a search with the NUL character, which PostgreSQL refuses', { game: RoomGame.CHESS, search: 'a\u0000' }],
     ])('should refuse a request for %s', async (_case: string, data: RoomsRequest) => {
         // Given
         const findRecentRooms = vi.spyOn(RoomRepository.prototype, 'findRecentRooms');

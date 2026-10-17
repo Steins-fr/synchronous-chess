@@ -9,6 +9,7 @@ describe('text helper', () => {
         ['an empty text', '', 1, false],
         ['an empty text allowed', '', 0, true],
         ['a too long text', 'a'.repeat(6), 1, false],
+        ['a text with the NUL character', 'a\u0000b', 1, false],
         ['a number', 42, 1, false],
         ['nothing', undefined, 0, false],
     ])('should tell whether %s is valid', (_case: string, value: unknown, minLength: number, valid: boolean) => {

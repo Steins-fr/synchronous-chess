@@ -39,6 +39,7 @@ describe('PlayerAddHandler', () => {
     test.each([
         ['without room name', { roomName: '', playerName: 'guest' }, HOST_CONNECTION, 'Payload not valid'],
         ['without player', { roomName: 'room', playerName: '' }, HOST_CONNECTION, 'Payload not valid'],
+        ['of a player name with the NUL character', { roomName: 'room', playerName: 'guest\u0000' }, HOST_CONNECTION, 'Payload not valid'],
         ['of another player than the host', { roomName: 'room', playerName: 'guest' }, GUEST_CONNECTION, 'You are not the host of the room'],
     ])('should refuse a request %s', async (_case: string, data: PlayerRequest, connection: string, message: string) => {
         // When / Then

@@ -1,6 +1,9 @@
-/** A text from the network: a string of `minLength` to `maxLength` characters */
+/**
+ * A text from the network: a string of `minLength` to `maxLength` characters, without the NUL character, which
+ * PostgreSQL refuses in a text
+ */
 export function isText(value: unknown, maxLength: number, minLength: number = 1): value is string {
-    return typeof value === 'string' && value.length >= minLength && value.length <= maxLength;
+    return typeof value === 'string' && value.length >= minLength && value.length <= maxLength && !value.includes('\u0000');
 }
 
 /**

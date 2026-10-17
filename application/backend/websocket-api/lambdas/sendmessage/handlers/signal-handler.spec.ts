@@ -58,6 +58,8 @@ describe('SignalHandler', () => {
     test.each([
         ['without room name', { roomName: '', to: 'host', signal }, GUEST_CONNECTION, 'Payload not valid'],
         ['without player', { roomName: 'room', to: '', signal }, GUEST_CONNECTION, 'Payload not valid'],
+        ['to a room name with the NUL character', { roomName: 'room\u0000', to: 'host', signal }, GUEST_CONNECTION, 'Payload not valid'],
+        ['to a too long player name', { roomName: 'room', to: 'p'.repeat(33), signal }, GUEST_CONNECTION, 'Payload not valid'],
         ['with an invalid signal', { roomName: 'room', to: 'host', signal: { sdp: { type: 'unknown' }, ice: [] } as unknown as RtcSignal }, GUEST_CONNECTION, 'Payload not valid'],
         ['from a connection out of the room', { roomName: 'room', to: 'host', signal }, 'unknown-connection', 'You were not in the queue!'],
         ['from the host to an unknown player', { roomName: 'room', to: 'unknown', signal }, HOST_CONNECTION, 'The player was not in the queue!'],
