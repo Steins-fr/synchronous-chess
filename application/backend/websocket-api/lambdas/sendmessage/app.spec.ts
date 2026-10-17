@@ -10,7 +10,6 @@ import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 import ReconnectHandler from './handlers/reconnect-handler';
-import RoomGetAllHandler from './handlers/room-get-all-handler';
 import SignalHandler from './handlers/signal-handler';
 
 describe('sendmessage lambda', () => {
@@ -41,7 +40,6 @@ describe('sendmessage lambda', () => {
         [RoomApiRequestTypeEnum.PLAYER_ADD, PlayerAddHandler],
         [RoomApiRequestTypeEnum.PLAYER_REMOVE, PlayerRemoveHandler],
         [RoomApiRequestTypeEnum.RECONNECT, ReconnectHandler],
-        [RoomApiRequestTypeEnum.ROOM_GET_ALL, RoomGetAllHandler],
     ])('should hand a %s request to its handler', async (type: RoomApiRequestTypeEnum, messageHandler: typeof MessageHandler) => {
         // Given
         const execute = vi.spyOn(messageHandler.prototype, 'execute').mockResolvedValue();
@@ -87,8 +85,9 @@ describe('sendmessage lambda', () => {
         expect(await handler(event)).toEqual({ statusCode: 401, body: 'Unauthorized request.' });
     });
 
-    test('should refuse an unknown request', async () => {
-        expect(await handler(anEvent(GUEST_CONNECTION, body('unknown')))).toEqual({ statusCode: 401, body: 'Operation not permitted.' });
+    // roomGetAll: the rooms are listed by the HTTP API, the websocket serves the connectivity of the rooms only
+    test.each(['unknown', 'roomGetAll'])('should refuse the request %s', async (type: string) => {
+        expect(await handler(anEvent(GUEST_CONNECTION, body(type)))).toEqual({ statusCode: 401, body: 'Operation not permitted.' });
     });
 
     test('should answer a server error without endpoint for the management API', async () => {

@@ -72,13 +72,17 @@ while the former host connection is still open). The host declares again a playe
 ## Open rooms
 
 A page lists the rooms of its game (`game` of `create`: the chess rooms on the chess page, the chat rooms on the chat
-page) with `roomGetAll`, from any connection: the rooms which did not expire, 30 at most, `hasMore` when more exist. The
-full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
+page) over HTTPS, with `GET /rooms?game=<game>&search=<text>` of the HTTP API (`lambdas/httpapi`), without connection:
+the websocket serves the connectivity of the rooms only, a page opens it to create or join one. The rooms which did not
+expire, 30 at most, `hasMore` when more exist (a `RoomsResponse` in JSON). The full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
 joins its room again from the list, the join retried until the room has its place back or its host reconnected.
 
 - Without `search`, the 30 most recent rooms, the last created first. A page asks it again every 15 seconds.
 - With a `search`, the rooms whose name holds it, whatever the case: the names starting with it first, then by name,
   the name equal to the search first. A page asks a search once typed, or on demand, not every 15 seconds.
+- An unknown or missing game, a search longer than 64 characters or holding the NUL character, or a `game` or `search`
+  given more than once: 400 `{ "message": "Payload not valid" }`, API Gateway joining the values of a repeated parameter
+  with commas. The other parameters are ignored. A failure of the database: 500, without its message.
 
 A query reads 31 rooms at most, the last one telling more exist, with the count of their players. A private room is
 listed by `isPrivate`, never the hash of its password. The indexes of the `rooms` table:
@@ -92,8 +96,7 @@ listed by `isPrivate`, never the hash of its password. The indexes of the `rooms
 The list refreshed every 15 seconds keeps the cluster awake while a page shows it.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
-searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones, the list
-fits a message.
+searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, without the name of its host, `join` refuses it
