@@ -1,9 +1,9 @@
 import { HttpResourceRef } from '@angular/common/http';
-import { Component, computed, effect, inject, input, linkedSignal, output, Resource, ResourceSnapshot, Signal, signal, untracked } from '@angular/core';
+import { Component, computed, debounced, effect, inject, input, linkedSignal, output, Resource, ResourceSnapshot, Signal, signal, untracked } from '@angular/core';
 import { form, maxLength, schema } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { debouncedSignal, withPreviousValue } from '@app/helpers/signal.helper';
+import { withPreviousValue } from '@app/helpers/signal.helper';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { openRoomsResource } from '@app/services/room-api/room-http.api';
@@ -17,7 +17,12 @@ type RoomSearch = {
 };
 
 /** The rooms matching a search, with the search they answer */
-type RoomsList = RoomsResponse & { search: string };
+type RoomsList = {
+    readonly rooms: ReadonlyArray<Readonly<OpenRoom>>;
+    /** More rooms match than the ones listed */
+    readonly hasMore: boolean;
+    readonly search: string;
+};
 
 
 const roomSearchSchema = schema<RoomSearch>((path) => {
@@ -56,7 +61,8 @@ export class OpenRoomsComponent {
      * API: not asked, the last search asked kept, its list still awaited or refreshed
      */
     private readonly query: Signal<string> = linkedSignal<string, string>({
-        source: debouncedSignal(computed(() => this.search().text.trim()), OpenRoomsComponent.SEARCH_DELAY),
+        // The value of the search typed last, kept until the player stops typing
+        source: debounced(computed(() => this.search().text.trim()), OpenRoomsComponent.SEARCH_DELAY).value,
         computation: (text: string, previous?: { value: string }) => text.length > ROOM_SEARCH_MAX_LENGTH && previous !== undefined ? previous.value : text,
     });
 

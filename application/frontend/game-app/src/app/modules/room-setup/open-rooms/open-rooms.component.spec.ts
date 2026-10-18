@@ -3,18 +3,18 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
+import { TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { OpenRoomsComponent } from './open-rooms.component';
 
 describe('OpenRoomsComponent', () => {
-    const API: string = 'https://api.test';
     const publicRoom: OpenRoom = { roomName: 'public', hostPlayer: 'alice', playerCount: 1, maxPlayer: 4, isPrivate: false, hostConnected: true };
     const privateRoom: OpenRoom = { roomName: 'private', playerCount: 3, maxPlayer: 4, isPrivate: true, hostConnected: true };
     let fixture: ComponentFixture<OpenRoomsComponent>;
     let httpTesting: HttpTestingController;
 
     async function createComponent(game: RoomGame = RoomGame.CHESS): Promise<void> {
-        TestBed.configureTestingModule({ providers: [{ provide: HTTP_API_SERVER, useValue: API }] });
+        TestBed.configureTestingModule({ providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }] });
         httpTesting = TestBed.inject(HttpTestingController);
         fixture = TestBed.createComponent(OpenRoomsComponent);
         fixture.componentRef.setInput('game', game);
@@ -30,7 +30,7 @@ describe('OpenRoomsComponent', () => {
 
     /** The request of the list awaited, of the search given */
     function listRequest(search?: string, game: RoomGame = RoomGame.CHESS): TestRequest {
-        return httpTesting.expectOne(search === undefined ? `${ API }/rooms?game=${ game }` : `${ API }/rooms?game=${ game }&search=${ search }`);
+        return httpTesting.expectOne(search === undefined ? `${ TEST_HTTP_API_SERVER }/rooms?game=${ game }` : `${ TEST_HTTP_API_SERVER }/rooms?game=${ game }&search=${ search }`);
     }
 
     async function answer(response: RoomsResponse, search?: string): Promise<void> {
