@@ -290,8 +290,7 @@ module "sc_lambda_sendmessage" {
     SOURCE_HASH_SECRET_PARAMETER = aws_ssm_parameter.source_hash_secret.name
     SOURCE_HASH_SECRET_VERSION   = tostring(local.source_hash_secret_version)
   })
-  # The lambda reads the parameter when it loads: its role has its policies before it deploys, not only the role
-  depends_on = [aws_lambda_invocation.migrate, module.sc_role_lambda_sendmessage]
+  depends_on = [aws_lambda_invocation.migrate]
 }
 
 # Serves every route of the HTTP API (sc_api_gateway_http_routes), today the list of the open rooms. Its memory is the

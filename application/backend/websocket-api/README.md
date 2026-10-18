@@ -139,7 +139,9 @@ SSM parameter `/sc/<stage>/source-hash-secret`, a `SecureString` of the AWS mana
 with an ephemeral `random_password` and writes it through a write-only argument (`value_wo`), so that neither the
 Terraform plan and state nor the configuration of the lambda hold it. `sendmessage`, the only lambda hashing IPs, gets
 the name of the parameter (`SOURCE_HASH_SECRET_PARAMETER`) and reads the key once, when it loads (a top-level `await` of
-`source.helper`, which the cold start waits for): without it, the lambda fails to load, before any request. Its role,
+`source.helper`, which the cold start waits for): without it, the lambda fails to load, and the request starting it
+fails, as each one starting a new lambda while the key is not read. No deployment checks it: the errors of the init
+show in the logs of `sendmessage`. Its role,
 `sc_lambda_sendmessage_<stage>`, reads that parameter only. The local server and the specs give the key directly, in
 `SOURCE_HASH_SECRET`. Raising `source_hash_secret_version` (`infrastructure/main.tf`) writes a new key: only the counts
 of a minute start again. `sendmessage` gets the version too (`SOURCE_HASH_SECRET_VERSION`), so that its configuration
