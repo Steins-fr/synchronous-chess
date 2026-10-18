@@ -318,10 +318,32 @@ data "aws_iam_policy_document" "api" {
     }
   }
 
-  # The APIs and stages of the stage, by their Environment tag (their IDs are random)
+  # The tags a stage is created with: API Gateway also authorizes them as apigateway:TagResource, which is no IAM action
+  # (the console and Access Analyzer refuse it), so that only apigateway:* matches it. On the stages of an API of the
+  # stage, tagged with the stage
+  statement {
+    sid       = "ApiStageTags"
+    actions   = ["apigateway:*"]
+    resources = ["${local.apigateway}/apis/*/stages"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Environment"
+      values   = [var.stage]
+    }
+
+    condition {
+      test     = "StringEqualsIfExists"
+      variable = "aws:ResourceTag/Environment"
+      values   = [var.stage]
+    }
+  }
+
+  # The APIs and stages of the stage, by their Environment tag (their IDs are random). apigateway:* for the same
+  # apigateway:TagResource and UntagResource when their tags change
   statement {
     sid       = "Apis"
-    actions   = ["apigateway:GET", "apigateway:PATCH", "apigateway:DELETE"]
+    actions   = ["apigateway:*"]
     resources = ["${local.apigateway}/apis/*"]
 
     condition {
