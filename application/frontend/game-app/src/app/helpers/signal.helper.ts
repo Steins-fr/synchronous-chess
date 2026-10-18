@@ -1,22 +1,4 @@
-import { effect, linkedSignal, Resource, resourceFromSnapshots, ResourceSnapshot, Signal, signal, untracked } from '@angular/core';
-
-/**
- * The value of the source, at once the first one, then once it stopped changing for the delay given: each change
- * restarts the delay. To create in an injection context, like the effect following the source
- * @param delay in milliseconds
- */
-export function debouncedSignal<T>(source: Signal<T>, delay: number): Signal<T> {
-    const debounced = signal<T>(untracked(source));
-
-    effect((onCleanup: (cleanup: () => void) => void) => {
-        const value: T = source();
-        const timeout: ReturnType<typeof setTimeout> = setTimeout(() => debounced.set(value), delay);
-        // The next change, or the destruction of the effect, cancels the value not set yet
-        onCleanup(() => clearTimeout(timeout));
-    });
-
-    return debounced.asReadonly();
-}
+import { linkedSignal, Resource, resourceFromSnapshots, ResourceSnapshot } from '@angular/core';
 
 /**
  * The resource, its previous value kept while it loads a new one, or waits without request (idle): a new search keeps
