@@ -11,7 +11,7 @@ describe('ApiHealthOverlayComponent', () => {
     let fixture: ComponentFixture<ApiHealthOverlayComponent>;
 
     function overlay(): HTMLElement | null {
-        return fixture.nativeElement.querySelector('[role="status"]');
+        return fixture.nativeElement.querySelector('output');
     }
 
     beforeEach(async () => {

@@ -42,7 +42,7 @@ describe('AppComponent', () => {
 
     test('should hold the overlay of the check of the APIs, hidden until a page waits for them', () => {
         expect(fixture.nativeElement.querySelector('app-api-health-overlay')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('[role="status"]')).toBeNull();
+        expect(fixture.nativeElement.querySelector('output')).toBeNull();
     });
 
     test('should render title', () => {

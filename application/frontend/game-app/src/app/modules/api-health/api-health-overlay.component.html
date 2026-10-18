@@ -1,14 +1,15 @@
 @if (state() !== ApiHealthState.IDLE) {
-<div class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4 bg-app-surface text-app-text text-center" role="status">
+<!-- An output: its role is status, read by the screen readers once its text changes. It holds phrasing content only -->
+<output class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4 bg-app-surface text-app-text text-center">
     <mat-spinner [diameter]="48" />
     @if (state() === ApiHealthState.BOOTING) {
-    <p class="m-0 mat-title-medium">Démarrage du serveur…</p>
-    <p class="m-0 max-w-md muted-note">
+    <span class="block mat-title-medium">Démarrage du serveur…</span>
+    <span class="block max-w-md muted-note">
         Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une
         trentaine de secondes.
-    </p>
+    </span>
     } @else {
-    <p class="m-0 mat-title-medium">Connexion au serveur…</p>
+    <span class="block mat-title-medium">Connexion au serveur…</span>
     }
-</div>
+</output>
 }
