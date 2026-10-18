@@ -185,6 +185,13 @@ It is applied locally with an admin profile, and creates:
 3. Run Terraform Apply with that Run ID and the same stage. A production apply waits for an approval again, then checks
    that the plan was made from a commit of `main`.
 
+To destroy a stage, tick `destroy` in steps 1 and 3: the plan removes every resource of the stage, which its summary
+lists, and Terraform Apply applies it the same way. Their runs are named `Terraform Plan <stage> (destroy)` and
+`Terraform Apply <stage> (destroy)`, and an apply refuses a plan whose `destroy` differs from its own.
+- The bootstrap and the empty state of the stage remain: a plan without `destroy` deploys it again.
+- So does the execution log group of its WebSocket API, `/aws/apigateway/<api id>/<Stage>`, which API Gateway creates
+  outside the state and keeps forever: delete it with the admin profile.
+
 A plan is refused once the state has changed since, and its artifacts expire after 7 days: plan again. The artifacts and
 summaries of the runs are public: the state and the plan never hold a secret.
 
@@ -205,6 +212,8 @@ terraform plan -var="stage=<stage>" -var="main_domain_name=steins.fr" -out=tfpla
 terraform apply tfplan
 ```
 
+- To destroy the stage, plan with `-destroy`: `terraform plan -destroy -var="stage=<stage>" ... -out=tfplan`. The lambdas
+  are built first all the same, their archives being read by the plan.
 - Terraform 1.16 is required, from 1.16.4 (the CI runs 1.16.4).
 - `-reconfigure` keeps the state of another stage from being migrated when the stage changes in the same folder.
 - The lock is shared with the CI. Use `terraform force-unlock <ID>` only after a run that died.

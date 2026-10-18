@@ -1,4 +1,6 @@
 name: Terraform Apply
+# Shows a destruction on the approval of the environment, before any step runs
+run-name: Terraform Apply ${{ inputs.stage }}${{ inputs.destroy && ' (destroy)' || '' }}
 
 on:
     workflow_dispatch:
@@ -14,6 +16,11 @@ on:
                 options:
                     - production
                     - staging
+            destroy:
+                description: "Apply a plan of the destruction of the stage (must match the plan run)"
+                required: false
+                type: boolean
+                default: false
 
 permissions:
     id-token: write
@@ -41,14 +48,20 @@ jobs:
                   REPOSITORY: ${{ github.repository }}
                   PLAN_RUN_ID: ${{ inputs.plan_run_id }}
                   STAGE: ${{ inputs.stage }}
+                  DESTROY: ${{ inputs.destroy }}
               run: |
                   [[ "$PLAN_RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::plan_run_id is not the ID of a run"; exit 1; }
                   run=$(gh api "repos/$REPOSITORY/actions/runs/$PLAN_RUN_ID")
-                  jq -e --arg repository "$REPOSITORY" --arg title "Terraform Plan $STAGE" '
+                  # The title of a plan of the stage, of a destruction only when this apply says so: a deployment never
+                  # applies a destruction by a wrong run ID, nor the reverse
+                  title="Terraform Plan $STAGE"
+                  if [[ "$DESTROY" == true ]]; then title+=" (destroy)"; fi
+                  jq -e --arg repository "$REPOSITORY" --arg title "$title" '
                     .path == ".github/workflows/terraform-plan.yml" and .event == "workflow_dispatch"
                     and .conclusion == "success" and .head_repository.full_name == $repository
                     and .display_title == $title' <<<"$run" > /dev/null \
-                    || { echo "::error::Run $PLAN_RUN_ID is not a successful Terraform Plan of $STAGE in this repository"; exit 1; }
+                    || { echo "::error::Run $PLAN_RUN_ID is not a successful run named $title in this repository"; exit 1; }
+                  echo "title=$title" >> "$GITHUB_OUTPUT"
                   sha=$(jq -r .head_sha <<<"$run")
                   if [[ "$STAGE" == production ]]; then
                     # A commit of the branch main, not only of a ref named main: a tag main would pass the name. The
@@ -122,6 +135,7 @@ jobs:
               working-directory: infrastructure
               env:
                   PLAN_RUN_ID: ${{ inputs.plan_run_id }}
+                  PLAN_RUN_TITLE: ${{ steps.plan-run.outputs.title }}
               run: |
                   echo "## Terraform Apply — \`${{ inputs.stage }}\`" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
@@ -129,6 +143,7 @@ jobs:
                   echo "|---|---|" >> $GITHUB_STEP_SUMMARY
                   echo "| Stage | \`${{ inputs.stage }}\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| Plan run ID | \`$PLAN_RUN_ID\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Plan run | \`$PLAN_RUN_TITLE\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| State bucket | \`${{ vars.TF_STATE_BUCKET }}\` |" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "### Plan that will be applied" >> $GITHUB_STEP_SUMMARY
