@@ -1,6 +1,9 @@
 terraform {
   backend "s3" {
     region = "eu-west-1"
+    # A lock object <key>.tflock beside the state while Terraform runs: an apply of the CI and one of a workstation never
+    # write the state at once
+    use_lockfile = true
   }
 }
 
