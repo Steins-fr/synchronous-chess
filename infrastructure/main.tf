@@ -1,6 +1,9 @@
 terraform {
   backend "s3" {
     region = "eu-west-1"
+    # A lock object <key>.tflock beside the state while Terraform runs: an apply of the CI and one of a workstation never
+    # write the state at once
+    use_lockfile = true
   }
 }
 
@@ -85,16 +88,13 @@ module "sc_database_data_api_policy" {
  * API Gateway
  */
 
-module "sc_api_gateway_account" {
-  source = "./modules/aws-api-gateway-account"
-}
-
+# Its stage writes its execution logs with the role of the account of API Gateway, one per account and region, which
+# infrastructure/bootstrap sets
 module "sc_api_gateway" {
   source = "./modules/aws-api-gateway"
 
   api_ws_name = "sc-websocket"
   stage       = var.stage
-  depends_on  = [module.sc_api_gateway_account]
 }
 
 module "sc_api_gateway_domain" {
@@ -109,11 +109,21 @@ module "sc_api_gateway_domain" {
 /**
  * Lambdas
  */
+data "aws_caller_identity" "current" {}
+
+locals {
+  # The most the roles of the lambdas can do, whatever policy is attached to them: created for each stage by
+  # infrastructure/bootstrap, applied before any stage. Built rather than read, which would take iam:GetPolicy from the
+  # deploy role of the stage
+  lambda_permissions_boundary = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/sc-lambda-boundary-${var.stage}"
+}
+
 module "sc_role_lambda_basic" {
-  source   = "./modules/aws-iam-lambda-role"
-  name     = "sc_lambda_basic_${var.stage}"
-  policies = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
-  stage    = var.stage
+  source               = "./modules/aws-iam-lambda-role"
+  name                 = "sc_lambda_basic_${var.stage}"
+  policies             = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
 }
 
 module "sc_api_gateway_iam_policy" {
@@ -131,7 +141,8 @@ module "sc_role_lambda_database" {
     module.sc_database_data_api_policy.arn,
     module.sc_api_gateway_iam_policy.arn
   ]
-  stage = var.stage
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
 }
 
 # sendmessage alone reads the key of the hashes of the IPs: the policies of sc_role_lambda_database, and its parameter
@@ -144,7 +155,8 @@ module "sc_role_lambda_sendmessage" {
     module.sc_api_gateway_iam_policy.arn,
     module.sc_source_hash_secret_policy.arn
   ]
-  stage = var.stage
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
 }
 
 module "sc_role_lambda_migrate" {
@@ -154,7 +166,8 @@ module "sc_role_lambda_migrate" {
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     module.sc_database_data_api_policy.arn
   ]
-  stage = var.stage
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
 }
 
 # The lambda of the HTTP API reaches the database only, no connection of the WebSocket API to push to: the policies of
@@ -166,7 +179,8 @@ module "sc_role_lambda_httpapi" {
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     module.sc_database_data_api_policy.arn
   ]
-  stage = var.stage
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
 }
 
 locals {

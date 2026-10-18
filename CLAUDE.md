@@ -30,7 +30,8 @@ Mono-repo, no root package.json — each package is installed and run from its o
   no dependency nor package.json: each package compiles it through its own tsconfig alias
 - `application/shared/sonar-eslint-rules` — the ESLint rules of the SonarCloud quality profile
   (`sonar-way.json`), used by the ESLint configs of both packages, and the script generating them
-- `infrastructure` — Terraform (AWS), applied by GitHub Actions
+- `infrastructure` — Terraform (AWS): the stages, applied by GitHub Actions (development locally), and
+  `infrastructure/bootstrap`, applied once locally (the GitHub trust, the deploy roles, the boundaries of the lambdas)
 - `documentation` — resources and diagrams
 
 ## Commands

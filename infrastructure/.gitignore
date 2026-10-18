@@ -1,3 +1,4 @@
 .out
 .terraform
 .custom-vars.txt
+tfplan

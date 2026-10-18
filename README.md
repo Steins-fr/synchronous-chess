@@ -142,16 +142,20 @@ the DNS records of the app, of the websocket API, of the HTTP API, and the ones 
 
 #### Terraform init backend configuration
 
-Important: Terraform states are stored in a S3 bucket.
+Important: Terraform states are stored in a S3 bucket, `synchronous-chess-terraform`.
 
 The Terraform backend configuration variables:
 - bucket: S3 bucket where is stored the terraform states;
-- key: Bucket path of the terraform states;
+- key: Bucket path of the terraform states: `<stage>/terraform.tfstate` for each stage, `bootstrap/terraform.tfstate`
+  for `infrastructure/bootstrap`;
 - region: AWS region.
+
+A plan or an apply locks the state with a `<key>.tflock` object beside it (`use_lockfile`): a run of the CI and one of a
+workstation never write the same state at once.
 
 #### Terraform plan vars
 
-- stage: Stage name: `production`, `staging` or `development`;
+- stage: Stage name: `production` or `staging` from the CI, `development` locally;
 - main_domain_name: Domain name principal. As example, 'steins.fr'
 
 The app will be deployed by adding automatically sub-domains, which its environment of the stage targets
@@ -165,6 +169,46 @@ The app will be deployed by adding automatically sub-domains, which its environm
 The lambdas and the app are built before the plan: `npm run build` in `application/backend/websocket-api`, and
 `npm run build -- --configuration=<stage>` in `application/frontend/game-app` (`dist/game-app/browser`).
 
+#### Deployment
+
+**Once per account**, before any stage: [`infrastructure/bootstrap`](infrastructure/bootstrap/README.md).
+
+It is applied locally with an admin profile, and creates:
+- the trust of AWS in GitHub Actions, and the deploy role of each stage;
+- the boundaries of the roles of the lambdas, and the account of API Gateway;
+- then the GitHub environments, their secrets and the repository variables are set from it.
+
+**From the CI**, for `staging` and `production`:
+1. Run Terraform Plan (Actions), from a branch for staging, from `main` for production, with the stage. A production
+   plan waits for the approval of its environment.
+2. Note the Run ID in its summary, and read the plan there.
+3. Run Terraform Apply with that Run ID and the same stage. A production apply waits for an approval again, then checks
+   that the plan was made from a commit of `main`.
+
+A plan is refused once the state has changed since, and its artifacts expire after 7 days: plan again. The artifacts and
+summaries of the runs are public: the state and the plan never hold a secret.
+
+After the first apply of a stage:
+- its WebSocket domain takes a few minutes to answer, the time its API mapping spreads;
+- the next plan replaces the deployment of the WebSocket API once: the routes and integrations read back empty
+  attributes the state did not hold yet, which change the hash of the deployment. Apply it, then a plan shows no change.
+
+**Locally**, for `development`, or any stage with the admin profile:
+
+```bash
+aws sso login --profile admin && export AWS_PROFILE=admin
+(cd application/backend/websocket-api && npm ci && npm run build)
+(cd application/frontend/game-app && npm ci && npm run build -- --configuration=<stage>)
+cd infrastructure
+terraform init -reconfigure -backend-config="bucket=synchronous-chess-terraform" -backend-config="key=<stage>/terraform.tfstate"
+terraform plan -var="stage=<stage>" -var="main_domain_name=steins.fr" -out=tfplan
+terraform apply tfplan
+```
+
+- Terraform 1.16 is required, from 1.16.4 (the CI runs 1.16.4).
+- `-reconfigure` keeps the state of another stage from being migrated when the stage changes in the same folder.
+- The lock is shared with the CI. Use `terraform force-unlock <ID>` only after a run that died.
+
 ## **CI/CD**
 
 GitHub Actions, in `.github/workflows`:
@@ -173,10 +217,13 @@ GitHub Actions, in `.github/workflows`:
 - `application-main.yml`, on `main`: the same without the lint, for the badges;
 - `terraform-plan.yml`, run by hand for a stage: builds the lambdas and the app, plans the infrastructure, and keeps
   the plan with the builds;
-- `terraform-apply.yml`, run by hand with the run of a plan: applies it.
+- `terraform-apply.yml`, run by hand with the run of a plan: checks the plan run, then applies it from its commit.
 
-The Terraform workflows assume an AWS role through OIDC (`secrets.AWS_ROLE_ARN`), and read the bucket of the states in
-`vars.TF_STATE_BUCKET`.
+The Terraform workflows:
+- run in the GitHub environment of their stage: `staging` from any branch, `production` from `main` with an approval;
+- assume the deploy role of that stage through OIDC, from the secret `AWS_ROLE_ARN` of the environment;
+- read the bucket of the states in `vars.TF_STATE_BUCKET` and the domain in `vars.MAIN_DOMAIN_NAME`;
+- pin the Terraform version, which a saved plan is applied with.
 
 ## QA - SonarCloud
 

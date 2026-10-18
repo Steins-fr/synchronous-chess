@@ -201,7 +201,7 @@
   <text x="860" y="318" class="s">execute-api:ManageConnections on the WebSocket API</text>
   <text x="848" y="331" class="h2 sec-t">policy sc-source-hash-secret-{stage}</text>
   <text x="860" y="343" class="s">ssm:GetParameter and kms:Decrypt of its parameter only</text>
-  <text x="848" y="356" class="s">role api_gateway_cloudwatch_global: WebSocket API → logs</text>
+  <text x="848" y="356" class="s">role api_gateway_cloudwatch_global (bootstrap) → logs</text>
 
   <!-- ===================================================================== eu-west-1 -->
   <rect x="300" y="376" width="870" height="886" rx="8" class="region"/>
