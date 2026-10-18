@@ -278,3 +278,50 @@
         }
     ]
 }
+// Deployment role of GitHub Actions (OIDC, secrets.AWS_ROLE_ARN): what the key of the hashes of the IPs adds, for each
+// stage, to grant by hand before its first apply. Terraform writes the parameter /sc/<stage>/source-hash-secret, a
+// SecureString of the AWS managed key aws/ssm (described with kms:DescribeKey of DatabaseSecretKey; Parameter Store
+// encrypts and decrypts it for the callers of its operations), and creates the policy sc-source-hash-secret-<stage>
+// reading it. Where the statements above are scoped by name, the role also needs the role sc_lambda_sendmessage_<stage>
+// of sendmessage (create, tag, PassRole, attach AWSLambdaBasicExecutionRole, sc-database-<stage>,
+// sc-manage-connection-<stage> and sc-source-hash-secret-<stage>), like the roles of the statements above
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "SourceHashSecretParameter",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:PutParameter",
+                "ssm:GetParameter",
+                "ssm:GetParameters",
+                "ssm:DeleteParameter",
+                "ssm:AddTagsToResource",
+                "ssm:RemoveTagsFromResource",
+                "ssm:ListTagsForResource"
+            ],
+            "Resource": "arn:aws:ssm:eu-west-1:404273159415:parameter/sc/*"
+        },
+        {
+            "Sid": "SourceHashSecretParameters",
+            "Effect": "Allow",
+            "Action": "ssm:DescribeParameters",
+            "Resource": "*"
+        },
+        {
+            "Sid": "SourceHashSecretPolicy",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:ListPolicyVersions",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicyVersion",
+                "iam:TagPolicy"
+            ],
+            "Resource": "arn:aws:iam::404273159415:policy/sc-source-hash-secret-*"
+        }
+    ]
+}

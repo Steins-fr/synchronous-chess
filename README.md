@@ -132,6 +132,7 @@ The options of each service, the regions, the network of the database and the ro
  - API Gateway: Manages the Websocket connections and messages (the connectivity of the rooms), and the HTTPS requests of the HTTP API (the list of the rooms), then transmits them to the lambdas;
  - Aurora Serverless v2 (PostgreSQL): Stores the Rooms informations for the API, reached by the lambdas through its Data API;
  - Secrets Manager: Keeps the password of the database, which the Data API reads;
+ - Systems Manager Parameter Store: Keeps the key of the hashes of the IPs of the clients, out of the Terraform state, which the sendmessage lambda reads;
  - Route 53: Manage the DNS records;
  - CloudWatch: Monitors and logs;
  - ACM: Manage the certificates.

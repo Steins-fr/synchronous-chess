@@ -134,6 +134,19 @@ module "sc_role_lambda_database" {
   stage = var.stage
 }
 
+# sendmessage alone reads the key of the hashes of the IPs: the policies of sc_role_lambda_database, and its parameter
+module "sc_role_lambda_sendmessage" {
+  source = "./modules/aws-iam-lambda-role"
+  name   = "sc_lambda_sendmessage_${var.stage}"
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    module.sc_database_data_api_policy.arn,
+    module.sc_api_gateway_iam_policy.arn,
+    module.sc_source_hash_secret_policy.arn
+  ]
+  stage = var.stage
+}
+
 module "sc_role_lambda_migrate" {
   source = "./modules/aws-iam-lambda-role"
   name   = "sc_lambda_migrate_${var.stage}"
@@ -220,10 +233,41 @@ module "sc_lambda_ondisconnect" {
 }
 
 # The key of the hashes of the IPs of the clients (source.helper of the websocket API): without it, the IP of a hash is
-# found by hashing the 2^32 IPv4 addresses in turn
-resource "random_password" "source_hash_secret" {
+# found by hashing the 2^32 IPv4 addresses in turn. An ephemeral value, written to its parameter through a write-only
+# argument: neither the plan, the state nor the configuration of the lambda hold it, sendmessage reads it when it loads.
+# Raise value_wo_version to rotate it: the hashes only key the password attempts of a minute (ROOM_PASSWORD_LOCK_DELAY),
+# which start again
+ephemeral "random_password" "source_hash_secret" {
   length  = 64
   special = false
+}
+
+resource "aws_ssm_parameter" "source_hash_secret" {
+  name = "/sc/${var.stage}/source-hash-secret"
+  # Encrypted by the AWS managed key aws/ssm
+  type             = "SecureString"
+  value_wo         = ephemeral.random_password.source_hash_secret.result
+  value_wo_version = 1
+
+  tags = {
+    Application = "Synchronous chess"
+    Tool        = "Terraform"
+    Environment = var.stage
+  }
+}
+
+# DescribeKey creates the AWS managed key when no SecureString of the account and region used it yet
+data "aws_kms_key" "ssm" {
+  key_id = "alias/aws/ssm"
+}
+
+module "sc_source_hash_secret_policy" {
+  source = "./modules/aws-ssm-parameter-iam-policy"
+
+  name          = "sc-source-hash-secret-${var.stage}"
+  parameter_arn = aws_ssm_parameter.source_hash_secret.arn
+  kms_key_arn   = data.aws_kms_key.ssm.arn
+  stage         = var.stage
 }
 
 module "sc_lambda_sendmessage" {
@@ -231,14 +275,14 @@ module "sc_lambda_sendmessage" {
 
   directory = "websocket-api"
   name      = "sendmessage"
-  role      = module.sc_role_lambda_database.arn
+  role      = module.sc_role_lambda_sendmessage.arn
   stage     = var.stage
   timeout   = local.database_lambda_timeout
   # The passwords of the private rooms are hashed and checked by scrypt (16 MB, CPU bound): 128 MB give it a fraction of a
   # vCPU, a cold start then takes seconds, the attempt counted but never uncounted
   memory_size = 512
   environment = merge(local.database_environment, {
-    SOURCE_HASH_SECRET = random_password.source_hash_secret.result
+    SOURCE_HASH_SECRET_PARAMETER = aws_ssm_parameter.source_hash_secret.name
   })
   depends_on = [aws_lambda_invocation.migrate]
 }
