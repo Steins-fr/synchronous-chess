@@ -114,10 +114,18 @@ data "aws_iam_policy_document" "edge" {
     }
   }
 
+  # The read of the distributions, without tag condition: once deleted a distribution has no tag left, and the provider
+  # waits for its NoSuchDistribution by reading it. Metadata only
+  statement {
+    sid       = "CdnRead"
+    actions   = ["cloudfront:GetDistribution"]
+    resources = ["arn:aws:cloudfront::${var.account_id}:distribution/*"]
+  }
+
   # The distribution of the stage, by its Environment tag (its ID is random)
   statement {
     sid       = "Cdn"
-    actions   = ["cloudfront:GetDistribution", "cloudfront:UpdateDistribution", "cloudfront:DeleteDistribution", "cloudfront:ListTagsForResource", "cloudfront:TagResource", "cloudfront:UntagResource"]
+    actions   = ["cloudfront:UpdateDistribution", "cloudfront:DeleteDistribution", "cloudfront:ListTagsForResource", "cloudfront:TagResource", "cloudfront:UntagResource"]
     resources = ["arn:aws:cloudfront::${var.account_id}:distribution/*"]
 
     condition {
