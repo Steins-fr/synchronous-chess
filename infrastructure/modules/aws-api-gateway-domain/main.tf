@@ -1,5 +1,5 @@
 resource "aws_apigatewayv2_domain_name" "sc_api_gateway_domain" {
-  domain_name = var.api_ws_domain_name
+  domain_name = var.domain_name
 
   domain_name_configuration {
     certificate_arn = var.certificate_arn

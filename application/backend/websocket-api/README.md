@@ -2,9 +2,9 @@
 
 ## Build
 
-`npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`,
-and `migrate/` with the migrations it applies), deployed by Terraform. It refuses to bundle PGlite, the database of the
-local API and the specs.
+`npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`
+of the websocket API, `httpapi.mjs` of the HTTP API, and `migrate/` with the migrations it applies), deployed by
+Terraform. It refuses to bundle PGlite, the database of the local API and the specs.
 
 ## Database
 
@@ -34,15 +34,19 @@ statement sent to it: what the specs on PGlite do not check, the codecs of the D
 
 ## Development server
 
-`npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` (loopback only), and
-restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the websocket
-routes (`$connect`, `sendmessage`, `ping`, `$disconnect`) and the `PostToConnection` endpoint of the management API.
+`npm run serve:local` runs the API locally, without AWS, on `ws://127.0.0.1:3001` and `http://127.0.0.1:3001`
+(loopback only), and restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the
+websocket routes (`$connect`, `sendmessage`, `ping`, `$disconnect`), the `PostToConnection` endpoint of the management
+API, and the HTTP API: any other request runs the `httpapi` lambda, which answers its routes (`GET /rooms`) and not
+found to the others, preflights included (the app sends simple requests). Readable by the game app served on
+`localhost` or `127.0.0.1`, on any port (`Access-Control-Allow-Origin`), its failures too.
 The database is [PGlite](https://pglite.dev), PostgreSQL compiled to WASM, in memory, with the migrations of
 `drizzle/`, and the major version of the cluster: the rooms are lost at each restart.
 
 Then serve the game app against it, from `application/frontend/game-app`: `npm run serve:local`.
 
-The lambdas get the IP of the client, as from API Gateway.
+The websocket lambdas get the IP of the client, as from API Gateway. The events of the HTTP API carry their route key
+and raw query string only.
 
 Emulated limits: 32 KB per message received (one frame of API Gateway, where a browser sends each message
 in a single frame), 128 KB per message posted to a connection, and the connections closed (1001) after
@@ -66,16 +70,27 @@ host reconnects, and the room keeps its name until it expires. Meanwhile, a play
 while the former host connection is still open). The host declares again a player whose connection it restored:
 `playerAdd` of a player already in the room changes nothing.
 
+## Health
+
+`GET /health` of the HTTP API answers `{ "status": "up" }` once the database answers a statement reading nothing
+(`HealthRepository`): a paused cluster resumes meanwhile, 28 seconds at most, the timeout of the lambda, else 500. The
+pages using the APIs wait for it before they show (the health guard of the game app, which asks it again until it
+answers): their requests then reach a database awake, the websocket API sharing it.
+
 ## Open rooms
 
 A page lists the rooms of its game (`game` of `create`: the chess rooms on the chess page, the chat rooms on the chat
-page) with `roomGetAll`, from any connection: the rooms which did not expire, 30 at most, `hasMore` when more exist. The
-full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
+page) over HTTPS, with `GET /rooms?game=<game>&search=<text>` of the HTTP API (`lambdas/httpapi`), without connection:
+the websocket serves the connectivity of the rooms only, a page opens it to create or join one. The rooms which did not
+expire, 30 at most, `hasMore` when more exist (a `RoomsResponse` in JSON). The full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
 joins its room again from the list, the join retried until the room has its place back or its host reconnected.
 
 - Without `search`, the 30 most recent rooms, the last created first. A page asks it again every 15 seconds.
 - With a `search`, the rooms whose name holds it, whatever the case: the names starting with it first, then by name,
   the name equal to the search first. A page asks a search once typed, or on demand, not every 15 seconds.
+- An unknown or missing game, a search longer than 64 characters or holding the NUL character, or a `game` or `search`
+  given more than once: 400 `{ "message": "Payload not valid" }`, API Gateway joining the values of a repeated parameter
+  with commas. The other parameters are ignored. A failure of the database: 500, without its message.
 
 A query reads 31 rooms at most, the last one telling more exist, with the count of their players. A private room is
 listed by `isPrivate`, never the hash of its password. The indexes of the `rooms` table:
@@ -89,8 +104,7 @@ listed by `isPrivate`, never the hash of its password. The indexes of the `rooms
 The list refreshed every 15 seconds keeps the cluster awake while a page shows it.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
-searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones, the list
-fits a message.
+searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, without the name of its host, `join` refuses it

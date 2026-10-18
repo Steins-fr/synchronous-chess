@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, expect, Locator, Page } from '@playwright/test';
+import { Browser, BrowserContext, expect, Locator, Page, WebSocket } from '@playwright/test';
 
 declare global {
     interface Window {
@@ -11,12 +11,24 @@ declare global {
 export class RoomParticipant {
     // The list of a page refreshes every 15 seconds: refreshed on demand, a room is listed at once
     private static readonly LISTING_TIMEOUT: number = 30_000;
+    // The websocket API run locally (environment.local.ts): the dev server of the app opens a socket of its own, to
+    // reload the page
+    private static readonly API_SOCKET: string = 'ws://127.0.0.1:3001';
+
+    /** The URLs of the sockets the page opened to the API */
+    private readonly apiSockets: string[] = [];
 
     private constructor(
         public readonly name: string,
         private readonly context: BrowserContext,
         public readonly page: Page,
-    ) {}
+    ) {
+        page.on('websocket', (webSocket: WebSocket) => {
+            if (webSocket.url().startsWith(RoomParticipant.API_SOCKET)) {
+                this.apiSockets.push(webSocket.url());
+            }
+        });
+    }
 
     public static async open(browser: Browser, name: string): Promise<RoomParticipant> {
         const context: BrowserContext = await browser.newContext();
@@ -108,6 +120,16 @@ export class RoomParticipant {
     /** The names of the rooms listed */
     public async expectListedRooms(roomNames: ReadonlyArray<string>): Promise<void> {
         await expect(this.page.locator('app-open-rooms li .font-bold')).toHaveText([...roomNames]);
+    }
+
+    /** The page opened no socket to the API: the open rooms, searched or not, are listed by the HTTP API */
+    public expectNoApiSocket(): void {
+        expect(this.apiSockets).toEqual([]);
+    }
+
+    /** The page opened a socket to the API: once it created or joined a room */
+    public async expectApiSocket(): Promise<void> {
+        await expect.poll(() => this.apiSockets.length).toBeGreaterThan(0);
     }
 
     /** The participants this one is connected to, itself included, and the players joining */

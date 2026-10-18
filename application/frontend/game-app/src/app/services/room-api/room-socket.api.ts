@@ -1,5 +1,6 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
+import { API_REQUEST_TIMEOUT } from './api-request-timeout';
 import { WEB_SOCKET_SERVER } from './web-socket-server.token';
 import { objectHasValue } from '@app/helpers/object.helper';
 import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
@@ -29,11 +30,6 @@ export class RoomApiError extends Error {}
 @Injectable()
 export class RoomSocketApi implements OnDestroy {
     private static readonly ERROR_REQUEST_TIMEOUT: string = 'The request has timeout. Request id:';
-    /**
-     * How long a request waits for its response, in milliseconds: the lambdas wait for the paused database to resume,
-     * 28 seconds at most, and API Gateway gives up on them after 29
-     */
-    private static readonly REQUEST_TIMEOUT: number = 30_000;
 
     private readonly webSocketService: WebSocketService;
     private destroyRef = new Subject<void>();
@@ -168,7 +164,7 @@ export class RoomSocketApi implements OnDestroy {
                     closeSub.complete();
                     reject(new Error(`${ RoomSocketApi.ERROR_REQUEST_TIMEOUT } ${ id }`));
                     console.error(`${ RoomSocketApi.ERROR_REQUEST_TIMEOUT } ${ id }`);
-                }, RoomSocketApi.REQUEST_TIMEOUT);
+                }, API_REQUEST_TIMEOUT);
 
                 this.getPayloadMessage()
                     .pipe(

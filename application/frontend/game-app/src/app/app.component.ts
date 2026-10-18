@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { RouterModule, RouterOutlet } from '@angular/router';
+import { ApiHealthOverlayComponent } from '@app/modules/api-health/api-health-overlay.component';
 import { ThemeModeEnum } from '@app/services/theme/enums/theme-mode.enum';
 import { ShownTheme, ThemeService } from '@app/services/theme/theme.service';
 import { chatPath, chessPath, homePath } from './app.routes';
@@ -13,7 +14,7 @@ type ThemeButton = {
 
 @Component({
     selector: 'app-root',
-    imports: [RouterOutlet, RouterModule, MatIconButton, MatIcon],
+    imports: [RouterOutlet, RouterModule, MatIconButton, MatIcon, ApiHealthOverlayComponent],
     templateUrl: './app.component.html',
 })
 export class AppComponent {

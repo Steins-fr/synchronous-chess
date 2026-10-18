@@ -1,30 +1,37 @@
-import { Component, computed, DOCUMENT, inject, input, output, signal } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { HttpResourceRef } from '@angular/common/http';
+import { Component, computed, debounced, effect, inject, input, linkedSignal, output, Resource, ResourceSnapshot, Signal, signal, untracked } from '@angular/core';
 import { form, maxLength, schema } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { withPreviousValue } from '@app/helpers/signal.helper';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { openRoomsResource } from '@app/services/room-api/room-http.api';
 import { RoomGame } from '@protocol/room-game.enum';
 import { ROOM_SEARCH_MAX_LENGTH } from '@protocol/room-limits';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
-import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
-import { combineLatest, debounceTime, distinctUntilChanged, exhaustMap, filter, fromEvent, merge, of, skip, Subject, switchMap, take, timer } from 'rxjs';
 
 // The model of the search of the rooms
 type RoomSearch = {
     text: string;
 };
 
-/** The rooms matching a search */
-type RoomsList = RoomsResponse & { search: string };
+/** The rooms matching a search, with the search they answer */
+type RoomsList = {
+    readonly rooms: ReadonlyArray<Readonly<OpenRoom>>;
+    /** More rooms match than the ones listed */
+    readonly hasMore: boolean;
+    readonly search: string;
+};
+
 
 const roomSearchSchema = schema<RoomSearch>((path) => {
     maxLength(path.text, ROOM_SEARCH_MAX_LENGTH, { message: `La recherche fait ${ ROOM_SEARCH_MAX_LENGTH } caractères au plus` });
 });
 
 /**
- * The rooms of a game, searched by a part of their name, through the socket of the page.
+ * The rooms of a game, searched by a part of their name, through the HTTP API: the page opens its socket once a room
+ * is created or joined only.
  * Without search, asked again every 15 seconds while the page is visible, and once it is visible again; a search is
  * asked once typed. Asked again on demand too
  */
@@ -44,75 +51,67 @@ export class OpenRoomsComponent {
     public readonly game = input.required<RoomGame>();
     public readonly joinRoom = output<Readonly<OpenRoom>>();
 
-    /** Undefined until the first list is received */
-    protected readonly rooms = signal<ReadonlyArray<Readonly<OpenRoom>> | undefined>(undefined);
-    /** More rooms match than the ones listed */
-    protected readonly hasMore = signal<boolean>(false);
-    protected readonly failed = signal<boolean>(false);
-
     protected readonly search = signal<Readonly<RoomSearch>>({ text: '' });
     protected readonly searchForm = form(this.search, roomSearchSchema, { name: 'room-search' });
-    /** The search the list shows */
-    protected readonly searched = signal<string>('');
 
-    private readonly roomSocketApi = inject(RoomSocketApi);
-    private readonly document = inject(DOCUMENT);
-    private readonly refreshRequests = new Subject<void>();
+    private readonly pageVisibility = inject(PageVisibilityService);
+
+    /**
+     * The search asked: at once the first one, then once the player stops typing. A search too long is refused by the
+     * API: not asked, the last search asked kept, its list still awaited or refreshed
+     */
+    private readonly query: Signal<string> = linkedSignal<string, string>({
+        // The value of the search typed last, kept until the player stops typing
+        source: debounced(computed(() => this.search().text.trim()), OpenRoomsComponent.SEARCH_DELAY).value,
+        computation: (text: string, previous?: { value: string }) => text.length > ROOM_SEARCH_MAX_LENGTH && previous !== undefined ? previous.value : text,
+    });
+
+    /** The rooms of the game matching the search, asked again by refresh() */
+    private readonly roomsResource: HttpResourceRef<RoomsResponse | undefined> = openRoomsResource(() => ({
+        game: this.game(),
+        search: this.query() === '' ? undefined : this.query(),
+    }));
+
+    /**
+     * The state of the resource, its list with the search it answers: the search asked, whenever the resource has a
+     * value, a new search resetting it while it loads
+     */
+    private readonly listSnapshot: Signal<ResourceSnapshot<RoomsList | undefined>> = computed((): ResourceSnapshot<RoomsList | undefined> => {
+        const snapshot: ResourceSnapshot<RoomsResponse | undefined> = this.roomsResource.snapshot();
+
+        if (snapshot.status === 'error') {
+            return snapshot;
+        }
+
+        return { status: snapshot.status, value: snapshot.value && { ...snapshot.value, search: this.query() } };
+    });
+
+    /** The rooms shown, with their search: the list of a former search kept until the new one is answered, none once the list failed */
+    protected readonly rooms: Resource<RoomsList | undefined> = withPreviousValue({ snapshot: this.listSnapshot });
 
     public constructor() {
-        const text$ = toObservable(computed(() => this.search().text.trim()));
-        // The first list at once, the searches once the player stops typing
-        const search$ = merge(text$.pipe(take(1)), text$.pipe(skip(1), debounceTime(OpenRoomsComponent.SEARCH_DELAY))).pipe(
-            // A search too long is refused by the API: the list keeps the last one
-            filter((text: string) => text.length <= ROOM_SEARCH_MAX_LENGTH),
-            distinctUntilChanged(),
-        );
-        const visible$ = fromEvent(this.document, 'visibilitychange').pipe(filter(() => !this.document.hidden));
+        effect((onCleanup: (cleanup: () => void) => void) => {
+            // Restarted by a change of the game or of the search. A search is a query of its own, not repeated; a page
+            // hidden asks nothing
+            this.game();
+            if (this.query() !== '' || !this.pageVisibility.visible()) {
+                return;
+            }
 
-        combineLatest([toObservable(this.game), search$]).pipe(
-            switchMap(([game, search]: [RoomGame, string]) => merge(
-                search === ''
-                    // The first list even in a hidden page: it is shown once visible
-                    ? merge(timer(0, OpenRoomsComponent.REFRESH_INTERVAL).pipe(filter((tick: number) => tick === 0 || !this.document.hidden)), visible$)
-                    // A search is a query of its own, not repeated
-                    : of(undefined),
-                this.refreshRequests,
-            ).pipe(exhaustMap(() => this.load(game, search)))),
-            takeUntilDestroyed(),
-        ).subscribe((list: RoomsList | undefined) => this.show(list));
+            // Visible again: at once. The first list, and the one of a new search or game, are asked by the resource,
+            // which ignores a refresh meanwhile
+            untracked(() => this.refresh());
+            const timer: ReturnType<typeof setInterval> = setInterval(() => this.refresh(), OpenRoomsComponent.REFRESH_INTERVAL);
+            onCleanup(() => clearInterval(timer));
+        });
     }
 
+    /** Not again while a list is awaited: the resource reloads once loaded only */
     protected refresh(): void {
-        this.refreshRequests.next();
+        this.roomsResource.reload();
     }
 
     protected isFull(room: Readonly<OpenRoom>): boolean {
         return room.playerCount >= room.maxPlayer;
-    }
-
-    /**
-     * The rooms matching the search, undefined once the request failed (logged by the socket). Shown by the subscription
-     * only: switchMap drops the list of a former search, received after the one of the search typed since
-     */
-    private async load(game: RoomGame, search: string): Promise<RoomsList | undefined> {
-        try {
-            const response: RoomsResponse = await this.roomSocketApi.send(RoomApiRequestTypeEnum.ROOM_GET_ALL, { game, search: search === '' ? undefined : search });
-            return { ...response, search };
-        } catch {
-            return undefined;
-        }
-    }
-
-    /** The next refresh may succeed once the list failed */
-    private show(list: RoomsList | undefined): void {
-        if (list === undefined) {
-            this.failed.set(true);
-            return;
-        }
-
-        this.rooms.set(list.rooms);
-        this.hasMore.set(list.hasMore);
-        this.searched.set(list.search);
-        this.failed.set(false);
     }
 }

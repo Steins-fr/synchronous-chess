@@ -8,7 +8,6 @@ import PlayerAddHandler from './handlers/player-add-handler';
 import PlayerGetAllHandler from './handlers/player-get-all-handler';
 import PlayerRemoveHandler from './handlers/player-remove-handler';
 import ReconnectHandler from './handlers/reconnect-handler';
-import RoomGetAllHandler from './handlers/room-get-all-handler';
 import SignalHandler from './handlers/signal-handler';
 import { SocketPacketRequestPayload } from '@protocol/socket-packet-payload.type';
 import { getManagementApiEndpoint } from '@helpers/environment.helper';
@@ -27,7 +26,6 @@ interface MessageHandlers {
     playerAdd: typeof PlayerAddHandler;
     playerRemove: typeof PlayerRemoveHandler;
     reconnect: typeof ReconnectHandler;
-    roomGetAll: typeof RoomGetAllHandler;
 }
 
 const messageHandlers: MessageHandlers = {
@@ -39,7 +37,6 @@ const messageHandlers: MessageHandlers = {
     playerAdd: PlayerAddHandler,
     playerRemove: PlayerRemoveHandler,
     reconnect: ReconnectHandler,
-    roomGetAll: RoomGetAllHandler,
 };
 
 export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {
@@ -53,7 +50,8 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
 
         const payload: SocketPacketRequestPayload = JSON.parse(body).data;
 
-        if (!messageHandlers[payload.type]) {
+        // Its own keys only: an inherited one (constructor, toString, __proto__...) is not a request either
+        if (!Object.hasOwn(messageHandlers, payload.type)) {
             return { statusCode: 401, body: 'Operation not permitted.' };
         }
 

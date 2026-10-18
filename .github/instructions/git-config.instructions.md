@@ -6,7 +6,8 @@ applyTo: '**'
 - Mono-repo structure, the project is organized into multiple packages
   - Main Repository `synchronous-chess`
   - `application/frontend/game-app`: This Angular project;
-  - `application/backend/websocket-api`: The backend WebSocket API project that is used for real-time communication;
+  - `application/backend/websocket-api`: The backend API project: the WebSocket API of the real-time communication
+    of the rooms, and the HTTP API listing them;
 - PR target branch: `main`
 - A branch behind `main` (branch protection requires it up to date before merging): rebase it on
   `origin/main` and push with `git push --force-with-lease`; never merge `main` into it (no

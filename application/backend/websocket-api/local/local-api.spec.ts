@@ -3,6 +3,7 @@ import { request as httpRequest, IncomingMessage } from 'node:http';
 import { connect as netConnect, Socket } from 'node:net';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { WebSocket } from 'ws';
+import { handler as httpApi } from '../lambdas/httpapi/app';
 import { handler as onConnect } from '../lambdas/onconnect/app';
 import { LocalApi, startLocalApi } from './local-api';
 
@@ -11,6 +12,15 @@ vi.mock('../lambdas/onconnect/app', async (importOriginal: () => Promise<typeof 
     const original = await importOriginal();
     return { handler: vi.fn(original.handler) };
 });
+
+// Spied, the original handler kept: a test makes it fail
+vi.mock('../lambdas/httpapi/app', async (importOriginal: () => Promise<typeof import('../lambdas/httpapi/app')>) => {
+    const original = await importOriginal();
+    return { handler: vi.fn(original.handler) };
+});
+
+// The game app served locally (environment.local.ts of the game app)
+const APP_ORIGIN: string = 'http://localhost:4200';
 
 const HANDSHAKE: string = [
     'GET / HTTP/1.1',
@@ -31,6 +41,15 @@ interface Closing {
 interface PostResponse {
     status: number | undefined;
     errorType: string | string[] | undefined;
+}
+
+interface HttpResponse {
+    status: number | undefined;
+    contentType: string | undefined;
+    allowedOrigin: string | undefined;
+    allowedMethods: string | undefined;
+    /** Parsed, undefined without */
+    body: unknown;
 }
 
 function open(api: LocalApi): Promise<WebSocket> {
@@ -101,6 +120,25 @@ function post(api: LocalApi, options: { method?: string; path?: string; headers?
     });
 }
 
+/** A request to the HTTP API, like a page of the game app sends it by default */
+function sendHttp(api: LocalApi, method: string, path: string, headers: Record<string, string> = { Origin: APP_ORIGIN }): Promise<HttpResponse> {
+    return new Promise((resolve: (response: HttpResponse) => void, reject: (error: Error) => void) => {
+        const outgoing = httpRequest({ host: '127.0.0.1', port: api.port, method, path, headers }, (response: IncomingMessage) => {
+            let body = '';
+            response.on('data', (chunk: Buffer) => body += chunk.toString('utf8'));
+            response.on('end', () => resolve({
+                status: response.statusCode,
+                contentType: response.headers['content-type'],
+                allowedOrigin: response.headers['access-control-allow-origin'],
+                allowedMethods: response.headers['access-control-allow-methods'],
+                body: body === '' ? undefined : JSON.parse(body),
+            }));
+        });
+        outgoing.on('error', reject);
+        outgoing.end();
+    });
+}
+
 function managementApi(api: LocalApi): ApiGatewayManagementApiClient {
     return new ApiGatewayManagementApiClient({
         endpoint: `http://127.0.0.1:${api.port}`,
@@ -117,7 +155,7 @@ function routeRuns(routeKey: string): string[] {
         .map((line: string) => line.split(' ')[1].replace(':', ''));
 }
 
-describe('local websocket API', () => {
+describe('local API', () => {
     let api: LocalApi;
     const sockets: WebSocket[] = [];
 
@@ -328,7 +366,7 @@ describe('local websocket API', () => {
 
     describe('open rooms', () => {
         // The game of no other test: the database keeps the rooms of the previous tests
-        test('should list the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
+        test('should list over HTTP the most recent rooms of a game through its index, searched, and let a player join a private one with its password', async () => {
             // Given
             const host = await connected();
             expect(await reply(host, 'create', { roomName: 'chat-listed', maxPlayer: 6, game: 'chat', password: 'secret', playerName: 'alice', token: 'alice-token' }))
@@ -339,17 +377,18 @@ describe('local websocket API', () => {
             const waitingId = await connectionIdOf(waiting);
             waiting.close();
             await vi.waitFor(() => expect(routeRuns('$disconnect')).toContain(waitingId));
-            const visitor = await connected();
 
             // When
-            const rooms = await reply(visitor, 'roomGetAll', { game: 'chat' });
-            const searched = await reply(visitor, 'roomGetAll', { game: 'chat', search: 'Chat-L' });
+            const rooms = await sendHttp(api, 'GET', '/rooms?game=chat');
+            const searched = await sendHttp(api, 'GET', '/rooms?game=chat&search=Chat-L');
 
             // Then
             expect(rooms).toEqual({
-                id: 1,
-                type: 'rooms',
-                data: {
+                status: 200,
+                contentType: 'application/json',
+                allowedOrigin: APP_ORIGIN,
+                allowedMethods: undefined,
+                body: {
                     rooms: [
                         { roomName: 'chat-waiting', hostPlayer: 'carol', playerCount: 1, maxPlayer: 6, isPrivate: false, hostConnected: false },
                         { roomName: 'chat-listed', playerCount: 1, maxPlayer: 6, isPrivate: true, hostConnected: true },
@@ -357,7 +396,11 @@ describe('local websocket API', () => {
                     hasMore: false,
                 },
             });
-            expect(searched).toMatchObject({ data: { rooms: [{ roomName: 'chat-listed' }], hasMore: false } });
+            expect(searched.body).toEqual({ rooms: [expect.objectContaining({ roomName: 'chat-listed' })], hasMore: false });
+            // Never the search of a visitor, like the access logs on AWS
+            expect(vi.mocked(console.log)).toHaveBeenCalledWith('GET /rooms: 200');
+            expect(vi.mocked(console.log).mock.calls.flat().join('\n')).not.toContain('Chat-L');
+            const visitor = await connected();
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chess', playerName: 'bob', password: 'secret', token: 'bob-token' }))
                 .toMatchObject({ type: 'error', data: { message: 'Room of another game' } });
             expect(await reply(visitor, 'join', { roomName: 'chat-listed', game: 'chat', playerName: 'bob', password: 'wrong', token: 'bob-token' }))
@@ -473,6 +516,50 @@ describe('local websocket API', () => {
         test('should give the SDK its exceptions', async () => {
             await expect(managementApi(api).send(new PostToConnectionCommand({ ConnectionId: 'unknown', Data: 'hello' })))
                 .rejects.toMatchObject({ name: 'GoneException' });
+        });
+    });
+
+    describe('HTTP API', () => {
+        test('should tell the API is up once its database answers, readable by the game app', async () => {
+            expect(await sendHttp(api, 'GET', '/health'))
+                .toEqual({ status: 200, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { status: 'up' } });
+        });
+
+        test('should answer a refused request, readable by the game app', async () => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=go'))
+                .toEqual({ status: 400, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { message: 'Payload not valid' } });
+        });
+
+        test.each([
+            ['127.0.0.1', 'http://127.0.0.1:4200'],
+            ['another port', 'http://localhost:4201'],
+        ])('should be readable by the game app served on %s', async (_case: string, origin: string) => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: origin })).toMatchObject({ status: 400, allowedOrigin: origin });
+        });
+
+        test.each([
+            ['a page of another domain', 'https://attacker.test'],
+            ['a page of another protocol', 'https://localhost:4200'],
+        ])('should not be readable by %s', async (_case: string, origin: string) => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: origin })).toMatchObject({ status: 400, allowedOrigin: undefined });
+        });
+
+        test.each<[string, string, string, Record<string, string>]>([
+            ['another method', 'POST', '/rooms?game=chat', { Origin: APP_ORIGIN }],
+            ['a preflight, refused like the ones of PostToConnection', 'OPTIONS', '/rooms?game=chat', { 'Access-Control-Request-Method': 'GET', Origin: APP_ORIGIN }],
+            ['another path', 'GET', '/rooms/chat', { Origin: APP_ORIGIN }],
+        ])('should answer not found to %s, through the lambda', async (_case: string, method: string, path: string, headers: Record<string, string>) => {
+            expect(await sendHttp(api, method, path, headers))
+                .toEqual({ status: 404, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { message: 'Not found' } });
+        });
+
+        test('should answer a server error readable by the game app when the lambda fails', async () => {
+            // Given
+            vi.mocked(httpApi).mockRejectedValueOnce(new Error('The lambda failed'));
+
+            // When / Then
+            expect(await sendHttp(api, 'GET', '/rooms?game=chat'))
+                .toEqual({ status: 500, contentType: undefined, allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: undefined });
         });
     });
 

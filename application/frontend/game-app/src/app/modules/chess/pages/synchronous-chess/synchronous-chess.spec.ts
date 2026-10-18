@@ -4,12 +4,13 @@ import { SynchronousChess } from './synchronous-chess';
 import { SCGameSessionType } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import { ChatMessengerType } from '@app/modules/chat-page/components/chat/chat.component';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
+import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { RoomNetworkMock } from '@testing/room-network.mock';
-import { openRoomsSocketApi } from '@testing/room-socket-api.mock';
+import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { TestHelper } from '@testing/test.helper';
 import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -27,13 +28,15 @@ describe('SynchronousChess', () => {
 
         await TestBed.configureTestingModule({
             imports: [SynchronousChess],
+            // Provided by the config of the app
+            providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }],
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })
-            .overrideProvider(RoomSocketApi, { useValue: openRoomsSocketApi() })
             .compileComponents();
 
         fixture = TestBed.createComponent(SynchronousChess);
+        answerOpenRooms();
         await fixture.whenStable();
     });
 
