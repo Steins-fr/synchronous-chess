@@ -89,7 +89,8 @@ async function loadLambdas(): Promise<Lambdas> {
         AWS_REGION: 'eu-west-3',
         AWS_ACCESS_KEY_ID: 'local',
         AWS_SECRET_ACCESS_KEY: 'local',
-        // The hashes of the IPs are kept by the process only
+        // The hashes of the IPs are kept by the process only: its key is given directly, without the SSM parameter of
+        // sendmessage on AWS
         SOURCE_HASH_SECRET: randomBytes(32).toString('hex'),
     });
 

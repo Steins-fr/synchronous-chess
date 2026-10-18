@@ -127,9 +127,19 @@ still join the room. A participant joining its room again, without leaving its p
 the password.
 
 The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
-connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by `SOURCE_HASH_SECRET` (a
-`random_password` of Terraform), never the IP. The attempts are counted apart from the rooms, in the
-`room_password_attempts` table (`PasswordAttemptRepository` of `RoomPasswordService`, by room and client), deleted with
-their room: a room created again under the name of an expired one starts without the attempts of the former one. The
-row of a room, read by every request, does not grow with the clients trying its password. The clients behind a same IP
-share their count. The lambdas reaching the cluster all read every table: the Data API grants a cluster, not a table.
+connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by a secret, never the IP. The attempts
+are counted apart from the rooms, in the `room_password_attempts` table (`PasswordAttemptRepository` of
+`RoomPasswordService`, by room and client), deleted with their room: a room created again under the name of an expired
+one starts without the attempts of the former one. The row of a room, read by every request, does not grow with the
+clients trying its password. The clients behind a same IP share their count. The lambdas reaching the cluster all read
+every table: the Data API grants a cluster, not a table.
+
+Without the key of the HMAC, the IP of a hash is found by hashing the 2^32 IPv4 addresses in turn. It lives in the SSM
+parameter `/sc/<stage>/source-hash-secret`, a `SecureString` of the AWS managed key `aws/ssm`: Terraform generates it
+with an ephemeral `random_password` and writes it through a write-only argument (`value_wo`), so that neither the
+Terraform plan and state nor the configuration of the lambda hold it. `sendmessage`, the only lambda hashing IPs, gets
+the name of the parameter (`SOURCE_HASH_SECRET_PARAMETER`) and reads the key once, when it loads (a top-level `await` of
+`source.helper`, which the cold start waits for): without it, the lambda fails to load, before any request. Its role,
+`sc_lambda_sendmessage_<stage>`, reads that parameter only. The local server and the specs give the key directly, in
+`SOURCE_HASH_SECRET`. Raising `value_wo_version` (`infrastructure/main.tf`) writes a new key: only the counts of a
+minute start again, and the warm lambdas keep the former key until they stop.

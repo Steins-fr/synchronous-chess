@@ -1,5 +1,12 @@
 import { describe, expect, test, vi } from 'vitest';
-import { getDatabaseName, getDatabaseResourceArn, getDatabaseSecretArn, getManagementApiEndpoint } from './environment.helper';
+import {
+    getDatabaseName,
+    getDatabaseResourceArn,
+    getDatabaseSecretArn,
+    getManagementApiEndpoint,
+    getSourceHashSecret,
+    getSourceHashSecretParameter,
+} from './environment.helper';
 
 describe('environment helper', () => {
     test.each([
@@ -33,6 +40,7 @@ describe('environment helper', () => {
         ['DATABASE_RESOURCE_ARN', getDatabaseResourceArn, 'the ARN of the Aurora cluster'],
         ['DATABASE_SECRET_ARN', getDatabaseSecretArn, 'the ARN of the secret of the Aurora cluster'],
         ['DATABASE_NAME', getDatabaseName, 'the database of the Aurora cluster'],
+        ['SOURCE_HASH_SECRET_PARAMETER', getSourceHashSecretParameter, 'the SSM parameter of the key of the hashes of the IPs'],
     ])('should fail at once without %s in the environment', (variable: string, setting: () => string, purpose: string) => {
         // Given
         vi.stubEnv(variable, undefined);
@@ -53,5 +61,23 @@ describe('environment helper', () => {
             'arn:aws:secretsmanager:eu-west-1:123456789012:secret:sc-dev',
             'synchronous_chess',
         ]);
+    });
+
+    test('should give the parameter of the key of the hashes of the IPs of the environment', () => {
+        // Given
+        vi.stubEnv('SOURCE_HASH_SECRET_PARAMETER', '/sc/dev/source-hash-secret');
+
+        // When / Then
+        expect(getSourceHashSecretParameter()).toEqual('/sc/dev/source-hash-secret');
+    });
+
+    test('should give the key of the hashes of the IPs of the environment, only when set', () => {
+        // Given: the key of the environment running the specs
+        const key: string | undefined = getSourceHashSecret();
+        vi.stubEnv('SOURCE_HASH_SECRET', '');
+
+        // When / Then
+        expect(key).toEqual('source-secret');
+        expect(getSourceHashSecret()).toBeUndefined();
     });
 });

@@ -4,7 +4,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     test: {
         environment: 'node',
-        // Read by the hashes of the IPs of the clients (source.helper)
+        // The key of the hashes of the IPs of the clients (source.helper), given directly: on AWS, sendmessage reads it
+        // from its SSM parameter
         env: {
             SOURCE_HASH_SECRET: 'source-secret',
         },
