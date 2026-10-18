@@ -85,8 +85,9 @@ describe('sendmessage lambda', () => {
         expect(await handler(event)).toEqual({ statusCode: 401, body: 'Unauthorized request.' });
     });
 
-    // roomGetAll: the rooms are listed by the HTTP API, the websocket serves the connectivity of the rooms only
-    test.each(['unknown', 'roomGetAll'])('should refuse the request %s', async (type: string) => {
+    // roomGetAll: the rooms are listed by the HTTP API, the websocket serves the connectivity of the rooms only. The
+    // others are inherited keys of an object
+    test.each(['unknown', 'roomGetAll', 'constructor', 'toString', 'hasOwnProperty', '__proto__'])('should refuse the request %s', async (type: string) => {
         expect(await handler(anEvent(GUEST_CONNECTION, body(type)))).toEqual({ statusCode: 401, body: 'Operation not permitted.' });
     });
 

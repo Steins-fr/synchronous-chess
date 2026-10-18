@@ -50,7 +50,8 @@ export const handler = async function (event: APIGatewayProxyEvent): Promise<Res
 
         const payload: SocketPacketRequestPayload = JSON.parse(body).data;
 
-        if (!messageHandlers[payload.type]) {
+        // Its own keys only: an inherited one (constructor, toString, __proto__...) is not a request either
+        if (!Object.hasOwn(messageHandlers, payload.type)) {
             return { statusCode: 401, body: 'Operation not permitted.' };
         }
 
