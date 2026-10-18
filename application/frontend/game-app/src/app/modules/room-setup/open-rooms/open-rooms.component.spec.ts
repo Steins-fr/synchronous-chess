@@ -235,6 +235,85 @@ describe('OpenRoomsComponent', () => {
         expect(fixture.nativeElement.querySelector('mat-error').textContent.trim()).toEqual('La recherche fait 64 caractères au plus');
     });
 
+    test('should still show the list awaited once a too long search is typed', async () => {
+        // Given
+        await createComponent();
+
+        // When
+        await typeSearch('s'.repeat(65));
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [publicRoom], hasMore: false });
+
+        // Then
+        expect(rows()).toHaveLength(1);
+    });
+
+    test('should still tell the rooms could not be loaded once a too long search is typed', async () => {
+        // Given
+        await createComponent();
+        await fail();
+
+        // When
+        await typeSearch('s'.repeat(65));
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then
+        expect(pendingRequests()).toEqual([]);
+        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
+    });
+
+    test('should refresh the list of the last search asked while a too long search is typed', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
+        await typeSearch('s'.repeat(65));
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // When the time of a refresh passes
+        await render(OpenRoomsComponent.REFRESH_INTERVAL);
+        await answer({ rooms: [publicRoom, privateRoom], hasMore: false });
+
+        // Then
+        expect(rows()).toHaveLength(2);
+
+        // When
+        refreshButton().click();
+        await render();
+
+        // Then
+        await answer({ rooms: [publicRoom], hasMore: false });
+        expect(rows()).toHaveLength(1);
+
+        // When the player types the last search asked again
+        await typeSearch('');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then it is not asked again
+        expect(pendingRequests()).toEqual([]);
+    });
+
+    test('should show the search of the list shown, while the list of another search is awaited', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [publicRoom], hasMore: false });
+        await typeSearch('bob');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [], hasMore: false }, 'bob');
+
+        // When
+        await typeSearch('alice');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then
+        expect(text()).toContain('Aucune salle ne contient « bob ».');
+
+        // When
+        await answer({ rooms: [], hasMore: false }, 'alice');
+
+        // Then
+        expect(text()).toContain('Aucune salle ne contient « alice ».');
+    });
+
     test('should tell the rooms could not be loaded, until a refresh lists them', async () => {
         // When
         await createComponent();

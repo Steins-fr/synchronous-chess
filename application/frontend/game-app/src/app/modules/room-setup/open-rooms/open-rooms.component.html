@@ -13,10 +13,10 @@
 @if (rooms.hasValue() && rooms.value(); as shown) {
 @if (shown.rooms.length === 0) {
 <p class="muted-note">
-    @if (searched() === '') {
+    @if (shown.search === '') {
     Aucune salle à rejoindre pour le moment : créez la vôtre !
     } @else {
-    Aucune salle ne contient « {{ searched() }} ».
+    Aucune salle ne contient « {{ shown.search }} ».
     }
 </p>
 } @else {
@@ -49,10 +49,10 @@
 </ul>
 @if (shown.hasMore) {
 <p class="muted-note">
-    @if (searched() === '') {
+    @if (shown.search === '') {
     Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.
     } @else {
-    D'autres salles contiennent « {{ searched() }} » : précisez la recherche pour les trouver.
+    D'autres salles contiennent « {{ shown.search }} » : précisez la recherche pour les trouver.
     }
 </p>
 }

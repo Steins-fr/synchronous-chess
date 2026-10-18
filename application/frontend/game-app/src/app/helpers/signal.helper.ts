@@ -19,17 +19,6 @@ export function debouncedSignal<T>(source: Signal<T>, delay: number): Signal<T> 
 }
 
 /**
- * The last value of the source that was not undefined, kept while the source is undefined: undefined until the source
- * gives a value. Keeps the value of a resource while it loads again, or once it failed
- */
-export function lastDefinedSignal<T>(source: () => T | undefined): Signal<T | undefined> {
-    return linkedSignal<T | undefined, T | undefined>({
-        source,
-        computation: (value: T | undefined, previous?: { value: T | undefined }) => value ?? previous?.value,
-    }).asReadonly();
-}
-
-/**
  * The resource, its previous value kept while it loads a new one, or waits without request (idle): a new search keeps
  * the list of the former one until answered. Unlike once it failed: an error has no value
  * @see https://angular.dev/guide/signals/resource#resource-composition-with-snapshots

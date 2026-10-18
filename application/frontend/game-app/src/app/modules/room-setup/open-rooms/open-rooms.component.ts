@@ -1,9 +1,9 @@
 import { HttpResourceRef } from '@angular/common/http';
-import { Component, computed, effect, inject, input, output, Resource, Signal, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, linkedSignal, output, Resource, ResourceSnapshot, Signal, signal, untracked } from '@angular/core';
 import { form, maxLength, schema } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { debouncedSignal, lastDefinedSignal, withPreviousValue } from '@app/helpers/signal.helper';
+import { debouncedSignal, withPreviousValue } from '@app/helpers/signal.helper';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { openRoomsResource } from '@app/services/room-api/room-http.api';
@@ -15,6 +15,9 @@ import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 type RoomSearch = {
     text: string;
 };
+
+/** The rooms matching a search, with the search they answer */
+type RoomsList = RoomsResponse & { search: string };
 
 
 const roomSearchSchema = schema<RoomSearch>((path) => {
@@ -48,25 +51,37 @@ export class OpenRoomsComponent {
 
     private readonly pageVisibility = inject(PageVisibilityService);
 
-    /** The search asked: at once the first one, then once the player stops typing */
-    private readonly query: Signal<string> = debouncedSignal(computed(() => this.search().text.trim()), OpenRoomsComponent.SEARCH_DELAY);
-
-    /** The rooms of the game matching the search, asked again by refresh() */
-    private readonly roomsResource: HttpResourceRef<RoomsResponse | undefined> = openRoomsResource(() => {
-        const search: string = this.query();
-
-        // A search too long is refused by the API: not asked, the list keeps the last one
-        if (search.length > ROOM_SEARCH_MAX_LENGTH) {
-            return undefined;
-        }
-
-        return { game: this.game(), search: search === '' ? undefined : search };
+    /**
+     * The search asked: at once the first one, then once the player stops typing. A search too long is refused by the
+     * API: not asked, the last search asked kept, its list still awaited or refreshed
+     */
+    private readonly query: Signal<string> = linkedSignal<string, string>({
+        source: debouncedSignal(computed(() => this.search().text.trim()), OpenRoomsComponent.SEARCH_DELAY),
+        computation: (text: string, previous?: { value: string }) => text.length > ROOM_SEARCH_MAX_LENGTH && previous !== undefined ? previous.value : text,
     });
 
-    /** The rooms shown: the list of a former search kept until the new one is answered, none once the list failed */
-    protected readonly rooms: Resource<RoomsResponse | undefined> = withPreviousValue(this.roomsResource);
-    /** The search the list shows: the one asked when the list was last received. Undefined until the first one */
-    protected readonly searched: Signal<string | undefined> = lastDefinedSignal(() => this.rooms.status() === 'resolved' ? this.query() : undefined);
+    /** The rooms of the game matching the search, asked again by refresh() */
+    private readonly roomsResource: HttpResourceRef<RoomsResponse | undefined> = openRoomsResource(() => ({
+        game: this.game(),
+        search: this.query() === '' ? undefined : this.query(),
+    }));
+
+    /**
+     * The state of the resource, its list with the search it answers: the search asked, whenever the resource has a
+     * value, a new search resetting it while it loads
+     */
+    private readonly listSnapshot: Signal<ResourceSnapshot<RoomsList | undefined>> = computed((): ResourceSnapshot<RoomsList | undefined> => {
+        const snapshot: ResourceSnapshot<RoomsResponse | undefined> = this.roomsResource.snapshot();
+
+        if (snapshot.status === 'error') {
+            return snapshot;
+        }
+
+        return { status: snapshot.status, value: snapshot.value && { ...snapshot.value, search: this.query() } };
+    });
+
+    /** The rooms shown, with their search: the list of a former search kept until the new one is answered, none once the list failed */
+    protected readonly rooms: Resource<RoomsList | undefined> = withPreviousValue({ snapshot: this.listSnapshot });
 
     public constructor() {
         effect((onCleanup: (cleanup: () => void) => void) => {

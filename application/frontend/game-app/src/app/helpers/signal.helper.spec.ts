@@ -1,7 +1,7 @@
 import { Injector, Resource, ResourceSnapshot, runInInjectionContext, signal, Signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { debouncedSignal, lastDefinedSignal, withPreviousValue } from './signal.helper';
+import { debouncedSignal, withPreviousValue } from './signal.helper';
 
 describe('debouncedSignal', () => {
     const DELAY: number = 300;
@@ -72,26 +72,6 @@ describe('debouncedSignal', () => {
 
         // Then
         expect(debounced()).toEqual('first');
-    });
-});
-
-describe('lastDefinedSignal', () => {
-    test('should be undefined until the source gives a value, then keep its last value while it is undefined', () => {
-        // Given
-        const source: WritableSignal<string | undefined> = signal(undefined);
-        const last: Signal<string | undefined> = lastDefinedSignal(source);
-        const values: (string | undefined)[] = [last()];
-
-        // When
-        source.set('first');
-        values.push(last());
-        source.set(undefined);
-        values.push(last());
-        source.set('second');
-        values.push(last());
-
-        // Then
-        expect(values).toEqual([undefined, 'first', 'first', 'second']);
     });
 });
 

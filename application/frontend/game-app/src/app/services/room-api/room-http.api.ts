@@ -13,19 +13,14 @@ export const HTTP_API_TIMEOUT: number = 30_000;
 
 /**
  * The open rooms of a game, searched by a part of their name, asked again by reload(): a resource of the HTTP API, to
- * create in an injection context. A new request cancels the former one; none waits (idle) without request. HttpParams
- * throws on a search it cannot encode (a lone surrogate): the resource fails
+ * create in an injection context. A new request cancels the former one. HttpParams throws on a search it cannot encode
+ * (a lone surrogate): the resource fails
  */
-export function openRoomsResource(request: () => Readonly<RoomsRequest> | undefined): HttpResourceRef<RoomsResponse | undefined> {
+export function openRoomsResource(request: () => Readonly<RoomsRequest>): HttpResourceRef<RoomsResponse | undefined> {
     const httpApiServer: string = inject(HTTP_API_SERVER);
 
-    return httpResource<RoomsResponse>((): HttpResourceRequest | undefined => {
-        const roomsRequest: Readonly<RoomsRequest> | undefined = request();
-        if (roomsRequest === undefined) {
-            return undefined;
-        }
-
-        const { game, search }: Readonly<RoomsRequest> = roomsRequest;
+    return httpResource<RoomsResponse>((): HttpResourceRequest => {
+        const { game, search }: Readonly<RoomsRequest> = request();
 
         return {
             url: `${ httpApiServer }${ RoomApiHttpRoute.ROOMS }`,
