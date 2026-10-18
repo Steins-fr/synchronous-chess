@@ -283,8 +283,8 @@
   <text x="328" y="938" class="s">sc-http-{stage} · stage $default</text>
 
   <rect x="326" y="944" width="176" height="48" rx="4" class="net-in"/>
-  <text x="334" y="959" class="h2 net-t">GET /rooms → httpapi</text>
-  <text x="334" y="973" class="s">Lambda proxy · payload 2.0</text>
+  <text x="334" y="959" class="h2 net-t">GET /rooms · /health</text>
+  <text x="334" y="973" class="s">→ httpapi · Lambda proxy 2.0</text>
   <text x="334" y="985" class="s">CORS: GET, the app's origin</text>
 
   <rect x="326" y="1000" width="176" height="70" rx="4" class="net-in"/>

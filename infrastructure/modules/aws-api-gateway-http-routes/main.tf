@@ -32,3 +32,12 @@ resource "aws_apigatewayv2_route" "rooms" {
 
   target = "integrations/${aws_apigatewayv2_integration.httpapi.id}"
 }
+
+# Whether the API is up, once its database answers: RoomApiHttpRoute.HEALTH, the guard of the pages of the game app
+# waiting for it
+resource "aws_apigatewayv2_route" "health" {
+  api_id    = var.api_gateway_id
+  route_key = "GET /health"
+
+  target = "integrations/${aws_apigatewayv2_integration.httpapi.id}"
+}
