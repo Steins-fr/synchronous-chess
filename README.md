@@ -188,6 +188,11 @@ It is applied locally with an admin profile, and creates:
 A plan is refused once the state has changed since, and its artifacts expire after 7 days: plan again. The artifacts and
 summaries of the runs are public: the state and the plan never hold a secret.
 
+After the first apply of a stage:
+- its WebSocket domain takes a few minutes to answer, the time its API mapping spreads;
+- the next plan replaces the deployment of the WebSocket API once: the routes and integrations read back empty
+  attributes the state did not hold yet, which change the hash of the deployment. Apply it, then a plan shows no change.
+
 **Locally**, for `development`, or any stage with the admin profile:
 
 ```bash
