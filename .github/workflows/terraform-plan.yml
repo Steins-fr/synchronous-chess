@@ -1,6 +1,6 @@
 name: Terraform Plan
-# Names the stage of the run, which terraform-apply.yml checks before applying its plan
-run-name: Terraform Plan ${{ inputs.stage }}
+# Names the stage of the run, and a destruction, which terraform-apply.yml checks before applying its plan
+run-name: Terraform Plan ${{ inputs.stage }}${{ inputs.destroy && ' (destroy)' || '' }}
 
 on:
     workflow_dispatch:
@@ -13,6 +13,11 @@ on:
                 options:
                     - production
                     - staging
+            destroy:
+                description: "Plan the destruction of every resource of the stage, instead of its deployment"
+                required: false
+                type: boolean
+                default: false
 
 permissions:
     id-token: write
@@ -115,8 +120,12 @@ jobs:
               env:
                   # Through the environment, never pasted into the script
                   TF_VAR_main_domain_name: ${{ vars.MAIN_DOMAIN_NAME }}
+                  DESTROY: ${{ inputs.destroy }}
               run: |
-                  terraform plan \
+                  # A destruction is a plan like another: terraform-apply.yml applies it, once its run is checked
+                  mode=()
+                  if [[ "$DESTROY" == true ]]; then mode=(-destroy); fi
+                  terraform plan "${mode[@]}" \
                     -var="stage=${{ inputs.stage }}" \
                     -lock-timeout=5m \
                     -out=tfplan
@@ -130,12 +139,14 @@ jobs:
               working-directory: infrastructure
               env:
                   MAIN_DOMAIN_NAME: ${{ vars.MAIN_DOMAIN_NAME }}
+                  DESTROY: ${{ inputs.destroy }}
               run: |
                   echo "## Terraform Plan — \`${{ inputs.stage }}\`" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "| Input | Value |" >> $GITHUB_STEP_SUMMARY
                   echo "|---|---|" >> $GITHUB_STEP_SUMMARY
                   echo "| Stage | \`${{ inputs.stage }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Destroy | \`$DESTROY\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| Domain | \`$MAIN_DOMAIN_NAME\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| State bucket | \`${{ vars.TF_STATE_BUCKET }}\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| Run ID | \`${{ github.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
