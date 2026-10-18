@@ -1,5 +1,7 @@
-# Reads one SecureString parameter: Parameter Store decrypts it through KMS with the ARN of the parameter as encryption
-# context, which binds the key to this parameter only
+# Reads one SecureString parameter: Parameter Store decrypts it through KMS, with the ARN of the parameter as encryption
+# context, the only one kms:Decrypt is granted for. The AWS managed key aws/ssm takes no access policy of its own, and
+# lets any principal of the account decrypt through Parameter Store: ssm:GetParameter on the parameter is what limits a
+# role to it
 data "aws_iam_policy_document" "parameter_read" {
   statement {
     effect = "Allow"

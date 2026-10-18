@@ -234,12 +234,17 @@ module "sc_lambda_ondisconnect" {
 
 # The key of the hashes of the IPs of the clients (source.helper of the websocket API): without it, the IP of a hash is
 # found by hashing the 2^32 IPv4 addresses in turn. An ephemeral value, written to its parameter through a write-only
-# argument: neither the plan, the state nor the configuration of the lambda hold it, sendmessage reads it when it loads.
-# Raise value_wo_version to rotate it: the hashes only key the password attempts of a minute (ROOM_PASSWORD_LOCK_DELAY),
-# which start again
+# argument: neither the plan, the state nor the configuration of the lambda hold it, sendmessage reads it when it loads
 ephemeral "random_password" "source_hash_secret" {
   length  = 64
   special = false
+}
+
+locals {
+  # Raise it to rotate the key: the hashes only key the password attempts of a minute (ROOM_PASSWORD_LOCK_DELAY), which
+  # start again. Given to sendmessage too: its configuration changed, the warm lambdas holding the former key are
+  # replaced, rather than counting a client apart from the new ones
+  source_hash_secret_version = 1
 }
 
 resource "aws_ssm_parameter" "source_hash_secret" {
@@ -247,7 +252,7 @@ resource "aws_ssm_parameter" "source_hash_secret" {
   # Encrypted by the AWS managed key aws/ssm
   type             = "SecureString"
   value_wo         = ephemeral.random_password.source_hash_secret.result
-  value_wo_version = 1
+  value_wo_version = local.source_hash_secret_version
 
   tags = {
     Application = "Synchronous chess"
@@ -283,8 +288,10 @@ module "sc_lambda_sendmessage" {
   memory_size = 512
   environment = merge(local.database_environment, {
     SOURCE_HASH_SECRET_PARAMETER = aws_ssm_parameter.source_hash_secret.name
+    SOURCE_HASH_SECRET_VERSION   = tostring(local.source_hash_secret_version)
   })
-  depends_on = [aws_lambda_invocation.migrate]
+  # The lambda reads the parameter when it loads: its role has its policies before it deploys, not only the role
+  depends_on = [aws_lambda_invocation.migrate, module.sc_role_lambda_sendmessage]
 }
 
 # Serves every route of the HTTP API (sc_api_gateway_http_routes), today the list of the open rooms. Its memory is the

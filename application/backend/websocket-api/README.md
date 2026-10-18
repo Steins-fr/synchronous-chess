@@ -134,12 +134,14 @@ one starts without the attempts of the former one. The row of a room, read by ev
 clients trying its password. The clients behind a same IP share their count. The lambdas reaching the cluster all read
 every table: the Data API grants a cluster, not a table.
 
-Without the key of the HMAC, the IP of a hash is found by hashing the 2^32 IPv4 addresses in turn. It lives in the SSM
-parameter `/sc/<stage>/source-hash-secret`, a `SecureString` of the AWS managed key `aws/ssm`: Terraform generates it
+The key of the HMAC keeps the IP of a hash from being found by hashing the 2^32 IPv4 addresses in turn. It lives in the
+SSM parameter `/sc/<stage>/source-hash-secret`, a `SecureString` of the AWS managed key `aws/ssm`: Terraform generates it
 with an ephemeral `random_password` and writes it through a write-only argument (`value_wo`), so that neither the
 Terraform plan and state nor the configuration of the lambda hold it. `sendmessage`, the only lambda hashing IPs, gets
 the name of the parameter (`SOURCE_HASH_SECRET_PARAMETER`) and reads the key once, when it loads (a top-level `await` of
 `source.helper`, which the cold start waits for): without it, the lambda fails to load, before any request. Its role,
 `sc_lambda_sendmessage_<stage>`, reads that parameter only. The local server and the specs give the key directly, in
-`SOURCE_HASH_SECRET`. Raising `value_wo_version` (`infrastructure/main.tf`) writes a new key: only the counts of a
-minute start again, and the warm lambdas keep the former key until they stop.
+`SOURCE_HASH_SECRET`. Raising `source_hash_secret_version` (`infrastructure/main.tf`) writes a new key: only the counts
+of a minute start again. `sendmessage` gets the version too (`SOURCE_HASH_SECRET_VERSION`), so that its configuration
+changes and its warm lambdas, holding the former key, are replaced: a client would otherwise be counted apart by the
+lambdas of each key, and give twice as many passwords.
