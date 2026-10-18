@@ -70,6 +70,13 @@ host reconnects, and the room keeps its name until it expires. Meanwhile, a play
 while the former host connection is still open). The host declares again a player whose connection it restored:
 `playerAdd` of a player already in the room changes nothing.
 
+## Health
+
+`GET /health` of the HTTP API answers `{ "status": "up" }` once the database answers a statement reading nothing
+(`HealthRepository`): a paused cluster resumes meanwhile, 28 seconds at most, the timeout of the lambda, else 500. The
+pages using the APIs wait for it before they show (the health guard of the game app, which asks it again until it
+answers): their requests then reach a database awake, the websocket API sharing it.
+
 ## Open rooms
 
 A page lists the rooms of its game (`game` of `create`: the chess rooms on the chess page, the chat rooms on the chat

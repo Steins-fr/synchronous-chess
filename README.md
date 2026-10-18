@@ -66,6 +66,7 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 
 **httpapi** - Behind the HTTP API, a handler per route, selected by its method and path. Available routes:
  - **`GET /rooms?game=<game>&search=<text>`** - The open rooms of a game, without connection: the most recent first, or the ones whose name holds the search.
+ - **`GET /health`** - The API is up, once its database answers (a paused cluster resumed): the pages of the app wait for it before they show.
 
 
 ### **Frontend**

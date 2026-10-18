@@ -520,6 +520,11 @@ describe('local API', () => {
     });
 
     describe('HTTP API', () => {
+        test('should tell the API is up once its database answers, readable by the game app', async () => {
+            expect(await sendHttp(api, 'GET', '/health'))
+                .toEqual({ status: 200, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { status: 'up' } });
+        });
+
         test('should answer a refused request, readable by the game app', async () => {
             expect(await sendHttp(api, 'GET', '/rooms?game=go'))
                 .toEqual({ status: 400, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { message: 'Payload not valid' } });

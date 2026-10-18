@@ -3,6 +3,7 @@ import ErrorResponse from '@protocol/responses/error-response';
 import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
 import { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { getRoomsHandler } from './handlers/get-rooms-handler';
+import { healthHandler } from './handlers/health-handler';
 
 interface Response {
     statusCode: number;
@@ -25,6 +26,7 @@ const ERROR_SERVER: string = 'Server error.';
  */
 const routeHandlers: ReadonlyMap<string, RouteHandler> = new Map<string, RouteHandler>([
     [`GET ${ RoomApiHttpRoute.ROOMS }`, getRoomsHandler],
+    [`GET ${ RoomApiHttpRoute.HEALTH }`, healthHandler],
 ]);
 
 /** A JSON body. API Gateway adds the CORS headers (cors_configuration of the HTTP API), ignoring the ones of a lambda */

@@ -1,4 +1,5 @@
 import { DatabaseOperationEnum } from '@exceptions/database-exception';
+import HealthRepository from '@repositories/health-repository';
 import RoomRepository from '@repositories/room-repository';
 import { aDatabaseFailure, anHttpEvent, aRoom, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
@@ -37,6 +38,18 @@ describe('httpapi lambda', () => {
                 hasMore: false,
             },
         });
+    });
+
+    test('should answer the API is up once its database answers', async () => {
+        expect(await request('GET /health')).toEqual({ statusCode: 200, headers: JSON_HEADERS, body: { status: 'up' } });
+    });
+
+    test('should answer a server error while the database of the API fails', async () => {
+        // Given
+        vi.spyOn(HealthRepository.prototype, 'ping').mockRejectedValue(aDatabaseFailure(DatabaseOperationEnum.QUERY));
+
+        // When / Then
+        expect(await request('GET /health')).toEqual({ statusCode: 500, headers: JSON_HEADERS, body: { message: 'Server error.' } });
     });
 
     test('should answer a refused request with its message', async () => {
