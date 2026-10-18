@@ -2,6 +2,8 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { ThemeModeEnum } from './services/theme/enums/theme-mode.enum';
 import { ThemeService } from './services/theme/theme.service';
+import { HTTP_API_SERVER } from './services/room-api/http-api-server.token';
+import { TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 
 describe('AppComponent', () => {
@@ -17,6 +19,7 @@ describe('AppComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [AppComponent],
+            providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }],
         }).compileComponents();
 
         fixture = TestBed.createComponent(AppComponent);
@@ -35,6 +38,11 @@ describe('AppComponent', () => {
 
     test('should have as title \'synchronous-chess\'', () => {
         expect(component['title']).toEqual('synchronous-chess');
+    });
+
+    test('should hold the overlay of the check of the APIs, hidden until a page waits for them', () => {
+        expect(fixture.nativeElement.querySelector('app-api-health-overlay')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('[role="status"]')).toBeNull();
     });
 
     test('should render title', () => {
