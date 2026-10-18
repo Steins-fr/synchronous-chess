@@ -1,28 +1,35 @@
 name: Terraform Plan
+# Names the stage of the run, which terraform-apply.yml checks before applying its plan
+run-name: Terraform Plan ${{ inputs.stage }}
 
 on:
     workflow_dispatch:
         inputs:
             stage:
+                # Development is deployed locally (README.md)
                 description: "Deployment stage"
                 required: true
                 type: choice
                 options:
                     - production
                     - staging
-                    - development
-            main_domain_name:
-                description: "Main domain name (e.g. example.com)"
-                required: true
-                type: string
 
 permissions:
     id-token: write
     contents: read
 
+# One run at a time per stage, plan or apply: the next one waits rather than failing on the lock of the state, and a
+# newer dispatch of the stage replaces the one waiting
+concurrency:
+    group: terraform-${{ inputs.stage }}
+    cancel-in-progress: false
+
 jobs:
     build-and-plan:
         runs-on: ubuntu-24.04
+        # The environment of the stage gives the job its role (secret AWS_ROLE_ARN) and the subject its trust checks:
+        # production plans from main only, once its reviewer approves
+        environment: ${{ inputs.stage }}
         steps:
             - name: Checkout
               uses: actions/checkout@v6
@@ -80,6 +87,10 @@ jobs:
             # ── Terraform ──────────────────────────────────────────────────
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v4
+              with:
+                  # The version of terraform-apply.yml and of required_version: a saved plan applies with the Terraform
+                  # it was made with only
+                  terraform_version: 1.16.4
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v6
@@ -101,10 +112,13 @@ jobs:
 
             - name: Terraform Plan
               working-directory: infrastructure
+              env:
+                  # Through the environment, never pasted into the script
+                  TF_VAR_main_domain_name: ${{ vars.MAIN_DOMAIN_NAME }}
               run: |
                   terraform plan \
                     -var="stage=${{ inputs.stage }}" \
-                    -var="main_domain_name=${{ inputs.main_domain_name }}" \
+                    -lock-timeout=5m \
                     -out=tfplan
 
             - name: Generate plan report
@@ -114,13 +128,15 @@ jobs:
             # ── Job Summary ────────────────────────────────────────────────
             - name: Write plan report to job summary
               working-directory: infrastructure
+              env:
+                  MAIN_DOMAIN_NAME: ${{ vars.MAIN_DOMAIN_NAME }}
               run: |
                   echo "## Terraform Plan — \`${{ inputs.stage }}\`" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "| Input | Value |" >> $GITHUB_STEP_SUMMARY
                   echo "|---|---|" >> $GITHUB_STEP_SUMMARY
                   echo "| Stage | \`${{ inputs.stage }}\` |" >> $GITHUB_STEP_SUMMARY
-                  echo "| Domain | \`${{ inputs.main_domain_name }}\` |" >> $GITHUB_STEP_SUMMARY
+                  echo "| Domain | \`$MAIN_DOMAIN_NAME\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| State bucket | \`${{ vars.TF_STATE_BUCKET }}\` |" >> $GITHUB_STEP_SUMMARY
                   echo "| Run ID | \`${{ github.run_id }}\` |" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
@@ -131,7 +147,7 @@ jobs:
 
             # ── Artifacts ──────────────────────────────────────────────────
             - name: Upload Terraform plan artifact
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: terraform-plan-${{ inputs.stage }}-${{ github.run_id }}
                   # The zips of the lambdas the plan was made with: applying a saved plan does not zip them again
@@ -143,14 +159,14 @@ jobs:
                   retention-days: 7
 
             - name: Upload backend dist artifact
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: backend-dist-${{ inputs.stage }}-${{ github.run_id }}
                   path: application/backend/websocket-api/dist/
                   retention-days: 7
 
             - name: Upload frontend dist artifact
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: frontend-dist-${{ inputs.stage }}-${{ github.run_id }}
                   # Where Angular builds the app, and the bucket module of Terraform reads it
