@@ -6,15 +6,20 @@ declare global {
             DATABASE_RESOURCE_ARN?: string;
             DATABASE_SECRET_ARN?: string;
             DATABASE_NAME?: string;
-            /** The key of the hashes of the IPs of the clients (source.helper), kept secret */
+            /**
+             * The key of the hashes of the IPs of the clients (source.helper), given by the local server and the specs
+             * only: on AWS, sendmessage reads it from its parameter, kept out of the configuration of the lambda
+             */
             SOURCE_HASH_SECRET?: string;
+            /** The SSM parameter (SecureString) holding that key, set by infrastructure/main.tf for sendmessage */
+            SOURCE_HASH_SECRET_PARAMETER?: string;
             // Set by the local server only (local/server.ts): API Gateway is reached through its domain otherwise
             MANAGEMENT_API_ENDPOINT?: string;
         }
     }
 }
 
-type RequiredVariable = 'DATABASE_RESOURCE_ARN' | 'DATABASE_SECRET_ARN' | 'DATABASE_NAME' | 'SOURCE_HASH_SECRET';
+type RequiredVariable = 'DATABASE_RESOURCE_ARN' | 'DATABASE_SECRET_ARN' | 'DATABASE_NAME' | 'SOURCE_HASH_SECRET_PARAMETER';
 
 /**
  * A variable a lambda can not run without: missing, the lambda fails as soon as it reads it, rather than once AWS refuses
@@ -46,12 +51,23 @@ export function getDatabaseName(): string {
     return requiredVariable('DATABASE_NAME', 'the database of the Aurora cluster, set by infrastructure/main.tf for the lambdas reading it');
 }
 
+/** The key of the hashes of the IPs of the clients, when the environment gives it: the local server and the specs only */
+export function getSourceHashSecret(): string | undefined {
+    const secret: string | undefined = process.env.SOURCE_HASH_SECRET;
+
+    if (!secret) {
+        return undefined;
+    }
+
+    return secret;
+}
+
 /**
- * The key of the hashes of the IPs of the clients
- * @throws {Error} when the environment does not give it: an IP would be hashed without a secret
+ * The parameter holding the key of the hashes of the IPs of the clients, without the key itself
+ * @throws {Error} when the environment of the lambda does not give it: an IP would be hashed without a secret
  */
-export function getSourceHashSecret(): string {
-    return requiredVariable('SOURCE_HASH_SECRET', 'the IPs of the clients are hashed with a secret key');
+export function getSourceHashSecretParameter(): string {
+    return requiredVariable('SOURCE_HASH_SECRET_PARAMETER', 'the SSM parameter of the key of the hashes of the IPs, set by infrastructure/main.tf for sendmessage');
 }
 
 /**
