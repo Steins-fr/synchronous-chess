@@ -30,11 +30,17 @@ data "aws_iam_policy_document" "lambda_boundary" {
   }
 
   # The secret of the master user, which the Data API reads with the rights of the lambda, on its behalf. Its name holds
-  # no stage (rds!cluster-<uuid>): to scope it to the cluster of the stage once its tags are known (README.md)
+  # no stage (rds!cluster-<uuid>): by the tag RDS sets on it, naming its cluster, which no one can set (an aws: key)
   statement {
     sid       = "DatabaseSecret"
     actions   = ["secretsmanager:GetSecretValue"]
     resources = ["arn:aws:secretsmanager:${local.region}:${local.account_id}:secret:rds!cluster-*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/aws:rds:primaryDBClusterArn"
+      values   = ["arn:aws:rds:${local.region}:${local.account_id}:cluster:sc-database-${each.key}"]
+    }
   }
 
   # Secrets Manager decrypts that secret with aws/secretsmanager, whose key policy grants it through Secrets Manager:

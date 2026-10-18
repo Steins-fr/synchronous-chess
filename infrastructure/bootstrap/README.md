@@ -127,15 +127,14 @@ An `AccessDenied` in the logs of a lambda, rather than in Terraform, means the b
   their access logs through them.
 - **The creation of a custom domain of API Gateway.** It takes no condition key, but needs a certificate of its name,
   and ACM issues the role certificates for the names of its stage only.
-- **The secret of the master user of every cluster.** The names of these secrets hold no stage (`rds!cluster-<uuid>`).
-  - A deploy role can tag every one (`DatabaseSecret` of `modules/stage-deploy-role/deploy-policy.tf`), since RDS creates
-    and tags it with the rights of its caller. It can neither read, untag nor delete it, nor set an `aws:` tag.
-  - A role of a lambda reads every one, through the boundary (`DatabaseSecret` of `lambda-boundary.tf`). Scope it to the
-    cluster of the stage with a tag RDS sets on its secret, if any (`aws secretsmanager describe-secret`, a key starting
-    with `aws:`). Otherwise, deny the secret of the other stage by its ARN.
 - **Roles of the lambdas outside the state.** A deploy role can create roles `sc_lambda_*_<stage>` with any trust,
   outside any state. They still carry the boundary of the stage.
 - **Describe and List calls**, which read metadata only.
+
+The secret of the master user of a cluster holds no stage in its name (`rds!cluster-<uuid>`). RDS tags it with the ARN
+of its cluster (`aws:rds:primaryDBClusterArn`), a key no one can set: the roles of the lambdas read, and the deploy role
+tags, the secret of the cluster of their stage only (`DatabaseSecret` of `lambda-boundary.tf` and of
+`modules/stage-deploy-role/deploy-policy.tf`).
 
 Inherent to deploying staging from any branch: anyone with write access to the repository runs code with the rights
 of staging.

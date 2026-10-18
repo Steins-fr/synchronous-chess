@@ -496,12 +496,18 @@ data "aws_iam_policy_document" "api" {
   }
 
   # RDS creates and tags the secret of the master user with the rights of its caller, and deletes it with the cluster.
-  # Its name holds no stage: this role can tag the secret of any cluster (never with an aws: key), but neither read,
-  # untag nor delete it
+  # Its name holds no stage: a new secret, or the secret of the cluster of the stage, by the tag RDS sets on it, which
+  # no one can set (an aws: key). This role can neither read, untag nor delete it
   statement {
     sid       = "DatabaseSecret"
     actions   = ["secretsmanager:CreateSecret", "secretsmanager:TagResource"]
     resources = ["arn:aws:secretsmanager:${local.region}:${var.account_id}:secret:rds!cluster-*"]
+
+    condition {
+      test     = "StringEqualsIfExists"
+      variable = "aws:ResourceTag/aws:rds:primaryDBClusterArn"
+      values   = ["arn:aws:rds:${local.region}:${var.account_id}:cluster:sc-database-${var.stage}"]
+    }
   }
 }
 
