@@ -85,16 +85,13 @@ module "sc_database_data_api_policy" {
  * API Gateway
  */
 
-module "sc_api_gateway_account" {
-  source = "./modules/aws-api-gateway-account"
-}
-
+# Its stage writes its execution logs with the role of the account of API Gateway, one per account and region, which
+# infrastructure/bootstrap sets
 module "sc_api_gateway" {
   source = "./modules/aws-api-gateway"
 
   api_ws_name = "sc-websocket"
   stage       = var.stage
-  depends_on  = [module.sc_api_gateway_account]
 }
 
 module "sc_api_gateway_domain" {
