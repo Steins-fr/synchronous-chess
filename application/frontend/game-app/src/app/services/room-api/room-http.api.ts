@@ -3,13 +3,8 @@ import { inject } from '@angular/core';
 import RoomsRequest from '@protocol/requests/rooms-request';
 import RoomsResponse from '@protocol/responses/rooms-response';
 import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
+import { API_REQUEST_TIMEOUT } from './api-request-timeout';
 import { HTTP_API_SERVER } from './http-api-server.token';
-
-/**
- * How long a request waits for its response, in milliseconds: the lambda waits for the paused database to resume, 28
- * seconds at most, and API Gateway gives up on it after 29
- */
-export const HTTP_API_TIMEOUT: number = 30_000;
 
 /**
  * The open rooms of a game, searched by a part of their name, asked again by reload(): a resource of the HTTP API, to
@@ -26,7 +21,7 @@ export function openRoomsResource(request: () => Readonly<RoomsRequest>): HttpRe
             url: `${ httpApiServer }${ RoomApiHttpRoute.ROOMS }`,
             // Without search, the most recent rooms: HttpParams would send an undefined search as a text
             params: search === undefined ? { game } : { game, search },
-            timeout: HTTP_API_TIMEOUT,
+            timeout: API_REQUEST_TIMEOUT,
         };
     });
 }

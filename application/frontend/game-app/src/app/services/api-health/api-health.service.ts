@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, Signal, signal } from '@angular/core';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
-import { HTTP_API_TIMEOUT } from '@app/services/room-api/room-http.api';
+import { API_REQUEST_TIMEOUT } from '@app/services/room-api/api-request-timeout';
 import HealthResponse from '@protocol/responses/health-response';
 import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
 import { defer, finalize, map, Observable, retry, share, timer } from 'rxjs';
@@ -33,7 +33,7 @@ export class ApiHealthService {
         // Long to answer: the lambda starts, the paused database resumes
         const booting: ReturnType<typeof setTimeout> = setTimeout(() => this.currentState.set(ApiHealthState.BOOTING), ApiHealthService.BOOTING_DELAY);
 
-        return this.httpClient.get<HealthResponse>(`${ this.httpApiServer }${ RoomApiHttpRoute.HEALTH }`, { timeout: HTTP_API_TIMEOUT }).pipe(
+        return this.httpClient.get<HealthResponse>(`${ this.httpApiServer }${ RoomApiHttpRoute.HEALTH }`, { timeout: API_REQUEST_TIMEOUT }).pipe(
             // Failed, timed out or refused: still booting, asked again
             retry({
                 delay: (): Observable<0> => {

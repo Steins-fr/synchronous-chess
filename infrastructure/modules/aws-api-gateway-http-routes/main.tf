@@ -8,7 +8,7 @@ resource "aws_apigatewayv2_integration" "httpapi" {
   integration_uri        = var.lambda_httpapi_arn
   payload_format_version = "2.0"
   # Over the timeout of the lambda (database_lambda_timeout of main.tf), like the WebSocket API: under the 30 seconds
-  # the app waits for a response
+  # the app waits for a response (API_REQUEST_TIMEOUT of the game app)
   timeout_milliseconds = 29000
 }
 
