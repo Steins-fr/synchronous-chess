@@ -14,3 +14,8 @@ variable "stage" {
   description = "Stage"
   type        = string
 }
+
+variable "permissions_boundary" {
+  description = "ARN of the policy capping the role, sc-lambda-boundary-<stage> of infrastructure/bootstrap"
+  type        = string
+}

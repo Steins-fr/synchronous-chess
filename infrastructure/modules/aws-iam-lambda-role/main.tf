@@ -15,6 +15,9 @@ resource "aws_iam_role" "role" {
   name = var.name
 
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json
+  # The most the role can do, whatever policy is attached to it: the deploy role of the stage, which writes those
+  # policies, creates the role with this boundary only
+  permissions_boundary = var.permissions_boundary
 
   tags = {
     Name        = "Role - ${var.name}"
