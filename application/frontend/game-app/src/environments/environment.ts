@@ -7,4 +7,5 @@ export const environment: EnvironmentInterface = {
     // infrastructure/main.tf)
     webSocketServer: 'wss://sc-ws-production.steins.fr',
     httpApiServer: 'https://sc-api-production.steins.fr',
+    httpApiWithCredentials: false,
 };

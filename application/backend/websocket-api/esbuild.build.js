@@ -8,6 +8,10 @@ const { metafile } = await esbuild.build({
         { out: "sendmessage", in: "./lambdas/sendmessage/app.ts" },
         // The routes of the HTTP API
         { out: "httpapi", in: "./lambdas/httpapi/app.ts" },
+        // A stage restricted to its owner: the login on its HTTP API, the authorizers of its APIs
+        { out: "access", in: "./lambdas/access/app.ts" },
+        { out: "wsauthorizer", in: "./lambdas/wsauthorizer/app.ts" },
+        { out: "httpauthorizer", in: "./lambdas/httpauthorizer/app.ts" },
         // A directory, with the migrations it reads
         { out: "migrate/migrate", in: "./lambdas/migrate/app.ts" },
     ],

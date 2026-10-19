@@ -3,8 +3,9 @@
 ## Build
 
 `npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`
-of the websocket API, `httpapi.mjs` of the HTTP API, and `migrate/` with the migrations it applies), deployed by
-Terraform. It refuses to bundle PGlite, the database of the local API and the specs.
+of the websocket API, `httpapi.mjs` of the HTTP API, `access.mjs`, `wsauthorizer.mjs` and `httpauthorizer.mjs` of
+the access to staging, and `migrate/` with the migrations it applies), deployed by Terraform. It refuses to bundle
+PGlite, the database of the local API and the specs.
 
 ## Database
 
@@ -50,8 +51,9 @@ and raw query string only.
 
 Emulated limits: 32 KB per message received (one frame of API Gateway, where a browser sends each message
 in a single frame), 128 KB per message posted to a connection, and the connections closed (1001) after
-10 minutes without message in either direction, or after 2 hours. Not emulated: the authorization and the
-throttling. The staging environment on AWS remains the reference.
+10 minutes without message in either direction, or after 2 hours. Not emulated: the access restriction of staging (its
+authorizers and its `/auth` routes, which answer not found) and the throttling. The staging environment on AWS remains
+the reference.
 
 The emulation is tested by `local/local-api.spec.ts`, run with the specs of the lambdas. The other specs run on
 PGlite too, a database per spec file emptied before each test (`testing/database.ts`): the conditional writes are
@@ -147,3 +149,35 @@ show in the logs of `sendmessage`. Its role,
 of a minute start again. `sendmessage` gets the version too (`SOURCE_HASH_SECRET_VERSION`), so that its configuration
 changes and its warm lambdas, holding the former key, are replaced: a client would otherwise be counted apart by the
 lambdas of each key, and give twice as many passwords.
+
+## Access to staging
+
+Staging answers its owner only (the root README tells how to sign in): its front, its websocket API and its HTTP API
+check the same signed cookies of CloudFront, which the login sets on the domain of the stage.
+
+- `access` (`lambdas/access`) serves `GET /auth/login` and `GET /auth/callback` of the HTTP API, outside its authorizer:
+  the authorization code flow of the managed login of Cognito, with PKCE (`login-handler`, the state and the verifier in
+  the cookie `__Host-sc-access-login`, of the API host alone, for 10 minutes). The callback refuses (403) a login
+  cancelled, without that cookie or of another state, and a code the token endpoint refuses, then sets the cookies for a
+  week, on the domain (`ACCESS_COOKIE_DOMAIN`). It neither checks nor keeps the tokens of Cognito, which come from its
+  token endpoint over HTTPS, the pool holding its owner only, and never logs the code, the state, the verifier, the
+  tokens nor the cookies. A token endpoint not answering fails the lambda: API Gateway answers 500.
+- The cookies (`access-cookie.helper`) are the ones of CloudFront for a custom policy: the files of the front
+  (`ACCESS_FRONT_URL` followed by `*`) until they expire, signed with SHA-256 (`CloudFront-Hash-Algorithm`), RSA
+  PKCS#1 v1.5, in the base64 of CloudFront. Signed with `node:crypto`: `@aws-sdk/cloudfront-signer` would stay outside
+  the bundles, as every `@aws-sdk` package.
+- `wsauthorizer` authorizes `$connect` (an IAM policy, Deny without the cookies), `httpauthorizer` the routes of the
+  app (a simple response, run at each request, without cache): both check the policy of the cookies against the public
+  key (`ACCESS_PUBLIC_KEY`, SPKI DER in base64), its ID (`ACCESS_KEY_PAIR_ID`), the files of the front and the expiry,
+  as CloudFront does. They read their environment at each request.
+
+The private key lives in the SSM parameter `/sc/staging/access-signing-key`, a `SecureString` its owner writes, outside
+Terraform: `access` gets its name (`ACCESS_SIGNING_KEY_PARAMETER`) and reads it once, when it loads
+(`access-signing-key.helper`, a top-level `await`, as the key of the hashes of the IPs), then checks it is the private
+key of `ACCESS_PUBLIC_KEY`: a key rotated in SSM only, or in the GitHub variable only, fails the cold start rather than
+signing cookies CloudFront refuses. Its role, `sc_lambda_access_staging`, reads that parameter only; the authorizers run
+with the basic role. The ID of the public key changes with the key: the configuration of the lambdas changes, their warm
+instances are replaced.
+
+The specs draw a key pair once per spec file (`testing/access.ts`, never a committed key), and mock SSM and `fetch`.
+

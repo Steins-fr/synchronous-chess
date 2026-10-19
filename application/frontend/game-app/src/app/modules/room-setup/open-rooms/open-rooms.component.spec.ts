@@ -1,6 +1,7 @@
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
+import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
 import { TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
@@ -13,8 +14,13 @@ describe('OpenRoomsComponent', () => {
     let fixture: ComponentFixture<OpenRoomsComponent>;
     let httpTesting: HttpTestingController;
 
-    async function createComponent(game: RoomGame = RoomGame.CHESS): Promise<void> {
-        TestBed.configureTestingModule({ providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }] });
+    async function createComponent(game: RoomGame = RoomGame.CHESS, withCredentials?: boolean): Promise<void> {
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
+                withCredentials === undefined ? [] : { provide: HTTP_API_WITH_CREDENTIALS, useValue: withCredentials },
+            ],
+        });
         httpTesting = TestBed.inject(HttpTestingController);
         fixture = TestBed.createComponent(OpenRoomsComponent);
         fixture.componentRef.setInput('game', game);
@@ -91,8 +97,9 @@ describe('OpenRoomsComponent', () => {
         request.flush({ rooms: [privateRoom, publicRoom], hasMore: false });
         await render();
 
-        // Then
+        // Then: without the cookies of the browser, unless the stage is restricted
         expect(request.request.timeout).toEqual(30_000);
+        expect(request.request.withCredentials).toBe(false);
         expect(rows()).toEqual([
             'lock private 3 / 4 Rejoindre',
             'public public Hôte : alice 1 / 4 Rejoindre',
@@ -102,6 +109,20 @@ describe('OpenRoomsComponent', () => {
         expect(Array.from(fixture.nativeElement.querySelectorAll('li button'), (button: Element) => button.getAttribute('aria-label')))
             .toEqual(['Rejoindre la salle private', 'Rejoindre la salle public']);
         expect(text()).not.toContain('D\'autres salles correspondent');
+    });
+
+    test('should list the rooms with the cookies of the browser on a stage restricted to its owner', async () => {
+        // Given
+        await createComponent(RoomGame.CHESS, true);
+
+        // When
+        const request: TestRequest = listRequest();
+        request.flush({ rooms: [publicRoom], hasMore: false });
+        await render();
+
+        // Then
+        expect(request.request.withCredentials).toBe(true);
+        expect(rows()).toEqual(['public public Hôte : alice 1 / 4 Rejoindre']);
     });
 
     test('should tell the full rooms and the ones waiting for their host, still joinable', async () => {

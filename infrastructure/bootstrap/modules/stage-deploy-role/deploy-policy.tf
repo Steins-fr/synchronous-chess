@@ -17,9 +17,9 @@ locals {
   functions  = "arn:aws:lambda:${local.region}:${var.account_id}:function:sc_*_${var.stage}"
   migrate    = "arn:aws:lambda:${local.region}:${var.account_id}:function:sc_migrate_${var.stage}"
   # The roles of the lambdas (aws-iam-lambda-role), and their policies by their exact names: never sc-*, which would take
-  # in the boundaries and the policies of the deploy roles
+  # in the boundaries and the policies of the deploy roles. A restricted stage adds the one reading its signing key
   lambda_roles    = "${local.iam}:role/sc_lambda_*_${var.stage}"
-  lambda_policies = [for name in ["sc-database", "sc-manage-connection", "sc-source-hash-secret"] : "${local.iam}:policy/${name}-${var.stage}"]
+  lambda_policies = [for name in concat(["sc-database", "sc-manage-connection", "sc-source-hash-secret"], var.access_restricted ? ["sc-access-signing-key"] : []) : "${local.iam}:policy/${name}-${var.stage}"]
   certificates    = [for region in local.regions : "arn:aws:acm:${region}:${var.account_id}:certificate/*"]
   network         = ["arn:aws:ec2:${local.region}:${var.account_id}:vpc/*", "arn:aws:ec2:${local.region}:${var.account_id}:subnet/*"]
   database = [
@@ -33,6 +33,8 @@ locals {
   ]])
   # The AWS managed keys of the parameter, the secret of the cluster and the storage of the cluster
   managed_key_aliases = ["alias/aws/ssm", "alias/aws/secretsmanager", "alias/aws/rds"]
+  # The private key of the access cookies of a restricted stage, written by its owner (infrastructure/main.tf)
+  access_signing_key = "arn:aws:ssm:${local.region}:${var.account_id}:parameter/sc/${var.stage}/access-signing-key"
 }
 
 # The state of the stage, the bucket of its app, its CDN, certificates and records, and the guards of the role
@@ -675,7 +677,7 @@ data "aws_iam_policy_document" "data" {
     }
   }
 
-  # The three policies of the lambdas of the stage
+  # The policies of the lambdas of the stage
   statement {
     sid       = "LambdaPolicies"
     actions   = ["iam:CreatePolicy", "iam:CreatePolicyVersion", "iam:DeletePolicyVersion", "iam:DeletePolicy", "iam:GetPolicy", "iam:GetPolicyVersion", "iam:ListPolicyVersions", "iam:ListPolicyTags", "iam:TagPolicy", "iam:UntagPolicy"]
@@ -696,5 +698,87 @@ data "aws_iam_policy_document" "data" {
       variable = "iam:AWSServiceName"
       values   = ["rds.amazonaws.com", "ops.apigateway.amazonaws.com"]
     }
+  }
+}
+
+# A stage restricted to its owner only (access_restricted): the login of Cognito, the key group of the signed cookies of
+# the distribution, the authorizers of the APIs. Its functions, roles and log groups take the names of the stage
+data "aws_iam_policy_document" "access" {
+  # CreateUserPool has no resource type: by the Environment tag the request carries
+  statement {
+    sid       = "LoginPoolCreate"
+    actions   = ["cognito-idp:CreateUserPool"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:RequestTag/Environment"
+      values   = [var.stage]
+    }
+  }
+
+  # The user pool of the stage, by its Environment tag (its ID is random): its settings, its app client and its domain,
+  # actions on the pool. Not its users, which the owner creates with an admin profile
+  statement {
+    sid = "LoginPool"
+    actions = [
+      "cognito-idp:DescribeUserPool", "cognito-idp:UpdateUserPool", "cognito-idp:DeleteUserPool", "cognito-idp:GetUserPoolMfaConfig",
+      "cognito-idp:SetUserPoolMfaConfig", "cognito-idp:ListTagsForResource", "cognito-idp:TagResource", "cognito-idp:UntagResource",
+      "cognito-idp:CreateUserPoolClient", "cognito-idp:DescribeUserPoolClient", "cognito-idp:UpdateUserPoolClient", "cognito-idp:DeleteUserPoolClient",
+      "cognito-idp:CreateUserPoolDomain", "cognito-idp:UpdateUserPoolDomain", "cognito-idp:DeleteUserPoolDomain",
+    ]
+    resources = ["arn:aws:cognito-idp:${local.region}:${var.account_id}:userpool/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Environment"
+      values   = [var.stage]
+    }
+
+    condition {
+      test     = "StringEqualsIfExists"
+      variable = "aws:RequestTag/Environment"
+      values   = [var.stage]
+    }
+  }
+
+  # DescribeUserPoolDomain takes the prefix of the domain, without resource type. Metadata only
+  statement {
+    sid       = "LoginDomainRead"
+    actions   = ["cognito-idp:DescribeUserPoolDomain"]
+    resources = ["*"]
+  }
+
+  # The public keys and key groups of CloudFront take no tag and have no resource type, and their IDs are random: those
+  # of the account. A key group lets a distribution trusting it check cookies, it opens none
+  statement {
+    sid = "CdnKeys"
+    actions = [
+      "cloudfront:CreatePublicKey", "cloudfront:GetPublicKey", "cloudfront:GetPublicKeyConfig", "cloudfront:UpdatePublicKey", "cloudfront:DeletePublicKey",
+      "cloudfront:CreateKeyGroup", "cloudfront:GetKeyGroup", "cloudfront:GetKeyGroupConfig", "cloudfront:UpdateKeyGroup", "cloudfront:DeleteKeyGroup",
+    ]
+    resources = ["*"]
+  }
+
+  # The authorizers of the APIs of the stage, by the tag of their API (ApiChildren of the api policy)
+  statement {
+    sid       = "ApiAuthorizers"
+    actions   = ["apigateway:GET", "apigateway:POST", "apigateway:PATCH", "apigateway:DELETE"]
+    resources = ["${local.apigateway}/apis/*/authorizers", "${local.apigateway}/apis/*/authorizers/*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceTag/Environment"
+      values   = [var.stage]
+    }
+  }
+
+  # The signing key of the access cookies: Terraform never reads nor writes it, and the Parameters statement of the api
+  # policy (with aws/ssm, which decrypts for the account) would let the role read it
+  statement {
+    sid       = "KeepAccessSigningKey"
+    effect    = "Deny"
+    actions   = ["ssm:*"]
+    resources = [local.access_signing_key]
   }
 }

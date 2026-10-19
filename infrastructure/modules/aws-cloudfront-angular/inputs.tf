@@ -27,6 +27,18 @@ variable "bucket" {
   description = "Bucket of the hosted site"
 }
 
+variable "trusted_key_groups" {
+  type        = list(string)
+  description = "Key groups signing the cookies the distribution requires (signed cookies): none on a public stage"
+  default     = []
+}
+
+variable "access_login_url" {
+  type        = string
+  description = "Login of a stage restricted to its owner, which the page answering its 403 sends to: null on a public stage"
+  default     = null
+}
+
 variable "stage" {
   description = "Stage"
   type        = string

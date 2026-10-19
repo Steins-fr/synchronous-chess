@@ -33,8 +33,10 @@ output "ping_route_id" {
   description = "Ping route ID"
 }
 
+# What deploys the stage again when it changes: the authorizer of a restricted stage last, the hash of a public stage
+# unchanged by it
 output "route_integration_jsonencode" {
-  value = join(",", tolist([
+  value = join(",", concat([
     jsonencode(aws_apigatewayv2_integration.connect),
     jsonencode(aws_apigatewayv2_route.connect),
     jsonencode(aws_apigatewayv2_integration.disconnect),
@@ -43,5 +45,5 @@ output "route_integration_jsonencode" {
     jsonencode(aws_apigatewayv2_route.sendmessage),
     jsonencode(aws_apigatewayv2_integration.ping),
     jsonencode(aws_apigatewayv2_route.ping),
-  ]))
+  ], [for authorizer in aws_apigatewayv2_authorizer.connect : jsonencode(authorizer)]))
 }

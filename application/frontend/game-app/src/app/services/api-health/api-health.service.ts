@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, Signal, signal } from '@angular/core';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
+import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import { API_REQUEST_TIMEOUT } from '@app/services/room-api/api-request-timeout';
 import HealthResponse from '@protocol/responses/health-response';
 import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
@@ -23,6 +24,7 @@ export class ApiHealthService {
 
     private readonly httpClient = inject(HttpClient);
     private readonly httpApiServer: string = inject(HTTP_API_SERVER);
+    private readonly withCredentials: boolean = inject(HTTP_API_WITH_CREDENTIALS);
     private readonly currentState = signal<ApiHealthState>(ApiHealthState.IDLE);
 
     public readonly state: Signal<ApiHealthState> = this.currentState.asReadonly();
@@ -33,7 +35,7 @@ export class ApiHealthService {
         // Long to answer: the lambda starts, the paused database resumes
         const booting: ReturnType<typeof setTimeout> = setTimeout(() => this.currentState.set(ApiHealthState.BOOTING), ApiHealthService.BOOTING_DELAY);
 
-        return this.httpClient.get<HealthResponse>(`${ this.httpApiServer }${ RoomApiHttpRoute.HEALTH }`, { timeout: API_REQUEST_TIMEOUT }).pipe(
+        return this.httpClient.get<HealthResponse>(`${ this.httpApiServer }${ RoomApiHttpRoute.HEALTH }`, { timeout: API_REQUEST_TIMEOUT, withCredentials: this.withCredentials }).pipe(
             // Failed, timed out or refused: still booting, asked again
             retry({
                 delay: (): Observable<0> => {

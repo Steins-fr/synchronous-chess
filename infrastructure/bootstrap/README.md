@@ -12,6 +12,8 @@ change.
     from any branch, production from `main` only.
   - Each reaches the resources of its stage only (`modules/stage-deploy-role/deploy-policy.tf`). Development is
     deployed locally, without a deploy role.
+  - Staging, restricted to its owner (`restricted_stages`), gets a fourth policy, `access`: its login (Cognito), the
+    key group of its signed cookies and the authorizers of its APIs. Production gets none of it.
 - **The boundary of the roles of the lambdas of each stage**: `sc-lambda-boundary-<stage>` (`lambda-boundary.tf`).
   - It is the most a role of a lambda can do, whatever policy is attached to it.
   - A deploy role creates those roles with the boundary of its stage only, and attaches to them only the policies
@@ -52,7 +54,10 @@ aws iam get-role --role-name api_gateway_cloudwatch_global
   delete them. Delete them, or import them locally into the state of the stage:
   - roles, policies, functions and log groups named after the stage, especially a role `sc_lambda_*_<stage>`
     without boundary, which a deploy role could pass to a function;
-  - the bucket `sc-<stage>.<domain>`, the API domains, the parameters `/sc/<stage>/` and the DNS records.
+  - the bucket `sc-<stage>.<domain>`, the API domains, the parameters `/sc/<stage>/` and the DNS records;
+  - on staging, the domain `synchronous-chess-staging` of Cognito and the key group `sc-access-staging` of CloudFront,
+    with its public keys `sc-access-staging-*`. Not the parameter `/sc/staging/access-signing-key`, which its owner
+    writes outside Terraform.
 - **Certificates and distributions without an `Environment` tag.** Tag or delete the ACM certificates (eu-west-1 and
   us-east-1) and the CloudFront distributions that have none. A deploy role tags a new one with its stage, and could
   take an untagged one the same way.
@@ -71,7 +76,7 @@ terraform output deploy_role_arns
 ```
 
 Access Analyzer flags the condition keys an action does not support. Run it on each policy of the deploy roles
-(`sc-github-deploy-<stage>-{edge,api,data}`) and on each boundary:
+(`sc-github-deploy-<stage>-{edge,api,data}`, and `sc-github-deploy-staging-access`) and on each boundary:
 
 ```bash
 arn=arn:aws:iam::404273159415:policy/sc-github-deploy-staging-edge
@@ -99,6 +104,9 @@ gh variable set TF_STATE_BUCKET  --body synchronous-chess-terraform
 gh variable set MAIN_DOMAIN_NAME --body steins.fr
 ```
 
+The variable `ACCESS_PUBLIC_KEY` of the staging environment comes with the key of the access cookies: the root README
+(Access to staging).
+
 A rename or a transfer of the repository switches the subject of its tokens to the immutable format
 (`repo:Steins-fr@36641258/synchronous-chess@206330696:...`). The `sub` conditions of the trusts must then be updated:
 `gh api repos/Steins-fr/synchronous-chess/actions/oidc/customization/sub` shows the prefix.
@@ -112,7 +120,7 @@ A rename or a transfer of the repository switches the subject of its tokens to t
 2. **Widen the narrowest statement** of `modules/stage-deploy-role/deploy-policy.tf`, scoped to the stage where IAM
    allows it. A new `"*"` is said why.
    - A managed policy holds 6,144 characters at most: IAM refuses a larger one at apply. Move statements between
-     `edge`, `api` and `data`.
+     `edge`, `api` and `data` (`access` holds the rights of a restricted stage only).
 3. **Apply bootstrap again**, then plan again: an apply stopped halfway makes its saved plan stale.
 4. **A run killed during an apply leaves its lock** `<stage>/terraform.tfstate.tflock`. Run `terraform force-unlock <ID>`
    locally, and only once no run is active.
@@ -123,6 +131,8 @@ An `AccessDenied` in the logs of a lambda, rather than in Terraform, means the b
 ## What a deploy role still reaches outside its stage
 
 - **The origin access controls of CloudFront.** They take no tag and no condition key.
+- **The public keys and key groups of CloudFront**, for staging. They take no tag and have no resource type. A key
+  group lets a distribution trusting it check signed cookies: it opens none.
 - **The log deliveries and the resource policy of the logs of the account.** The HTTP APIs of every stage set up
   their access logs through them.
 - **The creation of a custom domain of API Gateway.** It takes no condition key, but needs a certificate of its name,
@@ -137,7 +147,8 @@ tags, the secret of the cluster of their stage only (`DatabaseSecret` of `lambda
 `modules/stage-deploy-role/deploy-policy.tf`).
 
 Inherent to deploying staging from any branch: anyone with write access to the repository runs code with the rights
-of staging.
+of staging. The deploy role of staging is denied the key signing its access cookies (`KeepAccessSigningKey`), but such
+code could deploy a lambda of staging with the policy reading it, and sign cookies.
 
 `main` requires no review, so the approval of the production environment is the only human check before production.
 Read the summary of the plan run before approving its apply.

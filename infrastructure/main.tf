@@ -322,6 +322,112 @@ module "sc_lambda_httpapi" {
 }
 
 /**
+ * Access: staging, restricted to its owner. The owner signs in on the managed login of Cognito through the access lambda
+ * (/auth/* of the HTTP API), which sets the signed cookies of CloudFront on the domain: the distribution serves the front
+ * with them only, and the authorizers of the two APIs check the same ones. The other stages stay public
+ */
+locals {
+  access_restricted            = var.stage == "staging"
+  access_front_url             = "https://${local.front_domain_name}/"
+  access_callback_url          = "https://${local.api_http_domain_name}/auth/callback"
+  access_signing_key_parameter = "/sc/${var.stage}/access-signing-key"
+  # What the authorizers check the cookies with: the public key in SPKI DER, its PEM without its armor nor its line
+  # breaks, on one line in the environment of a lambda
+  access_environment = {
+    ACCESS_PUBLIC_KEY  = replace(var.access_public_key, "/-----(BEGIN|END) PUBLIC KEY-----|\\s/", "")
+    ACCESS_KEY_PAIR_ID = one(module.sc_access_key_group[*].public_key_id)
+    ACCESS_FRONT_URL   = local.access_front_url
+  }
+}
+
+module "sc_access_login" {
+  source = "./modules/aws-cognito-login"
+  count  = local.access_restricted ? 1 : 0
+
+  name         = "sc-access-${var.stage}"
+  domain       = "synchronous-chess-${var.stage}"
+  callback_url = local.access_callback_url
+  stage        = var.stage
+}
+
+module "sc_access_key_group" {
+  source = "./modules/aws-cloudfront-key-group"
+  count  = local.access_restricted ? 1 : 0
+
+  name       = "sc-access-${var.stage}"
+  public_key = var.access_public_key
+}
+
+# The private key signing the cookies: a SecureString the owner writes with the AWS CLI (README), out of Terraform, which
+# never reads it, so out of the state. Its ARN is built: a data source would put its value in the state
+module "sc_access_signing_key_policy" {
+  source = "./modules/aws-ssm-parameter-iam-policy"
+  count  = local.access_restricted ? 1 : 0
+
+  name          = "sc-access-signing-key-${var.stage}"
+  parameter_arn = "arn:aws:ssm:${local.region}:${data.aws_caller_identity.current.account_id}:parameter${local.access_signing_key_parameter}"
+  kms_key_arn   = data.aws_kms_key.ssm.arn
+  stage         = var.stage
+}
+
+# The access lambda alone reads the signing key
+module "sc_role_lambda_access" {
+  source = "./modules/aws-iam-lambda-role"
+  count  = local.access_restricted ? 1 : 0
+
+  name = "sc_lambda_access_${var.stage}"
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    module.sc_access_signing_key_policy[0].arn
+  ]
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
+}
+
+# The ID of the public key changes with the key: its configuration changed, the warm lambdas holding the former key are
+# replaced
+module "sc_lambda_access" {
+  source = "./modules/aws-lambda-api"
+  count  = local.access_restricted ? 1 : 0
+
+  directory = "websocket-api"
+  name      = "access"
+  role      = module.sc_role_lambda_access[0].arn
+  stage     = var.stage
+  # The token endpoint of Cognito, after the signing key read by a cold start
+  timeout = 10
+  environment = merge(local.access_environment, {
+    ACCESS_SIGNING_KEY_PARAMETER = local.access_signing_key_parameter
+    ACCESS_COOKIE_DOMAIN         = var.main_domain_name
+    ACCESS_LOGIN_URL             = module.sc_access_login[0].url
+    ACCESS_CLIENT_ID             = module.sc_access_login[0].client_id
+    ACCESS_CALLBACK_URL          = local.access_callback_url
+  })
+}
+
+module "sc_lambda_wsauthorizer" {
+  source = "./modules/aws-lambda-api"
+  count  = local.access_restricted ? 1 : 0
+
+  directory   = "websocket-api"
+  name        = "wsauthorizer"
+  role        = module.sc_role_lambda_basic.arn
+  stage       = var.stage
+  environment = local.access_environment
+}
+
+module "sc_lambda_httpauthorizer" {
+  source = "./modules/aws-lambda-api"
+  count  = local.access_restricted ? 1 : 0
+
+  directory   = "websocket-api"
+  name        = "httpauthorizer"
+  role        = module.sc_role_lambda_basic.arn
+  stage       = var.stage
+  environment = local.access_environment
+}
+
+/**
  * API Gateway routes / deployments
  */
 
@@ -336,7 +442,9 @@ module "sc_api_gateway_routes" {
   lambda_disconnect_name    = module.sc_lambda_ondisconnect.name
   lambda_sendmessage_arn    = module.sc_lambda_sendmessage.invoke_arn
   lambda_sendmessage_name   = module.sc_lambda_sendmessage.name
-  stage                     = var.stage
+  # Built from the condition, known at plan, never from an output of the lambda: the count of the authorizer depends on it
+  connect_authorizer = local.access_restricted ? { invoke_arn = module.sc_lambda_wsauthorizer[0].invoke_arn, function_name = module.sc_lambda_wsauthorizer[0].name } : null
+  stage              = var.stage
 }
 
 resource "aws_apigatewayv2_deployment" "deployment" {
@@ -379,7 +487,9 @@ module "sc_api_gateway_http" {
   api_http_name = "sc-http"
   # The app of the stage, and on the development stage the dev server of the game app (npm run serve:dev)
   allow_origins = concat(["https://${local.front_domain_name}"], var.stage == "development" ? ["http://localhost:4200"] : [])
-  stage         = var.stage
+  # The access cookies of a restricted stage
+  allow_credentials = local.access_restricted
+  stage             = var.stage
 }
 
 module "sc_api_gateway_http_routes" {
@@ -389,6 +499,9 @@ module "sc_api_gateway_http_routes" {
   api_gateway_execution_arn = module.sc_api_gateway_http.execution_arn
   lambda_httpapi_arn        = module.sc_lambda_httpapi.invoke_arn
   lambda_httpapi_name       = module.sc_lambda_httpapi.name
+  # From the condition, as the authorizer of the WebSocket API
+  authorizer    = local.access_restricted ? { invoke_arn = module.sc_lambda_httpauthorizer[0].invoke_arn, function_name = module.sc_lambda_httpauthorizer[0].name } : null
+  access_lambda = local.access_restricted ? { invoke_arn = module.sc_lambda_access[0].invoke_arn, function_name = module.sc_lambda_access[0].name } : null
 }
 
 module "sc_api_gateway_http_domain" {
@@ -439,7 +552,10 @@ module "sc_cloudfront_angular" {
   bucket                = module.sc_bucket_angular.bucket
   origin_access_control = aws_cloudfront_origin_access_control.origine_access_control_angular.id
   acm_certificate_arn   = module.sc_certificate_cloudfront.certificate_arn
-  stage                 = var.stage
+  # The signer of the access cookies of a restricted stage, none elsewhere, and the login its 403 sends to
+  trusted_key_groups = module.sc_access_key_group[*].key_group_id
+  access_login_url   = local.access_restricted ? "https://${local.api_http_domain_name}/auth/login" : null
+  stage              = var.stage
 }
 
 module "sc_bucket_angular_policy" {
