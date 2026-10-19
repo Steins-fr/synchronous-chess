@@ -35,9 +35,9 @@ describe('LanguageMenuComponent', () => {
 
         // Then
         expect(menuButton().getAttribute('aria-label')).toBe('Choose the language');
-        expect(items.map((item: HTMLButtonElement) => item.textContent.replace('check', '').trim())).toEqual(['English', 'Français', 'Español', 'Português (Brasil)', 'Português (Portugal)']);
-        expect(items.map((item: HTMLButtonElement) => item.lang)).toEqual([Language.EN, Language.FR, Language.ES, Language.PT_BR, Language.PT_PT]);
-        expect(items.map((item: HTMLButtonElement) => item.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'false', 'false']);
+        expect(items.map((item: HTMLButtonElement) => item.textContent.replace('check', '').trim())).toEqual(['English', 'Français', 'Español', 'Português (Brasil)', 'Português (Portugal)', 'Deutsch']);
+        expect(items.map((item: HTMLButtonElement) => item.lang)).toEqual([Language.EN, Language.FR, Language.ES, Language.PT_BR, Language.PT_PT, Language.DE]);
+        expect(items.map((item: HTMLButtonElement) => item.getAttribute('aria-checked'))).toEqual(['true', 'false', 'false', 'false', 'false', 'false']);
     });
 
     test('should switch to the language picked', async () => {

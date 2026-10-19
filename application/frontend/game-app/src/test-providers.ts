@@ -6,11 +6,12 @@ import { provideTranslocoMissingHandler, TranslocoTestingModule } from '@jsverse
 import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
 import { Language } from '@app/services/language/enums/language.enum';
 import { ThrowingMissingHandler } from '@testing/throwing-missing-handler';
-import en from './i18n/en.json';
-import fr from './i18n/fr.json';
-import es from './i18n/es.json';
-import ptBR from './i18n/pt-BR.json';
-import ptPT from './i18n/pt-PT.json';
+import enTranslation from './i18n/en.json';
+import frTranslation from './i18n/fr.json';
+import esTranslation from './i18n/es.json';
+import ptBRTranslation from './i18n/pt-BR.json';
+import ptPTTranslation from './i18n/pt-PT.json';
+import deTranslation from './i18n/de.json';
 
 const testProviders: (Provider | EnvironmentProviders)[] = [
     provideZonelessChangeDetection(),
@@ -20,11 +21,12 @@ const testProviders: (Provider | EnvironmentProviders)[] = [
     // The specs find the elements by their English text. Every language is loaded, for the specs switching to one
     importProvidersFrom(TranslocoTestingModule.forRoot({
         langs: {
-            [Language.EN]: en,
-            [Language.FR]: fr,
-            [Language.ES]: es,
-            [Language.PT_BR]: ptBR,
-            [Language.PT_PT]: ptPT,
+            [Language.EN]: enTranslation,
+            [Language.FR]: frTranslation,
+            [Language.ES]: esTranslation,
+            [Language.PT_BR]: ptBRTranslation,
+            [Language.PT_PT]: ptPTTranslation,
+            [Language.DE]: deTranslation,
         },
         preloadLangs: true,
         translocoConfig: {
