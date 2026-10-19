@@ -9,4 +9,5 @@ export enum Language {
     RU = 'ru',
     TR = 'tr',
     ID = 'id',
+    PL = 'pl',
 }

@@ -155,7 +155,7 @@ Claude writes the translations of every new or changed key, into every language:
 | English | fr | es | pt-BR | pt-PT | de | ru | tr | id | pl | it |
 |---|---|---|---|---|---|---|---|---|---|---|
 | check | échec | jaque | xeque | xeque | Schach | шах | şah | skak | szach | scacco |
-| checkmate | échec et mat | jaque mate | xeque-mate | xeque-mate | Schachmatt | мат | şah mat | skakmat | mat | scacco matto |
+| checkmate | échec et mat | jaque mate | xeque-mate | xeque-mate | Schachmatt | мат | şah mat | skakmat | szach-mat | scacco matto |
 | stalemate | pat | rey ahogado | afogamento | afogamento | Patt | пат | pat | remis pat | pat | stallo |
 | draw | nul | tablas | empate | empate | Remis | ничья | berabere | remis | remis | patta |
 | castling | roque | enroque | roque | roque | Rochade | рокировка | rok | rokade | roszada | arrocco |

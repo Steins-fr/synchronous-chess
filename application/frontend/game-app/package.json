@@ -17,7 +17,7 @@
         "e2e:fast": "playwright test --grep-invert @slow",
         "e2e:slow": "playwright test --grep @slow",
         "sonar-rules": "node ../../shared/sonar-eslint-rules/generate.mjs",
-        "i18n:extract": "transloco-keys-manager extract --input src/app --output src/i18n --langs en fr es pt-BR pt-PT de ru tr id --unflat --sort --remove-extra-keys"
+        "i18n:extract": "transloco-keys-manager extract --input src/app --output src/i18n --langs en fr es pt-BR pt-PT de ru tr id pl --unflat --sort --remove-extra-keys"
     },
     "private": true,
     "dependencies": {

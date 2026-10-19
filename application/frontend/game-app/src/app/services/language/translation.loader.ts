@@ -14,6 +14,7 @@ const translationFiles: Readonly<Record<Language, () => Promise<{ default: Trans
     [Language.RU]: () => import('../../../i18n/ru.json'),
     [Language.TR]: () => import('../../../i18n/tr.json'),
     [Language.ID]: () => import('../../../i18n/id.json'),
+    [Language.PL]: () => import('../../../i18n/pl.json'),
 };
 
 @Injectable({
