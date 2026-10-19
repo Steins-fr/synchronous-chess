@@ -102,8 +102,8 @@ This is an Angular TypeScript project with the following characteristics:
 - No translated text crosses the network: the API answers with codes (`RoomApiErrorMessage`), and each
   peer builds its texts from the codes of the chain. Keep it that way: every player sees the app in its
   own language
-- The specs run in English (`src/test-providers.ts`, French loaded too for the specs switching the
-  language) and find the elements by their English text; a key missing from the translation throws.
+- The specs run in English (`src/test-providers.ts`, every language loaded for the specs switching to
+  one) and find the elements by their English text; a key missing from the translation throws.
   The extraction reads the specs too: never give `translate()` or `marker()` a literal key that does
   not exist in a spec, it would add it to the files. A spec needing a text of its own sets it with
   `TranslocoService.setTranslationKey()`
@@ -120,8 +120,8 @@ This is an Angular TypeScript project with the following characteristics:
 - Never edit the keys of a file by hand nor reformat it: the CI runs the extraction and fails when it
   changes anything, a new file included
 - Adding a language: its code in `Language`, its name in itself in `LANGUAGE_NAMES`, its loader in
-  `translation.loader.ts`, its code in the `--langs` of `i18n:extract`, then its file, every key
-  translated, and its column in the glossary below
+  `translation.loader.ts`, its translation in `src/test-providers.ts`, its code in the `--langs` of
+  `i18n:extract`, then its file, every key translated, and its column in the glossary below
 
 ### Rules of translation
 
