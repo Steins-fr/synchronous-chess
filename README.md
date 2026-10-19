@@ -6,7 +6,8 @@ This project is an online chess board game. It implements the chess variant call
 
 ## **In progress - demo**
 
-The app is currently in development. It is possible to try it out the testing version at https://sc-staging.steins.fr
+The app is currently in development. Its testing version, https://sc-staging.steins.fr, answers its owner only
+([Access to staging](#access-to-staging)).
 
 **Important: The website is only in French for the moment!**
 
@@ -127,12 +128,13 @@ The options of each service, the regions, the network of the database and the ro
 
 #### Services:
  - S3: Stores the frontend files, and the Terraform states;
- - CloudFront: Serves the frontend from S3 and manage the cache;
- - Lambda: Run the Room API, behind the WebSocket API and the HTTP API;
+ - CloudFront: Serves the frontend from S3 and manage the cache, on staging to the signed cookies of its owner only;
+ - Lambda: Run the Room API, behind the WebSocket API and the HTTP API, and on staging the login of its owner and the authorizers of both APIs;
+ - Cognito: The login of the owner of staging (managed login), the one user of its pool;
  - API Gateway: Manages the Websocket connections and messages (the connectivity of the rooms), and the HTTPS requests of the HTTP API (the list of the rooms), then transmits them to the lambdas;
  - Aurora Serverless v2 (PostgreSQL): Stores the Rooms informations for the API, reached by the lambdas through its Data API;
  - Secrets Manager: Keeps the password of the database, which the Data API reads;
- - Systems Manager Parameter Store: Keeps the key of the hashes of the IPs of the clients, out of the Terraform state, which the sendmessage lambda reads;
+ - Systems Manager Parameter Store: Keeps the key of the hashes of the IPs of the clients, out of the Terraform state, which the sendmessage lambda reads, and on staging the key signing the access cookies, which its owner writes;
  - Route 53: Manage the DNS records;
  - CloudWatch: Monitors and logs;
  - ACM: Manage the certificates.
@@ -157,14 +159,16 @@ workstation never write the same state at once.
 
 - stage: Stage name: `production` or `staging` from the CI, `development` locally;
 - main_domain_name: Domain name principal. As example, 'steins.fr'
+- access_public_key: The public key of the access cookies of staging, `ACCESS_PUBLIC_KEY` of its GitHub environment:
+  required on staging, refused on the other stages, which stay public ([Access to staging](#access-to-staging)).
 
 The app will be deployed by adding automatically sub-domains, which its environment of the stage targets
 (`application/frontend/game-app/src/environments`).
 - frontend: sc-{stage}.{main_domain_name};
 - backend: sc-ws-{stage}.{main_domain_name}, the websocket API;
 - backend: sc-api-{stage}.{main_domain_name}, the HTTP API, a domain of its own: API Gateway does not map a websocket
-  API and an HTTP API to the same domain. Readable by the pages of its stage only (CORS), and by `http://localhost:4200`
-  on the development stage, for `npm run serve:dev` of the game app.
+  API and an HTTP API to the same domain. Readable by the pages of its stage only (CORS), with their cookies on staging
+  (its access cookies), and by `http://localhost:4200` on the development stage, for `npm run serve:dev` of the game app.
 
 The lambdas and the app are built before the plan: `npm run build` in `application/backend/websocket-api`, and
 `npm run build -- --configuration=<stage>` in `application/frontend/game-app` (`dist/game-app/browser`).
@@ -212,11 +216,66 @@ terraform plan -var="stage=<stage>" -var="main_domain_name=steins.fr" -out=tfpla
 terraform apply tfplan
 ```
 
+- A staging plan takes the public key of its access cookies:
+  `export TF_VAR_access_public_key="$(gh variable get ACCESS_PUBLIC_KEY --env staging)"`.
 - To destroy the stage, plan with `-destroy`: `terraform plan -destroy -var="stage=<stage>" ... -out=tfplan`. The lambdas
   are built first all the same, their archives being read by the plan.
 - Terraform 1.16 is required, from 1.16.4 (the CI runs 1.16.4).
 - `-reconfigure` keeps the state of another stage from being migrated when the stage changes in the same folder.
 - The lock is shared with the CI. Use `terraform force-unlock <ID>` only after a run that died.
+
+#### Access to staging
+
+Staging answers its owner only, production stays public. The owner signs in on the managed login of Cognito, then the
+three entry points of the stage check the same signed cookies of CloudFront:
+- the front: CloudFront refuses (403) a request without them (`trusted_key_groups` of its distribution);
+- the WebSocket API: the authorizer of `$connect` (`wsauthorizer`) refuses the handshake, 401 without any cookie, 403
+  without these ones;
+- the HTTP API: its authorizer (`httpauthorizer`) refuses its routes without them (403). `/auth/login` and
+  `/auth/callback` stay open: the `access` lambda runs the login there.
+
+The login is the authorization code flow of Cognito with PKCE, its app client without secret: `/auth/login` sends to the
+managed login, which sends the code back to `/auth/callback`, which exchanges it, then sets the cookies
+(`CloudFront-Policy`, `CloudFront-Signature`, `CloudFront-Key-Pair-Id`, `CloudFront-Hash-Algorithm`) on `steins.fr` for
+7 days, `HttpOnly`. The browser sends them to the front and to both APIs, of the same site, the app sending them to the
+HTTP API (`httpApiWithCredentials` of its staging environment). They also reach the other hosts of `steins.fr`,
+production included, which ignore them. Neither the cookies nor the tokens of Cognito are logged, nor kept.
+
+The cookies are signed with an RSA key of the owner, never in the state, the plan nor the repository:
+- its private key in the SSM parameter `/sc/staging/access-signing-key`, a SecureString outside Terraform, which the
+  `access` lambda alone reads, and the deploy role of staging is denied;
+- its public key in the GitHub variable `ACCESS_PUBLIC_KEY` of the staging environment, which the plan gives to
+  CloudFront and to the authorizers (`access_public_key`).
+
+**Once**, after the bootstrap is applied (it adds the `access` policy of the deploy role of staging), with the admin
+profile, in a temporary folder outside the repository: the private key goes to SSM, the public key straight to GitHub.
+
+```bash
+cd "$(mktemp -d)" && umask 077
+openssl genrsa -out key.pem 2048
+aws ssm put-parameter --region eu-west-1 --name /sc/staging/access-signing-key --type SecureString --value file://key.pem \
+  --tags Key=Application,Value="Synchronous chess" Key=Environment,Value=staging
+openssl rsa -in key.pem -pubout | gh variable set ACCESS_PUBLIC_KEY --env staging
+shred -u key.pem
+```
+
+Then plan and apply staging. Its user pool, `sc-access-staging`, only takes the users an admin creates: create the owner,
+whom Cognito emails a temporary password.
+
+```bash
+pool=$(aws cognito-idp list-user-pools --max-results 60 --query "UserPools[?Name=='sc-access-staging'].Id" --output text)
+aws cognito-idp admin-create-user --user-pool-id "$pool" --username <email> \
+  --user-attributes Name=email,Value=<email> Name=email_verified,Value=true
+```
+
+**On each device**, a phone included: open https://sc-api-staging.steins.fr/auth/login and sign in, which sends to
+https://sc-staging.steins.fr. The first time, with the temporary password, then a new password and an authenticator app,
+whose code is asked at each login. Sign in again once the cookies expired, after 7 days.
+
+**To rotate the key**, which signs every device out: the same commands, with `--overwrite` instead of `--tags`, then plan
+and apply staging. The key of SSM and the variable change together: the `access` lambda refuses to load while they
+differ. A destroyed staging keeps the parameter, outside Terraform, and loses its user pool: create the owner again
+after the next apply.
 
 ## **CI/CD**
 
@@ -231,7 +290,8 @@ GitHub Actions, in `.github/workflows`:
 The Terraform workflows:
 - run in the GitHub environment of their stage: `staging` from any branch, `production` from `main` with an approval;
 - assume the deploy role of that stage through OIDC, from the secret `AWS_ROLE_ARN` of the environment;
-- read the bucket of the states in `vars.TF_STATE_BUCKET` and the domain in `vars.MAIN_DOMAIN_NAME`;
+- read the bucket of the states in `vars.TF_STATE_BUCKET`, the domain in `vars.MAIN_DOMAIN_NAME`, and the public key of
+  the access cookies of staging in `vars.ACCESS_PUBLIC_KEY` of its environment;
 - pin the Terraform version, which a saved plan is applied with.
 
 ## QA - SonarCloud
