@@ -8,4 +8,5 @@ export enum Language {
     DE = 'de',
     RU = 'ru',
     TR = 'tr',
+    ID = 'id',
 }
