@@ -1,13 +1,23 @@
-<nav *transloco="let t; prefix: 'app.nav'" class="flex items-center">
+<nav *transloco="let t; prefix: 'app'" class="flex items-center">
     <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="m-2.5"
-        routerLinkActive="text-app-link-active">{{ t('home') }}</a>
-    <a [routerLink]="[ chessPath ]" class="m-2.5" routerLinkActive="text-app-link-active">{{ t('chess') }}</a>
-    <a [routerLink]="[ chatPath ]" class="m-2.5" routerLinkActive="text-app-link-active">{{ t('chat') }}</a>
-    <button
-        (click)="themeService.toggle()" [attr.aria-label]="themeButton().label | transloco"
-        [title]="themeButton().label | transloco" class="ml-auto" id="theme-button" mat-icon-button type="button">
-        <mat-icon>{{ themeButton().icon }}</mat-icon>
-    </button>
+        routerLinkActive="text-app-link-active">{{ t('nav.home') }}</a>
+    <a [routerLink]="[ chessPath ]" class="m-2.5" routerLinkActive="text-app-link-active">{{ t('nav.chess') }}</a>
+    <a [routerLink]="[ chatPath ]" class="m-2.5" routerLinkActive="text-app-link-active">{{ t('nav.chat') }}</a>
+    <div class="ml-auto flex items-center">
+        <!-- The menu, with the overlay it opens, loads once the app is idle: out of the bundle of its start -->
+        @defer (on idle) {
+        <app-language-menu />
+        } @placeholder {
+        <button [attr.aria-label]="t('language.pick')" [title]="t('language.pick')" mat-icon-button type="button">
+            <mat-icon>translate</mat-icon>
+        </button>
+        }
+        <button
+            (click)="themeService.toggle()" [attr.aria-label]="themeButton().label | transloco"
+            [title]="themeButton().label | transloco" id="theme-button" mat-icon-button type="button">
+            <mat-icon>{{ themeButton().icon }}</mat-icon>
+        </button>
+    </div>
 </nav>
 <div id="layout">
     <router-outlet></router-outlet>

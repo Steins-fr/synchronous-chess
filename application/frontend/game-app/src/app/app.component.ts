@@ -5,6 +5,7 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { ApiHealthOverlayComponent } from '@app/modules/api-health/api-health-overlay.component';
+import { LanguageMenuComponent } from '@app/modules/language-menu/language-menu.component';
 import { ThemeModeEnum } from '@app/services/theme/enums/theme-mode.enum';
 import { ShownTheme, ThemeService } from '@app/services/theme/theme.service';
 import { chatPath, chessPath, homePath } from './app.routes';
@@ -17,7 +18,10 @@ type ThemeButton = {
 
 @Component({
     selector: 'app-root',
-    imports: [RouterOutlet, RouterModule, MatIconButton, MatIcon, ApiHealthOverlayComponent, TranslocoDirective, TranslocoPipe],
+    imports: [
+        RouterOutlet, RouterModule, MatIconButton, MatIcon, ApiHealthOverlayComponent, LanguageMenuComponent, TranslocoDirective,
+        TranslocoPipe,
+    ],
     templateUrl: './app.component.html',
 })
 export class AppComponent {

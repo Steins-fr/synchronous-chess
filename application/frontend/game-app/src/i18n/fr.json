@@ -1,5 +1,8 @@
 {
   "app": {
+    "language": {
+      "pick": "Choisir la langue"
+    },
     "nav": {
       "chat": "Tchat",
       "chess": "Échecs synchrones",

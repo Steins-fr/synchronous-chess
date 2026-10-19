@@ -1,5 +1,8 @@
-import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { TestBed, ComponentFixture, DeferBlockState } from '@angular/core/testing';
+import { Title } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
+import { Language } from './services/language/enums/language.enum';
+import { LanguageService } from './services/language/language.service';
 import { ThemeModeEnum } from './services/theme/enums/theme-mode.enum';
 import { ThemeService } from './services/theme/theme.service';
 import { HTTP_API_SERVER } from './services/room-api/http-api-server.token';
@@ -12,6 +15,16 @@ describe('AppComponent', () => {
 
     function themeButton(): HTMLButtonElement {
         return fixture.nativeElement.querySelector('#theme-button');
+    }
+
+    function navTexts(): string[] {
+        return [...fixture.nativeElement.querySelectorAll('nav a')].map((link: HTMLElement) => link.textContent.trim());
+    }
+
+    // The language menu, loaded once the app is idle: its placeholder before
+    async function loadLanguageMenu(): Promise<void> {
+        const [menu] = await fixture.getDeferBlocks();
+        await menu.render(DeferBlockState.Complete);
     }
 
     beforeEach(async () => {
@@ -30,6 +43,7 @@ describe('AppComponent', () => {
     afterEach(() => {
         localStorage.clear();
         document.documentElement.removeAttribute('data-theme');
+        document.documentElement.removeAttribute('lang');
     });
 
     test('should create the app', () => {
@@ -73,5 +87,36 @@ describe('AppComponent', () => {
         // Then
         expect(TestBed.inject(ThemeService).theme()).toBe(ThemeModeEnum.LIGHT);
         expect(themeButton().getAttribute('aria-label')).toBe('Switch to the dark theme');
+    });
+
+    test('should show a placeholder of the language menu until it loads', async () => {
+        // Then
+        expect(fixture.nativeElement.querySelector('app-language-menu')).toBeNull();
+        expect(fixture.nativeElement.querySelector('nav [aria-label="Choose the language"]')).not.toBeNull();
+
+        // When
+        await loadLanguageMenu();
+
+        // Then
+        expect(fixture.nativeElement.querySelector('app-language-menu #language-button')).not.toBeNull();
+    });
+
+    test('picking a language in the menu should translate the texts shown, without a reload', async () => {
+        // Given
+        expect(navTexts()).toEqual(['Home', 'Synchronous chess', 'Chat']);
+        await loadLanguageMenu();
+        fixture.nativeElement.querySelector('#language-button').click();
+        await fixture.whenStable();
+
+        // When
+        document.querySelector<HTMLButtonElement>('[role="menuitemradio"][lang="fr"]')?.click();
+        await fixture.whenStable();
+
+        // Then
+        expect(TestBed.inject(LanguageService).language()).toBe(Language.FR);
+        expect(navTexts()).toEqual(['Accueil', 'Échecs synchrones', 'Tchat']);
+        expect(themeButton().getAttribute('aria-label')).toBe('Passer au thème sombre');
+        expect(TestBed.inject(Title).getTitle()).toBe('Échecs synchrones');
+        expect(document.documentElement.lang).toBe(Language.FR);
     });
 });
