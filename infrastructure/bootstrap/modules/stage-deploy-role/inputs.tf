@@ -48,6 +48,12 @@ variable "github_repository_id" {
   type        = string
 }
 
+variable "access_restricted" {
+  description = "Whether the stage is restricted to its owner (access_restricted of the main configuration): its login, its key group and its authorizers"
+  type        = bool
+  default     = false
+}
+
 variable "github_repository_owner_id" {
   description = "ID of the owner of that repository"
   type        = string

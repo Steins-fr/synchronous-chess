@@ -26,10 +26,12 @@ locals {
     staging    = "refs/heads/*"
     production = "refs/heads/main"
   }
-  main_domain_name = "steins.fr"
-  state_bucket     = "synchronous-chess-terraform"
-  region           = "eu-west-1"
-  account_id       = data.aws_caller_identity.current.account_id
+  # The stages restricted to their owner, as access_restricted of the main configuration tells
+  restricted_stages = ["staging"]
+  main_domain_name  = "steins.fr"
+  state_bucket      = "synchronous-chess-terraform"
+  region            = "eu-west-1"
+  account_id        = data.aws_caller_identity.current.account_id
   # Shared by the stages: no Environment tag
   tags = {
     Application = "Synchronous chess"
@@ -68,6 +70,7 @@ module "deploy_role" {
   github_repository               = local.github_repository
   github_repository_id            = local.github_repository_id
   github_repository_owner_id      = local.github_repository_owner_id
+  access_restricted               = contains(local.restricted_stages, each.key)
 }
 
 # One per account and region, which each stage would otherwise create again: the role the WebSocket stages write their
