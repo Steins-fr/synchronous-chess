@@ -1,6 +1,7 @@
 import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
+import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import { TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -45,10 +46,33 @@ describe('ApiHealthService', () => {
         const request: TestRequest = httpTesting.expectOne(HEALTH);
         request.flush({ status: 'up' });
 
-        // Then
+        // Then: without the cookies of the browser, unless the stage is restricted
         expect(request.request.timeout).toEqual(30_000);
+        expect(request.request.withCredentials).toBe(false);
         expect(ups).toEqual(1);
         expect(service.state()).toEqual(ApiHealthState.IDLE);
+    });
+
+    test('should check the APIs with the cookies of the browser on a stage restricted to its owner', () => {
+        // Given
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
+                { provide: HTTP_API_WITH_CREDENTIALS, useValue: true },
+            ],
+        });
+        service = TestBed.inject(ApiHealthService);
+        httpTesting = TestBed.inject(HttpTestingController);
+
+        // When
+        ensureUp();
+        const request: TestRequest = httpTesting.expectOne(HEALTH);
+        request.flush({ status: 'up' });
+
+        // Then
+        expect(request.request.withCredentials).toBe(true);
+        expect(ups).toEqual(1);
     });
 
     test('should tell the APIs are booting once the check takes 3 seconds', async () => {

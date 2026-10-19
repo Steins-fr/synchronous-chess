@@ -7,4 +7,5 @@ export const environment: EnvironmentInterface = {
     iceServers: ['stun:stun.l.google.com:19302'],
     webSocketServer: 'ws://127.0.0.1:3001',
     httpApiServer: 'http://127.0.0.1:3001',
+    httpApiWithCredentials: false,
 };
