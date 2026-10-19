@@ -50,6 +50,19 @@ jobs:
             - name: Run Angular lint
               run: npm run lint
 
+            - name: Check the translation keys
+              # The extraction adds the new keys to every translation file and removes the unused ones: it must find
+              # nothing to change, new files included
+              shell: bash
+              run: |
+                  npm run i18n:extract
+                  if [ -n "$(git status --porcelain -- src/i18n)" ]; then
+                      git status --short -- src/i18n
+                      git diff -- src/i18n
+                      echo "::error::The translation files are not up to date: run npm run i18n:extract, then translate the new keys"
+                      exit 1
+                  fi
+
     angular-test:
         needs: [angular-lint]
         # Runs after the lint, or without it when the lint is skipped

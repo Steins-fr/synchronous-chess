@@ -1,0 +1,14 @@
+{
+  "app": {
+    "nav": {
+      "chat": "Chat",
+      "chess": "Synchronous chess",
+      "home": "Home"
+    },
+    "theme": {
+      "toDark": "Switch to the dark theme",
+      "toLight": "Switch to the light theme"
+    },
+    "title": "Synchronous Chess"
+  }
+}

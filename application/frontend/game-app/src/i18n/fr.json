@@ -1,0 +1,14 @@
+{
+  "app": {
+    "nav": {
+      "chat": "Tchat",
+      "chess": "Échecs synchrones",
+      "home": "Accueil"
+    },
+    "theme": {
+      "toDark": "Passer au thème sombre",
+      "toLight": "Passer au thème clair"
+    },
+    "title": "Échecs synchrones"
+  }
+}

@@ -53,7 +53,7 @@ describe('AppComponent', () => {
 
     test('the theme button should tell the theme a click shows, and show it', async () => {
         // Then
-        expect(themeButton().getAttribute('aria-label')).toBe('Passer au thème sombre');
+        expect(themeButton().getAttribute('aria-label')).toBe('Switch to the dark theme');
         expect(themeButton().textContent.trim()).toBe('dark_mode');
 
         // When
@@ -62,8 +62,8 @@ describe('AppComponent', () => {
 
         // Then
         expect(TestBed.inject(ThemeService).theme()).toBe(ThemeModeEnum.DARK);
-        expect(themeButton().getAttribute('aria-label')).toBe('Passer au thème clair');
-        expect(themeButton().title).toBe('Passer au thème clair');
+        expect(themeButton().getAttribute('aria-label')).toBe('Switch to the light theme');
+        expect(themeButton().title).toBe('Switch to the light theme');
         expect(themeButton().textContent.trim()).toBe('light_mode');
 
         // When
@@ -72,6 +72,6 @@ describe('AppComponent', () => {
 
         // Then
         expect(TestBed.inject(ThemeService).theme()).toBe(ThemeModeEnum.LIGHT);
-        expect(themeButton().getAttribute('aria-label')).toBe('Passer au thème sombre');
+        expect(themeButton().getAttribute('aria-label')).toBe('Switch to the dark theme');
     });
 });
