@@ -13,7 +13,7 @@ import {
     SocketPacketRequestPayload,
 } from '@protocol/socket-packet-payload.type';
 import RoomRepository from '@repositories/room-repository';
-import { APIGatewayProxyEvent, APIGatewayProxyEventV2 } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayRequestAuthorizerEvent, APIGatewayRequestAuthorizerEventV2 } from 'aws-lambda';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
 import { beforeEach, vi } from 'vitest';
 import { TestDatabase, useTestDatabase } from './database';
@@ -63,9 +63,25 @@ export function anEvent(connectionId: string | undefined, body: string | null = 
     return { body, requestContext: { connectionId, domainName: 'api.test' } } as unknown as APIGatewayProxyEvent;
 }
 
-/** The event of a route of the HTTP API, with only what the lambdas read: the query string as sent, still encoded */
-export function anHttpEvent(routeKey: string, rawQueryString: string = ''): APIGatewayProxyEventV2 {
-    return { routeKey, rawQueryString } as unknown as APIGatewayProxyEventV2;
+/**
+ * The event of a route of the HTTP API, with only what the lambdas read: the query string as sent, still encoded, and the
+ * cookies, `name=value` each, left out without any as by API Gateway
+ */
+export function anHttpEvent(routeKey: string, rawQueryString: string = '', cookies?: string[]): APIGatewayProxyEventV2 {
+    return { routeKey, rawQueryString, cookies } as unknown as APIGatewayProxyEventV2;
+}
+
+/** The method of `$connect` the authorizer of the websocket API allows or denies */
+export const CONNECT_METHOD_ARN: string = 'arn:aws:execute-api:eu-west-1:123456789012:api/Test/$connect';
+
+/** The event of the authorizer of `$connect`, with only what it reads: the headers of the handshake */
+export function aWebSocketAuthorizerEvent(headers: Record<string, string> | null): APIGatewayRequestAuthorizerEvent {
+    return { methodArn: CONNECT_METHOD_ARN, headers } as unknown as APIGatewayRequestAuthorizerEvent;
+}
+
+/** The event of the authorizer of the HTTP API, with only what it reads: the cookies, left out without any */
+export function anHttpAuthorizerEvent(cookies?: string[]): APIGatewayRequestAuthorizerEventV2 {
+    return { cookies } as unknown as APIGatewayRequestAuthorizerEventV2;
 }
 
 /** What a repository throws when the database fails */
