@@ -38,8 +38,8 @@ describe('WebrtcDebugComponent', () => {
         const titles: string[] = Array.from(fixture.nativeElement.querySelectorAll('h4')).map((title) => (title as HTMLElement).textContent ?? '');
 
         expect(titles).toEqual([
-            'Debug connexion du joueur : remote',
-            'Debug connexion du négociateur : pending',
+            'Connection to the player: remote',
+            'Connection to the negotiator: pending',
         ]);
         expect(fixture.nativeElement.querySelectorAll('app-debug-webrtc-states')).toHaveLength(2);
         expect(fixture.nativeElement.textContent).toContain('RTC states of remote');
