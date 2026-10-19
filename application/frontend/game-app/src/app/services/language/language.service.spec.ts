@@ -65,6 +65,7 @@ describe('LanguageService', () => {
     test.each([
         { languages: ['FR'], language: Language.FR },
         { languages: ['en-GB', 'fr'], language: Language.EN },
+        { languages: ['es-MX'], language: Language.ES },
         { languages: ['ja', 'zh-CN'], language: Language.EN },
         { languages: [], language: Language.EN },
     ])('should match the browser languages $languages on their full code, then on their base language', ({ languages, language }) => {

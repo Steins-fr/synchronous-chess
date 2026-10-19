@@ -7,6 +7,7 @@ import { Language } from './enums/language.enum';
 const translationFiles: Readonly<Record<Language, () => Promise<{ default: Translation }>>> = {
     [Language.EN]: () => import('../../../i18n/en.json'),
     [Language.FR]: () => import('../../../i18n/fr.json'),
+    [Language.ES]: () => import('../../../i18n/es.json'),
 };
 
 @Injectable({

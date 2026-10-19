@@ -8,15 +8,20 @@ import { Language } from '@app/services/language/enums/language.enum';
 import { ThrowingMissingHandler } from '@testing/throwing-missing-handler';
 import en from './i18n/en.json';
 import fr from './i18n/fr.json';
+import es from './i18n/es.json';
 
 const testProviders: (Provider | EnvironmentProviders)[] = [
     provideZonelessChangeDetection(),
     provideHttpClient(withXhr()),
     provideHttpClientTesting(),
     provideRouter([]),
-    // The specs find the elements by their English text. French is loaded too, for the specs switching the language
+    // The specs find the elements by their English text. Every language is loaded, for the specs switching to one
     importProvidersFrom(TranslocoTestingModule.forRoot({
-        langs: { [Language.EN]: en, [Language.FR]: fr },
+        langs: {
+            [Language.EN]: en,
+            [Language.FR]: fr,
+            [Language.ES]: es,
+        },
         preloadLangs: true,
         translocoConfig: {
             availableLangs: Object.values(Language),

@@ -1,0 +1,265 @@
+{
+  "apiHealth": {
+    "booting": "Iniciando el servidor…",
+    "bootingDelay": "El servidor y su base de datos se suspenden cuando nadie juega: despertarlos tarda hasta unos treinta segundos.",
+    "connecting": "Conectando con el servidor…"
+  },
+  "app": {
+    "language": {
+      "pick": "Elegir el idioma"
+    },
+    "nav": {
+      "chat": "Chat",
+      "chess": "Ajedrez sincrónico",
+      "home": "Inicio"
+    },
+    "theme": {
+      "toDark": "Cambiar al tema oscuro",
+      "toLight": "Cambiar al tema claro"
+    },
+    "title": "Ajedrez sincrónico"
+  },
+  "chat": {
+    "author": "{author}:",
+    "backToLatest": "Volver a los mensajes más recientes.",
+    "history": "Estás viendo mensajes anteriores.",
+    "message": "Escribe tu mensaje",
+    "newMessages": "{count, plural, one {# mensaje nuevo} other {# mensajes nuevos}}",
+    "participants": {
+      "count": "{count, plural, one {# participante} other {# participantes}} en la sala",
+      "title": "Participantes"
+    },
+    "ping": "ping {ping}",
+    "room": "Sala ({roomName})",
+    "send": "Enviar",
+    "showNewMessages": "Ver.",
+    "title": "Chat WebRTC"
+  },
+  "cheat": {
+    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} other {}}) de {author} ha sido señalado como trampa por {reporters}",
+    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
+  },
+  "chess": {
+    "game": {
+      "check": "Jaque",
+      "checkmate": "Jaque mate",
+      "lastMove": {
+        "label": "Última jugada:",
+        "move": "{from} -> {to}",
+        "none": "ninguna",
+        "passed": "pasó"
+      },
+      "pass": "Pasar",
+      "played": "ha jugado",
+      "promotion": "Coronación",
+      "result": {
+        "checkmate": "Jaque mate: {winner, select, w {ganan las blancas} other {ganan las negras}}",
+        "doubleCheckmate": "Tablas: ambos jugadores reciben jaque mate",
+        "fiftyTurns": "Tablas: 50 turnos sin movimiento de peón ni captura",
+        "insufficientMaterial": "Tablas: no quedan piezas suficientes para dar mate",
+        "kingCaptured": "Rey capturado: {winner, select, w {ganan las blancas} other {ganan las negras}}",
+        "kingsCaptured": "Tablas: ambos reyes han sido capturados",
+        "stalemate": "Tablas: rey ahogado, un jugador ya no puede mover",
+        "threefoldRepetition": "Tablas: la misma posición se ha repetido tres veces"
+      },
+      "seat": {
+        "black": "Jugador negro:",
+        "free": "Esperando",
+        "leave": "Dejar el puesto",
+        "playBlack": "Jugar con negras",
+        "playWhite": "Jugar con blancas",
+        "white": "Jugador blanco:"
+      },
+      "spectators": "Espectadores: {count}",
+      "turn": {
+        "intermediate": "Intermedio",
+        "label": "Turno:",
+        "promotion": "Coronación",
+        "sync": "Sincronizado"
+      },
+      "waiting": "esperando"
+    },
+    "presentation": {
+      "caption": "Las blancas han elegido su jugada; las negras no la ven antes de haber jugado la suya.",
+      "intro": "Se acabó la ventaja de las blancas: en cada turno, cada jugador elige su jugada sin conocer la de su rival, y luego ambas jugadas se revelan y se juegan a la vez.",
+      "points": {
+        "intermediateTurn": "Una pieza que se aventura a una casilla atacada puede ser capturada en un turno intermedio.",
+        "kingCapture": "Un rey puede ser capturado directamente, incluso sin jaque mate.",
+        "sameSquare": "Dos piezas que van a la misma casilla se capturan mutuamente, y dos piezas pueden intercambiar sus puestos."
+      },
+      "rooms": "Crea una sala, privada con una contraseña, o únete a una de las salas abiertas. Cada participante elige su color; los demás ven la partida.",
+      "tagline": "El ajedrez en el que ambos jugadores juegan a la vez.",
+      "title": "Ajedrez sincrónico"
+    }
+  },
+  "chessRules": {
+    "captures": {
+      "capture": {
+        "text": "… una pieza va a una casilla ocupada por una pieza rival que no se ha movido en este turno, esta última es capturada. La pieza que se ha movido ocupa la casilla liberada.",
+        "title": "Captura"
+      },
+      "clash": {
+        "text": "… ambas piezas van a la misma casilla, las dos son capturadas y retiradas del tablero, <strong>incluido un rey</strong>.",
+        "title": "Choque"
+      },
+      "intro": "Si, durante un turno sincronizado…",
+      "swap": {
+        "text": "… una pieza va a una casilla ocupada antes del turno por una pieza rival que también se ha movido, ambas piezas llegan a su destino sin ser capturadas, aunque sus trayectorias se crucen.",
+        "title": "Intercambio"
+      },
+      "title": "Movimiento y captura"
+    },
+    "end": {
+      "caption": "Finales de la partida y su resultado",
+      "checkmate": "Jaque mate a un jugador",
+      "doubleCheckmate": "Jaque mate a ambos jugadores",
+      "draw": "Tablas",
+      "fiftyTurns": "50 turnos sincronizados sin movimiento de peón ni captura",
+      "insufficientMaterial": "No quedan piezas suficientes para dar mate: reyes solos, un solo caballo o alfil, alfiles todos en casillas del mismo color",
+      "kingCaptured": "Rey capturado al ir a la misma casilla que una pieza rival",
+      "opponent": "del rival",
+      "opponentUnlessBothKings": "del rival (tablas si ambos reyes son capturados)",
+      "result": "Resultado",
+      "situation": "Situación",
+      "stalemate": "Rey ahogado: un jugador que no está en jaque no puede mover ninguna pieza",
+      "text": "Un rey capturado pone fin a la partida en el acto. Si no, la partida termina al comienzo de un turno sincronizado.",
+      "threefoldRepetition": "La misma posición (piezas y derechos de enroque) se repite por tercera vez",
+      "title": "Fin de la partida",
+      "win": "Victoria"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Fin de la partida</strong>: jaque mate o rey capturado; se aplican las tablas del ajedrez clásico.",
+      "intermediateTurns": "<strong>Turnos intermedios</strong>: una pieza que llega a una casilla atacada puede ser capturada de inmediato.",
+      "sameSquare": "<strong>Misma casilla</strong>: dos piezas que van a la misma casilla son capturadas ambas, incluido un rey.",
+      "simultaneousMoves": "<strong>Jugadas simultáneas</strong>: cada uno elige su jugada en secreto, y luego ambas jugadas se juegan a la vez.",
+      "title": "En resumen"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Vuelta al juego.</strong> El juego sigue luego con un turno sincronizado.",
+      "captures": "<strong>Capturas y recapturas.</strong> El rival puede capturar esta pieza, o pasar. Solo se permiten las capturas en las casillas afectadas; cada captura puede a su vez ser recapturada, hasta que un jugador ya no pueda o ya no quiera capturar. Si ambos jugadores pueden jugar, sus jugadas se eligen en secreto y se aplican a la vez.",
+      "oncePerPiece": "<strong>Una vez por pieza.</strong> Una pieza solo puede moverse una vez durante la fase intermedia. La pieza que acaba de moverse en el turno sincronizado puede, aun así, moverse una vez en ella.",
+      "title": "Turnos intermedios",
+      "trigger": "<strong>Inicio.</strong> Tras un turno sincronizado, hay un turno intermedio si una pieza que se ha movido ha llegado a una casilla ya atacada (o protegida) por el rival antes del turno, y una pieza rival puede capturarla legalmente."
+    },
+    "players": {
+      "seats": "Dos jugadores. Cada participante de la sala, incluido el anfitrión, elige su color entre los puestos libres. Los puestos quedan fijados desde la primera jugada; los demás participantes son espectadores.",
+      "shortTitle": "Jugadores",
+      "simultaneousMoves": "Los dos jugadores juegan su jugada a la vez, cada uno sin conocer la del otro. Cuando ambos han elegido, las dos jugadas se revelan y se aplican según las reglas siguientes.",
+      "title": "Jugadores y principio"
+    },
+    "promotion": {
+      "text": "Si al menos un jugador lleva un peón a la última fila, un turno dedicado le permite elegir su coronación. El juego sigue luego con el turno sincronizado o intermedio que resulte de las jugadas.",
+      "title": "Coronación"
+    },
+    "restrictions": {
+      "castling": "<strong>Enroque</strong>: un rey en jaque no puede enrocarse para salir de él. El jaque solo impide el enroque durante ese turno; el derecho a enrocarse solo se pierde cuando el rey o la torre se han movido.",
+      "check": "<strong>Jaque</strong>: un rey atacado al comienzo del turno sincronizado debe moverse a una casilla que no esté atacada antes de las jugadas. Si no puede, es jaque mate.",
+      "enPassant": "<strong>Sin captura al paso</strong> en esta variante.",
+      "kingSquares": "<strong>Casillas prohibidas al rey</strong>: no puede ir a una casilla atacada por el rival antes del turno sincronizado; no sirve de nada anticipar que una casilla quedará libre para ir a ella.",
+      "pinnedPieces": "<strong>Piezas clavadas</strong>: ninguna jugada puede dejar al propio rey atacado, suponiendo que la posición rival no cambia; una pieza clavada no puede salir de la línea de su rey.",
+      "title": "Restricciones"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky y Andrey Krasowsky",
+      "classicChess": "El tablero, las piezas, su posición inicial y sus movimientos son los del ajedrez clásico.",
+      "label": "Reglas originales:"
+    },
+    "summary": "Reglas del juego",
+    "tableOfContents": "Índice de las reglas",
+    "title": "Reglas"
+  },
+  "dialog": {
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "no": "No",
+    "yes": "Sí"
+  },
+  "home": {
+    "chat": {
+      "action": "Chatear",
+      "description": "Un chat entre los participantes de una sala, con sus mensajes enviados de igual a igual.",
+      "title": "Chat"
+    },
+    "chess": {
+      "action": "Jugar",
+      "description": "El ajedrez en el que ambos jugadores juegan a la vez: cada uno elige su jugada sin conocer la del otro.",
+      "title": "Ajedrez sincrónico"
+    },
+    "intro": "Crea una sala o únete a una de las salas abiertas: los jugadores se conectan directamente entre sí.",
+    "title": "Elige un juego"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Los demás jugadores la encontrarán en la lista de salas abiertas: con una contraseña, es privada.",
+      "submit": "Crear",
+      "title": "Crear una sala"
+    },
+    "errors": {
+      "alreadyExists": "La sala ya existe.",
+      "fullOrGone": "La sala está llena o ya no existe.",
+      "hostDisconnected": "El anfitrión de la sala se ha desconectado.",
+      "nameInRoom": "Ya hay un jugador con este nombre en la sala.",
+      "nameWaiting": "Un jugador con este nombre ya está esperando para entrar en la sala.",
+      "notCreated": "No se ha podido crear la sala.",
+      "otherGame": "Esta sala es de otro juego.",
+      "private": "Esta sala es privada: únete desde la lista, con su contraseña.",
+      "tooManyPasswords": "Demasiadas contraseñas incorrectas para esta sala: inténtalo de nuevo dentro de un minuto.",
+      "wrongPassword": "La contraseña de la sala es incorrecta."
+    },
+    "form": {
+      "password": {
+        "label": "Contraseña",
+        "maxLength": "La contraseña tiene como máximo {maxLength, plural, one {# carácter} other {# caracteres}}",
+        "minLength": "La contraseña tiene como mínimo {minLength, plural, one {# carácter} other {# caracteres}}",
+        "privateRoomLabel": "Contraseña (sala privada)",
+        "required": "La contraseña es obligatoria"
+      },
+      "playerName": {
+        "label": "Nombre del jugador",
+        "maxLength": "El nombre del jugador tiene como máximo {maxLength, plural, one {# carácter} other {# caracteres}}",
+        "required": "El nombre del jugador es obligatorio"
+      },
+      "roomName": {
+        "label": "Nombre de la sala",
+        "maxLength": "El nombre de la sala tiene como máximo {maxLength, plural, one {# carácter} other {# caracteres}}",
+        "required": "El nombre de la sala es obligatorio"
+      }
+    },
+    "join": {
+      "intro": "Escribe tu nombre para unirte a la sala «{roomName}».",
+      "privateIntro": "La sala «{roomName}» es privada: escribe tu nombre y su contraseña para unirte.",
+      "submit": "Unirse",
+      "title": "Unirse a la sala"
+    },
+    "notifications": {
+      "hostReconnecting": "El anfitrión de la sala se está reconectando…",
+      "hostUnreachable": "La conexión con el anfitrión de la sala ha fallado.",
+      "joiningAgain": "La conexión con el anfitrión de la sala ha fallado, nuevo intento…",
+      "nameStillInRoom": "Este nombre sigue en la sala, reconectando…",
+      "roomFull": "La sala está llena.",
+      "roomLost": "La sala ha perdido su conexión con el servidor: ya nadie puede unirse a ella."
+    },
+    "open": {
+      "empty": "No hay ninguna sala a la que unirse por ahora: ¡crea la tuya!",
+      "error": "No se han podido cargar las salas.",
+      "full": "Llena",
+      "host": "Anfitrión: {host}",
+      "hostReconnecting": "Anfitrión reconectando",
+      "join": "Unirse",
+      "joinRoom": "Unirse a la sala {roomName}",
+      "loading": "Cargando las salas…",
+      "moreMatches": "Otras salas contienen «{search}»: precisa la búsqueda para encontrarlas.",
+      "mostRecent": "Solo se muestran las salas más recientes: busca las demás por su nombre.",
+      "noMatch": "Ninguna sala contiene «{search}».",
+      "private": "Sala privada",
+      "public": "Sala pública",
+      "refresh": "Actualizar las salas",
+      "search": {
+        "label": "Buscar una sala",
+        "maxLength": "La búsqueda tiene como máximo {maxLength, plural, one {# carácter} other {# caracteres}}"
+      },
+      "title": "Salas abiertas"
+    }
+  }
+}
