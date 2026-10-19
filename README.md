@@ -255,9 +255,13 @@ cd "$(mktemp -d)" && umask 077
 openssl genrsa -out key.pem 2048
 aws ssm put-parameter --region eu-west-1 --name /sc/staging/access-signing-key --type SecureString --value file://key.pem \
   --tags Key=Application,Value="Synchronous chess" Key=Environment,Value=staging
-openssl rsa -in key.pem -pubout | gh variable set ACCESS_PUBLIC_KEY --env staging
+openssl rsa -in key.pem -pubout | gh variable set ACCESS_PUBLIC_KEY --env staging --repo Steins-fr/synchronous-chess
 shred -u key.pem
 ```
+
+Outside the repository, `gh` needs `--repo`. The public key is derived again from the parameter, the private key never
+shown:
+`aws ssm get-parameter --region eu-west-1 --name /sc/staging/access-signing-key --with-decryption --query Parameter.Value --output text | openssl rsa -pubout | gh variable set ACCESS_PUBLIC_KEY --env staging --repo Steins-fr/synchronous-chess`.
 
 Then plan and apply staging. Its user pool, `sc-access-staging`, only takes the users an admin creates: create the owner,
 whom Cognito emails a temporary password.
