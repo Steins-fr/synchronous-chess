@@ -704,29 +704,11 @@ data "aws_iam_policy_document" "data" {
 # A stage restricted to its owner only (access_restricted): the login of Cognito, the key group of the signed cookies of
 # the distribution, the authorizers of the APIs. Its functions, roles and log groups take the names of the stage
 data "aws_iam_policy_document" "access" {
-  # CreateUserPool has no resource type: by the Environment tag the request carries
+  # The user pool of the stage, created by the bootstrap (module access_login), read only: the app client and the domain
+  # of its login, by its Environment tag (its ID is random). Never its users, which the owner creates with an admin profile
   statement {
-    sid       = "LoginPoolCreate"
-    actions   = ["cognito-idp:CreateUserPool"]
-    resources = ["*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "aws:RequestTag/Environment"
-      values   = [var.stage]
-    }
-  }
-
-  # The user pool of the stage, by its Environment tag (its ID is random): its settings, its app client and its domain,
-  # actions on the pool. Not its users, which the owner creates with an admin profile
-  statement {
-    sid = "LoginPool"
-    actions = [
-      "cognito-idp:DescribeUserPool", "cognito-idp:UpdateUserPool", "cognito-idp:DeleteUserPool", "cognito-idp:GetUserPoolMfaConfig",
-      "cognito-idp:SetUserPoolMfaConfig", "cognito-idp:ListTagsForResource", "cognito-idp:TagResource", "cognito-idp:UntagResource",
-      "cognito-idp:CreateUserPoolClient", "cognito-idp:DescribeUserPoolClient", "cognito-idp:UpdateUserPoolClient", "cognito-idp:DeleteUserPoolClient",
-      "cognito-idp:CreateUserPoolDomain", "cognito-idp:UpdateUserPoolDomain", "cognito-idp:DeleteUserPoolDomain",
-    ]
+    sid       = "LoginPool"
+    actions   = ["cognito-idp:DescribeUserPool", "cognito-idp:GetUserPoolMfaConfig", "cognito-idp:ListUserPoolClients"]
     resources = ["arn:aws:cognito-idp:${local.region}:${var.account_id}:userpool/*"]
 
     condition {
@@ -734,18 +716,12 @@ data "aws_iam_policy_document" "access" {
       variable = "aws:ResourceTag/Environment"
       values   = [var.stage]
     }
-
-    condition {
-      test     = "StringEqualsIfExists"
-      variable = "aws:RequestTag/Environment"
-      values   = [var.stage]
-    }
   }
 
-  # DescribeUserPoolDomain takes the prefix of the domain, without resource type. Metadata only
+  # ListUserPools has no resource type: the pools of the account, found by name. Metadata only
   statement {
-    sid       = "LoginDomainRead"
-    actions   = ["cognito-idp:DescribeUserPoolDomain"]
+    sid       = "LoginPools"
+    actions   = ["cognito-idp:ListUserPools"]
     resources = ["*"]
   }
 

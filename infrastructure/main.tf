@@ -324,7 +324,9 @@ module "sc_lambda_httpapi" {
 /**
  * Access: staging, restricted to its owner. The owner signs in on the managed login of Cognito through the access lambda
  * (/auth/* of the HTTP API), which sets the signed cookies of CloudFront on the domain: the distribution serves the front
- * with them only, and the authorizers of the two APIs check the same ones. The other stages stay public
+ * with them only, and the authorizers of the two APIs check the same ones. The other stages stay public. The user pool
+ * of the login belongs to infrastructure/bootstrap: the owner outlives the destruction of the stage. Its app client
+ * registers the callback below, access_callback_url
  */
 locals {
   access_restricted            = var.stage == "staging"
@@ -340,14 +342,24 @@ locals {
   }
 }
 
-module "sc_access_login" {
-  source = "./modules/aws-cognito-login"
-  count  = local.access_restricted ? 1 : 0
+# The user pool of the stage, its managed login and its app client (module access_login of infrastructure/bootstrap),
+# found by its name: a stage without it fails its plan, and one() fails on two pools or two clients
+data "aws_cognito_user_pools" "access" {
+  count = local.access_restricted ? 1 : 0
 
-  name         = "sc-access-${var.stage}"
-  domain       = "synchronous-chess-${var.stage}"
-  callback_url = local.access_callback_url
-  stage        = var.stage
+  name = "sc-access-${var.stage}"
+}
+
+data "aws_cognito_user_pool" "access" {
+  count = local.access_restricted ? 1 : 0
+
+  user_pool_id = one(data.aws_cognito_user_pools.access[0].ids)
+}
+
+data "aws_cognito_user_pool_clients" "access" {
+  count = local.access_restricted ? 1 : 0
+
+  user_pool_id = one(data.aws_cognito_user_pools.access[0].ids)
 }
 
 module "sc_access_key_group" {
@@ -399,8 +411,8 @@ module "sc_lambda_access" {
   environment = merge(local.access_environment, {
     ACCESS_SIGNING_KEY_PARAMETER = local.access_signing_key_parameter
     ACCESS_COOKIE_DOMAIN         = var.main_domain_name
-    ACCESS_LOGIN_URL             = module.sc_access_login[0].url
-    ACCESS_CLIENT_ID             = module.sc_access_login[0].client_id
+    ACCESS_LOGIN_URL             = "https://${data.aws_cognito_user_pool.access[0].domain}.auth.${local.region}.amazoncognito.com"
+    ACCESS_CLIENT_ID             = one(data.aws_cognito_user_pool_clients.access[0].client_ids)
     ACCESS_CALLBACK_URL          = local.access_callback_url
   })
 }
