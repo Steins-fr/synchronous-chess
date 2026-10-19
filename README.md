@@ -228,7 +228,8 @@ terraform apply tfplan
 
 Staging answers its owner only, production stays public. The owner signs in on the managed login of Cognito, then the
 three entry points of the stage check the same signed cookies of CloudFront:
-- the front: CloudFront refuses (403) a request without them (`trusted_key_groups` of its distribution);
+- the front: CloudFront refuses a request without them (`trusted_key_groups` of its distribution) with a page sending
+  to the login, still a 403: `access-denied.html`, served without the cookies;
 - the WebSocket API: the authorizer of `$connect` (`wsauthorizer`) refuses the handshake, 401 without any cookie, 403
   without these ones;
 - the HTTP API: its authorizer (`httpauthorizer`) refuses its routes without them (403). `/auth/login` and
@@ -272,8 +273,8 @@ aws cognito-idp admin-create-user --user-pool-id "$pool" --username <email> \
   --user-attributes Name=email,Value=<email> Name=email_verified,Value=true
 ```
 
-**On each device**, a phone included: open https://sc-api-staging.steins.fr/auth/login and sign in, which sends to
-https://sc-staging.steins.fr. The first time, with the temporary password, then a new password and an authenticator app,
+**On each device**, a phone included: open https://sc-staging.steins.fr, which sends to the login
+(https://sc-api-staging.steins.fr/auth/login), and sign in, which sends back to the front. The first time, with the temporary password, then a new password and an authenticator app,
 whose code is asked at each login. Sign in again once the cookies expired, after 7 days.
 
 **To rotate the key**, which signs every device out: the same commands, with `--overwrite` instead of `--tags`, then plan

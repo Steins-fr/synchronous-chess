@@ -33,6 +33,12 @@ variable "trusted_key_groups" {
   default     = []
 }
 
+variable "access_login_url" {
+  type        = string
+  description = "Login of a stage restricted to its owner, which the page answering its 403 sends to: null on a public stage"
+  default     = null
+}
+
 variable "stage" {
   description = "Stage"
   type        = string

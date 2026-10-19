@@ -552,8 +552,9 @@ module "sc_cloudfront_angular" {
   bucket                = module.sc_bucket_angular.bucket
   origin_access_control = aws_cloudfront_origin_access_control.origine_access_control_angular.id
   acm_certificate_arn   = module.sc_certificate_cloudfront.certificate_arn
-  # The signer of the access cookies of a restricted stage, none elsewhere
+  # The signer of the access cookies of a restricted stage, none elsewhere, and the login its 403 sends to
   trusted_key_groups = module.sc_access_key_group[*].key_group_id
+  access_login_url   = local.access_restricted ? "https://${local.api_http_domain_name}/auth/login" : null
   stage              = var.stage
 }
 
