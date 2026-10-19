@@ -12,14 +12,18 @@ change.
     from any branch, production from `main` only.
   - Each reaches the resources of its stage only (`modules/stage-deploy-role/deploy-policy.tf`). Development is
     deployed locally, without a deploy role.
-  - Staging, restricted to its owner (`restricted_stages`), gets a fourth policy, `access`: its login (Cognito), the
-    key group of its signed cookies and the authorizers of its APIs. Production gets none of it.
+  - Staging, restricted to its owner (`restricted_stages`), gets a fourth policy, `access`: the read of its login
+    (Cognito), the key group of its signed cookies and the authorizers of its APIs. Production gets none of it.
 - **The boundary of the roles of the lambdas of each stage**: `sc-lambda-boundary-<stage>` (`lambda-boundary.tf`).
   - It is the most a role of a lambda can do, whatever policy is attached to it.
   - A deploy role creates those roles with the boundary of its stage only, and attaches to them only the policies
     `main.tf` attaches.
 - **The account of API Gateway**: the role the WebSocket stages write their execution logs with. There is one per
   account and region, which each stage would otherwise create again.
+- **The login of each stage restricted to its owner** (`module.access_login`): the user pool `sc-access-staging` of
+  Cognito, its managed login `synchronous-chess-staging` and its app client.
+  - The stage reads them, and never writes them: its owner, created once, outlives the destruction of the stage.
+  - The pool is protected from deletion.
 
 Its state is `bootstrap/terraform.tfstate` in the bucket of the states, out of reach of the deploy roles.
 
@@ -55,8 +59,7 @@ aws iam get-role --role-name api_gateway_cloudwatch_global
   - roles, policies, functions and log groups named after the stage, especially a role `sc_lambda_*_<stage>`
     without boundary, which a deploy role could pass to a function;
   - the bucket `sc-<stage>.<domain>`, the API domains, the parameters `/sc/<stage>/` and the DNS records;
-  - on staging, the domain `synchronous-chess-staging` of Cognito and the key group `sc-access-staging` of CloudFront,
-    with its public keys `sc-access-staging-*`. Not the parameter `/sc/staging/access-signing-key`, which its owner
+  - on staging, the key group `sc-access-staging` of CloudFront, with its public keys `sc-access-staging-*`. Not the parameter `/sc/staging/access-signing-key`, which its owner
     writes outside Terraform.
 - **Certificates and distributions without an `Environment` tag.** Tag or delete the ACM certificates (eu-west-1 and
   us-east-1) and the CloudFront distributions that have none. A deploy role tags a new one with its stage, and could
@@ -73,6 +76,7 @@ terraform import module.api_gateway_account.aws_iam_role_policy.cloudwatch api_g
 terraform plan -out=tfplan
 terraform apply tfplan
 terraform output deploy_role_arns
+terraform output access_user_pool_ids
 ```
 
 Access Analyzer flags the condition keys an action does not support. Run it on each policy of the deploy roles
@@ -158,3 +162,4 @@ Read the summary of the plan run before approving its apply.
 - The roles of the lambdas carry their boundary.
 - The WebSocket stages log through the account of API Gateway.
 - The workflows assume the deploy roles.
+- The restricted stages read their user pool, which holds their owner. Turn its deletion protection off by hand first.

@@ -1,6 +1,6 @@
 # What the stages share, and what the Terraform workflows cannot create for themselves: the trust of AWS in GitHub
-# Actions, the deploy role of each stage, the boundaries of the roles of the lambdas, and the account of API Gateway.
-# Applied by hand with an admin profile (README.md), before any stage
+# Actions, the deploy role of each stage, the boundaries of the roles of the lambdas, the account of API Gateway, and the
+# login of the stages restricted to their owner. Applied by hand with an admin profile (README.md), before any stage
 terraform {
   backend "s3" {
     bucket = "synchronous-chess-terraform"
@@ -77,4 +77,18 @@ module "deploy_role" {
 # execution logs with (logging_level of aws-api-gateway-stage)
 module "api_gateway_account" {
   source = "../modules/aws-api-gateway-account"
+}
+
+# The login of the owner of each restricted stage: its user pool, managed login and app client, kept apart from the
+# stage, which reads them (data sources of infrastructure/main.tf). The owner, created once, outlives the destruction of
+# the stage. Its callback is the access lambda of the stage, on its HTTP API (access_callback_url of the main
+# configuration)
+module "access_login" {
+  source   = "../modules/aws-cognito-login"
+  for_each = toset(local.restricted_stages)
+
+  name         = "sc-access-${each.key}"
+  domain       = "synchronous-chess-${each.key}"
+  callback_url = "https://sc-api-${each.key}.${local.main_domain_name}/auth/callback"
+  stage        = each.key
 }

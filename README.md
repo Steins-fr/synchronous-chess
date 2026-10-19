@@ -130,7 +130,7 @@ The options of each service, the regions, the network of the database and the ro
  - S3: Stores the frontend files, and the Terraform states;
  - CloudFront: Serves the frontend from S3 and manage the cache, on staging to the signed cookies of its owner only;
  - Lambda: Run the Room API, behind the WebSocket API and the HTTP API, and on staging the login of its owner and the authorizers of both APIs;
- - Cognito: The login of the owner of staging (managed login), the one user of its pool;
+ - Cognito: The login of the owner of staging (managed login), the one user of its pool, which the bootstrap keeps;
  - API Gateway: Manages the Websocket connections and messages (the connectivity of the rooms), and the HTTPS requests of the HTTP API (the list of the rooms), then transmits them to the lambdas;
  - Aurora Serverless v2 (PostgreSQL): Stores the Rooms informations for the API, reached by the lambdas through its Data API;
  - Secrets Manager: Keeps the password of the database, which the Data API reads;
@@ -248,8 +248,9 @@ The cookies are signed with an RSA key of the owner, never in the state, the pla
 - its public key in the GitHub variable `ACCESS_PUBLIC_KEY` of the staging environment, which the plan gives to
   CloudFront and to the authorizers (`access_public_key`).
 
-**Once**, after the bootstrap is applied (it adds the `access` policy of the deploy role of staging), with the admin
-profile, in a temporary folder outside the repository: the private key goes to SSM, the public key straight to GitHub.
+**Once**, after the bootstrap is applied (it adds the user pool of staging and the `access` policy of its deploy
+role), with the admin profile, in a temporary folder outside the repository: the private key goes to SSM, the public
+key straight to GitHub.
 
 ```bash
 cd "$(mktemp -d)" && umask 077
@@ -264,8 +265,9 @@ Outside the repository, `gh` needs `--repo`. The public key is derived again fro
 shown:
 `aws ssm get-parameter --region eu-west-1 --name /sc/staging/access-signing-key --with-decryption --query Parameter.Value --output text | openssl rsa -pubout | gh variable set ACCESS_PUBLIC_KEY --env staging --repo Steins-fr/synchronous-chess`.
 
-Then plan and apply staging. Its user pool, `sc-access-staging`, only takes the users an admin creates: create the owner,
-whom Cognito emails a temporary password.
+Its user pool, `sc-access-staging`, belongs to the bootstrap (`terraform output access_user_pool_ids`), and only takes
+the users an admin creates: create the owner once, whom Cognito emails a temporary password. It outlives the destruction
+of staging.
 
 ```bash
 pool=$(aws cognito-idp list-user-pools --max-results 60 --query "UserPools[?Name=='sc-access-staging'].Id" --output text)
@@ -273,14 +275,17 @@ aws cognito-idp admin-create-user --user-pool-id "$pool" --username <email> \
   --user-attributes Name=email,Value=<email> Name=email_verified,Value=true
 ```
 
+Then plan and apply staging, whenever needed.
+
 **On each device**, a phone included: open https://sc-staging.steins.fr, which sends to the login
-(https://sc-api-staging.steins.fr/auth/login), and sign in, which sends back to the front. The first time, with the temporary password, then a new password and an authenticator app,
-whose code is asked at each login. Sign in again once the cookies expired, after 7 days.
+(https://sc-api-staging.steins.fr/auth/login), and sign in, which sends back to the front. The first time, with the
+temporary password, then a new password and an authenticator app, whose code is asked at each login. Sign in again once
+the cookies expired, after 7 days.
 
 **To rotate the key**, which signs every device out: the same commands, with `--overwrite` instead of `--tags`, then plan
 and apply staging. The key of SSM and the variable change together: the `access` lambda refuses to load while they
-differ. A destroyed staging keeps the parameter, outside Terraform, and loses its user pool: create the owner again
-after the next apply.
+differ. A destroyed staging keeps the parameter, outside Terraform, and its user pool, in the bootstrap: its owner signs
+in again once it is deployed again.
 
 ## **CI/CD**
 

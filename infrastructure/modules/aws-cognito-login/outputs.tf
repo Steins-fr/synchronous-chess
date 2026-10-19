@@ -1,3 +1,8 @@
+output "user_pool_id" {
+  value       = aws_cognito_user_pool.pool.id
+  description = "ID of the user pool, where the owner is created"
+}
+
 output "client_id" {
   value       = aws_cognito_user_pool_client.client.id
   description = "ID of the app client of the login"

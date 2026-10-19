@@ -31,7 +31,8 @@ Mono-repo, no root package.json — each package is installed and run from its o
 - `application/shared/sonar-eslint-rules` — the ESLint rules of the SonarCloud quality profile
   (`sonar-way.json`), used by the ESLint configs of both packages, and the script generating them
 - `infrastructure` — Terraform (AWS): the stages, applied by GitHub Actions (development locally), and
-  `infrastructure/bootstrap`, applied once locally (the GitHub trust, the deploy roles, the boundaries of the lambdas)
+  `infrastructure/bootstrap`, applied once locally (the GitHub trust, the deploy roles, the boundaries of the lambdas, the
+  login of staging)
 - `documentation` — resources and diagrams
 
 ## Commands

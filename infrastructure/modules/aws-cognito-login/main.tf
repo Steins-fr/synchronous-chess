@@ -1,13 +1,14 @@
-# The login of the owner of a stage restricted to it: the owner is the one user of the pool, created with the AWS CLI
-# (README), never by Terraform, whose public plan would show the email
+# The login of the owner of a stage restricted to it, created by infrastructure/bootstrap: the pool outlives the
+# destruction of the stage, and the owner, its one user, is created once with the AWS CLI (README), never by Terraform,
+# whose plan would show the email. The stage reads it (data sources of infrastructure/main.tf)
 resource "aws_cognito_user_pool" "pool" {
   name = var.name
   # The classic managed login, the TOTP and the email of Cognito: no cost under 10,000 users
   user_pool_tier           = "LITE"
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
-  # The destroy workflow deletes the stage
-  deletion_protection = "INACTIVE"
+  # It holds the user of the owner: deactivated by hand only, to destroy the bootstrap
+  deletion_protection = "ACTIVE"
 
   # A code of an authenticator app at each login, set up at the first one
   mfa_configuration = "ON"
