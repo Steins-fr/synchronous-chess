@@ -1,5 +1,6 @@
 import { Component, inject, Signal } from '@angular/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { ApiHealthState } from '@app/services/api-health/api-health-state.enum';
 import { ApiHealthService } from '@app/services/api-health/api-health.service';
 
@@ -7,7 +8,7 @@ import { ApiHealthService } from '@app/services/api-health/api-health.service';
 @Component({
     selector: 'app-api-health-overlay',
     templateUrl: './api-health-overlay.component.html',
-    imports: [MatProgressSpinner],
+    imports: [MatProgressSpinner, TranslocoDirective],
 })
 export class ApiHealthOverlayComponent {
     protected readonly ApiHealthState = ApiHealthState;

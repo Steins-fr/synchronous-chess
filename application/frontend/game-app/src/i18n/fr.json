@@ -1,4 +1,9 @@
 {
+  "apiHealth": {
+    "booting": "Démarrage du serveur…",
+    "bootingDelay": "Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une trentaine de secondes.",
+    "connecting": "Connexion au serveur…"
+  },
   "app": {
     "language": {
       "pick": "Choisir la langue"
@@ -13,5 +18,33 @@
       "toLight": "Passer au thème clair"
     },
     "title": "Échecs synchrones"
+  },
+  "chess": {
+    "presentation": {
+      "caption": "Les blancs ont choisi leur coup, les noirs ne le voient pas avant d'avoir joué le leur.",
+      "intro": "Plus d'avantage aux blancs : à chaque tour, chaque joueur choisit son coup sans connaître celui de son adversaire, puis les deux coups sont révélés et joués ensemble.",
+      "points": {
+        "intermediateTurn": "Une pièce qui s'aventure sur une case attaquée peut être capturée lors d'un tour intermédiaire.",
+        "kingCapture": "Un roi peut être capturé directement, même sans échec et mat.",
+        "sameSquare": "Deux pièces qui visent la même case se capturent mutuellement, et deux pièces peuvent échanger leur place."
+      },
+      "rooms": "Créez une salle, privée avec un mot de passe, ou rejoignez l'une des salles ouvertes. Chaque participant choisit sa couleur ; les autres regardent la partie.",
+      "tagline": "Les échecs où les deux joueurs jouent en même temps.",
+      "title": "Échecs synchrones"
+    }
+  },
+  "home": {
+    "chat": {
+      "action": "Discuter",
+      "description": "Un salon de discussion entre les participants d'une salle, leurs messages échangés de pair à pair.",
+      "title": "Tchat"
+    },
+    "chess": {
+      "action": "Jouer",
+      "description": "Les échecs où les deux joueurs jouent en même temps : chacun choisit son coup sans connaître celui de l'autre.",
+      "title": "Échecs synchrones"
+    },
+    "intro": "Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.",
+    "title": "Choisissez un jeu"
   }
 }

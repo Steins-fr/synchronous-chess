@@ -16,9 +16,9 @@ describe('ChessPresentationComponent', () => {
 
     test('should describe the game', () => {
         // Then
-        expect(fixture.nativeElement.querySelector('h1')?.textContent).toEqual('Échecs synchrones');
+        expect(fixture.nativeElement.querySelector('h1')?.textContent).toEqual('Synchronous chess');
         expect(fixture.nativeElement.querySelectorAll('.description li')).toHaveLength(3);
-        expect(fixture.nativeElement.querySelector('figcaption')?.textContent).toContain('Les blancs ont choisi leur coup');
+        expect(fixture.nativeElement.querySelector('figcaption')?.textContent).toContain('White has picked a move');
     });
 
     test('should preview the starting board with the move e2 to e4, no piece being playable', () => {

@@ -1,4 +1,9 @@
 {
+  "apiHealth": {
+    "booting": "Starting the server…",
+    "bootingDelay": "The server and its database sleep when nobody plays: waking them up takes up to about thirty seconds.",
+    "connecting": "Connecting to the server…"
+  },
   "app": {
     "language": {
       "pick": "Choose the language"
@@ -13,5 +18,33 @@
       "toLight": "Switch to the light theme"
     },
     "title": "Synchronous Chess"
+  },
+  "chess": {
+    "presentation": {
+      "caption": "White has picked a move, which Black does not see before playing theirs.",
+      "intro": "No more advantage for White: each turn, both players pick a move without knowing their opponent's, then the two moves are revealed and played together.",
+      "points": {
+        "intermediateTurn": "A piece venturing onto an attacked square can be captured in an intermediate turn.",
+        "kingCapture": "A king can be captured outright, even without checkmate.",
+        "sameSquare": "Two pieces heading for the same square capture each other, and two pieces can swap places."
+      },
+      "rooms": "Create a room, private with a password, or join one of the open rooms. Each participant picks a color; the others watch the game.",
+      "tagline": "Chess where both players move at the same time.",
+      "title": "Synchronous chess"
+    }
+  },
+  "home": {
+    "chat": {
+      "action": "Chat",
+      "description": "A chat between the participants of a room, their messages sent peer to peer.",
+      "title": "Chat"
+    },
+    "chess": {
+      "action": "Play",
+      "description": "Chess where both players move at the same time: each one picks a move without knowing the other's.",
+      "title": "Synchronous chess"
+    },
+    "intro": "Create a room, or join one of the open rooms: the players connect directly to each other.",
+    "title": "Choose a game"
   }
 }

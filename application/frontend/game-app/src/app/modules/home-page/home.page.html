@@ -1,30 +1,23 @@
-<section class="flex flex-col gap-6 max-w-4xl mx-auto p-4">
+<section *transloco="let t; prefix: 'home'" class="flex flex-col gap-6 max-w-4xl mx-auto p-4">
     <div class="flex flex-col gap-2">
-        <h1 class="m-0 mat-headline-medium">Choisissez un jeu</h1>
-        <p class="muted-note">
-            Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.
-        </p>
+        <h1 class="m-0 mat-headline-medium">{{ t('title') }}</h1>
+        <p class="muted-note">{{ t('intro') }}</p>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
         <a [routerLink]="chessPath" class="game-card" id="game-card-chess">
             <span aria-hidden="true" class="game-card-visual bg-app-board-light text-app-piece-ink text-[72px]">♞</span>
-            <h2 class="m-0 mat-title-large">Échecs synchrones</h2>
-            <p class="muted-note">
-                Les échecs où les deux joueurs jouent en même temps : chacun choisit son coup sans connaître celui de
-                l'autre.
-            </p>
-            <span class="game-card-action">Jouer <mat-icon>arrow_forward</mat-icon></span>
+            <h2 class="m-0 mat-title-large">{{ t('chess.title') }}</h2>
+            <p class="muted-note">{{ t('chess.description') }}</p>
+            <span class="game-card-action">{{ t('chess.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->
             <span aria-hidden="true" class="game-card-visual bg-app-surface text-app-accent-text">
                 <mat-icon class="size-18! text-[72px]!">forum</mat-icon>
             </span>
-            <h2 class="m-0 mat-title-large">Tchat</h2>
-            <p class="muted-note">
-                Un salon de discussion entre les participants d'une salle, leurs messages échangés de pair à pair.
-            </p>
-            <span class="game-card-action">Discuter <mat-icon>arrow_forward</mat-icon></span>
+            <h2 class="m-0 mat-title-large">{{ t('chat.title') }}</h2>
+            <p class="muted-note">{{ t('chat.description') }}</p>
+            <span class="game-card-action">{{ t('chat.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
     </div>
 </section>

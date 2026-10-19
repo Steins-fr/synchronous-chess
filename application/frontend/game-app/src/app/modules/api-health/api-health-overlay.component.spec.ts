@@ -32,15 +32,15 @@ describe('ApiHealthOverlayComponent', () => {
 
         // Then
         expect(overlay()?.querySelector('mat-spinner')).not.toBeNull();
-        expect(overlay()?.textContent).toContain('Connexion au serveur…');
+        expect(overlay()?.textContent).toContain('Connecting to the server…');
 
         // When
         state.set(ApiHealthState.BOOTING);
         await fixture.whenStable();
 
         // Then
-        expect(overlay()?.textContent).toContain('Démarrage du serveur…');
-        expect(overlay()?.textContent).toContain('Le serveur et sa base de données se mettent en veille quand personne ne joue');
-        expect(overlay()?.textContent).not.toContain('Connexion au serveur…');
+        expect(overlay()?.textContent).toContain('Starting the server…');
+        expect(overlay()?.textContent).toContain('The server and its database sleep when nobody plays');
+        expect(overlay()?.textContent).not.toContain('Connecting to the server…');
     });
 });
