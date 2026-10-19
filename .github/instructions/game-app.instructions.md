@@ -180,7 +180,7 @@ Claude writes the translations of every new or changed key, into every language:
 | win | victoire | victoria | vitória | vitória | Sieg | победа | galibiyet | menang | wygrana | vittoria |
 | room | salle | sala | sala | sala | Raum | комната | oda | ruang | pokój | stanza |
 | open rooms | salles ouvertes | salas abiertas | salas abertas | salas abertas | offene Räume | открытые комнаты | açık odalar | ruang terbuka | otwarte pokoje | stanze aperte |
-| private / public room | salle privée / publique | sala privada / pública | sala privada / pública | sala privada / pública | privater / öffentlicher Raum | закрытая / открытая комната | özel / herkese açık oda | ruang privat / publik | pokój prywatny / publiczny | stanza privata / pubblica |
+| private / public room | salle privée / publique | sala privada / pública | sala privada / pública | sala privada / pública | privater / öffentlicher Raum | приватная / публичная комната | özel / herkese açık oda | ruang privat / publik | pokój prywatny / publiczny | stanza privata / pubblica |
 | host | hôte | anfitrión | anfitrião | anfitrião | Gastgeber | хост | ev sahibi | tuan rumah | gospodarz | host |
 | player | joueur | jugador | jogador | jogador | Spieler | игрок | oyuncu | pemain | gracz | giocatore |
 | participant | participant | participante | participante | participante | Teilnehmer | участник | katılımcı | peserta | uczestnik | partecipante |

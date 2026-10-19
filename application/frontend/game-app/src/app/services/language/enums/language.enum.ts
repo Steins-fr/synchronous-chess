@@ -6,4 +6,5 @@ export enum Language {
     PT_BR = 'pt-BR',
     PT_PT = 'pt-PT',
     DE = 'de',
+    RU = 'ru',
 }

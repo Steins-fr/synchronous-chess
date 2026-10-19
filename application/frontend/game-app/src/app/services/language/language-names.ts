@@ -8,4 +8,5 @@ export const LANGUAGE_NAMES: Readonly<Record<Language, string>> = {
     [Language.PT_BR]: 'Português (Brasil)',
     [Language.PT_PT]: 'Português (Portugal)',
     [Language.DE]: 'Deutsch',
+    [Language.RU]: 'Русский',
 };
