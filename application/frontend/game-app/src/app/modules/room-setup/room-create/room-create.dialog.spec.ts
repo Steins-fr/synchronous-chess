@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { textFieldInput } from '@testing/text-field.helper';
 import { describe, expect, test } from 'vitest';
 import { RoomCreate, RoomCreateDialog } from './room-create.dialog';
 
@@ -15,7 +16,7 @@ describe('RoomCreateDialog', () => {
     }
 
     function input(label: string): HTMLInputElement {
-        return fixture.nativeElement.querySelector(`app-text-field[label="${ label }"] input`);
+        return textFieldInput(fixture.nativeElement, label);
     }
 
     async function typeIn(label: string, value: string): Promise<void> {
@@ -36,8 +37,8 @@ describe('RoomCreateDialog', () => {
     test('should give a public room without password', async () => {
         // Given
         await createDialog();
-        await typeIn('Nom de la salle', 'room');
-        await typeIn('Nom du joueur', 'alice');
+        await typeIn('Room name', 'room');
+        await typeIn('Player name', 'alice');
 
         // When
         await create();
@@ -49,55 +50,55 @@ describe('RoomCreateDialog', () => {
     test('should give a private room with its password, hidden as it is typed', async () => {
         // Given
         await createDialog({ roomName: 'room', playerName: 'alice' });
-        await typeIn('Mot de passe (salle privée)', 'secret');
+        await typeIn('Password (private room)', 'secret');
 
         // When
         await create();
 
         // Then
-        expect(input('Nom de la salle').value).toEqual('room');
-        expect(input('Mot de passe (salle privée)').type).toEqual('password');
+        expect(input('Room name').value).toEqual('room');
+        expect(input('Password (private room)').type).toEqual('password');
         expect(rooms).toEqual([{ roomName: 'room', playerName: 'alice', password: 'secret' }]);
     });
 
     test('should require the room and player names, spaces only refused', async () => {
         // Given
         await createDialog();
-        await typeIn('Nom de la salle', '   ');
+        await typeIn('Room name', '   ');
 
         // When
         await create();
 
         // Then
         expect(rooms).toEqual([]);
-        expect(errors()).toEqual(['Le nom de la salle est requis', 'Le nom du joueur est requis']);
+        expect(errors()).toEqual(['The room name is required', 'The player name is required']);
         expect(fixture.nativeElement.querySelectorAll('.mat-mdc-form-field-required-marker')).toHaveLength(2);
     });
 
     test('should refuse a password shorter than the API accepts', async () => {
         // Given
         await createDialog({ roomName: 'room', playerName: 'alice' });
-        await typeIn('Mot de passe (salle privée)', 'p'.repeat(5));
+        await typeIn('Password (private room)', 'p'.repeat(5));
 
         // When
         await create();
 
         // Then
         expect(rooms).toEqual([]);
-        expect(errors()).toEqual(['Le mot de passe fait 6 caractères au moins']);
+        expect(errors()).toEqual(['The password is at least 6 characters long']);
     });
 
     test('should refuse a password longer than the API accepts', async () => {
         // Given
         await createDialog({ roomName: 'room', playerName: 'alice' });
-        await typeIn('Mot de passe (salle privée)', 'p'.repeat(129));
+        await typeIn('Password (private room)', 'p'.repeat(129));
 
         // When
         await create();
 
         // Then
         expect(rooms).toEqual([]);
-        expect(errors()).toEqual(['Le mot de passe fait 128 caractères au plus']);
+        expect(errors()).toEqual(['The password is at most 128 characters long']);
     });
 
     test('should refuse the names longer than the API accepts', async () => {
@@ -109,6 +110,6 @@ describe('RoomCreateDialog', () => {
 
         // Then
         expect(rooms).toEqual([]);
-        expect(errors()).toEqual(['Le nom de la salle fait 32 caractères au plus', 'Le nom du joueur fait 32 caractères au plus']);
+        expect(errors()).toEqual(['The room name is at most 32 characters long', 'The player name is at most 32 characters long']);
     });
 });

@@ -1,64 +1,70 @@
-<div class="flex flex-wrap items-center gap-2">
-    <h2 class="m-0 mat-title-medium">Salles ouvertes</h2>
-    <button (click)="refresh()" aria-label="Actualiser les salles" id="open-rooms-refresh" mat-icon-button type="button">
-        <mat-icon>refresh</mat-icon>
-    </button>
-    <!-- The actions of the page on the rooms, at the end of the title line -->
-    <div class="ml-auto">
-        <ng-content />
-    </div>
-</div>
-<app-text-field [field]="searchForm.text" class="max-w-md" label="Rechercher une salle" />
-<!-- No value once the list failed: value() would throw -->
-@if (rooms.hasValue() && rooms.value(); as shown) {
-@if (shown.rooms.length === 0) {
-<p class="muted-note">
-    @if (shown.search === '') {
-    Aucune salle à rejoindre pour le moment : créez la vôtre !
-    } @else {
-    Aucune salle ne contient « {{ shown.search }} ».
-    }
-</p>
-} @else {
-<ul class="m-0 p-0 list-none flex flex-col gap-2">
-    @for (room of shown.rooms; track room.roomName) {
-    <li class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 border border-app-border rounded-lg bg-app-surface-raised">
-        <!-- Read by the screen readers: Material hides an icon otherwise -->
-        @if (room.isPrivate) {
-        <mat-icon aria-hidden="false" aria-label="Salle privée" class="text-app-accent-text" role="img">lock</mat-icon>
-        } @else {
-        <mat-icon aria-hidden="false" aria-label="Salle publique" class="text-app-text-muted" role="img">public</mat-icon>
-        }
-        <span class="font-bold">{{ room.roomName }}</span>
-        <!-- Not told for a private room: its names are told to the players giving its password only -->
-        @if (room.hostPlayer !== undefined) {
-        <span class="text-app-text-muted">Hôte : {{ room.hostPlayer }}</span>
-        }
-        @if (!room.hostConnected) {
-        <span class="room-state">Hôte en reconnexion</span>
-        } @else if (isFull(room)) {
-        <span class="room-state">Pleine</span>
-        }
-        <span class="ml-auto">{{ room.playerCount }} / {{ room.maxPlayer }}</span>
-        <!-- Joinable even full or without its host: a participant joins its room again once it has its place back -->
-        <button (click)="joinRoom.emit(room)" [attr.aria-label]="'Rejoindre la salle ' + room.roomName" mat-stroked-button type="button">
-            Rejoindre
+<ng-container *transloco="let t; prefix: 'rooms.open'">
+    <div class="flex flex-wrap items-center gap-2">
+        <h2 class="m-0 mat-title-medium">{{ t('title') }}</h2>
+        <button (click)="refresh()" [attr.aria-label]="t('refresh')" id="open-rooms-refresh" mat-icon-button
+            type="button">
+            <mat-icon>refresh</mat-icon>
         </button>
-    </li>
-    }
-</ul>
-@if (shown.hasMore) {
-<p class="muted-note">
-    @if (shown.search === '') {
-    Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.
+        <!-- The actions of the page on the rooms, at the end of the title line -->
+        <div class="ml-auto">
+            <ng-content />
+        </div>
+    </div>
+    <app-text-field [field]="searchForm.text" [label]="t('search.label')" class="max-w-md" />
+    <!-- No value once the list failed: value() would throw -->
+    @if (rooms.hasValue() && rooms.value(); as shown) {
+    @if (shown.rooms.length === 0) {
+    <p class="muted-note">
+        @if (shown.search === '') {
+        {{ t('empty') }}
+        } @else {
+        {{ t('noMatch', { search: shown.search }) }}
+        }
+    </p>
     } @else {
-    D'autres salles contiennent « {{ shown.search }} » : précisez la recherche pour les trouver.
+    <ul class="m-0 p-0 list-none flex flex-col gap-2">
+        @for (room of shown.rooms; track room.roomName) {
+        <li class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2 border border-app-border rounded-lg bg-app-surface-raised">
+            <!-- Read by the screen readers: Material hides an icon otherwise -->
+            @if (room.isPrivate) {
+            <mat-icon [attr.aria-label]="t('private')" aria-hidden="false" class="text-app-accent-text"
+                role="img">lock</mat-icon>
+            } @else {
+            <mat-icon [attr.aria-label]="t('public')" aria-hidden="false" class="text-app-text-muted"
+                role="img">public</mat-icon>
+            }
+            <span class="font-bold">{{ room.roomName }}</span>
+            <!-- Not told for a private room: its names are told to the players giving its password only -->
+            @if (room.hostPlayer !== undefined) {
+            <span class="text-app-text-muted">{{ t('host', { host: room.hostPlayer }) }}</span>
+            }
+            @if (!room.hostConnected) {
+            <span class="room-state">{{ t('hostReconnecting') }}</span>
+            } @else if (isFull(room)) {
+            <span class="room-state">{{ t('full') }}</span>
+            }
+            <span class="ml-auto">{{ room.playerCount }} / {{ room.maxPlayer }}</span>
+            <!-- Joinable even full or without its host: a participant joins its room again once it has its place back -->
+            <button (click)="joinRoom.emit(room)" [attr.aria-label]="t('joinRoom', { roomName: room.roomName })"
+                mat-stroked-button type="button">
+                {{ t('join') }}
+            </button>
+        </li>
+        }
+    </ul>
+    @if (shown.hasMore) {
+    <p class="muted-note">
+        @if (shown.search === '') {
+        {{ t('mostRecent') }}
+        } @else {
+        {{ t('moreMatches', { search: shown.search }) }}
+        }
+    </p>
     }
-</p>
-}
-}
-} @else if (rooms.error()) {
-<p class="muted-note">Les salles n'ont pas pu être chargées.</p>
-} @else {
-<p class="muted-note">Chargement des salles…</p>
-}
+    }
+    } @else if (rooms.error()) {
+    <p class="muted-note">{{ t('error') }}</p>
+    } @else {
+    <p class="muted-note">{{ t('loading') }}</p>
+    }
+</ng-container>

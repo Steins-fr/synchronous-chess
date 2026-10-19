@@ -19,6 +19,10 @@
     },
     "title": "Synchronous Chess"
   },
+  "cheat": {
+    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} other {}}) from {author} is reported as cheating by {reporters}",
+    "ignored": "A message ({chain, select, chess {chess} chat {chat} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
+  },
   "chess": {
     "presentation": {
       "caption": "White has picked a move, which Black does not see before playing theirs.",
@@ -33,6 +37,13 @@
       "title": "Synchronous chess"
     }
   },
+  "dialog": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "no": "No",
+    "yes": "Yes"
+  },
   "home": {
     "chat": {
       "action": "Chat",
@@ -46,5 +57,78 @@
     },
     "intro": "Create a room, or join one of the open rooms: the players connect directly to each other.",
     "title": "Choose a game"
+  },
+  "rooms": {
+    "create": {
+      "intro": "The other players will find it in the list of the open rooms: with a password, it is private.",
+      "submit": "Create",
+      "title": "Create a room"
+    },
+    "errors": {
+      "alreadyExists": "The room already exists.",
+      "fullOrGone": "The room is full or no longer exists.",
+      "hostDisconnected": "The host of the room disconnected.",
+      "nameInRoom": "A player of this name is already in the room.",
+      "nameWaiting": "A player of this name is already waiting to enter the room.",
+      "notCreated": "The room could not be created.",
+      "otherGame": "This room belongs to another game.",
+      "private": "This room is private: join it from the list, with its password.",
+      "tooManyPasswords": "Too many wrong passwords for this room: try again in a minute.",
+      "wrongPassword": "The password of the room is wrong."
+    },
+    "form": {
+      "password": {
+        "label": "Password",
+        "maxLength": "The password is at most {maxLength, plural, one {# character} other {# characters}} long",
+        "minLength": "The password is at least {minLength, plural, one {# character} other {# characters}} long",
+        "privateRoomLabel": "Password (private room)",
+        "required": "The password is required"
+      },
+      "playerName": {
+        "label": "Player name",
+        "maxLength": "The player name is at most {maxLength, plural, one {# character} other {# characters}} long",
+        "required": "The player name is required"
+      },
+      "roomName": {
+        "label": "Room name",
+        "maxLength": "The room name is at most {maxLength, plural, one {# character} other {# characters}} long",
+        "required": "The room name is required"
+      }
+    },
+    "join": {
+      "intro": "Enter your name to join the room “{roomName}”.",
+      "privateIntro": "The room “{roomName}” is private: enter your name and its password to join it.",
+      "submit": "Join",
+      "title": "Join the room"
+    },
+    "notifications": {
+      "hostReconnecting": "The host of the room is reconnecting…",
+      "hostUnreachable": "The connection to the host of the room failed.",
+      "joiningAgain": "The connection to the host of the room failed, trying again…",
+      "nameStillInRoom": "This name is still in the room, reconnecting…",
+      "roomFull": "The room is full.",
+      "roomLost": "The room lost its connection to the server: nobody can join it anymore."
+    },
+    "open": {
+      "empty": "No room to join for now: create yours!",
+      "error": "The rooms could not be loaded.",
+      "full": "Full",
+      "host": "Host: {host}",
+      "hostReconnecting": "Host reconnecting",
+      "join": "Join",
+      "joinRoom": "Join the room {roomName}",
+      "loading": "Loading the rooms…",
+      "moreMatches": "Other rooms contain “{search}”: refine the search to find them.",
+      "mostRecent": "Only the most recent rooms are shown: search for the others by their name.",
+      "noMatch": "No room contains “{search}”.",
+      "private": "Private room",
+      "public": "Public room",
+      "refresh": "Refresh the rooms",
+      "search": {
+        "label": "Search for a room",
+        "maxLength": "The search is at most {maxLength, plural, one {# character} other {# characters}} long"
+      },
+      "title": "Open rooms"
+    }
   }
 }

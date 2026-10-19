@@ -16,12 +16,13 @@ import {
 } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
     selector: 'app-dialog-wrapper',
     templateUrl: './dialog-wrapper.component.html',
     standalone: true,
-    imports: [MatIconButton, MatIcon],
+    imports: [MatIconButton, MatIcon, TranslocoPipe],
 })
 export class DialogWrapperComponent<TChild, TResult = void> implements OnInit {
     container = viewChild.required<ViewContainerRef>('container', {
@@ -36,6 +37,7 @@ export class DialogWrapperComponent<TChild, TResult = void> implements OnInit {
 
     /** Dialog design options */
     public readonly closable = input<boolean>(true);
+    /** The key of the title */
     public readonly title = input<string | undefined>(undefined);
 
     /** Output signal */

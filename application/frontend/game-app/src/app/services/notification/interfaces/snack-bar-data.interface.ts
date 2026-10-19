@@ -1,3 +1,6 @@
+import { TranslatableText } from '@app/types/translatable-text.type';
+
 export interface SnackBarDataInterface {
-    content: string;
+    // Translated in the language shown, followed while the snack bar is open
+    content: TranslatableText;
 }

@@ -1,9 +1,9 @@
-<p class="mb-2">{{ description() }}</p>
-<div class="flex gap-2 flex-wrap ml-auto">
+<p class="mb-2">{{ description() | transloco }}</p>
+<div *transloco="let t; prefix: 'dialog'" class="flex gap-2 flex-wrap ml-auto">
     <button (click)="result.emit(false)" class="min-w-[100px]" id="confirm-no" mat-stroked-button type="button">
-        {{ buttonLabels() === 'yes-no' ? 'Non' : 'Annuler' }}
+        {{ t(buttonLabels() === 'yes-no' ? 'no' : 'cancel') }}
     </button>
     <button (click)="result.emit(true)" class="min-w-[100px]" id="confirm-yes" mat-flat-button type="button">
-        {{ buttonLabels() === 'yes-no' ? 'Oui' : 'Confirmer' }}
+        {{ t(buttonLabels() === 'yes-no' ? 'yes' : 'confirm') }}
     </button>
 </div>

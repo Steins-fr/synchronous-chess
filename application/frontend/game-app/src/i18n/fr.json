@@ -19,6 +19,10 @@
     },
     "title": "Échecs synchrones"
   },
+  "cheat": {
+    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est signalé comme triché par {reporters}",
+    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
+  },
   "chess": {
     "presentation": {
       "caption": "Les blancs ont choisi leur coup, les noirs ne le voient pas avant d'avoir joué le leur.",
@@ -33,6 +37,13 @@
       "title": "Échecs synchrones"
     }
   },
+  "dialog": {
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "no": "Non",
+    "yes": "Oui"
+  },
   "home": {
     "chat": {
       "action": "Discuter",
@@ -46,5 +57,78 @@
     },
     "intro": "Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.",
     "title": "Choisissez un jeu"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Les autres joueurs la trouveront dans la liste des salles ouvertes : avec un mot de passe, elle est privée.",
+      "submit": "Créer",
+      "title": "Créer une salle"
+    },
+    "errors": {
+      "alreadyExists": "La salle existe déjà.",
+      "fullOrGone": "La salle est pleine ou elle n'existe plus.",
+      "hostDisconnected": "L'hôte de la salle s'est déconnecté.",
+      "nameInRoom": "Un joueur de ce nom est déjà dans la salle.",
+      "nameWaiting": "Un joueur de ce nom attend déjà d'entrer dans la salle.",
+      "notCreated": "La salle n'a pas pu être créée.",
+      "otherGame": "Cette salle est celle d'un autre jeu.",
+      "private": "Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.",
+      "tooManyPasswords": "Trop de mots de passe incorrects pour cette salle : réessayez dans une minute.",
+      "wrongPassword": "Le mot de passe de la salle est incorrect."
+    },
+    "form": {
+      "password": {
+        "label": "Mot de passe",
+        "maxLength": "Le mot de passe fait {maxLength, plural, one {# caractère} other {# caractères}} au plus",
+        "minLength": "Le mot de passe fait {minLength, plural, one {# caractère} other {# caractères}} au moins",
+        "privateRoomLabel": "Mot de passe (salle privée)",
+        "required": "Le mot de passe est requis"
+      },
+      "playerName": {
+        "label": "Nom du joueur",
+        "maxLength": "Le nom du joueur fait {maxLength, plural, one {# caractère} other {# caractères}} au plus",
+        "required": "Le nom du joueur est requis"
+      },
+      "roomName": {
+        "label": "Nom de la salle",
+        "maxLength": "Le nom de la salle fait {maxLength, plural, one {# caractère} other {# caractères}} au plus",
+        "required": "Le nom de la salle est requis"
+      }
+    },
+    "join": {
+      "intro": "Saisissez votre nom pour rejoindre la salle « {roomName} ».",
+      "privateIntro": "La salle « {roomName} » est privée : saisissez votre nom et son mot de passe pour la rejoindre.",
+      "submit": "Rejoindre",
+      "title": "Rejoindre la salle"
+    },
+    "notifications": {
+      "hostReconnecting": "L'hôte de la salle se reconnecte…",
+      "hostUnreachable": "La connexion à l'hôte de la salle a échoué.",
+      "joiningAgain": "La connexion à l'hôte de la salle a échoué, nouvelle tentative…",
+      "nameStillInRoom": "Ce nom est encore dans la salle, reconnexion en cours…",
+      "roomFull": "La salle est pleine.",
+      "roomLost": "La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre."
+    },
+    "open": {
+      "empty": "Aucune salle à rejoindre pour le moment : créez la vôtre !",
+      "error": "Les salles n'ont pas pu être chargées.",
+      "full": "Pleine",
+      "host": "Hôte : {host}",
+      "hostReconnecting": "Hôte en reconnexion",
+      "join": "Rejoindre",
+      "joinRoom": "Rejoindre la salle {roomName}",
+      "loading": "Chargement des salles…",
+      "moreMatches": "D'autres salles contiennent « {search} » : précisez la recherche pour les trouver.",
+      "mostRecent": "Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.",
+      "noMatch": "Aucune salle ne contient « {search} ».",
+      "private": "Salle privée",
+      "public": "Salle publique",
+      "refresh": "Actualiser les salles",
+      "search": {
+        "label": "Rechercher une salle",
+        "maxLength": "La recherche fait {maxLength, plural, one {# caractère} other {# caractères}} au plus"
+      },
+      "title": "Salles ouvertes"
+    }
   }
 }

@@ -29,6 +29,10 @@ export class DialogService {
     private readonly overlay = inject(Overlay);
     private readonly injector = inject(Injector);
 
+    /**
+     * @param title the key of the title
+     * @param message the key of the question
+     */
     public async confirm(
         title: string,
         message: string,
@@ -50,6 +54,7 @@ export class DialogService {
     >(
         component: Type<DialogContentComponent>,
         options?: {
+            /** The key of the title */
             title?: string;
             closable?: boolean;
             inputs?: Partial<ExtractInputSignals<DialogContentComponent>>;

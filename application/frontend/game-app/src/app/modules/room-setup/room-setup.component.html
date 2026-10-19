@@ -4,7 +4,9 @@
     <mat-spinner [diameter]="42" />
     } @else {
     <app-open-rooms (joinRoom)="joinOpenRoom($event)" [game]="game()">
-        <button (click)="createRoom()" id="room-create" mat-flat-button type="button">Créer une salle</button>
+        <button (click)="createRoom()" id="room-create" mat-flat-button type="button">
+            {{ 'rooms.create.title' | transloco }}
+        </button>
     </app-open-rooms>
     }
 </div>

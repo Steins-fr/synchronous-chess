@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import { NotificationService } from '@app/services/notification/notification.service';
 import { CheatFlag, CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -50,11 +51,8 @@ describe('notifyCheatFlags', () => {
         TestBed.tick();
 
         // Then
-        expect(vi.mocked(notificationService.error).mock.calls).toEqual([
-            ['Le message 3 (chess) de bob est signalé comme triché par alice'],
-            ['Le message 3 (chess) de bob est signalé comme triché par alice, carol'],
-            ['Le message 3 (chess) de bob est signalé comme triché par alice'],
-        ]);
+        const flagged = (reporters: string) => [{ key: 'cheat.flagged', params: { chain: BlockChainName.CHESS, author: 'bob', reporters, index: 3 } }];
+        expect(vi.mocked(notificationService.error).mock.calls).toEqual([flagged('alice'), flagged('alice, carol'), flagged('alice')]);
     });
 
     test('should notify an entry the sequencer does not order', () => {
@@ -66,6 +64,11 @@ describe('notifyCheatFlags', () => {
         TestBed.tick();
 
         // Then
-        expect(notificationService.error).toHaveBeenCalledExactlyOnceWith('Un message (chess) de bob est ignoré par host, signalé par alice');
+        expect(notificationService.error).toHaveBeenCalledExactlyOnceWith({
+            key: 'cheat.ignored',
+            params: { chain: BlockChainName.CHESS, author: 'bob', reporters: 'alice', sequencer: 'host' },
+        });
+        const [[text]] = vi.mocked(notificationService.error).mock.calls;
+        expect(TestBed.inject(TranslocoService).translate(text.key, text.params)).toEqual('A message (chess) from bob is ignored by host, reported by alice');
     });
 });

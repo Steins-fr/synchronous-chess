@@ -1,6 +1,8 @@
 import { Component, input, linkedSignal, output } from '@angular/core';
 import { form, required, submit } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { playerNameRules, roomPasswordRules } from '../room-form.rules';
 
@@ -21,7 +23,7 @@ type RoomJoinForm = {
 @Component({
     selector: 'app-room-join-dialog',
     templateUrl: './room-join.dialog.html',
-    imports: [TextFieldComponent, MatButton],
+    imports: [TextFieldComponent, MatButton, TranslocoDirective],
 })
 export class RoomJoinDialog {
     public readonly result = output<RoomJoin>();
@@ -35,7 +37,7 @@ export class RoomJoinDialog {
     protected readonly joinForm = form(this.model, (path) => {
         playerNameRules(path.playerName);
         // Not a required text: a password may be made of spaces
-        required(path.password, { message: 'Le mot de passe est requis', when: () => this.isPrivate() });
+        required(path.password, { message: marker('rooms.form.password.required'), when: () => this.isPrivate() });
         roomPasswordRules(path.password);
     }, { name: 'room-join' });
 

@@ -1,1 +1,2 @@
-<div [innerHTML]="data.content" id="custom-snack-bar"></div>
+<!-- A text, never html: its params can be names typed by the players -->
+<div id="custom-snack-bar">{{ data.content.key | transloco: data.content.params }}</div>

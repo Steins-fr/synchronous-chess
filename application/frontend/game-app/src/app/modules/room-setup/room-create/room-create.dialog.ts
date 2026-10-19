@@ -1,6 +1,7 @@
 import { Component, input, linkedSignal, output } from '@angular/core';
 import { form, schema, submit } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { playerNameRules, roomNameRules, roomPasswordRules } from '../room-form.rules';
 
@@ -30,7 +31,7 @@ const roomCreateSchema = schema<RoomCreateForm>((path) => {
 @Component({
     selector: 'app-room-create-dialog',
     templateUrl: './room-create.dialog.html',
-    imports: [TextFieldComponent, MatButton],
+    imports: [TextFieldComponent, MatButton, TranslocoDirective],
 })
 export class RoomCreateDialog {
     public readonly result = output<RoomCreate>();

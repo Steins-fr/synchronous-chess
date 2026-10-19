@@ -7,7 +7,7 @@ import { requiredText } from './required-text.rule';
 describe('requiredText', () => {
     function nameForm(name: WritableSignal<string>): FieldTree<string> {
         return form(name, (path) => {
-            requiredText(path, 'Le nom est requis');
+            requiredText(path, 'player.name.required');
         }, { injector: TestBed.inject(Injector) });
     }
 
@@ -21,7 +21,7 @@ describe('requiredText', () => {
         // Then
         expect(field().required()).toEqual(true);
         expect(field().invalid()).toEqual(true);
-        expect(field().errors().map((error) => error.message)).toEqual(['Le nom est requis']);
+        expect(field().errors().map((error) => error.message)).toEqual(['player.name.required']);
     });
 
     test('should accept a text', () => {

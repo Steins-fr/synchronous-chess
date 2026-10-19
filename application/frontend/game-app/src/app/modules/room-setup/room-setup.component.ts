@@ -3,6 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, ParamMap } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
 import RoomSetupService, { RoomSetupType } from '@app/services/room-setup/room-setup.service';
@@ -17,7 +19,7 @@ import { RoomJoin, RoomJoinDialog } from './room-join/room-join.dialog';
 @Component({
     selector: 'app-room-setup',
     templateUrl: './room-setup.component.html',
-    imports: [OpenRoomsComponent, MatButtonModule, MatProgressSpinnerModule],
+    imports: [OpenRoomsComponent, MatButtonModule, MatProgressSpinnerModule, TranslocoPipe],
 })
 export class RoomSetupComponent implements OnInit {
     public readonly game = input.required<RoomGame>();
@@ -45,7 +47,7 @@ export class RoomSetupComponent implements OnInit {
 
     protected async createRoom(): Promise<void> {
         const room: RoomCreate | void = await this.dialogService.open(RoomCreateDialog, {
-            title: 'Créer une salle',
+            title: marker('rooms.create.title'),
             inputs: { roomName: this.createdRoomName, playerName: this.playerName },
         });
 
@@ -59,7 +61,7 @@ export class RoomSetupComponent implements OnInit {
     /** Joins a room of the list under the name asked, with the password of a private one */
     protected async joinOpenRoom(room: Readonly<OpenRoom>): Promise<void> {
         const join: RoomJoin | void = await this.dialogService.open(RoomJoinDialog, {
-            title: 'Rejoindre la salle',
+            title: marker('rooms.join.title'),
             inputs: { roomName: room.roomName, isPrivate: room.isPrivate, playerName: this.playerName },
         });
 

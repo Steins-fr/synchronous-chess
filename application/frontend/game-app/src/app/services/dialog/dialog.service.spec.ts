@@ -1,5 +1,6 @@
 import { ApplicationRef, Component, EventEmitter, input, output } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import { DialogService } from './dialog.service';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -42,16 +43,22 @@ describe('DialogService', () => {
     }
 
     beforeEach(() => {
+        // The titles and the questions are keys, translated by the dialogs
+        const transloco: TranslocoService = TestBed.inject(TranslocoService);
+        transloco.setTranslationKey('test.title', 'My title');
+        transloco.setTranslationKey('test.confirm', 'Confirm');
+        transloco.setTranslationKey('test.question', 'Are you sure?');
         service = TestBed.inject(DialogService);
     });
 
     test('open should display the component and resolve with its result', async () => {
         // Given
-        const result: Promise<string | void> = service.open(TestDialog, { title: 'My title', inputs: { value: 'chosen' } });
+        const result: Promise<string | void> = service.open(TestDialog, { title: 'test.title', inputs: { value: 'chosen' } });
         await render();
 
         // Then
         expect(overlay().querySelector('h1')?.textContent).toEqual('My title');
+        expect(overlay().querySelector('#dialog-close')?.getAttribute('aria-label')).toEqual('Close');
         expect(overlay().querySelector('.emit')?.textContent).toEqual('chosen');
 
         // When
@@ -140,14 +147,14 @@ describe('DialogService', () => {
 
     test('confirm should display the question and resolve false when dismissed', async () => {
         // Given
-        const result: Promise<boolean> = service.confirm('Confirm', 'Are you sure?', 'confirm-cancel');
+        const result: Promise<boolean> = service.confirm('test.confirm', 'test.question', 'confirm-cancel');
         await render();
 
         // Then
         expect(overlay().querySelector('h1')?.textContent).toEqual('Confirm');
         expect(overlay().querySelector('app-confirm-dialog p')?.textContent).toEqual('Are you sure?');
-        expect(overlay().querySelector('#confirm-no')?.textContent?.trim()).toEqual('Annuler');
-        expect(overlay().querySelector('#confirm-yes')?.textContent?.trim()).toEqual('Confirmer');
+        expect(overlay().querySelector('#confirm-no')?.textContent?.trim()).toEqual('Cancel');
+        expect(overlay().querySelector('#confirm-yes')?.textContent?.trim()).toEqual('Confirm');
 
         // When
         pressKey('Escape');
@@ -158,12 +165,12 @@ describe('DialogService', () => {
 
     test('confirm should resolve true when the user says yes', async () => {
         // Given
-        const result: Promise<boolean> = service.confirm('Confirm', 'Are you sure?');
+        const result: Promise<boolean> = service.confirm('test.confirm', 'test.question');
         await render();
 
         // Then
-        expect(overlay().querySelector('#confirm-no')?.textContent?.trim()).toEqual('Non');
-        expect(overlay().querySelector('#confirm-yes')?.textContent?.trim()).toEqual('Oui');
+        expect(overlay().querySelector('#confirm-no')?.textContent?.trim()).toEqual('No');
+        expect(overlay().querySelector('#confirm-yes')?.textContent?.trim()).toEqual('Yes');
 
         // When
         (overlay().querySelector('#confirm-yes') as HTMLButtonElement).click();
@@ -174,7 +181,7 @@ describe('DialogService', () => {
 
     test('confirm should resolve false when the user says no', async () => {
         // Given
-        const result: Promise<boolean> = service.confirm('Confirm', 'Are you sure?');
+        const result: Promise<boolean> = service.confirm('test.confirm', 'test.question');
         await render();
 
         // When
