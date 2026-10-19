@@ -40,6 +40,45 @@
     "ignored": "A message ({chain, select, chess {chess} chat {chat} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
   },
   "chess": {
+    "game": {
+      "check": "Check",
+      "checkmate": "Checkmate",
+      "lastMove": {
+        "label": "Last move:",
+        "move": "{from} -> {to}",
+        "none": "none",
+        "passed": "passed"
+      },
+      "pass": "Pass",
+      "played": "played",
+      "promotion": "Promotion",
+      "result": {
+        "checkmate": "Checkmate: {winner, select, w {White wins} other {Black wins}}",
+        "doubleCheckmate": "Draw: both players are checkmated",
+        "fiftyTurns": "Draw: 50 turns without a pawn move or a capture",
+        "insufficientMaterial": "Draw: not enough pieces left to checkmate",
+        "kingCaptured": "King captured: {winner, select, w {White wins} other {Black wins}}",
+        "kingsCaptured": "Draw: both kings were captured",
+        "stalemate": "Draw: stalemate, a player can no longer move",
+        "threefoldRepetition": "Draw: the same position occurred three times"
+      },
+      "seat": {
+        "black": "Black player:",
+        "free": "Waiting",
+        "leave": "Leave the seat",
+        "playBlack": "Play black",
+        "playWhite": "Play white",
+        "white": "White player:"
+      },
+      "spectators": "Spectators: {count}",
+      "turn": {
+        "intermediate": "Intermediate",
+        "label": "Turn:",
+        "promotion": "Promotion",
+        "sync": "Synchronous"
+      },
+      "waiting": "waiting"
+    },
     "presentation": {
       "caption": "White has picked a move, which Black does not see before playing theirs.",
       "intro": "No more advantage for White: each turn, both players pick a move without knowing their opponent's, then the two moves are revealed and played together.",
@@ -52,6 +91,9 @@
       "tagline": "Chess where both players move at the same time.",
       "title": "Synchronous chess"
     }
+  },
+  "chessRules": {
+    "summary": "Rules of the game"
   },
   "dialog": {
     "cancel": "Cancel",

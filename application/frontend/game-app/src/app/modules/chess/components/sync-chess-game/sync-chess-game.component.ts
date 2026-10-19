@@ -1,6 +1,8 @@
 
 import { Component, OnDestroy, computed, input, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
@@ -20,12 +22,13 @@ import { ChessBoardComponent } from '../chess/chess-board/chess-board.component'
 import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
+import { TranslatableText } from '@app/types/translatable-text.type';
 
 @Component({
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
-    imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent],
+    imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent, TranslocoDirective, TranslocoPipe],
 })
 export class SyncChessGameComponent implements OnDestroy {
     public readonly room = input.required<Room<ChessPayloads> | undefined>();
@@ -72,15 +75,16 @@ export class SyncChessGameComponent implements OnDestroy {
         this.playedPiece.set(new Vec2(-1, -1));
     }
 
+    /** The key of the name of the turn */
     public turnType(): string {
         const turnType: TurnType = this.gameSession().game.getTurnType();
         switch (turnType) {
             case TurnType.MOVE_SYNC:
-                return 'Synchronisé';
+                return marker('chess.game.turn.sync');
             case TurnType.MOVE_INTERMEDIATE:
-                return 'Intermédiaire';
+                return marker('chess.game.turn.intermediate');
             case TurnType.CHOICE_PROMOTION:
-                return 'Promotion';
+                return marker('chess.game.turn.promotion');
             default:
                 return switchExhaustivenessGuard(turnType);
         }
@@ -111,14 +115,14 @@ export class SyncChessGameComponent implements OnDestroy {
         return this.gameSession().game.hasPlayed(PieceColor.BLACK);
     }
 
-    public whiteLastMove(): string {
+    public whiteLastMove(): TranslatableText {
         const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
-        return action === null ? '' : this.formatLastMove(action.whiteMove);
+        return action === null ? { key: marker('chess.game.lastMove.none') } : this.formatLastMove(action.whiteMove);
     }
 
-    public blackLastMove(): string {
+    public blackLastMove(): TranslatableText {
         const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
-        return action === null ? '' : this.formatLastMove(action.blackMove);
+        return action === null ? { key: marker('chess.game.lastMove.none') } : this.formatLastMove(action.blackMove);
     }
 
     public displayBlackInteractions(): boolean {
@@ -129,35 +133,28 @@ export class SyncChessGameComponent implements OnDestroy {
         return this.gameSession().playingColor === PieceColor.WHITE && !this.gameSession().game.isGameOver();
     }
 
-    private static colorName(color: PieceColor): string {
-        return color === PieceColor.WHITE ? 'blancs' : 'noirs';
+    /** The end of the game, once over. A win picks its sentence by the winner (an ICU select): no color word fits in it */
+    public resultText(): TranslatableText | undefined {
+        const result: GameResult | null = this.gameSession().game.result();
+        return result === null ? undefined : { key: SyncChessGameComponent.resultKey(result), params: { winner: result.winner } };
     }
 
-    public resultText(): string {
-        const result: GameResult | null = this.gameSession().game.result();
-
-        if (result === null) {
-            return '';
-        }
-
+    private static resultKey(result: GameResult): string {
         switch (result.reason) {
             case GameEndReason.CHECKMATE:
-                return `Échec et mat : victoire des ${ SyncChessGameComponent.colorName(result.winner) }`;
+                return marker('chess.game.result.checkmate');
             case GameEndReason.KING_CAPTURED:
-                if (result.winner === PieceColor.NONE) {
-                    return 'Match nul : les deux rois ont été capturés';
-                }
-                return `Roi capturé : victoire des ${ SyncChessGameComponent.colorName(result.winner) }`;
+                return result.winner === PieceColor.NONE ? marker('chess.game.result.kingsCaptured') : marker('chess.game.result.kingCaptured');
             case GameEndReason.DOUBLE_CHECKMATE:
-                return 'Match nul : échec et mat des deux joueurs';
+                return marker('chess.game.result.doubleCheckmate');
             case GameEndReason.STALEMATE:
-                return 'Match nul : pat, un joueur ne peut plus bouger';
+                return marker('chess.game.result.stalemate');
             case GameEndReason.THREEFOLD_REPETITION:
-                return 'Match nul : la même position s\'est répétée trois fois';
+                return marker('chess.game.result.threefoldRepetition');
             case GameEndReason.FIFTY_TURNS:
-                return 'Match nul : 50 tours sans mouvement de pion ni prise';
+                return marker('chess.game.result.fiftyTurns');
             case GameEndReason.INSUFFICIENT_MATERIAL:
-                return 'Match nul : plus assez de pièces pour mater';
+                return marker('chess.game.result.insufficientMaterial');
             default:
                 return switchExhaustivenessGuard(result.reason);
         }
@@ -193,13 +190,13 @@ export class SyncChessGameComponent implements OnDestroy {
         this.validPlayBoard.set(ChessBoardHelper.createFilledBoard(false));
     }
 
-    private formatLastMove(move: Move | null): string {
+    private formatLastMove(move: Move | null): TranslatableText {
         if (move === null) {
-            return 'a passé';
+            return { key: marker('chess.game.lastMove.passed') };
         }
         const from: string = `${ move.from[0].toUpperCase() }${ move.from[1] }`;
         const to: string = `${ move.to[0].toUpperCase() }${ move.to[1] }`;
 
-        return `${ from } -> ${ to }`;
+        return { key: marker('chess.game.lastMove.move'), params: { from, to } };
     }
 }

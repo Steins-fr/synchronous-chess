@@ -40,6 +40,45 @@
     "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
   },
   "chess": {
+    "game": {
+      "check": "Échec",
+      "checkmate": "Échec et mat",
+      "lastMove": {
+        "label": "Dernier coup :",
+        "move": "{from} -> {to}",
+        "none": "aucun",
+        "passed": "a passé"
+      },
+      "pass": "Passer",
+      "played": "a joué",
+      "promotion": "Promotion",
+      "result": {
+        "checkmate": "Échec et mat : {winner, select, w {victoire des blancs} other {victoire des noirs}}",
+        "doubleCheckmate": "Match nul : échec et mat des deux joueurs",
+        "fiftyTurns": "Match nul : 50 tours sans mouvement de pion ni prise",
+        "insufficientMaterial": "Match nul : plus assez de pièces pour mater",
+        "kingCaptured": "Roi capturé : {winner, select, w {victoire des blancs} other {victoire des noirs}}",
+        "kingsCaptured": "Match nul : les deux rois ont été capturés",
+        "stalemate": "Match nul : pat, un joueur ne peut plus bouger",
+        "threefoldRepetition": "Match nul : la même position s'est répétée trois fois"
+      },
+      "seat": {
+        "black": "Joueur Noir :",
+        "free": "En attente",
+        "leave": "Quitter la place",
+        "playBlack": "Jouer les noirs",
+        "playWhite": "Jouer les blancs",
+        "white": "Joueur Blanc :"
+      },
+      "spectators": "Spectateurs : {count}",
+      "turn": {
+        "intermediate": "Intermédiaire",
+        "label": "Tour :",
+        "promotion": "Promotion",
+        "sync": "Synchronisé"
+      },
+      "waiting": "en attente"
+    },
     "presentation": {
       "caption": "Les blancs ont choisi leur coup, les noirs ne le voient pas avant d'avoir joué le leur.",
       "intro": "Plus d'avantage aux blancs : à chaque tour, chaque joueur choisit son coup sans connaître celui de son adversaire, puis les deux coups sont révélés et joués ensemble.",
@@ -52,6 +91,9 @@
       "tagline": "Les échecs où les deux joueurs jouent en même temps.",
       "title": "Échecs synchrones"
     }
+  },
+  "chessRules": {
+    "summary": "Règles du jeu"
   },
   "dialog": {
     "cancel": "Annuler",
