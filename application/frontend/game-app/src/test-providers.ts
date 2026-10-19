@@ -16,6 +16,7 @@ import ruTranslation from './i18n/ru.json';
 import trTranslation from './i18n/tr.json';
 import idTranslation from './i18n/id.json';
 import plTranslation from './i18n/pl.json';
+import itTranslation from './i18n/it.json';
 
 const testProviders: (Provider | EnvironmentProviders)[] = [
     provideZonelessChangeDetection(),
@@ -35,6 +36,7 @@ const testProviders: (Provider | EnvironmentProviders)[] = [
             [Language.TR]: trTranslation,
             [Language.ID]: idTranslation,
             [Language.PL]: plTranslation,
+            [Language.IT]: itTranslation,
         },
         preloadLangs: true,
         translocoConfig: {

@@ -12,4 +12,5 @@ export const LANGUAGE_NAMES: Readonly<Record<Language, string>> = {
     [Language.TR]: 'Türkçe',
     [Language.ID]: 'Bahasa Indonesia',
     [Language.PL]: 'Polski',
+    [Language.IT]: 'Italiano',
 };

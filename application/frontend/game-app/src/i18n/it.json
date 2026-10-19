@@ -1,0 +1,265 @@
+{
+  "apiHealth": {
+    "booting": "Avvio del server…",
+    "bootingDelay": "Il server e il suo database vanno in sospensione quando nessuno gioca: risvegliarli richiede fino a una trentina di secondi.",
+    "connecting": "Connessione al server…"
+  },
+  "app": {
+    "language": {
+      "pick": "Scegli la lingua"
+    },
+    "nav": {
+      "chat": "Chat",
+      "chess": "Scacchi sincroni",
+      "home": "Home"
+    },
+    "theme": {
+      "toDark": "Passa al tema scuro",
+      "toLight": "Passa al tema chiaro"
+    },
+    "title": "Scacchi sincroni"
+  },
+  "chat": {
+    "author": "{author}:",
+    "backToLatest": "Torna ai messaggi più recenti.",
+    "history": "Stai guardando messaggi meno recenti.",
+    "message": "Scrivi il tuo messaggio",
+    "newMessages": "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}",
+    "participants": {
+      "count": "{count, plural, one {# partecipante} other {# partecipanti}} nella stanza",
+      "title": "Partecipanti"
+    },
+    "ping": "ping {ping}",
+    "room": "Stanza ({roomName})",
+    "send": "Invia",
+    "showNewMessages": "Vedi.",
+    "title": "Chat WebRTC"
+  },
+  "cheat": {
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+  },
+  "chess": {
+    "game": {
+      "check": "Scacco",
+      "checkmate": "Scacco matto",
+      "lastMove": {
+        "label": "Ultima mossa:",
+        "move": "{from} -> {to}",
+        "none": "nessuna",
+        "passed": "ha passato"
+      },
+      "pass": "Passa",
+      "played": "ha giocato",
+      "promotion": "Promozione",
+      "result": {
+        "checkmate": "Scacco matto: {winner, select, w {vince il Bianco} other {vince il Nero}}",
+        "doubleCheckmate": "Patta: scacco matto a entrambi i giocatori",
+        "fiftyTurns": "Patta: 50 turni senza mosse di pedone né catture",
+        "insufficientMaterial": "Patta: non restano pezzi sufficienti per dare matto",
+        "kingCaptured": "Re catturato: {winner, select, w {vince il Bianco} other {vince il Nero}}",
+        "kingsCaptured": "Patta: entrambi i re sono stati catturati",
+        "stalemate": "Patta: stallo, un giocatore non può più muovere",
+        "threefoldRepetition": "Patta: la stessa posizione si è ripetuta tre volte"
+      },
+      "seat": {
+        "black": "Giocatore Nero:",
+        "free": "In attesa",
+        "leave": "Lascia il posto",
+        "playBlack": "Gioca col Nero",
+        "playWhite": "Gioca col Bianco",
+        "white": "Giocatore Bianco:"
+      },
+      "spectators": "Spettatori: {count}",
+      "turn": {
+        "intermediate": "Intermedio",
+        "label": "Turno:",
+        "promotion": "Promozione",
+        "sync": "Sincrono"
+      },
+      "waiting": "in attesa"
+    },
+    "presentation": {
+      "caption": "Il Bianco ha scelto la sua mossa, che il Nero non vede prima di aver giocato la propria.",
+      "intro": "Basta col vantaggio del Bianco: a ogni turno ciascun giocatore sceglie la propria mossa senza conoscere quella dell'avversario, poi le due mosse vengono rivelate e giocate insieme.",
+      "points": {
+        "intermediateTurn": "Un pezzo che si avventura su una casa attaccata può essere catturato in un turno intermedio.",
+        "kingCapture": "Un re può essere catturato direttamente, anche senza scacco matto.",
+        "sameSquare": "Due pezzi che vanno sulla stessa casa si catturano a vicenda, e due pezzi possono scambiarsi di posto."
+      },
+      "rooms": "Crea una stanza, privata con una password, o entra in una delle stanze aperte. Ogni partecipante sceglie il proprio colore; gli altri guardano la partita.",
+      "tagline": "Gli scacchi in cui entrambi i giocatori muovono nello stesso momento.",
+      "title": "Scacchi sincroni"
+    }
+  },
+  "chessRules": {
+    "captures": {
+      "capture": {
+        "text": "… un pezzo va su una casa occupata da un pezzo avversario che non si è mosso in questo turno, quest'ultimo viene catturato. Il pezzo che si è mosso occupa la casa liberata.",
+        "title": "Cattura"
+      },
+      "clash": {
+        "text": "… entrambi i pezzi vanno sulla stessa casa, vengono catturati tutti e due e tolti dalla scacchiera, <strong>re compreso</strong>.",
+        "title": "Scontro"
+      },
+      "intro": "Se, durante un turno sincrono…",
+      "swap": {
+        "text": "… un pezzo va su una casa occupata prima del turno da un pezzo avversario che a sua volta si è mosso, entrambi i pezzi raggiungono la destinazione senza essere catturati, anche se i loro percorsi si incrociano.",
+        "title": "Scambio"
+      },
+      "title": "Movimento e cattura"
+    },
+    "end": {
+      "caption": "Finali della partita e loro risultato",
+      "checkmate": "Scacco matto a un giocatore",
+      "doubleCheckmate": "Scacco matto a entrambi i giocatori",
+      "draw": "Patta",
+      "fiftyTurns": "50 turni sincroni senza mosse di pedone né catture",
+      "insufficientMaterial": "Pezzi insufficienti per dare matto: re soli, un solo cavallo o alfiere, alfieri tutti su case dello stesso colore",
+      "kingCaptured": "Re catturato andando sulla stessa casa di un pezzo avversario",
+      "opponent": "dell'avversario",
+      "opponentUnlessBothKings": "dell'avversario (patta se entrambi i re vengono catturati)",
+      "result": "Risultato",
+      "situation": "Situazione",
+      "stalemate": "Stallo: un giocatore che non è sotto scacco non può muovere alcun pezzo",
+      "text": "Un re catturato pone fine subito alla partita. Altrimenti, la partita termina all'inizio di un turno sincrono.",
+      "threefoldRepetition": "La stessa posizione (pezzi e diritti di arrocco) si ripete per la terza volta",
+      "title": "Fine della partita",
+      "win": "Vittoria"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Fine della partita</strong>: scacco matto o re catturato; valgono le patte degli scacchi classici.",
+      "intermediateTurns": "<strong>Turni intermedi</strong>: un pezzo che arriva su una casa attaccata può essere catturato subito.",
+      "sameSquare": "<strong>Stessa casa</strong>: due pezzi che vanno sulla stessa casa vengono catturati entrambi, re compreso.",
+      "simultaneousMoves": "<strong>Mosse simultanee</strong>: ciascuno sceglie la propria mossa in segreto, poi le due mosse vengono giocate insieme.",
+      "title": "In breve"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Ritorno al gioco.</strong> Il gioco riprende poi con un turno sincrono.",
+      "captures": "<strong>Catture e ricatture.</strong> L'avversario può catturare questo pezzo, oppure passare. Sono ammesse solo le catture sulle case coinvolte; ogni cattura può a sua volta essere ricatturata, finché un giocatore non può più o non vuole più catturare. Se entrambi i giocatori possono giocare, le loro mosse vengono scelte in segreto e applicate simultaneamente.",
+      "oncePerPiece": "<strong>Una volta per pezzo.</strong> Un pezzo può muoversi una sola volta durante la fase intermedia. Il pezzo che si è appena mosso nel turno sincrono può comunque muoversi una volta in essa.",
+      "title": "Turni intermedi",
+      "trigger": "<strong>Avvio.</strong> Dopo un turno sincrono, si gioca un turno intermedio se un pezzo che si è mosso è arrivato su una casa già attaccata (o protetta) dall'avversario prima del turno, e un pezzo avversario può catturarlo regolarmente."
+    },
+    "players": {
+      "seats": "Due giocatori. Ogni partecipante della stanza, host compreso, sceglie il proprio colore tra i posti liberi. I posti sono fissati dalla prima mossa giocata; gli altri partecipanti sono spettatori.",
+      "shortTitle": "Giocatori",
+      "simultaneousMoves": "I due giocatori giocano la loro mossa contemporaneamente, ciascuno senza conoscere quella dell'altro. Quando entrambi hanno scelto, le due mosse vengono rivelate e applicate secondo le regole qui sotto.",
+      "title": "Giocatori e principio"
+    },
+    "promotion": {
+      "text": "Se almeno un giocatore porta un pedone sull'ultima traversa, un turno apposito permette di sceglierne la promozione. Il gioco riprende poi con il turno sincrono o intermedio che risulta dalle mosse giocate.",
+      "title": "Promozione"
+    },
+    "restrictions": {
+      "castling": "<strong>Arrocco</strong>: un re sotto scacco non può arroccare per uscirne. Lo scacco impedisce l'arrocco solo per quel turno; il diritto di arroccare si perde solo quando il re o la torre si sono mossi.",
+      "check": "<strong>Scacco</strong>: un re attaccato all'inizio del turno sincrono deve muoversi su una casa che non sia attaccata prima delle mosse. Se non può, è scacco matto.",
+      "enPassant": "<strong>Niente presa en passant</strong> in questa variante.",
+      "kingSquares": "<strong>Case vietate al re</strong>: non può andare su una casa attaccata dall'avversario prima del turno sincrono; è inutile prevedere che una casa si liberi per andarci.",
+      "pinnedPieces": "<strong>Pezzi inchiodati</strong>: nessuna mossa può lasciare il proprio re sotto attacco, considerando invariata la posizione avversaria; un pezzo inchiodato non può lasciare la linea del proprio re.",
+      "title": "Restrizioni"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky e Andrey Krasowsky",
+      "classicChess": "La scacchiera, i pezzi, la loro posizione iniziale e i loro movimenti restano quelli degli scacchi classici.",
+      "label": "Regole originali:"
+    },
+    "summary": "Regole del gioco",
+    "tableOfContents": "Indice delle regole",
+    "title": "Regole"
+  },
+  "dialog": {
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "confirm": "Conferma",
+    "no": "No",
+    "yes": "Sì"
+  },
+  "home": {
+    "chat": {
+      "action": "Chatta",
+      "description": "Una chat tra i partecipanti di una stanza, con i messaggi scambiati direttamente tra loro.",
+      "title": "Chat"
+    },
+    "chess": {
+      "action": "Gioca",
+      "description": "Gli scacchi in cui entrambi i giocatori muovono nello stesso momento: ciascuno sceglie la propria mossa senza conoscere quella dell'altro.",
+      "title": "Scacchi sincroni"
+    },
+    "intro": "Crea una stanza o entra in una delle stanze aperte: i giocatori si collegano direttamente tra loro.",
+    "title": "Scegli un gioco"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Gli altri giocatori la troveranno nell'elenco delle stanze aperte: con una password, è privata.",
+      "submit": "Crea",
+      "title": "Crea una stanza"
+    },
+    "errors": {
+      "alreadyExists": "La stanza esiste già.",
+      "fullOrGone": "La stanza è piena o non esiste più.",
+      "hostDisconnected": "L'host della stanza si è disconnesso.",
+      "nameInRoom": "Un giocatore con questo nome è già nella stanza.",
+      "nameWaiting": "Un giocatore con questo nome è già in attesa di entrare nella stanza.",
+      "notCreated": "Impossibile creare la stanza.",
+      "otherGame": "Questa stanza appartiene a un altro gioco.",
+      "private": "Questa stanza è privata: entra dall'elenco, con la sua password.",
+      "tooManyPasswords": "Troppe password errate per questa stanza: riprova tra un minuto.",
+      "wrongPassword": "La password della stanza è errata."
+    },
+    "form": {
+      "password": {
+        "label": "Password",
+        "maxLength": "La password ha al massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
+        "minLength": "La password ha almeno {minLength, plural, one {# carattere} other {# caratteri}}",
+        "privateRoomLabel": "Password (stanza privata)",
+        "required": "La password è obbligatoria"
+      },
+      "playerName": {
+        "label": "Nome del giocatore",
+        "maxLength": "Il nome del giocatore ha al massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
+        "required": "Il nome del giocatore è obbligatorio"
+      },
+      "roomName": {
+        "label": "Nome della stanza",
+        "maxLength": "Il nome della stanza ha al massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
+        "required": "Il nome della stanza è obbligatorio"
+      }
+    },
+    "join": {
+      "intro": "Inserisci il tuo nome per entrare nella stanza «{roomName}».",
+      "privateIntro": "La stanza «{roomName}» è privata: inserisci il tuo nome e la sua password per entrare.",
+      "submit": "Entra",
+      "title": "Entra nella stanza"
+    },
+    "notifications": {
+      "hostReconnecting": "L'host della stanza si sta riconnettendo…",
+      "hostUnreachable": "La connessione all'host della stanza non è riuscita.",
+      "joiningAgain": "La connessione all'host della stanza non è riuscita, nuovo tentativo…",
+      "nameStillInRoom": "Questo nome è ancora nella stanza, riconnessione in corso…",
+      "roomFull": "La stanza è piena.",
+      "roomLost": "La stanza ha perso la connessione al server: nessuno può più entrarci."
+    },
+    "open": {
+      "empty": "Per ora nessuna stanza in cui entrare: crea la tua!",
+      "error": "Impossibile caricare le stanze.",
+      "full": "Piena",
+      "host": "Host: {host}",
+      "hostReconnecting": "Host in riconnessione",
+      "join": "Entra",
+      "joinRoom": "Entra nella stanza {roomName}",
+      "loading": "Caricamento delle stanze…",
+      "moreMatches": "Altre stanze contengono «{search}»: affina la ricerca per trovarle.",
+      "mostRecent": "Sono mostrate solo le stanze più recenti: cerca le altre per nome.",
+      "noMatch": "Nessuna stanza contiene «{search}».",
+      "private": "Stanza privata",
+      "public": "Stanza pubblica",
+      "refresh": "Aggiorna le stanze",
+      "search": {
+        "label": "Cerca una stanza",
+        "maxLength": "La ricerca ha al massimo {maxLength, plural, one {# carattere} other {# caratteri}}"
+      },
+      "title": "Stanze aperte"
+    }
+  }
+}

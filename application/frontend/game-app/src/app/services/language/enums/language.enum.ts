@@ -10,4 +10,5 @@ export enum Language {
     TR = 'tr',
     ID = 'id',
     PL = 'pl',
+    IT = 'it',
 }
