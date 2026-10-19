@@ -27,7 +27,7 @@ test.describe('Open rooms', () => {
         const bob: RoomParticipant = await room.join('bob', 'wrong-password');
 
         // Then
-        await bob.expectNotification('Le mot de passe de la salle est incorrect.');
+        await bob.expectNotification('The password of the room is wrong.');
         await bob.expectSetupForm();
         await bob.expectOpenRoom(room.name, true);
 
@@ -55,7 +55,7 @@ test.describe('Open rooms', () => {
         await carol.searchRooms(`${ room.name }-missing`);
 
         // Then
-        await expect(carol.page.getByText(`Aucune salle ne contient « ${ room.name }-missing ».`)).toBeVisible();
+        await expect(carol.page.getByText(`No room contains “${ room.name }-missing”.`)).toBeVisible();
         // The list, searched or not, opened no socket: the socket serves the connectivity of a room only
         carol.expectNoApiSocket();
     });

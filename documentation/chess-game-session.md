@@ -220,16 +220,16 @@ room, the game replaces the presentation, and the rules are folded below it.
 
 `SyncChessGameComponent` shows the session:
 
-- **Seats.** Above and below the board, the name of the player of each color, or `En attente`. Before
-  the game starts, a free seat shows `Jouer les blancs` / `Jouer les noirs`, and the seat of the local
-  player shows `Quitter la place`. The local player can take the free seat of the other color, which
+- **Seats.** Above and below the board, the name of the player of each color, or `Waiting`. Before
+  the game starts, a free seat shows `Play white` / `Play black`, and the seat of the local
+  player shows `Leave the seat`. The local player can take the free seat of the other color, which
   moves it.
 - **Turn.** The type of the turn, whether each color has played, the last move of each color, the check
   and checkmate states.
 - **End of the game.** Above the board, the winner or the reason of the draw.
-- **Actions.** The local player drags the pieces of `playingColor` only; `Passer` skips an intermediate
+- **Actions.** The local player drags the pieces of `playingColor` only; `Pass` skips an intermediate
   turn; a promotion turn shows the pieces to choose from.
-- **Spectators.** `Spectateurs : n`.
+- **Spectators.** `Spectators: n`.
 
 ## Limits
 

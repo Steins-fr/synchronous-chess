@@ -17,6 +17,8 @@ export default defineConfig({
         baseURL: 'http://localhost:4200',
         trace: 'retain-on-failure',
         ...devices['Desktop Chrome'],
+        // The app follows the language of the browser: the scenarios find its elements by their English texts
+        locale: 'en-US',
     },
     webServer: [
         {

@@ -9,8 +9,8 @@ export class TestRoom {
 
     public constructor(private readonly browser: Browser) {}
 
-    private async open(playerName: string): Promise<RoomParticipant> {
-        const participant: RoomParticipant = await RoomParticipant.open(this.browser, playerName);
+    private async open(playerName: string, locale?: string): Promise<RoomParticipant> {
+        const participant: RoomParticipant = await RoomParticipant.open(this.browser, playerName, locale);
         this.participants.push(participant);
         return participant;
     }
@@ -46,9 +46,12 @@ export class TestRoom {
         return player;
     }
 
-    /** A player opening the page, the list of the open rooms */
-    public async visit(playerName: string): Promise<RoomParticipant> {
-        const player: RoomParticipant = await this.open(playerName);
+    /**
+     * A player opening the page, the list of the open rooms
+     * @param locale the language of its browser: the one of the config (en-US) by default
+     */
+    public async visit(playerName: string, locale?: string): Promise<RoomParticipant> {
+        const player: RoomParticipant = await this.open(playerName, locale);
         await player.visit();
         return player;
     }
