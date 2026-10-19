@@ -5,10 +5,12 @@ resource "aws_apigatewayv2_api" "api" {
   disable_execute_api_endpoint = true
 
   # API Gateway answers the preflights, and adds its headers to the responses of the lambda: it ignores the lambda's.
-  # The app sends simple GET requests, without credentials nor headers of its own: no preflight to cache
+  # The app sends simple GET requests, without headers of its own: no preflight to cache. With the cookies of the browser
+  # on a restricted stage only (withCredentials), its pages alone reading the answers, as allow_origins tells
   cors_configuration {
-    allow_origins = var.allow_origins
-    allow_methods = ["GET"]
+    allow_origins     = var.allow_origins
+    allow_methods     = ["GET"]
+    allow_credentials = var.allow_credentials
   }
 
   tags = {

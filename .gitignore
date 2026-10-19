@@ -96,3 +96,6 @@ dist
 
 # Playwright MCP output
 .playwright-mcp/
+
+# Keys: the signing key of the access cookies of staging is written to SSM, never committed (README, Access to staging)
+*.pem

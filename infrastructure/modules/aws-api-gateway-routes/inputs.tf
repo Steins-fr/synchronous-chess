@@ -38,6 +38,15 @@ variable "lambda_sendmessage_name" {
   description = "Name of the lambda send message"
 }
 
+variable "connect_authorizer" {
+  type = object({
+    invoke_arn    = string
+    function_name = string
+  })
+  description = "Lambda authorizing $connect on a stage restricted to its owner (wsauthorizer), null on a public stage"
+  default     = null
+}
+
 variable "stage" {
   description = "Stage"
   type        = string

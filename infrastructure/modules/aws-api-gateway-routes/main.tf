@@ -20,9 +20,34 @@ resource "aws_lambda_permission" "lambda_permission_connect" {
   source_arn = "${var.api_gateway_execution_arn}/*"
 }
 
+# A stage restricted to its owner: API Gateway refuses a handshake without Cookie header (401) before running the
+# authorizer, which checks the access cookies of the front (403 without). Only $connect takes an authorizer: the other
+# routes run on a connection it opened
+resource "aws_apigatewayv2_authorizer" "connect" {
+  count = var.connect_authorizer == null ? 0 : 1
+
+  api_id           = var.api_gateway_id
+  name             = "access"
+  authorizer_type  = "REQUEST"
+  authorizer_uri   = var.connect_authorizer.invoke_arn
+  identity_sources = ["route.request.header.Cookie"]
+}
+
+resource "aws_lambda_permission" "lambda_permission_connect_authorizer" {
+  count = var.connect_authorizer == null ? 0 : 1
+
+  action        = "lambda:InvokeFunction"
+  function_name = var.connect_authorizer.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${var.api_gateway_execution_arn}/authorizers/${aws_apigatewayv2_authorizer.connect[0].id}"
+}
+
 resource "aws_apigatewayv2_route" "connect" {
   api_id    = var.api_gateway_id
   route_key = "$connect"
+
+  authorization_type = var.connect_authorizer == null ? "NONE" : "CUSTOM"
+  authorizer_id      = one(aws_apigatewayv2_authorizer.connect[*].id)
 
   target = "integrations/${aws_apigatewayv2_integration.connect.id}"
 }

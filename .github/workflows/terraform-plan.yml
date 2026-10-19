@@ -120,6 +120,9 @@ jobs:
               env:
                   # Through the environment, never pasted into the script
                   TF_VAR_main_domain_name: ${{ vars.MAIN_DOMAIN_NAME }}
+                  # The public key of the access cookies of staging, restricted to its owner: a variable of the staging
+                  # environment only, empty on production (README, Access to staging)
+                  TF_VAR_access_public_key: ${{ vars.ACCESS_PUBLIC_KEY }}
                   DESTROY: ${{ inputs.destroy }}
               run: |
                   # A destruction is a plan like another: terraform-apply.yml applies it, once its run is checked

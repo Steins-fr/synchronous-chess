@@ -27,6 +27,12 @@ variable "bucket" {
   description = "Bucket of the hosted site"
 }
 
+variable "trusted_key_groups" {
+  type        = list(string)
+  description = "Key groups signing the cookies the distribution requires (signed cookies): none on a public stage"
+  default     = []
+}
+
 variable "stage" {
   description = "Stage"
   type        = string

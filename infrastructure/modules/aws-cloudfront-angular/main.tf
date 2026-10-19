@@ -22,6 +22,8 @@ resource "aws_cloudfront_distribution" "website_cdn" {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = local.origin_id
+    # A stage restricted to its owner: CloudFront answers 403 to a request without the access cookies, before its cache
+    trusted_key_groups = var.trusted_key_groups
 
     forwarded_values {
       query_string = false
@@ -50,12 +52,9 @@ resource "aws_cloudfront_distribution" "website_cdn" {
     Environment = var.stage
   }
 
-  custom_error_response {
-    error_code         = "403"
-    response_code      = "200"
-    response_page_path = "/index.html"
-  }
-
+  # The routes of the app, which no file holds: S3 answers 404 to a missing file, CloudFront being granted the listing of
+  # the bucket (aws-bucket-angular-policy). A 403 stays a refusal, the one of the signed cookies included: CloudFront
+  # applies its error responses to its own errors too
   custom_error_response {
     error_code         = "404"
     response_code      = "200"
