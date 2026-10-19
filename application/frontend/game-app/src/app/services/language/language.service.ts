@@ -36,17 +36,24 @@ export class LanguageService {
     // The first language of the browser the app speaks, matched on its full code first, then on its base language
     // (es-MX gives es)
     private static browserLanguage(tags: ReadonlyArray<string>): Language {
-        const languages: Language[] = Object.values(Language);
         for (const tag of tags) {
             const code: string = tag.toLowerCase();
-            const [base] = code.split('-');
-            const language: Language | undefined = languages.find((candidate: Language) => candidate.toLowerCase() === code)
-                ?? languages.find((candidate: Language) => candidate === base);
+            const language: Language | undefined = Object.values(Language).find((candidate: Language) => candidate.toLowerCase() === code)
+                ?? LanguageService.baseLanguage(code);
             if (language) {
                 return language;
             }
         }
         return Language.EN;
+    }
+
+    // Portuguese follows CLDR: Brazil is the default region of pt, every other region speaks the European norm
+    private static baseLanguage(code: string): Language | undefined {
+        const [base] = code.split('-');
+        if (base === 'pt') {
+            return code === 'pt' ? Language.PT_BR : Language.PT_PT;
+        }
+        return Object.values(Language).find((candidate: Language) => candidate === base);
     }
 
     // Loads the active language before the first render (provideTranslation). Failing, the app shows English

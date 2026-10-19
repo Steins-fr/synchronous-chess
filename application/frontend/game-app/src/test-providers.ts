@@ -9,6 +9,8 @@ import { ThrowingMissingHandler } from '@testing/throwing-missing-handler';
 import en from './i18n/en.json';
 import fr from './i18n/fr.json';
 import es from './i18n/es.json';
+import ptBR from './i18n/pt-BR.json';
+import ptPT from './i18n/pt-PT.json';
 
 const testProviders: (Provider | EnvironmentProviders)[] = [
     provideZonelessChangeDetection(),
@@ -21,6 +23,8 @@ const testProviders: (Provider | EnvironmentProviders)[] = [
             [Language.EN]: en,
             [Language.FR]: fr,
             [Language.ES]: es,
+            [Language.PT_BR]: ptBR,
+            [Language.PT_PT]: ptPT,
         },
         preloadLangs: true,
         translocoConfig: {

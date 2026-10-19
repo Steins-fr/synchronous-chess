@@ -8,6 +8,8 @@ const translationFiles: Readonly<Record<Language, () => Promise<{ default: Trans
     [Language.EN]: () => import('../../../i18n/en.json'),
     [Language.FR]: () => import('../../../i18n/fr.json'),
     [Language.ES]: () => import('../../../i18n/es.json'),
+    [Language.PT_BR]: () => import('../../../i18n/pt-BR.json'),
+    [Language.PT_PT]: () => import('../../../i18n/pt-PT.json'),
 };
 
 @Injectable({

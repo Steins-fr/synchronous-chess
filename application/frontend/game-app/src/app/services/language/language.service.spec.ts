@@ -66,6 +66,10 @@ describe('LanguageService', () => {
         { languages: ['FR'], language: Language.FR },
         { languages: ['en-GB', 'fr'], language: Language.EN },
         { languages: ['es-MX'], language: Language.ES },
+        { languages: ['pt'], language: Language.PT_BR },
+        { languages: ['pt-br'], language: Language.PT_BR },
+        { languages: ['pt-PT'], language: Language.PT_PT },
+        { languages: ['pt-AO'], language: Language.PT_PT },
         { languages: ['ja', 'zh-CN'], language: Language.EN },
         { languages: [], language: Language.EN },
     ])('should match the browser languages $languages on their full code, then on their base language', ({ languages, language }) => {
