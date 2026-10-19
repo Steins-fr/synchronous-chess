@@ -93,7 +93,80 @@
     }
   },
   "chessRules": {
-    "summary": "Rules of the game"
+    "captures": {
+      "capture": {
+        "text": "… a piece moves to a square held by an opposing piece that did not move this turn, that piece is captured. The piece that moved takes the freed square.",
+        "title": "Capture"
+      },
+      "clash": {
+        "text": "… both pieces move to the same square, they are both captured and removed from the board, <strong>a king included</strong>.",
+        "title": "Clash"
+      },
+      "intro": "If, during a synchronous turn…",
+      "swap": {
+        "text": "… a piece moves to a square held before the turn by an opposing piece that moved as well, both pieces reach their destination without being captured, even if their paths cross.",
+        "title": "Swap"
+      },
+      "title": "Movement and capture"
+    },
+    "end": {
+      "caption": "Ends of the game and their result",
+      "checkmate": "Checkmate of one player",
+      "doubleCheckmate": "Checkmate of both players",
+      "draw": "Draw",
+      "fiftyTurns": "50 synchronous turns without a pawn move or a capture",
+      "insufficientMaterial": "Not enough pieces to checkmate: kings alone, a single knight or bishop, bishops all on squares of the same color",
+      "kingCaptured": "King captured, by moving to the same square as an opposing piece",
+      "opponent": "for the opponent",
+      "opponentUnlessBothKings": "for the opponent (a draw if both kings are captured)",
+      "result": "Result",
+      "situation": "Situation",
+      "stalemate": "Stalemate: a player who is not in check cannot move any piece",
+      "text": "A captured king ends the game at once. Otherwise, the game ends at the start of a synchronous turn.",
+      "threefoldRepetition": "The same position (pieces and castling rights) occurs for the third time",
+      "title": "End of the game",
+      "win": "Win"
+    },
+    "inShort": {
+      "endOfGame": "<strong>End of the game</strong>: checkmate or a captured king; the draws of classic chess apply.",
+      "intermediateTurns": "<strong>Intermediate turns</strong>: a piece arriving on an attacked square can be captured right away.",
+      "sameSquare": "<strong>Same square</strong>: two pieces moving to the same square are both captured, a king included.",
+      "simultaneousMoves": "<strong>Simultaneous moves</strong>: each player picks a move in secret, then both moves are played together.",
+      "title": "In short"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Back to the game.</strong> The game then resumes with a synchronous turn.",
+      "captures": "<strong>Captures and recaptures.</strong> The opponent can capture this piece, or pass. Only the captures on the squares concerned are allowed; each capture can in turn be recaptured, until a player can no longer, or no longer wants to, capture. If both players may play, their moves are chosen in secret and applied simultaneously.",
+      "oncePerPiece": "<strong>Once per piece.</strong> A piece can move only once during the intermediate phase. The piece that just moved during the synchronous turn can still move once in it.",
+      "title": "Intermediate turns",
+      "trigger": "<strong>Trigger.</strong> After a synchronous turn, an intermediate turn takes place if a piece that moved arrived on a square already attacked (or protected) by the opponent before the turn, and an opposing piece can legally capture it."
+    },
+    "players": {
+      "seats": "Two players. Each participant of the room, the host included, picks a color among the free seats. The seats are set from the first move played; the other participants are spectators.",
+      "shortTitle": "Players",
+      "simultaneousMoves": "Both players play their move simultaneously, each without knowing the other's move. Once both players have chosen, the two moves are revealed and applied according to the rules below.",
+      "title": "Players and principle"
+    },
+    "promotion": {
+      "text": "If at least one player brings a pawn to the last rank, a dedicated turn lets them choose its promotion. The game then resumes with the synchronous or intermediate turn resulting from the moves played.",
+      "title": "Promotion"
+    },
+    "restrictions": {
+      "castling": "<strong>Castling</strong>: a king in check cannot castle out of it. Check prevents castling for this turn only; the right to castle is lost only once the king or the rook has moved.",
+      "check": "<strong>Check</strong>: a king attacked at the start of the synchronous turn must move to a square that is not attacked before the moves. If it cannot, it is checkmate.",
+      "enPassant": "<strong>No en passant</strong> in this variant.",
+      "kingSquares": "<strong>Squares forbidden to the king</strong>: it cannot go to a square attacked by the opponent before the synchronous turn; there is no point anticipating that a square will be freed to move there.",
+      "pinnedPieces": "<strong>Pinned pieces</strong>: no move can leave one's own king attacked, the opponent's position being assumed unchanged; a pinned piece cannot leave the line of its king.",
+      "title": "Restrictions"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky and Andrey Krasowsky",
+      "classicChess": "The board, the pieces, their starting position and their moves remain those of classic chess.",
+      "label": "Original rules:"
+    },
+    "summary": "Rules of the game",
+    "tableOfContents": "Table of contents of the rules",
+    "title": "Rules"
   },
   "dialog": {
     "cancel": "Cancel",
