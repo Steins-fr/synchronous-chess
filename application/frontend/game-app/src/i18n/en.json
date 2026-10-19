@@ -19,6 +19,22 @@
     },
     "title": "Synchronous Chess"
   },
+  "chat": {
+    "author": "{author}:",
+    "backToLatest": "Back to the latest messages.",
+    "history": "You are looking at older messages.",
+    "message": "Type your message",
+    "newMessages": "{count, plural, one {# new message} other {# new messages}}",
+    "participants": {
+      "count": "{count, plural, one {# participant} other {# participants}} in the room",
+      "title": "Participants"
+    },
+    "ping": "ping {ping}",
+    "room": "Room ({roomName})",
+    "send": "Send",
+    "showNewMessages": "Show.",
+    "title": "WebRTC chat"
+  },
   "cheat": {
     "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} other {}}) from {author} is reported as cheating by {reporters}",
     "ignored": "A message ({chain, select, chess {chess} chat {chat} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"

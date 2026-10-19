@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatChipsModule } from '@angular/material/chips';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { Subscription } from 'rxjs';
@@ -16,7 +17,7 @@ import { Subscription } from 'rxjs';
 @Component({
     selector: 'app-chat-participant',
     templateUrl: './chat-participant.component.html',
-    imports: [MatChipsModule],
+    imports: [MatChipsModule, TranslocoPipe],
     styleUrls: ['./chat-participant.component.scss'],
 })
 export class ChatParticipantComponent {

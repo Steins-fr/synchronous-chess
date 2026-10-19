@@ -19,6 +19,22 @@
     },
     "title": "Échecs synchrones"
   },
+  "chat": {
+    "author": "{author} :",
+    "backToLatest": "Revenir aux messages les plus récents.",
+    "history": "Tu es en train de regarder des anciens messages.",
+    "message": "Tape ton message",
+    "newMessages": "{count, plural, one {# nouveau message} other {# nouveaux messages}}",
+    "participants": {
+      "count": "{count, plural, one {# participant} other {# participants}} dans la salle",
+      "title": "Participants"
+    },
+    "ping": "ping {ping}",
+    "room": "Salle ({roomName})",
+    "send": "Envoyer",
+    "showNewMessages": "Voir.",
+    "title": "Tchat WebRTC"
+  },
   "cheat": {
     "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est signalé comme triché par {reporters}",
     "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"

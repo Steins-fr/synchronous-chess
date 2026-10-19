@@ -20,7 +20,7 @@ describe('ChatMessageComponent', () => {
 
         // Then
         const author: HTMLElement = fixture.nativeElement.querySelector('.author');
-        expect(author.textContent).toEqual('remote :');
+        expect(author.textContent).toEqual('remote:');
         expect(author.classList).not.toContain('my-message');
         expect(fixture.nativeElement.textContent).toContain('hello');
     });

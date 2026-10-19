@@ -57,7 +57,7 @@ describe('ChatComponent', () => {
 
         // Then
         expect(fixture.nativeElement.querySelector('h4:not(.list-title)')).toBeNull();
-        expect(fixture.nativeElement.querySelector('#player-list').textContent).toContain('0 participant(s) dans la salle');
+        expect(fixture.nativeElement.querySelector('#player-list').textContent).toContain('0 participants in the room');
         expect(sendButton().disabled).toEqual(true);
         expect(() => component.roomName).toThrow('Room not found');
     });
@@ -75,8 +75,8 @@ describe('ChatComponent', () => {
         // Then
         expect(component.roomName).toEqual('room');
         expect(component.localPlayer).toBe(network.localPlayer);
-        expect(fixture.nativeElement.textContent).toContain('Salle (room)');
-        expect(fixture.nativeElement.querySelector('#player-list').textContent).toContain('2 participant(s) dans la salle');
+        expect(fixture.nativeElement.textContent).toContain('Room (room)');
+        expect(fixture.nativeElement.querySelector('#player-list').textContent).toContain('2 participants in the room');
         expect(fixture.nativeElement.querySelectorAll('app-chat-participant')).toHaveLength(2);
         const chips: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('mat-chip');
         expect(chips[chips.length - 1].textContent).toContain('pending');
@@ -117,7 +117,7 @@ describe('ChatComponent', () => {
 
         // Then
         expect(fixture.nativeElement.querySelector('#history-notification')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('#new-message-notification').textContent).toContain('1 nouveaux messages');
+        expect(fixture.nativeElement.querySelector('#new-message-notification').textContent).toContain('1 new message');
         expect(scrollToSpy).not.toHaveBeenCalled();
 
         // When
