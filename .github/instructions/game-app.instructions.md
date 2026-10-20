@@ -116,16 +116,20 @@ This is an Angular TypeScript project with the following characteristics:
   `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
-  way. Its `translationScopesResolver` loads them before the page shows, as the app loads its global
+  way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
   texts before it starts: the first render has every text, the views and queries inside a `*transloco`
-  included. `app.routes.spec.ts` checks the scopes of each route against `TranslationScope`
+  included. A guard, not a resolver: the router runs the guards of a route together, so the
+  translations load while the APIs are checked. `app.routes.spec.ts` checks the scopes of each route
+  against `TranslationScope`
+- A navigation waiting for the APIs keeps their overlay until its page shows (`ApiHealthOverlayComponent`):
+  the previous page never shows again while the translations and the code of the next one load
 - A key of a scope starts with it (`chess.game.seat.free`): the extraction puts it in the files of the
   scope. A text shown out of the pages of its game (a notification) is global
 - In the code, `marker()` gets the key of a scope without its scope, the scope as a literal third
   argument, and `scopedKey()` prefixes it for the app: `scopedKey(TranslationScope.CHESS,
   marker('game.turn.sync', undefined, 'chess'))`. The keys manager reads the scope of a key of the code
   from that argument only: a `marker('chess.game.turn.sync')` would land in the global files
-- Adding a scope: its value in `TranslationScope`, its provider and the resolver on the routes of its
+- Adding a scope: its value in `TranslationScope`, its provider and the guard on the routes of its
   pages, its loaders in `translation.loader.ts`, its translations in `src/test-providers.ts`; the
   extraction creates its files
 
