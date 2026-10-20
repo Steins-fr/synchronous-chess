@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn } from '@angular/router';
-import { TRANSLOCO_SCOPE, TranslocoService } from '@jsverse/transloco';
-import { catchError, forkJoin, map, Observable, of } from 'rxjs';
+import { TRANSLOCO_SCOPE } from '@jsverse/transloco';
 import { TranslationScope } from './enums/translation-scope.enum';
+import { LanguageService } from './language.service';
 
 /**
  * Loads the translations of the scopes of a route (provideTranslocoScope) in the active language before its page shows,
@@ -11,12 +11,9 @@ import { TranslationScope } from './enums/translation-scope.enum';
  * the guards of a route together, so the translations load while the APIs are checked (apiHealthGuard). Failing, the page
  * shows anyway
  */
-export const translationScopesGuard: CanActivateFn = (): Observable<true> => {
-    const transloco = inject(TranslocoService);
+export const translationScopesGuard: CanActivateFn = async (): Promise<true> => {
     // provideTranslocoScope provides each scope apart (multi): the token gives the list of the scopes of the route
     const scopes = inject(TRANSLOCO_SCOPE) as unknown as ReadonlyArray<TranslationScope>;
-    return forkJoin(scopes.map((scope: TranslationScope) => transloco.load(`${ scope }/${ transloco.getActiveLang() }`))).pipe(
-        map((): true => true),
-        catchError(() => of<true>(true)),
-    );
+    await inject(LanguageService).loadScopes(scopes);
+    return true;
 };
