@@ -72,15 +72,16 @@ resource "aws_iam_role" "deploy" {
   tags = merge(local.tags, { Name = "Role - sc-github-deploy-${var.stage}" })
 }
 
-# Three managed policies (deploy-policy.tf): the rights of a stage outgrow the 6,144 characters of one. A fourth one on a
-# stage restricted to its owner, its access
+# Three managed policies (deploy-policy.tf): the rights of a stage outgrow the 6,144 characters of one. Another one on a
+# stage restricted to its owner, its access, and on a stage waking its database, its wake
 resource "aws_iam_policy" "deploy" {
   for_each = { for name, policy in {
     edge   = data.aws_iam_policy_document.edge.json
     api    = data.aws_iam_policy_document.api.json
     data   = data.aws_iam_policy_document.data.json
     access = data.aws_iam_policy_document.access.json
-  } : name => policy if name != "access" || var.access_restricted }
+    wake   = data.aws_iam_policy_document.wake.json
+  } : name => policy if lookup({ access = var.access_restricted, wake = var.wakes_database }, name, true) }
 
   name   = "sc-github-deploy-${var.stage}-${each.key}"
   policy = each.value

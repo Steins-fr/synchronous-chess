@@ -37,6 +37,8 @@ locals {
     Application = "Synchronous chess"
     Tool        = "Terraform"
   }
+  # The stages waking their database on a schedule, as wakes_database of the main configuration tells
+  wake_stages = ["production"]
 }
 
 data "aws_caller_identity" "current" {}
@@ -71,6 +73,7 @@ module "deploy_role" {
   github_repository_id            = local.github_repository_id
   github_repository_owner_id      = local.github_repository_owner_id
   access_restricted               = contains(local.restricted_stages, each.key)
+  wakes_database                  = contains(local.wake_stages, each.key)
 }
 
 # One per account and region, which each stage would otherwise create again: the role the WebSocket stages write their

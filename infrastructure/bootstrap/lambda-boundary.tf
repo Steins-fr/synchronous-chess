@@ -1,7 +1,8 @@
 # The most a role of a lambda of a stage can do, whatever policy is attached to it: the union of the policies main.tf
 # attaches (AWSLambdaBasicExecutionRole, aws-rds-data-iam-policy, aws-api-gateway-iam-policy,
-# aws-ssm-parameter-iam-policy), on the resources of the stage. The deploy role of the stage writes those policies, and
-# creates these roles with this boundary only: a policy it writes gives a lambda nothing beyond it
+# aws-ssm-parameter-iam-policy, aws-cloudwatch-metrics-iam-policy), on the resources of the stage. The deploy role of the
+# stage writes those policies, and creates these roles with this boundary only: a policy it writes gives a lambda nothing
+# beyond it
 data "aws_iam_policy_document" "lambda_boundary" {
   for_each = toset(local.stages)
 
@@ -94,6 +95,24 @@ data "aws_iam_policy_document" "lambda_boundary" {
       test     = "StringLike"
       variable = "kms:EncryptionContext:PARAMETER_ARN"
       values   = ["arn:aws:ssm:${local.region}:${local.account_id}:parameter/sc/${each.key}/*"]
+    }
+  }
+
+  # aws-cloudwatch-metrics-iam-policy, on a stage waking its database (wake_stages): the capacity of its cluster, read by
+  # the function waking it only. GetMetricData has no resource type: the metrics of the account
+  dynamic "statement" {
+    for_each = contains(local.wake_stages, each.key) ? [each.key] : []
+
+    content {
+      sid       = "DatabaseCapacity"
+      actions   = ["cloudwatch:GetMetricData"]
+      resources = ["*"]
+
+      condition {
+        test     = "ArnLike"
+        variable = "lambda:SourceFunctionArn"
+        values   = ["arn:aws:lambda:${local.region}:${local.account_id}:function:sc_wakedatabase_${each.key}"]
+      }
     }
   }
 }
