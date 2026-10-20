@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Translation, TranslocoLoader } from '@jsverse/transloco';
+import { defer, map, Observable } from 'rxjs';
 import { Language } from './enums/language.enum';
 import { TranslationScope } from './enums/translation-scope.enum';
 
@@ -49,8 +50,10 @@ const translationFiles: Readonly<Record<TranslationPath, () => Promise<{ default
     providedIn: 'root',
 })
 export class TranslationLoader implements TranslocoLoader {
-    public async getTranslation(path: string): Promise<Translation> {
-        const file = await translationFiles[path as TranslationPath]();
-        return file.default;
+    // Deferred: each subscription imports the file again, a promise would be imported once. Transloco then retries a failed
+    // load, and loads it again when asked again (its cache subscribes again to a failed load). Chromium keeps a failed
+    // import failed until the page reloads, as it does for the chunk of a page
+    public getTranslation(path: string): Observable<Translation> {
+        return defer(() => translationFiles[path as TranslationPath]()).pipe(map((file: { default: Translation }) => file.default));
     }
 }

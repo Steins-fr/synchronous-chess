@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Translation } from '@jsverse/transloco';
 import { MessageFormatTranspiler } from '@jsverse/transloco-messageformat';
 import { parse, Token } from '@messageformat/parser';
+import { firstValueFrom } from 'rxjs';
 import { describe, expect, test } from 'vitest';
 import { Language } from './enums/language.enum';
 import { TranslationScope } from './enums/translation-scope.enum';
@@ -49,7 +50,7 @@ describe('Translations', () => {
 
     describe.each(folders)('the %s translations', (_name: string, folder: string) => {
         async function load(language: Language): Promise<Map<string, string>> {
-            return flatten(await TestBed.inject(TranslationLoader).getTranslation(`${ folder }${ language }`));
+            return flatten(await firstValueFrom(TestBed.inject(TranslationLoader).getTranslation(`${ folder }${ language }`)));
         }
 
         test.each(languages)('the keys of %s should be the keys of English', async (language: Language) => {
