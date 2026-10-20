@@ -85,7 +85,7 @@
 
   <!-- ===================================================================== Title -->
   <text x="16" y="34" class="title">Synchronous Chess — AWS infrastructure</text>
-  <text x="16" y="54" class="subtitle">What Terraform deploys for one stage (infrastructure/main.tf) · {stage}: production, staging or development · {domain}: main_domain_name</text>
+  <text x="16" y="54" class="subtitle">What Terraform deploys for one stage (infrastructure/main.tf) · {stage}: production or staging · {domain}: main_domain_name</text>
 
   <!-- ===================================================================== Internet (outside AWS) -->
   <text x="16" y="84" class="tag">INTERNET</text>
@@ -185,7 +185,7 @@
   <text x="878" y="118" class="tag">GLOBAL · ROLES OF THE LAMBDAS</text>
   <text x="848" y="133" class="h2 sec-t">sc_lambda_basic_{stage}<tspan class="d" font-weight="normal"> → onconnect</tspan></text>
   <text x="860" y="145" class="s">AWSLambdaBasicExecutionRole (CloudWatch logs)</text>
-  <text x="848" y="158" class="h2 sec-t">sc_lambda_database_{stage}<tspan class="d" font-weight="normal"> → ondisconnect</tspan></text>
+  <text x="848" y="158" class="h2 sec-t">sc_lambda_database_{stage}<tspan class="d" font-weight="normal"> → ondisconnect, ping</tspan></text>
   <text x="860" y="170" class="s">basic + sc-database + sc-manage-connection</text>
   <text x="848" y="183" class="h2 sec-t">sc_lambda_sendmessage_{stage}<tspan class="d" font-weight="normal"> → sendmessage</tspan></text>
   <text x="860" y="195" class="s">the policies of ondisconnect + sc-source-hash-secret</text>
@@ -258,7 +258,7 @@
   <rect x="326" y="654" width="176" height="48" rx="4" class="net-in"/>
   <text x="334" y="669" class="h2 net-t">$connect → onconnect</text>
   <text x="334" y="683" class="s">Lambda proxy (AWS_PROXY)</text>
-  <text x="334" y="695" class="s">a socket opens</text>
+  <text x="334" y="695" class="s">a socket opens: the app's origin</text>
 
   <rect x="326" y="710" width="176" height="48" rx="4" class="net-in"/>
   <text x="334" y="725" class="h2 net-t">$disconnect → ondisconnect</text>
@@ -271,9 +271,9 @@
   <text x="334" y="807" class="s">signal, reconnect, players…</text>
 
   <rect x="326" y="822" width="176" height="48" rx="4" class="net-in"/>
-  <text x="334" y="837" class="h2 net-t">ping → mock integration</text>
-  <text x="334" y="851" class="s">keep-alive every 5 min: a socket</text>
-  <text x="334" y="863" class="s">idle for 10 min is closed</text>
+  <text x="334" y="837" class="h2 net-t">ping → ping</text>
+  <text x="334" y="851" class="s">Lambda proxy · every 3 min: the</text>
+  <text x="334" y="863" class="s">socket open, the database awake</text>
 
   <rect x="326" y="886" width="176" height="60" rx="4" class="net-in"/>
   <text x="334" y="902" class="h2 net-t">@connections</text>
@@ -287,7 +287,7 @@
   <text x="328" y="988" class="s">sc-http-{stage} · stage $default</text>
 
   <rect x="326" y="994" width="176" height="48" rx="4" class="net-in"/>
-  <text x="334" y="1009" class="h2 net-t">GET /rooms · /health</text>
+  <text x="334" y="1009" class="h2 net-t">GET /rooms</text>
   <text x="334" y="1023" class="s">→ httpapi · Lambda proxy 2.0</text>
   <text x="334" y="1035" class="s">CORS: GET, the app's origin</text>
 
@@ -326,7 +326,7 @@
 
   <rect x="626" y="654" width="176" height="48" rx="5" class="cmp"/>
   <text x="636" y="669" class="h2 cmp-t">onconnect</text>
-  <text x="636" y="683" class="s">128 MB · 3 s · logs the connection</text>
+  <text x="636" y="683" class="s">128 MB · 3 s · checks the origin</text>
   <text x="636" y="695" class="s">role sc_lambda_basic_{stage}</text>
 
   <rect x="626" y="710" width="176" height="48" rx="5" class="cmp"/>
@@ -338,6 +338,11 @@
   <text x="636" y="781" class="h2 cmp-t">sendmessage</text>
   <text x="636" y="795" class="s">512 MB (scrypt) · 28 s · role</text>
   <text x="636" y="807" class="s">sc_lambda_sendmessage_{stage}</text>
+
+  <rect x="626" y="822" width="176" height="48" rx="5" class="cmp"/>
+  <text x="636" y="837" class="h2 cmp-t">ping</text>
+  <text x="636" y="851" class="s">128 MB · 28 s · renews the lease</text>
+  <text x="636" y="863" class="s">role sc_lambda_database_{stage}</text>
 
   <text x="628" y="888" class="s">named sc_{name}_{stage}</text>
   <text x="628" y="903" class="s">timeout 28 s: API Gateway waits</text>
@@ -361,6 +366,8 @@
   <text x="564" y="728" class="lbl" text-anchor="middle">invoke</text>
   <line x1="502" y1="790" x2="626" y2="790" class="flow" marker-end="url(#ah)"/>
   <text x="564" y="784" class="lbl" text-anchor="middle">invoke</text>
+  <line x1="502" y1="846" x2="626" y2="846" class="flow" marker-end="url(#ah)"/>
+  <text x="564" y="840" class="lbl" text-anchor="middle">invoke</text>
   <line x1="502" y1="1018" x2="626" y2="1018" class="flow" marker-end="url(#ah)"/>
   <text x="564" y="1012" class="lbl" text-anchor="middle">invoke</text>
 
@@ -385,10 +392,12 @@
   <!-- Lambdas reading the database to the Data API -->
   <polyline points="802,734 836,734" class="flow"/>
   <polyline points="802,790 836,790" class="flow"/>
+  <polyline points="802,846 836,846" class="flow"/>
   <polyline points="802,1018 836,1018" class="flow"/>
   <polyline points="802,1074 836,1074 836,562 896,562" class="flow" marker-end="url(#ah)"/>
   <circle cx="836" cy="734" r="2.6" class="dot"/>
   <circle cx="836" cy="790" r="2.6" class="dot"/>
+  <circle cx="836" cy="846" r="2.6" class="dot"/>
   <circle cx="836" cy="1018" r="2.6" class="dot"/>
   <text x="844" y="650" class="lbl-b">Data API</text>
   <text x="844" y="662" class="lbl">HTTPS</text>

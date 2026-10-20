@@ -36,6 +36,9 @@ export const GUEST_CONNECTION: string = 'guest-connection';
 export const HOST_TOKEN: string = 'host-token';
 export const GUEST_TOKEN: string = 'guest-token';
 
+/** The lease of `aRoom()`, far ahead whatever the time of the spec */
+export const LEASED_UNTIL: number = 2_000_000_000;
+
 /** A room hosted by `host`, `guest` waiting in its queue */
 export function aRoom(room: Partial<Room> = {}): Room {
     return {
@@ -50,6 +53,7 @@ export function aRoom(room: Partial<Room> = {}): Room {
         queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }],
         tokenHashes: { host: hashToken(HOST_TOKEN), guest: hashToken(GUEST_TOKEN) },
         isPrivate: room.passwordHash !== undefined,
+        leaseUntil: LEASED_UNTIL,
         ...room,
     };
 }
@@ -58,17 +62,33 @@ export function aRequest<Type extends RoomApiRequestTypeEnum>(type: Type, data: 
     return { id: 7, type, data };
 }
 
+/** The origin of the game app of the specs: the one ALLOWED_ORIGINS gives (vitest.config.ts) */
+export const APP_ORIGIN: string = 'https://app.test';
+// The headers of a page of the game app: of the handshake of its websocket, then of its requests to the HTTP API, their
+// names in lower case as API Gateway gives them
+const APP_HANDSHAKE_HEADERS: Readonly<Record<string, string>> = { Origin: APP_ORIGIN };
+const APP_HTTP_HEADERS: Readonly<Record<string, string>> = { origin: APP_ORIGIN };
+
 /** The event of a websocket route, with only what the lambdas read */
 export function anEvent(connectionId: string | undefined, body: string | null = null): APIGatewayProxyEvent {
     return { body, requestContext: { connectionId, domainName: 'api.test' } } as unknown as APIGatewayProxyEvent;
 }
 
 /**
- * The event of a route of the HTTP API, with only what the lambdas read: the query string as sent, still encoded, and the
- * cookies, `name=value` each, left out without any as by API Gateway
+ * The event of `$connect`, the only route API Gateway gives the headers of the handshake: a page of the game app sending
+ * its Origin by default
  */
-export function anHttpEvent(routeKey: string, rawQueryString: string = '', cookies?: string[]): APIGatewayProxyEventV2 {
-    return { routeKey, rawQueryString, cookies } as unknown as APIGatewayProxyEventV2;
+export function aConnectEvent(connectionId: string, headers: Readonly<Record<string, string>> | null = APP_HANDSHAKE_HEADERS): APIGatewayProxyEvent {
+    return { ...anEvent(connectionId), headers } as unknown as APIGatewayProxyEvent;
+}
+
+/**
+ * The event of a route of the HTTP API, with only what the lambdas read: the query string as sent, still encoded, the
+ * cookies, `name=value` each, left out without any as by API Gateway, and the headers, their names in lower case as API
+ * Gateway gives them, a page of the game app sending its Origin by default
+ */
+export function anHttpEvent(routeKey: string, rawQueryString: string = '', cookies?: string[], headers: Readonly<Record<string, string>> = APP_HTTP_HEADERS): APIGatewayProxyEventV2 {
+    return { routeKey, rawQueryString, cookies, headers } as unknown as APIGatewayProxyEventV2;
 }
 
 /** The method of `$connect` the authorizer of the websocket API allows or denies */
@@ -129,6 +149,7 @@ export async function storeRoom(room: Room): Promise<void> {
         nameKey: room.nameKey,
         passwordHash: room.passwordHash,
         expiresAt: room.expiresAt,
+        leaseUntil: room.leaseUntil,
     });
 
     if (room.players.length > 0) {

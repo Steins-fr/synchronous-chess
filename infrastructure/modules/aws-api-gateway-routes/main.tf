@@ -110,17 +110,26 @@ resource "aws_apigatewayv2_route" "sendmessage" {
   target = "integrations/${aws_apigatewayv2_integration.sendmessage.id}"
 }
 
-# Keeps a connection open (RoomApiRoute.PING of the room socket protocol): API Gateway closes a connection without
-# message for 10 minutes. A mock integration without route response, no lambda runs and nothing is answered
+# Keeps a connection open (RoomApiRoute.PING of the room socket protocol), API Gateway closing a connection without
+# message for 10 minutes, and the database awake during a game: its lambda runs a statement. Without route response,
+# nothing is answered
 resource "aws_apigatewayv2_integration" "ping" {
   api_id           = var.api_gateway_id
-  integration_type = "MOCK"
+  integration_type = "AWS_PROXY"
 
-  description                   = "Ping integration"
-  template_selection_expression = "\\$default"
-  request_templates = {
-    "$default" = "{\"statusCode\": 200}"
-  }
+  connection_type           = "INTERNET"
+  content_handling_strategy = "CONVERT_TO_TEXT"
+  description               = "Ping integration"
+  integration_method        = "POST"
+  integration_uri           = var.lambda_ping_arn
+  passthrough_behavior      = "WHEN_NO_MATCH"
+}
+
+resource "aws_lambda_permission" "lambda_permission_ping" {
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_ping_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${var.api_gateway_execution_arn}/*"
 }
 
 resource "aws_apigatewayv2_route" "ping" {

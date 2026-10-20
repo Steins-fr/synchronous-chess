@@ -6,7 +6,7 @@ import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import RoomRepository from '@repositories/room-repository';
-import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeRoom } from '@testing/api-mocks';
+import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import RoomService from './room-service';
@@ -79,7 +79,7 @@ describe('RoomService', () => {
 
     test.each([
         ['with its host connected', aRoom()],
-        ['waiting for its host', aRoom({ expiresAt: now + 1 })],
+        ['waiting for its host past its lease', aRoom({ expiresAt: now + 1, leaseUntil: now })],
     ])('should get an existing room %s', async (_case: string, existing: Room) => {
         // Given
         await storeRoom(existing);
@@ -91,6 +91,7 @@ describe('RoomService', () => {
     test.each([
         ['missing', aRoom({ id: 'other', nameKey: 'other' })],
         ['expired', aRoom({ expiresAt: now })],
+        ['abandoned, its lease ended', aRoom({ leaseUntil: now })],
     ])('should report a %s room', async (_case: string, stored: Room) => {
         // Given
         await storeRoom(stored);
@@ -270,6 +271,7 @@ describe('RoomService', () => {
             queue: [],
             tokenHashes: { host: hashToken(HOST_TOKEN) },
             isPrivate: false,
+            leaseUntil: now + RoomService.LEASE,
         });
     });
 
@@ -290,8 +292,8 @@ describe('RoomService', () => {
         // When
         await service.reconnectHost(room, 'new-connection', 'host', HOST_TOKEN);
 
-        // Then
-        expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: 'new-connection' });
+        // Then: its lease renewed
+        expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: 'new-connection', leaseUntil: now + RoomService.LEASE });
     });
 
     test('should refuse to move a room expired now', async () => {
@@ -310,5 +312,17 @@ describe('RoomService', () => {
         // When / Then
         await expect(service.reconnectHost(room, 'new-connection', 'host', 'other-token')).rejects.toThrow('You are not the host of the room');
         expect(await readRoom('room')).toStrictEqual(room);
+    });
+
+    test('should renew the lease of the room a connection hosts, LEASE from now', async () => {
+        // Given
+        await storeRoom({ ...room, leaseUntil: now + 1 });
+        await storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
+
+        // When
+        await service.renewLease(HOST_CONNECTION);
+
+        // Then
+        expect(await readRoom('room')).toStrictEqual({ ...room, leaseUntil: now + RoomService.LEASE });
     });
 });

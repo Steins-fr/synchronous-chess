@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Uruchamianie serwera…",
-    "bootingDelay": "Serwer i jego baza danych usypiają, gdy nikt nie gra: ich wybudzenie trwa do około trzydziestu sekund.",
-    "connecting": "Łączenie z serwerem…",
-    "loadingPage": "Ładowanie strony…"
-  },
   "app": {
     "language": {
       "pick": "Wybierz język"
     },
+    "loadingPage": "Ładowanie strony…",
     "nav": {
       "chat": "Czat",
       "chess": "Szachy synchroniczne",
@@ -46,6 +41,10 @@
     "title": "Wybierz grę"
   },
   "rooms": {
+    "booting": {
+      "delay": "Serwer i jego baza danych usypiają, gdy nikt nie gra: ich wybudzenie trwa do około trzydziestu sekund.",
+      "title": "Uruchamianie serwera…"
+    },
     "create": {
       "intro": "Inni gracze znajdą go na liście otwartych pokojów: z hasłem jest prywatny.",
       "submit": "Utwórz",
@@ -115,6 +114,7 @@
         "label": "Szukaj pokoju",
         "maxLength": "Wyszukiwanie ma co najwyżej {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}"
       },
+      "show": "Pokaż otwarte pokoje",
       "title": "Otwarte pokoje"
     }
   }

@@ -5,11 +5,18 @@ import { Language } from '@app/services/language/enums/language.enum';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
+import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
 import { environment } from '@environments/environment';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { appConfig } from './app.config';
 
 describe('appConfig', () => {
+    afterEach(() => {
+        // @ts-expect-error The API of a spec only, missing from jsdom
+        delete window.performance.getEntriesByType;
+        vi.restoreAllMocks();
+    });
+
     test('should provide the application settings', () => {
         // Given
         TestBed.configureTestingModule({ providers: appConfig.providers });
@@ -25,6 +32,19 @@ describe('appConfig', () => {
         expect(httpApiWithCredentials).toEqual(environment.httpApiWithCredentials);
     });
 
+    test('should listen for a person on the page as soon as the app starts', () => {
+        // Given: the service itself, the specs providing a person on the page; jsdom has no navigation entries
+        window.performance.getEntriesByType = vi.fn((): PerformanceEntryList => []);
+        const added = vi.spyOn(document, 'addEventListener');
+        TestBed.configureTestingModule({ providers: [...appConfig.providers, VisitorPresenceService] });
+
+        // When
+        TestBed.inject(ApplicationInitStatus);
+
+        // Then
+        expect(added).toHaveBeenCalledWith('pointermove', expect.any(Function), { capture: true, passive: true });
+    });
+
     test('should load the language of the user before the app starts', async () => {
         // Given
         vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['fr-FR']);
@@ -37,6 +57,5 @@ describe('appConfig', () => {
         const transloco: TranslocoService = TestBed.inject(TranslocoService);
         expect(transloco.getActiveLang()).toBe(Language.FR);
         expect(transloco.translate('app.title')).toBe('Échecs synchrones');
-        vi.restoreAllMocks();
     });
 });

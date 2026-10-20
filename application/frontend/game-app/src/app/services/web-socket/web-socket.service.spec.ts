@@ -180,13 +180,13 @@ describe('WebSocketService', () => {
         const socket: WebSocketMock = await openService();
 
         // When
-        vi.advanceTimersByTime(5 * 60_000);
+        vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
 
         // Then
         expect(socket.send).not.toHaveBeenCalled();
     });
 
-    test('should ping an open socket kept alive every 5 minutes, until it closes', async () => {
+    test('should ping an open socket kept alive every 3 minutes, under the 5 the database stays awake, until it closes', async () => {
         // Given
         vi.useFakeTimers();
         const socket: WebSocketMock = await openService();
@@ -194,9 +194,9 @@ describe('WebSocketService', () => {
         // When
         service.keepAlive();
         service.keepAlive();
-        vi.advanceTimersByTime(5 * 60_000);
+        vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
         socket.closeFromServer();
-        vi.advanceTimersByTime(5 * 60_000);
+        vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
 
         // Then
         expect(socket.sentPackets()).toEqual([{ message: 'ping' }]);
@@ -212,7 +212,7 @@ describe('WebSocketService', () => {
         const opening: Promise<number> = service.send('message', 1);
         WebSocketMock.last().open();
         await opening;
-        vi.advanceTimersByTime(5 * 60_000);
+        vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
 
         // Then
         expect(WebSocketMock.last().sentPackets()).toEqual([{ message: 'message', data: 1 }, { message: 'ping' }]);
@@ -231,7 +231,7 @@ describe('WebSocketService', () => {
         const opening: Promise<number> = service.send('message', 2);
         WebSocketMock.last().open();
         await opening;
-        vi.advanceTimersByTime(5 * 60_000);
+        vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
 
         // Then
         expect(WebSocketMock.last().sentPackets()).toEqual([{ message: 'message', data: 2 }, { message: 'ping' }]);
@@ -249,7 +249,7 @@ describe('WebSocketService', () => {
         const next: WebSocketMock = WebSocketMock.last();
         next.open();
         await opening;
-        vi.advanceTimersByTime(5 * 60_000);
+        vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
 
         // Then
         expect(socket.send).not.toHaveBeenCalled();
@@ -484,7 +484,7 @@ describe('WebSocketService', () => {
             await replacing;
 
             // When
-            vi.advanceTimersByTime(5 * 60_000);
+            vi.advanceTimersByTime(WebSocketService.PING_INTERVAL);
 
             // Then
             expect(next.sentPackets()).toEqual([{ message: 'ping' }]);

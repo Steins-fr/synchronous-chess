@@ -43,15 +43,21 @@ export const rooms = snakeCase.table('rooms', {
     isPrivate: boolean().notNull().generatedAlwaysAs(sql`password_hash IS NOT NULL`),
     /** Set while its host is disconnected, in epoch seconds: the room waits until then for the host to reconnect */
     expiresAt: bigint({ mode: 'number' }),
-}, (table: ConstrainedColumns<'maxPlayer' | 'game' | 'createdAt' | 'nameKey' | 'expiresAt'>): PgTableExtraConfigValue[] => [
+    /**
+     * In epoch seconds, while its host is connected: the room no longer exists after it, unless a ping of its host
+     * renews it (RoomService.LEASE)
+     */
+    leaseUntil: bigint({ mode: 'number' }).notNull(),
+}, (table: ConstrainedColumns<'maxPlayer' | 'game' | 'createdAt' | 'nameKey' | 'expiresAt' | 'leaseUntil'>): PgTableExtraConfigValue[] => [
     check('rooms_max_player', sql`${table.maxPlayer} BETWEEN 1 AND 16`),
     check('rooms_game', sql`${table.game} IN (${sql.raw(ROOM_GAMES_SQL)})`),
     // The most recent rooms of a game. Nulls first, the order of `ORDER BY created_at DESC`: else not read in order
     index('rooms_game_created_at').on(table.game, table.createdAt.desc().nullsFirst()),
     // The rooms whose name holds the search: pg_trgm, created by the first migration
     index('rooms_name_key_trgm').using('gin', table.nameKey.op('gin_trgm_ops')),
-    // The expired rooms, deleted on the creation of a room
-    index('rooms_expires_at').on(table.expiresAt).where(sql`${table.expiresAt} IS NOT NULL`),
+    // The expired rooms, deleted on the creation of a room: the end of the wait for the host, else of the lease (the
+    // expiry of RoomRepository)
+    index('rooms_expiry').on(sql`coalesce(${table.expiresAt}, ${table.leaseUntil})`),
 ]);
 
 /** The room of the rows of the tables below, which are deleted with it */

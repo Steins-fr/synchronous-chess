@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Server wird gestartet…",
-    "bootingDelay": "Der Server und seine Datenbank schlafen, wenn niemand spielt: Das Aufwecken dauert bis zu etwa dreißig Sekunden.",
-    "connecting": "Verbindung zum Server…",
-    "loadingPage": "Seite wird geladen…"
-  },
   "app": {
     "language": {
       "pick": "Sprache wählen"
     },
+    "loadingPage": "Seite wird geladen…",
     "nav": {
       "chat": "Chat",
       "chess": "Synchrones Schach",
@@ -46,6 +41,10 @@
     "title": "Wähle ein Spiel"
   },
   "rooms": {
+    "booting": {
+      "delay": "Der Server und seine Datenbank schlafen, wenn niemand spielt: Das Aufwecken dauert bis zu etwa dreißig Sekunden.",
+      "title": "Server wird gestartet…"
+    },
     "create": {
       "intro": "Die anderen Spieler finden ihn in der Liste der offenen Räume: Mit einem Passwort ist er privat.",
       "submit": "Erstellen",
@@ -115,6 +114,7 @@
         "label": "Raum suchen",
         "maxLength": "Die Suche hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}"
       },
+      "show": "Offene Räume anzeigen",
       "title": "Offene Räume"
     }
   }

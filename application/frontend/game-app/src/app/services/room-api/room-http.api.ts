@@ -12,12 +12,19 @@ import { HTTP_API_WITH_CREDENTIALS } from './http-api-with-credentials.token';
  * create in an injection context. A new request cancels the former one. HttpParams throws on a search it cannot encode
  * (a lone surrogate): the resource fails
  */
-export function openRoomsResource(request: () => Readonly<RoomsRequest>): HttpResourceRef<RoomsResponse | undefined> {
+export function openRoomsResource(request: () => Readonly<RoomsRequest> | undefined): HttpResourceRef<RoomsResponse | undefined> {
     const httpApiServer: string = inject(HTTP_API_SERVER);
     const withCredentials: boolean = inject(HTTP_API_WITH_CREDENTIALS);
 
-    return httpResource<RoomsResponse>((): HttpResourceRequest => {
-        const { game, search }: Readonly<RoomsRequest> = request();
+    return httpResource<RoomsResponse>((): HttpResourceRequest | undefined => {
+        const asked: Readonly<RoomsRequest> | undefined = request();
+
+        // Nothing asked yet: the resource waits, idle
+        if (asked === undefined) {
+            return undefined;
+        }
+
+        const { game, search }: Readonly<RoomsRequest> = asked;
 
         return {
             url: `${ httpApiServer }${ RoomApiHttpRoute.ROOMS }`,

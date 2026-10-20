@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "A iniciar o servidor…",
-    "bootingDelay": "O servidor e a respetiva base de dados entram em repouso quando ninguém joga: acordá-los demora até cerca de trinta segundos.",
-    "connecting": "A ligar ao servidor…",
-    "loadingPage": "A carregar a página…"
-  },
   "app": {
     "language": {
       "pick": "Escolher o idioma"
     },
+    "loadingPage": "A carregar a página…",
     "nav": {
       "chat": "Chat",
       "chess": "Xadrez sincronizado",
@@ -46,6 +41,10 @@
     "title": "Escolha um jogo"
   },
   "rooms": {
+    "booting": {
+      "delay": "O servidor e a respetiva base de dados entram em repouso quando ninguém joga: acordá-los demora até cerca de trinta segundos.",
+      "title": "A iniciar o servidor…"
+    },
     "create": {
       "intro": "Os outros jogadores vão encontrá-la na lista das salas abertas: com uma palavra-passe, é privada.",
       "submit": "Criar",
@@ -115,6 +114,7 @@
         "label": "Pesquisar uma sala",
         "maxLength": "A pesquisa tem, no máximo, {maxLength, plural, one {# carácter} other {# carateres}}"
       },
+      "show": "Mostrar as salas abertas",
       "title": "Salas abertas"
     }
   }

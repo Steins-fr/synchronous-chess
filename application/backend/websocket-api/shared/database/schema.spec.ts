@@ -16,6 +16,7 @@ function aRoom(room: Partial<NewRoom> = {}): NewRoom {
         game: RoomGame.CHESS,
         createdAt: '2026-10-17T12:00:00.000Z',
         nameKey: 'room',
+        leaseUntil: 1_800_000_000,
         ...room,
     };
 }
@@ -93,7 +94,7 @@ describe('schema', () => {
 
     // What drizzle-kit generates the migrations from (`drizzle-kit check` in the CI)
     test('should declare the indexes of the list and the search of the rooms, and of their expiry', () => {
-        expect(getTableConfig(rooms).indexes.map((index: Index) => index.config.name)).toEqual(['rooms_game_created_at', 'rooms_name_key_trgm', 'rooms_expires_at']);
+        expect(getTableConfig(rooms).indexes.map((index: Index) => index.config.name)).toEqual(['rooms_game_created_at', 'rooms_name_key_trgm', 'rooms_expiry']);
     });
 
     test.each([

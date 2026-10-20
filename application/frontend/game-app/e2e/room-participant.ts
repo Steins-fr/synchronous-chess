@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, expect, Locator, Page, WebSocket } from '@playwright/test';
+import { Browser, BrowserContext, expect, Locator, Page, Request, WebSocket } from '@playwright/test';
 
 declare global {
     interface Window {
@@ -14,9 +14,13 @@ export class RoomParticipant {
     // The websocket API run locally (environment.local.ts): the dev server of the app opens a socket of its own, to
     // reload the page
     private static readonly API_SOCKET: string = 'ws://127.0.0.1:3001';
+    // The HTTP API run locally (environment.local.ts)
+    private static readonly API_SERVER: string = 'http://127.0.0.1:3001';
 
     /** The URLs of the sockets the page opened to the API */
     private readonly apiSockets: string[] = [];
+    /** The URLs of the requests the page sent to the HTTP API */
+    private readonly apiRequests: string[] = [];
 
     private constructor(
         public readonly name: string,
@@ -26,6 +30,11 @@ export class RoomParticipant {
         page.on('websocket', (webSocket: WebSocket) => {
             if (webSocket.url().startsWith(RoomParticipant.API_SOCKET)) {
                 this.apiSockets.push(webSocket.url());
+            }
+        });
+        page.on('request', (request: Request) => {
+            if (request.url().startsWith(RoomParticipant.API_SERVER)) {
+                this.apiRequests.push(request.url());
             }
         });
     }
@@ -60,9 +69,36 @@ export class RoomParticipant {
         await dialog.getByRole('button', { name: 'Create', exact: true }).click();
     }
 
-    /** Opens the page of the chat room, its list of the open rooms */
+    /**
+     * Loads the page of the chat room without acting on it, as a bot rendering it, until it settles: a script Playwright
+     * runs in the page (a snapshot of a trace, an evaluation) carries a user gesture, which would activate a page still
+     * starting, as a person does
+     * @param options.fakeClock its clock faked, the time flowing as usual until passTime(); its performance entries are
+     * faked too, none telling a reload
+     */
+    public async load(options?: { fakeClock?: boolean }): Promise<void> {
+        if (options?.fakeClock === true) {
+            await this.page.clock.install();
+        }
+        await this.page.goto('/simple-chat', { waitUntil: 'networkidle' });
+    }
+
+    /**
+     * Passes the time of a page loaded with a fake clock at once, its timers run: the requests they send reach the API in
+     * the second after
+     */
+    public async passTime(time: number): Promise<void> {
+        await this.page.clock.fastForward(time);
+        await this.page.waitForTimeout(1000);
+    }
+
+    /**
+     * Opens the page of the chat room as a person, the pointer moving over it once it settles, the app listening: its list
+     * of the open rooms
+     */
     public async visit(): Promise<void> {
-        await this.page.goto('/simple-chat');
+        await this.page.goto('/simple-chat', { waitUntil: 'networkidle' });
+        await this.page.mouse.move(100, 100);
     }
 
     /** Joins a room of the list of the open rooms, giving the password of a private one */
@@ -126,6 +162,11 @@ export class RoomParticipant {
     /** The page opened no socket to the API: the open rooms, searched or not, are listed by the HTTP API */
     public expectNoApiSocket(): void {
         expect(this.apiSockets).toEqual([]);
+    }
+
+    /** The page sent no request to the HTTP API, its database left asleep */
+    public expectNoApiRequest(): void {
+        expect(this.apiRequests).toEqual([]);
     }
 
     /** The page opened a socket to the API: once it created or joined a room */

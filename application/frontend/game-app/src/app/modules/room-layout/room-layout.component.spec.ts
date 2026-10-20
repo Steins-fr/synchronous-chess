@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RoomLayoutComponent } from './room-layout.component';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { RoomGame } from '@protocol/room-game.enum';
 import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
+import { TestHelper } from '@testing/test.helper';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 describe('RoomLayoutComponent', () => {
@@ -14,7 +16,12 @@ describe('RoomLayoutComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [RoomLayoutComponent],
-            providers: [RoomSetupService, { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }],
+            providers: [
+                RoomSetupService,
+                { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
+                // Provided by the page
+                { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: signal(false) }) },
+            ],
         }).compileComponents();
 
         roomSetupService = TestBed.inject(RoomSetupService);

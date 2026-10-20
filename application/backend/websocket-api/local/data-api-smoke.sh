@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The smoke test of the Data API, run with the AWS credentials of the shell (AWS_PROFILE...):
-#   npm run smoke:data-api -- <stage>        npm run smoke:data-api -- development
+#   npm run smoke:data-api -- <stage>        npm run smoke:data-api -- staging
 # Runs the statements of the repositories on the Aurora cluster of the stage (data-api-smoke.ts), waits for the
 # cluster to pause, then times a statement sent to the paused cluster
 set -euo pipefail

@@ -1,5 +1,4 @@
 import { DatabaseOperationEnum } from '@exceptions/database-exception';
-import HealthRepository from '@repositories/health-repository';
 import RoomRepository from '@repositories/room-repository';
 import { aDatabaseFailure, anHttpEvent, aRoom, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
@@ -16,9 +15,9 @@ describe('httpapi lambda', () => {
         vi.spyOn(console, 'error').mockImplementation((): void => undefined);
     });
 
-    /** The response of the lambda, its body parsed */
-    async function request(routeKey: string, rawQueryString: string = ''): Promise<{ statusCode: number; headers: Record<string, string>; body: unknown }> {
-        const response = await handler(anHttpEvent(routeKey, rawQueryString));
+    /** The response of the lambda, its body parsed: to a page of the game app by default */
+    async function request(routeKey: string, rawQueryString: string = '', headers?: Record<string, string>): Promise<{ statusCode: number; headers: Record<string, string>; body: unknown }> {
+        const response = await handler(anHttpEvent(routeKey, rawQueryString, undefined, headers));
         return { ...response, body: JSON.parse(response.body) };
     }
 
@@ -40,16 +39,31 @@ describe('httpapi lambda', () => {
         });
     });
 
-    test('should answer the API is up once its database answers', async () => {
-        expect(await request('GET /health')).toEqual({ statusCode: 200, headers: JSON_HEADERS, body: { status: 'up' } });
+    test.each([
+        ['a page of another domain', { origin: 'https://attacker.test' }],
+        ['a client out of a browser, without Origin', { 'user-agent': 'curl/8.5.0' }],
+    ])('should refuse %s, without reading the database', async (_case: string, headers: Record<string, string>) => {
+        // Given
+        const findRecentRooms = vi.spyOn(RoomRepository.prototype, 'findRecentRooms');
+
+        // When
+        const response = await request('GET /rooms', 'game=chess', headers);
+
+        // Then
+        expect(response).toEqual({ statusCode: 403, headers: JSON_HEADERS, body: { message: 'Forbidden' } });
+        expect(findRecentRooms).not.toHaveBeenCalled();
     });
 
-    test('should answer a server error while the database of the API fails', async () => {
+    test('should answer a server error without the origins of the game app in its environment', async () => {
         // Given
-        vi.spyOn(HealthRepository.prototype, 'ping').mockRejectedValue(aDatabaseFailure(DatabaseOperationEnum.QUERY));
+        vi.stubEnv('ALLOWED_ORIGINS', undefined);
 
-        // When / Then
-        expect(await request('GET /health')).toEqual({ statusCode: 500, headers: JSON_HEADERS, body: { message: 'Server error.' } });
+        // When
+        const response = await request('GET /rooms', 'game=chess');
+
+        // Then
+        expect(response).toEqual({ statusCode: 500, headers: JSON_HEADERS, body: { message: 'Server error.' } });
+        expect(console.error).toHaveBeenCalledExactlyOnceWith(new Error('No ALLOWED_ORIGINS: the origins of the game app, set by infrastructure/main.tf for onconnect and httpapi, by local/server.ts locally'));
     });
 
     test('should answer a refused request with its message', async () => {

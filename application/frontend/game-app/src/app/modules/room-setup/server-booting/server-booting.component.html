@@ -1,0 +1,8 @@
+<!-- An output: its role is status, read by the screen readers once its text changes, so always in the page, its text -->
+<!-- shown once the wait lasts. Empty, out of the flow of its parent: no gap for it. It holds phrasing content only -->
+<output *transloco="let t; prefix: 'rooms.booting'" class="flex flex-col gap-1 empty:absolute">
+    @if (shown()) {
+    <span class="block font-medium">{{ t('title') }}</span>
+    <span class="block muted-note">{{ t('delay') }}</span>
+    }
+</output>

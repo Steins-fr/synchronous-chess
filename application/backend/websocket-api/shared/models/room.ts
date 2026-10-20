@@ -28,4 +28,9 @@ export default interface Room {
      * no longer exists. The creation of a room deletes it afterwards
      */
     expiresAt?: number;
+    /**
+     * In epoch seconds, while the host is connected: the room no longer exists after it, unless a ping of the host renews
+     * it (RoomService.LEASE). A room whose host left without $disconnect ends then
+     */
+    leaseUntil: number;
 }

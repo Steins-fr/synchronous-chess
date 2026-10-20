@@ -46,6 +46,13 @@ export class TestRoom {
         return player;
     }
 
+    /** A bot loading the page, acting on nothing: its clock faked, for passTime() */
+    public async load(playerName: string, options?: { fakeClock?: boolean }): Promise<RoomParticipant> {
+        const player: RoomParticipant = await this.open(playerName);
+        await player.load(options);
+        return player;
+    }
+
     /**
      * A player opening the page, the list of the open rooms
      * @param locale the language of its browser: the one of the config (en-US) by default

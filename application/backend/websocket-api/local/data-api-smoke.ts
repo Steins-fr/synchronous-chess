@@ -11,7 +11,7 @@ import { relations } from '@database/relations';
 import { retryOnResume } from '@database/resume-retry';
 import { connections, roomPasswordAttempts, roomPlayers, roomQueue, rooms, roomTokens } from '@database/schema';
 import { RoomGame } from '@protocol/room-game.enum';
-import { and, desc, eq, exists, gt, isNotNull, isNull, like, lt, lte, or, SQL, sql } from 'drizzle-orm';
+import { and, desc, eq, exists, gt, inArray, isNotNull, like, lt, lte, or, SQL, sql } from 'drizzle-orm';
 import { AwsDataApiPgQueryResultHKT } from 'drizzle-orm/aws-data-api/pg';
 import { migrate } from 'drizzle-orm/aws-data-api/pg/migrator';
 import { PgAsyncTransaction } from 'drizzle-orm/pg-core';
@@ -20,6 +20,7 @@ import path from 'node:path';
 
 const SMOKE_DATABASE: string = 'smoke';
 const NOW: number = 1_800_000_000;
+const LEASED_UNTIL: number = NOW + 1200;
 
 async function timed<Result>(step: string, run: () => Promise<Result>): Promise<Result> {
     const start: number = performance.now();
@@ -28,14 +29,17 @@ async function timed<Result>(step: string, run: () => Promise<Result>): Promise<
     return result;
 }
 
-function notExpired(now: number): SQL | undefined {
-    return or(isNull(rooms.expiresAt), gt(rooms.expiresAt, now));
+/** RoomRepository: the wait for the host once disconnected, else the lease */
+const ROOM_EXPIRY: SQL<number> = sql<number>`coalesce(${ rooms.expiresAt }, ${ rooms.leaseUntil })`;
+
+function notExpired(now: number): SQL {
+    return gt(ROOM_EXPIRY, now);
 }
 
 /** RoomRepository.create: the expired room of the same name deleted first, with its rows */
 function createRoom(db: DataApiDatabase, id: string, passwordHash?: string): Promise<boolean> {
     return db.transaction(async (tx: PgAsyncTransaction<AwsDataApiPgQueryResultHKT, typeof relations>): Promise<boolean> => {
-        await tx.delete(rooms).where(and(eq(rooms.id, id), lte(rooms.expiresAt, NOW)));
+        await tx.delete(rooms).where(and(eq(rooms.id, id), lte(ROOM_EXPIRY, NOW)));
         const created: { id: string }[] = await tx.insert(rooms).values({
             id,
             connectionId: `${ id }-host`,
@@ -45,6 +49,7 @@ function createRoom(db: DataApiDatabase, id: string, passwordHash?: string): Pro
             createdAt: new Date((NOW + id.length) * 1000).toISOString(),
             nameKey: id.toLowerCase(),
             passwordHash,
+            leaseUntil: LEASED_UNTIL,
         }).onConflictDoNothing().returning({ id: rooms.id });
 
         if (created.length === 0) {
@@ -74,7 +79,7 @@ async function countAttempt(db: DataApiDatabase, now: number): Promise<boolean> 
 }
 
 function reconnectHost(db: DataApiDatabase, playerName: string, tokenHash: string): Promise<{ id: string }[]> {
-    return db.update(rooms).set({ connectionId: 'Room-host-2', hostPlayer: playerName, expiresAt: null })
+    return db.update(rooms).set({ connectionId: 'Room-host-2', hostPlayer: playerName, expiresAt: null, leaseUntil: LEASED_UNTIL })
         .where(and(
             eq(rooms.id, 'Room'),
             notExpired(NOW),
@@ -123,6 +128,7 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
         passwordHash: null,
         isPrivate: false,
         expiresAt: null,
+        leaseUntil: LEASED_UNTIL,
         players: [{ playerName: 'host' }, { playerName: 'guest' }],
         queue: [{ playerName: 'guest', connectionId: 'guest-connection' }],
         tokens: [{ playerName: 'guest', tokenHash: 'guest-token' }, { playerName: 'host', tokenHash: 'host-token' }],
@@ -178,6 +184,17 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
     await db.insert(connections).values({ connectionId: 'connection', roomName: 'Private' })
         .onConflictDoUpdate({ target: connections.connectionId, set: { roomName: 'Private' } });
     assert.deepEqual(await db.select().from(connections), [{ connectionId: 'connection', roomName: 'Private' }]);
+
+    // RoomRepository.renewLease: the room found through the connection of its host
+    await db.insert(connections).values({ connectionId: 'Room-host-2', roomName: 'Room' });
+    const renewed: { leaseUntil: number }[] = await timed('renew the lease of a room', (): Promise<{ leaseUntil: number }[]> => db.update(rooms).set({ leaseUntil: LEASED_UNTIL + 240 })
+        .where(and(
+            inArray(rooms.id, db.select({ roomName: connections.roomName }).from(connections).where(eq(connections.connectionId, 'Room-host-2'))),
+            eq(rooms.connectionId, 'Room-host-2'),
+            notExpired(NOW),
+        ))
+        .returning({ leaseUntil: rooms.leaseUntil }));
+    assert.deepEqual(renewed, [{ leaseUntil: LEASED_UNTIL + 240 }]);
 
     await db.delete(rooms).where(eq(rooms.id, 'Room'));
     assert.deepEqual(await db.select({ roomId: roomTokens.roomId }).from(roomTokens), [{ roomId: 'Private' }], 'the tokens deleted with their room');

@@ -22,9 +22,11 @@ vi.mock('../lambdas/httpapi/app', async (importOriginal: () => Promise<typeof im
 // The game app served locally (environment.local.ts of the game app)
 const APP_ORIGIN: string = 'http://localhost:4200';
 
+// Of a page of the game app
 const HANDSHAKE: string = [
     'GET / HTTP/1.1',
     'Host: 127.0.0.1',
+    `Origin: ${ APP_ORIGIN }`,
     'Upgrade: websocket',
     'Connection: Upgrade',
     'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==',
@@ -52,9 +54,10 @@ interface HttpResponse {
     body: unknown;
 }
 
+/** Opens a connection like a page of the game app: with its Origin */
 function open(api: LocalApi): Promise<WebSocket> {
     return new Promise((resolve: (socket: WebSocket) => void, reject: (error: Error) => void) => {
-        const socket = new WebSocket(api.endpoint);
+        const socket = new WebSocket(api.endpoint, { origin: APP_ORIGIN });
         socket.once('open', () => resolve(socket));
         socket.once('error', reject);
     });
@@ -170,6 +173,8 @@ describe('local API', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => undefined);
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
         vi.mocked(onConnect).mockClear();
+        // The origins server.ts gives, restored after each test (unstubEnvs)
+        vi.stubEnv('ALLOWED_ORIGINS', `${ APP_ORIGIN },http://127.0.0.1:4200`);
         api = await startLocalApi({ port: 0 });
     });
 
@@ -209,9 +214,10 @@ describe('local API', () => {
             expect(JSON.parse(await answer)).toMatchObject({ message: 'Forbidden', connectionId: expect.any(String) });
         });
 
-        test('should answer nothing to a ping', async () => {
+        test('should run the lambda of a ping, which keeps the database awake, and answer nothing', async () => {
             // Given
             const socket = await connected();
+            const connectionId = await connectionIdOf(socket);
             const answer = nextMessage(socket);
 
             // When
@@ -220,6 +226,7 @@ describe('local API', () => {
 
             // Then: the first answer is the one to the second message
             expect(JSON.parse(await answer)).toMatchObject({ message: 'Forbidden' });
+            await vi.waitFor(() => expect(routeRuns('ping')).toContain(connectionId));
         });
 
         test('should close a connection sending a message larger than a frame, and keep serving the others', async () => {
@@ -453,6 +460,16 @@ describe('local API', () => {
             expect(onConnect).not.toHaveBeenCalled();
         });
 
+        test('should refuse the connection of a client out of the game app, without $disconnect', async () => {
+            // When
+            const response = await rawHandshake(api, HANDSHAKE.replace(`Origin: ${ APP_ORIGIN }\r\n`, ''));
+
+            // Then
+            expect(response).toMatch(/^HTTP\/1\.1 403 Forbidden\r\n/);
+            expect(routeRuns('$connect')).toHaveLength(1);
+            expect(routeRuns('$disconnect')).not.toContain(routeRuns('$connect')[0]);
+        });
+
         test('should refuse a connection with the status code of $connect, without $disconnect', async () => {
             // Given
             vi.mocked(onConnect).mockResolvedValueOnce({ statusCode: 401, body: 'Refused' });
@@ -520,28 +537,26 @@ describe('local API', () => {
     });
 
     describe('HTTP API', () => {
-        test('should tell the API is up once its database answers, readable by the game app', async () => {
-            expect(await sendHttp(api, 'GET', '/health'))
-                .toEqual({ status: 200, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { status: 'up' } });
-        });
-
         test('should answer a refused request, readable by the game app', async () => {
             expect(await sendHttp(api, 'GET', '/rooms?game=go'))
                 .toEqual({ status: 400, contentType: 'application/json', allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: { message: 'Payload not valid' } });
         });
 
-        test.each([
-            ['127.0.0.1', 'http://127.0.0.1:4200'],
-            ['another port', 'http://localhost:4201'],
-        ])('should be readable by the game app served on %s', async (_case: string, origin: string) => {
-            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: origin })).toMatchObject({ status: 400, allowedOrigin: origin });
+        test('should be readable by the game app served on 127.0.0.1', async () => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: 'http://127.0.0.1:4200' })).toMatchObject({ status: 400, allowedOrigin: 'http://127.0.0.1:4200' });
         });
 
         test.each([
             ['a page of another domain', 'https://attacker.test'],
             ['a page of another protocol', 'https://localhost:4200'],
-        ])('should not be readable by %s', async (_case: string, origin: string) => {
-            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: origin })).toMatchObject({ status: 400, allowedOrigin: undefined });
+            ['a page of another port', 'http://localhost:4201'],
+        ])('should refuse %s, unreadable', async (_case: string, origin: string) => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=chat', { Origin: origin }))
+                .toEqual({ status: 403, contentType: 'application/json', allowedOrigin: undefined, allowedMethods: undefined, body: { message: 'Forbidden' } });
+        });
+
+        test('should refuse a client out of a browser, without Origin', async () => {
+            expect(await sendHttp(api, 'GET', '/rooms?game=chat', {})).toMatchObject({ status: 403, body: { message: 'Forbidden' } });
         });
 
         test.each<[string, string, string, Record<string, string>]>([
@@ -560,6 +575,31 @@ describe('local API', () => {
             // When / Then
             expect(await sendHttp(api, 'GET', '/rooms?game=chat'))
                 .toEqual({ status: 500, contentType: undefined, allowedOrigin: APP_ORIGIN, allowedMethods: undefined, body: undefined });
+        });
+    });
+
+    describe('origins of the game app given', () => {
+        test('should answer the game app served on the origins given only, read at each request', async () => {
+            // Given: the game app served on another port
+            const otherOrigin: string = 'http://localhost:4300';
+            vi.stubEnv('ALLOWED_ORIGINS', otherOrigin);
+
+            // When / Then
+            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: otherOrigin })).toMatchObject({ status: 400, allowedOrigin: otherOrigin });
+            expect(await sendHttp(api, 'GET', '/rooms?game=go', { Origin: APP_ORIGIN })).toMatchObject({ status: 403, allowedOrigin: undefined });
+            expect(await rawHandshake(api, HANDSHAKE.replace(APP_ORIGIN, otherOrigin), (client: Socket) => client.destroy()))
+                .toMatch(/^HTTP\/1\.1 101 /);
+        });
+
+        test('should answer a server error without origins given, and keep serving', async () => {
+            // Given
+            vi.stubEnv('ALLOWED_ORIGINS', '');
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+            // When / Then
+            expect(await sendHttp(api, 'GET', '/rooms?game=chess')).toMatchObject({ status: 500, allowedOrigin: undefined });
+            vi.stubEnv('ALLOWED_ORIGINS', APP_ORIGIN);
+            expect(await sendHttp(api, 'GET', '/rooms?game=chess')).toMatchObject({ status: 200, allowedOrigin: APP_ORIGIN });
         });
     });
 

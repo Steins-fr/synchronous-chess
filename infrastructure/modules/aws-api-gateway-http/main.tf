@@ -47,7 +47,8 @@ resource "aws_apigatewayv2_stage" "stage" {
   }
 
   default_route_settings {
-    # Each request runs a lambda, and wakes the paused database: the limits of the WebSocket API (aws-api-gateway-stage)
+    # Each request runs a lambda, and one of the game app wakes the paused database: the limits of the WebSocket API
+    # (aws-api-gateway-stage)
     throttling_burst_limit = 500
     throttling_rate_limit  = 100
   }

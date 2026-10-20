@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Iniciando el servidor…",
-    "bootingDelay": "El servidor y su base de datos se suspenden cuando nadie juega: despertarlos tarda hasta unos treinta segundos.",
-    "connecting": "Conectando con el servidor…",
-    "loadingPage": "Cargando la página…"
-  },
   "app": {
     "language": {
       "pick": "Elegir el idioma"
     },
+    "loadingPage": "Cargando la página…",
     "nav": {
       "chat": "Chat",
       "chess": "Ajedrez sincrónico",
@@ -46,6 +41,10 @@
     "title": "Elige un juego"
   },
   "rooms": {
+    "booting": {
+      "delay": "El servidor y su base de datos se suspenden cuando nadie juega: despertarlos tarda hasta unos treinta segundos.",
+      "title": "Iniciando el servidor…"
+    },
     "create": {
       "intro": "Los demás jugadores la encontrarán en la lista de salas abiertas: con una contraseña, es privada.",
       "submit": "Crear",
@@ -115,6 +114,7 @@
         "label": "Buscar una sala",
         "maxLength": "La búsqueda tiene como máximo {maxLength, plural, one {# carácter} other {# caracteres}}"
       },
+      "show": "Mostrar las salas abiertas",
       "title": "Salas abiertas"
     }
   }

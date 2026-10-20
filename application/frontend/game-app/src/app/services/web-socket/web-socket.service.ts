@@ -16,8 +16,13 @@ export type SocketHandover = (send: <Data>(message: string, data: Data) => void)
 export class WebSocketService {
 
     public static readonly ERROR_MESSAGE_SOCKET_URL_IS_NOT_SETUP: string = 'Socket is not setup! Please call "setup(__url__)"';
-    // API Gateway closes a connection without message, in either direction, for 10 minutes
-    private static readonly PING_INTERVAL: number = 5 * 60_000;
+    /**
+     * API Gateway closes a connection without message, in either direction, for 10 minutes. Each ping renews the lease of
+     * the room (RoomService.LEASE of the API), a statement which keeps the database awake: it pauses 5 minutes after the
+     * last one, its closing then always seen. 4 minutes at most in a hidden tab, whose timers the browser runs once a
+     * minute
+     */
+    public static readonly PING_INTERVAL: number = 3 * 60_000;
     private static readonly PING_PACKET: string = JSON.stringify({ message: RoomApiRoute.PING });
 
     private webSocket: WebSocket | null = null;
@@ -45,7 +50,7 @@ export class WebSocketService {
         return this._openedAt;
     }
 
-    /** Pings the open socket every 5 minutes, and the sockets replacing it, until close(): API Gateway closes it idle otherwise */
+    /** Pings the open socket every PING_INTERVAL, and the sockets replacing it, until close(): API Gateway closes it idle otherwise */
     public keepAlive(): void {
         this.keepingAlive = true;
 

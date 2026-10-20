@@ -1,4 +1,3 @@
-import { epochSeconds } from '@helpers/time.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import RoomReconnectRequest from '@protocol/requests/room-reconnect-request';
@@ -17,12 +16,24 @@ import {
     readRoom,
     storeRoom,
 } from '@testing/api-mocks';
-import { describe, expect, test } from 'vitest';
+import RoomService from '@services/room-service';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ReconnectHandler from './reconnect-handler';
 
 describe('ReconnectHandler', () => {
     const { apiGateway }: AwsMocks = mockAws();
     const connection: string = 'new-host-connection';
+
+    // In epoch seconds
+    const now: number = 1_800_000_000;
+
+    beforeEach(() => {
+        vi.useFakeTimers({ now: now * 1000, toFake: ['Date'] });
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
 
     function reconnect(data: RoomReconnectRequest): Promise<void> {
         return new ReconnectHandler(anApiGatewayClient(), connection, aRequest(RoomApiRequestTypeEnum.RECONNECT, data)).execute();
@@ -30,7 +41,7 @@ describe('ReconnectHandler', () => {
 
     test.each([
         ['before its former connection closes', () => ({})],
-        ['once its former connection closed, the room waiting for it', () => ({ expiresAt: epochSeconds() + 60 })],
+        ['once its former connection closed, the room waiting for it', () => ({ expiresAt: now + 60 })],
     ])('should move the room to the new connection of its host %s', async (_case: string, waiting: () => Partial<Room>) => {
         // Given
         await storeRoom(aRoom(waiting()));
@@ -38,9 +49,9 @@ describe('ReconnectHandler', () => {
         // When
         await reconnect({ roomName: 'room', playerName: 'host', token: HOST_TOKEN });
 
-        // Then: no longer waiting for its host
+        // Then: no longer waiting for its host, its lease renewed
         expect(await readConnections()).toEqual([{ connectionId: connection, roomName: 'room' }]);
-        expect(await readRoom('room')).toStrictEqual(aRoom({ connectionId: connection }));
+        expect(await readRoom('room')).toStrictEqual(aRoom({ connectionId: connection, leaseUntil: now + RoomService.LEASE }));
         expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: { id: 7, type: 'reconnected', data: { roomName: 'room' } } }]);
     });
 
@@ -60,20 +71,20 @@ describe('ReconnectHandler', () => {
         test('should move the room waiting for its host to the connection of a player of the room, its new host', async () => {
             // Given
             const room: Room = aRoom({ players, tokenHashes: { ...aRoom().tokenHashes, player: hashToken('player-token') } });
-            await storeRoom({ ...room, expiresAt: epochSeconds() + 60 });
+            await storeRoom({ ...room, expiresAt: now + 60 });
 
             // When
             await reconnect({ roomName: 'room', playerName: 'player', token: 'player-token' });
 
             // Then
             expect(await readConnections()).toEqual([{ connectionId: connection, roomName: 'room' }]);
-            expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: connection, hostPlayer: 'player' });
+            expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: connection, hostPlayer: 'player', leaseUntil: now + RoomService.LEASE });
             expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: { id: 7, type: 'reconnected', data: { roomName: 'room' } } }]);
         });
 
         test.each([
             ['while the host is connected', aRoom({ players }), 'player', RoomApiErrorMessage.HOST_CONNECTED],
-            ['out of the room, even queued', aRoom({ players, expiresAt: epochSeconds() + 60 }), 'guest', 'You are not the host of the room'],
+            ['out of the room, even queued', aRoom({ players, expiresAt: now + 60 }), 'guest', 'You are not the host of the room'],
         ])('should refuse a player %s', async (_case: string, room: Room, playerName: string, message: string) => {
             // Given
             await storeRoom(room);

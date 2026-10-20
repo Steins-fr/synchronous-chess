@@ -1,7 +1,8 @@
 <ng-container *transloco="let t; prefix: 'rooms.open'">
     <div class="flex flex-wrap items-center gap-2">
-        <h2 class="m-0 mat-title-medium">{{ t('title') }}</h2>
-        <button (click)="refresh()" [attr.aria-label]="t('refresh')" id="open-rooms-refresh" mat-icon-button
+        <!-- Focusable by the code only: the focus of the button showing the list -->
+        <h2 #title class="m-0 mat-title-medium" tabindex="-1">{{ t('title') }}</h2>
+        <button (click)="askRooms()" [attr.aria-label]="t('refresh')" id="open-rooms-refresh" mat-icon-button
             type="button">
             <mat-icon>refresh</mat-icon>
         </button>
@@ -11,8 +12,12 @@
         </div>
     </div>
     <app-text-field [field]="searchForm.text" [label]="t('search.label')" class="max-w-md" />
-    <!-- No value once the list failed: value() would throw -->
-    @if (rooms.hasValue() && rooms.value(); as shown) {
+    <!-- Asked once a person is on the page: never by a bot rendering it. No value once the list failed: value() would throw -->
+    @if (!visitorPresent()) {
+    <button (click)="showRooms(title)" class="self-start" id="open-rooms-show" mat-stroked-button type="button">
+        {{ t('show') }}
+    </button>
+    } @else if (rooms.hasValue() && rooms.value(); as shown) {
     @if (shown.rooms.length === 0) {
     <p class="muted-note">
         @if (shown.search === '') {
@@ -65,6 +70,8 @@
     } @else if (rooms.error()) {
     <p class="muted-note">{{ t('error') }}</p>
     } @else {
+    <!-- Awaited, or failed by the server and asked again: the server booting -->
     <p class="muted-note">{{ t('loading') }}</p>
     }
+    <app-server-booting [waiting]="awaitingServer()" />
 </ng-container>

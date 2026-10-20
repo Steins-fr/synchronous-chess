@@ -1,4 +1,4 @@
-import { inject, Injectable, OnDestroy } from '@angular/core';
+import { computed, inject, Injectable, OnDestroy, Signal, signal } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { API_REQUEST_TIMEOUT } from './api-request-timeout';
 import { WEB_SOCKET_SERVER } from './web-socket-server.token';
@@ -33,6 +33,12 @@ export class RoomSocketApi implements OnDestroy {
 
     private readonly webSocketService: WebSocketService;
     private destroyRef = new Subject<void>();
+    private readonly pendingRequests = signal<number>(0);
+    // Changed by close(): a request sent before is no longer awaited, its promise left pending until its timeout
+    private generation: number = 0;
+
+    /** A request sent awaits its response, its socket opening included: long, the server boots */
+    public readonly waiting: Signal<boolean> = computed(() => this.pendingRequests() > 0);
 
     public constructor() {
         const webSocketServer: string = inject(WEB_SOCKET_SERVER);
@@ -92,12 +98,21 @@ export class RoomSocketApi implements OnDestroy {
         requestType: RequestType,
         body: RoomSocketApiRequestTypedData[RequestType]
     ): Promise<RoomSocketApiResponseTypedData[RequestToResponseType<RequestType>]> {
-        const packet = await this.webSocketService.send(
-            RoomApiRoute.SEND_MESSAGE,
-            RoomSocketApi.buildPacket(requestType, body)
-        );
+        const generation: number = this.generation;
+        this.pendingRequests.update((pending: number) => pending + 1);
 
-        return this.followRequestResponse<RequestToResponseType<RequestType>>(packet.id, requestToResponse[requestType]);
+        try {
+            const packet = await this.webSocketService.send(
+                RoomApiRoute.SEND_MESSAGE,
+                RoomSocketApi.buildPacket(requestType, body)
+            );
+
+            return await this.followRequestResponse<RequestToResponseType<RequestType>>(packet.id, requestToResponse[requestType]);
+        } finally {
+            if (generation === this.generation) {
+                this.pendingRequests.update((pending: number) => pending - 1);
+            }
+        }
     }
 
     private getPayloadMessage(): Observable<SocketPacketAllPayload> {
@@ -195,6 +210,8 @@ export class RoomSocketApi implements OnDestroy {
     }
 
     public close(): void {
+        this.generation++;
+        this.pendingRequests.set(0);
         this.destroyRef.next();
         this.destroyRef.complete();
         this.destroyRef = new Subject<void>();
