@@ -9,7 +9,8 @@
         @defer (on idle) {
         <app-language-menu />
         } @placeholder {
-        <button [attr.aria-label]="t('language.pick')" [title]="t('language.pick')" mat-icon-button type="button">
+        <!-- Disabled for the assistive technologies and the tests: a click before the menu loads opens nothing -->
+        <button [attr.aria-label]="t('language.pick')" [title]="t('language.pick')" aria-disabled="true" mat-icon-button type="button">
             <mat-icon>translate</mat-icon>
         </button>
         }

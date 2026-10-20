@@ -89,10 +89,10 @@ describe('AppComponent', () => {
         expect(themeButton().getAttribute('aria-label')).toBe('Switch to the dark theme');
     });
 
-    test('should show a placeholder of the language menu until it loads', async () => {
+    test('should show a placeholder of the language menu until it loads, disabled', async () => {
         // Then
         expect(fixture.nativeElement.querySelector('app-language-menu')).toBeNull();
-        expect(fixture.nativeElement.querySelector('nav [aria-label="Choose the language"]')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('nav [aria-label="Choose the language"]')?.getAttribute('aria-disabled')).toBe('true');
 
         // When
         await loadLanguageMenu();
