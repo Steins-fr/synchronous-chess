@@ -8,6 +8,7 @@ import {
     getAccessLoginUrl,
     getAccessPublicKey,
     getAccessSigningKeyParameter,
+    getDatabaseInstanceIdentifier,
     getDatabaseName,
     getDatabaseResourceArn,
     getDatabaseSecretArn,
@@ -48,6 +49,7 @@ describe('environment helper', () => {
         ['DATABASE_RESOURCE_ARN', getDatabaseResourceArn, 'the ARN of the Aurora cluster'],
         ['DATABASE_SECRET_ARN', getDatabaseSecretArn, 'the ARN of the secret of the Aurora cluster'],
         ['DATABASE_NAME', getDatabaseName, 'the database of the Aurora cluster'],
+        ['DATABASE_INSTANCE_IDENTIFIER', getDatabaseInstanceIdentifier, 'the writer instance of the Aurora cluster'],
         ['SOURCE_HASH_SECRET_PARAMETER', getSourceHashSecretParameter, 'the SSM parameter of the key of the hashes of the IPs'],
         ['ACCESS_PUBLIC_KEY', getAccessPublicKey, 'the public key of the access cookies'],
         ['ACCESS_KEY_PAIR_ID', getAccessKeyPairId, 'the ID of the public key of the access cookies in CloudFront'],
@@ -70,12 +72,14 @@ describe('environment helper', () => {
         vi.stubEnv('DATABASE_RESOURCE_ARN', 'arn:aws:rds:eu-west-1:123456789012:cluster:sc-dev');
         vi.stubEnv('DATABASE_SECRET_ARN', 'arn:aws:secretsmanager:eu-west-1:123456789012:secret:sc-dev');
         vi.stubEnv('DATABASE_NAME', 'synchronous_chess');
+        vi.stubEnv('DATABASE_INSTANCE_IDENTIFIER', 'sc-dev-writer');
 
         // When / Then
-        expect([getDatabaseResourceArn(), getDatabaseSecretArn(), getDatabaseName()]).toEqual([
+        expect([getDatabaseResourceArn(), getDatabaseSecretArn(), getDatabaseName(), getDatabaseInstanceIdentifier()]).toEqual([
             'arn:aws:rds:eu-west-1:123456789012:cluster:sc-dev',
             'arn:aws:secretsmanager:eu-west-1:123456789012:secret:sc-dev',
             'synchronous_chess',
+            'sc-dev-writer',
         ]);
     });
 
