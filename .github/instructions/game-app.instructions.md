@@ -86,7 +86,8 @@ This is an Angular TypeScript project with the following characteristics:
   exception is the debug panel of WebRTC (`modules/debug`), developer tooling, in English out of the keys
 - `LanguageService` picks the language: the user's pick, kept in the local storage, else the first
   language of the browser the app speaks, else English. The menu next to the theme toggle switches it
-  live: never reload the page to change it, a reload in a match reconnects the peers
+  live: never reload the page to change it, a reload in a match reconnects the peers. The other tabs of
+  the app follow it, as they follow the theme (`storageChanges()` of `helpers/stored-preference.helper.ts`)
 - The keys are nested by feature (`rooms.open.title`, `chess.game.result.checkmate`). A key is a leaf or
   a parent, never both
 - A template translates through the structural directive at its root (`*transloco="let t; prefix:
