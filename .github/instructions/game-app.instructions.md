@@ -123,7 +123,11 @@ This is an Angular TypeScript project with the following characteristics:
   against `TranslationScope`
 - A navigation waiting for the APIs keeps their overlay until its page shows (`ApiHealthOverlayComponent`):
   the previous page never shows again while the translations and the code of the next one load. The
-  overlay shows once the wait lasts 0.4 second (`SHOW_DELAY`): a quick one keeps the previous page
+  overlay shows once the wait lasts 0.4 second (`LOADER_DELAY` of `helpers/signal.helper.ts`, through
+  `heldFor()`): a quick one keeps the previous page
+- A language picked in the menu loads with the scopes of the pages shown so far (`LanguageService.use()`):
+  every text switches at once. A ring turns around the icon of the menu while it loads, once the wait
+  lasts `LOADER_DELAY` too
 - A key of a scope starts with it (`chess.game.seat.free`): the extraction puts it in the files of the
   scope. A text shown out of the pages of its game (a notification) is global
 - In the code, `marker()` gets the key of a scope without its scope, the scope as a literal third
