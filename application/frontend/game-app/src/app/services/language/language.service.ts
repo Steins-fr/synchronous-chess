@@ -2,7 +2,7 @@ import { computed, DOCUMENT, effect, inject, Injectable, Signal, signal } from '
 import { Title } from '@angular/platform-browser';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoService } from '@jsverse/transloco';
-import { objectHasValue } from '@app/helpers/object.helper';
+import { storedValue, storeValue } from '@app/helpers/stored-preference.helper';
 import { catchError, EMPTY, firstValueFrom, forkJoin, switchMap } from 'rxjs';
 import { Language } from './enums/language.enum';
 import { TranslationScope } from './enums/translation-scope.enum';
@@ -31,7 +31,9 @@ export class LanguageService {
     public readonly switching: Signal<boolean> = computed(() => this.picked() !== null);
 
     public constructor() {
-        this.transloco.setActiveLang(this.storedLanguage() ?? LanguageService.browserLanguage(this.window.navigator.languages));
+        // Nothing stored, or the storage unavailable: the language follows the browser
+        this.transloco.setActiveLang(storedValue(this.window, LanguageService.storageKey, Language)
+            ?? LanguageService.browserLanguage(this.window.navigator.languages));
 
         const title = inject(Title);
         // The title in the language shown, once loaded. A language failing to load names nothing, the next one naming the
@@ -94,7 +96,7 @@ export class LanguageService {
         }
         if (loaded) {
             this.transloco.setActiveLang(language);
-            this.store(language);
+            storeValue(this.window, LanguageService.storageKey, language);
         } else if (this.language() !== shown) {
             // Transloco shows by itself the language of a load succeeding after a failed one: the global texts of the
             // language picked, one of its scopes failing
@@ -121,25 +123,6 @@ export class LanguageService {
             return true;
         } catch {
             return false;
-        }
-    }
-
-    // The local storage can be unavailable (blocked by the browser): the language then follows the browser, and a pick
-    // lasts until the page leaves
-    private storedLanguage(): Language | undefined {
-        try {
-            const stored = this.window.localStorage.getItem(LanguageService.storageKey) as Language;
-            return objectHasValue(Language, stored) ? stored : undefined;
-        } catch {
-            return undefined;
-        }
-    }
-
-    private store(language: Language): void {
-        try {
-            this.window.localStorage.setItem(LanguageService.storageKey, language);
-        } catch {
-            // Not stored, see storedLanguage
         }
     }
 }
