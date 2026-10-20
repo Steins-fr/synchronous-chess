@@ -82,8 +82,8 @@ This is an Angular TypeScript project with the following characteristics:
 
 - The app speaks the languages of `Language` (`services/language/enums/language.enum.ts`), English
   being the source: every text shown goes through a key of Transloco, translated in
-  `src/i18n/<code>.json`. The only exception is the debug panel of WebRTC (`modules/debug`), developer
-  tooling, in English out of the keys
+  `src/i18n/<code>.json`, or in the files of its scope for a text of a game (see Scopes). The only
+  exception is the debug panel of WebRTC (`modules/debug`), developer tooling, in English out of the keys
 - `LanguageService` picks the language: the user's pick, kept in the local storage, else the first
   language of the browser the app speaks, else English. The menu next to the theme toggle switches it
   live: never reload the page to change it, a reload in a match reconnects the peers
@@ -102,16 +102,37 @@ This is an Angular TypeScript project with the following characteristics:
 - No translated text crosses the network: the API answers with codes (`RoomApiErrorMessage`), and each
   peer builds its texts from the codes of the chain. Keep it that way: every player sees the app in its
   own language
-- The specs run in English (`src/test-providers.ts`, every language loaded for the specs switching to
-  one) and find the elements by their English text; a key missing from the translation throws.
+- The specs run in English (`src/test-providers.ts`, every language and every scope loaded for the specs
+  switching to a language) and find the elements by their English text; a key missing from the
+  translation throws.
   The extraction reads the specs too: never give `translate()` or `marker()` a literal key that does
   not exist in a spec, it would add it to the files. A spec needing a text of its own sets it with
   `TranslocoService.setTranslationKey()`
 
+### Scopes
+
+- The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
+  loaded by the pages showing the game only: `chess` (the game, its presentation and its rules) and
+  `chat`. The rest is global, `home` included: it presents every game
+- The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
+  'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
+  way. Its `translationScopesResolver` loads them before the page shows, as the app loads its global
+  texts before it starts: the first render has every text, the views and queries inside a `*transloco`
+  included. `app.routes.spec.ts` checks the scopes of each route against `TranslationScope`
+- A key of a scope starts with it (`chess.game.seat.free`): the extraction puts it in the files of the
+  scope. A text shown out of the pages of its game (a notification) is global
+- In the code, `marker()` gets the key of a scope without its scope, the scope as a literal third
+  argument, and `scopedKey()` prefixes it for the app: `scopedKey(TranslationScope.CHESS,
+  marker('game.turn.sync', undefined, 'chess'))`. The keys manager reads the scope of a key of the code
+  from that argument only: a `marker('chess.game.turn.sync')` would land in the global files
+- Adding a scope: its value in `TranslationScope`, its provider and the resolver on the routes of its
+  pages, its loaders in `translation.loader.ts`, its translations in `src/test-providers.ts`; the
+  extraction creates its files
+
 ### Adding or changing a text
 
 - Adding: write the key in the code, then run `npm run i18n:extract`. It adds the key to the file of
-  every language, valued `Missing value for '<key>'`: write its value in the eleven files, in the same
+  every language (of its scope), valued `Missing value for '<key>'`: write its value in the eleven files, in the same
   commit. `translations.spec.ts` fails until then
 - Changing the meaning of a text: rename its key. The extraction drops the former translations and the
   spec requires the new ones. Fixing its wording only: update the ten translations in the same commit
@@ -119,9 +140,10 @@ This is an Angular TypeScript project with the following characteristics:
   file
 - Never edit the keys of a file by hand nor reformat it: the CI runs the extraction and fails when it
   changes anything, a new file included
-- Adding a language: its code in `Language`, its name in itself in `LANGUAGE_NAMES`, its loader in
-  `translation.loader.ts`, its translation in `src/test-providers.ts`, its code in the `--langs` of
-  `i18n:extract`, then its file, every key translated, and its column in the glossary below
+- Adding a language: its code in `Language`, its name in itself in `LANGUAGE_NAMES`, its loaders in
+  `translation.loader.ts` and its translations in `src/test-providers.ts` (the global one and one per
+  scope), its code in the `--langs` of `i18n:extract`, then its files, every key translated, and its
+  column in the glossary below
 
 ### Rules of translation
 
