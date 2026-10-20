@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Menyalakan server…",
     "bootingDelay": "Server dan basis datanya tidur saat tidak ada yang bermain: membangunkannya butuh waktu hingga sekitar tiga puluh detik.",
-    "connecting": "Menghubungkan ke server…"
+    "connecting": "Menghubungkan ke server…",
+    "loadingPage": "Memuat halaman…"
   },
   "app": {
     "language": {

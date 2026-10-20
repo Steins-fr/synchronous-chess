@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Uruchamianie serwera…",
     "bootingDelay": "Serwer i jego baza danych usypiają, gdy nikt nie gra: ich wybudzenie trwa do około trzydziestu sekund.",
-    "connecting": "Łączenie z serwerem…"
+    "connecting": "Łączenie z serwerem…",
+    "loadingPage": "Ładowanie strony…"
   },
   "app": {
     "language": {

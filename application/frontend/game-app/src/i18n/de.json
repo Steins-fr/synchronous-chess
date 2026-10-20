@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Server wird gestartet…",
     "bootingDelay": "Der Server und seine Datenbank schlafen, wenn niemand spielt: Das Aufwecken dauert bis zu etwa dreißig Sekunden.",
-    "connecting": "Verbindung zum Server…"
+    "connecting": "Verbindung zum Server…",
+    "loadingPage": "Seite wird geladen…"
   },
   "app": {
     "language": {

@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Sunucu başlatılıyor…",
     "bootingDelay": "Kimse oynamadığında sunucu ve veritabanı uyku moduna geçer: uyanmaları otuz saniyeye kadar sürebilir.",
-    "connecting": "Sunucuya bağlanılıyor…"
+    "connecting": "Sunucuya bağlanılıyor…",
+    "loadingPage": "Sayfa yükleniyor…"
   },
   "app": {
     "language": {

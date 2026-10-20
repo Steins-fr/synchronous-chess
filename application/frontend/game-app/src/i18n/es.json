@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Iniciando el servidor…",
     "bootingDelay": "El servidor y su base de datos se suspenden cuando nadie juega: despertarlos tarda hasta unos treinta segundos.",
-    "connecting": "Conectando con el servidor…"
+    "connecting": "Conectando con el servidor…",
+    "loadingPage": "Cargando la página…"
   },
   "app": {
     "language": {

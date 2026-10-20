@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Starting the server…",
     "bootingDelay": "The server and its database sleep when nobody plays: waking them up takes up to about thirty seconds.",
-    "connecting": "Connecting to the server…"
+    "connecting": "Connecting to the server…",
+    "loadingPage": "Loading the page…"
   },
   "app": {
     "language": {

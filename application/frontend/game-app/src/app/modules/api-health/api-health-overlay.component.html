@@ -1,12 +1,18 @@
-@if (state() !== ApiHealthState.IDLE) {
+@if (visible()) {
 <!-- An output: its role is status, read by the screen readers once its text changes. It holds phrasing content only -->
 <output *transloco="let t; prefix: 'apiHealth'" class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4 bg-app-surface text-app-text text-center">
     <mat-spinner [diameter]="48" />
-    @if (state() === ApiHealthState.BOOTING) {
+    @switch (state()) {
+    @case (ApiHealthState.BOOTING) {
     <span class="block mat-title-medium">{{ t('booting') }}</span>
     <span class="block max-w-md muted-note">{{ t('bootingDelay') }}</span>
-    } @else {
+    }
+    @case (ApiHealthState.CHECKING) {
     <span class="block mat-title-medium">{{ t('connecting') }}</span>
+    }
+    @default {
+    <span class="block mat-title-medium">{{ t('loadingPage') }}</span>
+    }
     }
 </output>
 }

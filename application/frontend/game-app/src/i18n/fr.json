@@ -2,7 +2,8 @@
   "apiHealth": {
     "booting": "Démarrage du serveur…",
     "bootingDelay": "Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une trentaine de secondes.",
-    "connecting": "Connexion au serveur…"
+    "connecting": "Connexion au serveur…",
+    "loadingPage": "Chargement de la page…"
   },
   "app": {
     "language": {
