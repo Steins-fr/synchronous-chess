@@ -8,10 +8,13 @@ import { LanguageService } from './language.service';
 import { translationScopesGuard } from './translation-scopes.guard';
 
 describe('translationScopesGuard', () => {
-    test('should let the page show once the scopes of the route are loaded', async () => {
+    test.each<[string, boolean]>([
+        ['show the page once the scopes of the route are loaded', true],
+        ['cancel the navigation when a scope of the route fails to load', false],
+    ])('should %s', async (_case: string, loaded: boolean) => {
         // Given
         TestBed.configureTestingModule({ providers: [provideTranslocoScope(TranslationScope.CHESS, TranslationScope.CHAT)] });
-        const loadScopes = vi.spyOn(TestBed.inject(LanguageService), 'loadScopes').mockResolvedValue();
+        const loadScopes = vi.spyOn(TestBed.inject(LanguageService), 'loadScopes').mockResolvedValue(loaded);
 
         // When
         const guarded: unknown = await TestBed.runInInjectionContext(() => translationScopesGuard(
@@ -20,7 +23,7 @@ describe('translationScopesGuard', () => {
         ));
 
         // Then
-        expect(guarded).toBe(true);
+        expect(guarded).toBe(loaded);
         expect(loadScopes).toHaveBeenCalledExactlyOnceWith([TranslationScope.CHESS, TranslationScope.CHAT]);
     });
 });

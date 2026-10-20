@@ -1,8 +1,9 @@
 import { computed, DOCUMENT, effect, inject, Injectable, Signal, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { translateSignal, TranslocoService } from '@jsverse/transloco';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { TranslocoService } from '@jsverse/transloco';
 import { objectHasValue } from '@app/helpers/object.helper';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { catchError, EMPTY, firstValueFrom, forkJoin, switchMap } from 'rxjs';
 import { Language } from './enums/language.enum';
 import { TranslationScope } from './enums/translation-scope.enum';
 
@@ -10,7 +11,8 @@ import { TranslationScope } from './enums/translation-scope.enum';
  * The language of the app: the one the user picked, kept in the local storage, else the first language of the browser the
  * app speaks, else English. Switching it translates the texts shown, without a reload: a reload would reconnect the peers
  * of a match. The lang attribute of the html element and the title of the page follow it. A language picked shows once its
- * global texts and the texts of the games shown so far are loaded: every text switches at once.
+ * global texts and the texts of every game are loaded: every text switches at once, those of a page opened meanwhile
+ * included.
  */
 @Injectable({
     providedIn: 'root',
@@ -27,14 +29,16 @@ export class LanguageService {
     private readonly picked = signal<Language | null>(null);
     /** Whether a language picked loads */
     public readonly switching: Signal<boolean> = computed(() => this.picked() !== null);
-    // The scopes of the pages shown so far (loadScopes): a language picked loads them too
-    private readonly scopes = new Set<TranslationScope>();
 
     public constructor() {
         this.transloco.setActiveLang(this.storedLanguage() ?? LanguageService.browserLanguage(this.window.navigator.languages));
 
         const title = inject(Title);
-        const appTitle: Signal<string> = translateSignal('app.title');
+        // The title in the language shown, once loaded. A language failing to load names nothing, the next one naming the
+        // page again: translateSignal() would stop following the language at the first failure
+        const appTitle: Signal<string> = toSignal(this.transloco.langChanges$.pipe(
+            switchMap((language: string) => this.transloco.selectTranslate<string>('app.title', {}, language).pipe(catchError(() => EMPTY))),
+        ), { initialValue: '' });
         effect(() => {
             this.document.documentElement.lang = this.language();
         });
@@ -73,11 +77,17 @@ export class LanguageService {
         }
     }
 
-    // Shows the language once loaded, with the scopes of the pages shown so far, so that no text shows its key meanwhile
-    // nor switches after the others. Failing, the app keeps its language
+    // Shows the language once loaded, with the scopes of every game, so that no text shows its key meanwhile nor switches
+    // after the others. Failing, the app keeps its language
     public async use(language: Language): Promise<void> {
+        const shown: Language = this.language();
+        if (language === shown) {
+            // Already shown: a pick loading meanwhile is dropped
+            this.picked.set(null);
+            return;
+        }
         this.picked.set(language);
-        const loaded: boolean = await this.load([language, ...LanguageService.scopePaths(language, [...this.scopes])]);
+        const loaded: boolean = await this.load([language, ...LanguageService.scopePaths(language, Object.values(TranslationScope))]);
         if (this.picked() !== language) {
             // Picked again meanwhile: the last pick shows
             return;
@@ -85,15 +95,18 @@ export class LanguageService {
         if (loaded) {
             this.transloco.setActiveLang(language);
             this.store(language);
+        } else if (this.language() !== shown) {
+            // Transloco shows by itself the language of a load succeeding after a failed one: the global texts of the
+            // language picked, one of its scopes failing
+            this.transloco.setActiveLang(shown);
         }
         this.picked.set(null);
     }
 
-    // Loads the scopes of a page in the active language before it shows (translationScopesGuard). Failing, the page shows
-    // anyway
-    public async loadScopes(scopes: ReadonlyArray<TranslationScope>): Promise<void> {
-        scopes.forEach((scope: TranslationScope) => this.scopes.add(scope));
-        await this.load(LanguageService.scopePaths(this.language(), scopes));
+    // Loads the scopes of a page in the active language before it shows (translationScopesGuard), telling whether they
+    // loaded
+    public loadScopes(scopes: ReadonlyArray<TranslationScope>): Promise<boolean> {
+        return this.load(LanguageService.scopePaths(this.language(), scopes));
     }
 
     // The paths of the translations of scopes in a language, as Transloco loads them

@@ -8,12 +8,12 @@ import { LanguageService } from './language.service';
  * Loads the translations of the scopes of a route (provideTranslocoScope) in the active language before its page shows,
  * as the app loads its global texts before it starts (LanguageService.preload): the first render of the page has the texts
  * of its games, the views and the queries in their translations included. A guard rather than a resolver: the router runs
- * the guards of a route together, so the translations load while the APIs are checked (apiHealthGuard). Failing, the page
- * shows anyway
+ * the guards of a route together, so the translations load while the APIs are checked (apiHealthGuard). Failing, the
+ * navigation is cancelled: the page would show without its texts, the app stays on its page, and the next navigation to
+ * it loads them again
  */
-export const translationScopesGuard: CanActivateFn = async (): Promise<true> => {
+export const translationScopesGuard: CanActivateFn = (): Promise<boolean> => {
     // provideTranslocoScope provides each scope apart (multi): the token gives the list of the scopes of the route
     const scopes = inject(TRANSLOCO_SCOPE) as unknown as ReadonlyArray<TranslationScope>;
-    await inject(LanguageService).loadScopes(scopes);
-    return true;
+    return inject(LanguageService).loadScopes(scopes);
 };

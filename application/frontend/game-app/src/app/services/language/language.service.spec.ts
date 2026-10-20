@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { Translation, TranslocoService } from '@jsverse/transloco';
-import { Observable, Subject, throwError } from 'rxjs';
+import { defer, Observable, of, Subject, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { Language } from './enums/language.enum';
 import { TranslationScope } from './enums/translation-scope.enum';
@@ -37,9 +37,12 @@ describe('LanguageService', () => {
         return loads;
     }
 
-    function finishLoading(loaded: Subject<Translation> | undefined): void {
-        loaded?.next({});
-        loaded?.complete();
+    // The translations of a language picked load: its global texts and the texts of every game
+    function finishLoading(loads: Map<string, Subject<Translation>>, language: Language): void {
+        [language, ...Object.values(TranslationScope).map((scope: TranslationScope) => `${ scope }/${ language }`)].forEach((path: string) => {
+            loads.get(path)?.next({});
+            loads.get(path)?.complete();
+        });
     }
 
     function blockStorage(): void {
@@ -154,25 +157,27 @@ describe('LanguageService', () => {
         expect(storedLanguage()).toBeNull();
     });
 
-    test('should load the scopes of a page in its language, the page showing even when they fail to load', async () => {
+    test('should load the scopes of a page in its language, telling whether they loaded', async () => {
         // Given
         browserLanguages('fr-FR');
         const service: LanguageService = createService();
         failToLoad(`${ TranslationScope.CHAT }/${ Language.FR }`);
 
         // When
-        await service.loadScopes([TranslationScope.CHESS, TranslationScope.CHAT]);
+        const loaded: boolean = await service.loadScopes([TranslationScope.CHESS]);
+        const failed: boolean = await service.loadScopes([TranslationScope.CHESS, TranslationScope.CHAT]);
 
         // Then
+        expect(loaded).toBe(true);
+        expect(failed).toBe(false);
         expect(TestBed.inject(TranslocoService).load).toHaveBeenCalledWith(`${ TranslationScope.CHESS }/${ Language.FR }`);
         expect(TestBed.inject(TranslocoService).load).toHaveBeenCalledWith(`${ TranslationScope.CHAT }/${ Language.FR }`);
     });
 
-    test('should switch to the language picked once the scopes of the pages shown so far are loaded in it', async () => {
-        // Given
+    test('should switch to the language picked once the texts of every game are loaded in it', async () => {
+        // Given: no page shows a game yet, the next one opening while the language loads
         browserLanguages('en-US');
         const service: LanguageService = createService();
-        await service.loadScopes([TranslationScope.CHESS]);
         const load = vi.spyOn(TestBed.inject(TranslocoService), 'load');
 
         // When
@@ -181,6 +186,7 @@ describe('LanguageService', () => {
         // Then
         expect(load).toHaveBeenNthCalledWith(1, Language.FR);
         expect(load).toHaveBeenNthCalledWith(2, `${ TranslationScope.CHESS }/${ Language.FR }`);
+        expect(load).toHaveBeenNthCalledWith(3, `${ TranslationScope.CHAT }/${ Language.FR }`);
         expect(service.language()).toBe(Language.FR);
     });
 
@@ -188,7 +194,6 @@ describe('LanguageService', () => {
         // Given
         browserLanguages('en-US');
         const service: LanguageService = createService();
-        await service.loadScopes([TranslationScope.CHESS]);
         failToLoad(`${ TranslationScope.CHESS }/${ Language.FR }`);
 
         // When
@@ -197,6 +202,67 @@ describe('LanguageService', () => {
         // Then
         expect(service.language()).toBe(Language.EN);
         expect(service.switching()).toBe(false);
+    });
+
+    test('should keep its language when Transloco shows the language picked by itself, a scope failing to load', async () => {
+        // Given: Transloco shows the language of a load succeeding after a failed one
+        browserLanguages('en-US');
+        const service: LanguageService = createService();
+        const transloco: TranslocoService = TestBed.inject(TranslocoService);
+        vi.spyOn(transloco, 'load').mockImplementation((path: string): Observable<Translation> => {
+            if (path === Language.FR) {
+                return defer(() => {
+                    transloco.setActiveLang(Language.FR);
+                    return of({});
+                });
+            }
+            return throwError(() => new Error('Chunk not found'));
+        });
+
+        // When
+        await service.use(Language.FR);
+
+        // Then
+        expect(service.language()).toBe(Language.EN);
+        expect(storedLanguage()).toBeNull();
+    });
+
+    test('should leave the language shown when picked again, dropping a pick loading meanwhile', async () => {
+        // Given
+        browserLanguages('en-US');
+        const service: LanguageService = createService();
+        const loads: Map<string, Subject<Translation>> = loadSlowly();
+        const switched: Promise<void> = service.use(Language.FR);
+        const setActiveLang = vi.spyOn(TestBed.inject(TranslocoService), 'setActiveLang');
+
+        // When
+        await service.use(Language.EN);
+        finishLoading(loads, Language.FR);
+        await switched;
+
+        // Then
+        expect(service.language()).toBe(Language.EN);
+        expect(service.switching()).toBe(false);
+        expect(setActiveLang).not.toHaveBeenCalled();
+        expect(storedLanguage()).toBeNull();
+    });
+
+    test('should name the page in its language once a language failed to load at its start', async () => {
+        // Given: the language of the browser fails to load, the app showing English
+        browserLanguages('fr-FR');
+        failToLoad(Language.FR);
+        const service: LanguageService = createService();
+        await service.preload();
+        TestBed.tick();
+        expect(TestBed.inject(Title).getTitle()).toBe('Synchronous Chess');
+        vi.restoreAllMocks();
+
+        // When
+        await service.use(Language.FR);
+        TestBed.tick();
+
+        // Then
+        expect(TestBed.inject(Title).getTitle()).toBe('Échecs synchrones');
     });
 
     test('should tell a language picked loads, until it shows', async () => {
@@ -213,7 +279,7 @@ describe('LanguageService', () => {
         expect(service.language()).toBe(Language.EN);
 
         // When
-        finishLoading(loads.get(Language.FR));
+        finishLoading(loads, Language.FR);
         await switched;
 
         // Then
@@ -232,7 +298,7 @@ describe('LanguageService', () => {
         const switches: Promise<void>[] = [service.use(Language.FR), service.use(Language.DE)];
 
         // When
-        loadOrder.forEach((language: Language) => finishLoading(loads.get(language)));
+        loadOrder.forEach((language: Language) => finishLoading(loads, language));
         await Promise.all(switches);
 
         // Then
