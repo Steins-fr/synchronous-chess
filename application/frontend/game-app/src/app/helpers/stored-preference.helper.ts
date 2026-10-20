@@ -1,3 +1,4 @@
+import { filter, fromEvent, Observable } from 'rxjs';
 import { objectHasValue } from './object.helper';
 
 // The preferences of the user kept in the local storage of the browser. The storage can be unavailable (blocked by the
@@ -19,4 +20,9 @@ export function storeValue(window: Window, key: string, value: string): void {
     } catch {
         // Not stored, see storedValue
     }
+}
+
+/** The changes another tab of the app made to the value stored under the key, a cleared storage included (an event without key) */
+export function storageChanges(window: Window, key: string): Observable<StorageEvent> {
+    return fromEvent<StorageEvent>(window, 'storage').pipe(filter((event: StorageEvent) => event.key === null || event.key === key));
 }

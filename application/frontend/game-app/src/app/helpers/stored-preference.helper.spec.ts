@@ -1,5 +1,6 @@
+import { Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { storedValue, storeValue } from './stored-preference.helper';
+import { storageChanges, storedValue, storeValue } from './stored-preference.helper';
 
 describe('stored preference', () => {
     enum Color {
@@ -54,5 +55,20 @@ describe('stored preference', () => {
         // Then
         expect(setItem).toHaveBeenCalledOnce();
         expect(storedValue(window, key, Color)).toBeUndefined();
+    });
+
+    test('should tell the changes another tab made to the value, or to the whole storage', () => {
+        // Given
+        const changes: Array<string | null> = [];
+        const subscription: Subscription = storageChanges(window, key).subscribe((event: StorageEvent) => changes.push(event.key));
+
+        // When
+        window.dispatchEvent(new StorageEvent('storage', { key }));
+        window.dispatchEvent(new StorageEvent('storage', { key: 'other' }));
+        window.dispatchEvent(new StorageEvent('storage', { key: null }));
+        subscription.unsubscribe();
+
+        // Then
+        expect(changes).toEqual([key, null]);
     });
 });

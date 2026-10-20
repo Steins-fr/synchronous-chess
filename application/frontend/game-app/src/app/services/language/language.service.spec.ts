@@ -307,6 +307,37 @@ describe('LanguageService', () => {
         expect(storedLanguage()).toBe(Language.DE);
     });
 
+    test('should show the language another tab picked, once loaded', async () => {
+        // Given
+        browserLanguages('en-US');
+        const service: LanguageService = createService();
+
+        // When
+        localStorage.setItem(LanguageService.storageKey, Language.FR);
+        window.dispatchEvent(new StorageEvent('storage', { key: LanguageService.storageKey }));
+
+        // Then
+        await vi.waitFor(() => expect(service.language()).toBe(Language.FR));
+    });
+
+    test.each<[string, string | null]>([
+        ['clears the storage', null],
+        ['stores another preference', 'theme'],
+    ])('should keep its language when another tab %s', async (_case: string, key: string | null) => {
+        // Given
+        browserLanguages('en-US');
+        const service: LanguageService = createService();
+        localStorage.setItem('theme', 'dark');
+        const use = vi.spyOn(service, 'use');
+
+        // When
+        window.dispatchEvent(new StorageEvent('storage', { key }));
+
+        // Then
+        expect(use).not.toHaveBeenCalled();
+        expect(service.language()).toBe(Language.EN);
+    });
+
     test('should preload its language', async () => {
         // Given
         browserLanguages('fr-FR');

@@ -1,7 +1,7 @@
 import { computed, DestroyRef, DOCUMENT, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { storedValue, storeValue } from '@app/helpers/stored-preference.helper';
-import { filter, fromEvent } from 'rxjs';
+import { storageChanges, storedValue, storeValue } from '@app/helpers/stored-preference.helper';
+import { fromEvent } from 'rxjs';
 import { ThemeModeEnum } from './enums/theme-mode.enum';
 
 // A theme shown: the system mode resolves to one of them
@@ -41,10 +41,7 @@ export class ThemeService {
         });
 
         // Another tab of the app picked a theme, or cleared the storage (an event without key)
-        fromEvent<StorageEvent>(this.window, 'storage').pipe(
-            filter((event: StorageEvent) => event.key === null || event.key === ThemeService.storageKey),
-            takeUntilDestroyed(destroyRef),
-        ).subscribe(() => {
+        storageChanges(this.window, ThemeService.storageKey).pipe(takeUntilDestroyed(destroyRef)).subscribe(() => {
             this.mode.set(this.storedMode());
             this.apply();
         });

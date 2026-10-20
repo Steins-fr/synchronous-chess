@@ -1,8 +1,8 @@
 import { computed, DOCUMENT, effect, inject, Injectable, Signal, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoService } from '@jsverse/transloco';
-import { storedValue, storeValue } from '@app/helpers/stored-preference.helper';
+import { storageChanges, storedValue, storeValue } from '@app/helpers/stored-preference.helper';
 import { catchError, EMPTY, firstValueFrom, forkJoin, switchMap } from 'rxjs';
 import { Language } from './enums/language.enum';
 import { TranslationScope } from './enums/translation-scope.enum';
@@ -10,9 +10,9 @@ import { TranslationScope } from './enums/translation-scope.enum';
 /**
  * The language of the app: the one the user picked, kept in the local storage, else the first language of the browser the
  * app speaks, else English. Switching it translates the texts shown, without a reload: a reload would reconnect the peers
- * of a match. The lang attribute of the html element and the title of the page follow it. A language picked shows once its
- * global texts and the texts of every game are loaded: every text switches at once, those of a page opened meanwhile
- * included.
+ * of a match. The lang attribute of the html element and the title of the page follow it, as the other tabs of the app do.
+ * A language picked shows once its global texts and the texts of every game are loaded: every text switches at once,
+ * those of a page opened meanwhile included.
  */
 @Injectable({
     providedIn: 'root',
@@ -45,6 +45,14 @@ export class LanguageService {
             this.document.documentElement.lang = this.language();
         });
         effect(() => title.setTitle(appTitle()));
+
+        // Another tab of the app picked a language: shown here too, once loaded. A cleared storage keeps the language shown
+        storageChanges(this.window, LanguageService.storageKey).pipe(takeUntilDestroyed()).subscribe(() => {
+            const stored: Language | undefined = storedValue(this.window, LanguageService.storageKey, Language);
+            if (stored !== undefined) {
+                void this.use(stored);
+            }
+        });
     }
 
     // The first language of the browser the app speaks, matched on its full code first, then on its base language
