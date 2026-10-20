@@ -642,7 +642,8 @@ data "aws_iam_policy_document" "data" {
     }
   }
 
-  # The policies attached to those roles: the four main.tf attaches, nothing else, on roles carrying the boundary
+  # The policies attached to those roles: the ones main.tf attaches (lambda_policies), nothing else, on roles carrying the
+  # boundary
   statement {
     sid       = "LambdaRolePolicies"
     actions   = ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]

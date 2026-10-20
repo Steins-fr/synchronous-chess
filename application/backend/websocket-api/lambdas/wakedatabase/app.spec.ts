@@ -51,6 +51,22 @@ describe('wakedatabase handler', () => {
         expect(ping).toHaveBeenCalledOnce();
     });
 
+    test('should wake the database when its capacity can not be read', async () => {
+        // Given
+        const failure = new Error('User is not authorized to perform: cloudwatch:GetMetricData');
+        vi.mocked(wasAwakeSince).mockRejectedValue(failure);
+        const error = vi.spyOn(console, 'error').mockImplementation((): void => undefined);
+        const ping = vi.spyOn(HealthRepository.prototype, 'ping');
+
+        // When
+        const wake: DatabaseWake = await handler();
+
+        // Then
+        expect(wake).toEqual(DatabaseWake.WOKEN);
+        expect(ping).toHaveBeenCalledOnce();
+        expect(error).toHaveBeenCalledExactlyOnceWith('The capacity of the database could not be read: woken anyway', failure);
+    });
+
     test('should fail while the database fails, or still resumes: Lambda invokes it again', async () => {
         // Given
         vi.mocked(wasAwakeSince).mockResolvedValue(false);

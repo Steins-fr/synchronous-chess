@@ -18,17 +18,19 @@ seconds (30 or more after a day, see below): the Data API refuses it meanwhile, 
 
 After 24 hours paused, Aurora puts the cluster into a deeper sleep, whose resume outlasts those retries: the first
 request fails, the `$disconnect` of a host included, which no client sends again (its room would stay listed). On
-production, a rule of EventBridge invokes the `wakedatabase` lambda every 12 hours (`infrastructure/main.tf`):
+production, a rule of EventBridge invokes the `wakedatabase` lambda every 6 hours (`infrastructure/main.tf`):
 
 - It reads the capacity of the writer instance in CloudWatch (`ServerlessDatabaseCapacity`, through
   `DATABASE_INSTANCE_IDENTIFIER`), which leaves the paused cluster asleep.
 - When the cluster ran within the 8 last hours, it leaves it asleep: a stage where people play is never woken for
   nothing.
-- Otherwise it wakes it with a statement reading nothing (`HealthRepository`). A wake outlasting the retries fails the
-  invocation, which Lambda sends again a minute, then two minutes later, the cluster awake by then.
+- Otherwise, or when CloudWatch fails, it wakes it with a statement reading nothing (`HealthRepository`). A wake
+  outlasting the retries fails the invocation, which Lambda sends again a minute, then two minutes later, the cluster
+  awake by then.
 
-The cluster thus never pauses for more than 20 hours, and still pauses 5 minutes after each wake: 0.35 dollar a month at
-most. Staging and development leave theirs asleep.
+The cluster thus never pauses for more than 14 hours, 20 when a check fails. Idle, it is woken every 12 hours only, the
+check after a wake seeing it, and still pauses 5 minutes after each wake: 0.35 dollar a month at most. Staging and
+development leave theirs asleep.
 
 The schema is written with [Drizzle](https://orm.drizzle.team) (`shared/database/schema.ts`), the repositories query it
 through its query builder and its relational queries (`shared/repositories`). `getDatabase()` builds the Data API client
