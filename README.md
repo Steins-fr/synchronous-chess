@@ -47,7 +47,7 @@ The code the lambdas share, in `shared/`, bundled into each lambda by esbuild:
 
 #### API Lambdas
 
-The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, a 4th serving the routes of the HTTP API, and a 5th applying the migrations of the database on deploy. The websocket serves the connectivity of the rooms only (create, join, reconnect, the players, the WebRTC signals and the notifications of the room), everything else goes through HTTPS. The disconnection, message and HTTP API lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
+The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, a 4th serving the routes of the HTTP API, a 5th applying the migrations of the database on deploy, and, on production, one keeping the database out of its deep sleep. The websocket serves the connectivity of the rooms only (create, join, reconnect, the players, the WebRTC signals and the notifications of the room), everything else goes through HTTPS. The disconnection, message and HTTP API lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
 
 **onconnect** - Handle and log new websocket opened connection.
 
@@ -68,6 +68,8 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
 **httpapi** - Behind the HTTP API, a handler per route, selected by its method and path. Available routes:
  - **`GET /rooms?game=<game>&search=<text>`** - The open rooms of a game, without connection: the most recent first, or the ones whose name holds the search.
  - **`GET /health`** - The API is up, once its database answers (a paused cluster resumed): the pages of the app wait for it before they show.
+
+**wakedatabase** - Production only, invoked every 6 hours by EventBridge: wakes the database, unless it ran within the 8 last hours (its capacity in CloudWatch). After 24 hours paused, Aurora puts it into a deeper sleep, whose resume outlasts the retries of the other lambdas.
 
 
 ### **Frontend**

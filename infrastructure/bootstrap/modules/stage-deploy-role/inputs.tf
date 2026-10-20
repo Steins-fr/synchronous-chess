@@ -54,6 +54,12 @@ variable "access_restricted" {
   default     = false
 }
 
+variable "wakes_database" {
+  description = "Whether the stage wakes its database on a schedule (wakes_database of the main configuration): its rule, its function and the read of the capacity of the cluster"
+  type        = bool
+  default     = false
+}
+
 variable "github_repository_owner_id" {
   description = "ID of the owner of that repository"
   type        = string

@@ -4,8 +4,8 @@
 
 `npm run build` bundles the lambdas with esbuild into `dist/` (`onconnect.mjs`, `ondisconnect.mjs`, `sendmessage.mjs`
 of the websocket API, `httpapi.mjs` of the HTTP API, `access.mjs`, `wsauthorizer.mjs` and `httpauthorizer.mjs` of
-the access to staging, and `migrate/` with the migrations it applies), deployed by Terraform. It refuses to bundle
-PGlite, the database of the local API and the specs.
+the access to staging, `wakedatabase.mjs` waking the database of production, and `migrate/` with the migrations it
+applies), deployed by Terraform. It refuses to bundle PGlite, the database of the local API and the specs.
 
 ## Database
 
@@ -13,8 +13,24 @@ The rooms, their players, queue and tokens, the password attempts and the connec
 Aurora Serverless v2 cluster (`modules/aws-aurora-serverless` of `infrastructure`), which the lambdas reach through its
 Data API, over HTTPS, outside any VPC. The cluster pauses at 0 ACU 5 minutes after the last request, and costs nothing
 but its storage and secret while nobody plays. A request to the paused cluster waits for it to resume, about 15
-seconds (30 or more after a day): the Data API refuses it meanwhile, and the lambdas send it again
+seconds (30 or more after a day, see below): the Data API refuses it meanwhile, and the lambdas send it again
 (`shared/database/resume-retry.ts`), 28 seconds at most, the timeout of the lambdas, under the 29 of API Gateway.
+
+After 24 hours paused, Aurora puts the cluster into a deeper sleep, whose resume outlasts those retries: the first
+request fails, the `$disconnect` of a host included, which no client sends again (its room would stay listed). On
+production, a rule of EventBridge invokes the `wakedatabase` lambda every 6 hours (`infrastructure/main.tf`):
+
+- It reads the capacity of the writer instance in CloudWatch (`ServerlessDatabaseCapacity`, through
+  `DATABASE_INSTANCE_IDENTIFIER`), which leaves the paused cluster asleep.
+- When the cluster ran within the 8 last hours, it leaves it asleep: a stage where people play is never woken for
+  nothing.
+- Otherwise, or when CloudWatch fails, it wakes it with a statement reading nothing (`HealthRepository`). A wake
+  outlasting the retries fails the invocation, which Lambda sends again a minute, then two minutes later, the cluster
+  awake by then.
+
+The cluster thus never pauses for more than 14 hours, 20 when a check fails. Idle, it is woken every 12 hours only, the
+check after a wake seeing it, and still pauses 5 minutes after each wake: 0.35 dollar a month at most. Staging and
+development leave theirs asleep.
 
 The schema is written with [Drizzle](https://orm.drizzle.team) (`shared/database/schema.ts`), the repositories query it
 through its query builder and its relational queries (`shared/repositories`). `getDatabase()` builds the Data API client
@@ -27,7 +43,7 @@ from `DATABASE_RESOURCE_ARN`, `DATABASE_SECRET_ARN` and `DATABASE_NAME`, set by 
 - A conditional write tells whether it wrote from the rows it returns (`RETURNING`): the creation of a room, the
   reconnection of its host, the count of a password attempt.
 - No TTL: the queries ignore the expired rooms, and the creation of a room deletes them, with their rows. No scheduled
-  cleanup wakes the cluster.
+  cleanup wakes the cluster, only the wake of production above.
 
 `npm run smoke:data-api -- <stage>` runs the statements of the repositories on the cluster of a stage, with the AWS
 credentials of the shell (`AWS_PROFILE`), in a database of their own, then waits for the cluster to pause and times a

@@ -14,6 +14,8 @@ const { metafile } = await esbuild.build({
         { out: "httpauthorizer", in: "./lambdas/httpauthorizer/app.ts" },
         // A directory, with the migrations it reads
         { out: "migrate/migrate", in: "./lambdas/migrate/app.ts" },
+        // Invoked on a schedule, the database of production kept out of its deep sleep
+        { out: "wakedatabase", in: "./lambdas/wakedatabase/app.ts" },
     ],
     bundle: true,
     write: true,

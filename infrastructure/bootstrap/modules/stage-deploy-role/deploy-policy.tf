@@ -17,9 +17,10 @@ locals {
   functions  = "arn:aws:lambda:${local.region}:${var.account_id}:function:sc_*_${var.stage}"
   migrate    = "arn:aws:lambda:${local.region}:${var.account_id}:function:sc_migrate_${var.stage}"
   # The roles of the lambdas (aws-iam-lambda-role), and their policies by their exact names: never sc-*, which would take
-  # in the boundaries and the policies of the deploy roles. A restricted stage adds the one reading its signing key
+  # in the boundaries and the policies of the deploy roles. A restricted stage adds the one reading its signing key, a
+  # stage waking its database the one reading the capacity of its cluster
   lambda_roles    = "${local.iam}:role/sc_lambda_*_${var.stage}"
-  lambda_policies = [for name in concat(["sc-database", "sc-manage-connection", "sc-source-hash-secret"], var.access_restricted ? ["sc-access-signing-key"] : []) : "${local.iam}:policy/${name}-${var.stage}"]
+  lambda_policies = [for name in concat(["sc-database", "sc-manage-connection", "sc-source-hash-secret"], var.access_restricted ? ["sc-access-signing-key"] : [], var.wakes_database ? ["sc-database-capacity"] : []) : "${local.iam}:policy/${name}-${var.stage}"]
   certificates    = [for region in local.regions : "arn:aws:acm:${region}:${var.account_id}:certificate/*"]
   network         = ["arn:aws:ec2:${local.region}:${var.account_id}:vpc/*", "arn:aws:ec2:${local.region}:${var.account_id}:subnet/*"]
   database = [
@@ -35,6 +36,9 @@ locals {
   managed_key_aliases = ["alias/aws/ssm", "alias/aws/secretsmanager", "alias/aws/rds"]
   # The private key of the access cookies of a restricted stage, written by its owner (infrastructure/main.tf)
   access_signing_key = "arn:aws:ssm:${local.region}:${var.account_id}:parameter/sc/${var.stage}/access-signing-key"
+  # The function waking the database of a stage doing so, and the rule invoking it (infrastructure/main.tf)
+  wake_function = "arn:aws:lambda:${local.region}:${var.account_id}:function:sc_wakedatabase_${var.stage}"
+  wake_rule     = "arn:aws:events:${local.region}:${var.account_id}:rule/sc-wake-database-${var.stage}"
 }
 
 # The state of the stage, the bucket of its app, its CDN, certificates and records, and the guards of the role
@@ -638,7 +642,8 @@ data "aws_iam_policy_document" "data" {
     }
   }
 
-  # The policies attached to those roles: the four main.tf attaches, nothing else, on roles carrying the boundary
+  # The policies attached to those roles: the ones main.tf attaches (lambda_policies), nothing else, on roles carrying the
+  # boundary
   statement {
     sid       = "LambdaRolePolicies"
     actions   = ["iam:AttachRolePolicy", "iam:DetachRolePolicy"]
@@ -756,5 +761,32 @@ data "aws_iam_policy_document" "access" {
     effect    = "Deny"
     actions   = ["ssm:*"]
     resources = [local.access_signing_key]
+  }
+}
+
+# A stage waking its database on a schedule only (wakes_database): the rule of EventBridge invoking the function waking
+# it. The function, its role, its policy and its log group take the names of the stage
+data "aws_iam_policy_document" "wake" {
+  # The rule of the stage and its target, by its name; PutRule with tags also checks TagResource
+  statement {
+    sid = "WakeRule"
+    actions = [
+      "events:PutRule", "events:DescribeRule", "events:DeleteRule", "events:PutTargets", "events:RemoveTargets",
+      "events:ListTargetsByRule", "events:ListTagsForResource", "events:TagResource", "events:UntagResource",
+    ]
+    resources = [local.wake_rule]
+  }
+
+  # The invocation of the function by EventBridge (aws_lambda_permission of aws-lambda-schedule), its function only
+  statement {
+    sid       = "WakeInvoker"
+    actions   = ["lambda:AddPermission"]
+    resources = [local.wake_function]
+
+    condition {
+      test     = "StringEquals"
+      variable = "lambda:Principal"
+      values   = ["events.amazonaws.com"]
+    }
   }
 }

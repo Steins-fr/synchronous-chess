@@ -14,10 +14,14 @@ change.
     deployed locally, without a deploy role.
   - Staging, restricted to its owner (`restricted_stages`), gets a fourth policy, `access`: the read of its login
     (Cognito), the key group of its signed cookies and the authorizers of its APIs. Production gets none of it.
+  - Production, which wakes its database on a schedule (`wake_stages`), gets another policy, `wake`: the rule of
+    EventBridge invoking the function waking it. Staging gets none of it.
 - **The boundary of the roles of the lambdas of each stage**: `sc-lambda-boundary-<stage>` (`lambda-boundary.tf`).
   - It is the most a role of a lambda can do, whatever policy is attached to it.
   - A deploy role creates those roles with the boundary of its stage only, and attaches to them only the policies
     `main.tf` attaches.
+  - On production only, it lets the function waking the database read its capacity in CloudWatch
+    (`cloudwatch:GetMetricData`).
 - **The account of API Gateway**: the role the WebSocket stages write their execution logs with. There is one per
   account and region, which each stage would otherwise create again.
 - **The login of each stage restricted to its owner** (`module.access_login`): the user pool `sc-access-staging` of
@@ -80,7 +84,8 @@ terraform output access_user_pool_ids
 ```
 
 Access Analyzer flags the condition keys an action does not support. Run it on each policy of the deploy roles
-(`sc-github-deploy-<stage>-{edge,api,data}`, and `sc-github-deploy-staging-access`) and on each boundary:
+(`sc-github-deploy-<stage>-{edge,api,data}`, `sc-github-deploy-staging-access` and `sc-github-deploy-production-wake`)
+and on each boundary:
 
 ```bash
 arn=arn:aws:iam::404273159415:policy/sc-github-deploy-staging-edge
@@ -124,7 +129,8 @@ A rename or a transfer of the repository switches the subject of its tokens to t
 2. **Widen the narrowest statement** of `modules/stage-deploy-role/deploy-policy.tf`, scoped to the stage where IAM
    allows it. A new `"*"` is said why.
    - A managed policy holds 6,144 characters at most: IAM refuses a larger one at apply. Move statements between
-     `edge`, `api` and `data` (`access` holds the rights of a restricted stage only).
+     `edge`, `api` and `data` (`access` holds the rights of a restricted stage only, `wake` those of a stage waking its
+     database).
 3. **Apply bootstrap again**, then plan again: an apply stopped halfway makes its saved plan stale.
 4. **A run killed during an apply leaves its lock** `<stage>/terraform.tfstate.tflock`. Run `terraform force-unlock <ID>`
    locally, and only once no run is active.

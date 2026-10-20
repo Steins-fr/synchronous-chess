@@ -322,6 +322,68 @@ module "sc_lambda_httpapi" {
 }
 
 /**
+ * Wake of the database: production only. After 24 hours paused, Aurora puts the cluster into a deeper sleep, whose
+ * resume outlasts the retries of the lambdas: the first request fails, the $disconnect of a host included, which no
+ * client retries. A rule checks it every 6 hours, and wakes it unless it ran within the 8 last hours (wakedatabase of
+ * the API): it never pauses for more than 14 hours, 20 when a check fails. Idle, it is woken every 12 hours only, the
+ * check after a wake seeing it: 5 minutes at 0.5 ACU each, 0.35 dollar a month at most. Staging, restricted to its owner,
+ * and development leave theirs asleep. wake_stages of infrastructure/bootstrap names the same stages: its boundary lets
+ * the function read the capacity of the cluster, its deploy role creates the rule
+ */
+locals {
+  wakes_database = var.stage == "production"
+}
+
+module "sc_database_capacity_policy" {
+  source = "./modules/aws-cloudwatch-metrics-iam-policy"
+  count  = local.wakes_database ? 1 : 0
+
+  name  = "sc-database-capacity-${var.stage}"
+  stage = var.stage
+}
+
+module "sc_role_lambda_wakedatabase" {
+  source = "./modules/aws-iam-lambda-role"
+  count  = local.wakes_database ? 1 : 0
+
+  name = "sc_lambda_wakedatabase_${var.stage}"
+  policies = [
+    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+    module.sc_database_data_api_policy.arn,
+    module.sc_database_capacity_policy[0].arn
+  ]
+  stage                = var.stage
+  permissions_boundary = local.lambda_permissions_boundary
+}
+
+module "sc_lambda_wakedatabase" {
+  source = "./modules/aws-lambda-api"
+  count  = local.wakes_database ? 1 : 0
+
+  directory = "websocket-api"
+  name      = "wakedatabase"
+  role      = module.sc_role_lambda_wakedatabase[0].arn
+  stage     = var.stage
+  timeout   = local.database_lambda_timeout
+  # The writer instance, whose capacity CloudWatch publishes
+  environment = merge(local.database_environment, {
+    DATABASE_INSTANCE_IDENTIFIER = module.sc_database.writer_identifier
+  })
+  depends_on = [aws_lambda_invocation.migrate]
+}
+
+module "sc_wake_database_schedule" {
+  source = "./modules/aws-lambda-schedule"
+  count  = local.wakes_database ? 1 : 0
+
+  name                = "wake-database"
+  schedule_expression = "rate(6 hours)"
+  function_name       = module.sc_lambda_wakedatabase[0].name
+  function_arn        = module.sc_lambda_wakedatabase[0].arn
+  stage               = var.stage
+}
+
+/**
  * Access: staging, restricted to its owner. The owner signs in on the managed login of Cognito through the access lambda
  * (/auth/* of the HTTP API), which sets the signed cookies of CloudFront on the domain: the distribution serves the front
  * with them only, and the authorizers of the two APIs check the same ones. The other stages stay public. The user pool

@@ -6,6 +6,9 @@ declare global {
             DATABASE_RESOURCE_ARN?: string;
             DATABASE_SECRET_ARN?: string;
             DATABASE_NAME?: string;
+            // The writer instance of that cluster, whose capacity CloudWatch publishes (ServerlessDatabaseCapacity): set
+            // by infrastructure/main.tf for the lambda waking the database
+            DATABASE_INSTANCE_IDENTIFIER?: string;
             /**
              * The key of the hashes of the IPs of the clients (source.helper), given by the local server and the specs
              * only: on AWS, sendmessage reads it from its parameter, kept out of the configuration of the lambda
@@ -36,6 +39,7 @@ type RequiredVariable =
     | 'DATABASE_RESOURCE_ARN'
     | 'DATABASE_SECRET_ARN'
     | 'DATABASE_NAME'
+    | 'DATABASE_INSTANCE_IDENTIFIER'
     | 'SOURCE_HASH_SECRET_PARAMETER'
     | 'ACCESS_PUBLIC_KEY'
     | 'ACCESS_KEY_PAIR_ID'
@@ -74,6 +78,11 @@ export function getDatabaseSecretArn(): string {
 /** @throws {Error} when the environment of the lambda does not give it */
 export function getDatabaseName(): string {
     return requiredVariable('DATABASE_NAME', 'the database of the Aurora cluster, set by infrastructure/main.tf for the lambdas reading it');
+}
+
+/** @throws {Error} when the environment of the lambda does not give it */
+export function getDatabaseInstanceIdentifier(): string {
+    return requiredVariable('DATABASE_INSTANCE_IDENTIFIER', 'the writer instance of the Aurora cluster, set by infrastructure/main.tf for the lambda waking it');
 }
 
 /** The key of the hashes of the IPs of the clients, when the environment gives it: the local server and the specs only */
