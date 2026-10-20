@@ -1,21 +1,14 @@
-<section class="presentation">
+<section *transloco="let t; prefix: 'chess.presentation'" class="presentation">
     <div class="description">
-        <h1>Échecs synchrones</h1>
-        <p class="tagline">Les échecs où les deux joueurs jouent en même temps.</p>
-        <p>
-            Plus d'avantage aux blancs : à chaque tour, chaque joueur choisit son coup sans connaître celui de son
-            adversaire, puis les deux coups sont révélés et joués ensemble.
-        </p>
+        <h1>{{ t('title') }}</h1>
+        <p class="tagline">{{ t('tagline') }}</p>
+        <p>{{ t('intro') }}</p>
         <ul>
-            <li>Deux pièces qui visent la même case se capturent mutuellement, et deux pièces peuvent échanger leur
-                place.</li>
-            <li>Une pièce qui s'aventure sur une case attaquée peut être capturée lors d'un tour intermédiaire.</li>
-            <li>Un roi peut être capturé directement, même sans échec et mat.</li>
+            <li>{{ t('points.sameSquare') }}</li>
+            <li>{{ t('points.intermediateTurn') }}</li>
+            <li>{{ t('points.kingCapture') }}</li>
         </ul>
-        <p>
-            Créez une salle, privée avec un mot de passe, ou rejoignez l'une des salles ouvertes. Chaque participant
-            choisit sa couleur ; les autres regardent la partie.
-        </p>
+        <p>{{ t('rooms') }}</p>
     </div>
     <figure class="preview">
         <app-chess-board
@@ -23,6 +16,6 @@
             [grabColor]="noColor"
             [movePreview]="preview"
             [validPlayBoard]="validPlays" />
-        <figcaption>Les blancs ont choisi leur coup, les noirs ne le voient pas avant d'avoir joué le leur.</figcaption>
+        <figcaption>{{ t('caption') }}</figcaption>
     </figure>
 </section>

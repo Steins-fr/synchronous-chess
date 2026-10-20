@@ -15,6 +15,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { disabled, form } from '@angular/forms/signals';
 import { MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
@@ -51,6 +52,7 @@ type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, string>;
         TextFieldComponent,
         MatButton,
         ScrollingModule,
+        TranslocoDirective,
     ],
     styleUrls: ['./chat.component.scss'],
 })

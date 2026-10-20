@@ -1,0 +1,121 @@
+{
+  "apiHealth": {
+    "booting": "Sunucu başlatılıyor…",
+    "bootingDelay": "Kimse oynamadığında sunucu ve veritabanı uyku moduna geçer: uyanmaları otuz saniyeye kadar sürebilir.",
+    "connecting": "Sunucuya bağlanılıyor…",
+    "loadingPage": "Sayfa yükleniyor…"
+  },
+  "app": {
+    "language": {
+      "pick": "Dil seçin"
+    },
+    "nav": {
+      "chat": "Sohbet",
+      "chess": "Eşzamanlı satranç",
+      "home": "Ana sayfa"
+    },
+    "theme": {
+      "toDark": "Koyu temaya geç",
+      "toLight": "Açık temaya geç"
+    },
+    "title": "Eşzamanlı Satranç"
+  },
+  "cheat": {
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+  },
+  "dialog": {
+    "cancel": "İptal",
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "no": "Hayır",
+    "yes": "Evet"
+  },
+  "home": {
+    "chat": {
+      "action": "Sohbet et",
+      "description": "Bir odanın katılımcıları arasında, mesajları eşten eşe gönderilen bir sohbet.",
+      "title": "Sohbet"
+    },
+    "chess": {
+      "action": "Oyna",
+      "description": "İki oyuncunun aynı anda oynadığı satranç: her biri, diğerininkini bilmeden hamlesini seçer.",
+      "title": "Eşzamanlı satranç"
+    },
+    "intro": "Bir oda oluşturun ya da açık odalardan birine katılın: oyuncular birbirine doğrudan bağlanır.",
+    "title": "Bir oyun seçin"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Diğer oyuncular onu açık odalar listesinde bulacak: şifreyle oda özel olur.",
+      "submit": "Oluştur",
+      "title": "Oda oluştur"
+    },
+    "errors": {
+      "alreadyExists": "Bu oda zaten var.",
+      "fullOrGone": "Oda dolu ya da artık yok.",
+      "hostDisconnected": "Odanın ev sahibinin bağlantısı kesildi.",
+      "nameInRoom": "Bu adda bir oyuncu zaten odada.",
+      "nameWaiting": "Bu adda bir oyuncu zaten odaya girmeyi bekliyor.",
+      "notCreated": "Oda oluşturulamadı.",
+      "otherGame": "Bu oda başka bir oyuna ait.",
+      "private": "Bu oda özel: listeden, şifresiyle katılın.",
+      "tooManyPasswords": "Bu oda için çok fazla yanlış şifre girildi: bir dakika sonra yeniden deneyin.",
+      "wrongPassword": "Odanın şifresi yanlış."
+    },
+    "form": {
+      "password": {
+        "label": "Şifre",
+        "maxLength": "Şifre en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir",
+        "minLength": "Şifre en az {minLength, plural, one {# karakter} other {# karakter}} olmalı",
+        "privateRoomLabel": "Şifre (özel oda)",
+        "required": "Şifre zorunludur"
+      },
+      "playerName": {
+        "label": "Oyuncu adı",
+        "maxLength": "Oyuncu adı en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir",
+        "required": "Oyuncu adı zorunludur"
+      },
+      "roomName": {
+        "label": "Oda adı",
+        "maxLength": "Oda adı en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir",
+        "required": "Oda adı zorunludur"
+      }
+    },
+    "join": {
+      "intro": "“{roomName}” odasına katılmak için adınızı girin.",
+      "privateIntro": "“{roomName}” odası özel: katılmak için adınızı ve odanın şifresini girin.",
+      "submit": "Katıl",
+      "title": "Odaya katıl"
+    },
+    "notifications": {
+      "hostReconnecting": "Odanın ev sahibi yeniden bağlanıyor…",
+      "hostUnreachable": "Odanın ev sahibine bağlanılamadı.",
+      "joiningAgain": "Odanın ev sahibine bağlanılamadı, yeniden deneniyor…",
+      "nameStillInRoom": "Bu ad hâlâ odada, yeniden bağlanılıyor…",
+      "roomFull": "Oda dolu.",
+      "roomLost": "Odanın sunucuyla bağlantısı koptu: artık kimse odaya katılamaz."
+    },
+    "open": {
+      "empty": "Şu an katılınacak oda yok: kendi odanızı oluşturun!",
+      "error": "Odalar yüklenemedi.",
+      "full": "Dolu",
+      "host": "Ev sahibi: {host}",
+      "hostReconnecting": "Ev sahibi yeniden bağlanıyor",
+      "join": "Katıl",
+      "joinRoom": "{roomName} odasına katıl",
+      "loading": "Odalar yükleniyor…",
+      "moreMatches": "Başka odalar da “{search}” içeriyor: onları bulmak için aramayı daraltın.",
+      "mostRecent": "Yalnızca en yeni odalar gösteriliyor: diğerlerini adlarıyla arayın.",
+      "noMatch": "Hiçbir oda “{search}” içermiyor.",
+      "private": "Özel oda",
+      "public": "Herkese açık oda",
+      "refresh": "Odaları yenile",
+      "search": {
+        "label": "Oda ara",
+        "maxLength": "Arama en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir"
+      },
+      "title": "Açık odalar"
+    }
+  }
+}

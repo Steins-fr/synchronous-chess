@@ -1,5 +1,6 @@
 
 import { Component } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { chessBlockChains, ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import { SyncChessGameComponent } from '@app/modules/chess/components/sync-chess-game/sync-chess-game.component';
 import { ChessPresentationComponent } from '@app/modules/chess/components/chess-presentation/chess-presentation.component';
@@ -18,7 +19,10 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
     selector: 'app-synchronous-chess',
     templateUrl: './synchronous-chess.html',
     styleUrl: './synchronous-chess.scss',
-    imports: [RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent, ChessPresentationComponent, ChessRulesComponent],
+    imports: [
+        RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent, ChessPresentationComponent, ChessRulesComponent,
+        TranslocoPipe,
+    ],
     providers: [RoomSetupService, RoomManagerService, RoomSocketApi],
 })
 export class SynchronousChess {

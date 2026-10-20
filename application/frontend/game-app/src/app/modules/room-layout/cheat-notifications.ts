@@ -1,16 +1,20 @@
 import { effect, inject } from '@angular/core';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { NotificationService } from '@app/services/notification/notification.service';
 import { CheatFlag, CheatReporting } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
+import { TranslatableText } from '@app/types/translatable-text.type';
 
-function describe(flag: Readonly<CheatFlag>): string {
+// The chain is a code, named by the translation
+function describe(flag: Readonly<CheatFlag>): TranslatableText {
     const reporters: string = flag.reports.map((report: Readonly<CheatReporting>) => report.reporter).join(', ');
+    const params = { chain: flag.chain, author: flag.author, reporters };
 
     // An entry the sequencer does not order has no index
     if (flag.index === undefined) {
-        return `Un message (${ flag.chain }) de ${ flag.author } est ignoré par ${ flag.sequencer }, signalé par ${ reporters }`;
+        return { key: marker('cheat.ignored'), params: { ...params, sequencer: flag.sequencer } };
     }
 
-    return `Le message ${ flag.index } (${ flag.chain }) de ${ flag.author } est signalé comme triché par ${ reporters }`;
+    return { key: marker('cheat.flagged'), params: { ...params, index: flag.index } };
 }
 
 /**

@@ -1,7 +1,7 @@
 import { computed, DestroyRef, DOCUMENT, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { objectHasValue } from '@app/helpers/object.helper';
-import { filter, fromEvent } from 'rxjs';
+import { storageChanges, storedValue, storeValue } from '@app/helpers/stored-preference.helper';
+import { fromEvent } from 'rxjs';
 import { ThemeModeEnum } from './enums/theme-mode.enum';
 
 // A theme shown: the system mode resolves to one of them
@@ -41,10 +41,7 @@ export class ThemeService {
         });
 
         // Another tab of the app picked a theme, or cleared the storage (an event without key)
-        fromEvent<StorageEvent>(this.window, 'storage').pipe(
-            filter((event: StorageEvent) => event.key === null || event.key === ThemeService.storageKey),
-            takeUntilDestroyed(destroyRef),
-        ).subscribe(() => {
+        storageChanges(this.window, ThemeService.storageKey).pipe(takeUntilDestroyed(destroyRef)).subscribe(() => {
             this.mode.set(this.storedMode());
             this.apply();
         });
@@ -56,7 +53,7 @@ export class ThemeService {
         const mode: ThemeModeEnum = other === this.systemTheme() ? ThemeModeEnum.SYSTEM : other;
         this.mode.set(mode);
         this.apply();
-        this.store(mode);
+        storeValue(this.window, ThemeService.storageKey, mode);
     }
 
     private apply(): void {
@@ -67,22 +64,8 @@ export class ThemeService {
         return this.systemDarkScheme.matches ? ThemeModeEnum.DARK : ThemeModeEnum.LIGHT;
     }
 
-    // The local storage can be unavailable (blocked by the browser): the theme then follows the system, and a pick lasts
-    // until the page leaves
+    // Nothing stored, or the storage unavailable: the theme follows the system
     private storedMode(): ThemeModeEnum {
-        try {
-            const stored = this.window.localStorage.getItem(ThemeService.storageKey) as ThemeModeEnum;
-            return objectHasValue(ThemeModeEnum, stored) ? stored : ThemeModeEnum.SYSTEM;
-        } catch {
-            return ThemeModeEnum.SYSTEM;
-        }
-    }
-
-    private store(mode: ThemeModeEnum): void {
-        try {
-            this.window.localStorage.setItem(ThemeService.storageKey, mode);
-        } catch {
-            // Not stored, see storedMode
-        }
+        return storedValue(this.window, ThemeService.storageKey, ThemeModeEnum) ?? ThemeModeEnum.SYSTEM;
     }
 }

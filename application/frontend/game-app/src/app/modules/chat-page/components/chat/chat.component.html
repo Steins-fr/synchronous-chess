@@ -1,7 +1,7 @@
-<div id="chat-app">
-    <h3 class="mat-title-large">Webrtc chat</h3>
+<div *transloco="let t; prefix: 'chat'" id="chat-app">
+    <h3 class="mat-title-large">{{ t('title') }}</h3>
     @if (room()) {
-    <h4 class="mat-title-medium">Salle ({{ roomName }})</h4>
+    <h4 class="mat-title-medium">{{ t('room', { roomName }) }}</h4>
     }
     <div id="chat-container">
         <div id="chat">
@@ -11,23 +11,23 @@
             @if (newMessage() > 0) {
             <div id="new-message-notification" class="chat-notification">
                 <button mat-flat-button (click)="scrollDown(true)">
-                    <span>{{ newMessage() }} nouveaux messages</span>
-                    <span>Voir.</span>
+                    <span>{{ t('newMessages', { count: newMessage() }) }}</span>
+                    <span>{{ t('showNewMessages') }}</span>
                 </button>
             </div>
             }
             @if (viewingHistory()) {
             <div id="history-notification" class="chat-notification">
                 <button mat-flat-button (click)="scrollDown(true)">
-                    <span>Tu es entrain de regarder des anciens messages.</span>
-                    <span>Revenir aux messages les plus récents.</span>
+                    <span>{{ t('history') }}</span>
+                    <span>{{ t('backToLatest') }}</span>
                 </button>
             </div>
             }
         </div>
         <div id="player-list">
-            <h4 class="list-title mat-title-medium">Participants</h4>
-            {{ players().length }} participant(s) dans la salle
+            <h4 class="list-title mat-title-medium">{{ t('participants.title') }}</h4>
+            {{ t('participants.count', { count: players().length }) }}
             <mat-chip-set class="mat-chip-list-stacked">
                 @for (participant of players(); track participant.name) {
                 <app-chat-participant [player]="participant" />
@@ -40,10 +40,10 @@
     </div>
 
     <div id="send-form">
-        <app-text-field [field]="messageForm" class="flex-auto" label="Tape ton message" />
+        <app-text-field [field]="messageForm" [label]="t('message')" class="flex-auto" />
         <button
             mat-raised-button id="send" (click)="sendMessage()"
-            [disabled]="!room() || isSending()">Envoyer
+            [disabled]="!room() || isSending()">{{ t('send') }}
         </button>
     </div>
 </div>

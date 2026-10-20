@@ -30,7 +30,10 @@
                             "src/styles.scss",
                             "src/tailwind.css"
                         ],
-                        "scripts": []
+                        "scripts": [],
+                        "allowedCommonJsDependencies": [
+                            "@messageformat/core"
+                        ]
                     },
                     "configurations": {
                         "production": {

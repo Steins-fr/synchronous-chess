@@ -20,12 +20,13 @@ describe('ChessRulesComponent', () => {
 
     test('should show the rules with their title, a summary and the ends of the game', () => {
         // Then
-        expect(element().querySelector('.title')?.textContent).toEqual('Règles');
+        expect(element().querySelector('.title')?.textContent).toEqual('Rules');
         expect(element().querySelectorAll('.summary li')).toHaveLength(4);
-        expect([...element().querySelectorAll('.case-card h4')].map((title: Element) => title.textContent?.trim())).toEqual(['a Capture', 'b Échange', 'c Confrontation']);
+        expect([...element().querySelectorAll('.case-card h4')].map((title: Element) => title.textContent?.trim())).toEqual(['a Capture', 'b Swap', 'c Clash']);
         expect(element().querySelectorAll('.ends tbody tr')).toHaveLength(7);
         expect(element().querySelectorAll('.ends .badge-win')).toHaveLength(2);
         expect(element().querySelector('.source a')?.getAttribute('href')).toEqual('http://www.hexenspiel.de/engl/synchronous-chess/');
+        expect(element().querySelector('.summary li strong')?.textContent).toEqual('Simultaneous moves');
     });
 
     test('should hide the title when the rules are already titled', async () => {
@@ -50,7 +51,7 @@ describe('ChessRulesComponent', () => {
         buttons.forEach((button: HTMLButtonElement) => button.click());
 
         // Then each button scrolls to its own section
-        expect(buttons.map((button: HTMLButtonElement) => button.textContent)).toEqual(['Joueurs', 'Mouvement et capture', 'Tours intermédiaires', 'Promotion', 'Restrictions', 'Fin de partie']);
+        expect(buttons.map((button: HTMLButtonElement) => button.textContent)).toEqual(['Players', 'Movement and capture', 'Intermediate turns', 'Promotion', 'Restrictions', 'End of the game']);
         expect(scrolled).toEqual(sections);
         expect(sections[0].scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
     });

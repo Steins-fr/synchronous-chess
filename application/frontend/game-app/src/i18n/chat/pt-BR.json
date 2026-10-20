@@ -1,0 +1,16 @@
+{
+  "author": "{author}:",
+  "backToLatest": "Voltar às mensagens mais recentes.",
+  "history": "Você está vendo mensagens antigas.",
+  "message": "Digite sua mensagem",
+  "newMessages": "{count, plural, one {# nova mensagem} other {# novas mensagens}}",
+  "participants": {
+    "count": "{count, plural, one {# participante} other {# participantes}} na sala",
+    "title": "Participantes"
+  },
+  "ping": "ping {ping}",
+  "room": "Sala ({roomName})",
+  "send": "Enviar",
+  "showNewMessages": "Ver.",
+  "title": "Bate-papo WebRTC"
+}

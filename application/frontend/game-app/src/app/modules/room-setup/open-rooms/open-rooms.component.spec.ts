@@ -5,6 +5,7 @@ import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-
 import RoomsResponse, { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
 import { TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
+import { textFieldInput } from '@testing/text-field.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { OpenRoomsComponent } from './open-rooms.component';
 
@@ -67,7 +68,7 @@ describe('OpenRoomsComponent', () => {
     }
 
     async function typeSearch(search: string): Promise<void> {
-        const input: HTMLInputElement = fixture.nativeElement.querySelector('app-text-field[label="Rechercher une salle"] input');
+        const input: HTMLInputElement = textFieldInput(fixture.nativeElement, 'Search for a room');
         input.value = search;
         input.dispatchEvent(new Event('input'));
         // Touched: Material shows its error
@@ -101,13 +102,13 @@ describe('OpenRoomsComponent', () => {
         expect(request.request.timeout).toEqual(30_000);
         expect(request.request.withCredentials).toBe(false);
         expect(rows()).toEqual([
-            'lock private 3 / 4 Rejoindre',
-            'public public Hôte : alice 1 / 4 Rejoindre',
+            'lock private 3 / 4 Join',
+            'public public Host: alice 1 / 4 Join',
         ]);
         expect(Array.from(fixture.nativeElement.querySelectorAll('li mat-icon:not([aria-hidden="true"])'), (icon: Element) => icon.getAttribute('aria-label')))
-            .toEqual(['Salle privée', 'Salle publique']);
+            .toEqual(['Private room', 'Public room']);
         expect(Array.from(fixture.nativeElement.querySelectorAll('li button'), (button: Element) => button.getAttribute('aria-label')))
-            .toEqual(['Rejoindre la salle private', 'Rejoindre la salle public']);
+            .toEqual(['Join the room private', 'Join the room public']);
         expect(text()).not.toContain('D\'autres salles correspondent');
     });
 
@@ -122,7 +123,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(request.request.withCredentials).toBe(true);
-        expect(rows()).toEqual(['public public Hôte : alice 1 / 4 Rejoindre']);
+        expect(rows()).toEqual(['public public Host: alice 1 / 4 Join']);
     });
 
     test('should tell the full rooms and the ones waiting for their host, still joinable', async () => {
@@ -135,8 +136,8 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(rows()).toEqual([
-            'public public Hôte : alice Pleine 4 / 4 Rejoindre',
-            'lock private Hôte en reconnexion 4 / 4 Rejoindre',
+            'public public Host: alice Full 4 / 4 Join',
+            'lock private Host reconnecting 4 / 4 Join',
         ]);
     });
 
@@ -146,7 +147,7 @@ describe('OpenRoomsComponent', () => {
         await answer({ rooms: [publicRoom], hasMore: true });
 
         // Then
-        expect(text()).toContain('Seules les salles les plus récentes sont affichées : recherchez les autres par leur nom.');
+        expect(text()).toContain('Only the most recent rooms are shown: search for the others by their name.');
 
         // When
         await typeSearch('pub');
@@ -154,7 +155,7 @@ describe('OpenRoomsComponent', () => {
         await answer({ rooms: [publicRoom], hasMore: true }, 'pub');
 
         // Then
-        expect(text()).toContain('D\'autres salles contiennent « pub » : précisez la recherche pour les trouver.');
+        expect(text()).toContain('Other rooms contain “pub”: refine the search to find them.');
     });
 
     test('should show the list of the search typed last, the request of a former search cancelled', async () => {
@@ -173,7 +174,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(former.cancelled).toBe(true);
-        expect(rows()).toEqual(['lock private 3 / 4 Rejoindre']);
+        expect(rows()).toEqual(['lock private 3 / 4 Join']);
     });
 
     test('should tell the rooms are loading, then that there is none', async () => {
@@ -181,14 +182,14 @@ describe('OpenRoomsComponent', () => {
         await createComponent(RoomGame.CHAT);
 
         // Then
-        expect(text()).toContain('Chargement des salles…');
+        expect(text()).toContain('Loading the rooms…');
 
         // When
         listRequest(undefined, RoomGame.CHAT).flush({ rooms: [], hasMore: false });
         await render();
 
         // Then
-        expect(text()).toContain('Aucune salle à rejoindre pour le moment : créez la vôtre !');
+        expect(text()).toContain('No room to join for now: create yours!');
         expect(rows()).toEqual([]);
     });
 
@@ -210,7 +211,7 @@ describe('OpenRoomsComponent', () => {
         await answer({ rooms: [], hasMore: false }, 'bob');
 
         // Then
-        expect(text()).toContain('Aucune salle ne contient « bob ».');
+        expect(text()).toContain('No room contains “bob”.');
 
         // When the time of a refresh passes, the page visible again
         document.dispatchEvent(new Event('visibilitychange'));
@@ -238,7 +239,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         await answer({ rooms: [], hasMore: false }, 'a%2Bb%20%26%20c%23');
-        expect(text()).toContain('Aucune salle ne contient « a+b & c# ».');
+        expect(text()).toContain('No room contains “a+b & c#”.');
     });
 
     test('should not send a too long search, the list kept', async () => {
@@ -253,7 +254,7 @@ describe('OpenRoomsComponent', () => {
         // Then
         expect(pendingRequests()).toEqual([]);
         expect(rows()).toHaveLength(1);
-        expect(fixture.nativeElement.querySelector('mat-error').textContent.trim()).toEqual('La recherche fait 64 caractères au plus');
+        expect(fixture.nativeElement.querySelector('mat-error').textContent.trim()).toEqual('The search is at most 64 characters long');
     });
 
     test('should still show the list awaited once a too long search is typed', async () => {
@@ -280,7 +281,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(pendingRequests()).toEqual([]);
-        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
+        expect(text()).toContain('The rooms could not be loaded.');
     });
 
     test('should refresh the list of the last search asked while a too long search is typed', async () => {
@@ -326,13 +327,13 @@ describe('OpenRoomsComponent', () => {
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
 
         // Then
-        expect(text()).toContain('Aucune salle ne contient « bob ».');
+        expect(text()).toContain('No room contains “bob”.');
 
         // When
         await answer({ rooms: [], hasMore: false }, 'alice');
 
         // Then
-        expect(text()).toContain('Aucune salle ne contient « alice ».');
+        expect(text()).toContain('No room contains “alice”.');
     });
 
     test('should tell the rooms could not be loaded, until a refresh lists them', async () => {
@@ -341,7 +342,7 @@ describe('OpenRoomsComponent', () => {
         await fail();
 
         // Then
-        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
+        expect(text()).toContain('The rooms could not be loaded.');
 
         // When
         refreshButton().click();
@@ -349,7 +350,7 @@ describe('OpenRoomsComponent', () => {
         await answer({ rooms: [publicRoom], hasMore: false });
 
         // Then
-        expect(text()).not.toContain('Les salles n\'ont pas pu être chargées.');
+        expect(text()).not.toContain('The rooms could not be loaded.');
         expect(rows()).toHaveLength(1);
     });
 
@@ -370,14 +371,14 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(rows()).toEqual([]);
-        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
+        expect(text()).toContain('The rooms could not be loaded.');
 
         // When
         refreshButton().click();
         await render();
 
         // Then
-        expect(text()).toContain('Chargement des salles…');
+        expect(text()).toContain('Loading the rooms…');
 
         // When
         await answer({ rooms: [publicRoom], hasMore: false });
@@ -397,7 +398,7 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         expect(pendingRequests()).toEqual([]);
-        expect(text()).toContain('Les salles n\'ont pas pu être chargées.');
+        expect(text()).toContain('The rooms could not be loaded.');
 
         // When
         await typeSearch('');

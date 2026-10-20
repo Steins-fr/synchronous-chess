@@ -1,13 +1,13 @@
 <!-- Validated by the form of the dialog: the browser would show its own message for the required fields -->
-<form (submit)="join($event)" class="flex flex-col gap-2" novalidate>
+<form (submit)="join($event)" *transloco="let t; prefix: 'rooms'" class="flex flex-col gap-2" novalidate>
     @if (isPrivate()) {
-    <p class="mb-2">La salle « {{ roomName() }} » est privée : saisissez votre nom et son mot de passe pour la rejoindre.</p>
+    <p class="mb-2">{{ t('join.privateIntro', { roomName: roomName() }) }}</p>
     } @else {
-    <p class="mb-2">Saisissez votre nom pour rejoindre la salle « {{ roomName() }} ».</p>
+    <p class="mb-2">{{ t('join.intro', { roomName: roomName() }) }}</p>
     }
-    <app-text-field [field]="joinForm.playerName" label="Nom du joueur" />
+    <app-text-field [field]="joinForm.playerName" [label]="t('form.playerName.label')" />
     @if (isPrivate()) {
-    <app-text-field [field]="joinForm.password" label="Mot de passe" type="password" />
+    <app-text-field [field]="joinForm.password" [label]="t('form.password.label')" type="password" />
     }
-    <button class="ml-auto min-w-[100px]" id="room-join-submit" mat-flat-button type="submit">Rejoindre</button>
+    <button class="ml-auto min-w-[100px]" id="room-join-submit" mat-flat-button type="submit">{{ t('join.submit') }}</button>
 </form>

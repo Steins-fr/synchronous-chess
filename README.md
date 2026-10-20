@@ -9,7 +9,7 @@ This project is an online chess board game. It implements the chess variant call
 The app is currently in development. Its testing version, https://sc-staging.steins.fr, answers its owner only
 ([Access to staging](#access-to-staging)).
 
-**Important: The website is only in French for the moment!**
+The website follows the language of the browser, and its menu switches it, also during a game.
 
 In the demo, you can choose either to create a room or join an existing one. 
 
@@ -17,7 +17,7 @@ The room creator is the host, if he leave the room, the participants can continu
 
 ### Synchronous Chess demo
 
-Each participant, the host included, takes a free seat with the `Jouer les blancs` / `Jouer les noirs` buttons. The seats are final once the first move is played; the others are spectators.
+Each participant, the host included, takes a free seat with the `Play white` / `Play black` buttons. The seats are final once the first move is played; the others are spectators.
 
 Drag & Drop a piece to validate a move. The registered move will be displayed with two green cells: the origin and the destination. When both players has played, both moves will be played.
 

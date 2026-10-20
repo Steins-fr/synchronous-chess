@@ -16,7 +16,8 @@
         "e2e": "playwright test",
         "e2e:fast": "playwright test --grep-invert @slow",
         "e2e:slow": "playwright test --grep @slow",
-        "sonar-rules": "node ../../shared/sonar-eslint-rules/generate.mjs"
+        "sonar-rules": "node ../../shared/sonar-eslint-rules/generate.mjs",
+        "i18n:extract": "transloco-keys-manager extract --input src/app --output src/i18n --langs en fr es pt-BR pt-PT de ru tr id pl it --unflat --sort --remove-extra-keys"
     },
     "private": true,
     "dependencies": {
@@ -30,6 +31,8 @@
         "@angular/platform-browser": "^22.2.1",
         "@angular/platform-browser-dynamic": "^22.2.1",
         "@angular/router": "^22.2.1",
+        "@jsverse/transloco": "^8.4.0",
+        "@jsverse/transloco-messageformat": "^8.4.0",
         "rxjs": "~7.8.0",
         "tslib": "^2.3.0"
     },
@@ -39,6 +42,8 @@
         "@angular/compiler-cli": "^22.2.1",
         "@eslint/js": "^10.0.1",
         "@html-eslint/eslint-plugin": "^0.67.0",
+        "@jsverse/transloco-keys-manager": "^8.1.1",
+        "@messageformat/parser": "^5.2.0",
         "@playwright/test": "^1.63.0",
         "@stylistic/eslint-plugin": "^5.2.2",
         "@tailwindcss/postcss": "^4.1.12",

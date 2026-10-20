@@ -1,0 +1,16 @@
+{
+  "author": "{author}:",
+  "backToLatest": "En yeni mesajlara dönün.",
+  "history": "Eski mesajlara bakıyorsunuz.",
+  "message": "Mesajınızı yazın",
+  "newMessages": "{count, plural, one {# yeni mesaj} other {# yeni mesaj}}",
+  "participants": {
+    "count": "Odada {count, plural, one {# katılımcı} other {# katılımcı}}",
+    "title": "Katılımcılar"
+  },
+  "ping": "ping {ping}",
+  "room": "Oda ({roomName})",
+  "send": "Gönder",
+  "showNewMessages": "Gör.",
+  "title": "WebRTC sohbeti"
+}

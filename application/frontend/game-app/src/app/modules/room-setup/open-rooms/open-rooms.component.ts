@@ -3,6 +3,8 @@ import { Component, computed, debounced, effect, inject, input, linkedSignal, ou
 import { form, maxLength, schema } from '@angular/forms/signals';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { withPreviousValue } from '@app/helpers/signal.helper';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
@@ -26,7 +28,7 @@ type RoomsList = {
 
 
 const roomSearchSchema = schema<RoomSearch>((path) => {
-    maxLength(path.text, ROOM_SEARCH_MAX_LENGTH, { message: `La recherche fait ${ ROOM_SEARCH_MAX_LENGTH } caractères au plus` });
+    maxLength(path.text, ROOM_SEARCH_MAX_LENGTH, { message: marker('rooms.open.search.maxLength') });
 });
 
 /**
@@ -38,7 +40,7 @@ const roomSearchSchema = schema<RoomSearch>((path) => {
 @Component({
     selector: 'app-open-rooms',
     templateUrl: './open-rooms.component.html',
-    imports: [MatButton, MatIconButton, MatIcon, TextFieldComponent],
+    imports: [MatButton, MatIconButton, MatIcon, TextFieldComponent, TranslocoDirective],
     host: {
         class: 'flex flex-col gap-2',
     },

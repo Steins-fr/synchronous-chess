@@ -1,6 +1,6 @@
 <mat-chip [highlighted]="isMe()">
     {{ player().name }}
     @if (ping(); as pingValue) {
-    <span>{{ ' - ping ' + pingValue }}</span>
+    <span> - {{ 'chat.ping' | transloco: { ping: pingValue } }}</span>
     }
 </mat-chip>

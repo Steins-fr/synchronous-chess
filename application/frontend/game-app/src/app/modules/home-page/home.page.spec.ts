@@ -18,8 +18,8 @@ describe('HomePage', () => {
     }
 
     test.each<[string, string, string, string]>([
-        ['chess', 'Échecs synchrones', 'Jouer', '/synchronous-chess'],
-        ['chat', 'Tchat', 'Discuter', '/simple-chat'],
+        ['chess', 'Synchronous chess', 'Play', '/synchronous-chess'],
+        ['chat', 'Chat', 'Chat', '/simple-chat'],
     ])('should present the %s in a card leading to its page', async (game: string, title: string, action: string, path: string) => {
         // Given
         const fixture: ComponentFixture<HomePage> = await createPage();

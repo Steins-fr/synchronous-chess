@@ -1,9 +1,12 @@
 import { Type } from '@angular/core';
 import { Route } from '@angular/router';
+import { provideTranslocoScope } from '@jsverse/transloco';
 import { ChatPage } from '@app/modules/chat-page/chat.page';
 import { SynchronousChess } from '@app/modules/chess/pages/synchronous-chess/synchronous-chess';
 import { HomePage } from '@app/modules/home-page/home.page';
 import { apiHealthGuard } from '@app/services/api-health/api-health.guard';
+import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { translationScopesGuard } from '@app/services/language/translation-scopes.guard';
 import { describe, expect, test } from 'vitest';
 import { chatPath, chessPath, homePath, routes } from './app.routes';
 
@@ -15,10 +18,18 @@ describe('routes', () => {
 
     test.each<[string, unknown]>([
         [homePath, undefined],
-        [chessPath, [apiHealthGuard]],
-        [chatPath, [apiHealthGuard]],
-    ])('the route \'%s\' should show once the APIs it uses are up', (path: string, guards: unknown) => {
+        [chessPath, [apiHealthGuard, translationScopesGuard]],
+        [chatPath, [apiHealthGuard, translationScopesGuard]],
+    ])('the route \'%s\' should show once the APIs it uses are up and the translations of its games loaded', (path: string, guards: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.canActivate).toEqual(guards);
+    });
+
+    test.each<[string, unknown]>([
+        [homePath, undefined],
+        [chessPath, [provideTranslocoScope(TranslationScope.CHESS, TranslationScope.CHAT)]],
+        [chatPath, [provideTranslocoScope(TranslationScope.CHAT)]],
+    ])('the route \'%s\' should provide the translations of the games it holds', (path: string, providers: unknown) => {
+        expect(routes.find((candidate: Route) => candidate.path === path)?.providers).toEqual(providers);
     });
 
     test.each<[string, Type<unknown>]>([

@@ -1,0 +1,129 @@
+{
+  "game": {
+    "check": "Szach",
+    "checkmate": "Szach-mat",
+    "lastMove": {
+      "label": "Ostatni ruch:",
+      "move": "{from} -> {to}",
+      "none": "brak",
+      "passed": "spasował"
+    },
+    "pass": "Pasuj",
+    "played": "zagrał",
+    "promotion": "Promocja",
+    "result": {
+      "checkmate": "Szach-mat: {winner, select, w {wygrywają białe} other {wygrywają czarne}}",
+      "doubleCheckmate": "Remis: obaj gracze dostali mata",
+      "fiftyTurns": "Remis: 50 tur bez ruchu pionkiem ani bicia",
+      "insufficientMaterial": "Remis: za mało bierek, by dać mata",
+      "kingCaptured": "Król zbity: {winner, select, w {wygrywają białe} other {wygrywają czarne}}",
+      "kingsCaptured": "Remis: obaj królowie zostali zbici",
+      "stalemate": "Remis: pat, gracz nie może już wykonać ruchu",
+      "threefoldRepetition": "Remis: ta sama pozycja powtórzyła się trzy razy"
+    },
+    "seat": {
+      "black": "Gracz czarnych:",
+      "free": "Wolne",
+      "leave": "Zwolnij miejsce",
+      "playBlack": "Graj czarnymi",
+      "playWhite": "Graj białymi",
+      "white": "Gracz białych:"
+    },
+    "spectators": "Widzowie: {count}",
+    "turn": {
+      "intermediate": "Pośrednia",
+      "label": "Tura:",
+      "promotion": "Promocja",
+      "sync": "Synchroniczna"
+    },
+    "waiting": "czeka"
+  },
+  "presentation": {
+    "caption": "Białe wybrały ruch, którego czarne nie widzą, zanim nie zagrają swojego.",
+    "intro": "Koniec przewagi białych: w każdej turze każdy gracz wybiera ruch, nie znając ruchu przeciwnika, a potem oba ruchy są odsłaniane i wykonywane razem.",
+    "points": {
+      "intermediateTurn": "Bierkę, która wejdzie na atakowane pole, można zbić w turze pośredniej.",
+      "kingCapture": "Króla można zbić bezpośrednio, nawet bez mata.",
+      "sameSquare": "Dwie bierki idące na to samo pole biją się nawzajem, a dwie bierki mogą zamienić się miejscami."
+    },
+    "rooms": "Utwórz pokój, prywatny z hasłem, albo dołącz do jednego z otwartych pokojów. Każdy uczestnik wybiera kolor; pozostali oglądają partię.",
+    "tagline": "Szachy, w których obaj gracze grają jednocześnie.",
+    "title": "Szachy synchroniczne"
+  },
+  "rules": {
+    "captures": {
+      "capture": {
+        "text": "… bierka idzie na pole zajęte przez bierkę przeciwnika, która nie ruszyła się w tej turze, ta ostatnia zostaje zbita. Bierka, która się ruszyła, zajmuje zwolnione pole.",
+        "title": "Bicie"
+      },
+      "clash": {
+        "text": "… obie bierki idą na to samo pole, obie zostają zbite i zdjęte z szachownicy, <strong>także król</strong>.",
+        "title": "Zderzenie"
+      },
+      "intro": "Jeśli podczas tury synchronicznej…",
+      "swap": {
+        "text": "… bierka idzie na pole zajęte przed turą przez bierkę przeciwnika, która też się ruszyła, obie bierki docierają do celu bez bicia, nawet jeśli ich drogi się krzyżują.",
+        "title": "Zamiana"
+      },
+      "title": "Ruch i bicie"
+    },
+    "end": {
+      "caption": "Zakończenia partii i ich wynik",
+      "checkmate": "Mat jednego gracza",
+      "doubleCheckmate": "Mat obu graczy",
+      "draw": "Remis",
+      "fiftyTurns": "50 tur synchronicznych bez ruchu pionkiem ani bicia",
+      "insufficientMaterial": "Za mało bierek, by dać mata: same króle, jeden skoczek lub goniec, gońce wszystkie na polach tego samego koloru",
+      "kingCaptured": "Król zbity, gdy wszedł na to samo pole co bierka przeciwnika",
+      "opponent": "przeciwnika",
+      "opponentUnlessBothKings": "przeciwnika (remis, jeśli obaj królowie zostaną zbici)",
+      "result": "Wynik",
+      "situation": "Sytuacja",
+      "stalemate": "Pat: gracz, który nie jest szachowany, nie może ruszyć żadną bierką",
+      "text": "Zbicie króla od razu kończy partię. W przeciwnym razie partia kończy się na początku tury synchronicznej.",
+      "threefoldRepetition": "Ta sama pozycja (bierki i prawa do roszady) powtarza się po raz trzeci",
+      "title": "Koniec partii",
+      "win": "Wygrana"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Koniec partii</strong>: mat albo zbity król; obowiązują remisy szachów klasycznych.",
+      "intermediateTurns": "<strong>Tury pośrednie</strong>: bierkę, która wejdzie na atakowane pole, można od razu zbić.",
+      "sameSquare": "<strong>To samo pole</strong>: dwie bierki idące na to samo pole zostają zbite, także król.",
+      "simultaneousMoves": "<strong>Ruchy jednoczesne</strong>: każdy w tajemnicy wybiera ruch, a potem oba ruchy są wykonywane razem.",
+      "title": "W skrócie"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Powrót do gry.</strong> Potem gra toczy się dalej turą synchroniczną.",
+      "captures": "<strong>Bicia i odbicia.</strong> Przeciwnik może zbić tę bierkę albo spasować. Dozwolone są tylko bicia na danych polach; każde bicie można z kolei odbić, dopóki któryś gracz nie może już lub nie chce bić. Jeśli obaj gracze mogą grać, ich ruchy są wybierane w tajemnicy i wykonywane jednocześnie.",
+      "oncePerPiece": "<strong>Raz na bierkę.</strong> W fazie pośredniej bierka może się ruszyć tylko raz. Bierka, która właśnie ruszyła się w turze synchronicznej, wciąż może się w niej ruszyć raz.",
+      "title": "Tury pośrednie",
+      "trigger": "<strong>Rozpoczęcie.</strong> Po turze synchronicznej następuje tura pośrednia, jeśli bierka, która się ruszyła, weszła na pole atakowane (lub bronione) przez przeciwnika już przed turą, a bierka przeciwnika może ją zgodnie z zasadami zbić."
+    },
+    "players": {
+      "seats": "Dwóch graczy. Każdy uczestnik pokoju, także gospodarz, wybiera kolor spośród wolnych miejsc. Miejsca są ustalone od pierwszego ruchu; pozostali uczestnicy są widzami.",
+      "shortTitle": "Gracze",
+      "simultaneousMoves": "Obaj gracze wykonują ruch jednocześnie, nie znając ruchu drugiego. Gdy obaj wybiorą, oba ruchy są odsłaniane i wykonywane według poniższych zasad.",
+      "title": "Gracze i zasada"
+    },
+    "promotion": {
+      "text": "Jeśli co najmniej jeden gracz doprowadzi pionka do ostatniego rzędu, osobna tura pozwala wybrać jego promocję. Potem gra toczy się dalej turą synchroniczną lub pośrednią, która wynika z zagranych ruchów.",
+      "title": "Promocja"
+    },
+    "restrictions": {
+      "castling": "<strong>Roszada</strong>: szachowany król nie może wykonać roszady, by uciec przed szachem. Szach blokuje roszadę tylko w tej turze; prawo do roszady przepada dopiero, gdy ruszył się król lub wieża.",
+      "check": "<strong>Szach</strong>: król atakowany na początku tury synchronicznej musi pójść na pole, które nie jest atakowane przed ruchami. Jeśli nie może, to mat.",
+      "enPassant": "<strong>Brak bicia w przelocie</strong> w tym wariancie.",
+      "kingSquares": "<strong>Pola zakazane dla króla</strong>: nie może pójść na pole atakowane przez przeciwnika przed turą synchroniczną; nie ma sensu liczyć na to, że pole się zwolni.",
+      "pinnedPieces": "<strong>Związane bierki</strong>: żaden ruch nie może zostawić własnego króla pod atakiem, przy założeniu, że pozycja przeciwnika się nie zmienia; związana bierka nie może opuścić linii swojego króla.",
+      "title": "Ograniczenia"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky i Andrey Krasowsky",
+      "classicChess": "Szachownica, bierki, ich ustawienie początkowe i sposób poruszania się są takie jak w szachach klasycznych.",
+      "label": "Oryginalne zasady:"
+    },
+    "summary": "Zasady gry",
+    "tableOfContents": "Spis treści zasad",
+    "title": "Zasady"
+  }
+}

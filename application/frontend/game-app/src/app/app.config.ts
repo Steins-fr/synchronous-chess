@@ -1,5 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withRouterConfig, withComponentInputBinding } from '@angular/router';
+import { provideTranslation } from '@app/services/language/provide-translation';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
@@ -22,5 +23,6 @@ export const appConfig: ApplicationConfig = {
         { provide: WEB_SOCKET_SERVER, useValue: environment.webSocketServer },
         { provide: HTTP_API_SERVER, useValue: environment.httpApiServer },
         { provide: HTTP_API_WITH_CREDENTIALS, useValue: environment.httpApiWithCredentials },
+        ...provideTranslation(),
     ],
 };

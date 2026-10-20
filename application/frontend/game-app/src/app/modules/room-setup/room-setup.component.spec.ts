@@ -85,7 +85,7 @@ describe('RoomSetupComponent', () => {
         await createRoom(room);
 
         // Then
-        expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomCreateDialog, { title: 'Créer une salle', inputs: { roomName: '', playerName: '' } });
+        expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomCreateDialog, { title: 'rooms.create.title', inputs: { roomName: '', playerName: '' } });
         expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: room.password });
     });
 
@@ -103,9 +103,9 @@ describe('RoomSetupComponent', () => {
         await joinOpenRoom('public', undefined);
 
         // Then
-        expect(dialogService.open).toHaveBeenNthCalledWith(2, RoomCreateDialog, { title: 'Créer une salle', inputs: { roomName: 'room', playerName: 'player' } });
+        expect(dialogService.open).toHaveBeenNthCalledWith(2, RoomCreateDialog, { title: 'rooms.create.title', inputs: { roomName: 'room', playerName: 'player' } });
         expect(dialogService.open).toHaveBeenNthCalledWith(3, RoomJoinDialog, {
-            title: 'Rejoindre la salle',
+            title: 'rooms.join.title',
             inputs: { roomName: 'public', isPrivate: false, playerName: 'player' },
         });
         expect(roomSetupService.setup).toHaveBeenCalledTimes(1);
@@ -123,7 +123,7 @@ describe('RoomSetupComponent', () => {
 
         // Then
         expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomJoinDialog, {
-            title: 'Rejoindre la salle',
+            title: 'rooms.join.title',
             inputs: { roomName: room.roomName, isPrivate: room.isPrivate, playerName: '' },
         });
         expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: room.roomName, playerName: 'bob', password: join.password });
@@ -144,7 +144,7 @@ describe('RoomSetupComponent', () => {
     test('should display a spinner while loading and hide once the room is setup', async () => {
         // Given
         await createComponent();
-        expect(createButton()?.textContent.trim()).toEqual('Créer une salle');
+        expect(createButton()?.textContent.trim()).toEqual('Create a room');
         expect(fixture.nativeElement.querySelector('app-open-rooms #room-create')).toBe(createButton());
 
         // When

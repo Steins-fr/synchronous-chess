@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { textFieldInput } from '@testing/text-field.helper';
 import { describe, expect, test } from 'vitest';
 import { RoomJoin, RoomJoinDialog } from './room-join.dialog';
 
@@ -19,7 +20,7 @@ describe('RoomJoinDialog', () => {
     }
 
     function input(label: string): HTMLInputElement {
-        return fixture.nativeElement.querySelector(`app-text-field[label="${ label }"] input`);
+        return textFieldInput(fixture.nativeElement, label);
     }
 
     async function typeIn(label: string, value: string): Promise<void> {
@@ -42,12 +43,12 @@ describe('RoomJoinDialog', () => {
         await createDialog(false, 'alice');
 
         // Then
-        expect(fixture.nativeElement.querySelector('p').textContent).toContain('Saisissez votre nom pour rejoindre la salle « room »');
-        expect(input('Nom du joueur').value).toEqual('alice');
-        expect(input('Mot de passe')).toBeNull();
+        expect(fixture.nativeElement.querySelector('p').textContent).toContain('Enter your name to join the room “room”');
+        expect(input('Player name').value).toEqual('alice');
+        expect(() => input('Password')).toThrow();
 
         // When
-        await typeIn('Nom du joueur', 'bob');
+        await typeIn('Player name', 'bob');
         await join();
 
         // Then
@@ -57,29 +58,29 @@ describe('RoomJoinDialog', () => {
     test('should ask the name of the player and the password of a private room, hidden as it is typed', async () => {
         // Given
         await createDialog(true);
-        await typeIn('Nom du joueur', 'bob');
-        await typeIn('Mot de passe', ' secret ');
+        await typeIn('Player name', 'bob');
+        await typeIn('Password', ' secret ');
 
         // When
         await join();
 
         // Then
-        expect(fixture.nativeElement.querySelector('p').textContent).toContain('La salle « room » est privée');
-        expect(input('Mot de passe').type).toEqual('password');
+        expect(fixture.nativeElement.querySelector('p').textContent).toContain('The room “room” is private');
+        expect(input('Password').type).toEqual('password');
         expect(joins).toEqual([{ playerName: 'bob', password: ' secret ' }]);
     });
 
     test('should require the name of the player, and the password of a private room', async () => {
         // Given
         await createDialog(true);
-        await typeIn('Nom du joueur', '  ');
+        await typeIn('Player name', '  ');
 
         // When
         await join();
 
         // Then
         expect(joins).toEqual([]);
-        expect(errors()).toEqual(['Le nom du joueur est requis', 'Le mot de passe est requis']);
+        expect(errors()).toEqual(['The player name is required', 'The password is required']);
     });
 
     test('should not require a password for a public room', async () => {
@@ -91,32 +92,32 @@ describe('RoomJoinDialog', () => {
 
         // Then
         expect(joins).toEqual([]);
-        expect(errors()).toEqual(['Le nom du joueur est requis']);
+        expect(errors()).toEqual(['The player name is required']);
     });
 
     test('should refuse a password shorter than the API accepts', async () => {
         // Given
         await createDialog(true, 'bob');
-        await typeIn('Mot de passe', 'p'.repeat(5));
+        await typeIn('Password', 'p'.repeat(5));
 
         // When
         await join();
 
         // Then
         expect(joins).toEqual([]);
-        expect(errors()).toEqual(['Le mot de passe fait 6 caractères au moins']);
+        expect(errors()).toEqual(['The password is at least 6 characters long']);
     });
 
     test('should refuse a password longer than the API accepts', async () => {
         // Given
         await createDialog(true, 'bob');
-        await typeIn('Mot de passe', 'p'.repeat(129));
+        await typeIn('Password', 'p'.repeat(129));
 
         // When
         await join();
 
         // Then
         expect(joins).toEqual([]);
-        expect(errors()).toEqual(['Le mot de passe fait 128 caractères au plus']);
+        expect(errors()).toEqual(['The password is at most 128 characters long']);
     });
 });

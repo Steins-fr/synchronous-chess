@@ -21,7 +21,7 @@ test.describe('Room participants', () => {
         const bob: RoomParticipant = await room.create('bob');
 
         // Then
-        await bob.expectNotification('La salle existe déjà.');
+        await bob.expectNotification('The room already exists.');
         await bob.expectSetupForm();
         await alice.expectParticipants(['alice']);
     });
@@ -31,13 +31,13 @@ test.describe('Room participants', () => {
         const [alice]: RoomParticipant[] = await room.connect('alice');
         const bob: RoomParticipant = await room.visit('bob');
         await alice.close();
-        await bob.expectRoomState(room.name, 'Hôte en reconnexion');
+        await bob.expectRoomState(room.name, 'Host reconnecting');
 
         // When
         await bob.joinListedRoom(room.name);
 
         // Then
-        await bob.expectNotification('L\'hôte de la salle s\'est déconnecté.', REFUSED_JOIN_TIMEOUT);
+        await bob.expectNotification('The host of the room disconnected.', REFUSED_JOIN_TIMEOUT);
         await bob.expectSetupForm();
     });
 
@@ -63,7 +63,7 @@ test.describe('Room participants', () => {
         const impostor: RoomParticipant = await room.join('bob');
 
         // Then
-        await impostor.expectNotification('Un joueur de ce nom est déjà dans la salle.', REFUSED_JOIN_TIMEOUT);
+        await impostor.expectNotification('A player of this name is already in the room.', REFUSED_JOIN_TIMEOUT);
         await impostor.expectSetupForm();
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'])));
         await alice.sendMessage('still there?');
@@ -75,13 +75,13 @@ test.describe('Room participants', () => {
         // Given the chat room accepts 6 players
         const participants: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave', 'eve', 'frank');
         const grace: RoomParticipant = await room.visit('grace');
-        await grace.expectRoomState(room.name, 'Pleine');
+        await grace.expectRoomState(room.name, 'Full');
 
         // When
         await grace.joinListedRoom(room.name);
 
         // Then
-        await grace.expectNotification('La salle est pleine.');
+        await grace.expectNotification('The room is full.');
         await grace.expectSetupForm();
         const names: string[] = participants.map((participant: RoomParticipant) => participant.name);
         await Promise.all(participants.map((participant: RoomParticipant) => participant.expectConnected(names)));
@@ -222,7 +222,7 @@ test.describe('Room participants', () => {
         await bob.cutConnections();
 
         // Then
-        await bob.expectNotification('La connexion à l\'hôte de la salle a échoué, nouvelle tentative…', RECONNECTION_TIMEOUT);
+        await bob.expectNotification('The connection to the host of the room failed, trying again…', RECONNECTION_TIMEOUT);
         await Promise.all([alice, bob].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob'], RECONNECTION_TIMEOUT)));
     });
 

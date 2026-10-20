@@ -1,0 +1,21 @@
+<!-- The ring sits over the button, out of it: an icon button sizes every svg inside it as an icon, the ring turning off its center -->
+<span class="relative inline-flex">
+    <button [attr.aria-busy]="loading()" [attr.aria-label]="'app.language.pick' | transloco" [matMenuTriggerFor]="languageMenu"
+        [title]="'app.language.pick' | transloco" id="language-button" mat-icon-button type="button">
+        <mat-icon>translate</mat-icon>
+    </button>
+    @if (loading()) {
+    <span class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <mat-spinner [diameter]="36" [strokeWidth]="3" />
+    </span>
+    }
+</span>
+<mat-menu #languageMenu="matMenu">
+    @for (language of languages; track language.code) {
+    <button (click)="languageService.use(language.code)" [attr.aria-checked]="language.code === languageService.language()"
+        [lang]="language.code" mat-menu-item role="menuitemradio" type="button">
+        <mat-icon [class.invisible]="language.code !== languageService.language()">check</mat-icon>
+        <span>{{ language.name }}</span>
+    </button>
+    }
+</mat-menu>

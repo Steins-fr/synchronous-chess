@@ -1,9 +1,11 @@
 import { Component, input } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 /** The rules of the synchronous chess, from the source rules */
 @Component({
     selector: 'app-chess-rules',
     templateUrl: './chess-rules.component.html',
+    imports: [TranslocoDirective],
     host: {
         class: 'block max-w-[860px] mx-auto px-4 leading-[1.6] text-app-text',
     },

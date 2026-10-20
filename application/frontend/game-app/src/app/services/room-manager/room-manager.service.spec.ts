@@ -81,7 +81,7 @@ describe('RoomManagerService', () => {
 
         // Then
         expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', playerName: 'host', token: 'token' });
-        expect(notificationService.error).toHaveBeenCalledWith('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.notifications.roomLost' });
     });
 
     test.each([
@@ -97,7 +97,7 @@ describe('RoomManagerService', () => {
 
         // Then
         await expect(build).rejects.toThrow('Room creation failed, mismatched parameters');
-        expect(notificationService.error).toHaveBeenCalledWith('La salle n\'a pas pu être créée.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.notCreated' });
     });
 
     test('should notify when the room to create exists already', async () => {
@@ -109,7 +109,7 @@ describe('RoomManagerService', () => {
 
         // Then
         await expect(build).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
-        expect(notificationService.error).toHaveBeenCalledWith('La salle existe déjà.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.alreadyExists' });
     });
 
     test('should reject an empty routing at compile time', () => {
@@ -150,9 +150,9 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
-        { error: RoomApiErrorMessage.WRONG_PASSWORD, notification: 'Le mot de passe de la salle est incorrect.' },
-        { error: RoomApiErrorMessage.OTHER_GAME, notification: 'Cette salle est celle d\'un autre jeu.' },
-        { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, notification: 'Trop de mots de passe incorrects pour cette salle : réessayez dans une minute.' },
+        { error: RoomApiErrorMessage.WRONG_PASSWORD, notification: { key: 'rooms.errors.wrongPassword' } },
+        { error: RoomApiErrorMessage.OTHER_GAME, notification: { key: 'rooms.errors.otherGame' } },
+        { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, notification: { key: 'rooms.errors.tooManyPasswords' } },
     ])('should notify a join refused for good at once, on $error', async ({ error, notification }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
@@ -175,7 +175,7 @@ describe('RoomManagerService', () => {
 
         // Then
         await expect(build).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
-        expect(notificationService.error).toHaveBeenCalledWith('Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.private' });
     });
 
     test('should notify a peer when the room it took over can not move to a new socket', async () => {
@@ -187,7 +187,7 @@ describe('RoomManagerService', () => {
         TestHelper.cast<{ roomLostSubject: Subject<void> }>(room.roomConnection).roomLostSubject.next();
 
         // Then
-        expect(notificationService.error).toHaveBeenCalledWith('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.notifications.roomLost' });
     });
 
     test('should tell a peer it joins the room again, the connection to the host failed', async () => {
@@ -199,11 +199,11 @@ describe('RoomManagerService', () => {
         TestHelper.cast<{ joiningAgainSubject: Subject<void> }>(room.roomConnection).joiningAgainSubject.next();
 
         // Then
-        expect(notificationService.info).toHaveBeenCalledWith('La connexion à l\'hôte de la salle a échoué, nouvelle tentative…');
+        expect(notificationService.info).toHaveBeenCalledWith({ key: 'rooms.notifications.joiningAgain' });
     });
 
     test.each([
-        { error: RoomApiErrorMessage.ALREADY_IN_GAME, message: 'Ce nom est encore dans la salle, reconnexion en cours…' },
+        { error: RoomApiErrorMessage.ALREADY_IN_GAME, message: { key: 'rooms.notifications.nameStillInRoom' } },
     ])('should tell a peer the API refuses it joining the room again for a while, $error', async ({ error, message }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
@@ -217,8 +217,8 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
-        { failure: JoinFailure.ROOM_FULL, message: 'La salle est pleine.' },
-        { failure: JoinFailure.HOST_UNREACHABLE, message: 'La connexion à l\'hôte de la salle a échoué.' },
+        { failure: JoinFailure.ROOM_FULL, message: { key: 'rooms.notifications.roomFull' } },
+        { failure: JoinFailure.HOST_UNREACHABLE, message: { key: 'rooms.notifications.hostUnreachable' } },
     ])('should notify a peer giving the room up, $failure', async ({ failure, message }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
@@ -240,7 +240,7 @@ describe('RoomManagerService', () => {
 
         // Then
         await expect(build).rejects.toThrow('full');
-        expect(notificationService.error).toHaveBeenCalledWith('La salle est pleine ou elle n\'existe plus.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.fullOrGone' });
     });
 
     test('should join again while its name is still in the room, as after a reload of the page', async () => {
@@ -314,14 +314,14 @@ describe('RoomManagerService', () => {
 
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledTimes(2);
-        expect(notificationService.info).toHaveBeenCalledWith('L\'hôte de la salle se reconnecte…');
+        expect(notificationService.info).toHaveBeenCalledWith({ key: 'rooms.notifications.hostReconnecting' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
     });
 
     test.each([
-        { error: RoomApiErrorMessage.ALREADY_IN_GAME, notification: 'Un joueur de ce nom est déjà dans la salle.' },
-        { error: RoomApiErrorMessage.ALREADY_IN_QUEUE, notification: 'Un joueur de ce nom attend déjà d\'entrer dans la salle.' },
-        { error: RoomApiErrorMessage.HOST_DISCONNECTED, notification: 'L\'hôte de la salle s\'est déconnecté.' },
+        { error: RoomApiErrorMessage.ALREADY_IN_GAME, notification: { key: 'rooms.errors.nameInRoom' } },
+        { error: RoomApiErrorMessage.ALREADY_IN_QUEUE, notification: { key: 'rooms.errors.nameWaiting' } },
+        { error: RoomApiErrorMessage.HOST_DISCONNECTED, notification: { key: 'rooms.errors.hostDisconnected' } },
     ])('should give up joining after 20 seconds, on $error', async ({ error, notification }) => {
         // Given
         vi.useFakeTimers();
@@ -348,6 +348,6 @@ describe('RoomManagerService', () => {
         // Then
         await expect(build).rejects.toEqual('closed');
         expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
-        expect(notificationService.error).toHaveBeenCalledWith('La salle est pleine ou elle n\'existe plus.');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.fullOrGone' });
     });
 });

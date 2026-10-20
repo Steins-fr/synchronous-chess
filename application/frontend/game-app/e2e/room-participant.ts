@@ -30,8 +30,9 @@ export class RoomParticipant {
         });
     }
 
-    public static async open(browser: Browser, name: string): Promise<RoomParticipant> {
-        const context: BrowserContext = await browser.newContext();
+    /** @param locale the language of the browser: the one of the config (en-US) by default */
+    public static async open(browser: Browser, name: string, locale?: string): Promise<RoomParticipant> {
+        const context: BrowserContext = await browser.newContext(locale === undefined ? {} : { locale });
         await context.addInitScript(() => {
             const NativePeerConnection: typeof RTCPeerConnection = window.RTCPeerConnection;
             window.peerConnections = [];
@@ -49,14 +50,14 @@ export class RoomParticipant {
     /** Creates the room, private with a password */
     public async create(roomName: string, password?: string): Promise<void> {
         await this.page.goto('/simple-chat');
-        await this.page.getByRole('button', { name: 'Créer une salle', exact: true }).click();
+        await this.page.getByRole('button', { name: 'Create a room', exact: true }).click();
         const dialog: Locator = this.page.locator('app-room-create-dialog');
-        await dialog.getByRole('textbox', { name: 'Nom de la salle' }).fill(roomName);
-        await dialog.getByRole('textbox', { name: 'Nom du joueur' }).fill(this.name);
+        await dialog.getByRole('textbox', { name: 'Room name' }).fill(roomName);
+        await dialog.getByRole('textbox', { name: 'Player name' }).fill(this.name);
         if (password !== undefined) {
-            await dialog.getByLabel('Mot de passe (salle privée)').fill(password);
+            await dialog.getByLabel('Password (private room)').fill(password);
         }
-        await dialog.getByRole('button', { name: 'Créer', exact: true }).click();
+        await dialog.getByRole('button', { name: 'Create', exact: true }).click();
     }
 
     /** Opens the page of the chat room, its list of the open rooms */
@@ -82,39 +83,39 @@ export class RoomParticipant {
      * The dialog asks the name of the player, and the password of a private room
      */
     public async joinListedRoom(roomName: string, password?: string): Promise<void> {
-        const joinButton: Locator = this.page.getByRole('button', { name: `Rejoindre la salle ${ roomName }`, exact: true });
+        const joinButton: Locator = this.page.getByRole('button', { name: `Join the room ${ roomName }`, exact: true });
         await expect(async () => {
-            await this.page.getByRole('button', { name: 'Actualiser les salles' }).click();
+            await this.page.getByRole('button', { name: 'Refresh the rooms' }).click();
             await expect(joinButton).toBeVisible({ timeout: 2000 });
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
         await joinButton.click();
 
         const dialog: Locator = this.page.locator('app-room-join-dialog');
-        await dialog.getByRole('textbox', { name: 'Nom du joueur' }).fill(this.name);
+        await dialog.getByRole('textbox', { name: 'Player name' }).fill(this.name);
         if (password !== undefined) {
-            await dialog.getByLabel('Mot de passe').fill(password);
+            await dialog.getByLabel('Password').fill(password);
         }
-        await dialog.getByRole('button', { name: 'Rejoindre', exact: true }).click();
+        await dialog.getByRole('button', { name: 'Join', exact: true }).click();
     }
 
     /** A room of the list of the open rooms, private or public */
     public async expectOpenRoom(roomName: string, isPrivate: boolean): Promise<void> {
         const row: Locator = this.page.locator('app-open-rooms li').filter({ hasText: roomName });
-        await expect(row.getByRole('img', { name: isPrivate ? 'Salle privée' : 'Salle publique' })).toBeVisible();
+        await expect(row.getByRole('img', { name: isPrivate ? 'Private room' : 'Public room' })).toBeVisible();
     }
 
     /** The state of a room of the list, once refreshed: full, or its host reconnecting */
     public async expectRoomState(roomName: string, state: string): Promise<void> {
         const row: Locator = this.page.locator('app-open-rooms li').filter({ hasText: roomName });
         await expect(async () => {
-            await this.page.getByRole('button', { name: 'Actualiser les salles' }).click();
+            await this.page.getByRole('button', { name: 'Refresh the rooms' }).click();
             await expect(row).toContainText(state, { timeout: 2000 });
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
     }
 
     /** Searches the rooms by a part of their name */
     public async searchRooms(search: string): Promise<void> {
-        await this.page.getByRole('textbox', { name: 'Rechercher une salle' }).fill(search);
+        await this.page.getByRole('textbox', { name: 'Search for a room' }).fill(search);
     }
 
     /** The names of the rooms listed */
@@ -156,12 +157,12 @@ export class RoomParticipant {
     }
 
     public async sendMessage(text: string): Promise<void> {
-        await this.page.getByRole('textbox', { name: 'Tape ton message' }).fill(text);
-        await this.page.getByRole('button', { name: 'Envoyer' }).click();
+        await this.page.getByRole('textbox', { name: 'Type your message' }).fill(text);
+        await this.page.getByRole('button', { name: 'Send' }).click();
     }
 
     public async expectMessage(from: string, text: string): Promise<void> {
-        await expect(this.page.locator('#chat')).toContainText(`${ from } : ${ text }`);
+        await expect(this.page.locator('#chat')).toContainText(`${ from }: ${ text }`);
     }
 
     /** A notification shown to the player, among the ones queued one after the other */
@@ -171,7 +172,7 @@ export class RoomParticipant {
 
     /** The room setup is shown again: the player is in no room */
     public async expectSetupForm(timeout?: number): Promise<void> {
-        await expect(this.page.getByRole('button', { name: 'Créer une salle', exact: true })).toBeVisible({ timeout });
+        await expect(this.page.getByRole('button', { name: 'Create a room', exact: true })).toBeVisible({ timeout });
     }
 
     /**

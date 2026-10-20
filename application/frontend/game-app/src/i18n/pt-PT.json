@@ -1,0 +1,121 @@
+{
+  "apiHealth": {
+    "booting": "A iniciar o servidor…",
+    "bootingDelay": "O servidor e a respetiva base de dados entram em repouso quando ninguém joga: acordá-los demora até cerca de trinta segundos.",
+    "connecting": "A ligar ao servidor…",
+    "loadingPage": "A carregar a página…"
+  },
+  "app": {
+    "language": {
+      "pick": "Escolher o idioma"
+    },
+    "nav": {
+      "chat": "Chat",
+      "chess": "Xadrez sincronizado",
+      "home": "Início"
+    },
+    "theme": {
+      "toDark": "Mudar para o tema escuro",
+      "toLight": "Mudar para o tema claro"
+    },
+    "title": "Xadrez sincronizado"
+  },
+  "cheat": {
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} other {}}) de {author} foi denunciada como batota por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+  },
+  "dialog": {
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "no": "Não",
+    "yes": "Sim"
+  },
+  "home": {
+    "chat": {
+      "action": "Conversar",
+      "description": "Um chat entre os participantes de uma sala, com as mensagens trocadas diretamente entre eles.",
+      "title": "Chat"
+    },
+    "chess": {
+      "action": "Jogar",
+      "description": "O xadrez em que os dois jogadores jogam ao mesmo tempo: cada um escolhe a sua jogada sem conhecer a do outro.",
+      "title": "Xadrez sincronizado"
+    },
+    "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores ligam-se diretamente entre si.",
+    "title": "Escolha um jogo"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Os outros jogadores vão encontrá-la na lista das salas abertas: com uma palavra-passe, é privada.",
+      "submit": "Criar",
+      "title": "Criar uma sala"
+    },
+    "errors": {
+      "alreadyExists": "A sala já existe.",
+      "fullOrGone": "A sala está cheia ou já não existe.",
+      "hostDisconnected": "O anfitrião da sala desligou-se.",
+      "nameInRoom": "Já existe um jogador com este nome na sala.",
+      "nameWaiting": "Um jogador com este nome já está à espera de entrar na sala.",
+      "notCreated": "Não foi possível criar a sala.",
+      "otherGame": "Esta sala é de outro jogo.",
+      "private": "Esta sala é privada: entre a partir da lista, com a respetiva palavra-passe.",
+      "tooManyPasswords": "Demasiadas palavras-passe incorretas para esta sala: tente novamente dentro de um minuto.",
+      "wrongPassword": "A palavra-passe da sala está incorreta."
+    },
+    "form": {
+      "password": {
+        "label": "Palavra-passe",
+        "maxLength": "A palavra-passe tem, no máximo, {maxLength, plural, one {# carácter} other {# carateres}}",
+        "minLength": "A palavra-passe tem, no mínimo, {minLength, plural, one {# carácter} other {# carateres}}",
+        "privateRoomLabel": "Palavra-passe (sala privada)",
+        "required": "A palavra-passe é obrigatória"
+      },
+      "playerName": {
+        "label": "Nome do jogador",
+        "maxLength": "O nome do jogador tem, no máximo, {maxLength, plural, one {# carácter} other {# carateres}}",
+        "required": "O nome do jogador é obrigatório"
+      },
+      "roomName": {
+        "label": "Nome da sala",
+        "maxLength": "O nome da sala tem, no máximo, {maxLength, plural, one {# carácter} other {# carateres}}",
+        "required": "O nome da sala é obrigatório"
+      }
+    },
+    "join": {
+      "intro": "Introduza o seu nome para entrar na sala “{roomName}”.",
+      "privateIntro": "A sala “{roomName}” é privada: introduza o seu nome e a respetiva palavra-passe para entrar.",
+      "submit": "Entrar",
+      "title": "Entrar na sala"
+    },
+    "notifications": {
+      "hostReconnecting": "O anfitrião da sala está a ligar-se novamente…",
+      "hostUnreachable": "A ligação ao anfitrião da sala falhou.",
+      "joiningAgain": "A ligação ao anfitrião da sala falhou, nova tentativa…",
+      "nameStillInRoom": "Este nome ainda está na sala, a ligar novamente…",
+      "roomFull": "A sala está cheia.",
+      "roomLost": "A sala perdeu a ligação ao servidor: já ninguém pode entrar nela."
+    },
+    "open": {
+      "empty": "Nenhuma sala para entrar de momento: crie a sua!",
+      "error": "Não foi possível carregar as salas.",
+      "full": "Cheia",
+      "host": "Anfitrião: {host}",
+      "hostReconnecting": "Anfitrião a ligar-se",
+      "join": "Entrar",
+      "joinRoom": "Entrar na sala {roomName}",
+      "loading": "A carregar as salas…",
+      "moreMatches": "Outras salas contêm “{search}”: refine a pesquisa para as encontrar.",
+      "mostRecent": "Só são mostradas as salas mais recentes: pesquise as outras pelo nome.",
+      "noMatch": "Nenhuma sala contém “{search}”.",
+      "private": "Sala privada",
+      "public": "Sala pública",
+      "refresh": "Atualizar as salas",
+      "search": {
+        "label": "Pesquisar uma sala",
+        "maxLength": "A pesquisa tem, no máximo, {maxLength, plural, one {# carácter} other {# carateres}}"
+      },
+      "title": "Salas abertas"
+    }
+  }
+}

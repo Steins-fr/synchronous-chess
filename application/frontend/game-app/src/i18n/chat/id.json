@@ -1,0 +1,16 @@
+{
+  "author": "{author}:",
+  "backToLatest": "Kembali ke pesan terbaru.",
+  "history": "Anda sedang melihat pesan lama.",
+  "message": "Ketik pesan Anda",
+  "newMessages": "{count, plural, other {# pesan baru}}",
+  "participants": {
+    "count": "{count, plural, other {# peserta}} di ruang ini",
+    "title": "Peserta"
+  },
+  "ping": "ping {ping}",
+  "room": "Ruang ({roomName})",
+  "send": "Kirim",
+  "showNewMessages": "Lihat.",
+  "title": "Obrolan WebRTC"
+}

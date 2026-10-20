@@ -1,0 +1,129 @@
+{
+  "game": {
+    "check": "Xeque",
+    "checkmate": "Xeque-mate",
+    "lastMove": {
+      "label": "Última jogada:",
+      "move": "{from} -> {to}",
+      "none": "nenhuma",
+      "passed": "passou"
+    },
+    "pass": "Passar",
+    "played": "jogou",
+    "promotion": "Promoção",
+    "result": {
+      "checkmate": "Xeque-mate: {winner, select, w {vitória das brancas} other {vitória das pretas}}",
+      "doubleCheckmate": "Empate: xeque-mate aos dois jogadores",
+      "fiftyTurns": "Empate: 50 turnos sem movimento de peão nem captura",
+      "insufficientMaterial": "Empate: já não há peças suficientes para dar mate",
+      "kingCaptured": "Rei capturado: {winner, select, w {vitória das brancas} other {vitória das pretas}}",
+      "kingsCaptured": "Empate: os dois reis foram capturados",
+      "stalemate": "Empate: afogamento, um jogador já não se pode mover",
+      "threefoldRepetition": "Empate: a mesma posição repetiu-se três vezes"
+    },
+    "seat": {
+      "black": "Jogador das pretas:",
+      "free": "A aguardar",
+      "leave": "Deixar o lugar",
+      "playBlack": "Jogar com as pretas",
+      "playWhite": "Jogar com as brancas",
+      "white": "Jogador das brancas:"
+    },
+    "spectators": "Espetadores: {count}",
+    "turn": {
+      "intermediate": "Intermédio",
+      "label": "Turno:",
+      "promotion": "Promoção",
+      "sync": "Sincronizado"
+    },
+    "waiting": "a aguardar"
+  },
+  "presentation": {
+    "caption": "As brancas escolheram a sua jogada, que as pretas só veem depois de jogarem a delas.",
+    "intro": "Acabou a vantagem das brancas: em cada turno, cada jogador escolhe a sua jogada sem conhecer a do adversário, depois as duas jogadas são reveladas e jogadas em conjunto.",
+    "points": {
+      "intermediateTurn": "Uma peça que se aventure numa casa atacada pode ser capturada num turno intermédio.",
+      "kingCapture": "Um rei pode ser capturado diretamente, mesmo sem xeque-mate.",
+      "sameSquare": "Duas peças que vão para a mesma casa capturam-se mutuamente, e duas peças podem trocar de lugar."
+    },
+    "rooms": "Crie uma sala, privada com uma palavra-passe, ou entre numa das salas abertas. Cada participante escolhe a sua cor; os outros assistem à partida.",
+    "tagline": "O xadrez em que os dois jogadores jogam ao mesmo tempo.",
+    "title": "Xadrez sincronizado"
+  },
+  "rules": {
+    "captures": {
+      "capture": {
+        "text": "… uma peça vai para uma casa ocupada por uma peça adversária que não se moveu neste turno, esta última é capturada. A peça que se moveu ocupa a casa libertada.",
+        "title": "Captura"
+      },
+      "clash": {
+        "text": "… as duas peças vão para a mesma casa, ambas são capturadas e retiradas do tabuleiro, <strong>incluindo um rei</strong>.",
+        "title": "Confronto"
+      },
+      "intro": "Se, durante um turno sincronizado…",
+      "swap": {
+        "text": "… uma peça vai para uma casa ocupada antes do turno por uma peça adversária que também se moveu, as duas peças chegam ao destino sem serem capturadas, mesmo que os percursos se cruzem.",
+        "title": "Troca"
+      },
+      "title": "Movimento e captura"
+    },
+    "end": {
+      "caption": "Fins de partida e respetivo resultado",
+      "checkmate": "Xeque-mate a um jogador",
+      "doubleCheckmate": "Xeque-mate aos dois jogadores",
+      "draw": "Empate",
+      "fiftyTurns": "50 turnos sincronizados sem movimento de peão nem captura",
+      "insufficientMaterial": "Peças insuficientes para dar mate: só os reis, um único cavalo ou bispo, bispos todos em casas da mesma cor",
+      "kingCaptured": "Rei capturado ao ir para a mesma casa que uma peça adversária",
+      "opponent": "do adversário",
+      "opponentUnlessBothKings": "do adversário (empate se os dois reis forem capturados)",
+      "result": "Resultado",
+      "situation": "Situação",
+      "stalemate": "Afogamento: um jogador que não está em xeque não pode mover nenhuma peça",
+      "text": "Um rei capturado termina a partida de imediato. Caso contrário, a partida termina no início de um turno sincronizado.",
+      "threefoldRepetition": "A mesma posição (peças e direitos de roque) repete-se pela terceira vez",
+      "title": "Fim da partida",
+      "win": "Vitória"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Fim da partida</strong>: xeque-mate ou rei capturado; aplicam-se os empates do xadrez clássico.",
+      "intermediateTurns": "<strong>Turnos intermédios</strong>: uma peça que chegue a uma casa atacada pode ser capturada de imediato.",
+      "sameSquare": "<strong>Mesma casa</strong>: duas peças que vão para a mesma casa são ambas capturadas, incluindo um rei.",
+      "simultaneousMoves": "<strong>Jogadas simultâneas</strong>: cada um escolhe a sua jogada em segredo, depois as duas jogadas são jogadas em conjunto.",
+      "title": "Em resumo"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Regresso ao jogo.</strong> O jogo continua depois com um turno sincronizado.",
+      "captures": "<strong>Capturas e recapturas.</strong> O adversário pode capturar essa peça, ou passar. Só são permitidas as capturas nas casas em causa; cada captura pode, por sua vez, ser recapturada, até que um jogador já não possa ou já não queira capturar. Se os dois jogadores puderem jogar, as jogadas são escolhidas em segredo e aplicadas em simultâneo.",
+      "oncePerPiece": "<strong>Uma vez por peça.</strong> Uma peça só se pode mover uma vez durante a fase intermédia. A peça que acabou de se mover no turno sincronizado pode, ainda assim, mover-se uma vez nela.",
+      "title": "Turnos intermédios",
+      "trigger": "<strong>Início.</strong> Após um turno sincronizado, há um turno intermédio se uma peça que se moveu chegou a uma casa já atacada (ou protegida) pelo adversário antes do turno, e se uma peça adversária a pode capturar legalmente."
+    },
+    "players": {
+      "seats": "Dois jogadores. Cada participante da sala, incluindo o anfitrião, escolhe a sua cor entre os lugares livres. Os lugares ficam fixos a partir da primeira jogada; os restantes participantes são espetadores.",
+      "shortTitle": "Jogadores",
+      "simultaneousMoves": "Os dois jogadores jogam a sua jogada em simultâneo, cada um sem conhecer a do outro. Quando ambos tiverem escolhido, as duas jogadas são reveladas e aplicadas segundo as regras abaixo.",
+      "title": "Jogadores e princípio"
+    },
+    "promotion": {
+      "text": "Se pelo menos um jogador levar um peão à última fila, um turno dedicado permite escolher a sua promoção. O jogo continua depois com o turno sincronizado ou intermédio que resulta das jogadas feitas.",
+      "title": "Promoção"
+    },
+    "restrictions": {
+      "castling": "<strong>Roque</strong>: um rei em xeque não pode fazer roque para sair dele. O xeque só impede o roque nesse turno; o direito ao roque só se perde quando o rei ou a torre se moveram.",
+      "check": "<strong>Xeque</strong>: um rei atacado no início do turno sincronizado tem de ir para uma casa que não esteja atacada antes das jogadas. Se não puder, é xeque-mate.",
+      "enPassant": "<strong>Sem captura en passant</strong> nesta variante.",
+      "kingSquares": "<strong>Casas proibidas ao rei</strong>: não pode ir para uma casa atacada pelo adversário antes do turno sincronizado; não adianta antecipar que uma casa vai ficar livre para lá se colocar.",
+      "pinnedPieces": "<strong>Peças cravadas</strong>: nenhuma jogada pode deixar o próprio rei atacado, considerando-se inalterada a posição adversária; uma peça cravada não pode sair da linha do seu rei.",
+      "title": "Restrições"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky e Andrey Krasowsky",
+      "classicChess": "O tabuleiro, as peças, a posição inicial e os respetivos movimentos são os do xadrez clássico.",
+      "label": "Regras originais:"
+    },
+    "summary": "Regras do jogo",
+    "tableOfContents": "Índice das regras",
+    "title": "Regras"
+  }
+}

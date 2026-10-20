@@ -1,11 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslatableText } from '@app/types/translatable-text.type';
 import { SnackBarTypeEnum } from './enums/snack-bar-type.enum';
 import { SnackBarDataInterface } from './interfaces/snack-bar-data.interface';
 import { SnackBarComponent } from './snack-bar/snack-bar.component';
 
 type SnackBarQueueItem = {
-    content: string;
+    content: TranslatableText;
     type: SnackBarTypeEnum;
     duration: number;
 };
@@ -20,7 +21,7 @@ export class NotificationService {
     private readonly snackBar = inject(MatSnackBar);
 
     public openSnackBar(
-        content: string,
+        content: TranslatableText,
         type: SnackBarTypeEnum = SnackBarTypeEnum.INFO,
         duration: number = this.duration,
     ): void {
@@ -53,7 +54,8 @@ export class NotificationService {
     }
 
     private itemsAreEqual(item1: SnackBarQueueItem, item2: SnackBarQueueItem): boolean {
-        return item1.content === item2.content
+        return item1.content.key === item2.content.key
+        && JSON.stringify(item1.content.params) === JSON.stringify(item2.content.params)
         && item1.type === item2.type
         && item1.duration === item2.duration;
     }
@@ -64,15 +66,15 @@ export class NotificationService {
         }
     }
 
-    public error(content: string, duration: number = this.duration): void {
+    public error(content: TranslatableText, duration: number = this.duration): void {
         this.openSnackBar(content, SnackBarTypeEnum.ERROR, duration);
     }
 
-    public success(content: string, duration: number = this.duration): void {
+    public success(content: TranslatableText, duration: number = this.duration): void {
         this.openSnackBar(content, SnackBarTypeEnum.SUCCESS, duration);
     }
 
-    public info(content: string, duration: number = this.duration): void {
+    public info(content: TranslatableText, duration: number = this.duration): void {
         this.openSnackBar(content, SnackBarTypeEnum.INFO, duration);
     }
 }

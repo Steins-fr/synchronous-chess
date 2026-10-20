@@ -1,6 +1,7 @@
-import { Resource, ResourceSnapshot, signal, WritableSignal } from '@angular/core';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { withPreviousValue } from './signal.helper';
+import { Resource, ResourceSnapshot, Signal, signal, WritableSignal } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { heldFor, withPreviousValue } from './signal.helper';
 
 describe('withPreviousValue', () => {
     let snapshot: WritableSignal<ResourceSnapshot<string | undefined>>;
@@ -66,5 +67,66 @@ describe('withPreviousValue', () => {
 
         // Then
         expect(state()).toEqual({ status: 'loading', value: undefined });
+    });
+});
+
+describe('heldFor', () => {
+    const delay: number = 100;
+    let condition: WritableSignal<boolean>;
+    let held: Signal<boolean>;
+
+    // Lets the condition reach the signal held, once the time passed
+    async function wait(time: number = 0): Promise<void> {
+        TestBed.tick();
+        await vi.advanceTimersByTimeAsync(time);
+    }
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        condition = signal<boolean>(false);
+        held = TestBed.runInInjectionContext(() => heldFor(condition, delay));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    test('should be true once the condition held for the delay', async () => {
+        // When
+        condition.set(true);
+        await wait(delay - 1);
+
+        // Then
+        expect(held()).toBe(false);
+
+        // When
+        await wait(1);
+
+        // Then
+        expect(held()).toBe(true);
+    });
+
+    test('should be false as soon as the condition no longer holds', async () => {
+        // Given
+        condition.set(true);
+        await wait(delay);
+
+        // When
+        condition.set(false);
+        await wait();
+
+        // Then
+        expect(held()).toBe(false);
+    });
+
+    test('should stay false while the condition holds shorter than the delay', async () => {
+        // When
+        condition.set(true);
+        await wait(delay - 1);
+        condition.set(false);
+        await wait(delay);
+
+        // Then
+        expect(held()).toBe(false);
     });
 });

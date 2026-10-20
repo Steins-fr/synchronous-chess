@@ -1,0 +1,121 @@
+{
+  "apiHealth": {
+    "booting": "Server wird gestartet…",
+    "bootingDelay": "Der Server und seine Datenbank schlafen, wenn niemand spielt: Das Aufwecken dauert bis zu etwa dreißig Sekunden.",
+    "connecting": "Verbindung zum Server…",
+    "loadingPage": "Seite wird geladen…"
+  },
+  "app": {
+    "language": {
+      "pick": "Sprache wählen"
+    },
+    "nav": {
+      "chat": "Chat",
+      "chess": "Synchrones Schach",
+      "home": "Start"
+    },
+    "theme": {
+      "toDark": "Zum dunklen Design wechseln",
+      "toLight": "Zum hellen Design wechseln"
+    },
+    "title": "Synchrones Schach"
+  },
+  "cheat": {
+    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
+    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
+  },
+  "dialog": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "no": "Nein",
+    "yes": "Ja"
+  },
+  "home": {
+    "chat": {
+      "action": "Chatten",
+      "description": "Ein Chat zwischen den Teilnehmern eines Raums, ihre Nachrichten direkt von Peer zu Peer gesendet.",
+      "title": "Chat"
+    },
+    "chess": {
+      "action": "Spielen",
+      "description": "Schach, bei dem beide Spieler gleichzeitig ziehen: Jeder wählt seinen Zug, ohne den des anderen zu kennen.",
+      "title": "Synchrones Schach"
+    },
+    "intro": "Erstelle einen Raum oder tritt einem der offenen Räume bei: Die Spieler verbinden sich direkt miteinander.",
+    "title": "Wähle ein Spiel"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Die anderen Spieler finden ihn in der Liste der offenen Räume: Mit einem Passwort ist er privat.",
+      "submit": "Erstellen",
+      "title": "Raum erstellen"
+    },
+    "errors": {
+      "alreadyExists": "Der Raum existiert bereits.",
+      "fullOrGone": "Der Raum ist voll oder existiert nicht mehr.",
+      "hostDisconnected": "Der Gastgeber des Raums hat die Verbindung getrennt.",
+      "nameInRoom": "Ein Spieler mit diesem Namen ist bereits im Raum.",
+      "nameWaiting": "Ein Spieler mit diesem Namen wartet bereits darauf, den Raum zu betreten.",
+      "notCreated": "Der Raum konnte nicht erstellt werden.",
+      "otherGame": "Dieser Raum gehört zu einem anderen Spiel.",
+      "private": "Dieser Raum ist privat: Tritt ihm über die Liste bei, mit seinem Passwort.",
+      "tooManyPasswords": "Zu viele falsche Passwörter für diesen Raum: Versuch es in einer Minute erneut.",
+      "wrongPassword": "Das Passwort des Raums ist falsch."
+    },
+    "form": {
+      "password": {
+        "label": "Passwort",
+        "maxLength": "Das Passwort hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
+        "minLength": "Das Passwort hat mindestens {minLength, plural, one {# Zeichen} other {# Zeichen}}",
+        "privateRoomLabel": "Passwort (privater Raum)",
+        "required": "Das Passwort ist erforderlich"
+      },
+      "playerName": {
+        "label": "Spielername",
+        "maxLength": "Der Spielername hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
+        "required": "Der Spielername ist erforderlich"
+      },
+      "roomName": {
+        "label": "Raumname",
+        "maxLength": "Der Raumname hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
+        "required": "Der Raumname ist erforderlich"
+      }
+    },
+    "join": {
+      "intro": "Gib deinen Namen ein, um dem Raum „{roomName}“ beizutreten.",
+      "privateIntro": "Der Raum „{roomName}“ ist privat: Gib deinen Namen und sein Passwort ein, um beizutreten.",
+      "submit": "Beitreten",
+      "title": "Raum beitreten"
+    },
+    "notifications": {
+      "hostReconnecting": "Der Gastgeber des Raums verbindet sich neu…",
+      "hostUnreachable": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen.",
+      "joiningAgain": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen, neuer Versuch…",
+      "nameStillInRoom": "Dieser Name ist noch im Raum, Verbindung wird wiederhergestellt…",
+      "roomFull": "Der Raum ist voll.",
+      "roomLost": "Der Raum hat seine Verbindung zum Server verloren: Niemand kann ihm mehr beitreten."
+    },
+    "open": {
+      "empty": "Gerade gibt es keinen Raum zum Beitreten: Erstelle deinen eigenen!",
+      "error": "Die Räume konnten nicht geladen werden.",
+      "full": "Voll",
+      "host": "Gastgeber: {host}",
+      "hostReconnecting": "Gastgeber verbindet sich neu",
+      "join": "Beitreten",
+      "joinRoom": "Dem Raum {roomName} beitreten",
+      "loading": "Räume werden geladen…",
+      "moreMatches": "Weitere Räume enthalten „{search}“: Präzisiere die Suche, um sie zu finden.",
+      "mostRecent": "Nur die neuesten Räume werden angezeigt: Suche die anderen nach ihrem Namen.",
+      "noMatch": "Kein Raum enthält „{search}“.",
+      "private": "Privater Raum",
+      "public": "Öffentlicher Raum",
+      "refresh": "Räume aktualisieren",
+      "search": {
+        "label": "Raum suchen",
+        "maxLength": "Die Suche hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}"
+      },
+      "title": "Offene Räume"
+    }
+  }
+}

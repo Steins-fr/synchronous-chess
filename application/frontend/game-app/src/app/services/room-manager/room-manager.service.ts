@@ -1,10 +1,12 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { joinRoom } from '@app/services/room-api/join-room';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
+import { TranslatableText } from '@app/types/translatable-text.type';
 import RoomCreateResponse from '@protocol/responses/room-create-response';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
@@ -61,17 +63,19 @@ export default class RoomManagerService {
 
             // The participant taking the room over from a host which left hosts it too
             roomConnection.roomLost$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-                this.notificationService.error('La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre.');
+                this.notificationService.error({ key: marker('rooms.notifications.roomLost') });
             });
             roomConnection.joiningAgain$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-                this.notificationService.info('La connexion à l\'hôte de la salle a échoué, nouvelle tentative…');
+                this.notificationService.info({ key: marker('rooms.notifications.joiningAgain') });
             });
             roomConnection.joinDelayed$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((error: string) => {
                 this.notificationService.info(RoomManagerService.retryMessage(error));
             });
             // Before the page gives the room up
             roomConnection.joinFailed$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((failure: JoinFailure) => {
-                this.notificationService.error(failure === JoinFailure.ROOM_FULL ? 'La salle est pleine.' : 'La connexion à l\'hôte de la salle a échoué.');
+                this.notificationService.error({
+                    key: failure === JoinFailure.ROOM_FULL ? marker('rooms.notifications.roomFull') : marker('rooms.notifications.hostUnreachable'),
+                });
             });
 
             return new BlockRoom<M>(
@@ -96,35 +100,41 @@ export default class RoomManagerService {
         });
     }
 
-    private static retryMessage(error: string): string {
-        return error === RoomApiErrorMessage.HOST_DISCONNECTED ? 'L\'hôte de la salle se reconnecte…' : 'Ce nom est encore dans la salle, reconnexion en cours…';
+    private static retryMessage(error: string): TranslatableText {
+        return {
+            key: error === RoomApiErrorMessage.HOST_DISCONNECTED
+                ? marker('rooms.notifications.hostReconnecting')
+                : marker('rooms.notifications.nameStillInRoom'),
+        };
     }
 
-    private static failureMessage(setup: RoomSetupInterface, error: unknown): string {
+    private static failureMessage(setup: RoomSetupInterface, error: unknown): TranslatableText {
+        return { key: RoomManagerService.failureKey(setup, error) };
+    }
+
+    private static failureKey(setup: RoomSetupInterface, error: unknown): string {
         const message: string | undefined = error instanceof Error ? error.message : undefined;
 
         if (setup.type === 'create') {
-            return message === RoomApiErrorMessage.ROOM_ALREADY_EXISTS ? 'La salle existe déjà.' : 'La salle n\'a pas pu être créée.';
+            return message === RoomApiErrorMessage.ROOM_ALREADY_EXISTS ? marker('rooms.errors.alreadyExists') : marker('rooms.errors.notCreated');
         }
 
         switch (message) {
             case RoomApiErrorMessage.ALREADY_IN_GAME:
-                return 'Un joueur de ce nom est déjà dans la salle.';
+                return marker('rooms.errors.nameInRoom');
             case RoomApiErrorMessage.ALREADY_IN_QUEUE:
-                return 'Un joueur de ce nom attend déjà d\'entrer dans la salle.';
+                return marker('rooms.errors.nameWaiting');
             case RoomApiErrorMessage.HOST_DISCONNECTED:
-                return 'L\'hôte de la salle s\'est déconnecté.';
+                return marker('rooms.errors.hostDisconnected');
             case RoomApiErrorMessage.WRONG_PASSWORD:
                 // Listed as public before it became private, or joined through a link
-                return setup.password === undefined
-                    ? 'Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.'
-                    : 'Le mot de passe de la salle est incorrect.';
+                return setup.password === undefined ? marker('rooms.errors.private') : marker('rooms.errors.wrongPassword');
             case RoomApiErrorMessage.OTHER_GAME:
-                return 'Cette salle est celle d\'un autre jeu.';
+                return marker('rooms.errors.otherGame');
             case RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS:
-                return 'Trop de mots de passe incorrects pour cette salle : réessayez dans une minute.';
+                return marker('rooms.errors.tooManyPasswords');
             default:
-                return 'La salle est pleine ou elle n\'existe plus.';
+                return marker('rooms.errors.fullOrGone');
         }
     }
 }

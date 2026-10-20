@@ -106,7 +106,7 @@ describe('SyncChessGameComponent', () => {
     // The local player takes its seat with its button, the remote one takes the other seat
     async function createOnlineGame(localColor: PieceColor = PieceColor.WHITE): Promise<void> {
         await joinOnlineRoom();
-        seatButton(localColor === PieceColor.WHITE ? 'white' : 'black', localColor === PieceColor.WHITE ? 'Jouer les blancs' : 'Jouer les noirs')?.click();
+        seatButton(localColor === PieceColor.WHITE ? 'white' : 'black', localColor === PieceColor.WHITE ? 'Play white' : 'Play black')?.click();
         remoteSeat(localColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
         await refresh();
     }
@@ -126,13 +126,13 @@ describe('SyncChessGameComponent', () => {
         await fixture.whenStable();
 
         // Then
-        expect(fixture.nativeElement.textContent).toContain('Joueur Noir : En attente');
-        expect(fixture.nativeElement.textContent).toContain('Joueur Blanc : En attente');
-        expect(text('.spectators')).toEqual('Spectateurs : 0');
+        expect(fixture.nativeElement.textContent).toContain('Black player: Waiting');
+        expect(fixture.nativeElement.textContent).toContain('White player: Waiting');
+        expect(text('.spectators')).toEqual('Spectators: 0');
         expect(seatButtons('white')).toEqual([]);
         expect(seatButtons('black')).toEqual([]);
-        expect(fixture.nativeElement.textContent).toContain('Tour : Synchronisé');
-        expect(text('.player-information.black-player')).toContain('aucunen attente');
+        expect(fixture.nativeElement.textContent).toContain('Turn: Synchronous');
+        expect(text('.player-information.black-player')).toContain('nonewaiting');
         expect(skipButton('white')).toBeNull();
         expect(skipButton('black')).toBeNull();
         expect(component.moveColor()).toEqual(PieceColor.NONE);
@@ -143,9 +143,9 @@ describe('SyncChessGameComponent', () => {
         await createOnlineGame();
 
         // Then
-        expect(text('.black-seat')).toEqual('Joueur Noir : remote');
-        expect(text('.white-seat')).toEqual('Joueur Blanc : local Quitter la place');
-        expect(text('.spectators')).toEqual('Spectateurs : 0');
+        expect(text('.black-seat')).toEqual('Black player: remote');
+        expect(text('.white-seat')).toEqual('White player: local Leave the seat');
+        expect(text('.spectators')).toEqual('Spectators: 0');
         expect(component.moveColor()).toEqual(PieceColor.WHITE);
         expect(component.canSkip()).toEqual(false);
         expect(skipButton('white')).toBeNull();
@@ -157,44 +157,44 @@ describe('SyncChessGameComponent', () => {
         await joinOnlineRoom();
 
         // Then
-        expect(text('.black-seat')).toEqual('Joueur Noir : En attente Jouer les noirs');
-        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
-        expect(text('.spectators')).toEqual('Spectateurs : 2');
+        expect(text('.black-seat')).toEqual('Black player: Waiting Play black');
+        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
+        expect(text('.spectators')).toEqual('Spectators: 2');
         expect(component.moveColor()).toEqual(PieceColor.NONE);
 
         // When
-        seatButton('white', 'Jouer les blancs')?.click();
+        seatButton('white', 'Play white')?.click();
         await refresh();
 
         // Then the local player may still take the other seat
-        expect(text('.white-seat')).toEqual('Joueur Blanc : local Quitter la place');
-        expect(text('.black-seat')).toEqual('Joueur Noir : En attente Jouer les noirs');
-        expect(text('.spectators')).toEqual('Spectateurs : 1');
+        expect(text('.white-seat')).toEqual('White player: local Leave the seat');
+        expect(text('.black-seat')).toEqual('Black player: Waiting Play black');
+        expect(text('.spectators')).toEqual('Spectators: 1');
 
         // When
-        seatButton('black', 'Jouer les noirs')?.click();
+        seatButton('black', 'Play black')?.click();
         await refresh();
 
         // Then
-        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
-        expect(text('.black-seat')).toEqual('Joueur Noir : local Quitter la place');
+        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
+        expect(text('.black-seat')).toEqual('Black player: local Leave the seat');
 
         // When
-        seatButton('black', 'Quitter la place')?.click();
+        seatButton('black', 'Leave the seat')?.click();
         await refresh();
 
         // Then
-        expect(text('.black-seat')).toEqual('Joueur Noir : En attente Jouer les noirs');
-        expect(text('.spectators')).toEqual('Spectateurs : 2');
+        expect(text('.black-seat')).toEqual('Black player: Waiting Play black');
+        expect(text('.spectators')).toEqual('Spectators: 2');
 
         // When
-        seatButton('white', 'Jouer les blancs')?.click();
+        seatButton('white', 'Play white')?.click();
         await refresh();
-        seatButton('white', 'Quitter la place')?.click();
+        seatButton('white', 'Leave the seat')?.click();
         await refresh();
 
         // Then
-        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
+        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
     });
 
     test('should not offer a seat taken by another participant', async () => {
@@ -206,8 +206,8 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then
-        expect(text('.black-seat')).toEqual('Joueur Noir : remote');
-        expect(text('.white-seat')).toEqual('Joueur Blanc : En attente Jouer les blancs');
+        expect(text('.black-seat')).toEqual('Black player: remote');
+        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
     });
 
     test('should fix the seats once the game started', async () => {
@@ -223,7 +223,7 @@ describe('SyncChessGameComponent', () => {
         // Then
         expect(seatButtons('white')).toEqual([]);
         expect(seatButtons('black')).toEqual([]);
-        expect(text('.white-seat')).toEqual('Joueur Blanc : local');
+        expect(text('.white-seat')).toEqual('White player: local');
     });
 
     test('should highlight the possible plays of a clicked piece', async () => {
@@ -248,7 +248,7 @@ describe('SyncChessGameComponent', () => {
 
         // Then
         expect(component.blackHasPlayed()).toEqual(true);
-        expect(text('.player-information.black-player')).toContain('a joué');
+        expect(text('.player-information.black-player')).toContain('played');
     });
 
     test('should play a synchronous turn', async () => {
@@ -263,15 +263,15 @@ describe('SyncChessGameComponent', () => {
         // Then
         expect(component.whiteHasPlayed()).toEqual(true);
         expect(component.blackHasPlayed()).toEqual(false);
-        expect(text('.player-information.white-player')).toContain('a joué');
+        expect(text('.player-information.white-player')).toContain('played');
 
         // When
         await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
         await refresh();
 
         // Then
-        expect(component.whiteLastMove()).toEqual('E2 -> E4');
-        expect(component.blackLastMove()).toEqual('E7 -> E5');
+        expect(component.whiteLastMove()).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E2', to: 'E4' } });
+        expect(component.blackLastMove()).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
         expect(text('.player-information.black-player')).toContain('E7 -> E5');
     });
 
@@ -287,9 +287,9 @@ describe('SyncChessGameComponent', () => {
 
         // Then
         expect(skipButton('black')).toBeNull();
-        expect(component.turnType()).toEqual('Synchronisé');
-        expect(component.whiteLastMove()).toEqual('a passé');
-        expect(text('.player-information.white-player')).toContain('a passé');
+        expect(component.turnType()).toEqual('chess.game.turn.sync');
+        expect(component.whiteLastMove()).toEqual({ key: 'chess.game.lastMove.passed' });
+        expect(text('.player-information.white-player')).toContain('passed');
         expect(component.canSkip()).toEqual(false);
     });
 
@@ -313,8 +313,8 @@ describe('SyncChessGameComponent', () => {
         vi.spyOn(session().game, 'lastMoveTurnAction').mockReturnValue({ whiteMove: null, blackMove });
 
         // Then
-        expect(component.whiteLastMove()).toEqual('a passé');
-        expect(component.blackLastMove()).toEqual('E7 -> E5');
+        expect(component.whiteLastMove()).toEqual({ key: 'chess.game.lastMove.passed' });
+        expect(component.blackLastMove()).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
     });
 
     test('should display the black interactions when black is playing', async () => {
@@ -342,7 +342,7 @@ describe('SyncChessGameComponent', () => {
 
         // Then
         expect(skipButton('black')).toBeNull();
-        expect(text('.player-information.black-player .check')).toEqual('Échec');
+        expect(text('.player-information.black-player .check')).toEqual('Check');
     });
 
     test('should display the check and checkmate states', async () => {
@@ -356,7 +356,7 @@ describe('SyncChessGameComponent', () => {
 
         // Then
         expect(skipButton('white')).toBeNull();
-        expect(text('.player-information.white-player .check')).toEqual('Échec');
+        expect(text('.player-information.white-player .check')).toEqual('Check');
 
         // When
         gameState(session().game)._isWhiteInCheckmate.set(true);
@@ -366,29 +366,29 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then
-        expect(text('.player-information.white-player .check')).toEqual('Échec et mat');
-        expect(text('.player-information.black-player .check')).toEqual('Échec et mat');
-        expect(text('.player-information.white-player')).not.toContain('Dernier coup');
+        expect(text('.player-information.white-player .check')).toEqual('Checkmate');
+        expect(text('.player-information.black-player .check')).toEqual('Checkmate');
+        expect(text('.player-information.white-player')).not.toContain('Last move');
         expect(component.displayWhiteInteractions()).toEqual(false);
         expect(component.displayBlackInteractions()).toEqual(false);
     });
 
     test.each([
-        { result: { winner: PieceColor.WHITE, reason: GameEndReason.CHECKMATE }, message: 'Échec et mat : victoire des blancs' },
-        { result: { winner: PieceColor.BLACK, reason: GameEndReason.CHECKMATE }, message: 'Échec et mat : victoire des noirs' },
-        { result: { winner: PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED }, message: 'Roi capturé : victoire des blancs' },
-        { result: { winner: PieceColor.BLACK, reason: GameEndReason.KING_CAPTURED }, message: 'Roi capturé : victoire des noirs' },
-        { result: { winner: PieceColor.NONE, reason: GameEndReason.KING_CAPTURED }, message: 'Match nul : les deux rois ont été capturés' },
-        { result: { winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE }, message: 'Match nul : échec et mat des deux joueurs' },
-        { result: { winner: PieceColor.NONE, reason: GameEndReason.STALEMATE }, message: 'Match nul : pat, un joueur ne peut plus bouger' },
-        { result: { winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION }, message: 'Match nul : la même position s\'est répétée trois fois' },
-        { result: { winner: PieceColor.NONE, reason: GameEndReason.FIFTY_TURNS }, message: 'Match nul : 50 tours sans mouvement de pion ni prise' },
-        { result: { winner: PieceColor.NONE, reason: GameEndReason.INSUFFICIENT_MATERIAL }, message: 'Match nul : plus assez de pièces pour mater' },
+        { result: { winner: PieceColor.WHITE, reason: GameEndReason.CHECKMATE }, message: 'Checkmate: White wins' },
+        { result: { winner: PieceColor.BLACK, reason: GameEndReason.CHECKMATE }, message: 'Checkmate: Black wins' },
+        { result: { winner: PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED }, message: 'King captured: White wins' },
+        { result: { winner: PieceColor.BLACK, reason: GameEndReason.KING_CAPTURED }, message: 'King captured: Black wins' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.KING_CAPTURED }, message: 'Draw: both kings were captured' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.DOUBLE_CHECKMATE }, message: 'Draw: both players are checkmated' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.STALEMATE }, message: 'Draw: stalemate, a player can no longer move' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION }, message: 'Draw: the same position occurred three times' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.FIFTY_TURNS }, message: 'Draw: 50 turns without a pawn move or a capture' },
+        { result: { winner: PieceColor.NONE, reason: GameEndReason.INSUFFICIENT_MATERIAL }, message: 'Draw: not enough pieces left to checkmate' },
     ])('should display the end of the game: $message', async ({ result, message }) => {
         // Given
         await createOnlineGame();
         expect(fixture.nativeElement.querySelector('.game-result')).toBeNull();
-        expect(component.resultText()).toEqual('');
+        expect(component.resultText()).toBeUndefined();
 
         // When
         gameState(session().game)._result.set(result);
@@ -397,7 +397,7 @@ describe('SyncChessGameComponent', () => {
         // Then
         expect(text('.game-result')).toEqual(message);
         expect(component.displayWhiteInteractions()).toEqual(false);
-        expect(text('.player-information.white-player')).not.toContain('Dernier coup');
+        expect(text('.player-information.white-player')).not.toContain('Last move');
     });
 
     test('should reject an unknown end of the game', async () => {
@@ -421,7 +421,7 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then
-        expect(fixture.nativeElement.textContent).toContain('Tour : Promotion');
+        expect(fixture.nativeElement.textContent).toContain('Turn: Promotion');
         expect(fixture.nativeElement.querySelector('#promotion-title')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('.promotion-list.white-player')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('.promotion-list.black-player')).toBeNull();
@@ -466,7 +466,7 @@ describe('SyncChessGameComponent', () => {
         getTurnTypeSpy.mockReturnValue(TurnType.MOVE_INTERMEDIATE);
 
         // Then
-        expect(component.turnType()).toEqual('Intermédiaire');
+        expect(component.turnType()).toEqual('chess.game.turn.intermediate');
 
         // When
         getTurnTypeSpy.mockReturnValue('unknown' as TurnType);

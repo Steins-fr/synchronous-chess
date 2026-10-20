@@ -135,7 +135,7 @@ run by the CI.
 ### Testing a chess game
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`: the home page only links to them.
-- Each participant, the host included, takes a seat with the `Jouer les blancs` / `Jouer les noirs`
+- Each participant, the host included, takes a seat with the `Play white` / `Play black`
   buttons: two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
   `mcp__playwright__browser_run_code_unsafe`: `mouse.down()` on the origin cell, a first small

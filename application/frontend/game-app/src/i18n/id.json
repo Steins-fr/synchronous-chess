@@ -1,0 +1,121 @@
+{
+  "apiHealth": {
+    "booting": "Menyalakan server…",
+    "bootingDelay": "Server dan basis datanya tidur saat tidak ada yang bermain: membangunkannya butuh waktu hingga sekitar tiga puluh detik.",
+    "connecting": "Menghubungkan ke server…",
+    "loadingPage": "Memuat halaman…"
+  },
+  "app": {
+    "language": {
+      "pick": "Pilih bahasa"
+    },
+    "nav": {
+      "chat": "Obrolan",
+      "chess": "Catur serentak",
+      "home": "Beranda"
+    },
+    "theme": {
+      "toDark": "Beralih ke tema gelap",
+      "toLight": "Beralih ke tema terang"
+    },
+    "title": "Catur Serentak"
+  },
+  "cheat": {
+    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} other {}}) dari {author} dilaporkan curang oleh {reporters}",
+    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
+  },
+  "dialog": {
+    "cancel": "Batal",
+    "close": "Tutup",
+    "confirm": "Konfirmasi",
+    "no": "Tidak",
+    "yes": "Ya"
+  },
+  "home": {
+    "chat": {
+      "action": "Mengobrol",
+      "description": "Obrolan antarpeserta sebuah ruang, pesannya dikirim langsung dari peer ke peer.",
+      "title": "Obrolan"
+    },
+    "chess": {
+      "action": "Main",
+      "description": "Catur yang kedua pemainnya melangkah bersamaan: masing-masing memilih langkah tanpa mengetahui langkah yang lain.",
+      "title": "Catur serentak"
+    },
+    "intro": "Buat ruang, atau bergabunglah ke salah satu ruang terbuka: para pemain terhubung langsung satu sama lain.",
+    "title": "Pilih permainan"
+  },
+  "rooms": {
+    "create": {
+      "intro": "Pemain lain akan menemukannya di daftar ruang terbuka: dengan kata sandi, ruang ini privat.",
+      "submit": "Buat",
+      "title": "Buat ruang"
+    },
+    "errors": {
+      "alreadyExists": "Ruang ini sudah ada.",
+      "fullOrGone": "Ruang ini penuh atau sudah tidak ada.",
+      "hostDisconnected": "Tuan rumah ruang ini terputus.",
+      "nameInRoom": "Pemain dengan nama ini sudah ada di ruang.",
+      "nameWaiting": "Pemain dengan nama ini sudah menunggu untuk masuk ke ruang.",
+      "notCreated": "Ruang tidak dapat dibuat.",
+      "otherGame": "Ruang ini milik permainan lain.",
+      "private": "Ruang ini privat: bergabunglah dari daftar, dengan kata sandinya.",
+      "tooManyPasswords": "Terlalu banyak kata sandi salah untuk ruang ini: coba lagi dalam satu menit.",
+      "wrongPassword": "Kata sandi ruang salah."
+    },
+    "form": {
+      "password": {
+        "label": "Kata sandi",
+        "maxLength": "Kata sandi paling banyak {maxLength, plural, other {# karakter}}",
+        "minLength": "Kata sandi paling sedikit {minLength, plural, other {# karakter}}",
+        "privateRoomLabel": "Kata sandi (ruang privat)",
+        "required": "Kata sandi wajib diisi"
+      },
+      "playerName": {
+        "label": "Nama pemain",
+        "maxLength": "Nama pemain paling banyak {maxLength, plural, other {# karakter}}",
+        "required": "Nama pemain wajib diisi"
+      },
+      "roomName": {
+        "label": "Nama ruang",
+        "maxLength": "Nama ruang paling banyak {maxLength, plural, other {# karakter}}",
+        "required": "Nama ruang wajib diisi"
+      }
+    },
+    "join": {
+      "intro": "Masukkan nama Anda untuk bergabung ke ruang “{roomName}”.",
+      "privateIntro": "Ruang “{roomName}” privat: masukkan nama Anda dan kata sandinya untuk bergabung.",
+      "submit": "Gabung",
+      "title": "Gabung ke ruang"
+    },
+    "notifications": {
+      "hostReconnecting": "Tuan rumah ruang sedang menyambung ulang…",
+      "hostUnreachable": "Koneksi ke tuan rumah ruang gagal.",
+      "joiningAgain": "Koneksi ke tuan rumah ruang gagal, mencoba lagi…",
+      "nameStillInRoom": "Nama ini masih ada di ruang, menyambung ulang…",
+      "roomFull": "Ruang ini penuh.",
+      "roomLost": "Ruang kehilangan koneksi ke server: tidak ada lagi yang bisa bergabung."
+    },
+    "open": {
+      "empty": "Belum ada ruang untuk digabung: buat ruang Anda sendiri!",
+      "error": "Ruang tidak dapat dimuat.",
+      "full": "Penuh",
+      "host": "Tuan rumah: {host}",
+      "hostReconnecting": "Tuan rumah menyambung ulang",
+      "join": "Gabung",
+      "joinRoom": "Gabung ke ruang {roomName}",
+      "loading": "Memuat ruang…",
+      "moreMatches": "Ruang lain juga memuat “{search}”: persempit pencarian untuk menemukannya.",
+      "mostRecent": "Hanya ruang terbaru yang ditampilkan: cari yang lain berdasarkan namanya.",
+      "noMatch": "Tidak ada ruang yang memuat “{search}”.",
+      "private": "Ruang privat",
+      "public": "Ruang publik",
+      "refresh": "Muat ulang ruang",
+      "search": {
+        "label": "Cari ruang",
+        "maxLength": "Pencarian paling banyak {maxLength, plural, other {# karakter}}"
+      },
+      "title": "Ruang terbuka"
+    }
+  }
+}

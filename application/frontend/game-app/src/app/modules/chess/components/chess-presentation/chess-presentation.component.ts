@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import CoordinateMove, { Column, Row } from '@app/modules/chess/interfaces/CoordinateMove';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
@@ -11,7 +12,7 @@ import { ChessBoardComponent } from '../chess/chess-board/chess-board.component'
     selector: 'app-chess-presentation',
     templateUrl: './chess-presentation.component.html',
     styleUrl: './chess-presentation.component.scss',
-    imports: [ChessBoardComponent],
+    imports: [ChessBoardComponent, TranslocoDirective],
 })
 export class ChessPresentationComponent {
     // A board to look at, no piece can be moved

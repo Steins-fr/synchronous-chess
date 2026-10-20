@@ -1,0 +1,129 @@
+{
+  "game": {
+    "check": "Schach",
+    "checkmate": "Schachmatt",
+    "lastMove": {
+      "label": "Letzter Zug:",
+      "move": "{from} -> {to}",
+      "none": "keiner",
+      "passed": "gepasst"
+    },
+    "pass": "Passen",
+    "played": "hat gezogen",
+    "promotion": "Umwandlung",
+    "result": {
+      "checkmate": "Schachmatt: {winner, select, w {Weiß gewinnt} other {Schwarz gewinnt}}",
+      "doubleCheckmate": "Remis: Beide Spieler sind schachmatt",
+      "fiftyTurns": "Remis: 50 Runden ohne Bauernzug oder Schlagen",
+      "insufficientMaterial": "Remis: Nicht mehr genug Figuren zum Mattsetzen",
+      "kingCaptured": "König geschlagen: {winner, select, w {Weiß gewinnt} other {Schwarz gewinnt}}",
+      "kingsCaptured": "Remis: Beide Könige wurden geschlagen",
+      "stalemate": "Remis: Patt, ein Spieler kann nicht mehr ziehen",
+      "threefoldRepetition": "Remis: Dieselbe Stellung kam dreimal vor"
+    },
+    "seat": {
+      "black": "Spieler Schwarz:",
+      "free": "Frei",
+      "leave": "Platz verlassen",
+      "playBlack": "Schwarz spielen",
+      "playWhite": "Weiß spielen",
+      "white": "Spieler Weiß:"
+    },
+    "spectators": "Zuschauer: {count}",
+    "turn": {
+      "intermediate": "Zwischenrunde",
+      "label": "Runde:",
+      "promotion": "Umwandlung",
+      "sync": "Synchron"
+    },
+    "waiting": "wartet"
+  },
+  "presentation": {
+    "caption": "Weiß hat seinen Zug gewählt, Schwarz sieht ihn erst, nachdem es selbst gezogen hat.",
+    "intro": "Kein Vorteil mehr für Weiß: In jeder Runde wählt jeder Spieler seinen Zug, ohne den des Gegners zu kennen, dann werden beide Züge aufgedeckt und gemeinsam ausgeführt.",
+    "points": {
+      "intermediateTurn": "Eine Figur, die sich auf ein angegriffenes Feld wagt, kann in einer Zwischenrunde geschlagen werden.",
+      "kingCapture": "Ein König kann direkt geschlagen werden, auch ohne Schachmatt.",
+      "sameSquare": "Zwei Figuren, die auf dasselbe Feld ziehen, schlagen sich gegenseitig, und zwei Figuren können ihre Plätze tauschen."
+    },
+    "rooms": "Erstelle einen Raum, privat mit einem Passwort, oder tritt einem der offenen Räume bei. Jeder Teilnehmer wählt seine Farbe; die anderen schauen der Partie zu.",
+    "tagline": "Schach, bei dem beide Spieler gleichzeitig ziehen.",
+    "title": "Synchrones Schach"
+  },
+  "rules": {
+    "captures": {
+      "capture": {
+        "text": "… eine Figur auf ein Feld zieht, auf dem eine gegnerische Figur steht, die in dieser Runde nicht gezogen hat, wird diese geschlagen. Die gezogene Figur besetzt das frei gewordene Feld.",
+        "title": "Schlagen"
+      },
+      "clash": {
+        "text": "… beide Figuren auf dasselbe Feld ziehen, werden beide geschlagen und vom Brett genommen, <strong>auch ein König</strong>.",
+        "title": "Zusammenstoß"
+      },
+      "intro": "Wenn während einer synchronen Runde…",
+      "swap": {
+        "text": "… eine Figur auf ein Feld zieht, auf dem vor der Runde eine gegnerische Figur stand, die selbst gezogen hat, erreichen beide Figuren ihr Ziel, ohne geschlagen zu werden, auch wenn sich ihre Wege kreuzen.",
+        "title": "Tausch"
+      },
+      "title": "Zug und Schlagen"
+    },
+    "end": {
+      "caption": "Enden der Partie und ihr Ergebnis",
+      "checkmate": "Schachmatt eines Spielers",
+      "doubleCheckmate": "Schachmatt beider Spieler",
+      "draw": "Remis",
+      "fiftyTurns": "50 synchrone Runden ohne Bauernzug oder Schlagen",
+      "insufficientMaterial": "Nicht genug Figuren zum Mattsetzen: nur Könige, ein einzelner Springer oder Läufer, Läufer alle auf Feldern derselben Farbe",
+      "kingCaptured": "König geschlagen, weil er auf dasselbe Feld wie eine gegnerische Figur zog",
+      "opponent": "für den Gegner",
+      "opponentUnlessBothKings": "für den Gegner (Remis, wenn beide Könige geschlagen werden)",
+      "result": "Ergebnis",
+      "situation": "Situation",
+      "stalemate": "Patt: Ein Spieler, der nicht im Schach steht, kann keine Figur ziehen",
+      "text": "Ein geschlagener König beendet die Partie sofort. Sonst endet die Partie zu Beginn einer synchronen Runde.",
+      "threefoldRepetition": "Dieselbe Stellung (Figuren und Rochaderechte) kommt zum dritten Mal vor",
+      "title": "Ende der Partie",
+      "win": "Sieg"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Ende der Partie</strong>: Schachmatt oder geschlagener König; die Remisregeln des klassischen Schachs gelten.",
+      "intermediateTurns": "<strong>Zwischenrunden</strong>: Eine Figur, die auf einem angegriffenen Feld ankommt, kann sofort geschlagen werden.",
+      "sameSquare": "<strong>Dasselbe Feld</strong>: Zwei Figuren, die auf dasselbe Feld ziehen, werden beide geschlagen, auch ein König.",
+      "simultaneousMoves": "<strong>Gleichzeitige Züge</strong>: Jeder wählt seinen Zug geheim, dann werden beide Züge gemeinsam ausgeführt.",
+      "title": "Kurz gesagt"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Zurück zum Spiel.</strong> Danach geht das Spiel mit einer synchronen Runde weiter.",
+      "captures": "<strong>Schlagen und Zurückschlagen.</strong> Der Gegner kann diese Figur schlagen oder passen. Nur Schlagzüge auf den betroffenen Feldern sind erlaubt; jeder Schlag kann seinerseits zurückgeschlagen werden, bis ein Spieler nicht mehr schlagen kann oder will. Dürfen beide Spieler ziehen, werden ihre Züge geheim gewählt und gleichzeitig ausgeführt.",
+      "oncePerPiece": "<strong>Einmal pro Figur.</strong> Eine Figur darf in der Zwischenphase nur einmal ziehen. Die Figur, die gerade in der synchronen Runde gezogen hat, darf dort dennoch einmal ziehen.",
+      "title": "Zwischenrunden",
+      "trigger": "<strong>Auslöser.</strong> Nach einer synchronen Runde folgt eine Zwischenrunde, wenn eine gezogene Figur auf einem Feld angekommen ist, das der Gegner schon vor der Runde angegriffen (oder gedeckt) hat, und eine gegnerische Figur sie regelgerecht schlagen kann."
+    },
+    "players": {
+      "seats": "Zwei Spieler. Jeder Teilnehmer des Raums, auch der Gastgeber, wählt seine Farbe unter den freien Plätzen. Die Plätze stehen ab dem ersten Zug fest; die anderen Teilnehmer sind Zuschauer.",
+      "shortTitle": "Spieler",
+      "simultaneousMoves": "Beide Spieler ziehen gleichzeitig, jeder ohne den Zug des anderen zu kennen. Haben beide gewählt, werden die zwei Züge aufgedeckt und nach den folgenden Regeln ausgeführt.",
+      "title": "Spieler und Prinzip"
+    },
+    "promotion": {
+      "text": "Bringt mindestens ein Spieler einen Bauern auf die letzte Reihe, lässt ihn eine eigene Runde seine Umwandlung wählen. Danach geht das Spiel mit der synchronen oder Zwischenrunde weiter, die sich aus den Zügen ergibt.",
+      "title": "Umwandlung"
+    },
+    "restrictions": {
+      "castling": "<strong>Rochade</strong>: Ein König im Schach darf nicht rochieren, um ihm zu entkommen. Das Schach verhindert die Rochade nur in dieser Runde; das Rochaderecht geht erst verloren, wenn der König oder der Turm gezogen hat.",
+      "check": "<strong>Schach</strong>: Ein König, der zu Beginn der synchronen Runde angegriffen ist, muss auf ein Feld ziehen, das vor den Zügen nicht angegriffen ist. Kann er das nicht, ist es Schachmatt.",
+      "enPassant": "<strong>Kein en passant</strong> in dieser Variante.",
+      "kingSquares": "<strong>Verbotene Felder für den König</strong>: Er darf nicht auf ein Feld ziehen, das der Gegner vor der synchronen Runde angreift; es bringt nichts, darauf zu setzen, dass ein Feld frei wird.",
+      "pinnedPieces": "<strong>Gefesselte Figuren</strong>: Kein Zug darf den eigenen König angegriffen lassen, wobei die gegnerische Stellung als unverändert gilt; eine gefesselte Figur darf die Linie ihres Königs nicht verlassen.",
+      "title": "Einschränkungen"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky und Andrey Krasowsky",
+      "classicChess": "Brett, Figuren, Grundstellung und Gangarten bleiben die des klassischen Schachs.",
+      "label": "Ursprüngliche Regeln:"
+    },
+    "summary": "Spielregeln",
+    "tableOfContents": "Inhalt der Regeln",
+    "title": "Regeln"
+  }
+}

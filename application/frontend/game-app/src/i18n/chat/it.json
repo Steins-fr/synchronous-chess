@@ -1,0 +1,16 @@
+{
+  "author": "{author}:",
+  "backToLatest": "Torna ai messaggi più recenti.",
+  "history": "Stai guardando messaggi meno recenti.",
+  "message": "Scrivi il tuo messaggio",
+  "newMessages": "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}",
+  "participants": {
+    "count": "{count, plural, one {# partecipante} other {# partecipanti}} nella stanza",
+    "title": "Partecipanti"
+  },
+  "ping": "ping {ping}",
+  "room": "Stanza ({roomName})",
+  "send": "Invia",
+  "showNewMessages": "Vedi.",
+  "title": "Chat WebRTC"
+}
