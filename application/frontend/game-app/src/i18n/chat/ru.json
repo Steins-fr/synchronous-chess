@@ -1,0 +1,16 @@
+{
+  "author": "{author}:",
+  "backToLatest": "Вернуться к последним сообщениям.",
+  "history": "Вы просматриваете старые сообщения.",
+  "message": "Введите сообщение",
+  "newMessages": "{count, plural, one {# новое сообщение} few {# новых сообщения} many {# новых сообщений} other {# нового сообщения}}",
+  "participants": {
+    "count": "{count, plural, one {# участник} few {# участника} many {# участников} other {# участника}} в комнате",
+    "title": "Участники"
+  },
+  "ping": "пинг {ping}",
+  "room": "Комната ({roomName})",
+  "send": "Отправить",
+  "showNewMessages": "Показать.",
+  "title": "Чат WebRTC"
+}

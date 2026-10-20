@@ -23,6 +23,8 @@ import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component'
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
 import { TranslatableText } from '@app/types/translatable-text.type';
+import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { scopedKey } from '@app/services/language/scoped-key';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -80,11 +82,11 @@ export class SyncChessGameComponent implements OnDestroy {
         const turnType: TurnType = this.gameSession().game.getTurnType();
         switch (turnType) {
             case TurnType.MOVE_SYNC:
-                return marker('chess.game.turn.sync');
+                return scopedKey(TranslationScope.CHESS, marker('game.turn.sync', undefined, 'chess'));
             case TurnType.MOVE_INTERMEDIATE:
-                return marker('chess.game.turn.intermediate');
+                return scopedKey(TranslationScope.CHESS, marker('game.turn.intermediate', undefined, 'chess'));
             case TurnType.CHOICE_PROMOTION:
-                return marker('chess.game.turn.promotion');
+                return scopedKey(TranslationScope.CHESS, marker('game.turn.promotion', undefined, 'chess'));
             default:
                 return switchExhaustivenessGuard(turnType);
         }
@@ -117,12 +119,16 @@ export class SyncChessGameComponent implements OnDestroy {
 
     public whiteLastMove(): TranslatableText {
         const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
-        return action === null ? { key: marker('chess.game.lastMove.none') } : this.formatLastMove(action.whiteMove);
+        return action === null
+            ? { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.none', undefined, 'chess')) }
+            : this.formatLastMove(action.whiteMove);
     }
 
     public blackLastMove(): TranslatableText {
         const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
-        return action === null ? { key: marker('chess.game.lastMove.none') } : this.formatLastMove(action.blackMove);
+        return action === null
+            ? { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.none', undefined, 'chess')) }
+            : this.formatLastMove(action.blackMove);
     }
 
     public displayBlackInteractions(): boolean {
@@ -136,25 +142,30 @@ export class SyncChessGameComponent implements OnDestroy {
     /** The end of the game, once over. A win picks its sentence by the winner (an ICU select): no color word fits in it */
     public resultText(): TranslatableText | undefined {
         const result: GameResult | null = this.gameSession().game.result();
-        return result === null ? undefined : { key: SyncChessGameComponent.resultKey(result), params: { winner: result.winner } };
+        return result === null
+            ? undefined
+            : { key: scopedKey(TranslationScope.CHESS, SyncChessGameComponent.resultKey(result)), params: { winner: result.winner } };
     }
 
+    // The key of the result in the chess scope, without its scope (scopedKey)
     private static resultKey(result: GameResult): string {
         switch (result.reason) {
             case GameEndReason.CHECKMATE:
-                return marker('chess.game.result.checkmate');
+                return marker('game.result.checkmate', undefined, 'chess');
             case GameEndReason.KING_CAPTURED:
-                return result.winner === PieceColor.NONE ? marker('chess.game.result.kingsCaptured') : marker('chess.game.result.kingCaptured');
+                return result.winner === PieceColor.NONE
+                    ? marker('game.result.kingsCaptured', undefined, 'chess')
+                    : marker('game.result.kingCaptured', undefined, 'chess');
             case GameEndReason.DOUBLE_CHECKMATE:
-                return marker('chess.game.result.doubleCheckmate');
+                return marker('game.result.doubleCheckmate', undefined, 'chess');
             case GameEndReason.STALEMATE:
-                return marker('chess.game.result.stalemate');
+                return marker('game.result.stalemate', undefined, 'chess');
             case GameEndReason.THREEFOLD_REPETITION:
-                return marker('chess.game.result.threefoldRepetition');
+                return marker('game.result.threefoldRepetition', undefined, 'chess');
             case GameEndReason.FIFTY_TURNS:
-                return marker('chess.game.result.fiftyTurns');
+                return marker('game.result.fiftyTurns', undefined, 'chess');
             case GameEndReason.INSUFFICIENT_MATERIAL:
-                return marker('chess.game.result.insufficientMaterial');
+                return marker('game.result.insufficientMaterial', undefined, 'chess');
             default:
                 return switchExhaustivenessGuard(result.reason);
         }
@@ -192,11 +203,11 @@ export class SyncChessGameComponent implements OnDestroy {
 
     private formatLastMove(move: Move | null): TranslatableText {
         if (move === null) {
-            return { key: marker('chess.game.lastMove.passed') };
+            return { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.passed', undefined, 'chess')) };
         }
         const from: string = `${ move.from[0].toUpperCase() }${ move.from[1] }`;
         const to: string = `${ move.to[0].toUpperCase() }${ move.to[1] }`;
 
-        return { key: marker('chess.game.lastMove.move'), params: { from, to } };
+        return { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.move', undefined, 'chess')), params: { from, to } };
     }
 }

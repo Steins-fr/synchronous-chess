@@ -1,0 +1,129 @@
+{
+  "game": {
+    "check": "Şah",
+    "checkmate": "Şah mat",
+    "lastMove": {
+      "label": "Son hamle:",
+      "move": "{from} -> {to}",
+      "none": "yok",
+      "passed": "pas geçti"
+    },
+    "pass": "Pas geç",
+    "played": "oynadı",
+    "promotion": "Terfi",
+    "result": {
+      "checkmate": "Şah mat: {winner, select, w {Beyaz kazandı} other {Siyah kazandı}}",
+      "doubleCheckmate": "Berabere: iki oyuncu da mat oldu",
+      "fiftyTurns": "Berabere: piyon hamlesi ve taş alma olmadan 50 tur",
+      "insufficientMaterial": "Berabere: mat etmeye yetecek taş kalmadı",
+      "kingCaptured": "Şah alındı: {winner, select, w {Beyaz kazandı} other {Siyah kazandı}}",
+      "kingsCaptured": "Berabere: iki şah da alındı",
+      "stalemate": "Berabere: pat, bir oyuncu artık hamle yapamıyor",
+      "threefoldRepetition": "Berabere: aynı pozisyon üç kez tekrarlandı"
+    },
+    "seat": {
+      "black": "Siyah oyuncu:",
+      "free": "Bekleniyor",
+      "leave": "Yeri bırak",
+      "playBlack": "Siyahla oyna",
+      "playWhite": "Beyazla oyna",
+      "white": "Beyaz oyuncu:"
+    },
+    "spectators": "İzleyiciler: {count}",
+    "turn": {
+      "intermediate": "Ara tur",
+      "label": "Tur:",
+      "promotion": "Terfi",
+      "sync": "Eşzamanlı"
+    },
+    "waiting": "bekliyor"
+  },
+  "presentation": {
+    "caption": "Beyaz hamlesini seçti; Siyah kendi hamlesini yapmadan onu göremez.",
+    "intro": "Beyazın üstünlüğü artık yok: her turda her oyuncu, rakibininkini bilmeden hamlesini seçer, sonra iki hamle açıklanır ve birlikte oynanır.",
+    "points": {
+      "intermediateTurn": "Saldırı altındaki bir kareye giden taş, bir ara turda alınabilir.",
+      "kingCapture": "Şah, mat olmadan da doğrudan alınabilir.",
+      "sameSquare": "Aynı kareye giden iki taş birbirini alır ve iki taş yer değiştirebilir."
+    },
+    "rooms": "Şifreyle özel bir oda oluşturun ya da açık odalardan birine katılın. Her katılımcı rengini seçer; diğerleri oyunu izler.",
+    "tagline": "İki oyuncunun aynı anda oynadığı satranç.",
+    "title": "Eşzamanlı satranç"
+  },
+  "rules": {
+    "captures": {
+      "capture": {
+        "text": "… bir taş, bu turda hareket etmemiş bir rakip taşın bulunduğu kareye giderse, o taş alınır. Hareket eden taş boşalan kareye yerleşir.",
+        "title": "Alma"
+      },
+      "clash": {
+        "text": "… iki taş aynı kareye giderse, ikisi de alınır ve tahtadan çıkarılır, <strong>şah da dahil</strong>.",
+        "title": "Çarpışma"
+      },
+      "intro": "Eşzamanlı bir turda…",
+      "swap": {
+        "text": "… bir taş, turdan önce kendisi de hareket eden bir rakip taşın bulunduğu kareye giderse, iki taş da yolları kesişse bile alınmadan hedefine ulaşır.",
+        "title": "Yer değiştirme"
+      },
+      "title": "Hamle ve alma"
+    },
+    "end": {
+      "caption": "Oyunun sonları ve sonuçları",
+      "checkmate": "Bir oyuncunun mat olması",
+      "doubleCheckmate": "İki oyuncunun da mat olması",
+      "draw": "Berabere",
+      "fiftyTurns": "Piyon hamlesi ve taş alma olmadan 50 eşzamanlı tur",
+      "insufficientMaterial": "Mat etmeye yetecek taş yok: yalnız şahlar, tek bir at veya fil, hepsi aynı renk karelerde filler",
+      "kingCaptured": "Rakip bir taşla aynı kareye giderek alınan şah",
+      "opponent": "rakip için",
+      "opponentUnlessBothKings": "rakip için (iki şah da alınırsa berabere)",
+      "result": "Sonuç",
+      "situation": "Durum",
+      "stalemate": "Pat: şah altında olmayan bir oyuncu hiçbir taşını oynatamıyor",
+      "text": "Alınan bir şah oyunu hemen bitirir. Aksi hâlde oyun, eşzamanlı bir turun başında biter.",
+      "threefoldRepetition": "Aynı pozisyon (taşlar ve rok hakları) üçüncü kez oluşuyor",
+      "title": "Oyunun sonu",
+      "win": "Galibiyet"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Oyunun sonu</strong>: şah mat ya da alınan şah; klasik satrancın beraberlikleri geçerlidir.",
+      "intermediateTurns": "<strong>Ara turlar</strong>: saldırı altındaki bir kareye gelen taş hemen alınabilir.",
+      "sameSquare": "<strong>Aynı kare</strong>: aynı kareye giden iki taşın ikisi de alınır, şah da dahil.",
+      "simultaneousMoves": "<strong>Eşzamanlı hamleler</strong>: her oyuncu hamlesini gizlice seçer, sonra iki hamle birlikte oynanır.",
+      "title": "Kısaca"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Oyuna dönüş.</strong> Ardından oyun eşzamanlı bir turla devam eder.",
+      "captures": "<strong>Alma ve karşı alma.</strong> Rakip bu taşı alabilir ya da pas geçebilir. Yalnızca ilgili karelerdeki almalara izin verilir; her alma da karşılık olarak alınabilir, ta ki bir oyuncu artık alamayana ya da almak istemeyene kadar. İki oyuncu da oynayabiliyorsa hamleleri gizlice seçilir ve aynı anda uygulanır.",
+      "oncePerPiece": "<strong>Taş başına bir kez.</strong> Bir taş ara aşamada yalnızca bir kez hareket edebilir. Eşzamanlı turda az önce hareket eden taş da bu aşamada bir kez hareket edebilir.",
+      "title": "Ara turlar",
+      "trigger": "<strong>Başlangıç.</strong> Eşzamanlı bir turdan sonra, hareket eden bir taş turdan önce rakibin zaten saldırdığı (ya da koruduğu) bir kareye geldiyse ve bir rakip taş onu kurallara uygun şekilde alabiliyorsa ara tur oynanır."
+    },
+    "players": {
+      "seats": "İki oyuncu. Odadaki her katılımcı, ev sahibi de dahil, boş yerler arasından rengini seçer. Yerler ilk hamleyle sabitlenir; diğer katılımcılar izleyicidir.",
+      "shortTitle": "Oyuncular",
+      "simultaneousMoves": "İki oyuncu hamlesini aynı anda, diğerinin hamlesini bilmeden yapar. İkisi de seçimini yaptığında iki hamle açıklanır ve aşağıdaki kurallara göre uygulanır.",
+      "title": "Oyuncular ve ilke"
+    },
+    "promotion": {
+      "text": "En az bir oyuncu bir piyonu son yatay sıraya getirirse, ayrı bir tur terfisini seçmesini sağlar. Ardından oyun, oynanan hamlelerden doğan eşzamanlı ya da ara turla devam eder.",
+      "title": "Terfi"
+    },
+    "restrictions": {
+      "castling": "<strong>Rok</strong>: şah altındaki bir şah, şahtan kurtulmak için rok yapamaz. Şah, roku yalnızca o tur için engeller; rok hakkı ancak şah ya da kale hareket ettiğinde kaybedilir.",
+      "check": "<strong>Şah</strong>: eşzamanlı turun başında saldırı altındaki bir şah, hamlelerden önce saldırı altında olmayan bir kareye gitmelidir. Gidemiyorsa şah mattır.",
+      "enPassant": "Bu varyantta <strong>geçerken alma yoktur</strong>.",
+      "kingSquares": "<strong>Şaha yasak kareler</strong>: eşzamanlı turdan önce rakibin saldırdığı bir kareye gidemez; bir karenin boşalacağını öngörüp oraya gitmenin anlamı yoktur.",
+      "pinnedPieces": "<strong>Açmazdaki taşlar</strong>: rakibin pozisyonu değişmemiş sayılarak, hiçbir hamle kendi şahını saldırı altında bırakamaz; açmazdaki bir taş şahının hattından çıkamaz.",
+      "title": "Kısıtlamalar"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky ve Andrey Krasowsky",
+      "classicChess": "Tahta, taşlar, başlangıç konumları ve hareketleri klasik satrançtaki gibidir.",
+      "label": "Özgün kurallar:"
+    },
+    "summary": "Oyunun kuralları",
+    "tableOfContents": "Kuralların içindekiler",
+    "title": "Kurallar"
+  }
+}

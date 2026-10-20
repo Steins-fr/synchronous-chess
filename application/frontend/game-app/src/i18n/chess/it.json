@@ -1,0 +1,129 @@
+{
+  "game": {
+    "check": "Scacco",
+    "checkmate": "Scacco matto",
+    "lastMove": {
+      "label": "Ultima mossa:",
+      "move": "{from} -> {to}",
+      "none": "nessuna",
+      "passed": "ha passato"
+    },
+    "pass": "Passa",
+    "played": "ha giocato",
+    "promotion": "Promozione",
+    "result": {
+      "checkmate": "Scacco matto: {winner, select, w {vince il Bianco} other {vince il Nero}}",
+      "doubleCheckmate": "Patta: scacco matto a entrambi i giocatori",
+      "fiftyTurns": "Patta: 50 turni senza mosse di pedone né catture",
+      "insufficientMaterial": "Patta: non restano pezzi sufficienti per dare matto",
+      "kingCaptured": "Re catturato: {winner, select, w {vince il Bianco} other {vince il Nero}}",
+      "kingsCaptured": "Patta: entrambi i re sono stati catturati",
+      "stalemate": "Patta: stallo, un giocatore non può più muovere",
+      "threefoldRepetition": "Patta: la stessa posizione si è ripetuta tre volte"
+    },
+    "seat": {
+      "black": "Giocatore Nero:",
+      "free": "In attesa",
+      "leave": "Lascia il posto",
+      "playBlack": "Gioca col Nero",
+      "playWhite": "Gioca col Bianco",
+      "white": "Giocatore Bianco:"
+    },
+    "spectators": "Spettatori: {count}",
+    "turn": {
+      "intermediate": "Intermedio",
+      "label": "Turno:",
+      "promotion": "Promozione",
+      "sync": "Sincrono"
+    },
+    "waiting": "in attesa"
+  },
+  "presentation": {
+    "caption": "Il Bianco ha scelto la sua mossa, che il Nero non vede prima di aver giocato la propria.",
+    "intro": "Basta col vantaggio del Bianco: a ogni turno ciascun giocatore sceglie la propria mossa senza conoscere quella dell'avversario, poi le due mosse vengono rivelate e giocate insieme.",
+    "points": {
+      "intermediateTurn": "Un pezzo che si avventura su una casa attaccata può essere catturato in un turno intermedio.",
+      "kingCapture": "Un re può essere catturato direttamente, anche senza scacco matto.",
+      "sameSquare": "Due pezzi che vanno sulla stessa casa si catturano a vicenda, e due pezzi possono scambiarsi di posto."
+    },
+    "rooms": "Crea una stanza, privata con una password, o entra in una delle stanze aperte. Ogni partecipante sceglie il proprio colore; gli altri guardano la partita.",
+    "tagline": "Gli scacchi in cui entrambi i giocatori muovono nello stesso momento.",
+    "title": "Scacchi sincroni"
+  },
+  "rules": {
+    "captures": {
+      "capture": {
+        "text": "… un pezzo va su una casa occupata da un pezzo avversario che non si è mosso in questo turno, quest'ultimo viene catturato. Il pezzo che si è mosso occupa la casa liberata.",
+        "title": "Cattura"
+      },
+      "clash": {
+        "text": "… entrambi i pezzi vanno sulla stessa casa, vengono catturati tutti e due e tolti dalla scacchiera, <strong>re compreso</strong>.",
+        "title": "Scontro"
+      },
+      "intro": "Se, durante un turno sincrono…",
+      "swap": {
+        "text": "… un pezzo va su una casa occupata prima del turno da un pezzo avversario che a sua volta si è mosso, entrambi i pezzi raggiungono la destinazione senza essere catturati, anche se i loro percorsi si incrociano.",
+        "title": "Scambio"
+      },
+      "title": "Movimento e cattura"
+    },
+    "end": {
+      "caption": "Finali della partita e loro risultato",
+      "checkmate": "Scacco matto a un giocatore",
+      "doubleCheckmate": "Scacco matto a entrambi i giocatori",
+      "draw": "Patta",
+      "fiftyTurns": "50 turni sincroni senza mosse di pedone né catture",
+      "insufficientMaterial": "Pezzi insufficienti per dare matto: re soli, un solo cavallo o alfiere, alfieri tutti su case dello stesso colore",
+      "kingCaptured": "Re catturato andando sulla stessa casa di un pezzo avversario",
+      "opponent": "dell'avversario",
+      "opponentUnlessBothKings": "dell'avversario (patta se entrambi i re vengono catturati)",
+      "result": "Risultato",
+      "situation": "Situazione",
+      "stalemate": "Stallo: un giocatore che non è sotto scacco non può muovere alcun pezzo",
+      "text": "Un re catturato pone fine subito alla partita. Altrimenti, la partita termina all'inizio di un turno sincrono.",
+      "threefoldRepetition": "La stessa posizione (pezzi e diritti di arrocco) si ripete per la terza volta",
+      "title": "Fine della partita",
+      "win": "Vittoria"
+    },
+    "inShort": {
+      "endOfGame": "<strong>Fine della partita</strong>: scacco matto o re catturato; valgono le patte degli scacchi classici.",
+      "intermediateTurns": "<strong>Turni intermedi</strong>: un pezzo che arriva su una casa attaccata può essere catturato subito.",
+      "sameSquare": "<strong>Stessa casa</strong>: due pezzi che vanno sulla stessa casa vengono catturati entrambi, re compreso.",
+      "simultaneousMoves": "<strong>Mosse simultanee</strong>: ciascuno sceglie la propria mossa in segreto, poi le due mosse vengono giocate insieme.",
+      "title": "In breve"
+    },
+    "intermediate": {
+      "backToGame": "<strong>Ritorno al gioco.</strong> Il gioco riprende poi con un turno sincrono.",
+      "captures": "<strong>Catture e ricatture.</strong> L'avversario può catturare questo pezzo, oppure passare. Sono ammesse solo le catture sulle case coinvolte; ogni cattura può a sua volta essere ricatturata, finché un giocatore non può più o non vuole più catturare. Se entrambi i giocatori possono giocare, le loro mosse vengono scelte in segreto e applicate simultaneamente.",
+      "oncePerPiece": "<strong>Una volta per pezzo.</strong> Un pezzo può muoversi una sola volta durante la fase intermedia. Il pezzo che si è appena mosso nel turno sincrono può comunque muoversi una volta in essa.",
+      "title": "Turni intermedi",
+      "trigger": "<strong>Avvio.</strong> Dopo un turno sincrono, si gioca un turno intermedio se un pezzo che si è mosso è arrivato su una casa già attaccata (o protetta) dall'avversario prima del turno, e un pezzo avversario può catturarlo regolarmente."
+    },
+    "players": {
+      "seats": "Due giocatori. Ogni partecipante della stanza, host compreso, sceglie il proprio colore tra i posti liberi. I posti sono fissati dalla prima mossa giocata; gli altri partecipanti sono spettatori.",
+      "shortTitle": "Giocatori",
+      "simultaneousMoves": "I due giocatori giocano la loro mossa contemporaneamente, ciascuno senza conoscere quella dell'altro. Quando entrambi hanno scelto, le due mosse vengono rivelate e applicate secondo le regole qui sotto.",
+      "title": "Giocatori e principio"
+    },
+    "promotion": {
+      "text": "Se almeno un giocatore porta un pedone sull'ultima traversa, un turno apposito permette di sceglierne la promozione. Il gioco riprende poi con il turno sincrono o intermedio che risulta dalle mosse giocate.",
+      "title": "Promozione"
+    },
+    "restrictions": {
+      "castling": "<strong>Arrocco</strong>: un re sotto scacco non può arroccare per uscirne. Lo scacco impedisce l'arrocco solo per quel turno; il diritto di arroccare si perde solo quando il re o la torre si sono mossi.",
+      "check": "<strong>Scacco</strong>: un re attaccato all'inizio del turno sincrono deve muoversi su una casa che non sia attaccata prima delle mosse. Se non può, è scacco matto.",
+      "enPassant": "<strong>Niente presa en passant</strong> in questa variante.",
+      "kingSquares": "<strong>Case vietate al re</strong>: non può andare su una casa attaccata dall'avversario prima del turno sincrono; è inutile prevedere che una casa si liberi per andarci.",
+      "pinnedPieces": "<strong>Pezzi inchiodati</strong>: nessuna mossa può lasciare il proprio re sotto attacco, considerando invariata la posizione avversaria; un pezzo inchiodato non può lasciare la linea del proprio re.",
+      "title": "Restrizioni"
+    },
+    "source": {
+      "authors": "Ralf Hansmann, Arnold J. Krasowsky e Andrey Krasowsky",
+      "classicChess": "La scacchiera, i pezzi, la loro posizione iniziale e i loro movimenti restano quelli degli scacchi classici.",
+      "label": "Regole originali:"
+    },
+    "summary": "Regole del gioco",
+    "tableOfContents": "Indice delle regole",
+    "title": "Regole"
+  }
+}

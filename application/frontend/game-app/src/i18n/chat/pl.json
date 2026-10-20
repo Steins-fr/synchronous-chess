@@ -1,0 +1,16 @@
+{
+  "author": "{author}:",
+  "backToLatest": "Wróć do najnowszych wiadomości.",
+  "history": "Przeglądasz starsze wiadomości.",
+  "message": "Wpisz wiadomość",
+  "newMessages": "{count, plural, one {# nowa wiadomość} few {# nowe wiadomości} many {# nowych wiadomości} other {# nowej wiadomości}}",
+  "participants": {
+    "count": "{count, plural, one {# uczestnik} few {# uczestników} many {# uczestników} other {# uczestnika}} w pokoju",
+    "title": "Uczestnicy"
+  },
+  "ping": "ping {ping}",
+  "room": "Pokój ({roomName})",
+  "send": "Wyślij",
+  "showNewMessages": "Pokaż.",
+  "title": "Czat WebRTC"
+}
