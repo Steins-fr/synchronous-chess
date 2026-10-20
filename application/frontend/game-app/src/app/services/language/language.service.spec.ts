@@ -205,18 +205,23 @@ describe('LanguageService', () => {
     });
 
     test('should keep its language when Transloco shows the language picked by itself, a scope failing to load', async () => {
-        // Given: Transloco shows the language of a load succeeding after a failed one
+        // Given: Transloco shows the language of a load succeeding after a failed one, once. Each time, the title would
+        // load the language again, showing it again, without end
         browserLanguages('en-US');
         const service: LanguageService = createService();
         const transloco: TranslocoService = TestBed.inject(TranslocoService);
+        let recovered: boolean = false;
         vi.spyOn(transloco, 'load').mockImplementation((path: string): Observable<Translation> => {
-            if (path === Language.FR) {
-                return defer(() => {
-                    transloco.setActiveLang(Language.FR);
-                    return of({});
-                });
+            if (path !== Language.FR) {
+                return throwError(() => new Error('Chunk not found'));
             }
-            return throwError(() => new Error('Chunk not found'));
+            return defer(() => {
+                if (!recovered) {
+                    recovered = true;
+                    transloco.setActiveLang(Language.FR);
+                }
+                return of({});
+            });
         });
 
         // When
