@@ -3,9 +3,10 @@
  * by PGlite, in memory. Nothing is kept from one process to the next.
  */
 import { useDatabase } from '@database/database';
+import { isAllowedOrigin } from '@helpers/origin.helper';
 import { APIGatewayProxyEvent, APIGatewayProxyEventV2 } from 'aws-lambda';
 import { randomBytes, randomUUID } from 'node:crypto';
-import { createServer, IncomingMessage, Server, ServerResponse } from 'node:http';
+import { createServer, IncomingHttpHeaders, IncomingMessage, Server, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { Duplex } from 'node:stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
@@ -26,6 +27,7 @@ interface Lambdas {
     onConnect: Lambda;
     onDisconnect: Lambda;
     sendMessage: Lambda;
+    ping: Lambda;
     httpApi: HttpLambda;
 }
 
@@ -60,17 +62,16 @@ const MAX_CONNECTION_MS: number = 2 * 60 * 60 * 1000;
 const GOING_AWAY: number = 1001;
 const CONNECTIONS_PREFIX: string = '/@connections/';
 const CONNECTIONS_PATH: RegExp = /^\/@connections\/([^/]+)$/;
-// The game app served locally (npm run serve:local of the game app, and its e2e), of another origin than the API, on
-// localhost or 127.0.0.1 and any port: it reads the HTTP API, like the app of a stage on AWS (cors_configuration of the
-// HTTP API)
-const APP_ORIGIN: RegExp = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-
-/** The CORS headers of a response of the HTTP API: readable by a page of the game app served locally only */
+/**
+ * The CORS headers of a response of the HTTP API: readable by a page of the game app served locally only, like the app
+ * of a stage on AWS (cors_configuration of the HTTP API). Its origins are the ones the lambdas answer, by their rule
+ * (isAllowedOrigin, of the ALLOWED_ORIGINS set by server.ts)
+ */
 function corsHeaders(request: IncomingMessage): Record<string, string> {
     const origin: string | undefined = request.headers.origin;
 
     // Vary: the response depends on the page asking it
-    return origin !== undefined && APP_ORIGIN.test(origin) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : { Vary: 'Origin' };
+    return origin !== undefined && isAllowedOrigin({ origin }) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : { Vary: 'Origin' };
 }
 
 function listen(httpServer: Server, port: number): Promise<number> {
@@ -97,9 +98,10 @@ async function loadLambdas(): Promise<Lambdas> {
     const { handler: onConnect }: { handler: Lambda } = await import('../lambdas/onconnect/app');
     const { handler: onDisconnect }: { handler: Lambda } = await import('../lambdas/ondisconnect/app');
     const { handler: sendMessage }: { handler: Lambda } = await import('../lambdas/sendmessage/app');
+    const { handler: ping }: { handler: Lambda } = await import('../lambdas/ping/app');
     const { handler: httpApi }: { handler: HttpLambda } = await import('../lambdas/httpapi/app');
 
-    return { onConnect, onDisconnect, sendMessage, httpApi };
+    return { onConnect, onDisconnect, sendMessage, ping, httpApi };
 }
 
 let lambdas: Promise<Lambdas> | undefined;
@@ -107,10 +109,11 @@ let lambdas: Promise<Lambdas> | undefined;
 /**
  * Runs a lambda with the event of a websocket route, with only what the lambdas read: no domain name, the
  * lambdas reach the management API through MANAGEMENT_API_ENDPOINT
+ * @param headers the headers of the handshake, given to $connect only, like API Gateway does
  * @returns the status code of the lambda, 500 when it throws
  */
-async function invoke(routeKey: string, lambda: Lambda, connectionId: string, body: string | null = null, sourceIp?: string): Promise<number> {
-    const event = { body, requestContext: { connectionId, routeKey, identity: { sourceIp } } } as unknown as APIGatewayProxyEvent;
+async function invoke(routeKey: string, lambda: Lambda, connectionId: string, body: string | null = null, sourceIp?: string, headers?: IncomingHttpHeaders): Promise<number> {
+    const event = { body, headers, requestContext: { connectionId, routeKey, identity: { sourceIp } } } as unknown as APIGatewayProxyEvent;
 
     try {
         const response: LambdaResponse = await lambda(event);
@@ -185,7 +188,7 @@ interface PendingConnection {
  */
 export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi> {
     lambdas ??= loadLambdas();
-    const { onConnect, onDisconnect, sendMessage, httpApi }: Lambdas = await lambdas;
+    const { onConnect, onDisconnect, sendMessage, ping, httpApi }: Lambdas = await lambdas;
     const idleTimeoutMs: number = options.idleTimeoutMs ?? IDLE_TIMEOUT_MS;
     const maxConnectionMs: number = options.maxConnectionMs ?? MAX_CONNECTION_MS;
     const connections: Map<string, Connection> = new Map<string, Connection>();
@@ -236,14 +239,15 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
     }
 
     /**
-     * A request to the HTTP API, run by its lambda, which answers its routes, and not found to the others: public like
-     * on AWS, so not guarded like PostToConnection. Read by the game app served locally, of another origin: a simple
-     * request, sent without preflight. A preflight is answered not found too, like by PostToConnection, which relies on
-     * it
+     * A request to the HTTP API, run by its lambda, which answers its routes, and not found to the others: reached like
+     * on AWS, so not guarded like PostToConnection, the lambda answering the game app only (ALLOWED_ORIGINS). Read by the
+     * game app served locally, of another origin: a simple request, sent without preflight. A preflight is answered not
+     * found too, like by PostToConnection, which relies on it
      * @param rawQueryString the query string as sent, still encoded, like API Gateway gives it to the lambda
+     * @param requestHeaders the headers of the request, their names in lower case like API Gateway gives them
      */
-    async function invokeHttp(routeKey: string, rawQueryString: string, cors: Record<string, string>, response: ServerResponse): Promise<void> {
-        const event = { routeKey, rawQueryString } as unknown as APIGatewayProxyEventV2;
+    async function invokeHttp(routeKey: string, rawQueryString: string, requestHeaders: IncomingHttpHeaders, cors: Record<string, string>, response: ServerResponse): Promise<void> {
+        const event = { routeKey, rawQueryString, headers: requestHeaders } as unknown as APIGatewayProxyEventV2;
         const { statusCode, headers, body }: Awaited<ReturnType<HttpLambda>> = await httpApi(event);
 
         // Never the query, the search of a visitor, like the access logs of the HTTP API on AWS
@@ -267,12 +271,14 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
             const body: string = (data as Buffer).toString('utf8');
 
             // Selected by `$request.body.message` like API Gateway (see infrastructure/modules/aws-api-gateway-routes).
-            // A ping runs a mock integration without response there: nothing to do
+            // A ping runs its lambda, answered by nothing: no route response there
             const route: unknown = routeOf(body);
 
             if (route === RoomApiRoute.SEND_MESSAGE) {
                 void invoke(RoomApiRoute.SEND_MESSAGE, sendMessage, connectionId, body, sourceIp);
-            } else if (route !== RoomApiRoute.PING) {
+            } else if (route === RoomApiRoute.PING) {
+                void invoke(RoomApiRoute.PING, ping, connectionId, body);
+            } else {
                 // What API Gateway answers to a message matching no route, without $default route
                 console.warn(`No route for the message of ${connectionId}: ${body}`);
                 socket.send(JSON.stringify({ message: 'Forbidden', connectionId, requestId: randomUUID() }));
@@ -293,7 +299,7 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
     /** Like API Gateway, runs $connect once the handshake is valid (checked by ws before), and refuses it with its status code */
     async function verifyConnection(request: IncomingMessage, accept: (accepted: boolean, statusCode: number) => void): Promise<void> {
         const connectionId: string = randomUUID();
-        const statusCode: number = await invoke('$connect', onConnect, connectionId);
+        const statusCode: number = await invoke('$connect', onConnect, connectionId, null, undefined, request.headers);
         const accepted: boolean = statusCode >= 200 && statusCode < 300;
         const pending: PendingConnection = pendingConnections.get(request) as PendingConnection;
 
@@ -322,11 +328,15 @@ export async function startLocalApi(options: LocalApiOptions): Promise<LocalApi>
         const path: string = queryStart === -1 ? url : url.slice(0, queryStart);
         const routeKey: string = `${ request.method } ${ path }`;
         const toConnection: boolean = path.startsWith(CONNECTIONS_PREFIX);
-        // A failure of the HTTP API readable by the app too: a server error, not a response it is denied
-        const cors: Record<string, string> = toConnection ? {} : corsHeaders(request);
+        // A failure of the HTTP API readable by the app too: a server error, not a response it is denied. Without the
+        // allowed origins, a server error as well, not an exception out of the listener stopping the server
+        let cors: Record<string, string> = {};
         const served: Promise<void> = toConnection
             ? postToConnection(request, response)
-            : invokeHttp(routeKey, url.slice(path.length + 1), cors, response);
+            : Promise.resolve().then((): Promise<void> => {
+                cors = corsHeaders(request);
+                return invokeHttp(routeKey, url.slice(path.length + 1), request.headers, cors, response);
+            });
 
         served.catch((e: unknown): void => {
             console.error(`${ routeKey } failed`, e);

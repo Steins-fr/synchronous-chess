@@ -8,6 +8,7 @@ import {
     getAccessLoginUrl,
     getAccessPublicKey,
     getAccessSigningKeyParameter,
+    getAllowedOrigins,
     getDatabaseInstanceIdentifier,
     getDatabaseName,
     getDatabaseResourceArn,
@@ -51,6 +52,7 @@ describe('environment helper', () => {
         ['DATABASE_NAME', getDatabaseName, 'the database of the Aurora cluster'],
         ['DATABASE_INSTANCE_IDENTIFIER', getDatabaseInstanceIdentifier, 'the writer instance of the Aurora cluster'],
         ['SOURCE_HASH_SECRET_PARAMETER', getSourceHashSecretParameter, 'the SSM parameter of the key of the hashes of the IPs'],
+        ['ALLOWED_ORIGINS', getAllowedOrigins, 'the origins of the game app'],
         ['ACCESS_PUBLIC_KEY', getAccessPublicKey, 'the public key of the access cookies'],
         ['ACCESS_KEY_PAIR_ID', getAccessKeyPairId, 'the ID of the public key of the access cookies in CloudFront'],
         ['ACCESS_FRONT_URL', getAccessFrontUrl, 'the URL of the front the access cookies open'],
@@ -59,7 +61,7 @@ describe('environment helper', () => {
         ['ACCESS_LOGIN_URL', getAccessLoginUrl, 'the managed login of Cognito'],
         ['ACCESS_CLIENT_ID', getAccessClientId, 'the app client of the login'],
         ['ACCESS_CALLBACK_URL', getAccessCallbackUrl, 'the callback of the login'],
-    ])('should fail at once without %s in the environment', (variable: string, setting: () => string, purpose: string) => {
+    ])('should fail at once without %s in the environment', (variable: string, setting: () => unknown, purpose: string) => {
         // Given
         vi.stubEnv(variable, undefined);
 
@@ -89,6 +91,25 @@ describe('environment helper', () => {
 
         // When / Then
         expect(getSourceHashSecretParameter()).toEqual('/sc/dev/source-hash-secret');
+    });
+
+    test.each([
+        ['the origins of the game app of the environment', 'https://sc-staging.steins.fr,http://localhost:4200'],
+        ['origins written by hand, with spaces, a slash at the end, upper cases and empty entries', ' https://SC-Staging.steins.fr/, ,HTTP://localhost:4200 ,'],
+    ])('should give %s', (_case: string, value: string) => {
+        // Given
+        vi.stubEnv('ALLOWED_ORIGINS', value);
+
+        // When / Then
+        expect(getAllowedOrigins()).toEqual(['https://sc-staging.steins.fr', 'http://localhost:4200']);
+    });
+
+    test('should fail without any origin of the game app in the environment', () => {
+        // Given
+        vi.stubEnv('ALLOWED_ORIGINS', ' , ');
+
+        // When / Then
+        expect(() => getAllowedOrigins()).toThrow('No ALLOWED_ORIGINS');
     });
 
     test('should give the access of a restricted stage of the environment', () => {

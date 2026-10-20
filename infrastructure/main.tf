@@ -13,6 +13,10 @@ locals {
   api_ws_domain_name   = "sc-ws-${var.stage}.${var.main_domain_name}"
   api_http_domain_name = "sc-api-${var.stage}.${var.main_domain_name}"
   zone_name            = "${var.main_domain_name}."
+  # The pages of the game app: the app of the stage only. The only ones the APIs answer: the CORS of the HTTP API, and
+  # ALLOWED_ORIGINS of the lambdas answering a client first, which refuse the others before any statement wakes the
+  # paused database
+  app_origins = ["https://${local.front_domain_name}"]
 }
 
 data "aws_route53_zone" "site" {
@@ -228,10 +232,11 @@ resource "aws_lambda_invocation" "migrate" {
 module "sc_lambda_onconnect" {
   source = "./modules/aws-lambda-api"
 
-  directory = "websocket-api"
-  name      = "onconnect"
-  role      = module.sc_role_lambda_basic.arn
-  stage     = var.stage
+  directory   = "websocket-api"
+  name        = "onconnect"
+  role        = module.sc_role_lambda_basic.arn
+  stage       = var.stage
+  environment = { ALLOWED_ORIGINS = join(",", local.app_origins) }
 }
 
 module "sc_lambda_ondisconnect" {
@@ -239,6 +244,21 @@ module "sc_lambda_ondisconnect" {
 
   directory   = "websocket-api"
   name        = "ondisconnect"
+  role        = module.sc_role_lambda_database.arn
+  stage       = var.stage
+  timeout     = local.database_lambda_timeout
+  environment = local.database_environment
+  depends_on  = [aws_lambda_invocation.migrate]
+}
+
+# The ping of the host of a room, every 3 minutes during its game: it renews the lease of the room, a statement keeping the
+# database awake, which pauses 5 minutes after the last one (seconds_until_auto_pause of sc_database). The closing of the
+# connection is then always seen by ondisconnect. A host tab left open with its room keeps it awake too, at 0.5 ACU
+module "sc_lambda_ping" {
+  source = "./modules/aws-lambda-api"
+
+  directory   = "websocket-api"
+  name        = "ping"
   role        = module.sc_role_lambda_database.arn
   stage       = var.stage
   timeout     = local.database_lambda_timeout
@@ -317,18 +337,19 @@ module "sc_lambda_httpapi" {
   role        = module.sc_role_lambda_httpapi.arn
   stage       = var.stage
   timeout     = local.database_lambda_timeout
-  environment = local.database_environment
+  environment = merge(local.database_environment, { ALLOWED_ORIGINS = join(",", local.app_origins) })
   depends_on  = [aws_lambda_invocation.migrate]
 }
 
 /**
  * Wake of the database: production only. After 24 hours paused, Aurora puts the cluster into a deeper sleep, whose
- * resume outlasts the retries of the lambdas: the first request fails, the $disconnect of a host included, which no
- * client retries. A rule checks it every 6 hours, and wakes it unless it ran within the 8 last hours (wakedatabase of
+ * resume outlasts the retries of the lambdas: the first request fails, which the game app asks again (the list of the
+ * open rooms, a room created or joined once it answered). During a game, the ping of the host keeps it awake
+ * (sc_lambda_ping). A rule checks it every 6 hours, and wakes it unless it ran within the 8 last hours (wakedatabase of
  * the API): it never pauses for more than 14 hours, 20 when a check fails. Idle, it is woken every 12 hours only, the
  * check after a wake seeing it: 5 minutes at 0.5 ACU each, 0.35 dollar a month at most. Staging, restricted to its owner,
- * and development leave theirs asleep. wake_stages of infrastructure/bootstrap names the same stages: its boundary lets
- * the function read the capacity of the cluster, its deploy role creates the rule
+ * leaves its own asleep. wake_stages of infrastructure/bootstrap names the same stages: its boundary lets the function
+ * read the capacity of the cluster, its deploy role creates the rule
  */
 locals {
   wakes_database = var.stage == "production"
@@ -516,6 +537,8 @@ module "sc_api_gateway_routes" {
   lambda_disconnect_name    = module.sc_lambda_ondisconnect.name
   lambda_sendmessage_arn    = module.sc_lambda_sendmessage.invoke_arn
   lambda_sendmessage_name   = module.sc_lambda_sendmessage.name
+  lambda_ping_arn           = module.sc_lambda_ping.invoke_arn
+  lambda_ping_name          = module.sc_lambda_ping.name
   # Built from the condition, known at plan, never from an output of the lambda: the count of the authorizer depends on it
   connect_authorizer = local.access_restricted ? { invoke_arn = module.sc_lambda_wsauthorizer[0].invoke_arn, function_name = module.sc_lambda_wsauthorizer[0].name } : null
   stage              = var.stage
@@ -559,8 +582,7 @@ module "sc_api_gateway_http" {
   source = "./modules/aws-api-gateway-http"
 
   api_http_name = "sc-http"
-  # The app of the stage, and on the development stage the dev server of the game app (npm run serve:dev)
-  allow_origins = concat(["https://${local.front_domain_name}"], var.stage == "development" ? ["http://localhost:4200"] : [])
+  allow_origins = local.app_origins
   # The access cookies of a restricted stage
   allow_credentials = local.access_restricted
   stage             = var.stage

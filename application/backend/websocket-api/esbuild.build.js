@@ -6,6 +6,8 @@ const { metafile } = await esbuild.build({
         { out: "onconnect", in: "./lambdas/onconnect/app.ts" },
         { out: "ondisconnect", in: "./lambdas/ondisconnect/app.ts" },
         { out: "sendmessage", in: "./lambdas/sendmessage/app.ts" },
+        // The ping of a connection, keeping the database awake during a game
+        { out: "ping", in: "./lambdas/ping/app.ts" },
         // The routes of the HTTP API
         { out: "httpapi", in: "./lambdas/httpapi/app.ts" },
         // A stage restricted to its owner: the login on its HTTP API, the authorizers of its APIs

@@ -1,5 +1,6 @@
+import { GoneException, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import { getDatabase } from '@database/database';
-import { roomPasswordAttempts } from '@database/schema';
+import { connections, roomPasswordAttempts } from '@database/schema';
 import { hashPassword } from '@helpers/password.helper';
 import { epochSeconds } from '@helpers/time.helper';
 import { hashToken } from '@helpers/token.helper';
@@ -21,7 +22,7 @@ import {
     readRoom,
     storeRoom,
 } from '@testing/api-mocks';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import JoinHandler from './join-handler';
 
 describe('JoinHandler', () => {
@@ -51,6 +52,44 @@ describe('JoinHandler', () => {
             { to: HOST_CONNECTION, packet: { type: 'joinRequest', data: { playerName: 'other' } } },
             { to: connection, packet: { id: 7, type: 'joiningRoom', data: { playerName: 'host' } } },
         ]);
+    });
+
+    test('should cancel the join of a player whose connection closed before its answer, telling the host', async () => {
+        // Given
+        const room: Room = aRoom();
+        await storeRoom(room);
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        apiGateway.on(PostToConnectionCommand, { ConnectionId: connection }).rejects(new GoneException({ $metadata: {}, message: 'Gone' }));
+
+        // When
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+
+        // Then: as $disconnect does
+        expect(await readConnections()).toEqual([]);
+        expect((await readRoom('room'))?.queue).toEqual(room.queue);
+        expect(postedPackets(apiGateway)).toEqual([
+            { to: HOST_CONNECTION, packet: { type: 'joinRequest', data: { playerName: 'other' } } },
+            { to: connection, packet: { id: 7, type: 'joiningRoom', data: { playerName: 'host' } } },
+            { to: HOST_CONNECTION, packet: { type: 'joinCancelled', data: { playerName: 'other' } } },
+        ]);
+    });
+
+    test('should cancel the join of a player whose $disconnect ran before it was queued, telling the host', async () => {
+        // Given: $disconnect deleted its connection before the player was queued, finding nothing to undo
+        const room: Room = aRoom();
+        await storeRoom(room);
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        apiGateway.on(PostToConnectionCommand, { ConnectionId: connection }).callsFake(async (): Promise<never> => {
+            await getDatabase().delete(connections);
+            throw new GoneException({ $metadata: {}, message: 'Gone' });
+        });
+
+        // When
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+
+        // Then: the name free again
+        expect((await readRoom('room'))?.queue).toEqual(room.queue);
+        expect(postedPackets(apiGateway).at(-1)).toEqual({ to: HOST_CONNECTION, packet: { type: 'joinCancelled', data: { playerName: 'other' } } });
     });
 
     test.each([

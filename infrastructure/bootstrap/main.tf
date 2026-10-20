@@ -18,10 +18,10 @@ locals {
   # by a rename
   github_repository_id       = "206330696"
   github_repository_owner_id = "36641258"
-  # Every stage caps the roles of its lambdas, development included
-  stages = ["development", "staging", "production"]
+  # Every stage caps the roles of its lambdas
+  stages = ["staging", "production"]
   # The stages the Terraform workflows deploy, and the branches each deploys from, which its GitHub environment also
-  # enforces. Development is deployed locally only, without a deploy role
+  # enforces
   deploy_refs = {
     staging    = "refs/heads/*"
     production = "refs/heads/main"

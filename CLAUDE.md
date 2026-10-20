@@ -30,7 +30,7 @@ Mono-repo, no root package.json — each package is installed and run from its o
   no dependency nor package.json: each package compiles it through its own tsconfig alias
 - `application/shared/sonar-eslint-rules` — the ESLint rules of the SonarCloud quality profile
   (`sonar-way.json`), used by the ESLint configs of both packages, and the script generating them
-- `infrastructure` — Terraform (AWS): the stages, applied by GitHub Actions (development locally), and
+- `infrastructure` — Terraform (AWS): the stages (staging, production), applied by GitHub Actions, and
   `infrastructure/bootstrap`, applied once locally (the GitHub trust, the deploy roles, the boundaries of the lambdas, the
   login of staging)
 - `documentation` — resources and diagrams
@@ -40,9 +40,8 @@ Mono-repo, no root package.json — each package is installed and run from its o
 Frontend, from `application/frontend/game-app`:
 
 ```bash
-npm run serve:local  # dev server, against the local API (see below)
-npm run serve:dev    # dev server, against the development API on AWS
-npm run build        # production build (build:staging / build:dev for other configs)
+npm run serve:local  # dev server, against the local API (see below), as `ng serve`
+npm run build        # production build (build:staging for staging)
 npm test             # Vitest in watch mode
 npm run test:ci      # single run with coverage (what CI runs)
 npm run lint         # ESLint (Angular, template, RxJS and stylistic rules)
@@ -123,8 +122,9 @@ run by the CI.
 - `e2e/test-room.ts` gives each test a room of its own (`room` fixture), `e2e/room-participant.ts` drives a player:
   join, reload, messages, the participants it sees, and `cutConnections()` to close its WebRTC connections as a
   network failure would.
-- A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`. The servers' logs are
-  not shown: start the servers apart to read them.
+- A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`, without the snapshots of
+  the DOM in `bots.e2e.ts` (they run in the page with a user gesture, which activates it). The servers' logs are not
+  shown: start the servers apart to read them.
 - Run one scenario with `npx playwright test -g "<part of its name>"`.
 - Two suites: `npm run e2e:fast` runs the quick scenarios, `npm run e2e:slow` the ones tagged `SLOW` (`@slow`,
   `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing

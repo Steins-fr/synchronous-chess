@@ -38,6 +38,16 @@ variable "lambda_sendmessage_name" {
   description = "Name of the lambda send message"
 }
 
+variable "lambda_ping_arn" {
+  type        = string
+  description = "ARN of the lambda of the ping, keeping the database awake"
+}
+
+variable "lambda_ping_name" {
+  type        = string
+  description = "Name of the lambda of the ping"
+}
+
 variable "connect_authorizer" {
   type = object({
     invoke_arn    = string

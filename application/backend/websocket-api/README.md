@@ -16,9 +16,15 @@ but its storage and secret while nobody plays. A request to the paused cluster w
 seconds (30 or more after a day, see below): the Data API refuses it meanwhile, and the lambdas send it again
 (`shared/database/resume-retry.ts`), 28 seconds at most, the timeout of the lambdas, under the 29 of API Gateway.
 
+During a game, the host pings its socket every 3 minutes (`ping` lambda): the statement renewing the lease of its room
+keeps the cluster awake as long as a room is open, and the closing of its socket is always seen by `$disconnect`. A host
+tab left open with its room keeps it awake as well, at 0.5 ACU. A socket closed while its request waited for the
+cluster, before the request wrote its rows or between them (`$disconnect` then found nothing to undo), is disconnected
+by `sendmessage` once its answer meets a `GoneException`, as `$disconnect` does.
+
 After 24 hours paused, Aurora puts the cluster into a deeper sleep, whose resume outlasts those retries: the first
-request fails, the `$disconnect` of a host included, which no client sends again (its room would stay listed). On
-production, a rule of EventBridge invokes the `wakedatabase` lambda every 6 hours (`infrastructure/main.tf`):
+request fails. The game app asks the list again (`GET /rooms`), and creates or joins a room once the list answered, the cluster
+awake. On production, a rule of EventBridge invokes the `wakedatabase` lambda every 6 hours (`infrastructure/main.tf`):
 
 - It reads the capacity of the writer instance in CloudWatch (`ServerlessDatabaseCapacity`, through
   `DATABASE_INSTANCE_IDENTIFIER`), which leaves the paused cluster asleep.
@@ -29,8 +35,8 @@ production, a rule of EventBridge invokes the `wakedatabase` lambda every 6 hour
   awake by then.
 
 The cluster thus never pauses for more than 14 hours, 20 when a check fails. Idle, it is woken every 12 hours only, the
-check after a wake seeing it, and still pauses 5 minutes after each wake: 0.35 dollar a month at most. Staging and
-development leave theirs asleep.
+check after a wake seeing it, and still pauses 5 minutes after each wake: 0.35 dollar a month at most. Staging leaves
+its own asleep.
 
 The schema is written with [Drizzle](https://orm.drizzle.team) (`shared/database/schema.ts`), the repositories query it
 through its query builder and its relational queries (`shared/repositories`). `getDatabase()` builds the Data API client
@@ -55,15 +61,17 @@ statement sent to it: what the specs on PGlite do not check, the codecs of the D
 (loopback only), and restarts it when a file changes. `local/local-api.ts` emulates API Gateway around the lambdas: the
 websocket routes (`$connect`, `sendmessage`, `ping`, `$disconnect`), the `PostToConnection` endpoint of the management
 API, and the HTTP API: any other request runs the `httpapi` lambda, which answers its routes (`GET /rooms`) and not
-found to the others, preflights included (the app sends simple requests). Readable by the game app served on
-`localhost` or `127.0.0.1`, on any port (`Access-Control-Allow-Origin`), its failures too.
+found to the others, preflights included (the app sends simple requests). The lambdas answer the game app served on
+`localhost` or `127.0.0.1`, port 4200 (`ALLOWED_ORIGINS`), which reads the responses (`Access-Control-Allow-Origin`), its
+failures too: a client of another origin, or without one, is refused (403). A game app served on another port is given
+to `ALLOWED_ORIGINS`: `ALLOWED_ORIGINS=http://localhost:4300 npm run serve:local`.
 The database is [PGlite](https://pglite.dev), PostgreSQL compiled to WASM, in memory, with the migrations of
 `drizzle/`, and the major version of the cluster: the rooms are lost at each restart.
 
 Then serve the game app against it, from `application/frontend/game-app`: `npm run serve:local`.
 
-The websocket lambdas get the IP of the client, as from API Gateway. The events of the HTTP API carry their route key
-and raw query string only.
+The websocket lambdas get the IP of the client, and `$connect` the headers of the handshake, as from API Gateway. The
+events of the HTTP API carry their route key, raw query string and headers only.
 
 Emulated limits: 32 KB per message received (one frame of API Gateway, where a browser sends each message
 in a single frame), 128 KB per message posted to a connection, and the connections closed (1001) after
@@ -81,19 +89,29 @@ API Gateway closes any connection after 2 hours, and the host keeps its connecti
 players. Each page sends a secret token of its own with `create` and `join` (the room keeps its SHA-256 by player,
 `tokenHashes`, kept once the player is removed: the same page joins a private room again without its password). Every 100 minutes, or as soon as its socket closes, the host opens a new
 socket and sends it `reconnect` with its name and token: the room moves
-to the new connection, then the former socket closes. When the host connection closes before, `$disconnect` keeps
-the room for 10 minutes (`expiresAt`): joins are refused (`Host disconnected`) until the
+to the new connection, then the former socket closes. The room lives 20 minutes without a ping of its host
+(`leaseUntil`, renewed by each ping and by `reconnect`): more than a ping and the 10 minutes API Gateway waits before
+closing a silent connection, the lease ends only the room of a host gone without `$disconnect`. When the host connection
+closes, `$disconnect` keeps the room for 10 minutes (`expiresAt`): joins are refused (`Host disconnected`) until the
 host reconnects, and the room keeps its name until it expires. Meanwhile, a player of the room can take it over with
 `reconnect` and its own name and token: the room moves to its connection, and it becomes the host (`Host connected`
 while the former host connection is still open). The host declares again a player whose connection it restored:
 `playerAdd` of a player already in the room changes nothing.
 
-## Health
+## Wakes by a person only
 
-`GET /health` of the HTTP API answers `{ "status": "up" }` once the database answers a statement reading nothing
-(`HealthRepository`): a paused cluster resumes meanwhile, 28 seconds at most, the timeout of the lambda, else 500. The
-pages using the APIs wait for it before they show (the health guard of the game app, which asks it again until it
-answers): their requests then reach a database awake, the websocket API sharing it.
+A statement wakes the paused cluster, so the APIs run none for a bot:
+
+- The pages of the game app reach the APIs once a person is on them (`VisitorPresenceService` of the game app): a bot
+  rendering a page, a crawler running JavaScript, asks nothing. No health check: the first request of a person wakes
+  the cluster, and the page tells the server boots while it waits, asking again a list failed by the server (a deep
+  sleep outlasting the retries of the lambda).
+- `onconnect` refuses (403) the handshake of a client without the Origin of the game app (`ALLOWED_ORIGINS`, set by
+  `infrastructure/main.tf`): the connection never opens, and no `$disconnect` follows, whose statement would wake the
+  cluster. The `httpapi` lambda refuses such a request (403) before any statement. A browser always sends its Origin
+  with a handshake and with a request to another origin: only a client forging it still wakes the cluster.
+- API Gateway answers the routes it does not declare (404) without a lambda, and `GET /rooms` refuses its invalid
+  parameters (400) before any statement.
 
 ## Open rooms
 
@@ -103,12 +121,14 @@ the websocket serves the connectivity of the rooms only, a page opens it to crea
 expire, 30 at most, `hasMore` when more exist (a `RoomsResponse` in JSON). The full rooms and the ones waiting for their host (`hostConnected: false`) are listed too: a participant whose page reloaded
 joins its room again from the list, the join retried until the room has its place back or its host reconnected.
 
-- Without `search`, the 30 most recent rooms, the last created first. A page asks it again every 15 seconds.
+- Without `search`, the 30 most recent rooms, the last created first. A page asks it once a person is on it, then
+  again every 15 seconds.
 - With a `search`, the rooms whose name holds it, whatever the case: the names starting with it first, then by name,
   the name equal to the search first. A page asks a search once typed, or on demand, not every 15 seconds.
 - An unknown or missing game, a search longer than 64 characters or holding the NUL character, or a `game` or `search`
   given more than once: 400 `{ "message": "Payload not valid" }`, API Gateway joining the values of a repeated parameter
   with commas. The other parameters are ignored. A failure of the database: 500, without its message.
+- A request without the Origin of the game app: 403 `{ "message": "Forbidden" }`, before any statement.
 
 A query reads 31 rooms at most, the last one telling more exist, with the count of their players. A private room is
 listed by `isPrivate`, never the hash of its password. The indexes of the `rooms` table:
@@ -117,9 +137,9 @@ listed by `isPrivate`, never the hash of its password. The indexes of the `rooms
 |---|---|---|
 | `rooms_game_created_at` | `game`, `created_at` (the ISO date of the creation, sorted as a text) | the most recent rooms |
 | `rooms_name_key_trgm` | `name_key`, the name in lower case (`search.helper`), by trigram (`pg_trgm`) | a search |
-| `rooms_expires_at` | `expires_at`, of the rooms waiting for their host | the cleanup of the expired rooms |
+| `rooms_expiry` | `coalesce(expires_at, lease_until)`: the end of the wait for the host, else of the lease | the cleanup of the expired rooms |
 
-The list refreshed every 15 seconds keeps the cluster awake while a page shows it.
+The list refreshed every 15 seconds keeps the cluster awake while a page shows it to a person.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
 searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones.

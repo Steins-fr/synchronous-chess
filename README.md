@@ -47,13 +47,13 @@ The code the lambdas share, in `shared/`, bundled into each lambda by esbuild:
 
 #### API Lambdas
 
-The API is composed of 3 lambdas for managing websocket connection, disconnection and messages, a 4th serving the routes of the HTTP API, a 5th applying the migrations of the database on deploy, and, on production, one keeping the database out of its deep sleep. The websocket serves the connectivity of the rooms only (create, join, reconnect, the players, the WebRTC signals and the notifications of the room), everything else goes through HTTPS. The disconnection, message and HTTP API lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
+The API is composed of 4 lambdas for managing websocket connection, disconnection, messages and pings, a 5th serving the routes of the HTTP API, a 6th applying the migrations of the database on deploy, and, on production, one keeping the database out of its deep sleep. The websocket serves the connectivity of the rooms only (create, join, reconnect, the players, the WebRTC signals and the notifications of the room), everything else goes through HTTPS. The disconnection, message, ping and HTTP API lambdas use the services and the *PostgreSQL database* (Aurora Serverless v2, through its Data API).
 
-**onconnect** - Handle and log new websocket opened connection.
+**onconnect** - Open the websocket connections of the pages of the app only (their Origin): API Gateway refuses the others, without `$disconnect`, whose statement would wake the paused database.
 
 **ondisconnect** - Handle websocket disconnection. It will remove a player from a room queue, or let the room wait 10 minutes for its host to reconnect if the host was disconnected.
 
-**ping** - A route with a mock integration, no lambda: the clients send `{"message":"ping"}` every 5 minutes on an open socket, as API Gateway closes a connection without message for 10 minutes.
+**ping** - The host of a room sends `{"message":"ping"}` every 3 minutes on its open socket, as API Gateway closes a connection without message for 10 minutes. Its lambda renews the lease of the room, which ends 20 minutes without ping: a statement, so the database, which pauses 5 minutes after the last one, stays awake during a game, the disconnection of the host always seen. Answered by nothing.
 
 **sendmessage** - Handle all the websocket exchanges separated in host and peer roles. Available messages:
  - **create** - Create a new room if the room name is available (or its room expired), with a secret token of the host;
@@ -65,9 +65,8 @@ The API is composed of 3 lambdas for managing websocket connection, disconnectio
  - **join** - Ask to join a room and add the player in the room queue, with a secret token of the player;
  - **signal to host** - only peer - Send the RTC signal to the room host. The peer have to be in the waiting queue.
 
-**httpapi** - Behind the HTTP API, a handler per route, selected by its method and path. Available routes:
- - **`GET /rooms?game=<game>&search=<text>`** - The open rooms of a game, without connection: the most recent first, or the ones whose name holds the search.
- - **`GET /health`** - The API is up, once its database answers (a paused cluster resumed): the pages of the app wait for it before they show.
+**httpapi** - Behind the HTTP API, a handler per route, selected by its method and path, answering the pages of the app only (their Origin). Available routes:
+ - **`GET /rooms?game=<game>&search=<text>`** - The open rooms of a game, without connection: the most recent first, or the ones whose name holds the search. A page asks them once a person is on it, never for a bot rendering it.
 
 **wakedatabase** - Production only, invoked every 6 hours by EventBridge: wakes the database, unless it ran within the 8 last hours (its capacity in CloudWatch). After 24 hours paused, Aurora puts it into a deeper sleep, whose resume outlasts the retries of the other lambdas.
 
@@ -105,6 +104,7 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 - created_at, name_key: The date of its creation and its name in lower case, to list and search the rooms;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.
+- lease_until: While the host is connected, in epoch seconds: the room no longer exists after it, unless a ping of the host renews it.
 
 Deleted with their room:
 - room_players: The players currently in the room, in the order they joined;
@@ -159,7 +159,7 @@ workstation never write the same state at once.
 
 #### Terraform plan vars
 
-- stage: Stage name: `production` or `staging` from the CI, `development` locally;
+- stage: Stage name: `production` or `staging`;
 - main_domain_name: Domain name principal. As example, 'steins.fr'
 - access_public_key: The public key of the access cookies of staging, `ACCESS_PUBLIC_KEY` of its GitHub environment:
   required on staging, refused on the other stages, which stay public ([Access to staging](#access-to-staging)).
@@ -170,7 +170,7 @@ The app will be deployed by adding automatically sub-domains, which its environm
 - backend: sc-ws-{stage}.{main_domain_name}, the websocket API;
 - backend: sc-api-{stage}.{main_domain_name}, the HTTP API, a domain of its own: API Gateway does not map a websocket
   API and an HTTP API to the same domain. Readable by the pages of its stage only (CORS), with their cookies on staging
-  (its access cookies), and by `http://localhost:4200` on the development stage, for `npm run serve:dev` of the game app.
+  (its access cookies).
 
 The lambdas and the app are built before the plan: `npm run build` in `application/backend/websocket-api`, and
 `npm run build -- --configuration=<stage>` in `application/frontend/game-app` (`dist/game-app/browser`).
@@ -206,7 +206,7 @@ After the first apply of a stage:
 - the next plan replaces the deployment of the WebSocket API once: the routes and integrations read back empty
   attributes the state did not hold yet, which change the hash of the deployment. Apply it, then a plan shows no change.
 
-**Locally**, for `development`, or any stage with the admin profile:
+**Locally**, for any stage, with the admin profile:
 
 ```bash
 aws sso login --profile admin && export AWS_PROFILE=admin

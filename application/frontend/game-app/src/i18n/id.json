@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Menyalakan server…",
-    "bootingDelay": "Server dan basis datanya tidur saat tidak ada yang bermain: membangunkannya butuh waktu hingga sekitar tiga puluh detik.",
-    "connecting": "Menghubungkan ke server…",
-    "loadingPage": "Memuat halaman…"
-  },
   "app": {
     "language": {
       "pick": "Pilih bahasa"
     },
+    "loadingPage": "Memuat halaman…",
     "nav": {
       "chat": "Obrolan",
       "chess": "Catur serentak",
@@ -46,6 +41,10 @@
     "title": "Pilih permainan"
   },
   "rooms": {
+    "booting": {
+      "delay": "Server dan basis datanya tidur saat tidak ada yang bermain: membangunkannya butuh waktu hingga sekitar tiga puluh detik.",
+      "title": "Menyalakan server…"
+    },
     "create": {
       "intro": "Pemain lain akan menemukannya di daftar ruang terbuka: dengan kata sandi, ruang ini privat.",
       "submit": "Buat",
@@ -115,6 +114,7 @@
         "label": "Cari ruang",
         "maxLength": "Pencarian paling banyak {maxLength, plural, other {# karakter}}"
       },
+      "show": "Tampilkan ruang terbuka",
       "title": "Ruang terbuka"
     }
   }

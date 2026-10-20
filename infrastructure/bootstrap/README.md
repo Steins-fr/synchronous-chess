@@ -1,8 +1,7 @@
 # Bootstrap
 
 What the stages share, and what the Terraform workflows cannot create for themselves, since they assume a role it
-creates. Applied by hand with an admin profile, once, before any stage (development included), and again after each
-change.
+creates. Applied by hand with an admin profile, once, before any stage, and again after each change.
 
 - **The trust of AWS in GitHub Actions**: the OIDC provider of `token.actions.githubusercontent.com`.
 - **A deploy role per stage the workflows deploy**: `sc-github-deploy-staging` and `sc-github-deploy-production`.
@@ -10,8 +9,7 @@ change.
     environment of its stage.
   - Its trust checks the environment, the branch, and the IDs of the repository and of its owner. Staging deploys
     from any branch, production from `main` only.
-  - Each reaches the resources of its stage only (`modules/stage-deploy-role/deploy-policy.tf`). Development is
-    deployed locally, without a deploy role.
+  - Each reaches the resources of its stage only (`modules/stage-deploy-role/deploy-policy.tf`).
   - Staging, restricted to its owner (`restricted_stages`), gets a fourth policy, `access`: the read of its login
     (Cognito), the key group of its signed cookies and the authorizers of its APIs. Production gets none of it.
   - Production, which wakes its database on a schedule (`wake_stages`), gets another policy, `wake`: the rule of

@@ -6,6 +6,8 @@ import { provideTranslocoMissingHandler, Translation, TranslocoTestingModule } f
 import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
 import { Language } from '@app/services/language/enums/language.enum';
 import { TranslationPath } from '@app/services/language/translation.loader';
+import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
+import { VisitorPresenceMock } from '@testing/visitor-presence.mock';
 import { ThrowingMissingHandler } from '@testing/throwing-missing-handler';
 import enTranslation from './i18n/en.json';
 import frTranslation from './i18n/fr.json';
@@ -97,6 +99,8 @@ const testProviders: (Provider | EnvironmentProviders)[] = [
     provideTranslocoMessageformat(),
     // A key missing from the translation fails its spec
     provideTranslocoMissingHandler(ThrowingMissingHandler),
+    // A person on the pages, acting on them: the pages reach the APIs at once
+    { provide: VisitorPresenceService, useFactory: (): VisitorPresenceMock => new VisitorPresenceMock() },
 ];
 
 export default testProviders;

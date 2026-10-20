@@ -65,6 +65,32 @@ describe('RoomSocketApi', () => {
         expect(console.error).toHaveBeenCalledWith('Received payload is not a packet', { notAPacket: true });
     });
 
+    test('should tell a request awaits its response, its socket opening included, until answered or refused', async () => {
+        // Given
+        expect(api.waiting()).toBe(false);
+
+        // When
+        const created = api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' });
+
+        // Then
+        expect(api.waiting()).toBe(true);
+
+        // When
+        const { response: joined, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+        socket.receive({ id: id - 1, type: 'created', data: { roomName: 'room' } });
+        await created;
+
+        // Then: the other one still awaited
+        expect(api.waiting()).toBe(true);
+
+        // When
+        socket.receive({ id, type: 'error', data: { message: 'Room not found' } });
+        await expect(joined).rejects.toThrow('Room not found');
+
+        // Then
+        expect(api.waiting()).toBe(false);
+    });
+
     test('send should reject on error response', async () => {
         // Given
         const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' }));
@@ -211,6 +237,33 @@ describe('RoomSocketApi', () => {
 
         // Then
         expect(socket.close).toHaveBeenCalledTimes(1);
+    });
+
+    test('should no longer tell a request awaits its response once closed, nor once it times out after', async () => {
+        // Given
+        vi.useFakeTimers();
+        await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'peer' }));
+
+        // When
+        api.close();
+
+        // Then
+        expect(api.waiting()).toBe(false);
+
+        // When: another request, then the one before the closing times out
+        await vi.advanceTimersByTimeAsync(10_000);
+        const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }));
+        await vi.advanceTimersByTimeAsync(20_000);
+
+        // Then
+        expect(api.waiting()).toBe(true);
+
+        // When
+        socket.receive({ id, type: 'players', data: { players: [] } });
+        await response;
+
+        // Then
+        expect(api.waiting()).toBe(false);
     });
 
     test('close should stop the pending requests and close the socket', async () => {
