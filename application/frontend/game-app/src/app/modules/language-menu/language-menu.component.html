@@ -1,6 +1,11 @@
-<button [attr.aria-label]="'app.language.pick' | transloco" [matMenuTriggerFor]="languageMenu"
+<button [attr.aria-busy]="loading()" [attr.aria-label]="'app.language.pick' | transloco" [matMenuTriggerFor]="languageMenu"
     [title]="'app.language.pick' | transloco" id="language-button" mat-icon-button type="button">
     <mat-icon>translate</mat-icon>
+    @if (loading()) {
+    <span class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <mat-spinner [diameter]="36" [strokeWidth]="3" />
+    </span>
+    }
 </button>
 <mat-menu #languageMenu="matMenu">
     @for (language of languages; track language.code) {

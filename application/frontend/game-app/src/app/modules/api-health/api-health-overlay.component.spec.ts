@@ -1,6 +1,7 @@
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Navigation, Router } from '@angular/router';
+import { LOADER_DELAY } from '@app/helpers/signal.helper';
 import { ApiHealthState } from '@app/services/api-health/api-health-state.enum';
 import { ApiHealthService } from '@app/services/api-health/api-health.service';
 import { TestHelper } from '@testing/test.helper';
@@ -48,14 +49,14 @@ describe('ApiHealthOverlayComponent', () => {
     test('should show nothing while a page waits for the APIs a short time', async () => {
         // When
         state.set(ApiHealthState.CHECKING);
-        await wait(ApiHealthOverlayComponent.SHOW_DELAY - 1);
+        await wait(LOADER_DELAY - 1);
 
         // Then
         expect(overlay()).toBeNull();
 
         // When
         state.set(ApiHealthState.IDLE);
-        await wait(ApiHealthOverlayComponent.SHOW_DELAY);
+        await wait(LOADER_DELAY);
 
         // Then
         expect(overlay()).toBeNull();
@@ -64,7 +65,7 @@ describe('ApiHealthOverlayComponent', () => {
     test('should tell it connects to the server, then that the server boots once long', async () => {
         // When
         state.set(ApiHealthState.CHECKING);
-        await wait(ApiHealthOverlayComponent.SHOW_DELAY);
+        await wait(LOADER_DELAY);
 
         // Then
         expect(overlay()?.querySelector('mat-spinner')).not.toBeNull();
@@ -88,7 +89,7 @@ describe('ApiHealthOverlayComponent', () => {
 
         // When
         state.set(ApiHealthState.IDLE);
-        await wait(ApiHealthOverlayComponent.SHOW_DELAY);
+        await wait(LOADER_DELAY);
 
         // Then
         expect(overlay()?.querySelector('mat-spinner')).not.toBeNull();
@@ -106,7 +107,7 @@ describe('ApiHealthOverlayComponent', () => {
     test('should show nothing while a page loads without waiting for the APIs', async () => {
         // When
         navigation.set(TestHelper.cast<Navigation>({}));
-        await wait(ApiHealthOverlayComponent.SHOW_DELAY);
+        await wait(LOADER_DELAY);
 
         // Then
         expect(overlay()).toBeNull();

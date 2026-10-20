@@ -1,7 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Translation, TranslocoService } from '@jsverse/transloco';
+import { LOADER_DELAY } from '@app/helpers/signal.helper';
 import { Language } from '@app/services/language/enums/language.enum';
 import { LanguageService } from '@app/services/language/language.service';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { Subject } from 'rxjs';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { LanguageMenuComponent } from './language-menu.component';
 
 describe('LanguageMenuComponent', () => {
@@ -25,6 +28,8 @@ describe('LanguageMenuComponent', () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
+        vi.restoreAllMocks();
         localStorage.clear();
         document.documentElement.removeAttribute('lang');
     });
@@ -57,5 +62,34 @@ describe('LanguageMenuComponent', () => {
         // Then
         expect(TestBed.inject(LanguageService).language()).toBe(Language.FR);
         expect(menuButton().getAttribute('aria-label')).toBe('Choisir la langue');
+    });
+
+    test('should turn a ring around its icon while the language picked loads long', async () => {
+        // Given
+        const loaded = new Subject<Translation>();
+        vi.spyOn(TestBed.inject(TranslocoService), 'load').mockReturnValue(loaded);
+        const items: HTMLButtonElement[] = await openMenu();
+        vi.useFakeTimers();
+
+        // When
+        items[1].click();
+        fixture.detectChanges();
+        await vi.advanceTimersByTimeAsync(LOADER_DELAY);
+        fixture.detectChanges();
+
+        // Then
+        expect(menuButton().querySelector('mat-spinner')).not.toBeNull();
+        expect(menuButton().getAttribute('aria-busy')).toBe('true');
+
+        // When
+        loaded.next({});
+        loaded.complete();
+        await vi.advanceTimersByTimeAsync(0);
+        fixture.detectChanges();
+
+        // Then
+        expect(menuButton().querySelector('mat-spinner')).toBeNull();
+        expect(menuButton().getAttribute('aria-busy')).toBe('false');
+        expect(TestBed.inject(LanguageService).language()).toBe(Language.FR);
     });
 });
