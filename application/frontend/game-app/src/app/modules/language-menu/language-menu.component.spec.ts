@@ -78,7 +78,7 @@ describe('LanguageMenuComponent', () => {
         fixture.detectChanges();
 
         // Then
-        expect(menuButton().querySelector('mat-spinner')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
         expect(menuButton().getAttribute('aria-busy')).toBe('true');
 
         // When
@@ -88,7 +88,7 @@ describe('LanguageMenuComponent', () => {
         fixture.detectChanges();
 
         // Then
-        expect(menuButton().querySelector('mat-spinner')).toBeNull();
+        expect(fixture.nativeElement.querySelector('mat-spinner')).toBeNull();
         expect(menuButton().getAttribute('aria-busy')).toBe('false');
         expect(TestBed.inject(LanguageService).language()).toBe(Language.FR);
     });
