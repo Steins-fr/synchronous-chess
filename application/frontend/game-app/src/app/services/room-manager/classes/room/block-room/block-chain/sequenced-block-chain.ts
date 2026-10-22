@@ -73,8 +73,8 @@ export class SequencedBlockChain {
     private syncingSince?: number;
     /** The new sequencers collecting the blocks, answered once this participant follows them: the index they collect from */
     private readonly handoverRequests: Map<string, number> = new Map();
-    /** The participants asked for blocks, until their last response */
-    private readonly awaitingBlocksFrom: Set<string> = new Set();
+    /** The participants asked for blocks, with the index asked from, until their last response */
+    private readonly awaitingBlocksFrom: Map<string, number> = new Map();
     /** The entries submitted while syncing, ordered once synced */
     private readonly queuedEntries: ChainEntry[] = [];
     /** The entries checked once the key of their author is received */
@@ -370,10 +370,11 @@ export class SequencedBlockChain {
             return;
         }
 
-        this.awaitingBlocksFrom.add(participantName);
+        const from: number = this.blockChain.getLatestBlock().index + 1;
+        this.awaitingBlocksFrom.set(participantName, from);
         this.participants.send(participantName, {
             type: BlockChainMessageType.GET_BLOCKS_REQUEST,
-            payload: { from: this.blockChain.getLatestBlock().index + 1, handover },
+            payload: { from, handover },
             origin: MessageOriginType.BLOCK_ROOM_SERVICE,
             chain: this.name,
         });
@@ -397,8 +398,10 @@ export class SequencedBlockChain {
     }
 
     private async onGetBlocksResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_RESPONSE>): Promise<void> {
+        const from: number | undefined = this.awaitingBlocksFrom.get(message.from);
+
         // A participant can not push blocks without being asked
-        if (!this.awaitingBlocksFrom.has(message.from)) {
+        if (from === undefined) {
             return;
         }
 
@@ -421,8 +424,9 @@ export class SequencedBlockChain {
             }
         }
 
-        // A page is as long as its blocks fit: the next one may follow, until an empty one
-        if (message.payload.length > 0) {
+        // A page is as long as its blocks fit: the next one may follow, until an empty one. A page not reaching the index
+        // asked from is not the one asked for, asking again would bring it again
+        if ((message.payload.at(-1)?.index ?? -1) >= from) {
             this.requestBlocks(message.from);
         }
 
@@ -607,7 +611,7 @@ export class SequencedBlockChain {
             return;
         }
 
-        TimedLogger.warn(`Participants not following ${ this.participants.local.name } on the ${ this.name } chain, it stops waiting for their blocks`, [...this.awaitingBlocksFrom]);
+        TimedLogger.warn(`Participants not following ${ this.participants.local.name } on the ${ this.name } chain, it stops waiting for their blocks`, [...this.awaitingBlocksFrom.keys()]);
         this.awaitingBlocksFrom.clear();
         await this.finishSyncIfDone();
     }

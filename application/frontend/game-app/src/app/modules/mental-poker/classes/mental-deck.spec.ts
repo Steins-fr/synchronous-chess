@@ -368,7 +368,6 @@ describe('MentalDeck', () => {
         // When
         hub.send({ from: 'a', type: MentalDeckMessageType.SHUFFLE, payload: { deck: 'game:2', cards: [] } });
         hub.send({ from: 'a', type: MentalDeckMessageType.SHUFFLE, payload: TestHelper.cast<DeckStepMessage>(null) });
-        hub.send({ from: 'a', type: MentalDeckMessageType.DISCLOSE, payload: { deck: ID, shuffleKey: '1', cardKeys: [] } });
 
         // Then
         expect(hub.reports).toEqual([]);
@@ -395,6 +394,24 @@ describe('MentalDeck', () => {
         // Then its first key is final
         expect(opened.get(0)).toEqual(a.cards().get(0));
         expect(hub.reports).toEqual([]);
+    });
+
+    test('should take the disclosures given before the game of the participant asks for them, its game being late', async () => {
+        // Given
+        const [a, b, c] = table();
+        await disclose([a, b]);
+
+        // When
+        const verification: DeckVerification = await c.disclose();
+
+        // Then
+        expect(verification).toEqual(DeckVerification.FAIR);
+        expect(c.cards().size).toEqual(SIZE);
+    });
+
+    test('should refuse a deck not played by 2 different players at least', () => {
+        expect(() => page('a').deck({ id: ID, size: SIZE, players: ['a', 'a'], cipher })).toThrow('A deck is played by 2 different players at least, not a, a');
+        expect(() => page('b').deck({ id: ID, size: SIZE, players: ['b'], cipher })).toThrow('A deck is played by 2 different players at least, not b');
     });
 
     test('should give a deck the messages received before the game creates it', async () => {
@@ -478,6 +495,27 @@ describe('MentalDeck', () => {
             expect(a.cards()).toEqual(cardsOfA);
             expect(await disclose([a, b, c])).toEqual([DeckVerification.FAIR, DeckVerification.FAIR, DeckVerification.FAIR]);
             expect(hub.reports).toEqual([]);
+        });
+
+        test('should neither shuffle nor tell its secrets lost after a reload of a deck checked, its messages waiting for the game', async () => {
+            // Given a deck checked, its secrets removed
+            table();
+            await disclose();
+            const sent: number = hub.delivered.length;
+
+            // When a reloads, the chain coming back before its game creates the deck
+            tables.get('a')?.destroy();
+            hub.close(rooms.get('a') as Room<MentalDeckPayloads>);
+            const late: MentalDeckTable = page('a');
+            hub.replay(rooms.get('a') as Room<MentalDeckPayloads>);
+            const a: MentalDeck = late.deck({ id: ID, size: SIZE, players: ['a', 'b'], cipher });
+
+            // Then
+            expect(a.phase()).toEqual(DeckPhase.READY);
+            await vi.waitFor(() => expect(a.verification()).toEqual(DeckVerification.FAIR));
+            expect(a.cards().size).toEqual(SIZE);
+            expect(hub.delivered).toHaveLength(sent);
+            expect(TimedLogger.warn).not.toHaveBeenCalled();
         });
 
         test('should read its cards again after a reload, without sending anything again', async () => {

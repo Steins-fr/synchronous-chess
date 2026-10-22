@@ -29,9 +29,8 @@ export class MentalDeckTable {
             throw new Error(`The deck ${ options.id } exists already`);
         }
 
-        const deck = new MentalDeck(this.room, options);
+        const deck = new MentalDeck(this.room, options, this.waiting.get(options.id));
         this.decks.set(options.id, deck);
-        this.waiting.get(options.id)?.forEach((message: MentalDeckMessage) => deck.receive(message));
         this.waiting.delete(options.id);
         return deck;
     }

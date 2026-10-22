@@ -40,7 +40,7 @@ interface WatchedEntry {
 interface ChainInternals {
     blockChain: Chain;
     syncing: boolean;
-    awaitingBlocksFrom: Set<string>;
+    awaitingBlocksFrom: Map<string, number>;
     handoverRequests: Map<string, number>;
     queuedEntries: ChainEntry[];
     entriesWaitingForKey: Map<string, ChainEntry[]>;
@@ -535,14 +535,14 @@ describe('SequencedBlockChain', () => {
             // Given
             const node: Node = createNode('b');
             const blocks: Block[] = await createBlocks(node, 2, 'b', remoteKeys);
-            node.internals.awaitingBlocksFrom.add('b');
+            node.internals.awaitingBlocksFrom.set('b', 1);
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, blocks));
 
             // Then
             expect(sent(node.players['b'])).toEqual([expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 3 } })]);
-            expect(node.internals.awaitingBlocksFrom.has('b')).toEqual(true);
+            expect(node.internals.awaitingBlocksFrom.get('b')).toEqual(3);
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
@@ -552,12 +552,27 @@ describe('SequencedBlockChain', () => {
             expect(node.internals.awaitingBlocksFrom.has('b')).toEqual(false);
         });
 
+        test('should not ask again a participant answering with blocks before the index asked from', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const [block1] = await createBlocks(node, 1, 'b', remoteKeys);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
+            node.internals.awaitingBlocksFrom.set('b', 2);
+
+            // When
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1]));
+
+            // Then
+            expect(sentTypes(node.players['b'])).not.toContain(BlockChainMessageType.GET_BLOCKS_REQUEST);
+            expect(node.internals.awaitingBlocksFrom.size).toEqual(0);
+        });
+
         test('should skip the blocks it has already, as when several participants answer a new sequencer', async () => {
             // Given a block received, then a response bringing it again with the next one
             const node: Node = createNode('b');
             const [block1, block2] = await createBlocks(node, 2, 'b', remoteKeys);
             await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
-            node.internals.awaitingBlocksFrom.add('b');
+            node.internals.awaitingBlocksFrom.set('b', 1);
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1, block2]));
@@ -577,7 +592,7 @@ describe('SequencedBlockChain', () => {
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1]));
-            node.internals.awaitingBlocksFrom.add('b');
+            node.internals.awaitingBlocksFrom.set('b', 1);
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1, tamperedBlock2]));
 
             // Then
@@ -591,11 +606,11 @@ describe('SequencedBlockChain', () => {
             const node: Node = createNode('b');
             const forgedBlock: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys), 'b', otherKeys);
             const blockOfUnknownSequencer: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys), 'gone', otherKeys);
-            node.internals.awaitingBlocksFrom.add('c');
+            node.internals.awaitingBlocksFrom.set('c', 1);
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [forgedBlock], 'c'));
-            node.internals.awaitingBlocksFrom.add('c');
+            node.internals.awaitingBlocksFrom.set('c', 1);
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [blockOfUnknownSequencer], 'c'));
 
             // Then the block of a sequencer whose keys are unknown is trusted on the hash chain
@@ -791,7 +806,7 @@ describe('SequencedBlockChain', () => {
             node.chain.changeSequencer('a');
             await node.internals.queue;
             node.chain.tick(0);
-            expect(node.internals.awaitingBlocksFrom).toEqual(new Set(['b']));
+            expect([...node.internals.awaitingBlocksFrom.keys()]).toEqual(['b']);
 
             // When b answers before the collection is stopped
             node.chain.handle(received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
@@ -863,7 +878,7 @@ describe('SequencedBlockChain', () => {
         const node: Node = createNode();
         await node.chain.transmitMessage('move', 'e4');
         node.internals.syncing = true;
-        node.internals.awaitingBlocksFrom.add('b');
+        node.internals.awaitingBlocksFrom.set('b', 1);
         node.internals.handoverRequests.set('c', 1);
         node.internals.queuedEntries.push(await createEntry('b', remoteKeys));
         node.internals.entriesWaitingForKey.set('c', []);

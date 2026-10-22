@@ -19,6 +19,10 @@ export class CryptoHelper {
      * @param bound greater than 0
      */
     public static randomBigInt(bound: bigint): bigint {
+        if (bound <= 0n) {
+            throw new Error(`No integer from 0 to ${ bound } excluded`);
+        }
+
         const bits: number = bound.toString(2).length;
         const bytes = new Uint8Array(Math.ceil(bits / 8));
         let value: bigint;

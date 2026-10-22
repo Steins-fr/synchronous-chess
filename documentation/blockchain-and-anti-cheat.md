@@ -164,8 +164,8 @@ leaves the same cheated blocks out of it, so that the game and the chat stay the
 A participant missing blocks asks for them with `GET_BLOCKS_REQUEST { from }`, the index of its next
 block. The response carries the blocks that fit in **64 000 characters of JSON**, at least one: a data
 channel message holds 256 KiB in Chromium, a character taking up to 3 bytes, and the blocks of a card
-game carry decks of several kilobytes. A response holding blocks is followed by a request for the next
-page, until an empty one.
+game carry decks of several kilobytes. A response reaching the index asked from is followed by a request
+for the next page, until an empty one: a response of blocks before it is not the page asked for.
 
 A participant catches up:
 

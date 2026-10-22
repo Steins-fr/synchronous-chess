@@ -96,7 +96,11 @@ export class MentalDeck {
     private actAgain: boolean = false;
     private destroyed: boolean = false;
 
-    public constructor(private readonly room: Room<MentalDeckPayloads>, options: Readonly<MentalDeckOptions>) {
+    /**
+     * @param received the messages of the deck received before the game created it, in the order of the chain: they apply
+     * before the deck acts, a reloaded page finding its steps in them
+     */
+    public constructor(private readonly room: Room<MentalDeckPayloads>, options: Readonly<MentalDeckOptions>, received: ReadonlyArray<MentalDeckMessage> = []) {
         this.id = options.id;
         this.cipher = options.cipher ?? new SraCipher();
         this.localName = room.localPlayer.name;
@@ -104,6 +108,7 @@ export class MentalDeck {
         this.state = new MentalDeckState(options.size, options.players, this.cipher);
         this.verified = new Promise<DeckVerification>((resolve) => this.resolveVerified = resolve);
         this.cardOfValue = new Map(Array.from({ length: options.size }, (_, card: number) => [this.cipher.encode(card), card]));
+        received.forEach((message: MentalDeckMessage) => this.apply(message));
         this.changed();
     }
 
@@ -155,10 +160,13 @@ export class MentalDeck {
 
     /** The messages of the deck from every participant, the local one included, in the order of the chain */
     public receive(message: MentalDeckMessage): void {
-        if (this.destroyed) {
-            return;
+        if (!this.destroyed) {
+            this.apply(message);
+            this.changed();
         }
+    }
 
+    private apply(message: MentalDeckMessage): void {
         const cheat: DeckCheat | undefined = this.state.apply(message);
 
         if (cheat) {
@@ -168,8 +176,6 @@ export class MentalDeck {
         if (message.from === this.localName) {
             this.checkOwnSteps();
         }
-
-        this.changed();
     }
 
     /** Tells the state of the chain, then acts on it */

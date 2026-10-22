@@ -63,6 +63,7 @@ describe('CryptoHelper', () => {
             expect(result >= 0n && result < bound).toEqual(true);
         }
         expect(CryptoHelper.randomBigInt(1n)).toEqual(0n);
+        expect(() => CryptoHelper.randomBigInt(0n)).toThrow('No integer from 0 to 0 excluded');
     });
 
     test('randomHex should give random bytes as hexadecimal', () => {

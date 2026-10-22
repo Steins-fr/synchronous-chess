@@ -61,6 +61,9 @@ export class MentalDeckState {
         public readonly players: ReadonlyArray<string>,
         private readonly cipher: SraCipher,
     ) {
+        if (new Set(players).size !== players.length || players.length < 2) {
+            throw new Error(`A deck is played by 2 different players at least, not ${ players.join(', ') }`);
+        }
     }
 
     public get phase(): DeckPhase {
@@ -262,8 +265,9 @@ export class MentalDeckState {
             : undefined;
     }
 
+    /** The disclosure of a player, whether the game asked for it yet or not: its messages may apply after it */
     private applyDisclosure(message: MentalDeckMessage & { type: MentalDeckMessageType.DISCLOSE }): DeckCheat | undefined {
-        if (this.phase !== DeckPhase.READY || !this.disclosureRequested || this.disclosures.has(message.from)) {
+        if (this.phase !== DeckPhase.READY || this.disclosures.has(message.from)) {
             return undefined;
         }
 

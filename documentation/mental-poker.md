@@ -85,7 +85,8 @@ const verification = await deck.disclose();
   the game asking for it applies, in the order of the chain. The game of a participant may apply its
   messages later than the deck applies its own, awaiting a deck meanwhile (the recipient decrypting its
   cards, a reloaded page replaying the chain): a key given before the game of a participant asks for it
-  is kept, and the messages of a deck not created yet wait in the table for it.
+  is kept, as a disclosure, and the messages of a deck not created yet wait in the table for it: they
+  apply before the new deck acts, a reloaded page finding its own steps in them.
 - **What the game may rely on.** `phase`, `waitingFor` and the promises are the same for every
   participant: the game may act on them. `cards` is what the local participant reads: the interface
   shows it, the local player decides with it, the rules of the game never depend on it. The promise of
@@ -113,8 +114,8 @@ of their deck.
 | `MP_disclose` | `{ deck, shuffleKey, cardKeys }` | each player | the game asked for the disclosure |
 
 The first step of a player is final: a step out of its turn is ignored, as the one a reloaded page
-sends again. The first key of a player for a card is final too, whether the game asked for it yet or
-not. The keys are taken once the deck is locked only.
+sends again. The first key of a player for a card is final too, as its first disclosure, whether the
+game asked for them yet or not. The keys and the disclosures are taken once the deck is locked only.
 
 ## Reloading the page
 
