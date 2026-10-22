@@ -120,9 +120,25 @@ export class Chain {
         throw new Error('Unexpected chain index');
     }
 
-    /** At most `max` blocks from an index, none for an index out of the chain */
-    public blocksFrom(index: number, max: number): ReadonlyArray<Block> {
-        return this.hasIndex(index) ? this.chain.slice(index, index + max) : [];
+    /**
+     * The blocks from an index, as many as fit in a length of JSON, none for an index out of the chain
+     * @param maxLength the length of their JSON, a first block longer than it is given alone
+     */
+    public blocksFrom(index: number, maxLength: number): ReadonlyArray<Block> {
+        const blocks: Block[] = [];
+        let length: number = 0;
+
+        for (let next = index; this.hasIndex(next); next++) {
+            length += JSON.stringify(this.chain[next]).length;
+
+            if (blocks.length > 0 && length > maxLength) {
+                break;
+            }
+
+            blocks.push(this.chain[next]);
+        }
+
+        return blocks;
     }
 
     public reset(): void {

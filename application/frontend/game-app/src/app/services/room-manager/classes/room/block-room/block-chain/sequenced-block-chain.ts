@@ -53,8 +53,11 @@ interface WatchedEntry {
  * participants: a block the former sequencer sent to some of them only is kept, none is rolled back.
  */
 export class SequencedBlockChain {
-    /** For a response to fit in a data channel message */
-    private static readonly MAX_BLOCKS_PER_RESPONSE: number = 50;
+    /**
+     * The length of the JSON of the blocks of a response, for it to fit in a data channel message (256 KiB in Chromium),
+     * a character taking up to 3 bytes: the blocks of a card game carry a deck, of several kilobytes
+     */
+    private static readonly MAX_RESPONSE_LENGTH: number = 64_000;
     /** Bounds the memory taken by the entries of an author whose key never comes */
     private static readonly MAX_ENTRIES_WAITING_FOR_KEY: number = 32;
     /** An entry not ordered within this delay, while the sequencer orders other ones, is reported */
@@ -70,8 +73,8 @@ export class SequencedBlockChain {
     private syncingSince?: number;
     /** The new sequencers collecting the blocks, answered once this participant follows them: the index they collect from */
     private readonly handoverRequests: Map<string, number> = new Map();
-    /** The participants asked for blocks, until their last response */
-    private readonly awaitingBlocksFrom: Set<string> = new Set();
+    /** The participants asked for blocks, with the index asked from, until their last response */
+    private readonly awaitingBlocksFrom: Map<string, number> = new Map();
     /** The entries submitted while syncing, ordered once synced */
     private readonly queuedEntries: ChainEntry[] = [];
     /** The entries checked once the key of their author is received */
@@ -367,10 +370,11 @@ export class SequencedBlockChain {
             return;
         }
 
-        this.awaitingBlocksFrom.add(participantName);
+        const from: number = this.blockChain.getLatestBlock().index + 1;
+        this.awaitingBlocksFrom.set(participantName, from);
         this.participants.send(participantName, {
             type: BlockChainMessageType.GET_BLOCKS_REQUEST,
-            payload: { from: this.blockChain.getLatestBlock().index + 1, handover },
+            payload: { from, handover },
             origin: MessageOriginType.BLOCK_ROOM_SERVICE,
             chain: this.name,
         });
@@ -389,13 +393,15 @@ export class SequencedBlockChain {
     }
 
     private sendBlocks(participantName: string, from: number): void {
-        const blocks: ReadonlyArray<Block> = this.blockChain.blocksFrom(from, SequencedBlockChain.MAX_BLOCKS_PER_RESPONSE);
+        const blocks: ReadonlyArray<Block> = this.blockChain.blocksFrom(from, SequencedBlockChain.MAX_RESPONSE_LENGTH);
         this.participants.send(participantName, { type: BlockChainMessageType.GET_BLOCKS_RESPONSE, payload: blocks, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: this.name });
     }
 
     private async onGetBlocksResponse(message: ReceivedBlockChainMessage<BlockChainMessageType.GET_BLOCKS_RESPONSE>): Promise<void> {
+        const from: number | undefined = this.awaitingBlocksFrom.get(message.from);
+
         // A participant can not push blocks without being asked
-        if (!this.awaitingBlocksFrom.has(message.from)) {
+        if (from === undefined) {
             return;
         }
 
@@ -418,7 +424,9 @@ export class SequencedBlockChain {
             }
         }
 
-        if (message.payload.length === SequencedBlockChain.MAX_BLOCKS_PER_RESPONSE) {
+        // A page is as long as its blocks fit: the next one may follow, until an empty one. A page not reaching the index
+        // asked from is not the one asked for, asking again would bring it again
+        if ((message.payload.at(-1)?.index ?? -1) >= from) {
             this.requestBlocks(message.from);
         }
 
@@ -603,7 +611,7 @@ export class SequencedBlockChain {
             return;
         }
 
-        TimedLogger.warn(`Participants not following ${ this.participants.local.name } on the ${ this.name } chain, it stops waiting for their blocks`, [...this.awaitingBlocksFrom]);
+        TimedLogger.warn(`Participants not following ${ this.participants.local.name } on the ${ this.name } chain, it stops waiting for their blocks`, [...this.awaitingBlocksFrom.keys()]);
         this.awaitingBlocksFrom.clear();
         await this.finishSyncIfDone();
     }

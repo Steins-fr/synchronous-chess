@@ -14,6 +14,29 @@ export class CryptoHelper {
         return Array.from(bytes, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
     }
 
+    /**
+     * A random integer from 0 to an excluded bound, with no bias: the draws beyond the bound are drawn again
+     * @param bound greater than 0
+     */
+    public static randomBigInt(bound: bigint): bigint {
+        if (bound <= 0n) {
+            throw new Error(`No integer from 0 to ${ bound } excluded`);
+        }
+
+        const bits: number = bound.toString(2).length;
+        const bytes = new Uint8Array(Math.ceil(bits / 8));
+        let value: bigint;
+
+        do {
+            crypto.getRandomValues(bytes);
+            // The bits above the ones of the bound would make most draws exceed it
+            bytes[0] &= 0xff >> (bytes.length * 8 - bits);
+            value = BigInt(`0x${ CryptoHelper.toHex(bytes) }`);
+        } while (value >= bound);
+
+        return value;
+    }
+
     public static randomNumber(min: number, max: number): number {
         // Use cryptographically secure random number generator
         const array = new Uint32Array(1);

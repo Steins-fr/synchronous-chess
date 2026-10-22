@@ -166,18 +166,20 @@ describe('Chain', () => {
         expect(chain.hasEntry('entry')).toEqual(false);
     });
 
-    test('blocksFrom should give at most a number of blocks from an index', async () => {
+    test('blocksFrom should give the blocks from an index fitting in a length of JSON', async () => {
         // Given
         const chain: Chain = new Chain(chainName);
         const block1: Block = await createNextBlock(chain.getLatestBlock(), createEntry(data, '1'));
         chain.append(block1);
         const block2: Block = await createNextBlock(block1, createEntry(data, '2'));
         chain.append(block2);
+        const length: number = JSON.stringify(block1).length;
 
         // When / Then
-        expect(chain.blocksFrom(1, 50)).toEqual([block1, block2]);
-        expect(chain.blocksFrom(0, 2)).toEqual([chain.getBlock(0), block1]);
-        expect(chain.blocksFrom(3, 50)).toEqual([]);
-        expect(chain.blocksFrom(-1, 50)).toEqual([]);
+        expect(chain.blocksFrom(1, 64_000)).toEqual([block1, block2]);
+        expect(chain.blocksFrom(0, JSON.stringify(chain.getBlock(0)).length + length)).toEqual([chain.getBlock(0), block1]);
+        expect(chain.blocksFrom(1, 1)).toEqual([block1]);
+        expect(chain.blocksFrom(3, 64_000)).toEqual([]);
+        expect(chain.blocksFrom(-1, 64_000)).toEqual([]);
     });
 });

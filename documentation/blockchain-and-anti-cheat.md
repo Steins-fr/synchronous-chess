@@ -17,6 +17,7 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 - [Watching the sequencer](#watching-the-sequencer)
 - [Changing the sequencer](#changing-the-sequencer)
 - [Hidden moves: commit then reveal](#hidden-moves-commit-then-reveal)
+- [Hidden cards: mental poker](#hidden-cards-mental-poker)
 - [Anti-cheat](#anti-cheat)
 - [Messages](#messages)
 - [Trust model and limits](#trust-model-and-limits)
@@ -62,6 +63,7 @@ flowchart LR
 | `AntiCheat` | `anti-cheat/anti-cheat.ts` | Collects the cheat reports into flags, names the accusers of a sequencer |
 | `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
 | `SealedTurnStore` | `modules/chess/classes/game-sessions` | Keeps the hidden moves across the reloads of the page |
+| `MentalDeck` | `modules/mental-poker/classes` | Shuffles, deals and opens a deck no participant sees, checks it at the end of the game (see [Mental poker](mental-poker.md)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
 message is delivered to every participant, its sender included, once its block is added to the chain
@@ -160,8 +162,10 @@ leaves the same cheated blocks out of it, so that the game and the chat stay the
 ## Catching up
 
 A participant missing blocks asks for them with `GET_BLOCKS_REQUEST { from }`, the index of its next
-block. The response carries at most **50 blocks**, to fit in a data channel message; a full page is
-followed by a request for the next one.
+block. The response carries the blocks that fit in **64 000 characters of JSON**, at least one: a data
+channel message holds 256 KiB in Chromium, a character taking up to 3 bytes, and the blocks of a card
+game carry decks of several kilobytes. A response reaching the index asked from is followed by a request
+for the next page, until an empty one: a response of blocks before it is not the page asked for.
 
 A participant catches up:
 
@@ -296,6 +300,15 @@ reaches its turn, then revealed as usual. The page does not know whether its rev
 already, so it may reveal it twice: the other participants ignore a reveal matching the commitment of
 a turn its player already played. Without session storage (blocked site data), the action is lost.
 
+## Hidden cards: mental poker
+
+A card game needs more than a hidden move: a hand stays hidden for a whole round, and no participant
+can deal, the players and the sequencer included. `MentalDeck` (`modules/mental-poker`) runs the
+mental poker of Shamir, Rivest and Adleman over the chain of its game: each player encrypts and
+shuffles the deck, then puts a key of its own on each card; a card is dealt by asking the keys of every
+player but its recipient, and opened by asking all of them. Once the game is over, the players disclose
+all their keys and every participant checks the deck. See [Mental poker](mental-poker.md).
+
 ## Anti-cheat
 
 The participants report the cheats they detect with an `anti_cheat` message to all the others, outside
@@ -314,6 +327,8 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
 | `illegalMove` | A revealed move is against the rules | the player | yes |
 | `invalidReveal` | A revealed move does not match its commitment, or its turn | the player | yes |
+| `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
+| `invalidCardKey` | A key is malformed, does not give the card to its recipient (with two players), or is not the one disclosed at the end of the game | the player | a malformed key |
 
 The reasons **against the sequencer** count to take the ordering away from it: only reports from
 connected participants other than the sequencer count, and more than half of them must have reported
@@ -349,7 +364,7 @@ report (`modules/room-layout/cheat-notifications.ts`).
 | `block_room_service` | `submitEntry` | `ChainEntry` | a participant → everyone |
 | `block_room_service` | `newBlock` | `Block` | the sequencer → everyone |
 | `block_room_service` | `getBlocksRequest` | `{ from, handover? }` | a participant → the one it catches up with, a new sequencer → each participant |
-| `block_room_service` | `getBlocksResponse` | `Block[]` (at most 50) | → the requester |
+| `block_room_service` | `getBlocksResponse` | `Block[]` (64 000 characters of JSON at most, one block at least) | → the requester |
 | `block_room_service` | `chainHead` | `{ index, hash, sequencer, sequencerSignature }` | a participant → everyone, every 2 seconds |
 | `anti_cheat` | `cheatReport` | `CheatReport` | a participant → everyone |
 | `anti_cheat` | `sequencerState` | `{ sequencer, handovers, distrusted }` | a participant → each participant whose key it receives |
@@ -413,6 +428,8 @@ this.roomManagerService.buildBlockRoom<ChatPayloads & ChessPayloads>(
 
 - **Cheats of the application**: report a delivered message the application finds cheated with
   `room.reportCheat(message, reason)`, as the chess session does for the illegal moves.
+- **Card game**: route the messages of its decks to the chain of the game with
+  `mentalDeckBlockChains(chain)`, merged with the routing of the game (see [Mental poker](mental-poker.md)).
 
 To simulate a slow network while debugging, add `?latency=<ms>` to the URL: the sequencer delays the
 broadcast of its blocks.
