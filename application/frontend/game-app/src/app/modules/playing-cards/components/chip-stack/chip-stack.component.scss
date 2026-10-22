@@ -1,9 +1,9 @@
-// A chip placed drops on its pile, once the chips moved to the stack reached it
+// A chip placed drops on its pile, once the chips moved to the stack reached it: not the change of a stack paying out
 .chip-placed {
     animation: chip-placed var(--app-motion-medium) ease-out var(--app-motion-slow) backwards;
 }
 
-:host(.flying) .chip-placed {
+:host(.still) .chip-placed {
     animation: none;
 }
 

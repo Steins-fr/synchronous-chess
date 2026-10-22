@@ -10,9 +10,9 @@
         [acting]="toAct() === top"
         [canTake]="canTake(top)"
         (take)="takeSeat(top)" />
-    <app-card-hand class="table-hand [--deal-from-y:6rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
+    <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
     @if (categories()[top]; as current) {
-    <p class="hand-category">{{ current.key | transloco: current.params }}</p>
+    <p class="table-line">{{ current.key | transloco: current.params }}</p>
     }
 
     <div #cloth class="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-app-felt text-app-on-color">
@@ -26,7 +26,7 @@
             <app-card-deck [count]="session().deckCount()" [shuffling]="shuffling()" />
             <div class="flex flex-col items-center gap-1">
                 <app-chip-stack #potStack class="pot" [amount]="potChips()" />
-                <span class="text-xl font-bold">{{ t('pot', { pot: potChips() }) }}</span>
+                <span class="text-xl font-bold">{{ t('pot', { pot: pot() }) }}</span>
                 @if (hand(); as current) {
                 <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match.rules.hands }) }}</span>
                 }
@@ -47,10 +47,10 @@
     </div>
 
     @if (categories()[bottom]; as current) {
-    <p class="hand-category">{{ current.key | transloco: current.params }}</p>
+    <p class="table-line">{{ current.key | transloco: current.params }}</p>
     }
     <app-card-hand
-        class="table-hand [--deal-from-y:-6rem]"
+        class="table-hand [--deal-from-y:-8.5rem]"
         [class.opacity-50]="losing(bottom)"
         [cards]="hands()[bottom]"
         [selectable]="exchanging()"
@@ -70,7 +70,7 @@
         (leave)="leaveSeat()" />
 
     @if (status(); as current) {
-    <p class="m-0 text-center font-medium" role="status">{{ current.key | transloco: current.params }}</p>
+    <p class="table-line" role="status">{{ current.key | transloco: current.params }}</p>
     }
 
     <div class="flex flex-wrap items-center justify-center gap-2">
@@ -140,6 +140,7 @@
         [style.top.px]="flight.from.y"
         [style.--flight-x.px]="flight.to.x - flight.from.x"
         [style.--flight-y.px]="flight.to.y - flight.from.y"
-        (animationend)="land(flight.id, $event)" />
+        (animationend)="land(flight.id, $event)"
+        (animationcancel)="land(flight.id, $event)" />
     }
 </section>

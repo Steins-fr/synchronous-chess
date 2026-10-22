@@ -19,16 +19,18 @@ describe('ChipStackComponent', () => {
         expect(chips().map((chip: HTMLElement) => chip.style.getPropertyValue('--chip-level'))).toEqual(['0', '0', '0', '1', '0', '1', '2', '3']);
         expect(chips()[1].classList).toContain('bg-app-chip-25');
         expect(fixture.nativeElement.getAttribute('aria-hidden')).toEqual('true');
-        expect(fixture.nativeElement.classList).not.toContain('flying');
+        // The chips shown at first stay still
+        expect(fixture.nativeElement.classList).toContain('still');
     });
 
     test('should not drop the chips moving from a stack to another one', async () => {
         // When
         fixture.componentRef.setInput('placed', false);
+        fixture.componentRef.setInput('amount', 200);
         await fixture.whenStable();
 
         // Then
-        expect(fixture.nativeElement.classList).toContain('flying');
+        expect(fixture.nativeElement.classList).toContain('still');
     });
 
     test('should keep the chips of a pile keeping them', async () => {
@@ -39,8 +41,16 @@ describe('ChipStackComponent', () => {
         fixture.componentRef.setInput('amount', 105);
         await fixture.whenStable();
 
-        // Then
+        // Then: the chips of the change show at once
         expect(chips().map((chip: HTMLElement) => chip.dataset['value'])).toEqual(['100', '5']);
         expect(chips()[0]).toBe(hundred);
+        expect(fixture.nativeElement.classList).toContain('still');
+
+        // When: the stack grows
+        fixture.componentRef.setInput('amount', 106);
+        await fixture.whenStable();
+
+        // Then: the chips joining it drop on it
+        expect(fixture.nativeElement.classList).not.toContain('still');
     });
 });

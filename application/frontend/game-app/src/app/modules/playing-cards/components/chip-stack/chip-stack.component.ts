@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, input, Signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, linkedSignal, Signal } from '@angular/core';
 import { CHIP_VALUES, ChipValue, chipsOf } from '@app/modules/playing-cards/types/chip';
 
 /** A chip of a stack, in the pile of its value */
@@ -23,14 +23,14 @@ const CHIP_COLORS: Readonly<Record<ChipValue, string>> = {
 /**
  * An amount as piles of chips, the fewest chips making it, a pile for each value. Decorative: the page writes the amount.
  *
- * A chip joining the stack drops on its pile once the chips the page moves to it reached it, a chip leaving it fades
- * out: the page shows the chips moved from a stack to another one, as the stacks make the change.
+ * A chip joining a growing stack drops on its pile once the chips the page moves to it reached it, a chip leaving it
+ * fades out: the page shows the chips moved from a stack to another one. The change a stack makes shows at once.
  */
 @Component({
     selector: 'app-chip-stack',
     templateUrl: './chip-stack.component.html',
     styleUrl: './chip-stack.component.scss',
-    host: { 'class': 'inline-grid items-end pt-[0.6rem]', 'aria-hidden': 'true', '[class.flying]': '!placed()' },
+    host: { 'class': 'inline-grid items-end pt-[0.6rem]', 'aria-hidden': 'true', '[class.still]': '!placed() || !growing()' },
 })
 export class ChipStackComponent {
     public readonly amount = input.required<number>();
@@ -38,6 +38,12 @@ export class ChipStackComponent {
     public readonly placed = input<boolean>(true);
     /** Where the stack lies in the page, for the chips moved to it */
     public readonly element: HTMLElement = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+
+    /** Whether the amount grew: the chips joining a stack paying out are its change */
+    private readonly growing: Signal<boolean> = linkedSignal<number, boolean>({
+        source: this.amount,
+        computation: (amount: number, previous?: { source: number }): boolean => previous !== undefined && amount > previous.source,
+    });
 
     protected readonly chips: Signal<ReadonlyArray<Readonly<StackedChip>>> = computed((): ReadonlyArray<Readonly<StackedChip>> => {
         const chips: ReadonlyArray<ChipValue> = chipsOf(this.amount());

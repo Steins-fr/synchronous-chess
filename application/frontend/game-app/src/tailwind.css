@@ -41,8 +41,8 @@
     @apply flex items-center justify-center gap-2 min-h-8 text-sm font-bold;
 }
 
-/* The kind of a hand of the poker shown, beside its cards */
-@utility hand-category {
+/* A line of text of the poker table: what it waits for, the kind of a hand shown */
+@utility table-line {
     @apply m-0 text-center font-medium;
 }
 

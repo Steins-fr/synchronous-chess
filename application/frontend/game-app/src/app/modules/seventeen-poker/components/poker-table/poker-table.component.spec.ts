@@ -167,6 +167,14 @@ describe('PokerTableComponent', () => {
         // Given
         await dealt();
 
+        // When: the flights of the antes are cancelled
+        expect(flights()).toEqual([['5'], ['5']]);
+        element().querySelectorAll('.chip-flight').forEach((flight: Element) => flight.dispatchEvent(new Event('animationcancel')));
+        await fixture.whenStable();
+
+        // Then
+        expect(flights()).toEqual([]);
+
         // Then
         expect(button('Bet 1')).toBeDefined();
         expect(button('Bet less')?.disabled).toBe(true);
@@ -225,7 +233,7 @@ describe('PokerTableComponent', () => {
         expect(chipValues('#bet-bottom')).toEqual(['5', '1']);
         expect(chipValues('#bet-top')).toEqual([]);
         expect(chipValues('#seat-bottom')).toEqual(['100', '25', '5', '5', '1', '1', '1', '1']);
-        expect(element().textContent).toContain('Pot 10');
+        expect(element().textContent).toContain('Pot 16');
         expect(chipValues('.pot')).toEqual(['5', '5']);
         expect(element().querySelector('#seat-top .seat')?.classList).toContain('acting');
 
@@ -274,7 +282,7 @@ describe('PokerTableComponent', () => {
 
         // Then: both hands are shown, the best one outlined, the other one dimmed
         const outcome = bob.match.hand()?.outcome;
-        const categories: string[] = Array.from(element().querySelectorAll('.hand-category'), (line: Element) => line.textContent?.trim() as string);
+        const categories: string[] = Array.from(element().querySelectorAll('.table-line:not([role])'), (line: Element) => line.textContent?.trim() as string);
         expect(categories).toHaveLength(2);
         expect(text('#hand-outcome')).toEqual(text('details li'));
         expect(chipValues('.pot')).toEqual([]);
@@ -314,7 +322,7 @@ describe('PokerTableComponent', () => {
         expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#seat-bottom')).toEqual('alice142 chips');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
-        expect(element().querySelectorAll('.hand-category')).toHaveLength(0);
+        expect(element().querySelectorAll('.table-line:not([role])')).toHaveLength(0);
         // The bets joined the pot, the pot flying to Bob
         expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5', '5', '1', '1']]);
     });

@@ -119,7 +119,7 @@ export class PokerTableComponent implements OnDestroy {
     });
 
     /** The chips of the hand in progress, none once shared out */
-    private readonly pot: Signal<number> = computed((): number => {
+    protected readonly pot: Signal<number> = computed((): number => {
         const hand: PokerHand | null = this.hand();
         return hand === null || hand.phase === HandPhase.OVER ? 0 : hand.pot;
     });
@@ -285,7 +285,7 @@ export class PokerTableComponent implements OnDestroy {
         return this.winner() === otherSeat(seat);
     }
 
-    /** Chips flown to their place: the animation of a chip inside them ends earlier */
+    /** Chips flown to their place, or whose flight was cancelled: the animation of a chip inside them ends earlier */
     protected land(id: number, event: Event): void {
         if (event.target === event.currentTarget) {
             this._flights.update((flights: ReadonlyArray<Readonly<ChipFlight>>) => flights.filter((flight: Readonly<ChipFlight>) => flight.id !== id));
@@ -393,6 +393,10 @@ export class PokerTableComponent implements OnDestroy {
 
     /** The chips moved fly between the places of the table, as it shows them now */
     private flightsOf(transfers: ReadonlyArray<Readonly<ChipTransfer>>): ReadonlyArray<Readonly<ChipFlight>> {
+        if (transfers.length === 0) {
+            return [];
+        }
+
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
         return transfers.map(({ from, to, amount }): ChipFlight => ({ id: this.nextFlight++, amount, from: this.point(from, origin), to: this.point(to, origin) }));
     }
