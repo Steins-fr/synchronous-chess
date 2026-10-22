@@ -1,0 +1,37 @@
+// The fan: each card turns around a point below the hand, and drops with its distance to the middle
+.hand-card {
+    --lift: 0rem;
+    transform-origin: 50% 130%;
+    transform: translateY(calc(var(--lift) + var(--fan-offset) * var(--fan-offset) * 0.25rem)) rotate(calc(var(--fan-offset) * 4deg));
+    transition: transform var(--app-motion-fast) ease-out;
+
+    &.selected {
+        --lift: -1rem;
+    }
+}
+
+// A card dealt flies in from above the hand (or from --deal-from-x and --deal-from-y, the deck of the table), the cards
+// dealt with it one after the other
+.card-dealt {
+    animation: card-dealt var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(var(--deal-index) * var(--app-motion-stagger));
+}
+
+@keyframes card-dealt {
+    from {
+        opacity: 0;
+        transform: translate(var(--deal-from-x, 0), var(--deal-from-y, -8rem)) rotate(-20deg);
+    }
+}
+
+// A card thrown away rises and fades out
+.card-discarded {
+    animation: card-discarded var(--app-motion-medium) ease-in forwards;
+}
+
+@keyframes card-discarded {
+    to {
+        opacity: 0;
+        transform: translateY(-4rem) rotate(10deg);
+    }
+}

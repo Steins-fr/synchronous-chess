@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Quatro ases e o coringa: a melhor mão do jogo.",
     "intro": "Um baralho com quatro ases, quatro reis, quatro damas, quatro valetes e um coringa, que vale qualquer carta. Dez mãos para ficar com as fichas do outro jogador.",
     "points": {
       "checked": "Quando a partida termina, todas as chaves são mostradas: cada participante verifica que nenhuma carta foi distribuída de forma desleal.",

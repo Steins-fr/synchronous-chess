@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Empat as dan joker: kombinasi terbaik dalam permainan.",
     "intro": "Setumpuk kartu berisi empat as, empat raja, empat ratu, empat jack, dan satu joker yang dapat menggantikan kartu apa pun. Sepuluh tangan untuk merebut chip pemain lain.",
     "points": {
       "checked": "Setelah permainan selesai, semua kunci ditunjukkan: setiap peserta memeriksa bahwa tidak ada kartu yang dibagikan secara curang.",

@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Baraja de # carta} other {Baraja de # cartas}}",
+  "hidden": "Carta boca abajo",
+  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "joker": "Comodín",
+  "name": "{rank, select, ace {As} king {Rey} queen {Reina} other {Jota}} de {suit, select, spades {picas} hearts {corazones} diamonds {diamantes} other {tréboles}}"
+}

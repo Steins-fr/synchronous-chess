@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Talia: # karta} few {Talia: # karty} many {Talia: # kart} other {Talia: # karty}}",
+  "hidden": "Zakryta karta",
+  "index": "{rank, select, ace {A} king {K} queen {D} other {W}}",
+  "joker": "Joker",
+  "name": "{rank, select, ace {As} king {Król} queen {Dama} other {Walet}} {suit, select, spades {pik} hearts {kier} diamonds {karo} other {trefl}}"
+}

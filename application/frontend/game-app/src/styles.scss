@@ -60,6 +60,34 @@ html {
     --app-link-active: light-dark(green, #69f0ae);
     --app-chat-author: light-dark(blue, #82b1ff);
     --app-chat-my-author: light-dark(green, #69f0ae);
+    // The playing cards: a light face, dimmed in the dark theme as the board is, its inks staying dark. The back is the
+    // blue of the board, its pattern drawn with transparency
+    --app-card-face: light-dark(#fffdf7, #dcd8cc);
+    --app-card-edge: light-dark(#bdb8ab, #5f5b52);
+    --app-card-ink: #1c1b1f;
+    --app-card-red: #c62828;
+    --app-card-back: var(--app-accent);
+    --app-card-back-pattern: rgb(255 255 255 / 30%);
+    // The width of a card, larger out of a phone
+    --app-card-width: 4.5rem;
+
+    @media (min-width: 640px) {
+        --app-card-width: 5.5rem;
+    }
+
+    // The durations of the animations, none when the user asks for reduced motion
+    --app-motion-fast: 150ms;
+    --app-motion-medium: 250ms;
+    --app-motion-slow: 400ms;
+    // The delay between two cards dealt one after the other
+    --app-motion-stagger: 80ms;
+
+    @media (prefers-reduced-motion: reduce) {
+        --app-motion-fast: 0ms;
+        --app-motion-medium: 0ms;
+        --app-motion-slow: 0ms;
+        --app-motion-stagger: 0ms;
+    }
 }
 
 // The dark theme: the one of the system, unless the user picked a theme. ThemeService, and the script of index.html

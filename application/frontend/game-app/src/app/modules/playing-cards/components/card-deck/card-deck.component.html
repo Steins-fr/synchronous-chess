@@ -1,0 +1,16 @@
+<div *transloco="let t; prefix: 'cards'"
+    role="img"
+    class="relative w-(--app-card-width) aspect-[5/7]"
+    [class.shuffling]="shuffling()"
+    [attr.aria-label]="t('deck', { count: count() })">
+    @if (count() > 0) {
+    <app-playing-card class="absolute inset-0 translate-1" [card]="null" />
+    <app-playing-card class="deck-half deck-half-left absolute inset-0 translate-0.5" [card]="null" />
+    <app-playing-card class="deck-half deck-half-right absolute inset-0" [card]="null" />
+    } @else {
+    <div class="size-full rounded-[7%] border-2 border-dashed border-app-border"></div>
+    }
+    <span class="absolute z-10 -right-2 -bottom-2 min-w-6 px-1.5 rounded-full border border-app-border bg-app-surface-raised
+        text-center text-xs leading-5 text-app-text"
+        aria-hidden="true">{{ count() }}</span>
+</div>

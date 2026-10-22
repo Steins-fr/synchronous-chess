@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Quatro ases e o jóquer: a melhor mão do jogo.",
     "intro": "Um baralho de quatro ases, quatro reis, quatro damas, quatro valetes e um jóquer, que vale qualquer carta. Dez mãos para ficar com as fichas do outro jogador.",
     "points": {
       "checked": "Terminada a partida, todas as chaves são mostradas: cada participante verifica que nenhuma carta foi distribuída de forma desleal.",

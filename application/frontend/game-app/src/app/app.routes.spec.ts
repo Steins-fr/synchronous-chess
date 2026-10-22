@@ -29,7 +29,7 @@ describe('routes', () => {
         [homePath, undefined],
         [chessPath, [provideTranslocoScope(TranslationScope.CHESS, TranslationScope.CHAT)]],
         [chatPath, [provideTranslocoScope(TranslationScope.CHAT)]],
-        [pokerPath, [provideTranslocoScope(TranslationScope.POKER, TranslationScope.CHAT)]],
+        [pokerPath, [provideTranslocoScope(TranslationScope.POKER, TranslationScope.CARDS, TranslationScope.CHAT)]],
     ])('the route \'%s\' should provide the translations of the games it holds', (path: string, providers: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.providers).toEqual(providers);
     });

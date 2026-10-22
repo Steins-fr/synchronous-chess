@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Колода: # карта} few {Колода: # карты} many {Колода: # карт} other {Колода: # карты}}",
+  "hidden": "Карта рубашкой вверх",
+  "index": "{rank, select, ace {Т} king {К} queen {Д} other {В}}",
+  "joker": "Джокер",
+  "name": "{rank, select, ace {Туз} king {Король} queen {Дама} other {Валет}} {suit, select, spades {пик} hearts {червей} diamonds {бубен} other {треф}}"
+}

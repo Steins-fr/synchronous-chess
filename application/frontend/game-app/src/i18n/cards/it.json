@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Mazzo di # carta} other {Mazzo di # carte}}",
+  "hidden": "Carta coperta",
+  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "joker": "Jolly",
+  "name": "{rank, select, ace {Asso} king {Re} queen {Donna} other {Fante}} di {suit, select, spades {picche} hearts {cuori} diamonds {quadri} other {fiori}}"
+}

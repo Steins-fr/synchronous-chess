@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Vier Asse und der Joker: die beste Hand des Spiels.",
     "intro": "Ein Blatt aus vier Assen, vier Königen, vier Damen, vier Buben und einem Joker, der jede Karte ersetzt. Zehn Hände, um dem anderen Spieler die Chips abzunehmen.",
     "points": {
       "checked": "Nach dem Spiel werden alle Schlüssel gezeigt: Jeder Teilnehmer prüft, dass keine Karte unfair ausgeteilt wurde.",
