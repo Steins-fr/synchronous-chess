@@ -5,6 +5,7 @@ import { ChatMessengerType } from './components/chat/chat.component';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
@@ -29,7 +30,7 @@ describe('ChatPage', () => {
         await TestBed.configureTestingModule({
             imports: [ChatPage],
             // Provided by the config of the app
-            providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }],
+            providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }, { provide: WEB_SOCKET_SERVER, useValue: 'ws://server' }],
         })
             // Provided by the page itself, so override it rather than providing it to the testing module
             .overrideProvider(RoomManagerService, { useValue: roomManagerService })

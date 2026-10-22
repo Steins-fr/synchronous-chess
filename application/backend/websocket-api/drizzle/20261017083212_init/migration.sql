@@ -44,6 +44,7 @@ CREATE TABLE "rooms" (
 	"password_hash" text,
 	"is_private" boolean GENERATED ALWAYS AS (password_hash IS NOT NULL) STORED NOT NULL,
 	"expires_at" bigint,
+	"lease_until" bigint NOT NULL,
 	CONSTRAINT "rooms_max_player" CHECK ("max_player" BETWEEN 1 AND 16),
 	CONSTRAINT "rooms_game" CHECK ("game" IN ('chess', 'chat'))
 );
@@ -51,7 +52,7 @@ CREATE TABLE "rooms" (
 CREATE INDEX "room_queue_connection" ON "room_queue" ("room_id","connection_id");--> statement-breakpoint
 CREATE INDEX "rooms_game_created_at" ON "rooms" ("game","created_at" DESC);--> statement-breakpoint
 CREATE INDEX "rooms_name_key_trgm" ON "rooms" USING gin ("name_key" gin_trgm_ops);--> statement-breakpoint
-CREATE INDEX "rooms_expires_at" ON "rooms" ("expires_at") WHERE "expires_at" IS NOT NULL;--> statement-breakpoint
+CREATE INDEX "rooms_expiry" ON "rooms" (coalesce("expires_at", "lease_until"));--> statement-breakpoint
 ALTER TABLE "room_password_attempts" ADD CONSTRAINT "room_password_attempts_room_id_rooms_id_fkey" FOREIGN KEY ("room_id") REFERENCES "rooms"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "room_players" ADD CONSTRAINT "room_players_room_id_rooms_id_fkey" FOREIGN KEY ("room_id") REFERENCES "rooms"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "room_queue" ADD CONSTRAINT "room_queue_room_id_rooms_id_fkey" FOREIGN KEY ("room_id") REFERENCES "rooms"("id") ON DELETE CASCADE;--> statement-breakpoint

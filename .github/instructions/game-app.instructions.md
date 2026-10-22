@@ -119,13 +119,11 @@ This is an Angular TypeScript project with the following characteristics:
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
   texts before it starts: the first render has every text, the views and queries inside a `*transloco`
-  included. A guard, not a resolver: the router runs the guards of a route together, so the
-  translations load while the APIs are checked. Failing, it cancels the navigation: the page would show
-  without its texts. `app.routes.spec.ts` checks the scopes of each route against `TranslationScope`
-- A navigation waiting for the APIs keeps their overlay until its page shows (`ApiHealthOverlayComponent`):
-  the previous page never shows again while the translations and the code of the next one load. The
-  overlay shows once the wait lasts 0.4 second (`LOADER_DELAY` of `helpers/signal.helper.ts`, through
-  `heldFor()`): a quick one keeps the previous page
+  included. Failing, it cancels the navigation: the page would show without its texts.
+  `app.routes.spec.ts` checks the scopes of each route against `TranslationScope`
+- A navigation shows the loader of the pages (`PageLoaderComponent`) until its page shows, while the
+  translations and the code of the next one load: once the wait lasts 0.4 second (`LOADER_DELAY` of
+  `helpers/signal.helper.ts`, through `heldFor()`), a quick one keeping the previous page
 - A language picked in the menu loads with the scopes of every game (`LanguageService.use()`): every
   text switches at once, those of a page opened meanwhile included (`language.e2e.ts`). A ring turns
   around the icon of the menu while it loads, once the wait lasts `LOADER_DELAY` too. Failing, the app
@@ -224,6 +222,28 @@ Claude writes the translations of every new or changed key, into every language:
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
 | server | serveur | servidor | servidor | servidor | Server | сервер | sunucu | server | serwer | server |
 | cheating | triche | trampa | trapaça | batota | Betrug | жульничество | hile | curang | oszustwo | imbroglio |
+
+## APIs
+
+- A page reaches the APIs once a person is on it (`VisitorPresenceService`, listening as soon as the
+  app starts: a gesture, a reload, a navigation of the app), never on its load alone: a bot rendering
+  it, a crawler running JavaScript, would wake the paused database. Only the links of development
+  (`?auto-create`, `?auto-join`), linked from no page, set a room up at once
+- No health check: the first request wakes the database, a request awaited 3 seconds tells the server
+  boots (`ServerBootingComponent`), and a list failed by the server (or the network) is asked again 2
+  seconds later, while the page is visible, 5 times in a row at most: then it tells it failed (offline, or
+  refused). The notice shows while no list is shown only: a page asking the list keeps the server awake
+- A room is created or joined once the list answered (`OpenRoomsComponent.whenServerReady()`), and no list is
+  asked meanwhile (a list shown refreshed included), the room given last only, the button creating one disabled
+  meanwhile: the list, asked at the first gesture, wakes the database, which a deep sleep keeps asleep longer than
+  the retries of `sendmessage`
+- During a game, the host pings its socket every 3 minutes (`WebSocketService.PING_INTERVAL`): the `ping`
+  lambda renews the lease of its room (20 minutes without ping, the room ends), and keeps the database awake,
+  which pauses 5 minutes after the last request, so its closing is always seen
+- A gesture tells a person only when trusted (`event.isTrusted`): a script, a crawler for one, dispatches
+  untrusted events. A click is one: the button of a screen reader sends a click only
+- The specs run as a person on the page (`VisitorPresenceMock` of `src/test-providers.ts`); a spec of a
+  page without one provides `new VisitorPresenceMock(false)`
 
 ## Testing
 

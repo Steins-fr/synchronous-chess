@@ -402,6 +402,19 @@
       "table": "rooms"
     },
     {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "lease_until",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rooms"
+    },
+    {
       "nameExplicit": true,
       "columns": [
         {
@@ -485,19 +498,19 @@
       "nameExplicit": true,
       "columns": [
         {
-          "value": "expires_at",
-          "isExpression": false,
+          "value": "coalesce(\"expires_at\", \"lease_until\")",
+          "isExpression": true,
           "asc": true,
           "nullsFirst": false,
           "opclass": null
         }
       ],
       "isUnique": false,
-      "where": "\"expires_at\" IS NOT NULL",
+      "where": null,
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "rooms_expires_at",
+      "name": "rooms_expiry",
       "entityType": "indexes",
       "schema": "public",
       "table": "rooms"

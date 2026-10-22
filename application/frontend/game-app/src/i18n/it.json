@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Avvio del server…",
-    "bootingDelay": "Il server e il suo database vanno in sospensione quando nessuno gioca: risvegliarli richiede fino a una trentina di secondi.",
-    "connecting": "Connessione al server…",
-    "loadingPage": "Caricamento della pagina…"
-  },
   "app": {
     "language": {
       "pick": "Scegli la lingua"
     },
+    "loadingPage": "Caricamento della pagina…",
     "nav": {
       "chat": "Chat",
       "chess": "Scacchi sincroni",
@@ -46,6 +41,10 @@
     "title": "Scegli un gioco"
   },
   "rooms": {
+    "booting": {
+      "delay": "Il server e il suo database vanno in sospensione quando nessuno gioca: risvegliarli richiede fino a una trentina di secondi.",
+      "title": "Avvio del server…"
+    },
     "create": {
       "intro": "Gli altri giocatori la troveranno nell'elenco delle stanze aperte: con una password, è privata.",
       "submit": "Crea",
@@ -115,6 +114,7 @@
         "label": "Cerca una stanza",
         "maxLength": "La ricerca ha al massimo {maxLength, plural, one {# carattere} other {# caratteri}}"
       },
+      "show": "Mostra le stanze aperte",
       "title": "Stanze aperte"
     }
   }

@@ -3,13 +3,14 @@ import { roomPasswordAttempts } from '@database/schema';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
-import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeRoom } from '@testing/api-mocks';
+import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
 import { beforeEach, describe, expect, test } from 'vitest';
 import RoomRepository, { ListedRoom } from './room-repository';
 
 // In epoch seconds
 const NOW: number = 1_800_000_000;
+const LEASE_RENEWED: number = NOW + 1200;
 
 /** A room listed, of `aRoom()` by default: its host, alone in its game, connected */
 function aListedRoom(room: Partial<ListedRoom> = {}): ListedRoom {
@@ -60,8 +61,10 @@ describe('RoomRepository', () => {
         test('should find the rooms of a game not expired, the last created first, the most rooms asked', async () => {
             // Given
             await storeRoom(aRoom({ id: 'oldest', nameKey: 'oldest', createdAt: '2026-10-11T10:00:00.000Z' }));
-            await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', createdAt: '2026-10-11T11:00:00.000Z', expiresAt: NOW + 1 }));
+            // Waiting for its host past its lease: the wait for the host counts then
+            await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', createdAt: '2026-10-11T11:00:00.000Z', expiresAt: NOW + 1, leaseUntil: NOW }));
             await storeRoom(aRoom({ id: 'expired', nameKey: 'expired', createdAt: '2026-10-11T12:00:00.000Z', expiresAt: NOW }));
+            await storeRoom(aRoom({ id: 'abandoned', nameKey: 'abandoned', createdAt: '2026-10-11T12:30:00.000Z', leaseUntil: NOW }));
             await storeRoom(aRoom({ id: 'chat', nameKey: 'chat', createdAt: '2026-10-11T13:00:00.000Z', game: RoomGame.CHAT }));
             await storeRoom(aRoom({ id: 'newest', nameKey: 'newest', createdAt: '2026-10-11T14:00:00.000Z', passwordHash: 'hash' }));
 
@@ -155,16 +158,18 @@ describe('RoomRepository', () => {
             expect(await getDatabase().select().from(roomPasswordAttempts)).toEqual([]);
         });
 
-        test('should delete the other rooms expired', async () => {
+        test('should delete the other rooms expired, the ones whose lease ended included', async () => {
             // Given
             await storeRoom(aRoom({ id: 'expired', nameKey: 'expired', expiresAt: NOW }));
-            await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', expiresAt: NOW + 1 }));
+            await storeRoom(aRoom({ id: 'abandoned', nameKey: 'abandoned', leaseUntil: NOW }));
+            await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', expiresAt: NOW + 1, leaseUntil: NOW }));
 
             // When
             await repository.create(aRoom({ queue: [] }), NOW);
 
             // Then
             expect(await readRoom('expired')).toBeNull();
+            expect(await readRoom('abandoned')).toBeNull();
             expect(await readRoom('waiting')).not.toBeNull();
         });
     });
@@ -206,10 +211,10 @@ describe('RoomRepository', () => {
             await storeRoom({ ...room, ...waiting });
 
             // When
-            expect(await repository.reconnectHost(room, 'new-connection', playerName, tokenHash, NOW)).toEqual(true);
+            expect(await repository.reconnectHost(room, 'new-connection', playerName, tokenHash, NOW, LEASE_RENEWED)).toEqual(true);
 
             // Then
-            expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: 'new-connection', hostPlayer: playerName });
+            expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: 'new-connection', hostPlayer: playerName, leaseUntil: LEASE_RENEWED });
         });
 
         test.each([
@@ -217,13 +222,45 @@ describe('RoomRepository', () => {
             ['a token unknown', 'host', 'other-hash', {}],
             ['a player while its host is connected', 'zoe', 'zoe-hash', {}],
             ['the host once the room expired', 'host', 'host-hash', { expiresAt: NOW }],
+            ['the host once its lease ended', 'host', 'host-hash', { leaseUntil: NOW }],
         ])('should not move a room for %s', async (_case: string, playerName: string, tokenHash: string, waiting: Partial<Room>) => {
             // Given
             const room: Room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'zoe' }], tokenHashes: { host: 'host-hash', zoe: 'zoe-hash' }, ...waiting });
             await storeRoom(room);
 
             // When
-            expect(await repository.reconnectHost(room, 'new-connection', playerName, tokenHash, NOW)).toEqual(false);
+            expect(await repository.reconnectHost(room, 'new-connection', playerName, tokenHash, NOW, LEASE_RENEWED)).toEqual(false);
+
+            // Then
+            expect(await readRoom('room')).toStrictEqual(room);
+        });
+    });
+
+    describe('renewLease', () => {
+        test('should renew the lease of the room the connection hosts', async () => {
+            // Given
+            await storeRoom(aRoom({ leaseUntil: NOW + 1 }));
+            await storeConnection({ connectionId: HOST_CONNECTION, roomName: 'room' });
+
+            // When
+            await repository.renewLease(HOST_CONNECTION, NOW, LEASE_RENEWED);
+
+            // Then
+            expect((await readRoom('room'))?.leaseUntil).toBe(LEASE_RENEWED);
+        });
+
+        test.each([
+            ['a former connection of its host', { connectionId: 'new-host-connection', leaseUntil: NOW + 1 }, 'room'],
+            ['a connection of another room', { leaseUntil: NOW + 1 }, 'other'],
+            ['once its lease ended', { leaseUntil: NOW }, 'room'],
+        ])('should not renew the lease of a room for %s', async (_case: string, stored: Partial<Room>, roomName: string) => {
+            // Given
+            const room: Room = aRoom(stored);
+            await storeRoom(room);
+            await storeConnection({ connectionId: HOST_CONNECTION, roomName });
+
+            // When
+            await repository.renewLease(HOST_CONNECTION, NOW, LEASE_RENEWED);
 
             // Then
             expect(await readRoom('room')).toStrictEqual(room);

@@ -5,8 +5,6 @@ import { Language } from './services/language/enums/language.enum';
 import { LanguageService } from './services/language/language.service';
 import { ThemeModeEnum } from './services/theme/enums/theme-mode.enum';
 import { ThemeService } from './services/theme/theme.service';
-import { HTTP_API_SERVER } from './services/room-api/http-api-server.token';
-import { TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 
 describe('AppComponent', () => {
@@ -32,7 +30,6 @@ describe('AppComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [AppComponent],
-            providers: [{ provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER }],
         }).compileComponents();
 
         fixture = TestBed.createComponent(AppComponent);
@@ -54,9 +51,8 @@ describe('AppComponent', () => {
         expect(component['title']).toEqual('synchronous-chess');
     });
 
-    test('should hold the overlay of the check of the APIs, hidden until a page waits for them', () => {
-        expect(fixture.nativeElement.querySelector('app-api-health-overlay')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('output')).toBeNull();
+    test('should hold the loader of the pages, hidden until a navigation lasts', () => {
+        expect(fixture.nativeElement.querySelector('app-page-loader output')?.textContent.trim()).toBe('');
     });
 
     test('should render title', () => {

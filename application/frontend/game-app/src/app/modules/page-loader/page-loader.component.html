@@ -1,0 +1,10 @@
+<!-- An output: its role is status, read by the screen readers once its text changes, so always in the page, its overlay -->
+<!-- shown once the navigation lasts. Empty, out of the flow of the app. It holds phrasing content only -->
+<output *transloco="let t; prefix: 'app'" class="empty:absolute">
+    @if (visible()) {
+    <span class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-4 bg-app-surface text-app-text text-center">
+        <mat-spinner [diameter]="48" />
+        <span class="block mat-title-medium">{{ t('loadingPage') }}</span>
+    </span>
+    }
+</output>

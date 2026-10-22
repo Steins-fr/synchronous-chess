@@ -1,8 +1,10 @@
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Params } from '@angular/router';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
@@ -12,6 +14,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { RoomCreate, RoomCreateDialog } from './room-create/room-create.dialog';
 import { RoomJoin, RoomJoinDialog } from './room-join/room-join.dialog';
 import { RoomSetupComponent } from './room-setup.component';
+import { ServerBootingComponent } from './server-booting/server-booting.component';
 
 describe('RoomSetupComponent', () => {
     const publicRoom: OpenRoom = { roomName: 'public', hostPlayer: 'alice', playerCount: 1, maxPlayer: 2, isPrivate: false, hostConnected: true };
@@ -19,9 +22,13 @@ describe('RoomSetupComponent', () => {
     let fixture: ComponentFixture<RoomSetupComponent>;
     let roomSetupService: RoomSetupService;
     let dialogService: DialogService;
+    // A request of the socket of the page awaits the API
+    let socketWaiting: WritableSignal<boolean>;
 
-    async function createComponent(queryParams: Params = {}): Promise<void> {
+    /** @param answered whether the lists of the open rooms are answered, the database they wake awake */
+    async function createComponent(queryParams: Params = {}, answered: boolean = true): Promise<void> {
         dialogService = TestHelper.cast<DialogService>({ open: vi.fn() });
+        socketWaiting = signal(false);
         await TestBed.configureTestingModule({
             imports: [RoomSetupComponent],
             providers: [
@@ -29,6 +36,8 @@ describe('RoomSetupComponent', () => {
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 { provide: DialogService, useValue: dialogService },
                 { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
+                // Provided by the page
+                { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: socketWaiting }) },
             ],
         }).compileComponents();
 
@@ -37,7 +46,9 @@ describe('RoomSetupComponent', () => {
         vi.spyOn(CryptoHelper, 'randomNumber').mockReturnValue(123456);
         fixture = TestBed.createComponent(RoomSetupComponent);
         fixture.componentRef.setInput('game', RoomGame.CHESS);
-        answerOpenRooms([publicRoom, privateRoom]);
+        if (answered) {
+            answerOpenRooms([publicRoom, privateRoom]);
+        }
         if (vi.isFakeTimers()) {
             fixture.detectChanges();
         } else {
@@ -87,6 +98,100 @@ describe('RoomSetupComponent', () => {
         // Then
         expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomCreateDialog, { title: 'rooms.create.title', inputs: { roomName: '', playerName: '' } });
         expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: room.password });
+    });
+
+    test('should create the room given once the list woke the database, its button disabled meanwhile', async () => {
+        // Given: the list awaited, the database it wakes still asleep
+        vi.useFakeTimers();
+        await createComponent({}, false);
+        vi.mocked(dialogService.open).mockResolvedValueOnce({ roomName: 'room', playerName: 'player' });
+
+        // When
+        createButton()?.click();
+        await vi.advanceTimersByTimeAsync(0);
+        fixture.detectChanges();
+
+        // Then
+        expect(roomSetupService.setup).not.toHaveBeenCalled();
+        expect(createButton()?.disabled).toBe(true);
+
+        // When
+        answerOpenRooms([publicRoom]);
+        await vi.advanceTimersByTimeAsync(0);
+        fixture.detectChanges();
+
+        // Then
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: undefined });
+    });
+
+    test('should create the room given once a list shown asked again answered, telling the server boots meanwhile', async () => {
+        // Given: a list shown, asked again, its refresh maybe waking the database
+        vi.useFakeTimers();
+        await createComponent();
+        (fixture.nativeElement.querySelector('#open-rooms-refresh') as HTMLButtonElement).click();
+        vi.mocked(dialogService.open).mockResolvedValueOnce({ roomName: 'room', playerName: 'player' });
+
+        // When
+        createButton()?.click();
+        await vi.advanceTimersByTimeAsync(ServerBootingComponent.DELAY);
+        fixture.detectChanges();
+
+        // Then: told once, the list shown telling nothing
+        expect(roomSetupService.setup).not.toHaveBeenCalled();
+        expect(fixture.nativeElement.textContent.split('Starting the server…')).toHaveLength(2);
+
+        // When
+        answerOpenRooms([publicRoom]);
+        await vi.advanceTimersByTimeAsync(0);
+        fixture.detectChanges();
+
+        // Then
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: undefined });
+        expect(fixture.nativeElement.textContent).not.toContain('Starting the server…');
+    });
+
+    test('should set no room up once the page closed while the list wakes the database', async () => {
+        // Given
+        vi.useFakeTimers();
+        await createComponent({}, false);
+        vi.mocked(dialogService.open).mockResolvedValueOnce({ roomName: 'room', playerName: 'player' });
+        createButton()?.click();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // When
+        fixture.destroy();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then
+        expect(roomSetupService.setup).not.toHaveBeenCalled();
+    });
+
+    test('should join the room of the list given while a room created waits for the list shown asked again, once it answered, creating none', async () => {
+        // Given: a room given, waiting for the list shown asked again
+        vi.useFakeTimers();
+        await createComponent();
+        (fixture.nativeElement.querySelector('#open-rooms-refresh') as HTMLButtonElement).click();
+        vi.mocked(dialogService.open).mockResolvedValueOnce({ roomName: 'room', playerName: 'player' });
+        createButton()?.click();
+        await vi.advanceTimersByTimeAsync(0);
+        fixture.detectChanges();
+
+        // When
+        vi.mocked(dialogService.open).mockResolvedValueOnce({ playerName: 'bob' });
+        (fixture.nativeElement.querySelector('app-open-rooms li button') as HTMLButtonElement).click();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then: the join waits for the list too
+        expect(roomSetupService.setup).not.toHaveBeenCalled();
+
+        // When
+        answerOpenRooms([publicRoom]);
+        await vi.advanceTimersByTimeAsync(0);
+        fixture.detectChanges();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then: the room given last only
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: 'public', playerName: 'bob', password: undefined });
     });
 
     test('should give the dialogs the names given last, to try again once the room failed', async () => {
@@ -163,6 +268,31 @@ describe('RoomSetupComponent', () => {
         // Then
         expect(fixture.nativeElement.querySelector('mat-spinner')).toBeNull();
         expect(createButton()).toBeNull();
+    });
+
+    test('should tell the server boots while a request of the setup awaits the API long', async () => {
+        // Given
+        vi.useFakeTimers();
+        await createComponent();
+        roomSetupService.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' });
+        fixture.detectChanges();
+
+        // When
+        socketWaiting.set(true);
+        fixture.detectChanges();
+        await vi.advanceTimersByTimeAsync(ServerBootingComponent.DELAY);
+        fixture.detectChanges();
+
+        // Then
+        expect(fixture.nativeElement.textContent).toContain('Starting the server…');
+
+        // When: answered, the peers connecting
+        socketWaiting.set(false);
+        fixture.detectChanges();
+
+        // Then
+        expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
+        expect(fixture.nativeElement.textContent).not.toContain('Starting the server…');
     });
 
     test('should automatically create the room', async () => {

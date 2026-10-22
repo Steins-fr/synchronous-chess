@@ -2,12 +2,15 @@
 <div class="flex flex-col p-4 gap-4">
     @if (loading()) {
     <mat-spinner [diameter]="42" />
+    <app-server-booting [waiting]="awaitingApi()" />
     } @else {
-    <app-open-rooms (joinRoom)="joinOpenRoom($event)" [game]="game()">
-        <button (click)="createRoom()" id="room-create" mat-flat-button type="button">
+    <app-open-rooms #openRooms (joinRoom)="joinOpenRoom($event, openRooms)" [game]="game()">
+        <button (click)="createRoom(openRooms)" [disabled]="waitingServer()" id="room-create" mat-flat-button type="button">
             {{ 'rooms.create.title' | transloco }}
         </button>
     </app-open-rooms>
+    <!-- The room given waits for a list asked meanwhile: long, the server boots. The list tells it while it shows none -->
+    <app-server-booting [waiting]="waitingServer() && !openRooms.awaitingServer()" />
     }
 </div>
 }

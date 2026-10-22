@@ -5,9 +5,10 @@ export default defineConfig({
     test: {
         environment: 'node',
         // The key of the hashes of the IPs of the clients (source.helper), given directly: on AWS, sendmessage reads it
-        // from its SSM parameter
+        // from its SSM parameter. The origin of the game app, APP_ORIGIN of testing/api-mocks.ts
         env: {
             SOURCE_HASH_SECRET: 'source-secret',
+            ALLOWED_ORIGINS: 'https://app.test',
         },
         restoreMocks: true,
         // Each spec file starts PGlite in a hook, in a second alone: a worker by CPU compiling its WASM at once takes

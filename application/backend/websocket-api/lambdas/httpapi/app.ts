@@ -1,9 +1,9 @@
 import { isBadRequestException } from '@exceptions/bad-request-exception';
+import { isAllowedOrigin } from '@helpers/origin.helper';
 import ErrorResponse from '@protocol/responses/error-response';
 import { RoomApiHttpRoute } from '@protocol/room-api-http-route.enum';
 import { APIGatewayProxyEventV2 } from 'aws-lambda';
 import { getRoomsHandler } from './handlers/get-rooms-handler';
-import { healthHandler } from './handlers/health-handler';
 
 interface Response {
     statusCode: number;
@@ -18,6 +18,7 @@ interface Response {
 type RouteHandler = (event: APIGatewayProxyEventV2) => Promise<object>;
 
 const ERROR_NOT_FOUND: string = 'Not found';
+const ERROR_FORBIDDEN: string = 'Forbidden';
 const ERROR_SERVER: string = 'Server error.';
 
 /**
@@ -26,7 +27,6 @@ const ERROR_SERVER: string = 'Server error.';
  */
 const routeHandlers: ReadonlyMap<string, RouteHandler> = new Map<string, RouteHandler>([
     [`GET ${ RoomApiHttpRoute.ROOMS }`, getRoomsHandler],
-    [`GET ${ RoomApiHttpRoute.HEALTH }`, healthHandler],
 ]);
 
 /** A JSON body. API Gateway adds the CORS headers (cors_configuration of the HTTP API), ignoring the ones of a lambda */
@@ -47,6 +47,11 @@ export const handler = async function (event: APIGatewayProxyEventV2): Promise<R
     }
 
     try {
+        // Before any statement: a client out of a browser never wakes the paused database
+        if (!isAllowedOrigin(event.headers)) {
+            return jsonResponse(403, { message: ERROR_FORBIDDEN } satisfies ErrorResponse);
+        }
+
         return jsonResponse(200, await routeHandler(event));
     } catch (e) {
         console.error(e);

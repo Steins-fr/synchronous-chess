@@ -1,12 +1,12 @@
 import { DatabaseTransaction } from '@database/database';
-import { roomPlayers, roomQueue, rooms, roomTokens } from '@database/schema';
+import { connections, roomPlayers, roomQueue, rooms, roomTokens } from '@database/schema';
 import BadRequestException from '@exceptions/bad-request-exception';
 import { DatabaseOperationEnum } from '@exceptions/database-exception';
 import { escapeLike } from '@helpers/search.helper';
 import Player from '@models/player';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
-import { and, desc, eq, exists, gt, isNotNull, isNull, like, lte, or, SQL, sql } from 'drizzle-orm';
+import { and, desc, eq, exists, gt, inArray, isNotNull, like, lte, or, SQL, sql } from 'drizzle-orm';
 import BaseRepository from './base-repository';
 
 /** What the list of the rooms reads of a room */
@@ -24,6 +24,7 @@ interface RoomRow {
     passwordHash: string | null;
     isPrivate: boolean;
     expiresAt: number | null;
+    leaseUntil: number;
     players: { playerName: string }[];
     queue: { playerName: string, connectionId: string }[];
     tokens: { playerName: string, tokenHash: string }[];
@@ -38,9 +39,12 @@ interface ListedRoomRow {
     playerCount: number;
 }
 
-/** A room not expired at `now`: its host connected, or the room waiting for it */
-function notExpired(now: number): SQL | undefined {
-    return or(isNull(rooms.expiresAt), gt(rooms.expiresAt, now));
+/** When a room ends, in epoch seconds: the wait for its host once disconnected, else its lease (index rooms_expiry) */
+const ROOM_EXPIRY: SQL<number> = sql<number>`coalesce(${ rooms.expiresAt }, ${ rooms.leaseUntil })`;
+
+/** A room not expired at `now`: its host connected, its lease running, or the room waiting for it */
+function notExpired(now: number): SQL {
+    return gt(ROOM_EXPIRY, now);
 }
 
 export default class RoomRepository extends BaseRepository {
@@ -63,6 +67,7 @@ export default class RoomRepository extends BaseRepository {
             createdAt: row.createdAt,
             nameKey: row.nameKey,
             isPrivate: row.isPrivate,
+            leaseUntil: row.leaseUntil,
             players: row.players,
             queue: row.queue,
             tokenHashes: Object.fromEntries(row.tokens.map(({ playerName, tokenHash }: RoomRow['tokens'][number]): [string, string] => [playerName, tokenHash])),
@@ -134,7 +139,7 @@ export default class RoomRepository extends BaseRepository {
      */
     public async create(room: Room, now: number): Promise<boolean> {
         return this.run(DatabaseOperationEnum.PUT, (): Promise<boolean> => this.db.transaction(async (tx: DatabaseTransaction): Promise<boolean> => {
-            await tx.delete(rooms).where(lte(rooms.expiresAt, now));
+            await tx.delete(rooms).where(lte(ROOM_EXPIRY, now));
 
             const created: { id: string }[] = await tx.insert(rooms).values({
                 id: room.id,
@@ -145,6 +150,7 @@ export default class RoomRepository extends BaseRepository {
                 createdAt: room.createdAt,
                 nameKey: room.nameKey,
                 passwordHash: room.passwordHash,
+                leaseUntil: room.leaseUntil,
             }).onConflictDoNothing().returning({ id: rooms.id });
 
             if (!RoomRepository.written(created)) {
@@ -166,18 +172,18 @@ export default class RoomRepository extends BaseRepository {
 
     /**
      * Moves the room to a connection of the player, which becomes its host: the host, or another player while the room
-     * waits for its host. The room no longer waits for its host
+     * waits for its host. The room no longer waits for its host, its lease renewed until `leaseUntil`
      * @returns false when the token hash is not the one of the player (another room took its name), the room expired at
      * `now`, or the player is not the host while the host is connected
      */
-    public async reconnectHost(room: Room, connectionId: string, playerName: string, tokenHash: string, now: number): Promise<boolean> {
+    public async reconnectHost(room: Room, connectionId: string, playerName: string, tokenHash: string, now: number, leaseUntil: number): Promise<boolean> {
         const tokenOfPlayer = this.db.select({ one: sql`1` }).from(roomTokens).where(and(
             eq(roomTokens.roomId, rooms.id),
             eq(roomTokens.playerName, playerName),
             eq(roomTokens.tokenHash, tokenHash),
         ));
         const reconnected: { id: string }[] = await this.run(DatabaseOperationEnum.UPDATE, (): Promise<{ id: string }[]> => this.db.update(rooms)
-            .set({ connectionId, hostPlayer: playerName, expiresAt: null })
+            .set({ connectionId, hostPlayer: playerName, expiresAt: null, leaseUntil })
             .where(and(
                 eq(rooms.id, room.id),
                 notExpired(now),
@@ -187,6 +193,16 @@ export default class RoomRepository extends BaseRepository {
             .returning({ id: rooms.id }));
 
         return RoomRepository.written(reconnected);
+    }
+
+    /**
+     * Renews until `leaseUntil` the lease of the room the connection hosts, unless the room expired at `now`: the ping of a
+     * former connection of the host renews nothing. The room found through the connection, by their primary keys
+     */
+    public async renewLease(connectionId: string, now: number, leaseUntil: number): Promise<void> {
+        const roomOfConnection = this.db.select({ roomName: connections.roomName }).from(connections).where(eq(connections.connectionId, connectionId));
+        await this.run(DatabaseOperationEnum.UPDATE, (): Promise<unknown> => this.db.update(rooms).set({ leaseUntil })
+            .where(and(inArray(rooms.id, roomOfConnection), eq(rooms.connectionId, connectionId), notExpired(now))));
     }
 
     /** Once: the player is in the game a single time */

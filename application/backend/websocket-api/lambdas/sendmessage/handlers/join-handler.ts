@@ -39,7 +39,7 @@ export default class JoinHandler extends MessageHandler {
             throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_QUEUE);
         }
 
-        await this.connectionService.create({ connectionId: this.connectionId, roomName: room.id });
+        await this.createConnection(room.id);
         await this.roomService.addPlayerToQueue(data.playerName, this.connectionId, data.token, room);
 
         await this.notify(RoomSocketApiNotificationEnum.JOIN_REQUEST, room.connectionId, {

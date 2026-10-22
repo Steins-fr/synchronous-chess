@@ -15,13 +15,20 @@ import RoomRepository, { ListedRoom } from '@repositories/room-repository';
 export default class RoomService {
     /** How long a room waits for its disconnected host to reconnect it, in seconds */
     public static readonly HOST_RECONNECTION_DELAY: number = 10 * 60;
+    /**
+     * How long a room lives without a ping of its connected host, in seconds: more than a ping (every 3 minutes, 4 in a
+     * hidden tab whose timers the browser throttles) and the 10 minutes API Gateway waits after the last message before
+     * closing a silent connection. Its $disconnect always comes first, the room then waiting for its host: the lease ends
+     * the room of a host that left without one only
+     */
+    public static readonly LEASE: number = 20 * 60;
     /** The most rooms listed: a search finds the others */
     public static readonly MAX_OPEN_ROOMS: number = 30;
 
     private readonly roomRepository: RoomRepository = new RoomRepository();
 
     private static isExpired(room: Room): boolean {
-        return room.expiresAt !== undefined && room.expiresAt <= epochSeconds();
+        return (room.expiresAt ?? room.leaseUntil) <= epochSeconds();
     }
 
     /** The room of a disconnected host waits for it to reconnect, a disconnected guest leaves the queue */
@@ -140,6 +147,7 @@ export default class RoomService {
      * @throws {BadRequestException} when a room of that name exists, even waiting for its host
      */
     public async create(request: RoomCreateRequest, connectionId: string): Promise<void> {
+        const now: number = epochSeconds();
         const room: Room = {
             id: request.roomName,
             connectionId,
@@ -152,13 +160,14 @@ export default class RoomService {
             queue: [],
             tokenHashes: { [request.playerName]: hashToken(request.token) },
             isPrivate: request.password !== undefined,
+            leaseUntil: now + RoomService.LEASE,
         };
 
         if (request.password !== undefined) {
             room.passwordHash = hashPassword(request.password);
         }
 
-        const created: boolean = await this.roomRepository.create(room, epochSeconds());
+        const created: boolean = await this.roomRepository.create(room, now);
 
         if (!created) {
             throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
@@ -189,8 +198,15 @@ export default class RoomService {
      * @throws {BadRequestException} when the token is not the one of the player, or the host reconnected meanwhile
      */
     public async reconnectHost(room: Room, connectionId: string, playerName: string, token: string): Promise<void> {
-        if (!await this.roomRepository.reconnectHost(room, connectionId, playerName, hashToken(token), epochSeconds())) {
+        const now: number = epochSeconds();
+        if (!await this.roomRepository.reconnectHost(room, connectionId, playerName, hashToken(token), now, now + RoomService.LEASE)) {
             throw new BadRequestException('You are not the host of the room');
         }
+    }
+
+    /** The ping of the connection: the room it hosts lives LEASE more */
+    public async renewLease(connectionId: string): Promise<void> {
+        const now: number = epochSeconds();
+        await this.roomRepository.renewLease(connectionId, now, now + RoomService.LEASE);
     }
 }

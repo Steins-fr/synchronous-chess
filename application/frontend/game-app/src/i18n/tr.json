@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Sunucu başlatılıyor…",
-    "bootingDelay": "Kimse oynamadığında sunucu ve veritabanı uyku moduna geçer: uyanmaları otuz saniyeye kadar sürebilir.",
-    "connecting": "Sunucuya bağlanılıyor…",
-    "loadingPage": "Sayfa yükleniyor…"
-  },
   "app": {
     "language": {
       "pick": "Dil seçin"
     },
+    "loadingPage": "Sayfa yükleniyor…",
     "nav": {
       "chat": "Sohbet",
       "chess": "Eşzamanlı satranç",
@@ -46,6 +41,10 @@
     "title": "Bir oyun seçin"
   },
   "rooms": {
+    "booting": {
+      "delay": "Kimse oynamadığında sunucu ve veritabanı uyku moduna geçer: uyanmaları otuz saniyeye kadar sürebilir.",
+      "title": "Sunucu başlatılıyor…"
+    },
     "create": {
       "intro": "Diğer oyuncular onu açık odalar listesinde bulacak: şifreyle oda özel olur.",
       "submit": "Oluştur",
@@ -115,6 +114,7 @@
         "label": "Oda ara",
         "maxLength": "Arama en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir"
       },
+      "show": "Açık odaları göster",
       "title": "Açık odalar"
     }
   }

@@ -1,5 +1,6 @@
+import { GoneException, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import { getDatabase } from '@database/database';
-import { rooms } from '@database/schema';
+import { connections, rooms } from '@database/schema';
 import { verifyPassword } from '@helpers/password.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
@@ -23,7 +24,11 @@ import {
     storeRoom,
 } from '@testing/api-mocks';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import RoomService from '@services/room-service';
 import CreateHandler from './create-handler';
+
+// In epoch seconds
+const NOW: number = 1_800_000_000;
 
 describe('CreateHandler', () => {
     const { apiGateway }: AwsMocks = mockAws();
@@ -61,7 +66,49 @@ describe('CreateHandler', () => {
             queue: [],
             tokenHashes: { host: hashToken(HOST_TOKEN) },
             isPrivate: false,
+            leaseUntil: Date.parse('2026-10-11T12:00:00.000Z') / 1000 + RoomService.LEASE,
         });
+    });
+
+    test('should disconnect its host, as $disconnect does, once its connection closed before its answer', async () => {
+        // Given: the page closed while the paused database resumed, $disconnect finding no connection yet
+        vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] });
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        apiGateway.on(PostToConnectionCommand).rejects(new GoneException({ $metadata: {}, message: 'Gone' }));
+
+        // When
+        await create(request);
+
+        // Then: the room waits for its host, then expires, as a room whose host lost its connection
+        expect(await readConnections()).toEqual([]);
+        expect((await readRoom('room'))?.expiresAt).toEqual(NOW + RoomService.HOST_RECONNECTION_DELAY);
+        expect(console.warn).toHaveBeenCalledWith(`Connection closed before its answer, disconnected: ${ HOST_CONNECTION }`);
+    });
+
+    test('should let the room wait for its host once $disconnect ran before the room was written', async () => {
+        // Given: $disconnect deleted the connection before the room was written, finding no room to leave
+        vi.useFakeTimers({ now: NOW * 1000, toFake: ['Date'] });
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        apiGateway.on(PostToConnectionCommand).callsFake(async (): Promise<never> => {
+            await getDatabase().delete(connections);
+            throw new GoneException({ $metadata: {}, message: 'Gone' });
+        });
+
+        // When
+        await create(request);
+
+        // Then: not a room hosted by nobody, listed until its lease ends
+        expect((await readRoom('room'))?.expiresAt).toEqual(NOW + RoomService.HOST_RECONNECTION_DELAY);
+    });
+
+    test('should fail once its answer can not be sent otherwise', async () => {
+        // Given
+        const failure: Error = new Error('Throttled');
+        apiGateway.on(PostToConnectionCommand).rejects(failure);
+
+        // When / Then
+        await expect(create(request)).rejects.toBe(failure);
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room' }]);
     });
 
     test('should create a private room, keeping a hash of its password', async () => {

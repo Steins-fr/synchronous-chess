@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Démarrage du serveur…",
-    "bootingDelay": "Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une trentaine de secondes.",
-    "connecting": "Connexion au serveur…",
-    "loadingPage": "Chargement de la page…"
-  },
   "app": {
     "language": {
       "pick": "Choisir la langue"
     },
+    "loadingPage": "Chargement de la page…",
     "nav": {
       "chat": "Tchat",
       "chess": "Échecs synchrones",
@@ -46,6 +41,10 @@
     "title": "Choisissez un jeu"
   },
   "rooms": {
+    "booting": {
+      "delay": "Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une trentaine de secondes.",
+      "title": "Démarrage du serveur…"
+    },
     "create": {
       "intro": "Les autres joueurs la trouveront dans la liste des salles ouvertes : avec un mot de passe, elle est privée.",
       "submit": "Créer",
@@ -115,6 +114,7 @@
         "label": "Rechercher une salle",
         "maxLength": "La recherche fait {maxLength, plural, one {# caractère} other {# caractères}} au plus"
       },
+      "show": "Afficher les salles ouvertes",
       "title": "Salles ouvertes"
     }
   }

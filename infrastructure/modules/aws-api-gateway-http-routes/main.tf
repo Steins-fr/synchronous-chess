@@ -65,18 +65,6 @@ resource "aws_apigatewayv2_route" "rooms" {
   target = "integrations/${aws_apigatewayv2_integration.httpapi.id}"
 }
 
-# Whether the API is up, once its database answers: RoomApiHttpRoute.HEALTH, the guard of the pages of the game app
-# waiting for it
-resource "aws_apigatewayv2_route" "health" {
-  api_id    = var.api_gateway_id
-  route_key = "GET /health"
-
-  authorization_type = local.authorization_type
-  authorizer_id      = local.authorizer_id
-
-  target = "integrations/${aws_apigatewayv2_integration.httpapi.id}"
-}
-
 # The login of the owner on a restricted stage, opened without the access cookies it sets: AccessRoute of
 # application/backend/websocket-api/lambdas/access, never called by the app, so apart from the routes of the protocol
 resource "aws_apigatewayv2_integration" "access" {

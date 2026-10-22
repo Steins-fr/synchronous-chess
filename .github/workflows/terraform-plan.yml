@@ -6,7 +6,6 @@ on:
     workflow_dispatch:
         inputs:
             stage:
-                # Development is deployed locally (README.md)
                 description: "Deployment stage"
                 required: true
                 type: choice

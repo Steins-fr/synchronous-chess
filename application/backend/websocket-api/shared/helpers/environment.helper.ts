@@ -18,6 +18,10 @@ declare global {
             SOURCE_HASH_SECRET_PARAMETER?: string;
             // Set by the local server only (local/server.ts): API Gateway is reached through its domain otherwise
             MANAGEMENT_API_ENDPOINT?: string;
+            // The origins of the pages of the game app of the stage, separated by commas, set by infrastructure/main.tf
+            // for the lambdas answering a client first (onconnect, httpapi): the local server gives the game app served
+            // locally
+            ALLOWED_ORIGINS?: string;
             // The access of a stage restricted to its owner (staging), set by infrastructure/main.tf for its authorizers
             // and its access lambda: the public key of the signed cookies (SPKI DER in base64), its ID in CloudFront, and
             // the URL of the front they open
@@ -41,6 +45,7 @@ type RequiredVariable =
     | 'DATABASE_NAME'
     | 'DATABASE_INSTANCE_IDENTIFIER'
     | 'SOURCE_HASH_SECRET_PARAMETER'
+    | 'ALLOWED_ORIGINS'
     | 'ACCESS_PUBLIC_KEY'
     | 'ACCESS_KEY_PAIR_ID'
     | 'ACCESS_FRONT_URL'
@@ -102,6 +107,25 @@ export function getSourceHashSecret(): string | undefined {
  */
 export function getSourceHashSecretParameter(): string {
     return requiredVariable('SOURCE_HASH_SECRET_PARAMETER', 'the SSM parameter of the key of the hashes of the IPs, set by infrastructure/main.tf for sendmessage');
+}
+
+/**
+ * The origins of the pages of the game app of the stage, the only ones reaching the APIs: separated by commas, as the
+ * Origin header writes them, in lower case. A value written by hand keeps its spaces, a slash at the end copied from the
+ * address bar, an upper case or an empty entry: dropped
+ * @throws {Error} when the environment of the lambda does not give any
+ */
+export function getAllowedOrigins(): string[] {
+    const purpose: string = 'the origins of the game app, set by infrastructure/main.tf for onconnect and httpapi, by local/server.ts locally';
+    const origins: string[] = requiredVariable('ALLOWED_ORIGINS', purpose).split(',')
+        .map((origin: string): string => origin.trim().replace(/\/$/, '').toLowerCase())
+        .filter((origin: string): boolean => origin !== '');
+
+    if (origins.length === 0) {
+        throw new Error(`No ALLOWED_ORIGINS: ${ purpose }`);
+    }
+
+    return origins;
 }
 
 /** @throws {Error} when the environment of the lambda does not give it */

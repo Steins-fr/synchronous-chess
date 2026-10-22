@@ -1,14 +1,9 @@
 {
-  "apiHealth": {
-    "booting": "Starting the server…",
-    "bootingDelay": "The server and its database sleep when nobody plays: waking them up takes up to about thirty seconds.",
-    "connecting": "Connecting to the server…",
-    "loadingPage": "Loading the page…"
-  },
   "app": {
     "language": {
       "pick": "Choose the language"
     },
+    "loadingPage": "Loading the page…",
     "nav": {
       "chat": "Chat",
       "chess": "Synchronous chess",
@@ -46,6 +41,10 @@
     "title": "Choose a game"
   },
   "rooms": {
+    "booting": {
+      "delay": "The server and its database sleep when nobody plays: waking them up takes up to about thirty seconds.",
+      "title": "Starting the server…"
+    },
     "create": {
       "intro": "The other players will find it in the list of the open rooms: with a password, it is private.",
       "submit": "Create",
@@ -115,6 +114,7 @@
         "label": "Search for a room",
         "maxLength": "The search is at most {maxLength, plural, one {# character} other {# characters}} long"
       },
+      "show": "Show the open rooms",
       "title": "Open rooms"
     }
   }

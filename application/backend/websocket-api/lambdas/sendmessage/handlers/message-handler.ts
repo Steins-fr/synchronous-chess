@@ -1,4 +1,4 @@
-import { ApiGatewayManagementApiClient, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
+import { ApiGatewayManagementApiClient, GoneException, PostToConnectionCommand } from '@aws-sdk/client-apigatewaymanagementapi';
 import {
     SocketPacketRequestPayload,
     RoomApiRequestTypeEnum,
@@ -11,7 +11,9 @@ import {
 } from '@protocol/socket-packet-payload.type';
 import BadRequestException, { isBadRequestException } from '@exceptions/bad-request-exception';
 import { notificationCommand } from '@helpers/notification.helper';
+import Connection from '@models/connection';
 import ConnectionService from '@services/connection-service';
+import DisconnectionService from '@services/disconnection-service';
 import RoomService from '@services/room-service';
 
 export default abstract class MessageHandler {
@@ -21,6 +23,8 @@ export default abstract class MessageHandler {
 
     protected readonly roomService: RoomService;
     protected readonly connectionService: ConnectionService = new ConnectionService();
+    // The connection the request wrote, undone if it closed meanwhile
+    private connection: Connection | undefined;
 
     /** @param sourceIp the IP of the client, or its connection without it: the clients a private room tells apart */
     public constructor(
@@ -67,11 +71,23 @@ export default abstract class MessageHandler {
         return payload.type === type;
     }
 
+    /** Writes the connection of the room: what $disconnect reads to leave it */
+    protected async createConnection(roomName: string): Promise<void> {
+        const connection: Connection = { connectionId: this.connectionId, roomName };
+        await this.connectionService.create(connection);
+        this.connection = connection;
+    }
+
     protected notify<Type extends RoomSocketApiNotificationEnum>(type: Type, to: string, data: RoomSocketApiNotificationTypedData[Type]): Promise<object> {
         return this.apiGatewayManagementApiClient.send(notificationCommand(type, to, data));
     }
 
-    protected reply<Type extends RoomApiResponseTypeEnum>(type: Type, data: RoomSocketApiResponseTypedData[Type]): Promise<object> {
+    /**
+     * Answers the request, last of its handler. The connection closed while the request ran, waiting for the paused
+     * database to resume for one: $disconnect found nothing to undo then, or ran between the writes of the request, so it
+     * is disconnected here, its room told and left as $disconnect does
+     */
+    protected async reply<Type extends RoomApiResponseTypeEnum>(type: Type, data: RoomSocketApiResponseTypedData[Type]): Promise<void> {
         const response: SocketPacketResponsePayload<Type> = {
             id: this.payload.id,
             type,
@@ -82,10 +98,20 @@ export default abstract class MessageHandler {
             ConnectionId: this.connectionId,
             Data: JSON.stringify(response)
         });
-        return this.apiGatewayManagementApiClient.send(command);
+
+        try {
+            await this.apiGatewayManagementApiClient.send(command);
+        } catch (e) {
+            if (!(e instanceof GoneException)) {
+                throw e;
+            }
+
+            console.warn(`Connection closed before its answer, disconnected: ${ this.connectionId }`);
+            await new DisconnectionService((): ApiGatewayManagementApiClient => this.apiGatewayManagementApiClient).disconnect(this.connectionId, this.connection);
+        }
     }
 
-    protected replyError(message: string): Promise<object> {
+    protected replyError(message: string): Promise<void> {
         return this.reply(RoomApiResponseTypeEnum.ERROR, { message });
     }
 }

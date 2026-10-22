@@ -26,7 +26,7 @@ class TestHandler extends MessageHandler {
         return this.notify(RoomSocketApiNotificationEnum.JOIN_REQUEST, 'guest-connection', { playerName: 'guest' });
     }
 
-    public sendReply(): Promise<object> {
+    public sendReply(): Promise<void> {
         return this.reply(RoomApiResponseTypeEnum.PLAYERS, { players: ['host'] });
     }
 
