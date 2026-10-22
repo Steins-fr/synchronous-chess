@@ -187,6 +187,7 @@ describe('LanguageService', () => {
         expect(load).toHaveBeenNthCalledWith(1, Language.FR);
         expect(load).toHaveBeenNthCalledWith(2, `${ TranslationScope.CHESS }/${ Language.FR }`);
         expect(load).toHaveBeenNthCalledWith(3, `${ TranslationScope.CHAT }/${ Language.FR }`);
+        expect(load).toHaveBeenNthCalledWith(4, `${ TranslationScope.POKER }/${ Language.FR }`);
         expect(service.language()).toBe(Language.FR);
     });
 

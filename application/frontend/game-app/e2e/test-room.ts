@@ -1,16 +1,22 @@
 import { test as base, Browser, TestDetails } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 
-/** A chat room of its own for a test, its players closed after it */
+/** A room of its own for a test, a chat room by default, its players closed after it */
 export class TestRoom {
-    // The local API keeps the rooms between two runs
-    public readonly name: string = `room-${ Date.now() }`;
     private readonly participants: RoomParticipant[] = [];
 
-    public constructor(private readonly browser: Browser) {}
+    /**
+     * @param path the page of the game of the room
+     * @param name the name of the room: the local API keeps the rooms between two runs
+     */
+    public constructor(
+        private readonly browser: Browser,
+        private readonly path: string = '/simple-chat',
+        public readonly name: string = `room-${ Date.now() }`,
+    ) {}
 
     private async open(playerName: string, locale?: string): Promise<RoomParticipant> {
-        const participant: RoomParticipant = await RoomParticipant.open(this.browser, playerName, locale);
+        const participant: RoomParticipant = await RoomParticipant.open(this.browser, playerName, this.path, locale);
         this.participants.push(participant);
         return participant;
     }

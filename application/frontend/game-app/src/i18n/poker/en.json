@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "A deck of four aces, four kings, four queens, four jacks and a joker, which stands for any card. Ten hands to take the chips of the other player.",
+    "points": {
+      "checked": "Once the game is over, every key is shown: each participant checks that no card was dealt unfairly.",
+      "hidden": "Only you can read your cards: the other player gives you their keys to them, you keep yours.",
+      "shuffle": "Each hand, the two players shuffle a new deck in turn, encrypted: no one, not even the server, knows its order."
+    },
+    "rooms": "Create a room or join an open one: the participants without a seat watch the game.",
+    "tagline": "Poker for two players, with 17 cards and no dealer.",
+    "title": "Seventeen poker"
+  }
+}

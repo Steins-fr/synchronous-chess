@@ -6,8 +6,9 @@
     "loadingPage": "Cargando la página…",
     "nav": {
       "chat": "Chat",
-      "chess": "Ajedrez sincrónico",
-      "home": "Inicio"
+      "chess": "Ajedrez",
+      "home": "Inicio",
+      "poker": "Póquer"
     },
     "theme": {
       "toDark": "Cambiar al tema oscuro",
@@ -38,6 +39,11 @@
       "title": "Ajedrez sincrónico"
     },
     "intro": "Crea una sala o únete a una de las salas abiertas: los jugadores se conectan directamente entre sí.",
+    "poker": {
+      "action": "Jugar",
+      "description": "Póquer para dos con una baraja de 17 cartas que nadie reparte: los jugadores la barajan juntos, cifrada.",
+      "title": "Póquer de diecisiete cartas"
+    },
     "title": "Elige un juego"
   },
   "rooms": {

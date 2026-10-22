@@ -6,8 +6,9 @@
     "loadingPage": "Ładowanie strony…",
     "nav": {
       "chat": "Czat",
-      "chess": "Szachy synchroniczne",
-      "home": "Start"
+      "chess": "Szachy",
+      "home": "Start",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Przełącz na ciemny motyw",
@@ -38,6 +39,11 @@
       "title": "Szachy synchroniczne"
     },
     "intro": "Utwórz pokój albo dołącz do jednego z otwartych pokojów: gracze łączą się ze sobą bezpośrednio.",
+    "poker": {
+      "action": "Graj",
+      "description": "Poker we dwoje z talią 17 kart, której nikt nie rozdaje: gracze tasują ją razem, zaszyfrowaną.",
+      "title": "Poker na siedemnaście kart"
+    },
     "title": "Wybierz grę"
   },
   "rooms": {

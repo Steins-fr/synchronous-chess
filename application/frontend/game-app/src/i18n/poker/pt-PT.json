@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Um baralho de quatro ases, quatro reis, quatro damas, quatro valetes e um jóquer, que vale qualquer carta. Dez mãos para ficar com as fichas do outro jogador.",
+    "points": {
+      "checked": "Terminada a partida, todas as chaves são mostradas: cada participante verifica que nenhuma carta foi distribuída de forma desleal.",
+      "hidden": "As suas cartas só são legíveis por si: o outro jogador dá-lhe as chaves delas, e as suas ficam consigo.",
+      "shuffle": "Em cada mão, os dois jogadores baralham à vez um baralho novo, cifrado: ninguém, nem sequer o servidor, conhece a sua ordem."
+    },
+    "rooms": "Crie uma sala ou entre numa aberta: os participantes sem lugar assistem à partida.",
+    "tagline": "O póquer para dois jogadores, com 17 cartas e sem croupier.",
+    "title": "Póquer de dezassete cartas"
+  }
+}

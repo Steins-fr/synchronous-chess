@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Un paquet de quatre as, quatre rois, quatre dames, quatre valets et un joker, qui remplace n'importe quelle carte. Dix mains pour prendre les jetons de l'autre joueur.",
+    "points": {
+      "checked": "Une fois la partie finie, toutes les clés sont montrées : chaque participant vérifie qu'aucune carte n'a été distribuée de façon déloyale.",
+      "hidden": "Vos cartes ne sont lisibles que par vous : l'autre joueur vous en donne ses clés, vous gardez les vôtres.",
+      "shuffle": "À chaque main, les deux joueurs mélangent tour à tour un nouveau paquet, chiffré : personne, pas même le serveur, n'en connaît l'ordre."
+    },
+    "rooms": "Créez une salle ou rejoignez-en une ouverte : les participants sans place regardent la partie.",
+    "tagline": "Le poker à deux joueurs, avec 17 cartes et sans donneur.",
+    "title": "Poker à dix-sept cartes"
+  }
+}

@@ -65,7 +65,7 @@ test.describe('Language', () => {
 
         // When: the chess page, never shown before, opens meanwhile
         holding = false;
-        await page.locator('app-root > nav').getByRole('link', { name: 'Synchronous chess' }).click();
+        await page.locator('app-root > nav').getByRole('link', { name: 'Chess', exact: true }).click();
 
         // Then
         const presentationTitle: Locator = page.locator('app-chess-presentation h1');

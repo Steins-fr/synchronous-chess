@@ -6,8 +6,9 @@
     "loadingPage": "Loading the page…",
     "nav": {
       "chat": "Chat",
-      "chess": "Synchronous chess",
-      "home": "Home"
+      "chess": "Chess",
+      "home": "Home",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Switch to the dark theme",
@@ -38,6 +39,11 @@
       "title": "Synchronous chess"
     },
     "intro": "Create a room, or join one of the open rooms: the players connect directly to each other.",
+    "poker": {
+      "action": "Play",
+      "description": "Heads-up poker with a deck of 17 cards that no one deals: the players shuffle it together, encrypted.",
+      "title": "Seventeen poker"
+    },
     "title": "Choose a game"
   },
   "rooms": {

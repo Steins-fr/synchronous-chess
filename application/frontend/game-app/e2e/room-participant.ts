@@ -26,6 +26,7 @@ export class RoomParticipant {
         public readonly name: string,
         private readonly context: BrowserContext,
         public readonly page: Page,
+        private readonly path: string,
     ) {
         page.on('websocket', (webSocket: WebSocket) => {
             if (webSocket.url().startsWith(RoomParticipant.API_SOCKET)) {
@@ -39,8 +40,11 @@ export class RoomParticipant {
         });
     }
 
-    /** @param locale the language of the browser: the one of the config (en-US) by default */
-    public static async open(browser: Browser, name: string, locale?: string): Promise<RoomParticipant> {
+    /**
+     * @param path the page of the game of the room
+     * @param locale the language of the browser: the one of the config (en-US) by default
+     */
+    public static async open(browser: Browser, name: string, path: string, locale?: string): Promise<RoomParticipant> {
         const context: BrowserContext = await browser.newContext(locale === undefined ? {} : { locale });
         await context.addInitScript(() => {
             const NativePeerConnection: typeof RTCPeerConnection = window.RTCPeerConnection;
@@ -53,12 +57,12 @@ export class RoomParticipant {
             };
         });
 
-        return new RoomParticipant(name, context, await context.newPage());
+        return new RoomParticipant(name, context, await context.newPage(), path);
     }
 
     /** Creates the room, private with a password */
     public async create(roomName: string, password?: string): Promise<void> {
-        await this.page.goto('/simple-chat');
+        await this.page.goto(this.path);
         await this.page.getByRole('button', { name: 'Create a room', exact: true }).click();
         const dialog: Locator = this.page.locator('app-room-create-dialog');
         await dialog.getByRole('textbox', { name: 'Room name' }).fill(roomName);
@@ -70,7 +74,7 @@ export class RoomParticipant {
     }
 
     /**
-     * Loads the page of the chat room without acting on it, as a bot rendering it, until it settles: a script Playwright
+     * Loads the page of the room without acting on it, as a bot rendering it, until it settles: a script Playwright
      * runs in the page (a snapshot of a trace, an evaluation) carries a user gesture, which would activate a page still
      * starting, as a person does
      * @param options.fakeClock its clock faked, the time flowing as usual until passTime(); its performance entries are
@@ -80,7 +84,7 @@ export class RoomParticipant {
         if (options?.fakeClock === true) {
             await this.page.clock.install();
         }
-        await this.page.goto('/simple-chat', { waitUntil: 'networkidle' });
+        await this.page.goto(this.path, { waitUntil: 'networkidle' });
     }
 
     /**
@@ -93,11 +97,11 @@ export class RoomParticipant {
     }
 
     /**
-     * Opens the page of the chat room as a person, the pointer moving over it once it settles, the app listening: its list
+     * Opens the page of the room as a person, the pointer moving over it once it settles, the app listening: its list
      * of the open rooms
      */
     public async visit(): Promise<void> {
-        await this.page.goto('/simple-chat', { waitUntil: 'networkidle' });
+        await this.page.goto(this.path, { waitUntil: 'networkidle' });
         await this.page.mouse.move(100, 100);
     }
 

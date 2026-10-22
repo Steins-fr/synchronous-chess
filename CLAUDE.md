@@ -119,9 +119,9 @@ run by the CI.
 
 - One-time setup: `npx playwright install chromium` in the game app (the browser of `@playwright/test`, apart
   from the one of the MCP).
-- `e2e/test-room.ts` gives each test a room of its own (`room` fixture), `e2e/room-participant.ts` drives a player:
-  join, reload, messages, the participants it sees, and `cutConnections()` to close its WebRTC connections as a
-  network failure would.
+- `e2e/test-room.ts` gives each test a room of its own (`room` fixture, a chat room; `new TestRoom(browser, path)` for
+  the page of another game), `e2e/room-participant.ts` drives a player: join, reload, messages, the participants it
+  sees, and `cutConnections()` to close its WebRTC connections as a network failure would.
 - A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`, without the snapshots of
   the DOM in `bots.e2e.ts` (they run in the page with a user gesture, which activates it). The servers' logs are not
   shown: start the servers apart to read them.
@@ -134,7 +134,8 @@ run by the CI.
 
 ### Testing a chess game
 
-- The chess page is `/synchronous-chess`, the chat page `/simple-chat`: the home page only links to them.
+- The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`
+  (its rooms and chat only, the game in progress: #198): the home page only links to them.
 - Each participant, the host included, takes a seat with the `Play white` / `Play black`
   buttons: two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from

@@ -1,0 +1,7 @@
+<app-room-layout [game]="game" [dimContent]="false">
+    <app-poker-presentation roomPresentation />
+    @if (room(); as myRoom) {
+    <app-debug-webrtc [room]="myRoom"/>
+    <app-chat [room]="myRoom" />
+    }
+</app-room-layout>

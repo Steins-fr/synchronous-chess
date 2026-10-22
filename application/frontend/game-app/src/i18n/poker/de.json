@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Ein Blatt aus vier Assen, vier Königen, vier Damen, vier Buben und einem Joker, der jede Karte ersetzt. Zehn Hände, um dem anderen Spieler die Chips abzunehmen.",
+    "points": {
+      "checked": "Nach dem Spiel werden alle Schlüssel gezeigt: Jeder Teilnehmer prüft, dass keine Karte unfair ausgeteilt wurde.",
+      "hidden": "Nur du kannst deine Karten lesen: Der andere Spieler gibt dir seine Schlüssel dafür, du behältst deine.",
+      "shuffle": "In jeder Hand mischen die beiden Spieler abwechselnd ein neues Blatt, verschlüsselt: Niemand, nicht einmal der Server, kennt seine Reihenfolge."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem offenen bei: Die Teilnehmer ohne Platz schauen dem Spiel zu.",
+    "tagline": "Poker für zwei Spieler, mit 17 Karten und ohne Geber.",
+    "title": "Siebzehn-Karten-Poker"
+  }
+}
