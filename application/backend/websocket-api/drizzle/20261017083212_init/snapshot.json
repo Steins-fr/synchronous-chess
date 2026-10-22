@@ -1,666 +1,1102 @@
 {
-  "version": "8",
+  "type": "diff",
+  "version": "9",
   "dialect": "postgres",
   "id": "056fbc57-bf46-4800-9a6e-2a39910068d6",
   "prevIds": [
     "636928c1-5556-43e7-bf48-6c59f85b7029"
   ],
-  "ddl": [
+  "footprints": [
     {
-      "isRlsEnabled": false,
-      "name": "connections",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "room_password_attempts",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "room_players",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "room_queue",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "room_tokens",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "isRlsEnabled": false,
-      "name": "rooms",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "connection_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "connections"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "room_name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "connections"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "room_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_password_attempts"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "source_hash",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_password_attempts"
-    },
-    {
-      "type": "smallint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "attempts",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_password_attempts"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_password_attempts"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "room_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_players"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "player_name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_players"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": {
-        "type": "always",
-        "name": "room_players_seq_seq",
-        "increment": "1",
-        "startWith": "1",
-        "minValue": "1",
-        "maxValue": "9223372036854775807",
-        "cache": 1,
-        "cycle": false
-      },
-      "name": "seq",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_players"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "room_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_queue"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "player_name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_queue"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "connection_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_queue"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": {
-        "type": "always",
-        "name": "room_queue_seq_seq",
-        "increment": "1",
-        "startWith": "1",
-        "minValue": "1",
-        "maxValue": "9223372036854775807",
-        "cache": 1,
-        "cycle": false
-      },
-      "name": "seq",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_queue"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "room_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_tokens"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "player_name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_tokens"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "token_hash",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "room_tokens"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "connection_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "host_player",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "smallint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "max_player",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "game",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "name_key",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "password_hash",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "boolean",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": {
-        "as": "password_hash IS NOT NULL",
-        "type": "stored"
-      },
-      "identity": null,
-      "name": "is_private",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "expires_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "type": "bigint",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "lease_until",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "rooms"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "room_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "connection_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "connections"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "room_queue_connection",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "room_queue"
+      "writes": [
+        "s|tbl|public.connections",
+        "n|tbl|public.connections",
+        "e|tbl|public.connections",
+        "n|rel|public.connections",
+        "n|type|public.connections",
+        "n|rel|public.connections_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "game",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "created_at",
-          "isExpression": false,
-          "asc": false,
-          "nullsFirst": true,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_password_attempts"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "rooms_game_created_at",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "rooms"
+      "writes": [
+        "s|tbl|public.room_password_attempts",
+        "n|tbl|public.room_password_attempts",
+        "e|tbl|public.room_password_attempts",
+        "n|rel|public.room_password_attempts",
+        "n|type|public.room_password_attempts",
+        "n|rel|public.room_password_attempts_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "name_key",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": {
-            "name": "gin_trgm_ops",
-            "default": false
-          }
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_players"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "gin",
-      "concurrently": false,
-      "name": "rooms_name_key_trgm",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "rooms"
+      "writes": [
+        "s|tbl|public.room_players",
+        "n|tbl|public.room_players",
+        "e|tbl|public.room_players",
+        "n|rel|public.room_players",
+        "n|type|public.room_players",
+        "n|rel|public.room_players_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "coalesce(\"expires_at\", \"lease_until\")",
-          "isExpression": true,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_queue"
       ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "rooms_expiry",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "rooms"
+      "writes": [
+        "s|tbl|public.room_queue",
+        "n|tbl|public.room_queue",
+        "e|tbl|public.room_queue",
+        "n|rel|public.room_queue",
+        "n|type|public.room_queue",
+        "n|rel|public.room_queue_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "room_id"
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_tokens"
       ],
-      "schemaTo": "public",
-      "tableTo": "rooms",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|tbl|public.room_tokens",
+        "n|tbl|public.room_tokens",
+        "e|tbl|public.room_tokens",
+        "n|rel|public.room_tokens",
+        "n|type|public.room_tokens",
+        "n|rel|public.room_tokens_pkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "room_password_attempts_room_id_rooms_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "room_password_attempts"
+      "reads": [
+        "n|sch|public"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "room_id"
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "rooms"
       ],
-      "schemaTo": "public",
-      "tableTo": "rooms",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|tbl|public.rooms",
+        "n|tbl|public.rooms",
+        "e|tbl|public.rooms",
+        "n|rel|public.rooms",
+        "n|type|public.rooms",
+        "n|rel|public.rooms_pkey"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "room_players_room_id_rooms_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "room_players"
+      "reads": [
+        "n|sch|public"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "room_id"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "room_queue",
+        "room_queue_connection"
       ],
-      "schemaTo": "public",
-      "tableTo": "rooms",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|idx|public.room_queue_connection",
+        "n|idx|public.room_queue_connection",
+        "e|idx|public.room_queue_connection",
+        "n|rel|public.room_queue_connection"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "room_queue_room_id_rooms_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "room_queue"
+      "reads": [
+        "n|tbl|public.room_queue",
+        "n|sch|public",
+        "n|col|public.room_queue.room_id",
+        "n|col|public.room_queue.connection_id"
+      ]
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "room_id"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "rooms",
+        "rooms_game_created_at"
       ],
-      "schemaTo": "public",
-      "tableTo": "rooms",
-      "columnsTo": [
-        "id"
+      "writes": [
+        "s|idx|public.rooms_game_created_at",
+        "n|idx|public.rooms_game_created_at",
+        "e|idx|public.rooms_game_created_at",
+        "n|rel|public.rooms_game_created_at"
       ],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
-      "name": "room_tokens_room_id_rooms_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "room_tokens"
+      "reads": [
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.rooms.game",
+        "n|col|public.rooms.created_at"
+      ]
     },
     {
-      "columns": [
-        "room_id",
-        "source_hash"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "rooms",
+        "rooms_name_key_trgm"
       ],
-      "nameExplicit": false,
-      "name": "room_password_attempts_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "room_password_attempts"
-    },
-    {
-      "columns": [
-        "room_id",
-        "player_name"
+      "writes": [
+        "s|idx|public.rooms_name_key_trgm",
+        "n|idx|public.rooms_name_key_trgm",
+        "e|idx|public.rooms_name_key_trgm",
+        "n|rel|public.rooms_name_key_trgm"
       ],
-      "nameExplicit": false,
-      "name": "room_players_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "room_players"
+      "reads": [
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.rooms.name_key"
+      ]
     },
     {
-      "columns": [
-        "room_id",
-        "player_name"
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "rooms",
+        "rooms_expiry"
       ],
-      "nameExplicit": false,
-      "name": "room_queue_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "room_queue"
-    },
-    {
-      "columns": [
-        "room_id",
-        "player_name"
+      "writes": [
+        "s|idx|public.rooms_expiry",
+        "n|idx|public.rooms_expiry",
+        "e|idx|public.rooms_expiry",
+        "n|rel|public.rooms_expiry"
       ],
-      "nameExplicit": false,
-      "name": "room_tokens_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "room_tokens"
+      "reads": [
+        "n|tbl|public.rooms",
+        "n|sch|public"
+      ]
     },
     {
-      "columns": [
-        "connection_id"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_password_attempts"
       ],
-      "nameExplicit": false,
-      "name": "connections_pkey",
-      "schema": "public",
-      "table": "connections",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
-        "id"
+      "writes": [
+        "s|fk|public.room_password_attempts.room_password_attempts_room_id_rooms_id_fkey",
+        "n|fk|public.room_password_attempts.room_password_attempts_room_id_rooms_id_fkey",
+        "e|fk|public.room_password_attempts.room_password_attempts_room_id_rooms_id_fkey",
+        "n|con|public.room_password_attempts.room_password_attempts_room_id_rooms_id_fkey"
       ],
-      "nameExplicit": false,
-      "name": "rooms_pkey",
-      "schema": "public",
-      "table": "rooms",
-      "entityType": "pks"
+      "reads": [
+        "n|tbl|public.room_password_attempts",
+        "n|sch|public",
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.room_password_attempts.room_id",
+        "n|col|public.rooms.id",
+        "e|uniqueness|public.rooms.id"
+      ]
     },
     {
-      "value": "\"max_player\" BETWEEN 1 AND 16",
-      "name": "rooms_max_player",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "rooms"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_players"
+      ],
+      "writes": [
+        "s|fk|public.room_players.room_players_room_id_rooms_id_fkey",
+        "n|fk|public.room_players.room_players_room_id_rooms_id_fkey",
+        "e|fk|public.room_players.room_players_room_id_rooms_id_fkey",
+        "n|con|public.room_players.room_players_room_id_rooms_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.room_players",
+        "n|sch|public",
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.room_players.room_id",
+        "n|col|public.rooms.id",
+        "e|uniqueness|public.rooms.id"
+      ]
     },
     {
-      "value": "\"game\" IN ('chess', 'chat')",
-      "name": "rooms_game",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "rooms"
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_queue"
+      ],
+      "writes": [
+        "s|fk|public.room_queue.room_queue_room_id_rooms_id_fkey",
+        "n|fk|public.room_queue.room_queue_room_id_rooms_id_fkey",
+        "e|fk|public.room_queue.room_queue_room_id_rooms_id_fkey",
+        "n|con|public.room_queue.room_queue_room_id_rooms_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.room_queue",
+        "n|sch|public",
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.room_queue.room_id",
+        "n|col|public.rooms.id",
+        "e|uniqueness|public.rooms.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "room_tokens"
+      ],
+      "writes": [
+        "s|fk|public.room_tokens.room_tokens_room_id_rooms_id_fkey",
+        "n|fk|public.room_tokens.room_tokens_room_id_rooms_id_fkey",
+        "e|fk|public.room_tokens.room_tokens_room_id_rooms_id_fkey",
+        "n|con|public.room_tokens.room_tokens_room_id_rooms_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.room_tokens",
+        "n|sch|public",
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.room_tokens.room_id",
+        "n|col|public.rooms.id",
+        "e|uniqueness|public.rooms.id"
+      ]
     }
   ],
-  "renames": []
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "connections",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "room_password_attempts",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "room_players",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "room_queue",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "room_tokens",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "rooms",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "connections",
+        "name": "connection_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "connections",
+        "name": "room_name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_password_attempts",
+        "name": "room_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_password_attempts",
+        "name": "source_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_password_attempts",
+        "name": "attempts",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_password_attempts",
+        "name": "expires_at",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_players",
+        "name": "room_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_players",
+        "name": "player_name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_players",
+        "name": "seq",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": {
+          "type": "always",
+          "name": "room_players_seq_seq",
+          "increment": "1",
+          "startWith": "1",
+          "minValue": "1",
+          "maxValue": "9223372036854775807",
+          "cache": 1,
+          "cycle": false
+        },
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "room_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "player_name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "connection_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "seq",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": {
+          "type": "always",
+          "name": "room_queue_seq_seq",
+          "increment": "1",
+          "startWith": "1",
+          "minValue": "1",
+          "maxValue": "9223372036854775807",
+          "cache": 1,
+          "cycle": false
+        },
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "room_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "player_name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "token_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "connection_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "host_player",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "max_player",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "game",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "created_at",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "name_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "password_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "is_private",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": {
+          "as": "password_hash IS NOT NULL",
+          "type": "stored"
+        },
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "expires_at",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "lease_until",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "room_queue_connection",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "room_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "connection_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "rooms_game_created_at",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "game",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": false,
+            "nullsFirst": true,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "rooms_name_key_trgm",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "name_key",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": {
+              "name": "gin_trgm_ops",
+              "default": false
+            }
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "gin",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "rooms_expiry",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "coalesce(\"expires_at\", \"lease_until\")",
+            "isExpression": true,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_password_attempts",
+        "name": "room_password_attempts_room_id_rooms_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "room_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "rooms",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_players",
+        "name": "room_players_room_id_rooms_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "room_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "rooms",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "room_queue_room_id_rooms_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "room_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "rooms",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "room_tokens_room_id_rooms_id_fkey",
+        "nameExplicit": false,
+        "columns": [
+          "room_id"
+        ],
+        "schemaTo": "public",
+        "tableTo": "rooms",
+        "columnsTo": [
+          "id"
+        ],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_password_attempts",
+        "name": "room_password_attempts_pkey",
+        "columns": [
+          "room_id",
+          "source_hash"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_players",
+        "name": "room_players_pkey",
+        "columns": [
+          "room_id",
+          "player_name"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_queue",
+        "name": "room_queue_pkey",
+        "columns": [
+          "room_id",
+          "player_name"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "room_tokens_pkey",
+        "columns": [
+          "room_id",
+          "player_name"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "connections",
+        "name": "connections_pkey",
+        "columns": [
+          "connection_id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "rooms_pkey",
+        "columns": [
+          "id"
+        ],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "rooms_max_player",
+        "value": "\"max_player\" BETWEEN 1 AND 16",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rooms",
+        "name": "rooms_game",
+        "value": "\"game\" IN ('chess', 'chat')",
+        "entityType": "checks"
+      }
+    }
+  ]
 }
