@@ -17,8 +17,8 @@
     "title": "Scacchi sincroni"
   },
   "cheat": {
-    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
-    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
   },
   "dialog": {
     "cancel": "Annulla",

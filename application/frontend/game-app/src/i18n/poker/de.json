@@ -10,5 +10,99 @@
     "rooms": "Erstelle einen Raum oder tritt einem offenen bei: Die Teilnehmer ohne Platz schauen dem Spiel zu.",
     "tagline": "Poker für zwei Spieler, mit 17 Karten und ohne Geber.",
     "title": "Siebzehn-Karten-Poker"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 Karten: die Asse, Könige, Damen und Buben der vier Farben und ein Joker, der für die Karte steht, die die beste Hand ergibt. Für jede Hand wird ein neues Blatt gemischt.",
+      "title": "Das Blatt"
+    },
+    "fair": {
+      "dealer": "Die Spieler mischen jedes Blatt gemeinsam, verschlüsselt, und geben einander die Schlüssel der ausgeteilten Karten: Niemand, nicht einmal der Server, sieht eine Hand vor ihrem Showdown. Am Ende der Partie werden alle Schlüssel gezeigt und jeder Teilnehmer prüft jedes Blatt.",
+      "title": "Ohne Geber"
+    },
+    "hand": {
+      "ante": "Jeder Spieler zahlt eine Ante von 5 Chips und bekommt 5 Karten.",
+      "exchange": "Tausch: Jeder Spieler wirft der Reihe nach Karten ab und zieht ebenso viele; der zweite zieht aus den übrigen Karten.",
+      "firstRound": "Erste Setzrunde: checken, setzen, erhöhen, mitgehen oder aussteigen. Checken beide Spieler, gehen die Antes an die Bank.",
+      "secondRound": "Zweite Setzrunde: Ein Einsatz beträgt mindestens den der ersten Runde und höchstens 30 Chips.",
+      "showdown": "Showdown: Die beste Hand gewinnt den Pot. Wer aussteigt, überlässt ihn dem anderen.",
+      "title": "Eine Hand"
+    },
+    "hands": {
+      "fiveOfAKind": "Fünfling: die vier Karten eines Rangs und der Joker.",
+      "fourOfAKind": "Vierling: vier Karten eines Rangs.",
+      "fullHouse": "Full House: drei Karten eines Rangs und zwei eines anderen.",
+      "onePair": "Ein Paar: zwei Karten eines Rangs. Jede Hand hat mindestens eins.",
+      "royalFlush": "Royal Flush: Bube, Dame, König und Ass einer Farbe, der Joker als Zehn.",
+      "straight": "Straße: ein Bube, eine Dame, ein König und ein Ass, der Joker als Zehn.",
+      "threeOfAKind": "Drilling: drei Karten eines Rangs.",
+      "ties": "Zwischen Händen derselben Art gewinnen die höheren Ränge, zuerst das Ass; eine Hand ohne Joker schlägt dieselbe mit ihm. Nur gleiche Hände teilen den Pot.",
+      "title": "Die Hände, von der besten an",
+      "twoPair": "Zwei Paare: zwei Karten eines Rangs und zwei eines anderen."
+    },
+    "match": {
+      "cap": "In einer Hand setzt niemand mehr Chips, als der ärmere Spieler hat.",
+      "end": "10 Hände, 150 Chips pro Spieler: Wer die meisten Chips hat, gewinnt. Die Partie endet früher, wenn ein Spieler die Ante nicht mehr zahlen kann.",
+      "title": "Die Partie"
+    },
+    "summary": "Spielregeln",
+    "title": "Regeln"
+  },
+  "table": {
+    "action": {
+      "bet": "Setzen {amount}",
+      "call": "Mitgehen {amount}",
+      "check": "Checken",
+      "deal": "Austeilen",
+      "exchange": "{count, plural, one {# Karte tauschen} other {# Karten tauschen}}",
+      "fold": "Aussteigen",
+      "keep": "Hand behalten",
+      "less": "Weniger setzen",
+      "max": "Max",
+      "min": "Min",
+      "more": "Mehr setzen",
+      "raise": "Erhöhen auf {amount}"
+    },
+    "hand": "Hand {index} von {hands}",
+    "history": "Gespielte Hände",
+    "outcome": {
+      "fold": "Hand {index}: {folder} steigt aus, {winner} gewinnt den Pot von {pot}.",
+      "noContest": "Hand {index}: kein Spiel, die Antes gehen an die Bank.",
+      "split": "Hand {index}: gleiche Hände ({category, select, fiveOfAKind {Fünfling} royalFlush {Royal Flush} fourOfAKind {Vierling} fullHouse {Full House} straight {Straße} threeOfAKind {Drilling} twoPair {zwei Paare} other {ein Paar}}), der Pot wird geteilt.",
+      "win": "Hand {index}: {winner} gewinnt den Pot von {pot} mit {category, select, fiveOfAKind {einem Fünfling} royalFlush {einem Royal Flush} fourOfAKind {einem Vierling} fullHouse {einem Full House} straight {einer Straße} threeOfAKind {einem Drilling} twoPair {zwei Paaren} other {einem Paar}}."
+    },
+    "pot": "Pot {pot}",
+    "result": {
+      "draw": "Remis: Beide Spieler enden mit {chips, plural, one {# Chip} other {# Chips}}.",
+      "win": "{winner} gewinnt die Partie mit {chips, plural, one {# Chip} other {# Chips}}."
+    },
+    "seat": {
+      "bet": "Einsatz {amount}",
+      "chips": "{count, plural, one {# Chip} other {# Chips}}",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "play": "Hinsetzen"
+    },
+    "spectators": "Zuschauer: {count}",
+    "status": {
+      "away": "Warte, bis {name} zurückkommt…",
+      "broken": "Bei einem Blatt wurde betrogen: Die Partie endet.",
+      "keys": "Warte auf die Schlüssel von {name}…",
+      "myDeal": "Du teilst aus.",
+      "myExchange": "Wähle die Karten zum Abwerfen und tausche sie.",
+      "myTurn": "Du bist dran.",
+      "reading": "Die Karten werden gelesen…",
+      "seats": "Warte, bis sich zwei Spieler setzen.",
+      "showdown": "Die Hände werden gezeigt…",
+      "shuffling": "{name} mischt das Blatt…",
+      "theirDeal": "{name} teilt aus.",
+      "theirExchange": "{name} tauscht Karten.",
+      "theirTurn": "{name} ist dran."
+    },
+    "verification": {
+      "cheated": "Bei einem Blatt wurde betrogen.",
+      "checking": "Alle Blätter werden geprüft…",
+      "fair": "Jedes Blatt war fair."
+    }
   }
 }

@@ -17,8 +17,8 @@
     "title": "Synchronous Chess"
   },
   "cheat": {
-    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} other {}}) from {author} is reported as cheating by {reporters}",
-    "ignored": "A message ({chain, select, chess {chess} chat {chat} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
+    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} other {}}) from {author} is reported as cheating by {reporters}",
+    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
   },
   "dialog": {
     "cancel": "Cancel",

@@ -17,8 +17,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} other {}}) de {author} foi denunciada como batota por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} other {}}) de {author} foi denunciada como batota por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",

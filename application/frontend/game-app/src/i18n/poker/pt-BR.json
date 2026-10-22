@@ -10,5 +10,99 @@
     "rooms": "Crie uma sala ou entre em uma aberta: os participantes sem lugar assistem à partida.",
     "tagline": "O pôquer para dois jogadores, com 17 cartas e sem crupiê.",
     "title": "Pôquer de dezessete cartas"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 cartas: os ases, reis, damas e valetes dos quatro naipes, e um coringa, que vale a carta que dá a melhor mão. Um baralho novo é embaralhado a cada mão.",
+      "title": "O baralho"
+    },
+    "fair": {
+      "dealer": "Os jogadores embaralham juntos cada baralho, criptografado, e dão um ao outro as chaves das cartas distribuídas: ninguém, nem mesmo o servidor, vê uma mão antes do showdown. No fim da partida, todas as chaves são mostradas e cada participante verifica cada baralho.",
+      "title": "Sem crupiê"
+    },
+    "hand": {
+      "ante": "Cada jogador paga um ante de 5 fichas e recebe 5 cartas.",
+      "exchange": "Troca: cada jogador, na sua vez, descarta cartas e compra a mesma quantidade; o segundo compra entre as cartas que sobram.",
+      "firstRound": "Primeira rodada: mesa, apostar, aumentar, pagar ou desistir. Se os dois jogadores pedem mesa, os antes vão para a banca.",
+      "secondRound": "Segunda rodada: uma aposta é no mínimo a da primeira rodada, e no máximo 30 fichas.",
+      "showdown": "Showdown: a melhor mão leva o pote. Um jogador que desiste o deixa para o outro.",
+      "title": "Uma mão"
+    },
+    "hands": {
+      "fiveOfAKind": "Quina: as quatro cartas de um valor e o coringa.",
+      "fourOfAKind": "Quadra: quatro cartas de um valor.",
+      "fullHouse": "Full house: três cartas de um valor e duas de outro.",
+      "onePair": "Um par: duas cartas de um valor. Toda mão tem pelo menos um.",
+      "royalFlush": "Royal flush: o valete, a dama, o rei e o ás de um naipe, com o coringa como dez.",
+      "straight": "Sequência: um valete, uma dama, um rei e um ás, com o coringa como dez.",
+      "threeOfAKind": "Trinca: três cartas de um valor.",
+      "ties": "Entre mãos do mesmo tipo, os valores mais altos vencem, o ás primeiro; uma mão sem o coringa vence a mesma com ele. Só mãos iguais dividem o pote.",
+      "title": "As mãos, da melhor à pior",
+      "twoPair": "Dois pares: duas cartas de um valor e duas de outro."
+    },
+    "match": {
+      "cap": "Em uma mão, ninguém aposta mais fichas do que o jogador mais pobre tem.",
+      "end": "10 mãos, 150 fichas para cada um: vence o jogador com mais fichas. A partida acaba antes quando um jogador não consegue mais pagar o ante.",
+      "title": "A partida"
+    },
+    "summary": "Regras do jogo",
+    "title": "Regras"
+  },
+  "table": {
+    "action": {
+      "bet": "Apostar {amount}",
+      "call": "Pagar {amount}",
+      "check": "Mesa",
+      "deal": "Distribuir",
+      "exchange": "{count, plural, one {Trocar # carta} other {Trocar # cartas}}",
+      "fold": "Desistir",
+      "keep": "Manter a mão",
+      "less": "Apostar menos",
+      "max": "Máx",
+      "min": "Mín",
+      "more": "Apostar mais",
+      "raise": "Aumentar para {amount}"
+    },
+    "hand": "Mão {index} de {hands}",
+    "history": "Mãos jogadas",
+    "outcome": {
+      "fold": "Mão {index}: {folder} desiste, {winner} leva o pote de {pot}.",
+      "noContest": "Mão {index}: mão anulada, os antes vão para a banca.",
+      "split": "Mão {index}: mãos iguais ({category, select, fiveOfAKind {quina} royalFlush {royal flush} fourOfAKind {quadra} fullHouse {full house} straight {sequência} threeOfAKind {trinca} twoPair {dois pares} other {um par}}), o pote é dividido.",
+      "win": "Mão {index}: {winner} leva o pote de {pot} com {category, select, fiveOfAKind {uma quina} royalFlush {um royal flush} fourOfAKind {uma quadra} fullHouse {um full house} straight {uma sequência} threeOfAKind {uma trinca} twoPair {dois pares} other {um par}}."
+    },
+    "pot": "Pote {pot}",
+    "result": {
+      "draw": "Empate: os dois jogadores terminam com {chips, plural, one {# ficha} other {# fichas}}.",
+      "win": "{winner} vence a partida com {chips, plural, one {# ficha} other {# fichas}}."
+    },
+    "seat": {
+      "bet": "Aposta {amount}",
+      "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "play": "Sentar"
+    },
+    "spectators": "Espectadores: {count}",
+    "status": {
+      "away": "Aguardando {name} voltar…",
+      "broken": "Houve trapaça em um baralho: a partida para.",
+      "keys": "Aguardando as chaves de {name}…",
+      "myDeal": "Sua vez de distribuir.",
+      "myExchange": "Selecione as cartas para descartar e troque-as.",
+      "myTurn": "Sua vez.",
+      "reading": "Lendo as cartas…",
+      "seats": "Aguardando dois jogadores se sentarem.",
+      "showdown": "As mãos são mostradas…",
+      "shuffling": "{name} embaralha o baralho…",
+      "theirDeal": "Vez de {name} distribuir.",
+      "theirExchange": "{name} troca cartas.",
+      "theirTurn": "Vez de {name}."
+    },
+    "verification": {
+      "cheated": "Houve trapaça em um baralho.",
+      "checking": "Verificando os baralhos…",
+      "fair": "Todos os baralhos foram justos."
+    }
   }
 }

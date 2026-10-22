@@ -17,8 +17,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",

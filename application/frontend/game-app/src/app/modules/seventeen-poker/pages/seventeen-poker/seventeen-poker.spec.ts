@@ -14,6 +14,7 @@ import { TestRequest } from '@angular/common/http/testing';
 import { TestHelper } from '@testing/test.helper';
 import { RoomGame } from '@protocol/room-game.enum';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { pokerBlockChains } from '../../classes/game-sessions/seventeen-poker-session';
 import { SeventeenPoker } from './seventeen-poker';
 
 describe('SeventeenPoker', () => {
@@ -46,12 +47,14 @@ describe('SeventeenPoker', () => {
         expect(games).toEqual([RoomGame.SEVENTEEN_POKER]);
     });
 
-    test('should present the game until a room is set up', () => {
+    test('should present the game and its rules until a room is set up', () => {
         expect(fixture.nativeElement.querySelector('app-poker-presentation')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-poker-rules h2')?.textContent).toEqual('Rules');
         expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-poker-table')).toBeNull();
     });
 
-    test('should build a room of the game holding the chat, of 6 participants at most', async () => {
+    test('should build a room of the game holding its table and the chat, of 6 participants at most', async () => {
         // Given
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
@@ -63,10 +66,17 @@ describe('SeventeenPoker', () => {
         // Then
         expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith(
             { type: 'create', game: RoomGame.SEVENTEEN_POKER, roomName: 'room', playerName: 'local' }, 6,
-            { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal),
+            { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, ...pokerBlockChains }, expect.any(AbortSignal),
         );
         expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-poker-presentation')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-poker-table')).not.toBeNull();
+        // The rules are folded below the table, without their own title
+        expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-poker-rules')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-poker-rules h2')).toBeNull();
+        // The game first, then the chat, then the debug panel
+        const order: string[] = Array.from(fixture.nativeElement.querySelector('#page-content').children, (child: Element) => child.tagName.toLowerCase());
+        expect(order).toEqual(['app-poker-table', 'details', 'app-chat', 'app-debug-webrtc']);
     });
 });

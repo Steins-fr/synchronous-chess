@@ -1,0 +1,47 @@
+<ng-container *transloco="let t; prefix: 'poker.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('deck.title') }}</h3>
+        <p class="my-2">{{ t('deck.cards') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('hands.title') }}</h3>
+        <ol class="pl-5 list-decimal space-y-1">
+            <li>{{ t('hands.fiveOfAKind') }}</li>
+            <li>{{ t('hands.royalFlush') }}</li>
+            <li>{{ t('hands.fourOfAKind') }}</li>
+            <li>{{ t('hands.fullHouse') }}</li>
+            <li>{{ t('hands.straight') }}</li>
+            <li>{{ t('hands.threeOfAKind') }}</li>
+            <li>{{ t('hands.twoPair') }}</li>
+            <li>{{ t('hands.onePair') }}</li>
+        </ol>
+        <p class="my-2">{{ t('hands.ties') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('hand.title') }}</h3>
+        <ol class="pl-5 list-decimal space-y-1">
+            <li>{{ t('hand.ante') }}</li>
+            <li>{{ t('hand.firstRound') }}</li>
+            <li>{{ t('hand.exchange') }}</li>
+            <li>{{ t('hand.secondRound') }}</li>
+            <li>{{ t('hand.showdown') }}</li>
+        </ol>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('match.title') }}</h3>
+        <p class="my-2">{{ t('match.end') }}</p>
+        <p class="my-2">{{ t('match.cap') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.dealer') }}</p>
+    </section>
+</ng-container>

@@ -241,6 +241,24 @@ Claude writes the translations of every new or changed key, into every language:
 | shuffle | mélanger | barajar | embaralhar | baralhar | mischen | тасовать | karıştırmak | mengocok | tasować | mescolare |
 | deal | distribuer | repartir | distribuir | distribuir | austeilen | сдавать | dağıtmak | membagikan | rozdawać | distribuire |
 | key (of a card) | clé | clave | chave | chave | Schlüssel | ключ | anahtar | kunci | klucz | chiave |
+| check (poker) | parler | pasar | mesa | passar | checken | чек | pas | cek | czekaj | passo |
+| bet | miser / mise | apostar / apuesta | apostar / aposta | apostar / aposta | setzen / Einsatz | поставить / ставка | bahis | taruhan | postaw / stawka | punta / puntata |
+| raise | relancer | subir | aumentar | aumentar | erhöhen | повысить | artır | naikkan | przebij | rilancia |
+| call | suivre | igualar | pagar | pagar | mitgehen | уравнять | gör | ikut | sprawdź | vedi |
+| fold | se coucher | retirarse | desistir | desistir | aussteigen | сбросить | çekil | menyerah | pas | lascia |
+| ante | ante | ante | ante | ante | Ante | анте | ante | ante | ante | ante |
+| pot | pot | bote | pote | pote | Pot | банк | pot | pot | pula | piatto |
+| showdown | abattage | enfrentamiento | showdown | mostrar as cartas | Showdown | вскрытие | el açma | showdown | odkrycie kart | showdown |
+| exchange (of cards) | échange | cambio | troca | troca | Tausch | обмен | değişim | tukar | wymiana | cambio |
+| no contest | aucun vainqueur | mano nula | mão anulada | mão anulada | kein Spiel | без победителя | kazanan yok | tanpa pemenang | bez zwycięzcy | mano nulla |
+| five of a kind | cinq identiques | repóker | quina | quina | Fünfling | покер | beşli | five of a kind | pięć jednakowych | pokerissimo |
+| royal flush | quinte flush royale | escalera real | royal flush | sequência real | Royal Flush | роял-флеш | royal floş | royal flush | poker królewski | scala reale |
+| four of a kind | carré | póker | quadra | póquer | Vierling | каре | kare | four of a kind | kareta | poker |
+| full house | full | full | full house | full house | Full House | фулл-хаус | full | full house | full | full |
+| straight | quinte | escalera | sequência | sequência | Straße | стрит | kent | straight | strit | scala |
+| three of a kind | brelan | trío | trinca | trio | Drilling | сет | üçlü | three of a kind | trójka | tris |
+| two pair | double paire | doble pareja | dois pares | dois pares | zwei Paare | две пары | döper | two pair | dwie pary | doppia coppia |
+| one pair | paire | pareja | um par | par | ein Paar | пара | per | one pair | para | coppia |
 
 ## APIs
 

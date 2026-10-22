@@ -25,7 +25,8 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 
 ## Overview
 
-A room (`BlockRoom`) runs **one block chain per feature**: `chat` and `chess`. Each chain orders its
+A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess` or
+`poker`. Each chain orders its
 blocks on its own, so a busy chat never delays the moves of the game. The chains share the WebRTC
 connections and the identity of the participants.
 
@@ -64,6 +65,7 @@ flowchart LR
 | `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
 | `SealedTurnStore` | `modules/chess/classes/game-sessions` | Keeps the hidden moves across the reloads of the page |
 | `MentalDeck` | `modules/mental-poker/classes` | Shuffles, deals and opens a deck no participant sees, checks it at the end of the game (see [Mental poker](mental-poker.md)) |
+| `SeventeenPokerSession` | `modules/seventeen-poker/classes/game-sessions` | Seats the players, deals each hand with a mental deck, reports the illegal actions (see [Seventeen Poker session](seventeen-poker-session.md)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
 message is delivered to every participant, its sender included, once its block is added to the chain
@@ -307,7 +309,8 @@ can deal, the players and the sequencer included. `MentalDeck` (`modules/mental-
 mental poker of Shamir, Rivest and Adleman over the chain of its game: each player encrypts and
 shuffles the deck, then puts a key of its own on each card; a card is dealt by asking the keys of every
 player but its recipient, and opened by asking all of them. Once the game is over, the players disclose
-all their keys and every participant checks the deck. See [Mental poker](mental-poker.md).
+all their keys and every participant checks the deck. See [Mental poker](mental-poker.md), and the
+Seventeen Poker, its first game, in [Seventeen Poker session](seventeen-poker-session.md).
 
 ## Anti-cheat
 
@@ -325,7 +328,7 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `invalidBlock` | The hash of a block of the sequencer does not match its content | the sequencer | not added |
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
-| `illegalMove` | A revealed move is against the rules | the player | yes |
+| `illegalMove` | A revealed move, or an action of the poker (a bet, an exchange), is against the rules | the player | yes |
 | `invalidReveal` | A revealed move does not match its commitment, or its turn | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
 | `invalidCardKey` | A key is malformed, does not give the card to its recipient (with two players), or is not the one disclosed at the end of the game | the player | a malformed key |

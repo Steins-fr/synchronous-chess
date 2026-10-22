@@ -44,7 +44,7 @@ describe('SynchronousChess', () => {
     test('should present the game and its rules until the room is setup', () => {
         expect(fixture.nativeElement.querySelector('app-chess-presentation')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-chess-rules .title')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('details.rules')).toBeNull();
+        expect(fixture.nativeElement.querySelector('details.rules-details')).toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-sync-chess-game')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
@@ -75,7 +75,7 @@ describe('SynchronousChess', () => {
         expect(fixture.nativeElement.querySelector('app-chess-presentation')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('details.rules:not([open]) app-chess-rules')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-chess-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-chess-rules .title')).toBeNull();
 
         // When

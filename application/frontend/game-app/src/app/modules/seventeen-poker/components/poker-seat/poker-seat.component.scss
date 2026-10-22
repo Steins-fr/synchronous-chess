@@ -1,0 +1,51 @@
+// The ring around the seat of the player to act, widening as it fades out
+.acting::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--app-accent-text);
+    border-radius: 1rem;
+    animation: turn-ring 2.4s ease-out infinite;
+}
+
+@keyframes turn-ring {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+}
+
+// A bet slides in from the stack of the player, then to the pot once the round is over
+.chip-in {
+    animation: chip-in var(--app-motion-medium) ease-out;
+}
+
+@keyframes chip-in {
+    from {
+        opacity: 0;
+        transform: translateY(calc(var(--pot-direction, 1) * -1rem)) scale(0.6);
+    }
+}
+
+.chip-out {
+    animation: chip-out var(--app-motion-medium) ease-in forwards;
+}
+
+@keyframes chip-out {
+    to {
+        opacity: 0;
+        transform: translateY(calc(var(--pot-direction, 1) * 3rem)) scale(0.6);
+    }
+}
+
+// No motion asked: the ring stays still around the seat, rather than an endless animation lasting no time
+@media (prefers-reduced-motion: reduce) {
+    .acting::after {
+        animation: none;
+    }
+}

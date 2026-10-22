@@ -1,0 +1,19 @@
+<div *transloco="let t; prefix: 'poker.table.seat'"
+    class="seat relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-14 px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised"
+    [class.acting]="acting()">
+    <span class="font-medium">{{ name() ?? t('free') }}</span>
+    @if (name() !== null) {
+    <span class="muted-note text-sm">{{ t('chips', { count: chips() }) }}</span>
+    }
+    @if (bet() > 0) {
+    <span class="px-2 rounded-full bg-app-chip text-app-card-ink text-sm font-bold" animate.enter="chip-in" animate.leave="chip-out">
+        {{ t('bet', { amount: bet() }) }}
+    </span>
+    }
+    @if (canTake()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('play') }}</button>
+    }
+    @if (canLeave()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+    }
+</div>

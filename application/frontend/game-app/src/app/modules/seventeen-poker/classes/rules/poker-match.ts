@@ -102,6 +102,11 @@ export class PokerMatch {
         return { winner: PokerMatch.leader(stacks), stacks };
     });
 
+    /** The index of the next hand */
+    public readonly nextHand: Signal<number> = computed((): number => (this._hand()?.index ?? -1) + 1);
+    /** The player dealing the next hand: the other one speaks first in it */
+    public readonly dealer: Signal<PokerSeat> = computed((): PokerSeat => otherSeat(PokerMatch.firstOf(this.nextHand())));
+
     /** The player to exchange, null out of the exchange */
     public readonly exchanging: Signal<PokerSeat | null> = computed((): PokerSeat | null => {
         const hand: PokerHand | null = this._hand();
@@ -123,6 +128,11 @@ export class PokerMatch {
     public constructor(public readonly rules: PokerMatchRules = SEVENTEEN_POKER_RULES) {
     }
 
+    /** The player speaking first in a hand, by turns */
+    private static firstOf(index: number): PokerSeat {
+        return index % 2 === 0 ? PokerSeat.ONE : PokerSeat.TWO;
+    }
+
     private static leader(stacks: SeatPair<number>): PokerSeat | null {
         if (stacks[0] === stacks[1]) {
             return null;
@@ -139,8 +149,8 @@ export class PokerMatch {
             return false;
         }
 
-        const index: number = previous === null ? 0 : previous.index + 1;
-        const first: PokerSeat = index % 2 === 0 ? PokerSeat.ONE : PokerSeat.TWO;
+        const index: number = this.nextHand();
+        const first: PokerSeat = PokerMatch.firstOf(index);
         const stacks: SeatPair<number> = [this._stacks()[0] - this.rules.ante, this._stacks()[1] - this.rules.ante];
         const cap: number = Math.min(...stacks);
 

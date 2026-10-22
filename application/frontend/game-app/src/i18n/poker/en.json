@@ -10,5 +10,99 @@
     "rooms": "Create a room or join an open one: the participants without a seat watch the game.",
     "tagline": "Poker for two players, with 17 cards and no dealer.",
     "title": "Seventeen poker"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 cards: the aces, kings, queens and jacks of the four suits, and a joker, which stands for the card giving the best hand. A new deck is shuffled for each hand.",
+      "title": "The deck"
+    },
+    "fair": {
+      "dealer": "The players shuffle each deck together, encrypted, and give each other the keys of the cards dealt: no one, not even the server, sees a hand before its showdown. At the end of the match, every key is shown and each participant checks every deck.",
+      "title": "No dealer"
+    },
+    "hand": {
+      "ante": "Each player pays an ante of 5 chips, and gets 5 cards.",
+      "exchange": "Exchange: each player in turn discards cards and draws as many; the second one draws from the cards left.",
+      "firstRound": "First round: check, bet, raise, call or fold. When both players check, the antes go to the bank.",
+      "secondRound": "Second round: a bet is at least the one of the first round, and 30 chips at most.",
+      "showdown": "Showdown: the best hand takes the pot. A player who folds leaves it to the other one.",
+      "title": "A hand"
+    },
+    "hands": {
+      "fiveOfAKind": "Five of a kind: the four cards of a rank and the joker.",
+      "fourOfAKind": "Four of a kind: four cards of a rank.",
+      "fullHouse": "Full house: three cards of a rank and two of another.",
+      "onePair": "One pair: two cards of a rank. Every hand holds one at least.",
+      "royalFlush": "Royal flush: the jack, queen, king and ace of a suit, the joker as the ten.",
+      "straight": "Straight: a jack, a queen, a king and an ace, the joker as the ten.",
+      "threeOfAKind": "Three of a kind: three cards of a rank.",
+      "ties": "Between hands of the same kind, the higher ranks win, the ace first; a hand without the joker beats the same hand with it. Only equal hands split the pot.",
+      "title": "The hands, from the best",
+      "twoPair": "Two pair: two cards of a rank and two of another."
+    },
+    "match": {
+      "cap": "In a hand, no one bets more chips than the poorer player has.",
+      "end": "10 hands, 150 chips each: the player with the most chips wins. The match ends sooner when a player can no longer pay the ante.",
+      "title": "The match"
+    },
+    "summary": "Rules of the game",
+    "title": "Rules"
+  },
+  "table": {
+    "action": {
+      "bet": "Bet {amount}",
+      "call": "Call {amount}",
+      "check": "Check",
+      "deal": "Deal",
+      "exchange": "{count, plural, one {Exchange # card} other {Exchange # cards}}",
+      "fold": "Fold",
+      "keep": "Keep my hand",
+      "less": "Bet less",
+      "max": "Max",
+      "min": "Min",
+      "more": "Bet more",
+      "raise": "Raise to {amount}"
+    },
+    "hand": "Hand {index} of {hands}",
+    "history": "Hands played",
+    "outcome": {
+      "fold": "Hand {index}: {folder} folds, {winner} takes the pot of {pot}.",
+      "noContest": "Hand {index}: no contest, the antes go to the bank.",
+      "split": "Hand {index}: equal hands ({category, select, fiveOfAKind {five of a kind} royalFlush {royal flush} fourOfAKind {four of a kind} fullHouse {full house} straight {straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}), the pot is split.",
+      "win": "Hand {index}: {winner} takes the pot of {pot} with {category, select, fiveOfAKind {five of a kind} royalFlush {a royal flush} fourOfAKind {four of a kind} fullHouse {a full house} straight {a straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}."
+    },
+    "pot": "Pot {pot}",
+    "result": {
+      "draw": "Draw: both players end with {chips, plural, one {# chip} other {# chips}}.",
+      "win": "{winner} wins the match with {chips, plural, one {# chip} other {# chips}}."
+    },
+    "seat": {
+      "bet": "Bet {amount}",
+      "chips": "{count, plural, one {# chip} other {# chips}}",
+      "free": "Free seat",
+      "leave": "Leave the seat",
+      "play": "Sit here"
+    },
+    "spectators": "Spectators: {count}",
+    "status": {
+      "away": "Waiting for {name} to come back…",
+      "broken": "A deck was cheated: the match stops.",
+      "keys": "Waiting for the keys of {name}…",
+      "myDeal": "Your turn to deal.",
+      "myExchange": "Select the cards to discard, then exchange them.",
+      "myTurn": "Your turn.",
+      "reading": "Reading the cards…",
+      "seats": "Waiting for two players to sit.",
+      "showdown": "The hands are shown…",
+      "shuffling": "{name} shuffles the deck…",
+      "theirDeal": "{name} to deal.",
+      "theirExchange": "{name} exchanges cards.",
+      "theirTurn": "{name} to speak."
+    },
+    "verification": {
+      "cheated": "A deck was cheated.",
+      "checking": "Checking every deck…",
+      "fair": "Every deck was fair."
+    }
   }
 }

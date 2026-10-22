@@ -24,7 +24,7 @@
     }
 }
 
-// A card thrown away rises and fades out
+// A card thrown away rises and fades out, its place in the fan closing meanwhile
 .card-discarded {
     animation: card-discarded var(--app-motion-medium) ease-in forwards;
 }
@@ -33,5 +33,6 @@
     to {
         opacity: 0;
         transform: translateY(-4rem) rotate(10deg);
+        margin-left: calc(var(--app-card-width) * -1);
     }
 }

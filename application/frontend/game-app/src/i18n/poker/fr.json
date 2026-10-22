@@ -10,5 +10,99 @@
     "rooms": "Créez une salle ou rejoignez-en une ouverte : les participants sans place regardent la partie.",
     "tagline": "Le poker à deux joueurs, avec 17 cartes et sans donneur.",
     "title": "Poker à dix-sept cartes"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 cartes : les as, rois, dames et valets des quatre couleurs, et un joker, qui vaut la carte donnant la meilleure main. Un nouveau paquet est mélangé à chaque main.",
+      "title": "Le paquet"
+    },
+    "fair": {
+      "dealer": "Les joueurs mélangent chaque paquet ensemble, chiffré, et se donnent les clés des cartes distribuées : personne, pas même le serveur, ne voit une main avant son abattage. À la fin de la partie, toutes les clés sont montrées et chaque participant vérifie chaque paquet.",
+      "title": "Sans donneur"
+    },
+    "hand": {
+      "ante": "Chaque joueur paie une ante de 5 jetons et reçoit 5 cartes.",
+      "exchange": "Échange : chaque joueur à son tour défausse des cartes et en tire autant ; le second tire parmi les cartes restantes.",
+      "firstRound": "Premier tour : chaque joueur parle, mise, relance, suit ou se couche. Si les deux joueurs parlent, les antes vont à la banque.",
+      "secondRound": "Second tour : une mise vaut au moins celle du premier tour, et 30 jetons au plus.",
+      "showdown": "Abattage : la meilleure main remporte le pot. Un joueur qui se couche le laisse à l'autre.",
+      "title": "Une main"
+    },
+    "hands": {
+      "fiveOfAKind": "Cinq identiques : les quatre cartes d'un rang et le joker.",
+      "fourOfAKind": "Carré : quatre cartes d'un rang.",
+      "fullHouse": "Full : trois cartes d'un rang et deux d'un autre.",
+      "onePair": "Paire : deux cartes d'un rang. Toute main en a une au moins.",
+      "royalFlush": "Quinte flush royale : le valet, la dame, le roi et l'as d'une couleur, le joker valant le dix.",
+      "straight": "Quinte : un valet, une dame, un roi et un as, le joker valant le dix.",
+      "threeOfAKind": "Brelan : trois cartes d'un rang.",
+      "ties": "Entre deux mains de même sorte, les rangs les plus hauts gagnent, l'as d'abord ; une main sans le joker bat la même avec lui. Seules des mains égales partagent le pot.",
+      "title": "Les mains, de la meilleure à la moins bonne",
+      "twoPair": "Double paire : deux cartes d'un rang et deux d'un autre."
+    },
+    "match": {
+      "cap": "Dans une main, personne ne mise plus de jetons que n'en a le joueur le plus pauvre.",
+      "end": "10 mains, 150 jetons chacun : le joueur qui a le plus de jetons gagne. La partie s'arrête plus tôt quand un joueur ne peut plus payer l'ante.",
+      "title": "La partie"
+    },
+    "summary": "Règles du jeu",
+    "title": "Règles"
+  },
+  "table": {
+    "action": {
+      "bet": "Miser {amount}",
+      "call": "Suivre {amount}",
+      "check": "Parler",
+      "deal": "Distribuer",
+      "exchange": "{count, plural, one {Échanger # carte} other {Échanger # cartes}}",
+      "fold": "Se coucher",
+      "keep": "Garder ma main",
+      "less": "Miser moins",
+      "max": "Max",
+      "min": "Min",
+      "more": "Miser plus",
+      "raise": "Relancer à {amount}"
+    },
+    "hand": "Main {index} sur {hands}",
+    "history": "Mains jouées",
+    "outcome": {
+      "fold": "Main {index} : {folder} se couche, {winner} remporte le pot de {pot}.",
+      "noContest": "Main {index} : aucun vainqueur, les antes vont à la banque.",
+      "split": "Main {index} : mains égales ({category, select, fiveOfAKind {cinq identiques} royalFlush {quinte flush royale} fourOfAKind {carré} fullHouse {full} straight {quinte} threeOfAKind {brelan} twoPair {double paire} other {paire}}), le pot est partagé.",
+      "win": "Main {index} : {winner} remporte le pot de {pot} avec {category, select, fiveOfAKind {cinq identiques} royalFlush {une quinte flush royale} fourOfAKind {un carré} fullHouse {un full} straight {une quinte} threeOfAKind {un brelan} twoPair {une double paire} other {une paire}}."
+    },
+    "pot": "Pot {pot}",
+    "result": {
+      "draw": "Égalité : les deux joueurs finissent avec {chips, plural, one {# jeton} other {# jetons}}.",
+      "win": "{winner} gagne la partie avec {chips, plural, one {# jeton} other {# jetons}}."
+    },
+    "seat": {
+      "bet": "Mise {amount}",
+      "chips": "{count, plural, one {# jeton} other {# jetons}}",
+      "free": "Place libre",
+      "leave": "Quitter la place",
+      "play": "S'asseoir"
+    },
+    "spectators": "Spectateurs : {count}",
+    "status": {
+      "away": "En attente du retour de {name}…",
+      "broken": "Un paquet a été triché : la partie s'arrête.",
+      "keys": "En attente des clés de {name}…",
+      "myDeal": "À vous de distribuer.",
+      "myExchange": "Sélectionnez les cartes à défausser, puis échangez-les.",
+      "myTurn": "À vous de jouer.",
+      "reading": "Lecture des cartes…",
+      "seats": "En attente de deux joueurs assis.",
+      "showdown": "Les mains sont montrées…",
+      "shuffling": "{name} mélange le paquet…",
+      "theirDeal": "À {name} de distribuer.",
+      "theirExchange": "{name} échange des cartes.",
+      "theirTurn": "À {name} de parler."
+    },
+    "verification": {
+      "cheated": "Un paquet a été triché.",
+      "checking": "Vérification des paquets…",
+      "fair": "Tous les paquets étaient honnêtes."
+    }
   }
 }
