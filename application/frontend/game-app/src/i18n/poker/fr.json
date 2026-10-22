@@ -63,6 +63,8 @@
       "more": "Miser plus",
       "raise": "Relancer à {amount}"
     },
+    "bet": "Mise {amount}",
+    "category": "{category, select, fiveOfAKind {Cinq identiques} royalFlush {Quinte flush royale} fourOfAKind {Carré} fullHouse {Full} straight {Quinte} threeOfAKind {Brelan} twoPair {Double paire} other {Paire}}",
     "hand": "Main {index} sur {hands}",
     "history": "Mains jouées",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} gagne la partie avec {chips, plural, one {# jeton} other {# jetons}}."
     },
     "seat": {
-      "bet": "Mise {amount}",
       "chips": "{count, plural, one {# jeton} other {# jetons}}",
       "free": "Place libre",
+      "gain": "+{amount}",
       "leave": "Quitter la place",
       "play": "S'asseoir"
     },

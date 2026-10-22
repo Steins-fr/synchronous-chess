@@ -63,6 +63,8 @@
       "more": "Apostar más",
       "raise": "Subir a {amount}"
     },
+    "bet": "Apuesta {amount}",
+    "category": "{category, select, fiveOfAKind {Repóker} royalFlush {Escalera real} fourOfAKind {Póker} fullHouse {Full} straight {Escalera} threeOfAKind {Trío} twoPair {Doble pareja} other {Pareja}}",
     "hand": "Mano {index} de {hands}",
     "history": "Manos jugadas",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} gana la partida con {chips, plural, one {# ficha} other {# fichas}}."
     },
     "seat": {
-      "bet": "Apuesta {amount}",
       "chips": "{count, plural, one {# ficha} other {# fichas}}",
       "free": "Puesto libre",
+      "gain": "+{amount}",
       "leave": "Dejar el puesto",
       "play": "Sentarse"
     },

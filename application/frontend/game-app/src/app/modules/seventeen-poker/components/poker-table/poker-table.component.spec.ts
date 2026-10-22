@@ -53,6 +53,24 @@ describe('PokerTableComponent', () => {
         (image: Element) => image.getAttribute('aria-label') as string,
     );
 
+    /** The values of the chips flying over the table, for each move */
+    const flights = (): string[][] => Array.from(
+        element().querySelectorAll('.chip-flight'),
+        (flight: Element) => Array.from(flight.querySelectorAll('.chip'), (chip: Element) => (chip as HTMLElement).dataset['value'] as string),
+    );
+
+    /** The chips flying over the table land */
+    async function landed(): Promise<void> {
+        element().querySelectorAll('.chip-flight').forEach((flight: Element) => flight.dispatchEvent(new Event('animationend')));
+        await fixture.whenStable();
+    }
+
+    /** The values of the chips of a stack */
+    const chipValues = (selector: string): string[] => Array.from(
+        element().querySelectorAll(`${ selector } .chip`),
+        (chip: Element) => (chip as HTMLElement).dataset['value'] as string,
+    );
+
     async function until(check: () => boolean): Promise<void> {
         await vi.waitFor(async () => {
             await fixture.whenStable();
@@ -180,12 +198,35 @@ describe('PokerTableComponent', () => {
         const bob: SeventeenPokerSession = await dealt();
 
         // When: Alice bets, Bob raises
+        await landed();
         await click('Bet more');
         await click('Bet 6');
         await until(() => status() === 'bob to speak.');
 
+        // Then: her bet lies in front of her, out of the pot, flying there from her stack
+        expect(flights()).toEqual([['5', '1']]);
+        expect(text('#seat-bottom')).toEqual('alice139 chips');
+
+        // When: the chips land, a chip inside them ending its own animation first
+        const flight: HTMLElement = element().querySelector('.chip-flight') as HTMLElement;
+        flight.querySelector('.chip')?.dispatchEvent(new Event('animationend', { bubbles: true }));
+        await fixture.whenStable();
+
         // Then
-        expect(text('#seat-bottom')).toEqual('alice139 chips Bet 6');
+        expect(flights()).toHaveLength(1);
+
+        // When
+        flight.dispatchEvent(new Event('animationend'));
+        await fixture.whenStable();
+
+        // Then
+        expect(flights()).toEqual([]);
+        expect(text('#bet-bottom')).toEqual('Bet 6');
+        expect(chipValues('#bet-bottom')).toEqual(['5', '1']);
+        expect(chipValues('#bet-top')).toEqual([]);
+        expect(chipValues('#seat-bottom')).toEqual(['100', '25', '5', '5', '1', '1', '1', '1']);
+        expect(element().textContent).toContain('Pot 10');
+        expect(chipValues('.pot')).toEqual(['5', '5']);
         expect(element().querySelector('#seat-top .seat')?.classList).toContain('acting');
 
         // When
@@ -199,6 +240,7 @@ describe('PokerTableComponent', () => {
         expect(button('Check')).toBeUndefined();
 
         // When: Alice calls, then discards two cards
+        await landed();
         await click('Call 6');
         await until(() => status() === 'Select the cards to discard, then exchange them.');
         const kept: string[] = cards(1).slice(2);
@@ -208,8 +250,12 @@ describe('PokerTableComponent', () => {
         hand[1].click();
         await fixture.whenStable();
 
-        // Then
+        // Then: the bets went to the pot
+        // Alice's bet and her call, then Bob's bet
+        expect(flights()).toEqual([['5', '1'], ['5', '1'], ['5', '5', '1', '1']]);
         expect(button('Exchange 2 cards')).toBeDefined();
+        expect(chipValues('#bet-bottom')).toEqual([]);
+        expect(chipValues('.pot')).toEqual(['25', '5', '1', '1', '1', '1']);
 
         // When
         await click('Exchange 2 cards');
@@ -226,8 +272,15 @@ describe('PokerTableComponent', () => {
         bob.bet(BetAction.CHECK);
         await until(() => status() === 'Your turn to deal.');
 
-        // Then: both hands are shown, the best one outlined
+        // Then: both hands are shown, the best one outlined, the other one dimmed
         const outcome = bob.match.hand()?.outcome;
+        const categories: string[] = Array.from(element().querySelectorAll('.hand-category'), (line: Element) => line.textContent?.trim() as string);
+        expect(categories).toHaveLength(2);
+        expect(text('#hand-outcome')).toEqual(text('details li'));
+        expect(chipValues('.pot')).toEqual([]);
+        const hands: Element[] = Array.from(element().querySelectorAll('app-card-hand'));
+        expect(hands[1].classList.contains('opacity-50')).toEqual(outcome?.winner === PokerSeat.TWO);
+        expect(hands[0].classList.contains('opacity-50')).toEqual(outcome?.winner === PokerSeat.ONE);
         expect(outcome?.end).toEqual(HandEnd.SHOWDOWN);
         expect(cards(0)).not.toContain('Face-down card');
         expect(cards(1).slice(2)).toEqual(kept);
@@ -252,12 +305,18 @@ describe('PokerTableComponent', () => {
         await until(() => status() === 'bob to speak.');
         bob.bet(BetAction.RAISE, 4);
         await until(() => status() === 'Your turn.');
+        await landed();
         await click('Fold');
         await until(() => status() === 'Your turn to deal.');
 
-        // Then
+        // Then: the pot goes to Bob, at the top of the table
         expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
+        expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#seat-bottom')).toEqual('alice142 chips');
+        expect(text('#seat-top')).toEqual('bob158 chips +17');
+        expect(element().querySelectorAll('.hand-category')).toHaveLength(0);
+        // The bets joined the pot, the pot flying to Bob
+        expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5', '5', '1', '1']]);
     });
 
     test('should show the hand to a spectator face down, without any action', async () => {
@@ -282,7 +341,8 @@ describe('PokerTableComponent', () => {
         // Then
         expect(cards(0)).toEqual(FACE_DOWN);
         expect(cards(1)).toEqual(FACE_DOWN);
-        expect(text('#seat-bottom')).toEqual('alice140 chips Bet 5');
+        expect(text('#seat-bottom')).toEqual('alice140 chips');
+        expect(text('#bet-bottom')).toEqual('Bet 5');
         expect(element().textContent).toContain('Spectators: 1');
         expect(button('Check')).toBeUndefined();
         expect(button('Call 5')).toBeUndefined();
@@ -441,6 +501,7 @@ describe('PokerTableComponent', () => {
         test('should tell a draw', async () => {
             // Given
             const bob: SeventeenPokerSession = await dealt(rules);
+            await landed();
 
             // When
             await click('Check');
@@ -448,7 +509,8 @@ describe('PokerTableComponent', () => {
             bob.bet(BetAction.CHECK);
             await until(() => text('.badge') !== '');
 
-            // Then
+            // Then: the antes go to the bank
+            expect(flights()).toEqual([['5', '5']]);
             expect(text('.badge')).toEqual('Draw: both players end with 145 chips.');
             expect(element().querySelector('.badge')?.classList).toContain('badge-draw');
         });
