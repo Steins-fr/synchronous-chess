@@ -45,6 +45,12 @@ export class RoomHub<M extends object> {
         this.rooms.delete(room);
     }
 
+    /** The participant leaves the room: its page closed, the others no longer see it */
+    public leave(room: Room<M>): void {
+        this.close(room);
+        this.players.update((players) => players.filter((player) => player.name !== room.localPlayer.name));
+    }
+
     /** The messages of the participant wait until released */
     public hold(name: string): void {
         this.holding.add(name);

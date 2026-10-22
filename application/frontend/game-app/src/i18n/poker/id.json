@@ -10,5 +10,98 @@
     "rooms": "Buat ruang atau bergabunglah ke ruang terbuka: peserta tanpa kursi menonton permainan.",
     "tagline": "Poker untuk dua pemain, dengan 17 kartu dan tanpa bandar.",
     "title": "Poker tujuh belas kartu"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 kartu: as, raja, ratu, dan jack dari keempat jenis, serta sebuah joker yang menggantikan kartu yang memberi kombinasi terbaik. Setumpuk kartu baru dikocok untuk setiap putaran.",
+      "title": "Setumpuk kartu"
+    },
+    "fair": {
+      "dealer": "Para pemain mengocok setiap tumpukan kartu bersama-sama, terenkripsi, dan saling memberikan kunci kartu yang dibagikan: tidak ada yang, bahkan server, melihat kombinasi sebelum showdown. Di akhir pertandingan, semua kunci ditampilkan dan setiap peserta memeriksa setiap tumpukan.",
+      "title": "Tanpa bandar"
+    },
+    "hand": {
+      "ante": "Setiap pemain membayar ante 5 chip dan menerima 5 kartu.",
+      "exchange": "Tukar: setiap pemain bergiliran membuang kartu dan mengambil sejumlah yang sama; pemain kedua mengambil dari kartu yang tersisa.",
+      "firstRound": "Ronde pertama: cek, taruhan, naikkan, ikut, atau menyerah. Jika kedua pemain cek, ante masuk ke bank.",
+      "secondRound": "Ronde kedua: taruhan minimal sama dengan taruhan ronde pertama, dan maksimal 30 chip.",
+      "showdown": "Showdown: kombinasi terbaik mengambil pot. Pemain yang menyerah menyerahkannya kepada pemain lain.",
+      "title": "Satu putaran"
+    },
+    "hands": {
+      "fiveOfAKind": "Five of a kind: empat kartu dengan nilai yang sama dan joker.",
+      "fourOfAKind": "Four of a kind: empat kartu dengan nilai yang sama.",
+      "fullHouse": "Full house: tiga kartu dengan nilai yang sama dan dua dengan nilai lain.",
+      "onePair": "One pair: dua kartu dengan nilai yang sama. Setiap kombinasi punya setidaknya satu.",
+      "royalFlush": "Royal flush: jack, ratu, raja, dan as dari satu jenis, dengan joker sebagai sepuluh.",
+      "straight": "Straight: jack, ratu, raja, dan as, dengan joker sebagai sepuluh.",
+      "threeOfAKind": "Three of a kind: tiga kartu dengan nilai yang sama.",
+      "ties": "Di antara kombinasi yang sejenis, nilai yang lebih tinggi menang, as lebih dulu; kombinasi tanpa joker mengalahkan yang sama dengan joker. Hanya kombinasi yang sama yang membagi pot.",
+      "title": "Kombinasi, dari yang terbaik",
+      "twoPair": "Two pair: dua kartu dengan nilai yang sama dan dua dengan nilai lain."
+    },
+    "match": {
+      "cap": "Dalam satu putaran, tidak ada yang bertaruh melebihi chip pemain yang lebih miskin.",
+      "end": "10 putaran, masing-masing 150 chip: pemain dengan chip terbanyak menang. Pertandingan berakhir lebih cepat jika seorang pemain tidak bisa lagi membayar ante.",
+      "title": "Pertandingan"
+    },
+    "summary": "Aturan permainan",
+    "title": "Aturan"
+  },
+  "table": {
+    "action": {
+      "bet": "Taruhan {amount}",
+      "call": "Ikut {amount}",
+      "check": "Cek",
+      "deal": "Bagikan",
+      "exchange": "{count, plural, other {Tukar # kartu}}",
+      "fold": "Menyerah",
+      "keep": "Simpan kartu",
+      "less": "Kurangi",
+      "max": "Maks",
+      "min": "Min",
+      "more": "Tambah",
+      "raise": "Naikkan ke {amount}"
+    },
+    "hand": "Putaran {index} dari {hands}",
+    "history": "Putaran yang dimainkan",
+    "outcome": {
+      "fold": "Putaran {index}: {folder} menyerah, {winner} mengambil pot {pot}.",
+      "noContest": "Putaran {index}: tanpa pemenang, ante masuk ke bank.",
+      "split": "Putaran {index}: kombinasi sama ({category, select, fiveOfAKind {five of a kind} royalFlush {royal flush} fourOfAKind {four of a kind} fullHouse {full house} straight {straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}), pot dibagi.",
+      "win": "Putaran {index}: {winner} mengambil pot {pot} dengan {category, select, fiveOfAKind {five of a kind} royalFlush {royal flush} fourOfAKind {four of a kind} fullHouse {full house} straight {straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}."
+    },
+    "pot": "Pot {pot}",
+    "result": {
+      "draw": "Seri: kedua pemain selesai dengan {chips, plural, other {# chip}}.",
+      "win": "{winner} memenangkan pertandingan dengan {chips, plural, other {# chip}}."
+    },
+    "seat": {
+      "bet": "Taruhan {amount}",
+      "chips": "{count, plural, other {# chip}}",
+      "free": "Kursi kosong",
+      "leave": "Tinggalkan kursi",
+      "play": "Duduk"
+    },
+    "spectators": "Penonton: {count}",
+    "status": {
+      "away": "Menunggu {name} kembali…",
+      "broken": "Ada kecurangan pada tumpukan kartu: pertandingan dihentikan.",
+      "keys": "Menunggu kunci dari {name}…",
+      "myExchange": "Pilih kartu yang dibuang, lalu tukar.",
+      "myTurn": "Giliran Anda.",
+      "next": "Menunggu pemain membagikan kartu.",
+      "reading": "Membaca kartu…",
+      "seats": "Menunggu dua pemain duduk.",
+      "showdown": "Kombinasi sedang dibuka…",
+      "shuffling": "{name} mengocok kartu…",
+      "theirExchange": "{name} menukar kartu.",
+      "theirTurn": "Giliran {name}."
+    },
+    "verification": {
+      "cheated": "Ada kecurangan pada tumpukan kartu.",
+      "checking": "Memeriksa semua tumpukan kartu…",
+      "fair": "Semua tumpukan kartu jujur."
+    }
   }
 }

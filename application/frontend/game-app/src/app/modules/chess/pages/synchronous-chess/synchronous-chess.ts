@@ -18,7 +18,6 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
 @Component({
     selector: 'app-synchronous-chess',
     templateUrl: './synchronous-chess.html',
-    styleUrl: './synchronous-chess.scss',
     imports: [
         RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent, ChessPresentationComponent, ChessRulesComponent,
         TranslocoPipe,

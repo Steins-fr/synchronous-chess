@@ -17,8 +17,8 @@
     "title": "Échecs synchrones"
   },
   "cheat": {
-    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est signalé comme triché par {reporters}",
-    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
+    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} poker {poker} other {}}) de {author} est signalé comme triché par {reporters}",
+    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} poker {poker} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
   },
   "dialog": {
     "cancel": "Annuler",

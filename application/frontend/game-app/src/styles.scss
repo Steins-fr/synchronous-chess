@@ -68,6 +68,9 @@ html {
     --app-card-red: #c62828;
     --app-card-back: var(--app-accent);
     --app-card-back-pattern: rgb(255 255 255 / 30%);
+    // The cloth of the poker table, under a white text, and the chips of the bets
+    --app-felt: light-dark(#2f6b4a, #1f4a34);
+    --app-chip: light-dark(#f2c14e, #d9a93a);
     // The width of a card, larger out of a phone
     --app-card-width: 4.5rem;
 
@@ -133,4 +136,43 @@ body {
 // The pieces of the board are sized for the board of the game: smaller in the preview of the presentation page
 app-chess-presentation .preview app-chess-piece {
     font-size: min(30px, 8vw);
+}
+
+// The rules below a game: a bar to unfold them (the chess and poker pages)
+.rules-details {
+    max-width: 860px;
+    margin: 24px auto;
+
+    summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border: 1px solid var(--app-border);
+        border-radius: 8px;
+        background-color: var(--app-surface);
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::before {
+            content: '▸';
+            color: var(--app-accent-text);
+            transition: transform 0.2s;
+        }
+
+        &:hover,
+        &:focus-visible {
+            border-color: var(--app-accent-text);
+        }
+    }
+
+    &[open] summary::before {
+        transform: rotate(90deg);
+    }
 }

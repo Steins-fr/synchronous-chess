@@ -3,5 +3,12 @@
     @if (room(); as myRoom) {
     <app-debug-webrtc [room]="myRoom"/>
     <app-chat [room]="myRoom" />
+    <app-poker-table [room]="myRoom" />
+    <details class="rules-details">
+        <summary>{{ 'poker.rules.summary' | transloco }}</summary>
+        <app-poker-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-poker-rules />
     }
 </app-room-layout>

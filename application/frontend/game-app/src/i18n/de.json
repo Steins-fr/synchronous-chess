@@ -17,8 +17,8 @@
     "title": "Synchrones Schach"
   },
   "cheat": {
-    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
-    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
+    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
+    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
   },
   "dialog": {
     "cancel": "Abbrechen",

@@ -24,6 +24,8 @@
     --color-app-card-red: var(--app-card-red);
     --color-app-card-back: var(--app-card-back);
     --color-app-card-back-pattern: var(--app-card-back-pattern);
+    --color-app-felt: var(--app-felt);
+    --color-app-chip: var(--app-chip);
 }
 
 /* A game of the home page: the whole card links to its page */

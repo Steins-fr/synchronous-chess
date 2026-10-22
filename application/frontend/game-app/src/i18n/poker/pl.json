@@ -10,5 +10,98 @@
     "rooms": "Utwórz pokój lub dołącz do otwartego: uczestnicy bez miejsca oglądają partię.",
     "tagline": "Poker dla dwóch graczy: 17 kart i żadnego krupiera.",
     "title": "Poker na siedemnaście kart"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 kart: asy, króle, damy i walety czterech kolorów oraz joker, który zastępuje kartę dającą najlepszy układ. W każdym rozdaniu tasuje się nową talię.",
+      "title": "Talia"
+    },
+    "fair": {
+      "dealer": "Gracze tasują każdą talię razem, zaszyfrowaną, i przekazują sobie klucze rozdanych kart: nikt, nawet serwer, nie widzi układu przed odkryciem kart. Na koniec partii wszystkie klucze są pokazywane, a każdy uczestnik sprawdza każdą talię.",
+      "title": "Bez krupiera"
+    },
+    "hand": {
+      "ante": "Każdy gracz płaci ante w wysokości 5 żetonów i dostaje 5 kart.",
+      "exchange": "Wymiana: każdy gracz po kolei odrzuca karty i dobiera tyle samo; drugi dobiera z pozostałych kart.",
+      "firstRound": "Pierwsza runda licytacji: czekaj, postaw, przebij, sprawdź albo pas. Jeśli obaj gracze czekają, ante trafiają do banku.",
+      "secondRound": "Druga runda licytacji: stawka wynosi co najmniej tyle, co w pierwszej rundzie, i najwyżej 30 żetonów.",
+      "showdown": "Odkrycie kart: najlepszy układ zgarnia pulę. Gracz, który pasuje, zostawia ją drugiemu.",
+      "title": "Rozdanie"
+    },
+    "hands": {
+      "fiveOfAKind": "Pięć jednakowych: cztery karty jednej figury i joker.",
+      "fourOfAKind": "Kareta: cztery karty jednej figury.",
+      "fullHouse": "Full: trzy karty jednej figury i dwie innej.",
+      "onePair": "Para: dwie karty jednej figury. Każdy układ ma przynajmniej jedną.",
+      "royalFlush": "Poker królewski: walet, dama, król i as jednego koloru, z jokerem jako dziesiątką.",
+      "straight": "Strit: walet, dama, król i as, z jokerem jako dziesiątką.",
+      "threeOfAKind": "Trójka: trzy karty jednej figury.",
+      "ties": "Między układami tego samego rodzaju wygrywają wyższe figury, najpierw as; układ bez jokera bije taki sam z jokerem. Pulę dzielą tylko równe układy.",
+      "title": "Układy, od najlepszego",
+      "twoPair": "Dwie pary: dwie karty jednej figury i dwie innej."
+    },
+    "match": {
+      "cap": "W rozdaniu nikt nie stawia więcej żetonów, niż ma uboższy gracz.",
+      "end": "10 rozdań, po 150 żetonów: wygrywa gracz z największą liczbą żetonów. Partia kończy się wcześniej, gdy gracz nie może już zapłacić ante.",
+      "title": "Partia"
+    },
+    "summary": "Zasady gry",
+    "title": "Zasady"
+  },
+  "table": {
+    "action": {
+      "bet": "Postaw {amount}",
+      "call": "Sprawdź {amount}",
+      "check": "Czekaj",
+      "deal": "Rozdaj",
+      "exchange": "{count, plural, one {Wymień # kartę} few {Wymień # karty} many {Wymień # kart} other {Wymień # karty}}",
+      "fold": "Pas",
+      "keep": "Zostaw karty",
+      "less": "Mniej",
+      "max": "Maks",
+      "min": "Min",
+      "more": "Więcej",
+      "raise": "Przebij do {amount}"
+    },
+    "hand": "Rozdanie {index} z {hands}",
+    "history": "Rozegrane rozdania",
+    "outcome": {
+      "fold": "Rozdanie {index}: {folder} pasuje, {winner} zgarnia pulę {pot}.",
+      "noContest": "Rozdanie {index}: bez zwycięzcy, ante trafiają do banku.",
+      "split": "Rozdanie {index}: równe układy ({category, select, fiveOfAKind {pięć jednakowych} royalFlush {poker królewski} fourOfAKind {kareta} fullHouse {full} straight {strit} threeOfAKind {trójka} twoPair {dwie pary} other {para}}), pula zostaje podzielona.",
+      "win": "Rozdanie {index}: {winner} zgarnia pulę {pot} — {category, select, fiveOfAKind {pięć jednakowych} royalFlush {poker królewski} fourOfAKind {kareta} fullHouse {full} straight {strit} threeOfAKind {trójka} twoPair {dwie pary} other {para}}."
+    },
+    "pot": "Pula {pot}",
+    "result": {
+      "draw": "Remis: obaj gracze kończą z {chips, plural, one {# żetonem} few {# żetonami} many {# żetonami} other {# żetonu}}.",
+      "win": "{winner} wygrywa partię, mając {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}."
+    },
+    "seat": {
+      "bet": "Stawka {amount}",
+      "chips": "{count, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "play": "Usiądź"
+    },
+    "spectators": "Widzowie: {count}",
+    "status": {
+      "away": "Czekamy na powrót gracza {name}…",
+      "broken": "W talii oszukano: partia zostaje przerwana.",
+      "keys": "Czekamy na klucze gracza {name}…",
+      "myExchange": "Wybierz karty do odrzucenia, potem je wymień.",
+      "myTurn": "Twoja kolej.",
+      "next": "Czekamy, aż gracz rozda karty.",
+      "reading": "Odczytywanie kart…",
+      "seats": "Czekamy, aż usiądzie dwóch graczy.",
+      "showdown": "Układy są odkrywane…",
+      "shuffling": "{name} tasuje talię…",
+      "theirExchange": "{name} wymienia karty.",
+      "theirTurn": "Kolej gracza {name}."
+    },
+    "verification": {
+      "cheated": "W talii oszukano.",
+      "checking": "Sprawdzanie talii…",
+      "fair": "Wszystkie talie były uczciwe."
+    }
   }
 }

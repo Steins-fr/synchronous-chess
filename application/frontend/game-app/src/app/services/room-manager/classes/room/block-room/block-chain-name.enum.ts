@@ -2,4 +2,5 @@
 export enum BlockChainName {
     CHAT = 'chat',
     CHESS = 'chess',
+    POKER = 'poker',
 }

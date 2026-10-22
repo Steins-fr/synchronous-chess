@@ -10,5 +10,98 @@
     "rooms": "Crea una stanza o entra in una aperta: i partecipanti senza posto guardano la partita.",
     "tagline": "Il poker per due giocatori, con 17 carte e senza mazziere.",
     "title": "Poker a diciassette carte"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 carte: gli assi, i re, le donne e i fanti dei quattro semi, e un jolly, che vale la carta che dà la mano migliore. Per ogni mano si mescola un mazzo nuovo.",
+      "title": "Il mazzo"
+    },
+    "fair": {
+      "dealer": "I giocatori mescolano insieme ogni mazzo, cifrato, e si scambiano le chiavi delle carte distribuite: nessuno, nemmeno il server, vede una mano prima dello showdown. Alla fine della partita tutte le chiavi vengono mostrate e ogni partecipante verifica ogni mazzo.",
+      "title": "Senza mazziere"
+    },
+    "hand": {
+      "ante": "Ogni giocatore paga un ante di 5 fiche e riceve 5 carte.",
+      "exchange": "Cambio: ogni giocatore a turno scarta delle carte e ne pesca altrettante; il secondo pesca tra le carte rimaste.",
+      "firstRound": "Primo giro: passo, punta, rilancia, vedi o lascia. Se entrambi i giocatori passano, gli ante vanno al banco.",
+      "secondRound": "Secondo giro: una puntata è almeno quella del primo giro, e al massimo di 30 fiche.",
+      "showdown": "Showdown: la mano migliore prende il piatto. Chi lascia lo cede all'altro.",
+      "title": "Una mano"
+    },
+    "hands": {
+      "fiveOfAKind": "Pokerissimo: le quattro carte di un valore e il jolly.",
+      "fourOfAKind": "Poker: quattro carte di un valore.",
+      "fullHouse": "Full: tre carte di un valore e due di un altro.",
+      "onePair": "Coppia: due carte di un valore. Ogni mano ne ha almeno una.",
+      "royalFlush": "Scala reale: fante, donna, re e asso di un seme, con il jolly come dieci.",
+      "straight": "Scala: un fante, una donna, un re e un asso, con il jolly come dieci.",
+      "threeOfAKind": "Tris: tre carte di un valore.",
+      "ties": "Tra mani dello stesso tipo vincono i valori più alti, prima l'asso; una mano senza il jolly batte la stessa con il jolly. Solo mani uguali dividono il piatto.",
+      "title": "Le mani, dalla migliore",
+      "twoPair": "Doppia coppia: due carte di un valore e due di un altro."
+    },
+    "match": {
+      "cap": "In una mano nessuno punta più fiche di quante ne abbia il giocatore più povero.",
+      "end": "10 mani, 150 fiche a testa: vince chi ha più fiche. La partita finisce prima quando un giocatore non può più pagare l'ante.",
+      "title": "La partita"
+    },
+    "summary": "Regole del gioco",
+    "title": "Regole"
+  },
+  "table": {
+    "action": {
+      "bet": "Punta {amount}",
+      "call": "Vedi {amount}",
+      "check": "Passo",
+      "deal": "Distribuisci",
+      "exchange": "{count, plural, one {Cambia # carta} other {Cambia # carte}}",
+      "fold": "Lascia",
+      "keep": "Tieni la mano",
+      "less": "Punta meno",
+      "max": "Max",
+      "min": "Min",
+      "more": "Punta di più",
+      "raise": "Rilancia a {amount}"
+    },
+    "hand": "Mano {index} di {hands}",
+    "history": "Mani giocate",
+    "outcome": {
+      "fold": "Mano {index}: {folder} lascia, {winner} prende il piatto di {pot}.",
+      "noContest": "Mano {index}: mano nulla, gli ante vanno al banco.",
+      "split": "Mano {index}: mani uguali ({category, select, fiveOfAKind {pokerissimo} royalFlush {scala reale} fourOfAKind {poker} fullHouse {full} straight {scala} threeOfAKind {tris} twoPair {doppia coppia} other {coppia}}), il piatto viene diviso.",
+      "win": "Mano {index}: {winner} prende il piatto di {pot} con {category, select, fiveOfAKind {un pokerissimo} royalFlush {una scala reale} fourOfAKind {un poker} fullHouse {un full} straight {una scala} threeOfAKind {un tris} twoPair {una doppia coppia} other {una coppia}}."
+    },
+    "pot": "Piatto {pot}",
+    "result": {
+      "draw": "Patta: entrambi i giocatori finiscono con {chips, plural, one {# fiche} other {# fiche}}.",
+      "win": "{winner} vince la partita con {chips, plural, one {# fiche} other {# fiche}}."
+    },
+    "seat": {
+      "bet": "Puntata {amount}",
+      "chips": "{count, plural, one {# fiche} other {# fiche}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "play": "Siediti"
+    },
+    "spectators": "Spettatori: {count}",
+    "status": {
+      "away": "In attesa del ritorno di {name}…",
+      "broken": "Un mazzo è stato truccato: la partita si ferma.",
+      "keys": "In attesa delle chiavi di {name}…",
+      "myExchange": "Seleziona le carte da scartare, poi cambiale.",
+      "myTurn": "Tocca a te.",
+      "next": "In attesa che un giocatore distribuisca la mano.",
+      "reading": "Lettura delle carte…",
+      "seats": "In attesa che si siedano due giocatori.",
+      "showdown": "Le mani vengono mostrate…",
+      "shuffling": "{name} mescola il mazzo…",
+      "theirExchange": "{name} cambia delle carte.",
+      "theirTurn": "Tocca a {name}."
+    },
+    "verification": {
+      "cheated": "Un mazzo è stato truccato.",
+      "checking": "Verifica dei mazzi…",
+      "fair": "Tutti i mazzi erano onesti."
+    }
   }
 }

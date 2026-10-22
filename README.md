@@ -23,6 +23,12 @@ Drag & Drop a piece to validate a move. The registered move will be displayed wi
 
 For the Synchronous Chess rules, please refer to [this website](http://www.hexenspiel.de/engl/synchronous-chess/).
 
+### Seventeen Poker demo
+
+The poker of the manga *Liar Game*, for two players: 17 cards (the aces, kings, queens and jacks, and a joker), 10 hands, 150 chips each. Each player takes a seat with `Sit here`, then a player deals each hand with `Deal`. The others watch.
+
+No one deals the cards: the players shuffle each deck together, encrypted, and give each other the keys of the cards dealt, so no one, not even the server, sees a hand before its showdown. Once the match is over, every key is shown and each participant checks every deck. See [Mental poker](documentation/mental-poker.md) and [Seventeen Poker session](documentation/seventeen-poker-session.md).
+
 ### Chat demo
 
 A simple chat demo with ping displayed between peers. For the moment, you have to click on the send button for sending the message. The `Enter` key is not supported.
@@ -74,12 +80,14 @@ The API is composed of 4 lambdas for managing websocket connection, disconnectio
 ### **Frontend**
 ---
 
-The synchronous chess board game with chat. 
+The synchronous chess board game and the Seventeen Poker, with chat. 
 
 The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
-which the other participants watch for cheats. The moves stay hidden until both players are committed.
-See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md) and
-[Chess game session](documentation/chess-game-session.md).
+which the other participants watch for cheats. The moves stay hidden until both players are committed, and the
+cards of the poker until their showdown.
+See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md),
+[Chess game session](documentation/chess-game-session.md), [Mental poker](documentation/mental-poker.md) and
+[Seventeen Poker session](documentation/seventeen-poker-session.md).
 
 **Required**: Backend API (its websocket API and its HTTP API).
 
@@ -100,7 +108,7 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 - connection_id: Websocket connection id of the host;
 - host_player: Player name of the host;
 - max_player: Maximum of player that can join the room;
-- game: The game of the room, chess or chat;
+- game: The game of the room, chess, seventeen-poker or chat;
 - created_at, name_key: The date of its creation and its name in lower case, to list and search the rooms;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.

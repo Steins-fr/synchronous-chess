@@ -134,8 +134,8 @@ run by the CI.
 
 ### Testing a chess game
 
-- The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`
-  (its rooms and chat only, the game in progress: #198): the home page only links to them.
+- The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`:
+  the home page only links to them.
 - Each participant, the host included, takes a seat with the `Play white` / `Play black`
   buttons: two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
@@ -145,6 +145,20 @@ run by the CI.
 - `page.context().pages()` reaches every tab from one script, to compare the boards after a turn.
 - The MCP only records the console of the selected tab: select each tab and call
   `mcp__playwright__browser_console_messages` to check it.
+
+### Testing a poker game
+
+- Each participant takes a seat with `Sit here` (`#seat-bottom` / `#seat-top` of `app-poker-table`), then a
+  seated player clicks `Deal`. The table shows the local player at its bottom. See
+  `documentation/seventeen-poker-session.md`.
+- The actions are buttons named by their text (`Check`, `Bet 6`, `Call 6`, `Raise to 13`, `Fold`, `Bet more`,
+  `Min`, `Max`, `Keep my hand`, `Exchange 2 cards`); the cards of the player are buttons during the exchange,
+  `aria-pressed` once selected. A card is an image named by its card (`Ace of spades`, `Face-down card`), and
+  `[role="status"]` tells what the table waits for.
+- A card thrown away keeps its element while it leaves the hand (`li.card-discarded`): read the cards
+  without it, as `e2e/seventeen-poker.e2e.ts` does.
+- The `?auto-join` link draws a new player name at each load: reloading it joins as a new participant. Reload
+  then join the room from the list under the same name to come back to a seat.
 
 ### Cleanup after every browser test
 

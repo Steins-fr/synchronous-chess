@@ -10,5 +10,98 @@
     "rooms": "Bir oda oluşturun veya açık bir odaya katılın: yeri olmayan katılımcılar oyunu izler.",
     "tagline": "İki oyuncu için poker: 17 kart, krupiyesiz.",
     "title": "On yedi kartlık poker"
+  },
+  "rules": {
+    "deck": {
+      "cards": "17 kart: dört rengin asları, papazları, kızları ve valeleri, bir de en iyi eli veren kartın yerine geçen bir joker. Her elde yeni bir deste karıştırılır.",
+      "title": "Deste"
+    },
+    "fair": {
+      "dealer": "Oyuncular her desteyi birlikte, şifreli olarak karıştırır ve dağıtılan kartların anahtarlarını birbirine verir: kimse, sunucu bile, bir eli açılmadan önce göremez. Maçın sonunda tüm anahtarlar gösterilir ve her katılımcı her desteyi kontrol eder.",
+      "title": "Krupiyesiz"
+    },
+    "hand": {
+      "ante": "Her oyuncu 5 fişlik ante öder ve 5 kart alır.",
+      "exchange": "Değişim: her oyuncu sırayla kart atar ve aynı sayıda kart çeker; ikinci oyuncu kalan kartlardan çeker.",
+      "firstRound": "İlk tur: pas, bahis, artırma, görme ya da çekilme. İki oyuncu da pas geçerse anteler bankaya gider.",
+      "secondRound": "İkinci tur: bir bahis en az ilk turdaki kadar, en fazla 30 fiştir.",
+      "showdown": "El açma: en iyi el potu alır. Çekilen oyuncu potu diğerine bırakır.",
+      "title": "Bir el"
+    },
+    "hands": {
+      "fiveOfAKind": "Beşli: bir değerin dört kartı ve joker.",
+      "fourOfAKind": "Kare: aynı değerde dört kart.",
+      "fullHouse": "Full: aynı değerde üç kart ve başka bir değerde iki kart.",
+      "onePair": "Per: aynı değerde iki kart. Her elde en az bir tane vardır.",
+      "royalFlush": "Royal floş: bir rengin valesi, kızı, papazı ve ası, joker on yerine.",
+      "straight": "Kent: bir vale, bir kız, bir papaz ve bir as, joker on yerine.",
+      "threeOfAKind": "Üçlü: aynı değerde üç kart.",
+      "ties": "Aynı türden eller arasında yüksek değerler kazanır, önce as; jokersiz bir el aynı eli jokerle yener. Potu yalnızca eşit eller paylaşır.",
+      "title": "Eller, en iyisinden başlayarak",
+      "twoPair": "Döper: aynı değerde iki kart ve başka bir değerde iki kart."
+    },
+    "match": {
+      "cap": "Bir elde kimse, daha az fişi olan oyuncunun fişinden fazlasını yatıramaz.",
+      "end": "10 el, her oyuncuya 150 fiş: en çok fişi olan kazanır. Bir oyuncu anteyi artık ödeyemezse maç daha erken biter.",
+      "title": "Maç"
+    },
+    "summary": "Oyunun kuralları",
+    "title": "Kurallar"
+  },
+  "table": {
+    "action": {
+      "bet": "Bahis {amount}",
+      "call": "Gör {amount}",
+      "check": "Pas",
+      "deal": "Dağıt",
+      "exchange": "{count, plural, one {# kart değiştir} other {# kart değiştir}}",
+      "fold": "Çekil",
+      "keep": "Elimi koru",
+      "less": "Daha az",
+      "max": "En çok",
+      "min": "En az",
+      "more": "Daha çok",
+      "raise": "Artır: {amount}"
+    },
+    "hand": "El {index}/{hands}",
+    "history": "Oynanan eller",
+    "outcome": {
+      "fold": "El {index}: {folder} çekiliyor, {winner} {pot} fişlik potu alıyor.",
+      "noContest": "El {index}: kazanan yok, anteler bankaya gidiyor.",
+      "split": "El {index}: eşit eller ({category, select, fiveOfAKind {beşli} royalFlush {royal floş} fourOfAKind {kare} fullHouse {full} straight {kent} threeOfAKind {üçlü} twoPair {döper} other {per}}), pot paylaşılıyor.",
+      "win": "El {index}: {winner} {pot} fişlik potu alıyor — {category, select, fiveOfAKind {beşli} royalFlush {royal floş} fourOfAKind {kare} fullHouse {full} straight {kent} threeOfAKind {üçlü} twoPair {döper} other {per}}."
+    },
+    "pot": "Pot {pot}",
+    "result": {
+      "draw": "Berabere: iki oyuncu da {chips, plural, one {# fişle} other {# fişle}} bitirdi.",
+      "win": "{winner} maçı {chips, plural, one {# fişle} other {# fişle}} kazandı."
+    },
+    "seat": {
+      "bet": "Bahis {amount}",
+      "chips": "{count, plural, one {# fiş} other {# fiş}}",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "play": "Otur"
+    },
+    "spectators": "İzleyiciler: {count}",
+    "status": {
+      "away": "{name} kullanıcısının dönmesi bekleniyor…",
+      "broken": "Bir destede hile yapıldı: maç duruyor.",
+      "keys": "{name} kullanıcısının anahtarları bekleniyor…",
+      "myExchange": "Atacağınız kartları seçin, sonra değiştirin.",
+      "myTurn": "Sıra sizde.",
+      "next": "Bir oyuncunun eli dağıtması bekleniyor.",
+      "reading": "Kartlar okunuyor…",
+      "seats": "İki oyuncunun oturması bekleniyor.",
+      "showdown": "Eller açılıyor…",
+      "shuffling": "{name} desteyi karıştırıyor…",
+      "theirExchange": "{name} kart değiştiriyor.",
+      "theirTurn": "Sıra {name} kullanıcısında."
+    },
+    "verification": {
+      "cheated": "Bir destede hile yapıldı.",
+      "checking": "Desteler kontrol ediliyor…",
+      "fair": "Tüm desteler dürüsttü."
+    }
   }
 }

@@ -17,8 +17,8 @@
     "title": "Catur Serentak"
   },
   "cheat": {
-    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} other {}}) dari {author} dilaporkan curang oleh {reporters}",
-    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
+    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} other {}}) dari {author} dilaporkan curang oleh {reporters}",
+    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
   },
   "dialog": {
     "cancel": "Batal",

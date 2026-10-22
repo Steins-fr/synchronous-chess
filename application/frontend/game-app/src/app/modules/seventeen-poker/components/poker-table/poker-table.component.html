@@ -1,0 +1,105 @@
+<section *transloco="let t; prefix: 'poker.table'" class="flex flex-col gap-3 py-4">
+    @let top = topSeat();
+    @let bottom = bottomSeat();
+    <app-poker-seat
+        id="seat-top"
+        class="[--pot-direction:1]"
+        [name]="session().seats()[top]"
+        [chips]="session().match.stacks()[top]"
+        [bet]="roundBet(top)"
+        [acting]="toAct() === top"
+        [canTake]="canTake(top)"
+        (take)="takeSeat(top)" />
+    <app-card-hand class="[--deal-from-y:6rem]" [cards]="hands()[top]" [highlighted]="winning(top)" />
+
+    <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-app-felt text-app-on-color">
+        <app-card-deck [count]="session().deckCount()" [shuffling]="shuffling()" />
+        <div class="flex flex-col items-center gap-1">
+            <span class="text-xl font-bold">{{ t('pot', { pot: pot() }) }}</span>
+            @if (hand(); as current) {
+            <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match.rules.hands }) }}</span>
+            }
+        </div>
+        <span class="text-sm text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
+    </div>
+
+    <app-card-hand
+        class="[--deal-from-y:-6rem]"
+        [cards]="hands()[bottom]"
+        [selectable]="exchanging()"
+        [highlighted]="winning(bottom)"
+        [selected]="selected()"
+        (selectedChange)="selected.set($event)" />
+    <app-poker-seat
+        id="seat-bottom"
+        class="[--pot-direction:-1]"
+        [name]="session().seats()[bottom]"
+        [chips]="session().match.stacks()[bottom]"
+        [bet]="roundBet(bottom)"
+        [acting]="toAct() === bottom"
+        [canTake]="canTake(bottom)"
+        [canLeave]="canLeave()"
+        (take)="takeSeat(bottom)"
+        (leave)="leaveSeat()" />
+
+    @if (status(); as current) {
+    <p class="m-0 text-center font-medium" role="status">{{ current.key | transloco: current.params }}</p>
+    }
+
+    <div class="flex flex-wrap items-center justify-center gap-2">
+        @if (canDeal()) {
+        <button mat-flat-button type="button" (click)="deal()">{{ t('action.deal') }}</button>
+        }
+        @if (actions().includes(betAction.CHECK)) {
+        <button mat-stroked-button type="button" (click)="act(betAction.CHECK)">{{ t('action.check') }}</button>
+        }
+        @if (actions().includes(betAction.CALL)) {
+        <button mat-flat-button type="button" (click)="act(betAction.CALL)">{{ t('action.call', { amount: toCall() }) }}</button>
+        }
+        @if (betRange(); as range) {
+        <div class="flex items-center gap-1">
+            <button mat-stroked-button type="button" class="min-w-10!" [disabled]="amount() <= range.min" [attr.aria-label]="t('action.less')" (click)="step(-1)">−</button>
+            <span class="min-w-10 text-center font-bold tabular-nums" aria-live="polite">{{ amount() }}</span>
+            <button mat-stroked-button type="button" class="min-w-10!" [disabled]="amount() >= range.max" [attr.aria-label]="t('action.more')" (click)="step(1)">+</button>
+            <button mat-button type="button" (click)="setAmount(range.min)">{{ t('action.min') }}</button>
+            <button mat-button type="button" (click)="setAmount(range.max)">{{ t('action.max') }}</button>
+        </div>
+        @if (actions().includes(betAction.RAISE)) {
+        <button mat-flat-button type="button" (click)="act(betAction.RAISE)">{{ t('action.raise', { amount: amount() }) }}</button>
+        } @else {
+        <button mat-flat-button type="button" (click)="act(betAction.BET)">{{ t('action.bet', { amount: amount() }) }}</button>
+        }
+        }
+        <!-- Folding is offered against a bet only: with nothing to call, a player checks for free -->
+        @if (actions().includes(betAction.CALL)) {
+        <button mat-stroked-button type="button" (click)="act(betAction.FOLD)">{{ t('action.fold') }}</button>
+        }
+        @if (exchanging()) {
+        <button mat-flat-button type="button" [disabled]="selected().length > maxExchange()" (click)="exchange()">
+            {{ selected().length === 0 ? t('action.keep') : t('action.exchange', { count: selected().length }) }}
+        </button>
+        }
+    </div>
+
+    @if (result(); as current) {
+    <p class="m-0 text-center">
+        <span class="badge" [class.badge-win]="session().match.result()?.winner !== null" [class.badge-draw]="session().match.result()?.winner === null">
+            {{ current.key | transloco: current.params }}
+        </span>
+    </p>
+    }
+    @if (verification(); as current) {
+    <p class="m-0 text-center muted-note">{{ current.key | transloco }}</p>
+    }
+
+    @if (history().length > 0) {
+    <details>
+        <summary class="cursor-pointer">{{ t('history') }}</summary>
+        <ul class="m-0 mt-2 pl-0 list-none space-y-1">
+            @for (outcome of history(); track $index) {
+            <li>{{ outcome.key | transloco: outcome.params }}</li>
+            }
+        </ul>
+    </details>
+    }
+</section>
