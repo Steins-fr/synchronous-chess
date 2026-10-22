@@ -24,7 +24,8 @@ The code lives in `application/frontend/game-app/src/app/modules/mental-poker`.
 |---|---|---|
 | `SraCipher` | `classes/sra-cipher.ts` | The cipher: keys, encryption, the encoding of the cards |
 | `MentalDeckState` | `classes/mental-deck-state.ts` | What the chain tells of a deck, the same for every participant: the steps, the keys asked for and given |
-| `MentalDeck` | `classes/mental-deck.ts` | The deck of a game on a room: applies the messages, makes and sends the steps and the keys of the local player, reads its cards |
+| `MentalDeckTable` | `classes/mental-deck-table.ts` | The decks of a game: receives their messages from the start of the session, keeps the ones of a deck not created yet |
+| `MentalDeck` | `classes/mental-deck.ts` | A deck of a game: applies its messages, makes and sends the steps and the keys of the local player, reads its cards |
 | `verifyDeck` | `classes/deck-verification.ts` | Checks a deck once every player disclosed its keys |
 | `DeckKeyStore` | `classes/deck-key-store.ts` | Keeps the secrets of the player across the reloads of the page |
 
@@ -32,7 +33,9 @@ The code lives in `application/frontend/game-app/src/app/modules/mental-poker`.
 
 The participants share a safe prime p = 2q + 1, the 2048-bit MODP group of RFC 3526. A card `i` is the
 square `(i + 2)² mod p`: the squares form the subgroup of order q, which every cipher text stays in.
-Without it, the symbol of Legendre of a cipher text would tell one bit of its card (the attack of Lipton).
+Without it, the symbol of Legendre of a cipher text would tell one bit of its card (the attack of Lipton):
+every value received must be a square, checked with the symbol of Jacobi (0.2 ms, against 10 ms for an
+exponentiation), or a player could mark a card and follow it through the shuffles.
 
 A key is an exponent `e` from 1 to q − 1, its inverse `d = e⁻¹ mod q` decrypts: `(mᵉ)ᵈ = m`. The cipher
 commutes, `(m^e₁)^e₂ = (m^e₂)^e₁`: a card encrypted by several players is decrypted with their keys, in
@@ -65,8 +68,11 @@ players, never sends any, and reads the open cards only.
 // The routing of the game, merged with the one of its decks: they share the chain of the game
 const routing = mergeBlockChainRoutings(gameBlockChains, mentalDeckBlockChains(gameChain));
 
+// The game session creates its table at once, before any message of a deck can come
+const table = new MentalDeckTable(room);
+
 // Every participant creates the deck when the message of the game starting it applies
-const deck = new MentalDeck(room, { id: `${ gameId }:${ hand }`, size: 17, players: [first, second] });
+const deck = table.deck({ id: `${ gameId }:${ hand }`, size: 17, players: [first, second] });
 
 // The game deals and opens as its own messages apply, on every participant
 await Promise.all([deck.deal([0, 1, 2, 3, 4], first), deck.deal([5, 6, 7, 8, 9], second)]);
@@ -76,8 +82,10 @@ const verification = await deck.disclose();
 ```
 
 - **The order of the chain.** The game calls `deal()`, `open()` and `disclose()` when the message of
-  the game asking for it applies, in the order of the chain. A key given before the game asked for it
-  is ignored by every participant alike, so the game asks before the players answer.
+  the game asking for it applies, in the order of the chain. The game of a participant may apply its
+  messages later than the deck applies its own, awaiting a deck meanwhile (the recipient decrypting its
+  cards, a reloaded page replaying the chain): a key given before the game of a participant asks for it
+  is kept, and the messages of a deck not created yet wait in the table for it.
 - **What the game may rely on.** `phase`, `waitingFor` and the promises are the same for every
   participant: the game may act on them. `cards` is what the local participant reads: the interface
   shows it, the local player decides with it, the rules of the game never depend on it. The promise of
@@ -89,8 +97,8 @@ const verification = await deck.disclose();
 - **The id** of a deck is unique in the room, and across the rooms of the same name: a random part,
   drawn by the game and given in the chain, keeps a player from using again the secrets of a former
   deck, which it disclosed.
-- **A broken deck.** A step that is not a deck breaks it (`phase` is `broken`): its promises reject,
-  the game decides what follows.
+- **A broken deck.** A step that is not a deck breaks it (`phase` is `broken`): the promises of its
+  deals and openings reject, its disclosure resolves `cheated`, the game decides what follows.
 
 ## Messages
 
@@ -105,14 +113,15 @@ of their deck.
 | `MP_disclose` | `{ deck, shuffleKey, cardKeys }` | each player | the game asked for the disclosure |
 
 The first step of a player is final: a step out of its turn is ignored, as the one a reloaded page
-sends again. The first key of a player for a card is final too.
+sends again. The first key of a player for a card is final too, whether the game asked for it yet or
+not. The keys are taken once the deck is locked only.
 
 ## Reloading the page
 
 `DeckKeyStore` keeps the secrets of the player for each deck (shuffle key, permutation, card keys) in
 the session storage of the tab, under `synchronous-chess:deck-keys:<room>:<player>:<deck>`. They are
 stored **before** anything made with them is sent, and never drawn again. They are removed once the
-deck is checked: disclosed, they are not secret anymore.
+deck is checked, disclosed, or broken.
 
 The reloaded page creates the decks again as the chain replays the messages of the game, then reads
 its cards with its stored keys. It does not know which of its messages are in the chain:
@@ -122,7 +131,8 @@ its cards with its stored keys. It does not know which of its messages are in th
 - the keys it gives again are ignored the same way.
 
 Without session storage, the secrets are lost: the page does not read its cards nor give its keys, and
-the deck waits for it. A page drawing new secrets, the chain replaying a step it made with former ones,
+the deck waits for it. It still reads the cards whose keys are all in the chain, as the open ones. A page
+drawing new secrets, the chain replaying a step it made with former ones,
 finds that its secrets do not make its step in the chain: it drops them, rather than give wrong keys.
 
 ## Checking the deck
@@ -142,8 +152,8 @@ runs once the game is over, yielding to the browser, and `verification` tells it
 
 Some cheats are found earlier, by every participant alike:
 
-- a step that is not a deck: a card missing, a card twice, a value out of the group (`invalidShuffle`,
-  the deck breaks);
+- a step that is not a deck: a card missing, a card twice, a value out of the group or not a square
+  (`invalidShuffle`, the deck breaks);
 - a malformed key or disclosure (`invalidCardKey`, ignored).
 
 The recipient of a card finds a key not giving any card at once. With two players, the key of the

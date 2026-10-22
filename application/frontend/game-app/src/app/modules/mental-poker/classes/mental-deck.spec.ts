@@ -7,9 +7,10 @@ import { RoomHub } from '@testing/room-hub';
 import { TestHelper } from '@testing/test.helper';
 import { TEST_GROUP } from '@testing/sra-test-group';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { CardKeysMessage, DeckStepMessage, mentalDeckBlockChains, MentalDeckMessageType, MentalDeckPayloads } from '../mental-deck-messages';
+import { CardKey, CardKeysMessage, DeckStepMessage, mentalDeckBlockChains, MentalDeckMessageType, MentalDeckPayloads } from '../mental-deck-messages';
 import { DeckKeyStore } from './deck-key-store';
 import { DeckVerification, MentalDeck } from './mental-deck';
+import { MentalDeckTable } from './mental-deck-table';
 import { DeckPhase } from './mental-deck-state';
 import { SraCipher } from './sra-cipher';
 
@@ -28,19 +29,26 @@ function tampering(type: MentalDeckMessageType, change: (payload: never) => unkn
 describe('MentalDeck', () => {
     let hub: RoomHub<MentalDeckPayloads>;
     let rooms: Map<string, Room<MentalDeckPayloads>>;
+    let tables: Map<string, MentalDeckTable>;
     let decks: MentalDeck[];
 
-    function deck(name: string, players: ReadonlyArray<string>, tamper?: Tamper): MentalDeck {
+    /** The page of a participant: its room and the table of its game */
+    function page(name: string, tamper?: Tamper): MentalDeckTable {
         const room: Room<MentalDeckPayloads> = hub.room(name, tamper);
         rooms.set(name, room);
-        const created = new MentalDeck(room, { id: ID, size: SIZE, players, cipher });
+        tables.set(name, new MentalDeckTable(room));
+        return tables.get(name) as MentalDeckTable;
+    }
+
+    function deck(name: string, players: ReadonlyArray<string>, tamper?: Tamper): MentalDeck {
+        const created: MentalDeck = page(name, tamper).deck({ id: ID, size: SIZE, players, cipher });
         decks.push(created);
         return created;
     }
 
     /** The page of a player loaded again: a new deck, the former page closed */
     function reload(index: number, name: string): MentalDeck {
-        decks[index].destroy();
+        tables.get(name)?.destroy();
         hub.close(rooms.get(name) as Room<MentalDeckPayloads>);
         const reloaded: MentalDeck = deck(name, ['a', 'b']);
         decks.splice(index, 1, decks.pop() as MentalDeck);
@@ -77,13 +85,14 @@ describe('MentalDeck', () => {
         sessionStorage.clear();
         hub = new RoomHub<MentalDeckPayloads>();
         rooms = new Map();
+        tables = new Map();
         decks = [];
         vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
         vi.spyOn(TimedLogger, 'error').mockImplementation(() => undefined);
     });
 
     afterEach(() => {
-        decks.forEach((of: MentalDeck) => of.destroy());
+        tables.forEach((table: MentalDeckTable) => table.destroy());
         vi.restoreAllMocks();
     });
 
@@ -286,8 +295,26 @@ describe('MentalDeck', () => {
             // When a broken deck receives the next step
             hub.send({ from: 'a', type: MentalDeckMessageType.LOCK, payload: { deck: ID, cards: [] } });
 
-            // Then it is ignored
+            // Then it is ignored, and the game does not wait for its disclosure
             expect(hub.reports).toHaveLength(3);
+            expect(await c.disclose()).toEqual(DeckVerification.CHEATED);
+            expect(c.verification()).toEqual(DeckVerification.CHEATED);
+            expect(new DeckKeyStore('room', 'a').get(ID)).toBeUndefined();
+        });
+
+        test('should break on a deck holding a value that is not a square, a card marked to follow it', async () => {
+            // Given b marks a card, its opposite being no square
+            const key: bigint = cipher.randomKey();
+            const [, b, c] = table();
+            vi.spyOn(TestHelper.cast<{ computeShuffle(): Promise<bigint[]> }>(b), 'computeShuffle')
+                .mockResolvedValue(Array.from({ length: SIZE }, (_, card: number) => {
+                    const value: bigint = cipher.apply(cipher.encode(card), key);
+                    return card === 0 ? TEST_GROUP.prime - value : value;
+                }));
+
+            // Then
+            await vi.waitFor(() => expect(c.phase()).toEqual(DeckPhase.BROKEN));
+            expect(hub.reported().sort()).toEqual(['a', 'b', 'c'].map((reporter: string) => `${ reporter } ${ CheatReason.INVALID_SHUFFLE } b`));
         });
 
         test.each([
@@ -312,13 +339,15 @@ describe('MentalDeck', () => {
             // When
             hub.send({ from: 'b', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: [{ position: 0, key: 'zz' }] } });
             hub.send({ from: 'b', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: undefined } });
+            hub.send({ from: 'b', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: [TestHelper.cast<CardKey>(null)] } });
+            hub.send({ from: 'b', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: [{ position: SIZE, key: '1' }] } });
             c.disclose();
             hub.send({ from: 'b', type: MentalDeckMessageType.DISCLOSE, payload: { deck: ID, shuffleKey: '1', cardKeys: ['1'] } });
             hub.send({ from: 'b', type: MentalDeckMessageType.DISCLOSE, payload: { deck: ID, shuffleKey: 'zz', cardKeys: Array.from({ length: SIZE }, () => '1') } });
             hub.send({ from: 'b', type: MentalDeckMessageType.DISCLOSE, payload: { deck: ID, shuffleKey: '1', cardKeys: undefined } });
 
             // Then
-            expect(hub.reported().filter((report: string) => report.startsWith('c'))).toEqual(Array.from({ length: 5 }, () => `c ${ CheatReason.INVALID_CARD_KEY } b`));
+            expect(hub.reported().filter((report: string) => report.startsWith('c'))).toEqual(Array.from({ length: 7 }, () => `c ${ CheatReason.INVALID_CARD_KEY } b`));
             // The keys of b come once b deals them too
             expect(c.waitingFor()).toEqual(['a', 'b']);
             void decks[1].deal(hand(0), 'a');
@@ -327,7 +356,7 @@ describe('MentalDeck', () => {
         });
     });
 
-    test('should ignore the messages out of turn, of another deck, of a spectator, and the keys not asked for', async () => {
+    test('should ignore the messages out of turn, of another deck, of a spectator, and the keys before the deck is ready', async () => {
         // Given
         const [a, b, c] = table();
         hub.send({ from: 'b', type: MentalDeckMessageType.SHUFFLE, payload: { deck: ID, cards: [] } });
@@ -338,13 +367,56 @@ describe('MentalDeck', () => {
 
         // When
         hub.send({ from: 'a', type: MentalDeckMessageType.SHUFFLE, payload: { deck: 'game:2', cards: [] } });
-        hub.send({ from: 'b', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: [{ position: 0, key: '1' }] } });
+        hub.send({ from: 'a', type: MentalDeckMessageType.SHUFFLE, payload: TestHelper.cast<DeckStepMessage>(null) });
         hub.send({ from: 'a', type: MentalDeckMessageType.DISCLOSE, payload: { deck: ID, shuffleKey: '1', cardKeys: [] } });
 
         // Then
         expect(hub.reports).toEqual([]);
         await deal([0], 'a');
         expect(a.cards().size).toEqual(1);
+    });
+
+    test('should take the keys given before the game of the participant asks for them, its game being late', async () => {
+        // Given the games of b and c deal the cards of a, its game later
+        const [a, b, c] = table();
+        await Promise.all([b.deal(hand(0), 'a'), c.deal(hand(0), 'a')]);
+
+        // When
+        await a.deal(hand(0), 'a');
+
+        // Then
+        expect(a.cards().size).toEqual(5);
+        expect(messagesOf(MentalDeckMessageType.KEYS)).toHaveLength(1);
+
+        // When b gives another key of a card, then a opens it
+        hub.send({ from: 'b', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: [{ position: 0, key: '2' }] } });
+        const [opened] = await open([0], [a, b, c]);
+
+        // Then its first key is final
+        expect(opened.get(0)).toEqual(a.cards().get(0));
+        expect(hub.reports).toEqual([]);
+    });
+
+    test('should give a deck the messages received before the game creates it', async () => {
+        // Given the game of c is late, its deck not created yet
+        const [a, b] = [deck('a', ['a', 'b']), deck('b', ['a', 'b'])];
+        const late: MentalDeckTable = page('c');
+        await ready(a, b);
+        hub.send(TestHelper.cast<AppMessage>({ from: 'a', type: MentalDeckMessageType.KEYS, payload: { keys: [] } }));
+
+        // When
+        const c: MentalDeck = late.deck({ id: ID, size: SIZE, players: ['a', 'b'], cipher });
+
+        // Then
+        expect(c.phase()).toEqual(DeckPhase.READY);
+        expect(() => late.deck({ id: ID, size: SIZE, players: ['a', 'b'], cipher })).toThrow('The deck game:1 exists already');
+
+        // When the game destroys the deck, the table staying
+        c.destroy();
+        hub.send({ from: 'a', type: MentalDeckMessageType.KEYS, payload: { deck: ID, keys: [{ position: 0, key: 'zz' }] } });
+
+        // Then
+        expect(hub.reported()).toEqual(['a invalidCardKey a', 'b invalidCardKey a']);
     });
 
     test('should refuse to deal to a spectator, or a card out of the deck', () => {
@@ -373,12 +445,7 @@ describe('MentalDeck', () => {
 
     test('should deal with the 2048-bit group by default', async () => {
         // Given
-        const room = (name: string): Room<MentalDeckPayloads> => {
-            rooms.set(name, hub.room(name));
-            return rooms.get(name) as Room<MentalDeckPayloads>;
-        };
-        const [a, b] = ['a', 'b'].map((name: string) => new MentalDeck(room(name), { id: ID, size: SIZE, players: ['a', 'b'] }));
-        decks.push(a, b);
+        const [a, b] = ['a', 'b'].map((name: string) => page(name).deck({ id: ID, size: SIZE, players: ['a', 'b'] }));
 
         // When
         await Promise.all([a, b].map((of: MentalDeck) => of.deal(hand(0), 'a')));
@@ -481,25 +548,34 @@ describe('MentalDeck', () => {
             expect(hub.held).toHaveLength(1);
         });
 
-        test('should give no key once its secrets are lost, nor disclose them, its deck being in the chain already', async () => {
+        test('should give no key once its secrets are lost, nor disclose them, and read the cards opened like the others', async () => {
             // Given
             table();
-            await ready(...decks);
+            await deal(hand(0), 'a');
+            const cardsOfA: ReadonlyMap<number, number> = decks[0].cards();
             sessionStorage.clear();
 
             // When b reloads, not shuffling first: the chain comes back before its turn
             const b: MentalDeck = reload(1, 'b');
+            void b.deal(hand(0), 'a');
             hub.replay(rooms.get('b') as Room<MentalDeckPayloads>);
-            void deal(hand(0), 'a');
+            const [, opened] = await open([0]);
+
+            // Then b reads the card opened with the keys of the chain
+            expect(opened.get(0)).toEqual(cardsOfA.get(0));
+            expect(TimedLogger.warn).not.toHaveBeenCalled();
+
+            // When
+            void deal([10], 'a');
             void disclose();
 
             // Then
             await vi.waitFor(() => expect(TimedLogger.warn).toHaveBeenCalledOnce());
             await vi.waitFor(() => expect(messagesOf(MentalDeckMessageType.DISCLOSE)).toHaveLength(1));
-            expect(messagesOf(MentalDeckMessageType.KEYS, 'b')).toEqual([]);
+            expect(messagesOf(MentalDeckMessageType.KEYS, 'b')).toHaveLength(1);
             expect(messagesOf(MentalDeckMessageType.DISCLOSE, 'b')).toEqual([]);
-            expect(b.cards().size).toEqual(0);
-            expect(decks[0].cards().size).toEqual(0);
+            // The keys of the cards of a are all in the chain, once a disclosed its own
+            await vi.waitFor(() => expect([...b.cards().keys()]).toEqual(hand(0)));
         });
     });
 });

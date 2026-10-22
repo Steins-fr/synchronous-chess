@@ -4,7 +4,6 @@ import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
-import { merge, Subscription } from 'rxjs';
 import { MentalDeckMessage, MentalDeckMessageType, MentalDeckPayloads } from '../mental-deck-messages';
 import { DeckKeyStore, DeckSecrets } from './deck-key-store';
 import { verifyDeck } from './deck-verification';
@@ -55,8 +54,8 @@ interface Waiter {
  * each card. A card is read with the keys of every player: the game deals it by asking the keys of all the players
  * but its recipient, who keeps its own; it opens it by asking the keys of all the players.
  *
- * The game creates the deck, deals and opens its cards as its own messages apply, in the order of the chain, on every
- * participant: the players give their keys by themselves. What the deck tells the game is the same for everyone
+ * The game creates the deck with its `MentalDeckTable`, deals and opens its cards as its own messages apply, in the order
+ * of the chain, on every participant: the players give their keys by themselves. What the deck tells the game is the same for everyone
  * (`phase`, `waitingFor`, the promises), but what the local participant reads (`cards`).
  * Once the game is over, the players disclose all their keys: every participant checks the deck, and reports the cheats.
  */
@@ -66,7 +65,6 @@ export class MentalDeck {
     private readonly cipher: SraCipher;
     private readonly store: DeckKeyStore;
     private readonly localName: string;
-    private readonly subscription: Subscription;
 
     private readonly _phase = signal<DeckPhase>(DeckPhase.SHUFFLING);
     public readonly phase: Signal<DeckPhase> = this._phase.asReadonly();
@@ -106,12 +104,6 @@ export class MentalDeck {
         this.state = new MentalDeckState(options.size, options.players, this.cipher);
         this.verified = new Promise<DeckVerification>((resolve) => this.resolveVerified = resolve);
         this.cardOfValue = new Map(Array.from({ length: options.size }, (_, card: number) => [this.cipher.encode(card), card]));
-        this.subscription = merge(
-            room.messenger(MentalDeckMessageType.SHUFFLE),
-            room.messenger(MentalDeckMessageType.LOCK),
-            room.messenger(MentalDeckMessageType.KEYS),
-            room.messenger(MentalDeckMessageType.DISCLOSE),
-        ).subscribe((message: MentalDeckMessage) => this.onMessage(message));
         this.changed();
     }
 
@@ -153,7 +145,6 @@ export class MentalDeck {
 
     public destroy(): void {
         this.destroyed = true;
-        this.subscription.unsubscribe();
     }
 
     private waitFor(positions: ReadonlyArray<number>): Promise<void> {
@@ -162,9 +153,9 @@ export class MentalDeck {
         return settled;
     }
 
-    /** The messages of every participant, the local one included, in the order of the chain */
-    private onMessage(message: MentalDeckMessage): void {
-        if (message.payload.deck !== this.id) {
+    /** The messages of the deck from every participant, the local one included, in the order of the chain */
+    public receive(message: MentalDeckMessage): void {
+        if (this.destroyed) {
             return;
         }
 
@@ -354,9 +345,13 @@ export class MentalDeck {
             return;
         }
 
+        if (this.unsentKeys().length === 0) {
+            return;
+        }
+
         // The keys asked by the messages of the same block go together, a reloaded page may find the ones of its former page
         await wait(0);
-        const positions: ReadonlyArray<number> = this.state.missingKeys(this.localName).filter((position: number) => !this.sentKeys.has(position));
+        const positions: ReadonlyArray<number> = this.unsentKeys();
         const secrets: Secrets | undefined = this.loadSecrets();
 
         if (this.destroyed || positions.length === 0 || !secrets) {
@@ -368,6 +363,10 @@ export class MentalDeck {
             deck: this.id,
             keys: positions.map((position: number) => ({ position, key: SraCipher.toHex(secrets.cardUnlockKeys[position]) })),
         });
+    }
+
+    private unsentKeys(): ReadonlyArray<number> {
+        return this.state.missingKeys(this.localName).filter((position: number) => !this.sentKeys.has(position));
     }
 
     private giveDisclosure(): void {
@@ -395,10 +394,10 @@ export class MentalDeck {
         }
 
         for (let position = 0; position < this.state.size; position++) {
-            const keys: ReadonlyArray<bigint | undefined> = this.state.players.map((player: string) => this.keyOf(position, player));
+            const keys: ReadonlyArray<bigint> | undefined = this.decrypted.has(position) ? undefined : this.readingKeys(position);
 
-            if (!this.decrypted.has(position) && !keys.includes(undefined)) {
-                const value: bigint = this.cipher.apply(this.state.lockedDeck[position], this.cipher.combine(keys as ReadonlyArray<bigint>));
+            if (keys) {
+                const value: bigint = this.cipher.apply(this.state.lockedDeck[position], this.cipher.combine(keys));
                 this.read(position, this.cardOfValue.get(value));
                 // eslint-disable-next-line no-await-in-loop -- one computation at a time, for the page to stay fluid
                 await wait(0);
@@ -406,12 +405,20 @@ export class MentalDeck {
         }
     }
 
-    private keyOf(position: number, player: string): bigint | undefined {
-        if (player === this.localName && this.state.phase === DeckPhase.READY) {
-            return this.loadSecrets()?.cardUnlockKeys[position];
+    /**
+     * The keys of every player of a card, once the local participant has them: the ones in the chain, the secret one of
+     * the local player when it is not, so a card every key opened reads alike for everyone
+     */
+    private readingKeys(position: number): ReadonlyArray<bigint> | undefined {
+        const keys: Array<bigint | undefined> = this.state.players.map((player: string) => this.state.keyOf(position, player));
+        const own: number = this.state.players.indexOf(this.localName);
+
+        // The secrets of the local player are looked for once the other keys are there only
+        if (own !== -1 && keys[own] === undefined && keys.every((key: bigint | undefined, index: number) => key !== undefined || index === own)) {
+            keys[own] = this.loadSecrets()?.cardUnlockKeys[position];
         }
 
-        return this.state.keyOf(position, player);
+        return keys.includes(undefined) ? undefined : keys as ReadonlyArray<bigint>;
     }
 
     private read(position: number, card: number | undefined): void {
@@ -436,12 +443,13 @@ export class MentalDeck {
         if (this.state.phase === DeckPhase.BROKEN) {
             this.waiters.forEach((waiter: Waiter) => waiter.reject(new Error(`The deck ${ this.id } is broken`)));
             this.waiters = [];
+            this.breakVerification();
             return;
         }
 
         this.waiters = this.waiters.filter((waiter: Waiter) => {
             const settled: boolean = waiter.positions.every((position: number) => this.state.isSettled(position)
-                && (this.decrypted.has(position) || this.state.players.some((player: string) => this.keyOf(position, player) === undefined)));
+                && (this.decrypted.has(position) || this.readingKeys(position) === undefined));
 
             if (settled) {
                 waiter.resolve();
@@ -449,6 +457,15 @@ export class MentalDeck {
 
             return !settled;
         });
+    }
+
+    /** A broken deck is cheated: its game does not wait for a disclosure that never comes, and its secrets are useless */
+    private breakVerification(): void {
+        if (this._verification() !== DeckVerification.CHEATED) {
+            this._verification.set(DeckVerification.CHEATED);
+            this.store.remove(this.id);
+            this.resolveVerified(DeckVerification.CHEATED);
+        }
     }
 
     /** Once every player disclosed its keys */

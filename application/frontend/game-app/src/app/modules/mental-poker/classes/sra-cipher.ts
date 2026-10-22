@@ -56,6 +56,33 @@ export function modInverse(value: bigint, prime: bigint): bigint {
 }
 
 /**
+ * The symbol of Jacobi of a value modulo an odd number, the symbol of Legendre modulo a prime: 1 for a square, -1 for
+ * a value that is not one, 0 for a multiple. Far faster than the criterion of Euler, an exponentiation.
+ */
+export function jacobi(value: bigint, modulus: bigint): number {
+    let [rest, odd] = [((value % modulus) + modulus) % modulus, modulus];
+    let symbol: number = 1;
+
+    while (rest !== 0n) {
+        while ((rest & 1n) === 0n) {
+            rest >>= 1n;
+            const modulo8: bigint = odd & 7n;
+            if (modulo8 === 3n || modulo8 === 5n) {
+                symbol = -symbol;
+            }
+        }
+
+        [rest, odd] = [odd, rest];
+        if ((rest & 3n) === 3n && (odd & 3n) === 3n) {
+            symbol = -symbol;
+        }
+        rest %= odd;
+    }
+
+    return odd === 1n ? symbol : 0;
+}
+
+/**
  * The commutative cipher of Shamir, Rivest and Adleman: a value encrypted with several keys, in any order, is decrypted
  * with their inverses, in any order. A key is an exponent modulo q, its inverse decrypts.
  */
@@ -92,10 +119,13 @@ export class SraCipher {
         return modPow(value, key, this.group.prime);
     }
 
-    /** A value received from a peer, undefined when it is not one of the group */
+    /**
+     * A value received from a peer, undefined when it is not one of the group: a value that is not a square would be
+     * told from the others by its symbol of Legendre, a card marked to follow it
+     */
     public parseValue(hex: unknown): bigint | undefined {
         const value: bigint | undefined = SraCipher.parse(hex);
-        return value !== undefined && value > 1n && value < this.group.prime ? value : undefined;
+        return value !== undefined && value > 1n && value < this.group.prime && jacobi(value, this.group.prime) === 1 ? value : undefined;
     }
 
     /** A key received from a peer, undefined when it is not one */

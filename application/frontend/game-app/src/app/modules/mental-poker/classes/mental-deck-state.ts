@@ -228,27 +228,38 @@ export class MentalDeckState {
         return undefined;
     }
 
+    /** The keys of a player, whether the game asked for them yet or not: its messages may apply after the keys */
     private applyKeys(message: MentalDeckMessage & { type: MentalDeckMessageType.KEYS }): DeckCheat | undefined {
         if (this.phase !== DeckPhase.READY) {
             return undefined;
         }
 
-        const given: ReadonlyArray<Readonly<CardKey>> = Array.isArray(message.payload.keys) ? message.payload.keys : [];
-        // A key given before the game asked for it, or given again, is ignored
-        const asked: ReadonlyArray<Readonly<CardKey>> = given.filter(({ position }) => this.requests.get(position)?.has(message.from)
-            && !this.keys.get(position)?.has(message.from));
-        const keys: ReadonlyArray<bigint | undefined> = asked.map(({ key }) => this.cipher.parseKey(key));
+        const given: unknown = message.payload.keys;
+        const keys: ReadonlyArray<[number, bigint] | undefined> = Array.isArray(given) ? given.map((key: unknown) => this.parseCardKey(key)) : [undefined];
 
-        if (!Array.isArray(message.payload.keys) || keys.includes(undefined)) {
+        if (keys.includes(undefined)) {
             return { message, reason: CheatReason.INVALID_CARD_KEY };
         }
 
-        asked.forEach(({ position }, index: number) => {
+        (keys as ReadonlyArray<[number, bigint]>).forEach(([position, key]) => {
             const published: Map<string, PublishedKey> = this.keys.get(position) ?? new Map<string, PublishedKey>();
-            published.set(message.from, { message, key: keys[index] as bigint });
-            this.keys.set(position, published);
+
+            // The first key of a player for a card is final
+            if (!published.has(message.from)) {
+                published.set(message.from, { message, key });
+                this.keys.set(position, published);
+            }
         });
         return undefined;
+    }
+
+    private parseCardKey(cardKey: unknown): [number, bigint] | undefined {
+        const { position, key } = (typeof cardKey === 'object' && cardKey !== null ? cardKey : {}) as Partial<Record<keyof CardKey, unknown>>;
+        const parsed: bigint | undefined = this.cipher.parseKey(key);
+
+        return Number.isInteger(position) && (position as number) >= 0 && (position as number) < this.size && parsed !== undefined
+            ? [position as number, parsed]
+            : undefined;
     }
 
     private applyDisclosure(message: MentalDeckMessage & { type: MentalDeckMessageType.DISCLOSE }): DeckCheat | undefined {

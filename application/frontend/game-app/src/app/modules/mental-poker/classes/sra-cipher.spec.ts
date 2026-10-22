@@ -1,7 +1,7 @@
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { TEST_GROUP } from '@testing/sra-test-group';
-import { MODP_2048_GROUP, modInverse, modPow, SraCipher } from './sra-cipher';
+import { jacobi, MODP_2048_GROUP, modInverse, modPow, SraCipher } from './sra-cipher';
 
 describe('SraCipher', () => {
     const cipher = new SraCipher(TEST_GROUP);
@@ -20,6 +20,16 @@ describe('SraCipher', () => {
         expect(modInverse(3n, 11n)).toEqual(4n);
         expect(modInverse(-3n, 11n)).toEqual(7n);
         expect(() => modInverse(22n, 11n)).toThrow('No inverse of 0');
+    });
+
+    test('jacobi should tell the squares modulo a prime', () => {
+        // 2 = 3² and 4 = 2² modulo 7, 3, 5 and 6 are not squares
+        expect([1n, 2n, 3n, 4n, 5n, 6n].map((value: bigint) => jacobi(value, 7n))).toEqual([1, 1, -1, 1, -1, -1]);
+        expect(jacobi(14n, 7n)).toEqual(0);
+        expect(jacobi(-3n, 7n)).toEqual(1);
+        // Modulo 15: 2 is not a square modulo 3 nor modulo 5
+        expect(jacobi(2n, 15n)).toEqual(1);
+        expect(jacobi(7n, 15n)).toEqual(-1);
     });
 
     test('should use the 2048-bit safe prime of RFC 3526 by default', () => {
@@ -67,8 +77,10 @@ describe('SraCipher', () => {
 
     test('should parse the values and the keys of the group only', () => {
         // Then
-        expect(cipher.parseValue(SraCipher.toHex(255n))).toEqual(255n);
+        expect(cipher.parseValue(SraCipher.toHex(256n))).toEqual(256n);
         expect(cipher.parseValue('1')).toBeUndefined();
+        // Not a square: a card marked by a cheater
+        expect(cipher.parseValue(SraCipher.toHex(TEST_GROUP.prime - 4n))).toBeUndefined();
         expect(cipher.parseValue(SraCipher.toHex(TEST_GROUP.prime))).toBeUndefined();
         expect(cipher.parseKey('1')).toEqual(1n);
         expect(cipher.parseKey('0')).toBeUndefined();
