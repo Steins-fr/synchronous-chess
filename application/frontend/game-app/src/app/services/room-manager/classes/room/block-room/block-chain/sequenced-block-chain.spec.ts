@@ -514,34 +514,42 @@ describe('SequencedBlockChain', () => {
 
     describe('catch up', () => {
         test('should answer the blocks requests, a page at a time', async () => {
-            // Given
+            // Given blocks of 10 000 characters, as the ones carrying a deck
             const node: Node = createNode();
-            for (let index = 0; index < 52; index++) {
-                await node.chain.transmitMessage('move', index);
+            for (let index = 0; index < 8; index++) {
+                await node.chain.transmitMessage('move', String(index).repeat(10_000));
             }
             vi.mocked(node.players['b'].sendData).mockClear();
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_REQUEST, { from: 2 }));
 
-            // Then
+            // Then the response fits in a data channel message
             const [response] = sent(node.players['b']);
             expect(response.type).toEqual(BlockChainMessageType.GET_BLOCKS_RESPONSE);
-            expect(TestHelper.cast<Block[]>(response.payload).map((block: Block) => block.index)).toEqual(Array.from({ length: 50 }, (_, index) => index + 2));
+            expect(TestHelper.cast<Block[]>(response.payload).map((block: Block) => block.index)).toEqual([2, 3, 4, 5, 6]);
+            expect(JSON.stringify(response.payload).length).toBeLessThan(64_000);
         });
 
-        test('should ask for the next page of a full response', async () => {
+        test('should ask for the next page of a response, until an empty one', async () => {
             // Given
             const node: Node = createNode('b');
-            const blocks: Block[] = await createBlocks(node, 50, 'b', remoteKeys);
+            const blocks: Block[] = await createBlocks(node, 2, 'b', remoteKeys);
             node.internals.awaitingBlocksFrom.add('b');
 
             // When
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, blocks));
 
             // Then
-            expect(sent(node.players['b'])).toEqual([expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 51 } })]);
+            expect(sent(node.players['b'])).toEqual([expect.objectContaining({ type: BlockChainMessageType.GET_BLOCKS_REQUEST, payload: { from: 3 } })]);
             expect(node.internals.awaitingBlocksFrom.has('b')).toEqual(true);
+
+            // When
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
+
+            // Then
+            expect(sent(node.players['b'])).toHaveLength(1);
+            expect(node.internals.awaitingBlocksFrom.has('b')).toEqual(false);
         });
 
         test('should skip the blocks it has already, as when several participants answer a new sequencer', async () => {
@@ -738,8 +746,10 @@ describe('SequencedBlockChain', () => {
             expect(sentTypes(node.players['c'])).not.toContain(BlockChainMessageType.GET_BLOCKS_REQUEST);
             expect(node.internals.blockChain.getLatestBlock().index).toEqual(0);
 
-            // When b answers with the block the former sequencer sent to it only
+            // When b answers with the block the former sequencer sent to it only, then with the next page, empty
             await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [blockOfFormerSequencer]));
+            expect(node.internals.syncing).toEqual(true);
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
 
             // Then nothing is rolled back, the entries are ordered after the collected block, the watched ones included
             expect(node.internals.syncing).toEqual(false);

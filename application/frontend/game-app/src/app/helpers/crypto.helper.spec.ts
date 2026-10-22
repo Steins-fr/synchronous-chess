@@ -43,6 +43,28 @@ describe('CryptoHelper', () => {
         }
     });
 
+    test('randomBigInt should draw again the values beyond its bound, with the bits of the bound only', () => {
+        // Given draws of 0xff then 0x05: the bits above the 3 of the bound 6 are dropped, 7 then 5
+        const draws: number[] = [0xff, 0x05];
+        vi.spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
+            (array as unknown as Uint8Array)[0] = draws.shift() ?? 0;
+            return array;
+        });
+
+        // When / Then
+        expect(CryptoHelper.randomBigInt(6n)).toEqual(5n);
+        expect(draws).toEqual([]);
+    });
+
+    test('randomBigInt should stay below its bound, on several bytes', () => {
+        const bound: bigint = 2n ** 70n + 3n;
+        for (let i = 0; i < 50; i++) {
+            const result: bigint = CryptoHelper.randomBigInt(bound);
+            expect(result >= 0n && result < bound).toEqual(true);
+        }
+        expect(CryptoHelper.randomBigInt(1n)).toEqual(0n);
+    });
+
     test('randomHex should give random bytes as hexadecimal', () => {
         // Given
         vi.spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {

@@ -53,8 +53,11 @@ interface WatchedEntry {
  * participants: a block the former sequencer sent to some of them only is kept, none is rolled back.
  */
 export class SequencedBlockChain {
-    /** For a response to fit in a data channel message */
-    private static readonly MAX_BLOCKS_PER_RESPONSE: number = 50;
+    /**
+     * The length of the JSON of the blocks of a response, for it to fit in a data channel message (256 KiB in Chromium),
+     * a character taking up to 3 bytes: the blocks of a card game carry a deck, of several kilobytes
+     */
+    private static readonly MAX_RESPONSE_LENGTH: number = 64_000;
     /** Bounds the memory taken by the entries of an author whose key never comes */
     private static readonly MAX_ENTRIES_WAITING_FOR_KEY: number = 32;
     /** An entry not ordered within this delay, while the sequencer orders other ones, is reported */
@@ -389,7 +392,7 @@ export class SequencedBlockChain {
     }
 
     private sendBlocks(participantName: string, from: number): void {
-        const blocks: ReadonlyArray<Block> = this.blockChain.blocksFrom(from, SequencedBlockChain.MAX_BLOCKS_PER_RESPONSE);
+        const blocks: ReadonlyArray<Block> = this.blockChain.blocksFrom(from, SequencedBlockChain.MAX_RESPONSE_LENGTH);
         this.participants.send(participantName, { type: BlockChainMessageType.GET_BLOCKS_RESPONSE, payload: blocks, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: this.name });
     }
 
@@ -418,7 +421,8 @@ export class SequencedBlockChain {
             }
         }
 
-        if (message.payload.length === SequencedBlockChain.MAX_BLOCKS_PER_RESPONSE) {
+        // A page is as long as its blocks fit: the next one may follow, until an empty one
+        if (message.payload.length > 0) {
             this.requestBlocks(message.from);
         }
 

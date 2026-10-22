@@ -19,6 +19,10 @@ export enum CheatReason {
     ILLEGAL_MOVE = 'illegalMove',
     /** Detected by the application: a revealed move not matching the commitment of its player */
     INVALID_REVEAL = 'invalidReveal',
+    /** Detected by the application: a deck of cards not shuffled or locked from the previous one, its cards dealt unfairly */
+    INVALID_SHUFFLE = 'invalidShuffle',
+    /** Detected by the application: a key not decrypting the card it is given for */
+    INVALID_CARD_KEY = 'invalidCardKey',
 }
 
 /** The cheats only the sequencer can commit: enough participants reporting them hand the ordering over */
