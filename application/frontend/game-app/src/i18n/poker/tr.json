@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Dört as, dört papaz, dört kız, dört vale ve her kartın yerine geçen bir jokerden oluşan bir deste. Diğer oyuncunun fişlerini almak için on el.",
+    "points": {
+      "checked": "Oyun bittiğinde tüm anahtarlar gösterilir: her katılımcı hiçbir kartın haksız dağıtılmadığını kontrol eder.",
+      "hidden": "Kartlarınızı yalnızca siz okuyabilirsiniz: diğer oyuncu size onların anahtarlarını verir, siz kendinizinkini saklarsınız.",
+      "shuffle": "Her elde iki oyuncu sırayla yeni bir desteyi şifreli olarak karıştırır: sırasını kimse, sunucu bile bilmez."
+    },
+    "rooms": "Bir oda oluşturun veya açık bir odaya katılın: yeri olmayan katılımcılar oyunu izler.",
+    "tagline": "İki oyuncu için poker: 17 kart, krupiyesiz.",
+    "title": "On yedi kartlık poker"
+  }
+}

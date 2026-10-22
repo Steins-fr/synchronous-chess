@@ -3,12 +3,19 @@
         <h1 class="m-0 mat-headline-medium">{{ t('title') }}</h1>
         <p class="muted-note">{{ t('intro') }}</p>
     </div>
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <a [routerLink]="chessPath" class="game-card" id="game-card-chess">
-            <span aria-hidden="true" class="game-card-visual bg-app-board-light text-app-piece-ink text-[72px]">♞</span>
+            <span aria-hidden="true" class="game-card-glyph">♞</span>
             <h2 class="m-0 mat-title-large">{{ t('chess.title') }}</h2>
             <p class="muted-note">{{ t('chess.description') }}</p>
             <span class="game-card-action">{{ t('chess.action') }} <mat-icon>arrow_forward</mat-icon></span>
+        </a>
+        <a [routerLink]="pokerPath" class="game-card" id="game-card-poker">
+            <!-- The variation selector shows the spade as a text, in the ink of the theme, never as a coloured emoji -->
+            <span aria-hidden="true" class="game-card-glyph">♠&#xFE0E;</span>
+            <h2 class="m-0 mat-title-large">{{ t('poker.title') }}</h2>
+            <p class="muted-note">{{ t('poker.description') }}</p>
+            <span class="game-card-action">{{ t('poker.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->

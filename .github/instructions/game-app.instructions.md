@@ -113,8 +113,8 @@ This is an Angular TypeScript project with the following characteristics:
 ### Scopes
 
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
-  loaded by the pages showing the game only: `chess` (the game, its presentation and its rules) and
-  `chat`. The rest is global, `home` included: it presents every game
+  loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
+  `poker` (the Seventeen Poker) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -222,6 +222,19 @@ Claude writes the translations of every new or changed key, into every language:
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
 | server | serveur | servidor | servidor | servidor | Server | сервер | sunucu | server | serwer | server |
 | cheating | triche | trampa | trapaça | batota | Betrug | жульничество | hile | curang | oszustwo | imbroglio |
+| card | carte | carta | carta | carta | Karte | карта | kart | kartu | karta | carta |
+| deck | paquet | baraja | baralho | baralho | Blatt | колода | deste | setumpuk kartu | talia | mazzo |
+| hand (of poker) | main | mano | mão | mão | Hand | раздача | el | tangan | rozdanie | mano |
+| ace | as | as | ás | ás | Ass | туз | as | as | as | asso |
+| king (card) | roi | rey | rei | rei | König | король | papaz | raja | król | re |
+| queen (card) | dame | reina | dama | dama | Dame | дама | kız | ratu | dama | donna |
+| jack | valet | jota | valete | valete | Bube | валет | vale | jack | walet | fante |
+| joker | joker | comodín | coringa | jóquer | Joker | джокер | joker | joker | joker | jolly |
+| chip | jeton | ficha | ficha | ficha | Chip | фишка | fiş | chip | żeton | fiche |
+| dealer | donneur | crupier | crupiê | croupier | Geber | дилер | krupiye | bandar | krupier | mazziere |
+| shuffle | mélanger | barajar | embaralhar | baralhar | mischen | тасовать | karıştırmak | mengocok | tasować | mescolare |
+| deal | distribuer | repartir | distribuir | distribuir | austeilen | сдавать | dağıtmak | membagikan | rozdawać | distribuire |
+| key (of a card) | clé | clave | chave | chave | Schlüssel | ключ | anahtar | kunci | klucz | chiave |
 
 ## APIs
 

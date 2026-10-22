@@ -10,7 +10,11 @@ class GamePage {}
 describe('HomePage', () => {
     async function createPage(): Promise<ComponentFixture<HomePage>> {
         TestBed.configureTestingModule({
-            providers: [provideRouter([{ path: 'synchronous-chess', component: GamePage }, { path: 'simple-chat', component: GamePage }])],
+            providers: [provideRouter([
+                { path: 'synchronous-chess', component: GamePage },
+                { path: 'seventeen-poker', component: GamePage },
+                { path: 'simple-chat', component: GamePage },
+            ])],
         });
         const fixture: ComponentFixture<HomePage> = TestBed.createComponent(HomePage);
         await fixture.whenStable();
@@ -19,6 +23,7 @@ describe('HomePage', () => {
 
     test.each<[string, string, string, string]>([
         ['chess', 'Synchronous chess', 'Play', '/synchronous-chess'],
+        ['poker', 'Seventeen poker', 'Play', '/seventeen-poker'],
         ['chat', 'Chat', 'Chat', '/simple-chat'],
     ])('should present the %s in a card leading to its page', async (game: string, title: string, action: string, path: string) => {
         // Given

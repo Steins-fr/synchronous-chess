@@ -6,8 +6,9 @@
     "loadingPage": "Caricamento della pagina…",
     "nav": {
       "chat": "Chat",
-      "chess": "Scacchi sincroni",
-      "home": "Home"
+      "chess": "Scacchi",
+      "home": "Home",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Passa al tema scuro",
@@ -38,6 +39,11 @@
       "title": "Scacchi sincroni"
     },
     "intro": "Crea una stanza o entra in una delle stanze aperte: i giocatori si collegano direttamente tra loro.",
+    "poker": {
+      "action": "Gioca",
+      "description": "Poker in due con un mazzo di 17 carte che nessuno distribuisce: i giocatori lo mescolano insieme, cifrato.",
+      "title": "Poker a diciassette carte"
+    },
     "title": "Scegli un gioco"
   },
   "rooms": {

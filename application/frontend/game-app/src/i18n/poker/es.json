@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Una baraja de cuatro ases, cuatro reyes, cuatro reinas, cuatro jotas y un comodín, que vale por cualquier carta. Diez manos para quedarte con las fichas del otro jugador.",
+    "points": {
+      "checked": "Al terminar la partida, se muestran todas las claves: cada participante comprueba que ninguna carta se repartió de forma desleal.",
+      "hidden": "Solo tú puedes leer tus cartas: el otro jugador te da sus claves, tú guardas las tuyas.",
+      "shuffle": "En cada mano, los dos jugadores barajan por turnos una baraja nueva, cifrada: nadie, ni siquiera el servidor, conoce su orden."
+    },
+    "rooms": "Crea una sala o únete a una abierta: los participantes sin puesto miran la partida.",
+    "tagline": "El póquer para dos jugadores, con 17 cartas y sin crupier.",
+    "title": "Póquer de diecisiete cartas"
+  }
+}

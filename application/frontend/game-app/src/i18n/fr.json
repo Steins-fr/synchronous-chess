@@ -6,8 +6,9 @@
     "loadingPage": "Chargement de la page…",
     "nav": {
       "chat": "Tchat",
-      "chess": "Échecs synchrones",
-      "home": "Accueil"
+      "chess": "Échecs",
+      "home": "Accueil",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Passer au thème sombre",
@@ -38,6 +39,11 @@
       "title": "Échecs synchrones"
     },
     "intro": "Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.",
+    "poker": {
+      "action": "Jouer",
+      "description": "Un poker à deux avec un paquet de 17 cartes que personne ne distribue : les joueurs le mélangent ensemble, chiffré.",
+      "title": "Poker à dix-sept cartes"
+    },
     "title": "Choisissez un jeu"
   },
   "rooms": {

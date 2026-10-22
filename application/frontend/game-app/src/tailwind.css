@@ -31,6 +31,16 @@
     @apply flex justify-center items-center h-32 rounded-lg;
 }
 
+/* A link of the navigation: closer to the others on a phone, the four links and the two buttons holding on its width */
+@utility nav-link {
+    @apply mx-1.5 my-2.5 sm:mx-2.5;
+}
+
+/* The picture of a card drawn with a glyph of the game, on the light square of the board */
+@utility game-card-glyph {
+    @apply game-card-visual bg-app-board-light text-app-piece-ink text-[72px];
+}
+
 /* What a click on the card does, at its bottom */
 @utility game-card-action {
     @apply mt-auto flex items-center gap-1 font-medium text-app-accent-text;

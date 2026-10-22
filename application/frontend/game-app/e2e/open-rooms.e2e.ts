@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
-import { test } from './test-room';
+import { test, TestRoom } from './test-room';
 
 /** The list of the open rooms, listed by the HTTP API: joining a room from it, public or private */
 test.describe('Open rooms', () => {
@@ -58,5 +58,26 @@ test.describe('Open rooms', () => {
         await expect(carol.page.getByText(`No room contains “${ room.name }-missing”.`)).toBeVisible();
         // The list, searched or not, opened no socket: the socket serves the connectivity of a room only
         carol.expectNoApiSocket();
+    });
+
+    test('lists a room on the page of its game only', async ({ browser, room }) => {
+        // Given a room of the poker
+        const poker = new TestRoom(browser, '/seventeen-poker', `${ room.name }-poker`);
+
+        try {
+            const alice: RoomParticipant = await poker.create('alice');
+            await alice.expectParticipants(['alice']);
+
+            // When
+            const bob: RoomParticipant = await poker.join('bob');
+            const carol: RoomParticipant = await room.visit('carol');
+            await carol.searchRooms(poker.name);
+
+            // Then
+            await bob.expectConnected(['alice', 'bob']);
+            await expect(carol.page.getByText(`No room contains “${ poker.name }”.`)).toBeVisible();
+        } finally {
+            await poker.close();
+        }
     });
 });

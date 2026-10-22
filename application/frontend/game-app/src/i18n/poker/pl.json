@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Talia z czterech asów, czterech króli, czterech dam, czterech waletów i jokera, który zastępuje dowolną kartę. Dziesięć rozdań, by zabrać żetony drugiego gracza.",
+    "points": {
+      "checked": "Po zakończeniu partii wszystkie klucze są ujawniane: każdy uczestnik sprawdza, czy żadna karta nie została rozdana nieuczciwie.",
+      "hidden": "Tylko ty możesz odczytać swoje karty: drugi gracz daje ci swoje klucze do nich, a ty zachowujesz swoje.",
+      "shuffle": "W każdym rozdaniu obaj gracze po kolei tasują nową, zaszyfrowaną talię: nikt, nawet serwer, nie zna jej kolejności."
+    },
+    "rooms": "Utwórz pokój lub dołącz do otwartego: uczestnicy bez miejsca oglądają partię.",
+    "tagline": "Poker dla dwóch graczy: 17 kart i żadnego krupiera.",
+    "title": "Poker na siedemnaście kart"
+  }
+}

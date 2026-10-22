@@ -6,8 +6,9 @@
     "loadingPage": "Carregando a página…",
     "nav": {
       "chat": "Bate-papo",
-      "chess": "Xadrez sincronizado",
-      "home": "Início"
+      "chess": "Xadrez",
+      "home": "Início",
+      "poker": "Pôquer"
     },
     "theme": {
       "toDark": "Mudar para o tema escuro",
@@ -38,6 +39,11 @@
       "title": "Xadrez sincronizado"
     },
     "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores se conectam diretamente entre si.",
+    "poker": {
+      "action": "Jogar",
+      "description": "Pôquer a dois com um baralho de 17 cartas que ninguém distribui: os jogadores o embaralham juntos, criptografado.",
+      "title": "Pôquer de dezessete cartas"
+    },
     "title": "Escolha um jogo"
   },
   "rooms": {

@@ -6,8 +6,9 @@
     "loadingPage": "Sayfa yükleniyor…",
     "nav": {
       "chat": "Sohbet",
-      "chess": "Eşzamanlı satranç",
-      "home": "Ana sayfa"
+      "chess": "Satranç",
+      "home": "Ana sayfa",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Koyu temaya geç",
@@ -38,6 +39,11 @@
       "title": "Eşzamanlı satranç"
     },
     "intro": "Bir oda oluşturun ya da açık odalardan birine katılın: oyuncular birbirine doğrudan bağlanır.",
+    "poker": {
+      "action": "Oyna",
+      "description": "Kimsenin dağıtmadığı 17 kartlık bir desteyle iki kişilik poker: oyuncular desteyi şifreli olarak birlikte karıştırır.",
+      "title": "On yedi kartlık poker"
+    },
     "title": "Bir oyun seçin"
   },
   "rooms": {

@@ -1,8 +1,9 @@
 <nav *transloco="let t; prefix: 'app'" class="flex items-center">
-    <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="m-2.5"
+    <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="nav-link"
         routerLinkActive="text-app-link-active">{{ t('nav.home') }}</a>
-    <a [routerLink]="[ chessPath ]" class="m-2.5" routerLinkActive="text-app-link-active">{{ t('nav.chess') }}</a>
-    <a [routerLink]="[ chatPath ]" class="m-2.5" routerLinkActive="text-app-link-active">{{ t('nav.chat') }}</a>
+    <a [routerLink]="[ chessPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.chess') }}</a>
+    <a [routerLink]="[ pokerPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.poker') }}</a>
+    <a [routerLink]="[ chatPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.chat') }}</a>
     <!-- The touch target of an icon button exceeds it by 4px: held in the page, it scrolls nothing at its right edge -->
     <div class="ml-auto mr-1 flex items-center">
         <!-- The menu, with the overlay it opens, loads once the app is idle: out of the bundle of its start -->

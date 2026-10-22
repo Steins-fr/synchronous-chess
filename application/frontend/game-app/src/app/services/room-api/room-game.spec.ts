@@ -6,6 +6,7 @@ describe('RoomGame', () => {
     test.each<[unknown, boolean]>([
         [RoomGame.CHESS, true],
         [RoomGame.CHAT, true],
+        [RoomGame.SEVENTEEN_POKER, true],
         ['go', false],
         [undefined, false],
     ])('should tell whether %s is a game', (value: unknown, isGame: boolean) => {

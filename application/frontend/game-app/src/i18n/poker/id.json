@@ -1,0 +1,13 @@
+{
+  "presentation": {
+    "intro": "Setumpuk kartu berisi empat as, empat raja, empat ratu, empat jack, dan satu joker yang dapat menggantikan kartu apa pun. Sepuluh tangan untuk merebut chip pemain lain.",
+    "points": {
+      "checked": "Setelah permainan selesai, semua kunci ditunjukkan: setiap peserta memeriksa bahwa tidak ada kartu yang dibagikan secara curang.",
+      "hidden": "Hanya Anda yang dapat membaca kartu Anda: pemain lain memberikan kuncinya kepada Anda, Anda menyimpan kunci Anda sendiri.",
+      "shuffle": "Di setiap tangan, kedua pemain bergantian mengocok setumpuk kartu baru yang terenkripsi: tidak ada yang tahu urutannya, bahkan server sekalipun."
+    },
+    "rooms": "Buat ruang atau bergabunglah ke ruang terbuka: peserta tanpa kursi menonton permainan.",
+    "tagline": "Poker untuk dua pemain, dengan 17 kartu dan tanpa bandar.",
+    "title": "Poker tujuh belas kartu"
+  }
+}

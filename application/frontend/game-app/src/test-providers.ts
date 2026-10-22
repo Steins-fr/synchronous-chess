@@ -42,6 +42,17 @@ import trChatTranslation from './i18n/chat/tr.json';
 import idChatTranslation from './i18n/chat/id.json';
 import plChatTranslation from './i18n/chat/pl.json';
 import itChatTranslation from './i18n/chat/it.json';
+import enPokerTranslation from './i18n/poker/en.json';
+import frPokerTranslation from './i18n/poker/fr.json';
+import esPokerTranslation from './i18n/poker/es.json';
+import ptBRPokerTranslation from './i18n/poker/pt-BR.json';
+import ptPTPokerTranslation from './i18n/poker/pt-PT.json';
+import dePokerTranslation from './i18n/poker/de.json';
+import ruPokerTranslation from './i18n/poker/ru.json';
+import trPokerTranslation from './i18n/poker/tr.json';
+import idPokerTranslation from './i18n/poker/id.json';
+import plPokerTranslation from './i18n/poker/pl.json';
+import itPokerTranslation from './i18n/poker/it.json';
 
 // Every translation file, the global ones then the ones of each scope
 const translations: Readonly<Record<TranslationPath, Translation>> = {
@@ -78,6 +89,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'chat/id': idChatTranslation,
     'chat/pl': plChatTranslation,
     'chat/it': itChatTranslation,
+    'poker/en': enPokerTranslation,
+    'poker/fr': frPokerTranslation,
+    'poker/es': esPokerTranslation,
+    'poker/pt-BR': ptBRPokerTranslation,
+    'poker/pt-PT': ptPTPokerTranslation,
+    'poker/de': dePokerTranslation,
+    'poker/ru': ruPokerTranslation,
+    'poker/tr': trPokerTranslation,
+    'poker/id': idPokerTranslation,
+    'poker/pl': plPokerTranslation,
+    'poker/it': itPokerTranslation,
 };
 
 const testProviders: (Provider | EnvironmentProviders)[] = [

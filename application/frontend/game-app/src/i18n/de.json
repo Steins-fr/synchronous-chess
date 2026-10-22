@@ -6,8 +6,9 @@
     "loadingPage": "Seite wird geladen…",
     "nav": {
       "chat": "Chat",
-      "chess": "Synchrones Schach",
-      "home": "Start"
+      "chess": "Schach",
+      "home": "Start",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Zum dunklen Design wechseln",
@@ -38,6 +39,11 @@
       "title": "Synchrones Schach"
     },
     "intro": "Erstelle einen Raum oder tritt einem der offenen Räume bei: Die Spieler verbinden sich direkt miteinander.",
+    "poker": {
+      "action": "Spielen",
+      "description": "Poker zu zweit mit einem Blatt aus 17 Karten, das niemand austeilt: Die Spieler mischen es gemeinsam, verschlüsselt.",
+      "title": "Siebzehn-Karten-Poker"
+    },
     "title": "Wähle ein Spiel"
   },
   "rooms": {

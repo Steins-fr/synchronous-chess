@@ -6,8 +6,9 @@
     "loadingPage": "Memuat halaman…",
     "nav": {
       "chat": "Obrolan",
-      "chess": "Catur serentak",
-      "home": "Beranda"
+      "chess": "Catur",
+      "home": "Beranda",
+      "poker": "Poker"
     },
     "theme": {
       "toDark": "Beralih ke tema gelap",
@@ -38,6 +39,11 @@
       "title": "Catur serentak"
     },
     "intro": "Buat ruang, atau bergabunglah ke salah satu ruang terbuka: para pemain terhubung langsung satu sama lain.",
+    "poker": {
+      "action": "Main",
+      "description": "Poker berdua dengan setumpuk 17 kartu yang tidak dibagikan siapa pun: para pemain mengocoknya bersama dalam keadaan terenkripsi.",
+      "title": "Poker tujuh belas kartu"
+    },
     "title": "Pilih permainan"
   },
   "rooms": {
