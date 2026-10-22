@@ -65,20 +65,20 @@ describe('PokerTableComponent', () => {
         await fixture.whenStable();
     }
 
-    /** Alice, the local player, sits at the bottom of her table, on the first seat; Bob on the second one */
+    /** Alice, the local player, sits at the bottom of her table, on the first seat; Bob on the second one, dealing first */
     async function seated(rules?: PokerMatchRules, tamper?: Tamper): Promise<SeventeenPokerSession> {
         await table('alice', rules);
         const bob: SeventeenPokerSession = participant('bob', rules, tamper);
         (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         bob.takeSeat(PokerSeat.TWO);
-        await until(() => button('Deal') !== undefined);
+        await until(() => status() === 'bob to deal.');
         return bob;
     }
 
-    /** Alice deals the hand, then reads her cards */
+    /** Bob deals the hand, then Alice reads her cards */
     async function dealt(rules?: PokerMatchRules, tamper?: Tamper): Promise<SeventeenPokerSession> {
         const bob: SeventeenPokerSession = await seated(rules, tamper);
-        await click('Deal');
+        bob.deal();
         await until(() => status() === 'Your turn.');
         return bob;
     }
@@ -111,7 +111,7 @@ describe('PokerTableComponent', () => {
         // When: Alice sits on the second seat, at the top of the table, then at its bottom
         (element().querySelector('#seat-top button') as HTMLButtonElement).click();
         bob.takeSeat(PokerSeat.ONE);
-        await until(() => status() === 'Waiting for a player to deal the hand.');
+        await until(() => status() === 'Your turn to deal.');
 
         // Then
         expect(text('#seat-bottom')).toEqual('alice150 chipsLeave the seat');
@@ -224,7 +224,7 @@ describe('PokerTableComponent', () => {
         await click('Check');
         await until(() => status() === 'bob to speak.');
         bob.bet(BetAction.CHECK);
-        await until(() => status() === 'Waiting for a player to deal the hand.');
+        await until(() => status() === 'Your turn to deal.');
 
         // Then: both hands are shown, the best one outlined
         const outcome = bob.match.hand()?.outcome;
@@ -253,7 +253,7 @@ describe('PokerTableComponent', () => {
         bob.bet(BetAction.RAISE, 4);
         await until(() => status() === 'Your turn.');
         await click('Fold');
-        await until(() => status() === 'Waiting for a player to deal the hand.');
+        await until(() => status() === 'Your turn to deal.');
 
         // Then
         expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
@@ -267,14 +267,14 @@ describe('PokerTableComponent', () => {
         const bob: SeventeenPokerSession = participant('bob');
         alice.takeSeat(PokerSeat.ONE);
         bob.takeSeat(PokerSeat.TWO);
-        await until(() => status() === 'Waiting for a player to deal the hand.');
+        await until(() => status() === 'bob to deal.');
 
         // Then
         expect(button('Deal')).toBeUndefined();
         expect(button('Sit here')).toBeUndefined();
 
         // When
-        alice.deal();
+        bob.deal();
         await until(() => status() === 'alice to speak.');
         alice.bet(BetAction.BET, 5);
         await until(() => status() === 'bob to speak.');
@@ -294,10 +294,10 @@ describe('PokerTableComponent', () => {
         const bob: SeventeenPokerSession = await seated(SEVENTEEN_POKER_RULES, (message: AppMessage) => {
             return dropKeys && message.type === MentalDeckMessageType.KEYS ? { ...message, type: 'dropped' } : message;
         });
-        hub.hold('bob');
 
-        // When
-        await click('Deal');
+        // When: the shuffle of Bob waits, after his deal
+        bob.deal();
+        hub.hold('bob');
 
         // Then
         await until(() => status() === 'bob shuffles the deck…');
@@ -337,8 +337,11 @@ describe('PokerTableComponent', () => {
     });
 
     test('should wait for a seated player who left the room', async () => {
-        // Given
-        await seated();
+        // Given: Alice deals the first hand, on the second seat
+        await table('alice');
+        participant('bob').takeSeat(PokerSeat.ONE);
+        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        await until(() => button('Deal') !== undefined);
 
         // When
         hub.leave(rooms.get('bob') as Room<PokerPayloads>);
@@ -351,10 +354,10 @@ describe('PokerTableComponent', () => {
     test('should tell the players read their cards once every key is in the chain', async () => {
         // Given: the deals of the table never resolve
         vi.spyOn(MentalDeck.prototype, 'deal').mockReturnValue(new Promise<void>(() => undefined));
-        await seated();
+        const bob: SeventeenPokerSession = await seated();
 
         // When
-        await click('Deal');
+        bob.deal();
 
         // Then
         await until(() => status() === 'Reading the cards…');
@@ -362,16 +365,7 @@ describe('PokerTableComponent', () => {
 
     test('should act once on a second click, or a click on a button hidden meanwhile', async () => {
         // Given
-        const bob: SeventeenPokerSession = await seated();
-        const deal: HTMLButtonElement = button('Deal') as HTMLButtonElement;
-
-        // When: Alice deals twice
-        deal.click();
-        deal.click();
-        await until(() => status() === 'Your turn.');
-
-        // Then
-        expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_deal')).toHaveLength(1);
+        const bob: SeventeenPokerSession = await dealt();
 
         // When: Alice checks twice
         const check: HTMLButtonElement = button('Check') as HTMLButtonElement;
@@ -390,15 +384,32 @@ describe('PokerTableComponent', () => {
         // Then
         expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_bet' && message.from === 'alice')).toHaveLength(2);
         expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_exchange')).toHaveLength(1);
+
+        // When: Bob keeps his hand, Alice folds against his bet, then deals the next hand twice
+        bob.exchange([]);
+        await until(() => status() === 'Your turn.');
+        await click('Check');
+        await until(() => status() === 'bob to speak.');
+        bob.bet(BetAction.BET, 1);
+        await until(() => status() === 'Your turn.');
+        await click('Fold');
+        await until(() => status() === 'Your turn to deal.');
+        const deal: HTMLButtonElement = button('Deal') as HTMLButtonElement;
+        deal.click();
+        deal.click();
+        await until(() => status() === 'bob to speak.');
+
+        // Then
+        expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_deal' && message.from === 'alice')).toHaveLength(1);
         expect(hub.reports).toEqual([]);
     });
 
     test('should stop the match when a deck is cheated', async () => {
         // When: Bob locks the deck with cards not of the deck
-        await seated(SEVENTEEN_POKER_RULES, (message: AppMessage) => {
+        const bob: SeventeenPokerSession = await seated(SEVENTEEN_POKER_RULES, (message: AppMessage) => {
             return message.type === MentalDeckMessageType.LOCK ? { ...message, payload: { ...message.payload as object, cards: ['1'] } } : message;
         });
-        await click('Deal');
+        bob.deal();
 
         // Then
         await until(() => status() === 'A deck was cheated: the match stops.');

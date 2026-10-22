@@ -75,5 +75,8 @@ describe('SeventeenPoker', () => {
         // The rules are folded below the table, without their own title
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-poker-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-poker-rules h2')).toBeNull();
+        // The game first, then the chat, then the debug panel
+        const order: string[] = Array.from(fixture.nativeElement.querySelector('#page-content').children, (child: Element) => child.tagName.toLowerCase());
+        expect(order).toEqual(['app-poker-table', 'details', 'app-chat', 'app-debug-webrtc']);
     });
 });

@@ -79,11 +79,11 @@ html {
     }
 
     // The durations of the animations, none when the user asks for reduced motion
-    --app-motion-fast: 150ms;
-    --app-motion-medium: 250ms;
-    --app-motion-slow: 400ms;
+    --app-motion-fast: 300ms;
+    --app-motion-medium: 500ms;
+    --app-motion-slow: 800ms;
     // The delay between two cards dealt one after the other
-    --app-motion-stagger: 80ms;
+    --app-motion-stagger: 160ms;
 
     @media (prefers-reduced-motion: reduce) {
         --app-motion-fast: 0ms;

@@ -18,6 +18,7 @@ import { PokerSeat } from '../rules/poker-seat';
 import { pokerBlockChains, PokerPayloads, SeventeenPokerSession, SPGameSessionType } from './seventeen-poker-session';
 
 const cipher = new SraCipher(TEST_GROUP);
+const SALT: string = 'a'.repeat(32);
 const { ONE, TWO } = PokerSeat;
 
 type Tamper = (message: AppMessage) => AppMessage;
@@ -60,9 +61,9 @@ describe('SeventeenPokerSession', () => {
         }));
     }
 
-    /** Deals the hand, then waits for each player to read its cards */
+    /** The dealer of the hand deals it, Bob first, then waits for each player to read its cards */
     async function deal(alice: SeventeenPokerSession, bob: SeventeenPokerSession, carol: SeventeenPokerSession, index: number = 0): Promise<void> {
-        alice.deal();
+        (index % 2 === 0 ? bob : alice).deal();
         await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match.hand()?.index === index);
         await settled([alice], (session: SeventeenPokerSession) => known(session, ONE));
         await settled([bob], (session: SeventeenPokerSession) => known(session, TWO));
@@ -136,17 +137,39 @@ describe('SeventeenPokerSession', () => {
             expect(alice.mySeat()).toBeNull();
         });
 
-        test('should ignore a request for a seat that does not exist', async () => {
+        test.each<{ name: string; payload: unknown }>([
+            { name: 'a seat that does not exist', payload: { seat: 2, salt: SALT } },
+            { name: 'a seat without salt', payload: { seat: TWO } },
+            { name: 'a seat of a salt not hexadecimal', payload: { seat: TWO, salt: 'z'.repeat(32) } },
+            { name: 'a seat of a short salt', payload: { seat: TWO, salt: 'a'.repeat(31) } },
+            { name: 'a seat of a salt not a text', payload: { seat: TWO, salt: 3 } },
+        ])('should ignore a request for $name', async ({ payload }) => {
             // Given
             const alice: SeventeenPokerSession = page('alice');
 
             // When
-            hub.send({ from: 'bob', type: SPGameSessionType.SEAT, payload: { seat: 2 } });
+            hub.send({ from: 'bob', type: SPGameSessionType.SEAT, payload });
             alice.takeSeat(ONE);
             await flush();
 
             // Then
             expect(alice.seats()).toEqual(['alice', null]);
+        });
+
+        test('should draw a new salt for each seat taken', async () => {
+            // Given
+            const alice: SeventeenPokerSession = page('alice');
+
+            // When
+            alice.takeSeat(ONE);
+            alice.takeSeat(TWO);
+            await flush();
+
+            // Then
+            const [first, second] = messagesOf(SPGameSessionType.SEAT).map((message: AppMessage) => (message.payload as { salt: string }).salt);
+            expect(first).toMatch(/^[0-9a-f]{32}$/);
+            expect(second).toMatch(/^[0-9a-f]{32}$/);
+            expect(second).not.toEqual(first);
         });
 
         test('should tell the seated players who left the room', async () => {
@@ -203,21 +226,19 @@ describe('SeventeenPokerSession', () => {
 
         test('should show the whole deck until it is ready', () => {
             // Given
-            const [alice, , carol] = table();
+            const [, bob, carol] = table();
 
             // When
-            alice.deal();
+            bob.deal();
 
             // Then
             expect(carol.deckCount()).toEqual(17);
         });
 
         test.each<{ name: string; from: string; payload: unknown }>([
-            { name: 'a spectator', from: 'carol', payload: { hand: 0, deck: 'random' } },
-            { name: 'another hand', from: 'alice', payload: { hand: 1, deck: 'random' } },
-            { name: 'a deck without id', from: 'alice', payload: { hand: 0, deck: '' } },
-            { name: 'a deck of a long id', from: 'alice', payload: { hand: 0, deck: 'r'.repeat(65) } },
-            { name: 'a deck of an id not a text', from: 'alice', payload: { hand: 0, deck: 3 } },
+            { name: 'a spectator', from: 'carol', payload: { hand: 0 } },
+            { name: 'the player not dealing it', from: 'alice', payload: { hand: 0 } },
+            { name: 'another hand', from: 'bob', payload: { hand: 1 } },
         ])('should not deal a hand asked by $name', async ({ from, payload }) => {
             // Given
             const [alice] = table();
@@ -234,7 +255,7 @@ describe('SeventeenPokerSession', () => {
         test('should not deal before both seats are taken', async () => {
             // Given
             const alice: SeventeenPokerSession = page('alice');
-            alice.takeSeat(ONE);
+            alice.takeSeat(TWO);
 
             // When
             alice.deal();
@@ -244,17 +265,51 @@ describe('SeventeenPokerSession', () => {
             expect(alice.match.hand()).toBeNull();
         });
 
-        test('should deal a hand once when both players ask for it', async () => {
+        test('should let the players deal by turns, each deck of an id made of the salts of both players', async () => {
             // Given
             const [alice, bob, carol] = table();
-
-            // When
-            bob.deal();
+            const [one, two] = messagesOf(SPGameSessionType.SEAT).map((message: AppMessage) => (message.payload as { salt: string }).salt);
             await deal(alice, bob, carol);
+            expect(carol.deck()?.id).toEqual(`${ one }:${ two }:0`);
+            alice.bet(BetAction.FOLD);
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match.hand()?.phase === HandPhase.OVER);
+
+            // When: Bob deals again, out of his turn
+            bob.deal();
+            await flush();
 
             // Then
-            expect(carol.deck()?.id).toEqual(`${ (messagesOf(SPGameSessionType.DEAL, 'bob')[0].payload as { deck: string }).deck }:0`);
-            expect(messagesOf(MentalDeckMessageType.SHUFFLE)).toHaveLength(2);
+            expect(carol.match.hand()?.index).toEqual(0);
+
+            // When
+            await deal(alice, bob, carol, 1);
+
+            // Then
+            expect(carol.deck()?.id).toEqual(`${ one }:${ two }:1`);
+            expect(messagesOf(MentalDeckMessageType.SHUFFLE)).toHaveLength(4);
+        });
+
+        test('should not let a dealer make the other player reuse the secrets of a deck of a former match', async () => {
+            // Given: a hand of a former match in a room of the same name, its decks never disclosed
+            const former: [SeventeenPokerSession, SeventeenPokerSession, SeventeenPokerSession] = table();
+            await deal(...former);
+            const shuffled = (): unknown => (messagesOf(MentalDeckMessageType.SHUFFLE, 'alice')[0].payload as { cards: string[] }).cards;
+            const formerShuffle: unknown = shuffled();
+            const formerSalt: string = (messagesOf(SPGameSessionType.SEAT, 'bob')[0].payload as { salt: string }).salt;
+            sessions.forEach((session: SeventeenPokerSession) => session.destroy());
+            hub = new RoomHub<PokerPayloads>();
+            sessions = [];
+
+            // When: Bob gives his former salt in a new match
+            const [alice, bob, carol] = table(undefined, {
+                bob: (message: AppMessage) => message.type === SPGameSessionType.SEAT ? { ...message, payload: { ...message.payload as object, salt: formerSalt } } : message,
+            });
+            await deal(alice, bob, carol);
+
+            // Then: Alice shuffles the deck with new secrets
+            expect(carol.deck()?.id).toMatch(new RegExp(`:${ formerSalt }:0$`));
+            expect(shuffled()).not.toEqual(formerShuffle);
+            expect(hub.reports).toEqual([]);
         });
 
         test('should stop the match when the deck of the hand is broken', async () => {
@@ -264,7 +319,7 @@ describe('SeventeenPokerSession', () => {
             });
 
             // When
-            alice.deal();
+            bob.deal();
             await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.broken());
 
             // Then

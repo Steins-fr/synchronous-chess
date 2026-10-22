@@ -31,9 +31,10 @@ async function seated(room: TestRoom): Promise<RoomParticipant[]> {
     return [alice, bob, carol];
 }
 
-/** Deals the hand: each player reads its cards, at the bottom of its table */
+/** Bob, on the second seat, deals the first hand: each player reads its cards, at the bottom of its table */
 async function deal(alice: RoomParticipant, bob: RoomParticipant): Promise<void> {
-    await table(alice).getByRole('button', { name: 'Deal' }).click();
+    await expect(table(alice).getByRole('status')).toHaveText('bob to deal.');
+    await table(bob).getByRole('button', { name: 'Deal' }).click();
     await expect(table(alice).getByRole('status')).toHaveText('Your turn.');
     await expect.poll(() => cardsOf(alice, 1)).not.toContain('Face-down card');
     await expect(table(bob).getByRole('status')).toHaveText('alice to speak.');
@@ -72,7 +73,7 @@ test.describe('Seventeen poker', () => {
         await table(bob).getByRole('button', { name: 'Check' }).click();
 
         // Showdown: everyone sees both hands, Alice keeping 3 of her cards
-        await expect(table(carol).getByRole('status')).toHaveText('Waiting for a player to deal the hand.');
+        await expect(table(carol).getByRole('status')).toHaveText('alice to deal.');
         const shown: string[] = await cardsOf(carol, 1);
         expect(shown).not.toContain('Face-down card');
         expect(shown.slice(2)).toEqual(aliceCards.slice(2));
@@ -109,7 +110,7 @@ test.describe('Seventeen poker', () => {
         await expect(table(bob).getByRole('status')).toHaveText('Your turn.');
         expect(await cardsOf(bob, 1)).toEqual(bobCards);
         await table(bob).getByRole('button', { name: 'Check' }).click();
-        await expect(table(carol).getByRole('status')).toHaveText('Waiting for a player to deal the hand.');
+        await expect(table(carol).getByRole('status')).toHaveText('alice to deal.');
         await table(carol).getByText('Hands played').click();
         await expect(table(carol).locator('details li')).toHaveText('Hand 1: no contest, the antes go to the bank.');
     });

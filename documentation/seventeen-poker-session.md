@@ -52,7 +52,7 @@ The cards themselves (`PlayingCardComponent`, `CardHandComponent`, `CardDeckComp
   the other one.
 - The bets of a hand are capped by the stack of the poorer player, once the antes are paid: a player
   paying the ante with its last chips plays the hand to the showdown, without a bet.
-- The player speaking first alternates. The match ends after 10 hands, or once a player can not pay the
+- The player speaking first alternates, the other one deals the hand. The match ends after 10 hands, or once a player can not pay the
   ante; the player with the most chips wins.
 
 The hands, from the best: five of a kind, royal flush (the joker as the ten: the only flush of the
@@ -88,13 +88,21 @@ Each participant takes a seat with `Sit here`: the first request for a free seat
 has a single seat, and `Leave the seat` frees it. The seats are final once the first hand is dealt; the
 other participants are spectators.
 
+A player draws a random **salt** for each seat it takes, given in its `SP_seat`: the id of each deck of the
+match is made of the salts of both seats and the index of the hand (`<salt 1>:<salt 2>:<hand>`). A request
+without a salt of 32 hexadecimal digits is ignored. The page of a player keeps its secrets until the decks
+are disclosed, at the end of the match: its fresh salt keeps the other player from giving the id of a deck
+of a former match, in a room of the same name, which would make the page use its former secrets again, and
+show cards the other player knows.
+
 The table shows the local player at its bottom, a spectator the first seat.
 
 ## A hand
 
-1. A seated player clicks `Deal` (`SP_deal`), once both seats are taken and both players are in the room:
-   the first request of a hand starts it, the antes paid. Every participant creates the deck of the hand, its id made of a random
-   part given in the message and the index of the hand.
+1. The dealer clicks `Deal` (`SP_deal`), once both seats are taken and both players are in the room: the
+   players deal by turns, the second seat first, the other player speaking first. The deal starts the
+   hand, the antes paid; a deal of the other player is ignored. Every participant creates the deck of
+   the hand.
 2. The players shuffle and lock the deck, then the session deals the positions 0 to 4 to the first seat
    and 5 to 9 to the second one. The betting opens once **both** players read their cards: the first
    one reading them learns nothing before the other one.
@@ -121,7 +129,7 @@ whether every deck was fair.
 
 The chain replays every message to a reloaded page: the session plays the match again, creates the
 decks again, and the `DeckKeyStore` gives back the secrets of the player, so it reads its cards and
-gives its keys again. A player leaving the room keeps its seat: the hand waits for it to come back.
+gives its keys again: the ids of the decks are the same, the salts being read back from the chain. A player leaving the room keeps its seat: the hand waits for it to come back.
 
 ## Messages
 
@@ -129,8 +137,8 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 
 | Type | Payload | Sent by | When |
 |---|---|---|---|
-| `SP_seat` | `{ seat }`: 0, 1, or null to leave | a participant | before the first hand |
-| `SP_deal` | `{ hand, deck }`: the index of the hand, the random part of the id of its deck | a player | between two hands |
+| `SP_seat` | `{ seat, salt }`: 0, 1, or null to leave; the salt of the player, 16 random bytes in hexadecimal | a participant | before the first hand |
+| `SP_deal` | `{ hand }`: the index of the hand | the dealer of the hand | between two hands |
 | `SP_bet` | `{ hand, action, amount? }`: the amount is the total of the player in the round | a player | its turn of a betting round |
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |

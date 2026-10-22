@@ -96,9 +96,11 @@ const verification = await deck.disclose();
   deck: the deck applies its own messages meanwhile, so the game reaches the same state on every
   participant. A deal resolves once every key is in the chain, and the recipient read its cards: the
   first player to read its cards learns nothing before the other one, the game waiting for both deals.
-- **The id** of a deck is unique in the room, and across the rooms of the same name: a random part,
-  drawn by the game and given in the chain, keeps a player from using again the secrets of a former
-  deck, which it disclosed.
+- **The id** of a deck is unique in the room, and across the rooms of the same name: it holds a random
+  part of **each** player, drawn for each game and given in the chain (the Seventeen Poker: a salt of
+  each seat). A player could otherwise give the id of a former deck, and make another one use again the
+  secrets of that deck, kept by its page until disclosed: knowing the cards of the former deck, it would
+  know the new one.
 - **A broken deck.** A step that is not a deck breaks it (`phase` is `broken`): the promises of its
   deals and openings reject, its disclosure resolves `cheated`, the game decides what follows.
 

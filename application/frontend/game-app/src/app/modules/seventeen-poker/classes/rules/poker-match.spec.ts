@@ -229,8 +229,10 @@ describe('PokerMatch', () => {
     test('should let the other player speak first in the next hand', () => {
         // Given
         const match: PokerMatch = new PokerMatch();
+        expect(match.dealer()).toEqual(TWO);
         match.startHand();
         match.bet(ONE, BetAction.FOLD);
+        expect(match.dealer()).toEqual(ONE);
 
         // When
         match.startHand();

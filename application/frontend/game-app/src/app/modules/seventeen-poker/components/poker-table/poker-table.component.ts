@@ -76,11 +76,11 @@ export class PokerTableComponent implements OnDestroy {
     });
     protected readonly actions: Signal<ReadonlyArray<BetAction>> = computed((): ReadonlyArray<BetAction> => this.betting() ? (this.hand() as PokerHand).round.legalActions() : []);
 
-    /** A seated player deals the next hand while the match goes on */
+    /** The dealer deals the next hand while the match goes on */
     protected readonly canDeal: Signal<boolean> = computed((): boolean => {
         const session: SeventeenPokerSession = this.session();
         const hand: PokerHand | null = this.hand();
-        return session.mySeat() !== null && !session.seats().includes(null) && session.awayPlayers().length === 0 && !session.sending()
+        return session.mySeat() === session.match.dealer() && !session.seats().includes(null) && session.awayPlayers().length === 0 && !session.sending()
             && !session.broken() && session.match.result() === null && (hand === null || hand.phase === HandPhase.OVER);
     });
 
@@ -131,7 +131,7 @@ export class PokerTableComponent implements OnDestroy {
         }
 
         if (hand === null || hand.phase === HandPhase.OVER) {
-            return session.match.result() === null ? { key: this.key(marker('table.status.next', undefined, 'poker')) } : null;
+            return session.match.result() === null ? this.dealStatus() : null;
         }
 
         // A hand in progress has its deck
@@ -246,6 +246,15 @@ export class PokerTableComponent implements OnDestroy {
             .map(({ position }) => position);
         this.selected.set([]);
         this.session().exchange(positions);
+    }
+
+    /** The dealer the next hand waits for */
+    private dealStatus(): TranslatableText {
+        const dealer: PokerSeat = this.session().match.dealer();
+
+        return dealer === this.session().mySeat()
+            ? { key: this.key(marker('table.status.myDeal', undefined, 'poker')) }
+            : { key: this.key(marker('table.status.theirDeal', undefined, 'poker')), params: { name: this.session().seats()[dealer] } };
     }
 
     /** The players the deck of the hand waits for */
