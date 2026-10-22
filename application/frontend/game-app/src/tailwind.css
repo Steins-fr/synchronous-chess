@@ -18,6 +18,12 @@
     --color-app-board-light: var(--app-board-light);
     --color-app-piece-ink: var(--app-piece-ink);
     --color-app-link-active: var(--app-link-active);
+    --color-app-card-face: var(--app-card-face);
+    --color-app-card-edge: var(--app-card-edge);
+    --color-app-card-ink: var(--app-card-ink);
+    --color-app-card-red: var(--app-card-red);
+    --color-app-card-back: var(--app-card-back);
+    --color-app-card-back-pattern: var(--app-card-back-pattern);
 }
 
 /* A game of the home page: the whole card links to its page */

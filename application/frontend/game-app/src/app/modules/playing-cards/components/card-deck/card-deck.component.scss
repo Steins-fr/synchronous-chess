@@ -1,0 +1,46 @@
+// The riffle: the halves part, then fall into each other, the left one passing over the right one halfway
+.shuffling .deck-half-left {
+    animation: riffle-left calc(var(--app-motion-slow) * 2.5) ease-in-out infinite;
+}
+
+.shuffling .deck-half-right {
+    animation: riffle-right calc(var(--app-motion-slow) * 2.5) ease-in-out infinite;
+}
+
+@keyframes riffle-left {
+    0%,
+    100% {
+        transform: none;
+        z-index: 0;
+    }
+
+    35% {
+        transform: translateX(-55%) rotate(-8deg);
+        z-index: 0;
+    }
+
+    50%,
+    85% {
+        z-index: 2;
+    }
+}
+
+@keyframes riffle-right {
+    0%,
+    100% {
+        transform: none;
+        z-index: 1;
+    }
+
+    35% {
+        transform: translateX(55%) rotate(8deg);
+    }
+}
+
+// No motion asked: the deck stays still, the page tells it is being shuffled. Without an animation, rather than an
+// endless one lasting no time
+@media (prefers-reduced-motion: reduce) {
+    .shuffling .deck-half {
+        animation: none;
+    }
+}

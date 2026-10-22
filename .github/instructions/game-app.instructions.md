@@ -224,11 +224,17 @@ Claude writes the translations of every new or changed key, into every language:
 | cheating | triche | trampa | trapaça | batota | Betrug | жульничество | hile | curang | oszustwo | imbroglio |
 | card | carte | carta | carta | carta | Karte | карта | kart | kartu | karta | carta |
 | deck | paquet | baraja | baralho | baralho | Blatt | колода | deste | setumpuk kartu | talia | mazzo |
-| hand (of poker) | main | mano | mão | mão | Hand | раздача | el | tangan | rozdanie | mano |
+| hand (a deal of the match) | main | mano | mão | mão | Hand | раздача | el | tangan | rozdanie | mano |
+| hand (the cards held) | main | mano | mão | mão | Hand | комбинация | el | kombinasi | układ | mano |
 | ace | as | as | ás | ás | Ass | туз | as | as | as | asso |
 | king (card) | roi | rey | rei | rei | König | король | papaz | raja | król | re |
 | queen (card) | dame | reina | dama | dama | Dame | дама | kız | ratu | dama | donna |
 | jack | valet | jota | valete | valete | Bube | валет | vale | jack | walet | fante |
+| spades | pique | picas | espadas | espadas | Pik | пики | maça | sekop | pik | picche |
+| hearts | cœur | corazones | copas | copas | Herz | черви | kupa | hati | kier | cuori |
+| diamonds | carreau | diamantes | ouros | ouros | Karo | бубны | karo | wajik | karo | quadri |
+| clubs | trèfle | tréboles | paus | paus | Kreuz | трефы | sinek | keriting | trefl | fiori |
+| face down | face cachée | boca abajo | virada para baixo | voltada para baixo | verdeckt | рубашкой вверх | kapalı | tertutup | zakryta | coperta |
 | joker | joker | comodín | coringa | jóquer | Joker | джокер | joker | joker | joker | jolly |
 | chip | jeton | ficha | ficha | ficha | Chip | фишка | fiş | chip | żeton | fiche |
 | dealer | donneur | crupier | crupiê | croupier | Geber | дилер | krupiye | bandar | krupier | mazziere |

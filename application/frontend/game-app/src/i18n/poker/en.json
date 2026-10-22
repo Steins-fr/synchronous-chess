@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Four aces and the joker: the best hand of the game.",
     "intro": "A deck of four aces, four kings, four queens, four jacks and a joker, which stands for any card. Ten hands to take the chips of the other player.",
     "points": {
       "checked": "Once the game is over, every key is shown: each participant checks that no card was dealt unfairly.",

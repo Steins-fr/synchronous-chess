@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Blatt mit # Karte} other {Blatt mit # Karten}}",
+  "hidden": "Verdeckte Karte",
+  "index": "{rank, select, ace {A} king {K} queen {D} other {B}}",
+  "joker": "Joker",
+  "name": "{suit, select, spades {Pik} hearts {Herz} diamonds {Karo} other {Kreuz}}-{rank, select, ace {Ass} king {König} queen {Dame} other {Bube}}"
+}

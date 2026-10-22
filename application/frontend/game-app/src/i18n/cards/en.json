@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Deck of # card} other {Deck of # cards}}",
+  "hidden": "Face-down card",
+  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "joker": "Joker",
+  "name": "{rank, select, ace {Ace} king {King} queen {Queen} other {Jack}} of {suit, select, spades {spades} hearts {hearts} diamonds {diamonds} other {clubs}}"
+}

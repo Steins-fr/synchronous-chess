@@ -1,0 +1,42 @@
+<div *transloco="let t; prefix: 'cards'"
+    role="img"
+    class="relative size-full rounded-[7%] outline-offset-2 outline-app-win transform-3d transition-transform
+        duration-(--app-motion-slow) ease-in-out"
+    [class.rotate-y-180]="card() === null"
+    [class.outline-3]="highlighted()"
+    [attr.aria-label]="label().key | transloco: label().params">
+    <svg viewBox="0 0 100 140" class="absolute inset-0 size-full backface-hidden" aria-hidden="true">
+        <rect x="1" y="1" width="98" height="138" rx="7" stroke-width="1.5" class="fill-app-card-face stroke-app-card-edge" />
+        @if (card() !== null) {
+        <g [class]="red() ? 'fill-app-card-red stroke-app-card-red' : 'fill-app-card-ink stroke-app-card-ink'">
+            @if (suited(); as suitedCard) {
+            <text x="11" y="23" font-size="19" font-weight="700" text-anchor="middle" stroke="none">{{ t('index', { rank: suitedCard.rank }) }}</text>
+            <path transform="translate(5 28) scale(0.12)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
+            <g transform="rotate(180 50 70)">
+                <text x="11" y="23" font-size="19" font-weight="700" text-anchor="middle" stroke="none">{{ t('index', { rank: suitedCard.rank }) }}</text>
+                <path transform="translate(5 28) scale(0.12)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
+            </g>
+            @if (suitedCard.rank === ace) {
+            <path transform="translate(28 48) scale(0.44)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
+            } @else {
+            <rect x="24" y="28" width="52" height="84" rx="4" fill="none" stroke-width="1.5" />
+            <text x="50" y="80" font-size="40" font-weight="700" text-anchor="middle" stroke="none">{{ t('index', { rank: suitedCard.rank }) }}</text>
+            <path transform="translate(40 86) scale(0.2)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
+            }
+            } @else {
+            <path transform="translate(4 9) scale(0.14)" stroke="none" [attr.d]="jokerStar" />
+            <g transform="rotate(180 50 70)">
+                <path transform="translate(4 9) scale(0.14)" stroke="none" [attr.d]="jokerStar" />
+            </g>
+            <rect x="24" y="28" width="52" height="84" rx="4" fill="none" stroke-width="1.5" />
+            <path transform="translate(26 44) scale(0.48)" stroke="none" class="fill-app-card-back" [attr.d]="jokerStar" />
+            }
+        </g>
+        }
+    </svg>
+    <svg viewBox="0 0 100 140" class="absolute inset-0 size-full backface-hidden rotate-y-180" aria-hidden="true">
+        <rect x="1" y="1" width="98" height="138" rx="7" stroke-width="1.5" class="fill-app-card-back stroke-app-card-edge" />
+        <rect x="7" y="7" width="86" height="126" rx="4" fill="none" stroke-width="1.5" class="stroke-app-card-back-pattern" />
+        <path class="fill-app-card-back-pattern" [attr.d]="backPattern" />
+    </svg>
+</div>

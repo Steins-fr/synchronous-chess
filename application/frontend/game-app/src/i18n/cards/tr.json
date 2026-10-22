@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {# kartlık deste} other {# kartlık deste}}",
+  "hidden": "Kapalı kart",
+  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "joker": "Joker",
+  "name": "{suit, select, spades {Maça} hearts {Kupa} diamonds {Karo} other {Sinek}} {rank, select, ace {ası} king {papazı} queen {kızı} other {valesi}}"
+}

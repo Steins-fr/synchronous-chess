@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Cztery asy i joker: najlepszy układ w grze.",
     "intro": "Talia z czterech asów, czterech króli, czterech dam, czterech waletów i jokera, który zastępuje dowolną kartę. Dziesięć rozdań, by zabrać żetony drugiego gracza.",
     "points": {
       "checked": "Po zakończeniu partii wszystkie klucze są ujawniane: każdy uczestnik sprawdza, czy żadna karta nie została rozdana nieuczciwie.",

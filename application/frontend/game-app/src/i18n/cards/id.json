@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, other {Setumpuk # kartu}}",
+  "hidden": "Kartu tertutup",
+  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "joker": "Joker",
+  "name": "{rank, select, ace {As} king {Raja} queen {Ratu} other {Jack}} {suit, select, spades {sekop} hearts {hati} diamonds {wajik} other {keriting}}"
+}

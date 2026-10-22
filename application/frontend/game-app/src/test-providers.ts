@@ -53,6 +53,17 @@ import trPokerTranslation from './i18n/poker/tr.json';
 import idPokerTranslation from './i18n/poker/id.json';
 import plPokerTranslation from './i18n/poker/pl.json';
 import itPokerTranslation from './i18n/poker/it.json';
+import enCardsTranslation from './i18n/cards/en.json';
+import frCardsTranslation from './i18n/cards/fr.json';
+import esCardsTranslation from './i18n/cards/es.json';
+import ptBRCardsTranslation from './i18n/cards/pt-BR.json';
+import ptPTCardsTranslation from './i18n/cards/pt-PT.json';
+import deCardsTranslation from './i18n/cards/de.json';
+import ruCardsTranslation from './i18n/cards/ru.json';
+import trCardsTranslation from './i18n/cards/tr.json';
+import idCardsTranslation from './i18n/cards/id.json';
+import plCardsTranslation from './i18n/cards/pl.json';
+import itCardsTranslation from './i18n/cards/it.json';
 
 // Every translation file, the global ones then the ones of each scope
 const translations: Readonly<Record<TranslationPath, Translation>> = {
@@ -100,6 +111,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'poker/id': idPokerTranslation,
     'poker/pl': plPokerTranslation,
     'poker/it': itPokerTranslation,
+    'cards/en': enCardsTranslation,
+    'cards/fr': frCardsTranslation,
+    'cards/es': esCardsTranslation,
+    'cards/pt-BR': ptBRCardsTranslation,
+    'cards/pt-PT': ptPTCardsTranslation,
+    'cards/de': deCardsTranslation,
+    'cards/ru': ruCardsTranslation,
+    'cards/tr': trCardsTranslation,
+    'cards/id': idCardsTranslation,
+    'cards/pl': plCardsTranslation,
+    'cards/it': itCardsTranslation,
 };
 
 const testProviders: (Provider | EnvironmentProviders)[] = [

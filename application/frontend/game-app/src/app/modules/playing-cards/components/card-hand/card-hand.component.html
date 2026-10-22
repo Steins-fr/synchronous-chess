@@ -1,0 +1,21 @@
+<ul class="flex justify-center m-0 pt-4 pb-8 px-0 list-none">
+    @for (handCard of cards(); track handCard.id) {
+    <li class="hand-card not-first:-ml-[calc(var(--app-card-width)*0.4)]"
+        animate.enter="card-dealt"
+        animate.leave="card-discarded"
+        [class.selected]="selectable() && selected().includes(handCard.id)"
+        [style.--fan-offset]="fanOffset($index)"
+        [style.--deal-index]="dealOrder().get(handCard.id)">
+        @if (selectable()) {
+        <button type="button"
+            class="block p-0 border-0 rounded-[7%] bg-transparent cursor-pointer focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-app-accent-text"
+            [attr.aria-pressed]="selected().includes(handCard.id)"
+            (click)="toggle(handCard.id)">
+            <app-playing-card [card]="handCard.card" [highlighted]="highlighted().includes(handCard.id)" />
+        </button>
+        } @else {
+        <app-playing-card [card]="handCard.card" [highlighted]="highlighted().includes(handCard.id)" />
+        }
+    </li>
+    }
+</ul>

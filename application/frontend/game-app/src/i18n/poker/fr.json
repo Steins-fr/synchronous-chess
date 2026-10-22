@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Quatre as et le joker : la meilleure main du jeu.",
     "intro": "Un paquet de quatre as, quatre rois, quatre dames, quatre valets et un joker, qui remplace n'importe quelle carte. Dix mains pour prendre les jetons de l'autre joueur.",
     "points": {
       "checked": "Une fois la partie finie, toutes les clés sont montrées : chaque participant vérifie qu'aucune carte n'a été distribuée de façon déloyale.",

@@ -1,0 +1,7 @@
+{
+  "deck": "{count, plural, one {Baralho de # carta} other {Baralho de # cartas}}",
+  "hidden": "Carta virada para baixo",
+  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "joker": "Coringa",
+  "name": "{rank, select, ace {Ás} king {Rei} queen {Dama} other {Valete}} de {suit, select, spades {espadas} hearts {copas} diamonds {ouros} other {paus}}"
+}

@@ -1,5 +1,6 @@
 {
   "presentation": {
+    "bestHand": "Cuatro ases y el comodín: la mejor mano del juego.",
     "intro": "Una baraja de cuatro ases, cuatro reyes, cuatro reinas, cuatro jotas y un comodín, que vale por cualquier carta. Diez manos para quedarte con las fichas del otro jugador.",
     "points": {
       "checked": "Al terminar la partida, se muestran todas las claves: cada participante comprueba que ninguna carta se repartió de forma desleal.",

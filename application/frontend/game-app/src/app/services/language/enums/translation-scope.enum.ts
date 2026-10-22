@@ -4,4 +4,6 @@ export enum TranslationScope {
     CHESS = 'chess',
     CHAT = 'chat',
     POKER = 'poker',
+    /** The names of the playing cards, shared by the card games */
+    CARDS = 'cards',
 }

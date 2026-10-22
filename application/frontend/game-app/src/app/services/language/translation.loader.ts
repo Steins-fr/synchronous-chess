@@ -55,6 +55,17 @@ const translationFiles: Readonly<Record<TranslationPath, () => Promise<{ default
     'poker/id': () => import('../../../i18n/poker/id.json'),
     'poker/pl': () => import('../../../i18n/poker/pl.json'),
     'poker/it': () => import('../../../i18n/poker/it.json'),
+    'cards/en': () => import('../../../i18n/cards/en.json'),
+    'cards/fr': () => import('../../../i18n/cards/fr.json'),
+    'cards/es': () => import('../../../i18n/cards/es.json'),
+    'cards/pt-BR': () => import('../../../i18n/cards/pt-BR.json'),
+    'cards/pt-PT': () => import('../../../i18n/cards/pt-PT.json'),
+    'cards/de': () => import('../../../i18n/cards/de.json'),
+    'cards/ru': () => import('../../../i18n/cards/ru.json'),
+    'cards/tr': () => import('../../../i18n/cards/tr.json'),
+    'cards/id': () => import('../../../i18n/cards/id.json'),
+    'cards/pl': () => import('../../../i18n/cards/pl.json'),
+    'cards/it': () => import('../../../i18n/cards/it.json'),
 };
 
 @Injectable({
