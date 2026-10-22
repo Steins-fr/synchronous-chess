@@ -434,6 +434,15 @@ describe('MentalDeck', () => {
 
         // Then
         expect(hub.reported()).toEqual(['a invalidCardKey a', 'b invalidCardKey a']);
+
+        // When the game of a player destroys its deck, then asks for its disclosure
+        a.destroy();
+        void a.disclose();
+        void b.disclose();
+
+        // Then the destroyed deck sends nothing
+        await vi.waitFor(() => expect(messagesOf(MentalDeckMessageType.DISCLOSE, 'b')).toHaveLength(1));
+        expect(messagesOf(MentalDeckMessageType.DISCLOSE, 'a')).toEqual([]);
     });
 
     test('should refuse to deal to a spectator, or a card out of the deck', () => {
@@ -540,6 +549,23 @@ describe('MentalDeck', () => {
 
             // Then
             expect(opened.get(0)).toEqual(cardsOfA.get(0));
+        });
+
+        test('should give no key once its secrets stored are not ones', async () => {
+            // Given
+            table();
+            await ready(...decks);
+            new DeckKeyStore('room', 'b').save(ID, { shuffleKey: 'zz', permutation: [], cardKeys: [] });
+
+            // When
+            const b: MentalDeck = reload(1, 'b');
+            hub.replay(rooms.get('b') as Room<MentalDeckPayloads>);
+            void deal(hand(0), 'a');
+
+            // Then
+            await vi.waitFor(() => expect(TimedLogger.warn).toHaveBeenCalledWith('The keys of the deck game:1 are lost, its cards can not be read'));
+            expect(messagesOf(MentalDeckMessageType.KEYS, 'b')).toEqual([]);
+            expect(b.cards().size).toEqual(0);
         });
 
         test('should give no key once its secrets are lost, its new ones not making its deck in the chain', async () => {

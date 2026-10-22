@@ -115,6 +115,11 @@ export class SraCipher {
         return keys.reduce((combined: bigint, key: bigint) => combined * key % this.group.order, 1n);
     }
 
+    /** The key replacing a shuffle key with a key of a card, in one exponentiation */
+    public lockKey(shuffleKey: bigint, cardKey: bigint): bigint {
+        return this.combine([this.inverse(shuffleKey), cardKey]);
+    }
+
     public apply(value: bigint, key: bigint): bigint {
         return modPow(value, key, this.group.prime);
     }

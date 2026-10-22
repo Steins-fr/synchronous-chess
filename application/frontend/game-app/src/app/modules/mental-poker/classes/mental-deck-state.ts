@@ -49,6 +49,8 @@ export class MentalDeckState {
     /** The keys the players gave, by position then player */
     private readonly keys = new Map<number, Map<string, PublishedKey>>();
     public readonly disclosures = new Map<string, Disclosure>();
+    /** The cards themselves, by number */
+    public readonly plainDeck: ReadonlyArray<bigint>;
     private disclosureRequested: boolean = false;
     private broken: boolean = false;
 
@@ -64,6 +66,8 @@ export class MentalDeckState {
         if (new Set(players).size !== players.length || players.length < 2) {
             throw new Error(`A deck is played by 2 different players at least, not ${ players.join(', ') }`);
         }
+
+        this.plainDeck = Array.from({ length: size }, (_, card: number) => cipher.encode(card));
     }
 
     public get phase(): DeckPhase {
@@ -93,7 +97,7 @@ export class MentalDeckState {
     /** The deck to shuffle or lock next: the cards themselves for the first player */
     public get stepInput(): ReadonlyArray<bigint> {
         if (this.phase === DeckPhase.SHUFFLING) {
-            return this.shuffles.at(-1)?.cards ?? Array.from({ length: this.size }, (_, card: number) => this.cipher.encode(card));
+            return this.shuffles.at(-1)?.cards ?? this.plainDeck;
         }
 
         // Locking, the deck is shuffled already

@@ -64,6 +64,7 @@ describe('SraCipher', () => {
         expect(cipher.apply(cipher.apply(encrypted, cipher.inverse(key1)), cipher.inverse(key2))).toEqual(card);
         expect(cipher.apply(encrypted, cipher.combine([cipher.inverse(key2), cipher.inverse(key1)]))).toEqual(card);
         expect(cipher.combine([])).toEqual(1n);
+        expect(cipher.apply(cipher.apply(card, key1), cipher.lockKey(key1, key2))).toEqual(cipher.apply(card, key2));
     });
 
     test('should draw the keys from 1 to q - 1', () => {

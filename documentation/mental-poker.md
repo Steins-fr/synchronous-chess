@@ -42,7 +42,8 @@ commutes, `(m^e₁)^e₂ = (m^e₂)^e₁`: a card encrypted by several players i
 any order, or with the product of the keys at once. The numbers travel in hexadecimal.
 
 With 17 cards and 2 players, a player computes 34 exponentiations of 2048 bits per deck, about 10 ms
-each on a computer. The deck yields to the browser between two of them, so the page stays fluid.
+each on a computer. The deck yields to the browser every 40 milliseconds of computation, so the page stays
+fluid: yielding after each one would cost 4 milliseconds more each, the browsers delaying nested timers.
 
 ## The protocol
 
@@ -149,7 +150,8 @@ Once every player disclosed its keys, each participant replays the deck (`verify
 Each cheat is reported against its message with `Room.reportCheat()`: `invalidShuffle` for a step,
 `invalidCardKey` for a key. The cards were then dealt from a fair deck: every player shuffled it, none
 of them knowing the order. The check computes about 4 × 17 exponentiations per deck of 2 players: it
-runs once the game is over, yielding to the browser, and `verification` tells its result.
+runs once the game is over, yielding to the browser, and `verification` tells its result. `disclose()`
+resolves once the deck is checked and every card read.
 
 Some cheats are found earlier, by every participant alike:
 

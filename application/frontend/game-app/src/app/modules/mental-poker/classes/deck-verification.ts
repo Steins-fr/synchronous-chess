@@ -11,7 +11,7 @@ import { SraCipher } from './sra-cipher';
  */
 export async function verifyDeck(state: MentalDeckState, cipher: SraCipher, pause: () => Promise<void>): Promise<ReadonlyArray<DeckCheat>> {
     const cheats: DeckCheat[] = [];
-    let input: ReadonlyArray<bigint> = Array.from({ length: state.size }, (_, card: number) => cipher.encode(card));
+    let input: ReadonlyArray<bigint> = state.plainDeck;
 
     for (const step of state.shuffles) {
         // eslint-disable-next-line no-await-in-loop -- each step follows the previous one
@@ -51,12 +51,9 @@ async function isShuffled(input: ReadonlyArray<bigint>, step: DeckStep, disclosu
 
 /** Each card is the one before, its shuffle key replaced with its card key */
 async function isLocked(input: ReadonlyArray<bigint>, step: DeckStep, disclosure: Readonly<Disclosure>, cipher: SraCipher, pause: () => Promise<void>): Promise<boolean> {
-    const unshuffle: bigint = cipher.inverse(disclosure.shuffleKey);
-
     for (const [position, card] of input.entries()) {
-        const lock: bigint = cipher.combine([unshuffle, cipher.inverse(disclosure.cardKeys[position])]);
-
-        if (cipher.apply(card, lock) !== step.cards[position]) {
+        // The disclosed key of a card decrypts it: its inverse locked it
+        if (cipher.apply(card, cipher.lockKey(disclosure.shuffleKey, cipher.inverse(disclosure.cardKeys[position]))) !== step.cards[position]) {
             return false;
         }
         // eslint-disable-next-line no-await-in-loop -- one computation at a time, for the page to stay fluid

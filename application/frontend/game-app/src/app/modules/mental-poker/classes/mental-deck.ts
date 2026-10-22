@@ -1,5 +1,6 @@
 import { Signal, signal } from '@angular/core';
 import { wait } from '@app/helpers/wait.helper';
+import { timeSlices } from '@app/helpers/time-slices.helper';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -68,7 +69,9 @@ export class MentalDeck {
 
     private readonly _phase = signal<DeckPhase>(DeckPhase.SHUFFLING);
     public readonly phase: Signal<DeckPhase> = this._phase.asReadonly();
-    private readonly _waitingFor = signal<ReadonlyArray<string>>([]);
+    private readonly _waitingFor = signal<ReadonlyArray<string>>([], {
+        equal: (previous: ReadonlyArray<string>, next: ReadonlyArray<string>) => previous.join(' ') === next.join(' '),
+    });
     /** The players the deck waits for */
     public readonly waitingFor: Signal<ReadonlyArray<string>> = this._waitingFor.asReadonly();
     private readonly _cards = signal<ReadonlyMap<number, number>>(new Map<number, number>());
@@ -92,6 +95,8 @@ export class MentalDeck {
     private secretsLost: boolean = false;
     /** The card of each value, once decrypted */
     private readonly cardOfValue: ReadonlyMap<bigint, number>;
+    /** The computations yield to the browser once a slice of time is spent */
+    private readonly pause: () => Promise<void> = timeSlices();
     private acting: boolean = false;
     private actAgain: boolean = false;
     private destroyed: boolean = false;
@@ -107,7 +112,7 @@ export class MentalDeck {
         this.store = options.store ?? new DeckKeyStore(room.roomName, this.localName);
         this.state = new MentalDeckState(options.size, options.players, this.cipher);
         this.verified = new Promise<DeckVerification>((resolve) => this.resolveVerified = resolve);
-        this.cardOfValue = new Map(Array.from({ length: options.size }, (_, card: number) => [this.cipher.encode(card), card]));
+        this.cardOfValue = new Map(this.state.plainDeck.map((value: bigint, card: number) => [value, card]));
         received.forEach((message: MentalDeckMessage) => this.apply(message));
         this.changed();
     }
@@ -180,6 +185,10 @@ export class MentalDeck {
 
     /** Tells the state of the chain, then acts on it */
     private changed(): void {
+        if (this.destroyed) {
+            return;
+        }
+
         this._phase.set(this.state.phase);
         this._waitingFor.set(this.state.waitingFor);
         this.settleWaiters();
@@ -278,20 +287,19 @@ export class MentalDeck {
         for (const card of input) {
             encrypted.push(this.cipher.apply(card, secrets.shuffleKey));
             // eslint-disable-next-line no-await-in-loop -- one computation at a time, for the page to stay fluid
-            await wait(0);
+            await this.pause();
         }
 
         return secrets.permutation.map((from: number) => encrypted[from]);
     }
 
     private async computeLock(input: ReadonlyArray<bigint>, secrets: Secrets): Promise<ReadonlyArray<bigint>> {
-        const unshuffle: bigint = this.cipher.inverse(secrets.shuffleKey);
         const locked: bigint[] = [];
 
         for (const [position, card] of input.entries()) {
-            locked.push(this.cipher.apply(card, this.cipher.combine([unshuffle, secrets.cardKeys[position]])));
+            locked.push(this.cipher.apply(card, this.cipher.lockKey(secrets.shuffleKey, secrets.cardKeys[position])));
             // eslint-disable-next-line no-await-in-loop -- one computation at a time, for the page to stay fluid
-            await wait(0);
+            await this.pause();
         }
 
         return locked;
@@ -319,13 +327,19 @@ export class MentalDeck {
             return undefined;
         }
 
-        const cardKeys: ReadonlyArray<bigint> = stored.cardKeys.map((key: string) => BigInt(`0x${ key }`));
-        this.secrets = {
-            shuffleKey: BigInt(`0x${ stored.shuffleKey }`),
-            permutation: stored.permutation,
-            cardKeys,
-            cardUnlockKeys: cardKeys.map((key: bigint) => this.cipher.inverse(key)),
-        };
+        try {
+            const cardKeys: ReadonlyArray<bigint> = stored.cardKeys.map((key: string) => BigInt(`0x${ key }`));
+            this.secrets = {
+                shuffleKey: BigInt(`0x${ stored.shuffleKey }`),
+                permutation: stored.permutation,
+                cardKeys,
+                cardUnlockKeys: cardKeys.map((key: bigint) => this.cipher.inverse(key)),
+            };
+        } catch {
+            // The storage of the tab is not the one of this deck
+            this.loseSecrets();
+        }
+
         return this.secrets;
     }
 
@@ -376,7 +390,7 @@ export class MentalDeck {
     }
 
     private giveDisclosure(): void {
-        if (this.sentDisclosure || !this.isPlayer || !this.state.isDisclosureRequested || this.state.disclosures.has(this.localName)
+        if (this.destroyed || this.sentDisclosure || !this.isPlayer || !this.state.isDisclosureRequested || this.state.disclosures.has(this.localName)
             || this.state.phase !== DeckPhase.READY) {
             return;
         }
@@ -406,7 +420,7 @@ export class MentalDeck {
                 const value: bigint = this.cipher.apply(this.state.lockedDeck[position], this.cipher.combine(keys));
                 this.read(position, this.cardOfValue.get(value));
                 // eslint-disable-next-line no-await-in-loop -- one computation at a time, for the page to stay fluid
-                await wait(0);
+                await this.pause();
             }
         }
     }
@@ -481,12 +495,14 @@ export class MentalDeck {
         }
 
         this._verification.set(DeckVerification.CHECKING);
-        const cheats: ReadonlyArray<DeckCheat> = await verifyDeck(this.state, this.cipher, () => wait(0));
+        const cheats: ReadonlyArray<DeckCheat> = await verifyDeck(this.state, this.cipher, this.pause);
         cheats.forEach((cheat: DeckCheat) => this.room.reportCheat(cheat.message, cheat.reason));
         const verification: DeckVerification = cheats.length === 0 ? DeckVerification.FAIR : DeckVerification.CHEATED;
         this._verification.set(verification);
         // Disclosed, the secrets are not secret anymore
         this.store.remove(this.id);
+        // A disclosure applied while reading the cards: the ones read before it are read now
+        await this.readCards();
         this.resolveVerified(verification);
     }
 }
