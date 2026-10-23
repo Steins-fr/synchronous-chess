@@ -63,6 +63,8 @@
       "more": "Daha çok",
       "raise": "Artır: {amount}"
     },
+    "bet": "Bahis {amount}",
+    "category": "{category, select, fiveOfAKind {Beşli} royalFlush {Royal floş} fourOfAKind {Kare} fullHouse {Full} straight {Kent} threeOfAKind {Üçlü} twoPair {Döper} other {Per}}",
     "hand": "El {index}/{hands}",
     "history": "Oynanan eller",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} maçı {chips, plural, one {# fişle} other {# fişle}} kazandı."
     },
     "seat": {
-      "bet": "Bahis {amount}",
       "chips": "{count, plural, one {# fiş} other {# fiş}}",
       "free": "Boş yer",
+      "gain": "+{amount}",
       "leave": "Yeri bırak",
       "play": "Otur"
     },

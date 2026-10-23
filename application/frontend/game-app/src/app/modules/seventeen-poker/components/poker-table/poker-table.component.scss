@@ -1,0 +1,29 @@
+// The outcome of a hand shows once the pot reached its winner
+.outcome-shown {
+    animation: outcome-shown var(--app-motion-slow) ease-out var(--app-motion-slow) backwards;
+}
+
+@keyframes outcome-shown {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+}
+
+// Chips moved from a place of the table to another one fly from the first one (left and top, the middle of the chips)
+// to the other one (--flight-x and --flight-y), and fade out as the stack there shows them
+.chip-flight {
+    transform: translate(-50%, -50%);
+    animation: chip-flight var(--app-motion-slow) cubic-bezier(0.3, 0.7, 0.3, 1) forwards;
+}
+
+@keyframes chip-flight {
+    90% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y)));
+    }
+}

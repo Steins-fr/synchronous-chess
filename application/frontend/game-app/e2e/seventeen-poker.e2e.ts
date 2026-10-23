@@ -92,6 +92,8 @@ test.describe('Seventeen poker', () => {
 
         await expect(table(carol).locator('#seat-bottom')).toContainText('155 chips');
         await expect(table(carol).locator('#seat-top')).toContainText('145 chips');
+        await expect(table(carol).locator('#seat-bottom')).toContainText('+11');
+        await expect(table(carol).locator('#hand-outcome')).toHaveText('Hand 1: bob folds, alice takes the pot of 11.');
         expect(await cardsOf(carol, 0)).toEqual(FACE_DOWN);
         expect(await cardsOf(carol, 1)).toEqual(FACE_DOWN);
         await table(carol).getByText('Hands played').click();

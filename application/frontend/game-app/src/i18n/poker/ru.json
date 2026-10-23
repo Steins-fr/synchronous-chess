@@ -63,6 +63,8 @@
       "more": "Больше",
       "raise": "Повысить до {amount}"
     },
+    "bet": "Ставка {amount}",
+    "category": "{category, select, fiveOfAKind {Покер} royalFlush {Роял-флеш} fourOfAKind {Каре} fullHouse {Фулл-хаус} straight {Стрит} threeOfAKind {Сет} twoPair {Две пары} other {Пара}}",
     "hand": "Раздача {index} из {hands}",
     "history": "Сыгранные раздачи",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} выигрывает партию с {chips, plural, one {# фишкой} few {# фишками} many {# фишками} other {# фишки}}."
     },
     "seat": {
-      "bet": "Ставка {amount}",
       "chips": "{count, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}",
       "free": "Свободное место",
+      "gain": "+{amount}",
       "leave": "Освободить место",
       "play": "Сесть"
     },

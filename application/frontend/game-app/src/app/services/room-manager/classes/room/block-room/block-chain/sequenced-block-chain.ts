@@ -87,6 +87,11 @@ export class SequencedBlockChain {
     private readonly leftOut: Set<number> = new Set();
     /** The index of the latest block delivered to the application, or left out of it */
     private deliveredIndex: number = 0;
+    /**
+     * The index of the first block added once this participant caught up with the others: the blocks before it are the
+     * history of the chain, which a page reloaded or a participant joining late receives at once. Unknown while catching up
+     */
+    private liveFrom?: number;
     /** The chain changes one message at a time, so that the blocks are added in order */
     private queue: Promise<void> = Promise.resolve();
 
@@ -113,6 +118,11 @@ export class SequencedBlockChain {
     ) {
         this.blockChain = new Chain(name);
         this.sequencer = sequencer;
+
+        // The sequencer of a new room starts its chain
+        if (this.isSequencer) {
+            this.catchUp();
+        }
     }
 
     private get isSequencer(): boolean {
@@ -250,6 +260,8 @@ export class SequencedBlockChain {
         } else if (!this.blockChain.canAppend(block)) {
             this.report(block, CheatReason.CONFLICTING_BLOCK);
         } else {
+            // The block follows the latest one: the chain is caught up with the sequencer
+            this.catchUp();
             await this.acceptBlock(block, true);
         }
     }
@@ -323,7 +335,7 @@ export class SequencedBlockChain {
                     this.report(block, CheatReason.FORGED_AUTHOR);
                 } else {
                     // An author who left before this participant joined is unknown: its entry is trusted
-                    this.blockRoomService.notifyMessage(this.name, block);
+                    this.blockRoomService.notifyMessage(this.name, block, this.liveFrom === undefined || block.index < this.liveFrom);
                 }
             }
 
@@ -428,6 +440,9 @@ export class SequencedBlockChain {
         // asked from is not the one asked for, asking again would bring it again
         if ((message.payload.at(-1)?.index ?? -1) >= from) {
             this.requestBlocks(message.from);
+        } else if (this.awaitingBlocksFrom.size === 0) {
+            // Every participant asked answered: the sequencer, or the others when its link is lost
+            this.catchUp();
         }
 
         await this.finishSyncIfDone();
@@ -602,6 +617,11 @@ export class SequencedBlockChain {
         });
     }
 
+    /** The blocks added from now on are live, the ones before the history of the chain: once only */
+    private catchUp(): void {
+        this.liveFrom ??= this.blockChain.getLatestBlock().index + 1;
+    }
+
     private submitPendingEntries(): void {
         this.ownPendingEntries.forEach((entry: ChainEntry) => this.broadcastEntry(entry));
     }
@@ -622,6 +642,7 @@ export class SequencedBlockChain {
         }
 
         this.syncing = false;
+        this.catchUp();
 
         // The entries watched until now were submitted to the former sequencer, or to this one before it took over
         const watchedEntries: ReadonlyArray<ChainEntry> = [...this.watchedEntries.values()].map((watched: WatchedEntry) => watched.entry);
@@ -658,5 +679,6 @@ export class SequencedBlockChain {
         this.leftOut.clear();
         this.deliveredIndex = 0;
         this.syncing = false;
+        this.liveFrom = undefined;
     }
 }

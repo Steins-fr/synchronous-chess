@@ -78,6 +78,15 @@ export class Room<M extends object> {
         TimedLogger.warn(`Cheat not reported, ${ reason } by ${ message.from }`, message);
     }
 
+    /**
+     * Whether a message delivered by this room was sent before this participant joined it: a page reloaded, or a
+     * participant joining late, receives the history of a room keeping one at once. A room without block chain keeps none
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the message of a block room, which keeps a history
+    public isHistory(_message: AppMessage): boolean {
+        return false;
+    }
+
     public transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {
         const roomServiceMessage: RoomServiceMessage = {
             type,

@@ -20,26 +20,15 @@
     }
 }
 
-// A bet slides in from the stack of the player, then to the pot once the round is over
-.chip-in {
-    animation: chip-in var(--app-motion-medium) ease-out;
+// The chips won pop up on the seat, once the pot reached it
+.gain-shown {
+    animation: gain-shown var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--app-motion-slow) backwards;
 }
 
-@keyframes chip-in {
+@keyframes gain-shown {
     from {
         opacity: 0;
-        transform: translateY(calc(var(--pot-direction, 1) * -1rem)) scale(0.6);
-    }
-}
-
-.chip-out {
-    animation: chip-out var(--app-motion-medium) ease-in forwards;
-}
-
-@keyframes chip-out {
-    to {
-        opacity: 0;
-        transform: translateY(calc(var(--pot-direction, 1) * 3rem)) scale(0.6);
+        transform: scale(0.4);
     }
 }
 

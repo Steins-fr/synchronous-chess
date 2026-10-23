@@ -1,0 +1,9 @@
+@for (chip of chips(); track chip.id) {
+<span class="chip row-start-1 size-5 mx-px rounded-full border-[3px] border-dashed shadow-sm translate-y-[calc(var(--chip-level)*-0.2rem)]"
+    [class]="chip.colors"
+    [attr.data-value]="chip.value"
+    [style.grid-column]="chip.pile"
+    [style.--chip-level]="chip.level"
+    animate.enter="chip-placed"
+    animate.leave="chip-taken"></span>
+}

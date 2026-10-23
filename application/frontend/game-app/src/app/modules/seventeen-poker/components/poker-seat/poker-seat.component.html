@@ -3,11 +3,12 @@
     [class.acting]="acting()">
     <span class="font-medium">{{ name() ?? t('free') }}</span>
     @if (name() !== null) {
+    <app-chip-stack #stack [amount]="chips()" />
     <span class="muted-note text-sm">{{ t('chips', { count: chips() }) }}</span>
     }
-    @if (bet() > 0) {
-    <span class="px-2 rounded-full bg-app-chip text-app-card-ink text-sm font-bold" animate.enter="chip-in" animate.leave="chip-out">
-        {{ t('bet', { amount: bet() }) }}
+    @if (gain() > 0) {
+    <span class="px-2 rounded-full bg-app-chip text-app-card-ink text-sm font-bold" animate.enter="gain-shown">
+        {{ t('gain', { amount: gain() }) }}
     </span>
     }
     @if (canTake()) {

@@ -48,6 +48,7 @@ interface ChainInternals {
     watchedEntries: Map<string, WatchedEntry>;
     leftOut: Set<number>;
     deliveredIndex: number;
+    liveFrom?: number;
     queue: Promise<void>;
 }
 
@@ -88,6 +89,11 @@ function readyC(node: Node): void {
 
 function delivered(node: Node): AppMessage[] {
     return node.room.notifyMessage.mock.calls.map((call: unknown[]) => TestHelper.cast<Block>(call[1]).entry.data);
+}
+
+/** Whether each block delivered was in the chain before the participant caught up with it */
+function history(node: Node): boolean[] {
+    return node.room.notifyMessage.mock.calls.map((call: unknown[]) => call[2] as boolean);
 }
 
 function sent(player: Player): BlockChainMessage[] {
@@ -171,7 +177,7 @@ describe('SequencedBlockChain', () => {
             expect(block.index).toEqual(1);
             expect(block.sequencer).toEqual('a');
             expect(block.entry.data).toEqual({ from: 'a', type: 'move', payload: 'e4' });
-            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(chainName, block);
+            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(chainName, block, false);
             expect(sent(node.players['b'])).toEqual([{ type: BlockChainMessageType.NEW_BLOCK, payload: block, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: chainName }]);
             expect(node.internals.ownPendingEntries.size).toEqual(0);
             expect(await node.internals.blockChain.hasValidHash(block)).toEqual(true);
@@ -619,6 +625,77 @@ describe('SequencedBlockChain', () => {
         });
     });
 
+    describe('history', () => {
+        test('should deliver the blocks it catches up with as history, the next ones as live', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const [block1, block2, block3] = await createBlocks(node, 3, 'b', remoteKeys);
+
+            // When the sequencer is ready, then answers a page, then an empty one
+            node.chain.onParticipantReady('b');
+            await node.internals.queue;
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1, block2]));
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block3));
+
+            // Then
+            expect(delivered(node)).toEqual([block1.entry.data, block2.entry.data, block3.entry.data]);
+            expect(history(node)).toEqual([true, true, false]);
+        });
+
+        test('should be caught up by a block of the sequencer following its latest one', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const [block1, block2] = await createBlocks(node, 2, 'b', remoteKeys);
+
+            // When
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
+            node.internals.awaitingBlocksFrom.set('c', 2);
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block2], 'c'));
+
+            // Then the blocks a participant sends later are live too
+            expect(history(node)).toEqual([false, false]);
+        });
+
+        test('should catch up with every participant asked for blocks', async () => {
+            // Given
+            const node: Node = createNode('b');
+            readyC(node);
+            const [block1, block2] = await createBlocks(node, 2, 'b', remoteKeys);
+            node.internals.awaitingBlocksFrom.set('b', 1);
+            node.internals.awaitingBlocksFrom.set('c', 1);
+
+            // When b has no block, c has some
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [block1], 'c'));
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [], 'c'));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block2));
+
+            // Then
+            expect(history(node)).toEqual([true, false]);
+        });
+
+        test('should deliver as history the blocks caught up with waiting for the key of their author', async () => {
+            // Given
+            const node: Node = createNode('b');
+            const blockOfC: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('c', otherKeys), 'b', remoteKeys);
+            const liveBlock: Block = await createBlock(blockOfC, await createEntry('c', otherKeys), 'b', remoteKeys);
+            node.internals.awaitingBlocksFrom.set('b', 1);
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, [blockOfC]));
+            await handled(node, received(BlockChainMessageType.GET_BLOCKS_RESPONSE, []));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, liveBlock));
+
+            // When
+            readyC(node);
+            node.chain.onParticipantReady('c');
+            await node.internals.queue;
+
+            // Then
+            expect(delivered(node)).toEqual([blockOfC.entry.data, liveBlock.entry.data]);
+            expect(history(node)).toEqual([true, false]);
+        });
+    });
+
     describe('comparison of the chains', () => {
         test('should show its latest block to everyone at each tick, once it has one', async () => {
             // Given
@@ -769,6 +846,7 @@ describe('SequencedBlockChain', () => {
             // Then nothing is rolled back, the entries are ordered after the collected block, the watched ones included
             expect(node.internals.syncing).toEqual(false);
             expect(delivered(node).map((data: AppMessage) => data.payload)).toEqual(['former', 'own', 'while syncing', 'watched', 'submitted']);
+            expect(history(node)).toEqual([true, false, false, false, false]);
             expect(node.internals.blockChain.getLatestBlock().sequencer).toEqual('a');
             expect(node.internals.watchedEntries.size).toEqual(0);
         });
@@ -858,7 +936,7 @@ describe('SequencedBlockChain', () => {
 
             // Then
             expect(node.internals.syncing).toEqual(false);
-            expect(node.room.notifyMessage).toHaveBeenCalledOnce();
+            expect(history(node)).toEqual([false]);
         });
     });
 
@@ -900,5 +978,6 @@ describe('SequencedBlockChain', () => {
         expect(node.internals.watchedEntries.size).toEqual(0);
         expect(node.internals.leftOut.size).toEqual(0);
         expect(node.internals.deliveredIndex).toEqual(0);
+        expect(node.internals.liveFrom).toBeUndefined();
     });
 });

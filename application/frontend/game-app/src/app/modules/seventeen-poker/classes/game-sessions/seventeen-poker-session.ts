@@ -149,6 +149,12 @@ export class SeventeenPokerSession {
     private readonly _broken = signal<boolean>(false);
     /** A deck was cheated: the match stops */
     public readonly broken: Signal<boolean> = this._broken.asReadonly();
+    private readonly _historySteps = signal<number>(0);
+    /**
+     * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
+     * the start and the end of each of its messages, a showdown moving the chips once the cards are opened
+     */
+    public readonly historySteps: Signal<number> = this._historySteps.asReadonly();
     private readonly _verification = signal<DeckVerification>(DeckVerification.PENDING);
     /** The check of every deck of the match, once it is over */
     public readonly verification: Signal<DeckVerification> = this._verification.asReadonly();
@@ -234,6 +240,23 @@ export class SeventeenPokerSession {
     }
 
     private async handle(message: PokerGameMessage): Promise<void> {
+        const history: boolean = this.room.isHistory(message);
+        const step = (): void => this._historySteps.update((steps: number) => steps + 1);
+
+        if (history) {
+            step();
+        }
+
+        try {
+            await this.apply(message);
+        } finally {
+            if (history) {
+                step();
+            }
+        }
+    }
+
+    private async apply(message: PokerGameMessage): Promise<void> {
         // The action of the local player is in the chain: it may act again
         if (message.from === this.room.localPlayer.name && message.type !== SPGameSessionType.SEAT) {
             this._sending.set(false);

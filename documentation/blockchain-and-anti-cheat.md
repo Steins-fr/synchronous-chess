@@ -180,6 +180,15 @@ A participant only processes the responses it asked for. A block received from a
 than the sequencer must be signed by its sequencer. A refused block stops the catch up with that
 participant, since asking again would bring the same block.
 
+The blocks a participant joining the room catches up with are the **history** of the chain:
+`Room.isHistory()` tells the application whether a message it delivers is one, so that a reloaded page
+replaying them does not animate them as new moves. A chain is caught up once every participant it
+asked for blocks answered with an empty page (the sequencer, or the others when its link to it is lost),
+once a `NEW_BLOCK` of the sequencer follows its latest block, or once it collected the blocks as a new
+sequencer; the sequencer of a new room starts caught up.
+The blocks added before are its history, delivered later included (waiting for the key of their author);
+the ones added after are live, those caught up with later (a gap, a lost connection) included.
+
 ## Watching the sequencer
 
 Every 2 seconds, the room ticks its chains:

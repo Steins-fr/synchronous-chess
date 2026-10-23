@@ -68,9 +68,18 @@ html {
     --app-card-red: #c62828;
     --app-card-back: var(--app-accent);
     --app-card-back-pattern: rgb(255 255 255 / 30%);
-    // The cloth of the poker table, under a white text, and the chips of the bets
+    // The cloth of the poker table, under a white text, and the gains of a hand
     --app-felt: light-dark(#2f6b4a, #1f4a34);
     --app-chip: light-dark(#f2c14e, #d9a93a);
+    // The chips, by value: their face and the stripes of their edge, the black one lighter on the dark page
+    --app-chip-1: #f4f1ea;
+    --app-chip-1-edge: #3d5a80;
+    --app-chip-5: #c62828;
+    --app-chip-5-edge: #f4f1ea;
+    --app-chip-25: #1e5aa8;
+    --app-chip-25-edge: #f4f1ea;
+    --app-chip-100: light-dark(#26262b, #4f4f5a);
+    --app-chip-100-edge: #f2c14e;
     // The width of a card, larger out of a phone
     --app-card-width: 4.5rem;
 

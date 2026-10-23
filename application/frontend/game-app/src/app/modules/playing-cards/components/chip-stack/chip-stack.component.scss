@@ -1,0 +1,27 @@
+// A chip placed drops on its pile, once the chips moved to the stack reached it: not the change of a stack paying out
+.chip-placed {
+    animation: chip-placed var(--app-motion-medium) ease-out var(--app-motion-slow) backwards;
+}
+
+:host(.still) .chip-placed {
+    animation: none;
+}
+
+@keyframes chip-placed {
+    from {
+        opacity: 0;
+        transform: translateY(-0.75rem) scale(1.2);
+    }
+}
+
+// A chip taken fades out, the chips moved from the stack flying meanwhile
+.chip-taken {
+    animation: chip-taken var(--app-motion-fast) ease-in forwards;
+}
+
+@keyframes chip-taken {
+    to {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}

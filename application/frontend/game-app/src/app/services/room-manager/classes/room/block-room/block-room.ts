@@ -60,7 +60,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     /** The block chains by name, to dispatch the received messages */
     private readonly blockChains: ReadonlyMap<BlockChainName, SequencedBlockChain>;
     /** The block of each message delivered to the application, to report it */
-    private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block }>();
+    private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block; history: boolean }>();
     private sequencer: string;
     /** The sequencers most of the other participants reported as cheating */
     private distrusted = new Set<string>();
@@ -357,6 +357,10 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         this.antiCheat.report({ chain, subject: block.hash, index: block.index, author: message.from, sequencer: block.sequencer, reason });
     }
 
+    public override isHistory(message: AppMessage): boolean {
+        return this.deliveredBlocks.get(message)?.history ?? false;
+    }
+
     protected override onMessage(message: ReceivedMessage): void {
         if (message.origin === MessageOriginType.BLOCK_ROOM_PARTICIPANT) {
             this.participants.handle(message);
@@ -383,11 +387,11 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         }
     }
 
-    public notifyMessage(chain: BlockChainName, block: Block): void {
+    public notifyMessage(chain: BlockChainName, block: Block, history: boolean): void {
         const message: AppMessage = block.entry.data;
         TimedLogger.log(message);
 
-        this.deliveredBlocks.set(message, { chain, block });
+        this.deliveredBlocks.set(message, { chain, block, history });
         this.publicMessenger$.next(message);
     }
 

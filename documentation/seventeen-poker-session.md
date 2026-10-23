@@ -33,11 +33,11 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The match in a room: seats, decks, cards, cheat reports |
 | `PokerTableComponent` | `components/poker-table` | Shows the session, and turns the clicks into seat requests and actions |
-| `PokerSeatComponent` | `components/poker-seat` | A seat: its player, chips and bet, a ring while its player acts |
+| `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring while its player acts, what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
 
-The cards themselves (`PlayingCardComponent`, `CardHandComponent`, `CardDeckComponent`) live in
-`modules/playing-cards`, shared with the card games to come.
+The cards and the chips themselves (`PlayingCardComponent`, `CardHandComponent`, `CardDeckComponent`,
+`ChipStackComponent`) live in `modules/playing-cards`, shared with the card games to come.
 
 ## Rules
 
@@ -145,20 +145,34 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 
 ## Interface
 
-- The seats, at the top and the bottom of the table: the player, its chips, its bet of the round, and
+- The seats, at the top and the bottom of the table: the player, its chips, as piles and as a count, and
   a ring around the one to act.
 - The hands, in fans: the cards of the local player face up, the others face down until the showdown.
-  During the exchange, the cards of the player are buttons selecting the ones to discard.
+  During the exchange, the cards of the player are buttons selecting the ones to discard. At the
+  showdown, each hand tells its kind, the winning one outlined, the other one dimmed.
 - The cloth, with the deck and its count (riffling while the players shuffle), the pot, the count of the
-  hands, and the spectators.
-- A status line (`role="status"`): what the table waits for, a player shuffling or giving its keys, a
+  hands, and the spectators. The chips of the bets of the round lie in front of each player, the pot in
+  the middle: the fewest chips making each amount, of 1, 5, 25 and 100 (`chipsOf`).
+- Once a hand is over, its outcome on the cloth and the chips won on the seat of the winner (`+32`),
+  until the next hand is dealt.
+- A status line (`<output>`, of the role `status`): what the table waits for, a player shuffling or giving its keys, a
   player away from the room.
 - The actions of the player: `Check`, `Call`, `Bet` or `Raise` with the amount set by steps of 5 chips,
   `Min` and `Max`, and `Fold` against a bet only (with nothing to call, a player checks for free).
 - The history of the hands, folded below the table, then the result of the match.
 
 The animations (the deal, the turn over of the cards, the riffle, the chips, the ring) use
-`animate.enter` / `animate.leave` and CSS only, and stop under `prefers-reduced-motion`.
+`animate.enter` / `animate.leave` and CSS only, and stop under `prefers-reduced-motion`. Once the table
+shows a change of its chips, `chipTransfers` tells the chips it moved: a bet from a stack to the cloth,
+the antes and the bets of a round over to the pot, the pot to its winner, half to each player when it is
+split, to the bank on a no contest; a player taking the pot alone takes the bets of the cloth with it (a
+fold). The chips of each move fly between the places as the page shows them, measured once rendered,
+then the stack there shows them dropping on it, the gains and the outcome with them. A stack paying out
+shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights,
+as does the history of the room a reloaded page or a participant joining late catches up with: the
+session counts the steps of the history it applies (`historySteps`: the start and the end of each of its
+messages, a showdown moving the chips once the cards are opened), and a change of the table while it
+grows does not fly.
 
 ## Limits
 
@@ -166,6 +180,7 @@ The animations (the deal, the turn over of the cards, the riffle, the chips, the
 - The timing of the messages may tell something: the chain shows when each player acted.
 - The sequencer can delay the messages, as in every game of a room, and is watched for it by the
   anti-cheat.
+- Moves applied between two renders (a burst of messages) fly as one, their net change.
 
 ## Testing
 

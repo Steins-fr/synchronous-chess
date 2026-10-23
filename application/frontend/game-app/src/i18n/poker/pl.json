@@ -63,6 +63,8 @@
       "more": "Więcej",
       "raise": "Przebij do {amount}"
     },
+    "bet": "Stawka {amount}",
+    "category": "{category, select, fiveOfAKind {Pięć jednakowych} royalFlush {Poker królewski} fourOfAKind {Kareta} fullHouse {Full} straight {Strit} threeOfAKind {Trójka} twoPair {Dwie pary} other {Para}}",
     "hand": "Rozdanie {index} z {hands}",
     "history": "Rozegrane rozdania",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} wygrywa partię, mając {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}."
     },
     "seat": {
-      "bet": "Stawka {amount}",
       "chips": "{count, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
       "free": "Wolne miejsce",
+      "gain": "+{amount}",
       "leave": "Zwolnij miejsce",
       "play": "Usiądź"
     },

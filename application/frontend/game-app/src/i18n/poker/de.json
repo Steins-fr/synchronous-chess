@@ -63,6 +63,8 @@
       "more": "Mehr setzen",
       "raise": "Erhöhen auf {amount}"
     },
+    "bet": "Einsatz {amount}",
+    "category": "{category, select, fiveOfAKind {Fünfling} royalFlush {Royal Flush} fourOfAKind {Vierling} fullHouse {Full House} straight {Straße} threeOfAKind {Drilling} twoPair {Zwei Paare} other {Ein Paar}}",
     "hand": "Hand {index} von {hands}",
     "history": "Gespielte Hände",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} gewinnt die Partie mit {chips, plural, one {# Chip} other {# Chips}}."
     },
     "seat": {
-      "bet": "Einsatz {amount}",
       "chips": "{count, plural, one {# Chip} other {# Chips}}",
       "free": "Freier Platz",
+      "gain": "+{amount}",
       "leave": "Platz verlassen",
       "play": "Hinsetzen"
     },

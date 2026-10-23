@@ -63,6 +63,8 @@
       "more": "Tambah",
       "raise": "Naikkan ke {amount}"
     },
+    "bet": "Taruhan {amount}",
+    "category": "{category, select, fiveOfAKind {Five of a kind} royalFlush {Royal flush} fourOfAKind {Four of a kind} fullHouse {Full house} straight {Straight} threeOfAKind {Three of a kind} twoPair {Two pair} other {One pair}}",
     "hand": "Putaran {index} dari {hands}",
     "history": "Putaran yang dimainkan",
     "outcome": {
@@ -77,9 +79,9 @@
       "win": "{winner} memenangkan pertandingan dengan {chips, plural, other {# chip}}."
     },
     "seat": {
-      "bet": "Taruhan {amount}",
       "chips": "{count, plural, other {# chip}}",
       "free": "Kursi kosong",
+      "gain": "+{amount}",
       "leave": "Tinggalkan kursi",
       "play": "Duduk"
     },

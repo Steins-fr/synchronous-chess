@@ -1,41 +1,68 @@
-<section *transloco="let t; prefix: 'poker.table'" class="flex flex-col gap-3 py-4">
+<section *transloco="let t; prefix: 'poker.table'" class="relative flex flex-col gap-3 py-4" #tableSection>
     @let top = topSeat();
     @let bottom = bottomSeat();
     <app-poker-seat
+        #topSeatView
         id="seat-top"
-        class="[--pot-direction:1]"
         [name]="session().seats()[top]"
         [chips]="session().match.stacks()[top]"
-        [bet]="roundBet(top)"
+        [gain]="gain(top)"
         [acting]="toAct() === top"
         [canTake]="canTake(top)"
         (take)="takeSeat(top)" />
-    <app-card-hand class="[--deal-from-y:6rem]" [cards]="hands()[top]" [highlighted]="winning(top)" />
+    <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
+    @if (categories()[top]; as current) {
+    <p class="table-line">{{ current.key | transloco: current.params }}</p>
+    }
 
-    <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-app-felt text-app-on-color">
-        <app-card-deck [count]="session().deckCount()" [shuffling]="shuffling()" />
-        <div class="flex flex-col items-center gap-1">
-            <span class="text-xl font-bold">{{ t('pot', { pot: pot() }) }}</span>
-            @if (hand(); as current) {
-            <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match.rules.hands }) }}</span>
+    <div #cloth class="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-app-felt text-app-on-color">
+        <div id="bet-top" class="bet-zone">
+            <app-chip-stack #topBet [amount]="bets()[top]" />
+            @if (bets()[top] > 0) {
+            <span>{{ t('bet', { amount: bets()[top] }) }}</span>
             }
         </div>
-        <span class="text-sm text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
+        <div class="flex items-center justify-between gap-3">
+            <app-card-deck [count]="session().deckCount()" [shuffling]="shuffling()" />
+            <div class="flex flex-col items-center gap-1">
+                <app-chip-stack #potStack class="pot" [amount]="potChips()" />
+                <span class="text-xl font-bold">{{ t('pot', { pot: pot() }) }}</span>
+                @if (hand(); as current) {
+                <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match.rules.hands }) }}</span>
+                }
+            </div>
+            <span class="text-sm text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
+        </div>
+        @if (outcomeText(); as current) {
+        <p id="hand-outcome" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center font-bold" animate.enter="outcome-shown">
+            {{ current.key | transloco: current.params }}
+        </p>
+        }
+        <div id="bet-bottom" class="bet-zone">
+            <app-chip-stack #bottomBet [amount]="bets()[bottom]" />
+            @if (bets()[bottom] > 0) {
+            <span>{{ t('bet', { amount: bets()[bottom] }) }}</span>
+            }
+        </div>
     </div>
 
+    @if (categories()[bottom]; as current) {
+    <p class="table-line">{{ current.key | transloco: current.params }}</p>
+    }
     <app-card-hand
-        class="[--deal-from-y:-6rem]"
+        class="table-hand [--deal-from-y:-8.5rem]"
+        [class.opacity-50]="losing(bottom)"
         [cards]="hands()[bottom]"
         [selectable]="exchanging()"
         [highlighted]="winning(bottom)"
         [selected]="selected()"
         (selectedChange)="selected.set($event)" />
     <app-poker-seat
+        #bottomSeatView
         id="seat-bottom"
-        class="[--pot-direction:-1]"
         [name]="session().seats()[bottom]"
         [chips]="session().match.stacks()[bottom]"
-        [bet]="roundBet(bottom)"
+        [gain]="gain(bottom)"
         [acting]="toAct() === bottom"
         [canTake]="canTake(bottom)"
         [canLeave]="canLeave()"
@@ -43,7 +70,7 @@
         (leave)="leaveSeat()" />
 
     @if (status(); as current) {
-    <p class="m-0 text-center font-medium" role="status">{{ current.key | transloco: current.params }}</p>
+    <output class="table-line block">{{ current.key | transloco: current.params }}</output>
     }
 
     <div class="flex flex-wrap items-center justify-center gap-2">
@@ -101,5 +128,19 @@
             }
         </ul>
     </details>
+    }
+
+    <!-- The chips moved from a place of the table to another one, flying over it -->
+    @for (flight of flights(); track flight.id) {
+    <app-chip-stack
+        class="chip-flight absolute pointer-events-none"
+        [amount]="flight.amount"
+        [placed]="false"
+        [style.left.px]="flight.from.x"
+        [style.top.px]="flight.from.y"
+        [style.--flight-x.px]="flight.to.x - flight.from.x"
+        [style.--flight-y.px]="flight.to.y - flight.from.y"
+        (animationend)="land(flight.id, $event)"
+        (animationcancel)="land(flight.id, $event)" />
     }
 </section>
