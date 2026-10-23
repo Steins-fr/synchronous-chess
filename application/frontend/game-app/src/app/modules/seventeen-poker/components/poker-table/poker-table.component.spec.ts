@@ -44,7 +44,7 @@ describe('PokerTableComponent', () => {
 
     const element = (): HTMLElement => fixture.nativeElement;
     const text = (selector: string): string => element().querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-    const status = (): string => text('[role="status"]');
+    const status = (): string => text('output');
     const button = (label: string): HTMLButtonElement | undefined => Array.from(element().querySelectorAll<HTMLButtonElement>('button'))
         .find((candidate: HTMLButtonElement) => candidate.textContent?.trim() === label || candidate.getAttribute('aria-label') === label);
     /** The names of the cards of a hand, from the top of the table */
@@ -201,10 +201,10 @@ describe('PokerTableComponent', () => {
         expect(button('Bet 1')).toBeDefined();
 
         // When: the chips move while the page is hidden
-        Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+        vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+        document.dispatchEvent(new Event('visibilitychange'));
         await click('Bet 1');
         await until(() => status() === 'bob to speak.');
-        delete (document as { hidden?: boolean }).hidden;
 
         // Then: they do not fly
         expect(flights()).toEqual([]);
@@ -291,7 +291,7 @@ describe('PokerTableComponent', () => {
 
         // Then: both hands are shown, the best one outlined, the other one dimmed
         const outcome = bob.match.hand()?.outcome;
-        const categories: string[] = Array.from(element().querySelectorAll('.table-line:not([role])'), (line: Element) => line.textContent?.trim() as string);
+        const categories: string[] = Array.from(element().querySelectorAll('p.table-line'), (line: Element) => line.textContent?.trim() as string);
         expect(categories).toHaveLength(2);
         expect(text('#hand-outcome')).toEqual(text('details li'));
         expect(chipValues('.pot')).toEqual([]);
@@ -331,7 +331,7 @@ describe('PokerTableComponent', () => {
         expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#seat-bottom')).toEqual('alice142 chips');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
-        expect(element().querySelectorAll('.table-line:not([role])')).toHaveLength(0);
+        expect(element().querySelectorAll('p.table-line')).toHaveLength(0);
         // The pot flies to Bob, the bets with it
         expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5']]);
     });
@@ -363,6 +363,48 @@ describe('PokerTableComponent', () => {
         expect(element().textContent).toContain('Spectators: 1');
         expect(button('Check')).toBeUndefined();
         expect(button('Call 5')).toBeUndefined();
+    });
+
+    test('should not move the chips of the history of the room to a participant joining late', async () => {
+        // Given: a hand played to the showdown, which moves the chips once the cards are opened
+        const alice: SeventeenPokerSession = participant('alice');
+        const bob: SeventeenPokerSession = participant('bob');
+        const turn = async (session: SeventeenPokerSession): Promise<void> => vi.waitFor(() => expect(session.myTurn()).toBe(true));
+        alice.takeSeat(PokerSeat.ONE);
+        bob.takeSeat(PokerSeat.TWO);
+        bob.deal();
+        await turn(alice);
+        alice.bet(BetAction.BET, 5);
+        await turn(bob);
+        bob.bet(BetAction.CALL);
+        await turn(alice);
+        alice.exchange([]);
+        await turn(bob);
+        bob.exchange([]);
+        await turn(alice);
+        alice.bet(BetAction.CHECK);
+        await turn(bob);
+        bob.bet(BetAction.CHECK);
+        await vi.waitFor(() => expect(alice.match.outcomes()).toHaveLength(1));
+
+        // When: Carol joins, the chain giving her its history, the page showing the hands being opened
+        await table('carol');
+        const lastBet: number = hub.delivered.map((message: AppMessage) => message.type).lastIndexOf('SP_bet') + 1;
+        hub.replay(fixture.componentInstance.room(), hub.delivered.slice(0, lastBet));
+        await until(() => status() === 'The hands are shown…');
+        hub.replay(fixture.componentInstance.room(), hub.delivered.slice(lastBet));
+        await until(() => status() === 'alice to deal.');
+
+        // Then
+        expect(text('#hand-outcome')).not.toEqual('');
+        expect(flights()).toEqual([]);
+
+        // When
+        alice.deal();
+        await until(() => status() === 'bob to speak.');
+
+        // Then: the antes of the next hand fly
+        expect(flights()).toEqual([['5'], ['5']]);
     });
 
     test('should tell the player the deck waits for', async () => {
@@ -509,7 +551,7 @@ describe('PokerTableComponent', () => {
             // Then
             expect(text('.badge')).toEqual('alice wins the match with 155 chips.');
             expect(element().querySelector('.badge')?.classList).toContain('badge-win');
-            expect(element().querySelector('[role="status"]')).toBeNull();
+            expect(element().querySelector('output')).toBeNull();
             expect(button('Deal')).toBeUndefined();
             expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 11.');
             await until(() => text('p.muted-note') === 'Every deck was fair.');

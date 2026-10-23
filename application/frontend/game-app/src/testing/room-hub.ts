@@ -14,7 +14,8 @@ export class RoomHub<M extends object> {
     public readonly delivered: AppMessage[] = [];
     /** The cheats each participant reported */
     public readonly reports: Array<[string, AppMessage, CheatReason]> = [];
-    private readonly rooms = new Map<Room<M>, Subject<AppMessage>>();
+    /** The messages of each room, and the ones replayed to it, its history */
+    private readonly rooms = new Map<Room<M>, { readonly messages: Subject<AppMessage>; readonly history: Set<AppMessage> }>();
     private readonly players = signal<ReadonlyArray<Readonly<Player>>>([]);
     private readonly queue: AppMessage[] = [];
     private delivering: boolean = false;
@@ -27,6 +28,7 @@ export class RoomHub<M extends object> {
      */
     public room(name: string, tamper: (message: AppMessage) => AppMessage = (message: AppMessage) => message): Room<M> {
         const messages = new Subject<AppMessage>();
+        const history = new Set<AppMessage>();
         const room: Room<M> = TestHelper.cast<Room<M>>({
             localPlayer: { name },
             roomName: 'room',
@@ -34,8 +36,9 @@ export class RoomHub<M extends object> {
             messenger: (type: string) => messages.pipe(filter((message: AppMessage) => message.type === type)),
             transmitMessage: (type: string, payload: unknown) => this.transmit(tamper({ from: name, type, payload })),
             reportCheat: (message: AppMessage, reason: CheatReason) => this.reports.push([name, message, reason]),
+            isHistory: (message: AppMessage) => history.has(message),
         });
-        this.rooms.set(room, messages);
+        this.rooms.set(room, { messages, history });
         this.players.update((players) => players.some((player) => player.name === name) ? players : [...players, TestHelper.cast<Player>({ name })]);
         return room;
     }
@@ -79,14 +82,18 @@ export class RoomHub<M extends object> {
         this.delivering = true;
         for (let next = this.queue.shift(); next; next = this.queue.shift()) {
             this.delivered.push(next);
-            this.rooms.forEach((messages: Subject<AppMessage>) => messages.next(next));
+            this.rooms.forEach(({ messages }) => messages.next(next));
         }
         this.delivering = false;
     }
 
-    /** Delivers again messages of the chain to a room only, as when a player reloads the page */
+    /** Delivers again messages of the chain to a room only, as its history, as when a player reloads the page */
     public replay(room: Room<M>, messages: ReadonlyArray<AppMessage> = [...this.delivered]): void {
-        messages.forEach((message: AppMessage) => this.rooms.get(room)?.next(message));
+        const replayed = this.rooms.get(room);
+        messages.forEach((message: AppMessage) => {
+            replayed?.history.add(message);
+            replayed?.messages.next(message);
+        });
     }
 
     public types(): string[] {

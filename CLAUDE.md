@@ -154,7 +154,7 @@ run by the CI.
 - The actions are buttons named by their text (`Check`, `Bet 6`, `Call 6`, `Raise to 13`, `Fold`, `Bet more`,
   `Min`, `Max`, `Keep my hand`, `Exchange 2 cards`); the cards of the player are buttons during the exchange,
   `aria-pressed` once selected. A card is an image named by its card (`Ace of spades`, `Face-down card`), and
-  `[role="status"]` tells what the table waits for.
+  the `status` role (`<output>`) tells what the table waits for.
 - The bets of the round lie on the cloth (`#bet-top` / `#bet-bottom`, `Bet 6`), and the outcome of a hand over
   shows in `#hand-outcome` until the next deal. The chips are decorative (`aria-hidden`): read the amounts in
   the texts. The chips moved fly over the table (`.chip-flight`) until their animation ends.

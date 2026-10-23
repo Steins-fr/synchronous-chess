@@ -619,12 +619,15 @@ describe('SeventeenPokerSession', () => {
         hub.replay(rooms.get('bob') as Room<PokerPayloads>);
         await settled([reloaded], (session: SeventeenPokerSession) => known(session, TWO));
 
-        // Then
+        // Then: the messages of the game it caught up with are its history
         expect(read(reloaded, TWO)).toEqual(cards);
         expect(reloaded.mySeat()).toEqual(TWO);
+        const steps: number = 2 * hub.delivered.filter((message: AppMessage) => message.type.startsWith('SP_')).length;
+        expect(reloaded.historySteps()).toEqual(steps);
         alice.bet(BetAction.CHECK);
         await settled([reloaded], (session: SeventeenPokerSession) => session.myTurn());
         expect(reloaded.match.hand()?.round.toAct).toEqual(TWO);
+        expect(reloaded.historySteps()).toEqual(steps);
     });
 
     test('should stop receiving the messages once destroyed', async () => {

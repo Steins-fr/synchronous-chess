@@ -2,7 +2,6 @@ import {
     afterRenderEffect, Component, computed, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { DeckVerification, MentalDeck } from '@app/modules/mental-poker/classes/mental-deck';
 import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
@@ -10,6 +9,7 @@ import { CardDeckComponent } from '@app/modules/playing-cards/components/card-de
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { TranslatableText } from '@app/types/translatable-text.type';
@@ -237,19 +237,21 @@ export class PokerTableComponent implements OnDestroy {
     private readonly topSeatView: Signal<PokerSeatComponent> = viewChild.required('topSeatView');
     private readonly bottomSeatView: Signal<PokerSeatComponent> = viewChild.required('bottomSeatView');
 
-    private readonly document: Document = inject(DOCUMENT);
+    private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
 
-    /** The chips on the table last shown, with their session */
-    private shown: { readonly session: SeventeenPokerSession; readonly chips: Readonly<TableChips> } | null = null;
+    /** The chips on the table last shown, with their session and the steps of its history applied then */
+    private shown: { readonly session: SeventeenPokerSession; readonly chips: Readonly<TableChips>; readonly historySteps: number } | null = null;
 
     // Once the table shows a change, the chips it moved fly from where they were to where they are
     private readonly chipMoves = afterRenderEffect({
         earlyRead: (): ReadonlyArray<Readonly<ChipFlight>> => {
             const session: SeventeenPokerSession = this.session();
             const chips: Readonly<TableChips> = { stacks: session.match.stacks(), bets: this.bets(), pot: this.potChips() };
-            // A new session starts from its own chips
-            const transfers: ReadonlyArray<Readonly<ChipTransfer>> = this.shown?.session === session ? chipTransfers(this.shown.chips, chips) : [];
-            this.shown = { session, chips };
+            const historySteps: number = session.historySteps();
+            // A new session starts from its own chips, and the history of the room it catches up with moves none
+            const previous: Readonly<TableChips> | null = this.shown?.session === session && this.shown.historySteps === historySteps ? this.shown.chips : null;
+            const transfers: ReadonlyArray<Readonly<ChipTransfer>> = previous === null ? [] : chipTransfers(previous, chips);
+            this.shown = { session, chips, historySteps };
             return this.flightsOf(transfers);
         },
         write: (flights: Signal<ReadonlyArray<Readonly<ChipFlight>>>): void => {
@@ -263,7 +265,6 @@ export class PokerTableComponent implements OnDestroy {
     });
 
     public ngOnDestroy(): void {
-        this.chipMoves.destroy();
         this.session().destroy();
     }
 
@@ -397,7 +398,7 @@ export class PokerTableComponent implements OnDestroy {
     /** The chips moved fly between the places of the table, as it shows them now */
     private flightsOf(transfers: ReadonlyArray<Readonly<ChipTransfer>>): ReadonlyArray<Readonly<ChipFlight>> {
         // A hidden page does not run its animations: its flights would all fly at once when shown again
-        if (transfers.length === 0 || this.document.hidden) {
+        if (transfers.length === 0 || !untracked(this.pageVisibility.visible)) {
             return [];
         }
 

@@ -86,6 +86,7 @@ describe('Room', () => {
 
         // Then
         expect(moves).toEqual([{ type: 'move', payload: 'e4', origin: MessageOriginType.ROOM_SERVICE, from: 'remote' }]);
+        expect(room.isHistory(moves[0])).toEqual(false);
     });
 
     test('reportCheat should only log, without anti-cheat', () => {

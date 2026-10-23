@@ -168,18 +168,23 @@ describe('BlockRoom', () => {
         expect(() => room.transmitMessage(TestHelper.cast<'move'>('unknown'), 'e4')).toThrow('No block chain routes the unknown messages');
     });
 
-    test('notifyMessage should publish the message of the block', () => {
+    test('notifyMessage should publish the message of the block, telling whether it is history', () => {
         // Given
         const room: BlockRoom<TestPayloads> = createRoom();
         const data: AppMessage = { from: 'remote', type: 'move', payload: 'd5' };
+        const liveData: AppMessage = { from: 'remote', type: 'move', payload: 'e5' };
         const moves: AppMessage[] = [];
         room.messenger('move').subscribe((message: AppMessage) => moves.push(message));
 
         // When
-        room.notifyMessage(BlockChainName.CHESS, new Block(1, 'previous', { id: 'id', data, signature: 'signature' }, 'local', 'hash', 'signature'));
+        room.notifyMessage(BlockChainName.CHESS, new Block(1, 'previous', { id: 'id', data, signature: 'signature' }, 'local', 'hash', 'signature'), true);
+        room.notifyMessage(BlockChainName.CHESS, new Block(2, 'hash', { id: 'id2', data: liveData, signature: 'signature' }, 'local', 'hash2', 'signature'), false);
 
         // Then
-        expect(moves).toEqual([data]);
+        expect(moves).toEqual([data, liveData]);
+        expect(room.isHistory(data)).toEqual(true);
+        expect(room.isHistory(liveData)).toEqual(false);
+        expect(room.isHistory({ ...data })).toEqual(false);
     });
 
     test('should dispatch the network messages to the participants, the anti-cheat or their block chain', () => {
@@ -847,6 +852,51 @@ describe('BlockRoom', () => {
             expect(peer.received).toHaveLength(3);
             expect(host.room.cheatFlags()).toEqual([]);
             expect(peer.room.cheatFlags()).toEqual([]);
+        });
+
+        test('should give its history to a participant joining late, then the next messages live', async () => {
+            // Given
+            const host: Peer = await createPeer('host', 'host');
+            const alice: Peer = await createPeer('alice', 'host');
+            connect(host, alice);
+            alice.room.transmitMessage('move', 'e4');
+            await vi.waitFor(() => expect(alice.received).toHaveLength(1));
+
+            // When
+            const bob: Peer = await createPeer('bob', 'host');
+            [host, alice].forEach((peer: Peer) => {
+                link(peer, bob);
+                link(bob, peer);
+            });
+            await vi.waitFor(() => expect(bob.received).toHaveLength(1));
+            host.room.transmitMessage('move', 'e5');
+            await vi.waitFor(() => expect(bob.received).toHaveLength(2));
+
+            // Then
+            expect(bob.received.map((message: AppMessage) => bob.room.isHistory(message))).toEqual([true, false]);
+            expect(alice.room.isHistory(alice.received[0])).toEqual(false);
+        });
+
+        test('should give its history to a participant joining late without link to the host, through the others', async () => {
+            // Given
+            const host: Peer = await createPeer('host', 'host');
+            const alice: Peer = await createPeer('alice', 'host');
+            connect(host, alice);
+            alice.room.transmitMessage('move', 'e4');
+            await vi.waitFor(() => expect(alice.received).toHaveLength(1));
+
+            // When: Bob only reaches Alice, who shows him her chain
+            const bob: Peer = await createPeer('bob', 'host');
+            link(alice, bob);
+            link(bob, alice);
+            await vi.waitFor(() => expect(bob.received).toHaveLength(1));
+            host.room.transmitMessage('move', 'e5');
+            await vi.waitFor(() => expect(alice.received).toHaveLength(2));
+            tick(alice, 0);
+            await vi.waitFor(() => expect(bob.received).toHaveLength(2));
+
+            // Then
+            expect(bob.received.map((message: AppMessage) => bob.room.isHistory(message))).toEqual([true, false]);
         });
 
         test('should go on once the host left, ordered by the next participant', async () => {

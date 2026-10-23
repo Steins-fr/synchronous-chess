@@ -70,7 +70,7 @@
         (leave)="leaveSeat()" />
 
     @if (status(); as current) {
-    <p class="table-line" role="status">{{ current.key | transloco: current.params }}</p>
+    <output class="table-line block">{{ current.key | transloco: current.params }}</output>
     }
 
     <div class="flex flex-wrap items-center justify-center gap-2">
