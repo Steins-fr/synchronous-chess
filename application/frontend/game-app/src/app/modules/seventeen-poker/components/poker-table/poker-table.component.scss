@@ -1,6 +1,6 @@
 // The outcome of a hand shows once the pot reached its winner
 .outcome-shown {
-    animation: outcome-shown var(--app-motion-slow) ease-out var(--app-motion-medium) backwards;
+    animation: outcome-shown var(--app-motion-slow) ease-out var(--app-motion-slow) backwards;
 }
 
 @keyframes outcome-shown {

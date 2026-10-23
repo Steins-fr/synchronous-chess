@@ -2,6 +2,7 @@ import {
     afterRenderEffect, Component, computed, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { DeckVerification, MentalDeck } from '@app/modules/mental-poker/classes/mental-deck';
 import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
@@ -236,6 +237,8 @@ export class PokerTableComponent implements OnDestroy {
     private readonly topSeatView: Signal<PokerSeatComponent> = viewChild.required('topSeatView');
     private readonly bottomSeatView: Signal<PokerSeatComponent> = viewChild.required('bottomSeatView');
 
+    private readonly document: Document = inject(DOCUMENT);
+
     /** The chips on the table last shown, with their session */
     private shown: { readonly session: SeventeenPokerSession; readonly chips: Readonly<TableChips> } | null = null;
 
@@ -393,7 +396,8 @@ export class PokerTableComponent implements OnDestroy {
 
     /** The chips moved fly between the places of the table, as it shows them now */
     private flightsOf(transfers: ReadonlyArray<Readonly<ChipTransfer>>): ReadonlyArray<Readonly<ChipFlight>> {
-        if (transfers.length === 0) {
+        // A hidden page does not run its animations: its flights would all fly at once when shown again
+        if (transfers.length === 0 || this.document.hidden) {
             return [];
         }
 

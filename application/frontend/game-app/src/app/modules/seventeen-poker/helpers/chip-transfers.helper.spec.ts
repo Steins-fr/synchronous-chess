@@ -47,10 +47,16 @@ describe('chipTransfers', () => {
             transfers: [{ from: POT, to: stack(ONE), amount: 17 }, { from: POT, to: stack(TWO), amount: 17 }],
         },
         {
-            name: 'the bet and the pot of a fold, the pot to the other player',
+            name: 'the bets and the pot of a fold to the other player, straight from the cloth',
+            previous: { stacks: [142, 141], bets: [3, 4], pot: 10 },
+            current: { stacks: [142, 158], bets: [0, 0], pot: 0 },
+            transfers: [{ from: bet(ONE), to: stack(TWO), amount: 3 }, { from: bet(TWO), to: stack(TWO), amount: 4 }, { from: POT, to: stack(TWO), amount: 10 }],
+        },
+        {
+            name: 'the bet of a fold before any other bet to its player, the pot with it',
             previous: { stacks: [144, 145], bets: [1, 0], pot: 10 },
             current: { stacks: [155, 145], bets: [0, 0], pot: 0 },
-            transfers: [{ from: bet(ONE), to: POT, amount: 1 }, { from: POT, to: stack(ONE), amount: 11 }],
+            transfers: [{ from: bet(ONE), to: stack(ONE), amount: 1 }, { from: POT, to: stack(ONE), amount: 10 }],
         },
         {
             name: 'the antes of a no contest to the bank',

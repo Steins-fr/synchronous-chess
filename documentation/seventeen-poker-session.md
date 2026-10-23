@@ -165,9 +165,10 @@ The animations (the deal, the turn over of the cards, the riffle, the chips, the
 `animate.enter` / `animate.leave` and CSS only, and stop under `prefers-reduced-motion`. Once the table
 shows a change of its chips, `chipTransfers` tells the chips it moved: a bet from a stack to the cloth,
 the antes and the bets of a round over to the pot, the pot to its winner, half to each player when it is
-split, to the bank on a no contest. The chips of each move fly between the places as the page shows
-them, measured once rendered, then the stack there shows them dropping on it. A stack makes its change
-in place: a chip leaving it fades out.
+split, to the bank on a no contest; a player taking the pot alone takes the bets of the cloth with it (a
+fold). The chips of each move fly between the places as the page shows them, measured once rendered,
+then the stack there shows them dropping on it, the gains and the outcome with them. A stack paying out
+shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights.
 
 ## Limits
 
@@ -176,7 +177,8 @@ in place: a chip leaving it fades out.
 - The sequencer can delay the messages, as in every game of a room, and is watched for it by the
   anti-cheat.
 - A reloaded page shows the chips moved by the hand in progress again, as the chain replays it: the
-  room does not tell a replayed message from a new one.
+  room does not tell a replayed message from a new one. Moves applied between two renders (a replay, a
+  burst of messages) fly as one, their net change.
 
 ## Testing
 

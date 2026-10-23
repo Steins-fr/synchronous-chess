@@ -6,6 +6,8 @@ interface StackedChip {
     /** Its value and its level in its pile: a chip stays while its pile keeps as many chips */
     readonly id: string;
     readonly value: ChipValue;
+    /** The classes of its face and of the stripes of its edge */
+    readonly colors: string;
     /** The pile of its value, the highest value first */
     readonly pile: number;
     /** Its height in its pile, from 0 */
@@ -50,11 +52,7 @@ export class ChipStackComponent {
 
         return chips.map((value: ChipValue, index: number): StackedChip => {
             const level: number = index - chips.indexOf(value);
-            return { id: `${ value }:${ level }`, value, pile: CHIP_VALUES.indexOf(value) + 1, level };
+            return { id: `${ value }:${ level }`, value, colors: CHIP_COLORS[value], pile: CHIP_VALUES.indexOf(value) + 1, level };
         });
     });
-
-    protected colors(value: ChipValue): string {
-        return CHIP_COLORS[value];
-    }
 }

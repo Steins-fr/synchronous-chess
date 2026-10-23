@@ -199,6 +199,15 @@ describe('PokerTableComponent', () => {
 
         // Then
         expect(button('Bet 1')).toBeDefined();
+
+        // When: the chips move while the page is hidden
+        Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+        await click('Bet 1');
+        await until(() => status() === 'bob to speak.');
+        delete (document as { hidden?: boolean }).hidden;
+
+        // Then: they do not fly
+        expect(flights()).toEqual([]);
     });
 
     test('should play a hand to the showdown', async () => {
@@ -323,8 +332,8 @@ describe('PokerTableComponent', () => {
         expect(text('#seat-bottom')).toEqual('alice142 chips');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
         expect(element().querySelectorAll('.table-line:not([role])')).toHaveLength(0);
-        // The bets joined the pot, the pot flying to Bob
-        expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5', '5', '1', '1']]);
+        // The pot flies to Bob, the bets with it
+        expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5']]);
     });
 
     test('should show the hand to a spectator face down, without any action', async () => {
