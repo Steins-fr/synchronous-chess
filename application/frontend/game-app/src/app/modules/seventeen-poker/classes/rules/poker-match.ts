@@ -13,10 +13,20 @@ export interface PokerMatchRules {
     readonly ante: number;
     /** The most a player bets in the second round, in antes */
     readonly secondRoundAntes: number;
+    /** The seconds a player has for each move: then its page checks, folds against a bet, or keeps the hand */
+    readonly turnTime: number;
+    /**
+     * The seconds a move gains, once, while a seated player is away: the player to act still away once its time is over
+     * loses the match
+     */
+    readonly awayTime: number;
 }
 
-/** The rules of the manga: 10 hands, 150 chips each, an ante of 5 chips, at most 6 antes in the second round */
-export const SEVENTEEN_POKER_RULES: PokerMatchRules = { hands: 10, stack: 150, ante: 5, secondRoundAntes: 6 };
+/**
+ * The rules of the manga: 10 hands, 150 chips each, an ante of 5 chips, at most 6 antes in the second round, and 45
+ * seconds for each move, 30 more once while a player is away
+ */
+export const SEVENTEEN_POKER_RULES: PokerMatchRules = { hands: 10, stack: 150, ante: 5, secondRoundAntes: 6, turnTime: 45, awayTime: 30 };
 
 /** The cards left once both hands are dealt, the cards the players draw from in the exchange */
 export const DRAW_PILE: number = SEVENTEEN_DECK.length - 2 * HAND_SIZE;
@@ -67,6 +77,8 @@ export interface PokerHand {
     readonly firstRoundBet: number;
     /** The cards each player discarded, null until it exchanged */
     readonly exchanges: SeatPair<number | null>;
+    /** The actions played in the hand: the move awaited is the next one */
+    readonly moves: number;
     readonly outcome: HandOutcome | null;
 }
 
@@ -89,10 +101,18 @@ export class PokerMatch {
     private readonly _outcomes = signal<ReadonlyArray<Readonly<HandOutcome>>>([]);
     /** The outcome of each hand played */
     public readonly outcomes = this._outcomes.asReadonly();
+    private readonly _forfeited = signal<PokerSeat | null>(null);
+    /** The player who lost the match on time, away from the table */
+    public readonly forfeited = this._forfeited.asReadonly();
 
     public readonly result: Signal<MatchResult | null> = computed((): MatchResult | null => {
         const hand: PokerHand | null = this._hand();
         const stacks: SeatPair<number> = this._stacks();
+        const forfeited: PokerSeat | null = this._forfeited();
+
+        if (forfeited !== null) {
+            return { winner: otherSeat(forfeited), stacks };
+        }
 
         // A hand in progress, or another one to play: a player who can not pay the ante plays none
         if ((hand !== null && hand.phase !== HandPhase.OVER) || (this._outcomes().length < this.rules.hands && Math.min(...stacks) >= this.rules.ante)) {
@@ -116,6 +136,17 @@ export class PokerMatch {
         }
 
         return hand.exchanges[hand.first] === null ? hand.first : otherSeat(hand.first);
+    });
+
+    /** The player the hand waits for, null between two hands and at the showdown */
+    public readonly toAct: Signal<PokerSeat | null> = computed((): PokerSeat | null => {
+        const hand: PokerHand | null = this._hand();
+
+        if (hand?.phase === HandPhase.EXCHANGE) {
+            return this.exchanging();
+        }
+
+        return hand?.phase === HandPhase.FIRST_ROUND || hand?.phase === HandPhase.SECOND_ROUND ? hand.round.toAct : null;
     });
 
     /** The cards left to draw from in the exchange */
@@ -164,6 +195,7 @@ export class PokerMatch {
             round: BettingRound.open(first, { min: 1, max: cap }),
             firstRoundBet: 0,
             exchanges: [null, null],
+            moves: 0,
             outcome: null,
         });
 
@@ -186,7 +218,7 @@ export class PokerMatch {
 
         const added: number = round.bets[seat] - hand.round.bets[seat];
         this._stacks.update((stacks: SeatPair<number>) => withSeat(stacks, seat, stacks[seat] - added));
-        this.endRound({ ...hand, pot: hand.pot + added, round });
+        this.endRound({ ...hand, pot: hand.pot + added, round, moves: hand.moves + 1 });
 
         return true;
     }
@@ -205,8 +237,27 @@ export class PokerMatch {
         this._hand.set({
             ...hand,
             exchanges,
+            moves: hand.moves + 1,
             ...exchanged ? { phase: HandPhase.SECOND_ROUND, round: BettingRound.open(hand.first, this.secondRoundLimits(hand)) } : {},
         });
+
+        return true;
+    }
+
+    /**
+     * The player to act ran out of time, away from the table: it loses the hand, as on a fold, and the match, whatever the
+     * chips
+     */
+    public forfeit(seat: PokerSeat): boolean {
+        const hand: PokerHand | null = this._hand();
+
+        if (hand === null || this.toAct() !== seat) {
+            return false;
+        }
+
+        const winner: PokerSeat = otherSeat(seat);
+        this._forfeited.set(seat);
+        this.settle(hand, { end: HandEnd.FOLD, winner, pot: hand.pot, gains: withSeat([0, 0], winner, hand.pot), hands: null });
 
         return true;
     }

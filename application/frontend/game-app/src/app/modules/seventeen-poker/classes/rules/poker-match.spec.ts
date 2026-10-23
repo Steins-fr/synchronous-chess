@@ -384,4 +384,61 @@ describe('PokerMatch', () => {
         // Then
         expect(match.result()).toEqual({ winner: ONE, stacks: [155, 145] });
     });
+
+    test('should count the moves of a hand, and tell the player it waits for', () => {
+        // Given
+        const match: PokerMatch = new PokerMatch();
+        expect(match.toAct()).toBeNull();
+
+        // When
+        match.startHand();
+
+        // Then
+        expect(match.toAct()).toEqual(ONE);
+        expect(match.hand()?.moves).toEqual(0);
+
+        // When
+        match.bet(ONE, BetAction.BET, 10);
+        match.bet(TWO, BetAction.CALL);
+
+        // Then: the exchange, the first player first
+        expect(match.toAct()).toEqual(ONE);
+        expect(match.hand()?.moves).toEqual(2);
+
+        // When
+        match.exchange(ONE, 0);
+        match.exchange(TWO, 0);
+        match.bet(ONE, BetAction.CHECK);
+
+        // Then
+        expect(match.toAct()).toEqual(TWO);
+        expect(match.hand()?.moves).toEqual(5);
+
+        // When
+        match.bet(TWO, BetAction.CHECK);
+
+        // Then: the showdown
+        expect(match.toAct()).toBeNull();
+    });
+
+    test('should end the match of the player to act on its timeout, the other one taking the pot and the match', () => {
+        // Given
+        const match: PokerMatch = new PokerMatch();
+        expect(match.forfeit(ONE)).toBe(false);
+        match.startHand();
+        match.bet(ONE, BetAction.BET, 10);
+        match.bet(TWO, BetAction.RAISE, 20);
+
+        // When
+        const refused: boolean = match.forfeit(TWO);
+        const forfeited: boolean = match.forfeit(ONE);
+
+        // Then: the player with fewer chips wins
+        expect(refused).toBe(false);
+        expect(forfeited).toBe(true);
+        expect(match.forfeited()).toEqual(ONE);
+        expect(match.hand()?.outcome).toEqual({ end: HandEnd.FOLD, winner: TWO, pot: 40, gains: [0, 40], hands: null });
+        expect(match.result()).toEqual({ winner: TWO, stacks: [135, 165] });
+        expect(match.startHand()).toBe(false);
+    });
 });

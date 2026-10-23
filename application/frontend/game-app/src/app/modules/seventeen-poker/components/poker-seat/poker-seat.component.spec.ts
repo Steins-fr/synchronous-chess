@@ -57,4 +57,45 @@ describe('PokerSeatComponent', () => {
         expect(fixture.nativeElement.querySelector('.seat').classList).toContain('acting');
         expect(leave).toHaveBeenCalledTimes(1);
     });
+
+    test('should show the clock of the move of its player, running out from 5 seconds', async () => {
+        // Given
+        const clock = (): HTMLElement | null => fixture.nativeElement.querySelector('.turn-clock');
+        const seconds = (): HTMLElement => fixture.nativeElement.querySelector('.tabular-nums');
+        fixture.componentRef.setInput('name', 'alice');
+        fixture.componentRef.setInput('acting', true);
+        fixture.componentRef.setInput('turnTime', 10);
+
+        // When
+        fixture.componentRef.setInput('timeLeft', 6);
+        await fixture.whenStable();
+
+        // Then
+        expect(text()).toEqual('alice150 chips6 s');
+        expect(clock()?.style.width).toEqual('60%');
+        expect(seconds().classList).not.toContain('text-app-clock-low');
+
+        // When
+        fixture.componentRef.setInput('timeLeft', 5);
+        await fixture.whenStable();
+
+        // Then
+        expect(clock()?.style.width).toEqual('50%');
+        expect(seconds().classList).toContain('text-app-clock-low');
+
+        // When: a player away gave the move more time
+        fixture.componentRef.setInput('timeLeft', 15);
+        await fixture.whenStable();
+
+        // Then
+        expect(clock()?.style.width).toEqual('100%');
+
+        // When: the turn is over
+        fixture.componentRef.setInput('timeLeft', null);
+        await fixture.whenStable();
+
+        // Then
+        expect(text()).toEqual('alice150 chips');
+        expect(clock()).toBeNull();
+    });
 });

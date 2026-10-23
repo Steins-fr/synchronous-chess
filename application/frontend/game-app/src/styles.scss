@@ -71,6 +71,8 @@ html {
     // The cloth of the poker table, under a white text, and the gains of a hand
     --app-felt: light-dark(#2f6b4a, #1f4a34);
     --app-chip: light-dark(#f2c14e, #d9a93a);
+    // The clock of a move about to run out
+    --app-clock-low: var(--mat-sys-error);
     // The chips, by value: their face and the stripes of their edge, the black one lighter on the dark page
     --app-chip-1: #f4f1ea;
     --app-chip-1-edge: #3d5a80;

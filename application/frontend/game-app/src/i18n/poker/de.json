@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Jeder Spieler zahlt eine Ante von 5 Chips und bekommt 5 Karten.",
+      "away": "Solange ein Spieler abwesend ist, bekommt der Zug einmalig 30 Sekunden mehr: Ist der Spieler am Zug nach Ablauf der Zeit noch abwesend, verliert er die Partie.",
+      "clock": "Jeder Zug dauert höchstens 45 Sekunden: Ist die Zeit um, checkt der Spieler, steigt gegen einen Einsatz aus oder behält beim Tausch seine Hand.",
       "exchange": "Tausch: Jeder Spieler wirft der Reihe nach Karten ab und zieht ebenso viele; der zweite zieht aus den übrigen Karten.",
       "firstRound": "Erste Setzrunde: checken, setzen, erhöhen, mitgehen oder aussteigen. Checken beide Spieler, gehen die Antes an die Bank.",
       "secondRound": "Zweite Setzrunde: Ein Einsatz beträgt mindestens den der ersten Runde und höchstens 30 Chips.",
@@ -76,10 +78,12 @@
     "pot": "Pot {pot}",
     "result": {
       "draw": "Remis: Beide Spieler enden mit {chips, plural, one {# Chip} other {# Chips}}.",
+      "forfeit": "Die Zeit lief ab, während {loser} abwesend war: {winner} gewinnt die Partie.",
       "win": "{winner} gewinnt die Partie mit {chips, plural, one {# Chip} other {# Chips}}."
     },
     "seat": {
       "chips": "{count, plural, one {# Chip} other {# Chips}}",
+      "clock": "{seconds} s",
       "free": "Freier Platz",
       "gain": "+{amount}",
       "leave": "Platz verlassen",
@@ -92,7 +96,9 @@
       "keys": "Warte auf die Schlüssel von {name}…",
       "myDeal": "Du teilst aus.",
       "myExchange": "Wähle die Karten zum Abwerfen und tausche sie.",
+      "myExchangeEnding": "Tausche deine Karten: Die Zeit läuft ab.",
       "myTurn": "Du bist dran.",
+      "myTurnEnding": "Du bist dran: Die Zeit läuft ab.",
       "reading": "Die Karten werden gelesen…",
       "seats": "Warte, bis sich zwei Spieler setzen.",
       "showdown": "Die Hände werden gezeigt…",

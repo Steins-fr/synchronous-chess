@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Chaque joueur paie une ante de 5 jetons et reçoit 5 cartes.",
+      "away": "Pendant l'absence d'un joueur, le coup gagne 30 secondes, une seule fois : le joueur qui doit jouer, toujours absent le temps écoulé, perd la partie.",
+      "clock": "Chaque coup dure 45 secondes au plus : le temps écoulé, le joueur parle, se couche face à une mise, ou garde sa main à l'échange.",
       "exchange": "Échange : chaque joueur à son tour défausse des cartes et en tire autant ; le second tire parmi les cartes restantes.",
       "firstRound": "Premier tour : chaque joueur parle, mise, relance, suit ou se couche. Si les deux joueurs parlent, les antes vont à la banque.",
       "secondRound": "Second tour : une mise vaut au moins celle du premier tour, et 30 jetons au plus.",
@@ -76,10 +78,12 @@
     "pot": "Pot {pot}",
     "result": {
       "draw": "Égalité : les deux joueurs finissent avec {chips, plural, one {# jeton} other {# jetons}}.",
+      "forfeit": "Temps écoulé en l'absence de {loser} : {winner} gagne la partie.",
       "win": "{winner} gagne la partie avec {chips, plural, one {# jeton} other {# jetons}}."
     },
     "seat": {
       "chips": "{count, plural, one {# jeton} other {# jetons}}",
+      "clock": "{seconds} s",
       "free": "Place libre",
       "gain": "+{amount}",
       "leave": "Quitter la place",
@@ -92,7 +96,9 @@
       "keys": "En attente des clés de {name}…",
       "myDeal": "À vous de distribuer.",
       "myExchange": "Sélectionnez les cartes à défausser, puis échangez-les.",
+      "myExchangeEnding": "Échangez vos cartes : le temps presse.",
       "myTurn": "À vous de jouer.",
+      "myTurnEnding": "À vous de jouer : le temps presse.",
       "reading": "Lecture des cartes…",
       "seats": "En attente de deux joueurs assis.",
       "showdown": "Les mains sont montrées…",

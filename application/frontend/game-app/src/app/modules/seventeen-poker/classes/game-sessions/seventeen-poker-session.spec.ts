@@ -93,6 +93,7 @@ describe('SeventeenPokerSession', () => {
             [SPGameSessionType.DEAL]: BlockChainName.POKER,
             [SPGameSessionType.BET]: BlockChainName.POKER,
             [SPGameSessionType.EXCHANGE]: BlockChainName.POKER,
+            [SPGameSessionType.TIMEOUT]: BlockChainName.POKER,
             [MentalDeckMessageType.SHUFFLE]: BlockChainName.POKER,
             [MentalDeckMessageType.LOCK]: BlockChainName.POKER,
             [MentalDeckMessageType.KEYS]: BlockChainName.POKER,
@@ -564,6 +565,47 @@ describe('SeventeenPokerSession', () => {
 
             // Then
             expect(carol.match.hand()?.outcome).toBeNull();
+        });
+    });
+
+    describe('timeout', () => {
+        test('should end the match of the player to act on the timeout of the other one', async () => {
+            // Given
+            const [alice, bob, carol] = table();
+            await deal(alice, bob, carol);
+
+            // When
+            bob.claimTimeout();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match.result() !== null);
+
+            // Then
+            expect(carol.match.forfeited()).toEqual(ONE);
+            expect(carol.match.result()).toEqual({ winner: TWO, stacks: [145, 155] });
+            expect(bob.sending()).toBe(false);
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
+        });
+
+        test('should ignore a timeout before the first hand, once the move is played, of the player to act or of a spectator', async () => {
+            // Given
+            const [alice, bob, carol] = table();
+            alice.claimTimeout();
+            await deal(alice, bob, carol);
+
+            // When: the timeout of Bob comes after the check of Alice
+            hub.hold('bob');
+            bob.claimTimeout();
+            alice.bet(BetAction.CHECK);
+            await settled([bob], (session: SeventeenPokerSession) => session.match.hand()?.moves === 1);
+            hub.release();
+            bob.claimTimeout();
+            carol.claimTimeout();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => !session.sending());
+
+            // Then
+            expect(messagesOf(SPGameSessionType.TIMEOUT)).toHaveLength(4);
+            expect(carol.match.result()).toBeNull();
+            expect(carol.match.toAct()).toEqual(TWO);
+            expect(hub.reports).toEqual([]);
         });
     });
 

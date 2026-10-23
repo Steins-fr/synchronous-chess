@@ -1,5 +1,5 @@
 import {
-    afterRenderEffect, Component, computed, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
+    afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,7 +22,7 @@ import { BetAction, BetLimits } from '../../classes/rules/betting-round';
 import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
 import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand } from '../../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../../classes/rules/poker-seat';
-import { PokerSeatComponent } from '../poker-seat/poker-seat.component';
+import { CLOCK_LOW, PokerSeatComponent } from '../poker-seat/poker-seat.component';
 
 /** The options of the session of the table: the cipher and the rules of the app, lighter ones for the specs */
 export const POKER_SESSION_OPTIONS = new InjectionToken<PokerSessionOptions>('POKER_SESSION_OPTIONS', { factory: (): PokerSessionOptions => ({}) });
@@ -30,6 +30,11 @@ export const POKER_SESSION_OPTIONS = new InjectionToken<PokerSessionOptions>('PO
 /** The chips a click on more or less adds to the amount of a bet */
 const BET_STEP: number = 5;
 
+/** The clock of a move ticks every second */
+const CLOCK_TICK: number = 1000;
+const MS_PER_SECOND: number = 1000;
+/** A tick may come a bit before the end of a move, which is over once less than half a tick is left */
+const LAST_TICK: number = CLOCK_TICK / MS_PER_SECOND / 2;
 /** The bank, off the table: the chips going to it fly to the right side of the cloth, this far inside it */
 const BANK_INSET: number = 16;
 
@@ -104,7 +109,7 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly canDeal: Signal<boolean> = computed((): boolean => {
         const session: SeventeenPokerSession = this.session();
         const hand: PokerHand | null = this.hand();
-        return session.mySeat() === session.match.dealer() && !session.seats().includes(null) && session.awayPlayers().length === 0 && !session.sending()
+        return session.mySeat() === session.match.dealer() && !session.seats().includes(null) && !this.waiting() && !session.sending()
             && !session.broken() && session.match.result() === null && (hand === null || hand.phase === HandPhase.OVER);
     });
 
@@ -116,9 +121,52 @@ export class PokerTableComponent implements OnDestroy {
             return null;
         }
 
-        return hand.phase === HandPhase.EXCHANGE ? this.session().match.exchanging() : hand.round.toAct;
+        return this.session().match.toAct();
     });
 
+    /** A seated player is away: the table waits for it, the clock of the move running */
+    private readonly waiting: Signal<boolean> = computed((): boolean => this.session().awayPlayers().length > 0);
+    private readonly _timeLeft = signal<number | null>(null);
+    /** The seconds left to the player to act for its move */
+    protected readonly timeLeft: Signal<number | null> = this._timeLeft.asReadonly();
+    // Each move has its time, from when the page sees it, a new one at each action: once over, the page of its player
+    // plays for it, or the page of the other player ends the match while it is away
+    private readonly turnClock = effect((onCleanup: (cleanup: () => void) => void): void => {
+        // Each action changes the hand: the clock starts again, for a seat acting twice in a row too
+        if (this.hand() === null || this.toAct() === null) {
+            this._timeLeft.set(null);
+            return;
+        }
+
+        const { turnTime, awayTime } = this.session().match.rules;
+        // The time of the page, which the clock of the system does not set back or forward
+        let deadline: number = performance.now() + turnTime * MS_PER_SECOND;
+        let extended: boolean = false;
+        this._timeLeft.set(turnTime);
+        const clock: ReturnType<typeof setInterval> = setInterval(() => {
+            // A seated player away gives the move more time, once: a player leaving and coming back gets no more
+            if (!extended && this.waiting()) {
+                extended = true;
+                deadline += awayTime * MS_PER_SECOND;
+            }
+
+            const left: number = (deadline - performance.now()) / MS_PER_SECOND;
+
+            if (left < LAST_TICK) {
+                this._timeLeft.set(0);
+                clearInterval(clock);
+                this.timeOut();
+            } else {
+                this._timeLeft.set(Math.ceil(left));
+            }
+        }, CLOCK_TICK);
+        onCleanup(() => clearInterval(clock));
+    });
+    /** The time of the move runs out: the status of the local player tells it, once, for a screen reader too */
+    private readonly hurry: Signal<boolean> = computed((): boolean => {
+        const left: number | null = this.timeLeft();
+        return left !== null && left <= CLOCK_LOW;
+    });
     /** The chips of the hand in progress, none once shared out */
     protected readonly pot: Signal<number> = computed((): number => {
         const hand: PokerHand | null = this.hand();
@@ -178,7 +226,8 @@ export class PokerTableComponent implements OnDestroy {
             return { key: this.key(marker('table.status.seats', undefined, 'poker')) };
         }
 
-        if (session.awayPlayers().length > 0 && session.match.result() === null) {
+        // The local player to act plays while the other one is away
+        if (this.waiting() && session.match.result() === null && !session.myTurn()) {
             return { key: this.key(marker('table.status.away', undefined, 'poker')), params: { name: session.awayPlayers().join(', ') } };
         }
 
@@ -208,6 +257,13 @@ export class PokerTableComponent implements OnDestroy {
 
         if (result === null) {
             return null;
+        }
+
+        const forfeited: PokerSeat | null = this.session().match.forfeited();
+
+        if (forfeited !== null) {
+            const seats: SeatPair<string | null> = this.session().seats();
+            return { key: this.key(marker('table.result.forfeit', undefined, 'poker')), params: { loser: seats[forfeited], winner: seats[otherSeat(forfeited)] } };
         }
 
         return result.winner === null
@@ -352,6 +408,24 @@ export class PokerTableComponent implements OnDestroy {
         this.session().exchange(positions);
     }
 
+    /**
+     * The time of the move is over. The local player checks, or folds against a bet, and keeps its hand in the exchange:
+     * an action sent meanwhile is the move. The other player, away, loses the match; back, its page plays for it
+     */
+    private timeOut(): void {
+        const session: SeventeenPokerSession = this.session();
+        const toAct: PokerSeat = this.toAct() as PokerSeat;
+
+        if (this.exchanging()) {
+            this.selected.set([]);
+            this.exchange();
+        } else if (this.betting()) {
+            this.act(this.actions().includes(BetAction.CHECK) ? BetAction.CHECK : BetAction.FOLD);
+        } else if (session.mySeat() === otherSeat(toAct) && session.awayPlayers().includes(session.seats()[toAct] as string)) {
+            session.claimTimeout();
+        }
+    }
+
     /** The dealer the next hand waits for */
     private dealStatus(): TranslatableText {
         const dealer: PokerSeat = this.session().match.dealer();
@@ -381,6 +455,12 @@ export class PokerTableComponent implements OnDestroy {
 
         if (toAct === null) {
             return { key: this.key(marker('table.status.showdown', undefined, 'poker')) };
+        }
+
+        if (toAct === this.session().mySeat() && this.hurry()) {
+            return hand.phase === HandPhase.EXCHANGE
+                ? { key: this.key(marker('table.status.myExchangeEnding', undefined, 'poker')) }
+                : { key: this.key(marker('table.status.myTurnEnding', undefined, 'poker')) };
         }
 
         if (toAct === this.session().mySeat()) {

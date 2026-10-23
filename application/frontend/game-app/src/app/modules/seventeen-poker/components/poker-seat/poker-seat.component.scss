@@ -20,6 +20,12 @@
     }
 }
 
+// The clock of the move empties smoothly from a second to the next one: following the seconds left, it fills again for a
+// new move of the same seat, and shows the time left at once on a page shown again
+.turn-clock {
+    transition: width 1s linear;
+}
+
 // The chips won pop up on the seat, once the pot reached it
 .gain-shown {
     animation: gain-shown var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--app-motion-slow) backwards;
@@ -32,9 +38,14 @@
     }
 }
 
-// No motion asked: the ring stays still around the seat, rather than an endless animation lasting no time
+// No motion asked: the ring stays still around the seat, rather than an endless animation lasting no time, and the
+// clock empties second by second
 @media (prefers-reduced-motion: reduce) {
     .acting::after {
         animation: none;
+    }
+
+    .turn-clock {
+        transition: none;
     }
 }

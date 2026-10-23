@@ -16,7 +16,7 @@ import { merge, Subscription } from 'rxjs';
 import { BetAction } from '../rules/betting-round';
 import { HAND_SIZE } from '../rules/hand-evaluator';
 import { DRAW_PILE, HandPhase, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
-import { PokerSeat, SeatPair, withSeat } from '../rules/poker-seat';
+import { otherSeat, PokerSeat, SeatPair, withSeat } from '../rules/poker-seat';
 import { SEVENTEEN_DECK, seventeenCard } from '../rules/seventeen-deck';
 
 export enum SPGameSessionType {
@@ -28,6 +28,8 @@ export enum SPGameSessionType {
     BET = 'SP_bet',
     /** The cards a player discards, to draw as many */
     EXCHANGE = 'SP_exchange',
+    /** A player tells the time of the move of the other one, away, is over: the other one loses the match */
+    TIMEOUT = 'SP_timeout',
 }
 
 export interface PokerSeatMessage {
@@ -55,11 +57,18 @@ export interface PokerExchangeMessage {
     positions: number[];
 }
 
+export interface PokerTimeoutMessage {
+    hand: number;
+    /** The move over: the actions played in the hand before it */
+    move: number;
+}
+
 export interface PokerGamePayloads {
     [SPGameSessionType.SEAT]: PokerSeatMessage;
     [SPGameSessionType.DEAL]: PokerDealMessage;
     [SPGameSessionType.BET]: PokerBetMessage;
     [SPGameSessionType.EXCHANGE]: PokerExchangeMessage;
+    [SPGameSessionType.TIMEOUT]: PokerTimeoutMessage;
 }
 
 export type PokerPayloads = PokerGamePayloads & MentalDeckPayloads;
@@ -80,6 +89,7 @@ export const pokerBlockChains: BlockChainRouting<PokerPayloads> = mergeBlockChai
     [SPGameSessionType.DEAL]: BlockChainName.POKER,
     [SPGameSessionType.BET]: BlockChainName.POKER,
     [SPGameSessionType.EXCHANGE]: BlockChainName.POKER,
+    [SPGameSessionType.TIMEOUT]: BlockChainName.POKER,
 }, mentalDeckBlockChains(BlockChainName.POKER));
 
 export interface PokerSessionOptions {
@@ -199,6 +209,7 @@ export class SeventeenPokerSession {
             room.messenger(SPGameSessionType.DEAL),
             room.messenger(SPGameSessionType.BET),
             room.messenger(SPGameSessionType.EXCHANGE),
+            room.messenger(SPGameSessionType.TIMEOUT),
         ).subscribe((message: PokerGameMessage) => {
             this.queue = this.queue.then(() => logHandlingFailure(message, this.handle(message)));
         });
@@ -232,6 +243,13 @@ export class SeventeenPokerSession {
     public exchange(positions: ReadonlyArray<number>): void {
         this._sending.set(true);
         this.room.transmitMessage(SPGameSessionType.EXCHANGE, { hand: this.match.hand()?.index ?? 0, positions: [...positions] });
+    }
+
+    /** The time of the move of the other player is over, while it is away: it loses the match */
+    public claimTimeout(): void {
+        const hand: PokerHand | null = this.match.hand();
+        this._sending.set(true);
+        this.room.transmitMessage(SPGameSessionType.TIMEOUT, { hand: hand?.index ?? 0, move: hand?.moves ?? 0 });
     }
 
     private seatOf(name: string): PokerSeat | null {
@@ -278,6 +296,9 @@ export class SeventeenPokerSession {
                 break;
             case SPGameSessionType.EXCHANGE:
                 await this.onExchange(message);
+                break;
+            case SPGameSessionType.TIMEOUT:
+                this.onTimeout(message);
                 break;
         }
     }
@@ -373,6 +394,22 @@ export class SeventeenPokerSession {
         if (draws.length > 0) {
             await this.dealt(deck.deal(draws, this.seats()[seat] as string));
         }
+    }
+
+    /**
+     * A player ends the move of the other one, away once its time was over, unless the move was played before: the
+     * chain orders the move and the timeout, the first one counts. No page can tell when the other one was away
+     */
+    private onTimeout(message: AppMessage<SPGameSessionType.TIMEOUT, PokerTimeoutMessage>): void {
+        const seat: PokerSeat | null = this.seatOf(message.from);
+        const { hand, move } = message.payload;
+        const current: PokerHand | null = this.match.hand();
+
+        if (seat === null || hand !== current?.index || move !== current.moves || !this.match.forfeit(otherSeat(seat))) {
+            return;
+        }
+
+        this.verifyOnceOver();
     }
 
     /** Waits for the cards dealt: a broken deck stops the match */

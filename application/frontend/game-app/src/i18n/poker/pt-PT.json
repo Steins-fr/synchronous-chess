@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Cada jogador paga um ante de 5 fichas e recebe 5 cartas.",
+      "away": "Enquanto um jogador está ausente, a jogada ganha 30 segundos, uma única vez: o jogador que deve jogar, ainda ausente no fim do tempo, perde a partida.",
+      "clock": "Cada jogada dura no máximo 45 segundos: esgotado o tempo, o jogador passa, desiste perante uma aposta ou mantém a mão na troca.",
       "exchange": "Troca: cada jogador, na sua vez, descarta cartas e tira outras tantas; o segundo tira das cartas que restam.",
       "firstRound": "Primeira ronda: passar, apostar, aumentar, pagar ou desistir. Se os dois jogadores passam, os antes vão para a banca.",
       "secondRound": "Segunda ronda: uma aposta é pelo menos a da primeira ronda, e no máximo 30 fichas.",
@@ -76,10 +78,12 @@
     "pot": "Pote {pot}",
     "result": {
       "draw": "Empate: os dois jogadores terminam com {chips, plural, one {# ficha} other {# fichas}}.",
+      "forfeit": "O tempo esgotou-se com {loser} ausente: {winner} ganha a partida.",
       "win": "{winner} ganha a partida com {chips, plural, one {# ficha} other {# fichas}}."
     },
     "seat": {
       "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "clock": "{seconds} s",
       "free": "Lugar livre",
       "gain": "+{amount}",
       "leave": "Deixar o lugar",
@@ -92,7 +96,9 @@
       "keys": "A aguardar as chaves de {name}…",
       "myDeal": "É a sua vez de distribuir.",
       "myExchange": "Selecione as cartas a descartar e troque-as.",
+      "myExchangeEnding": "Troque as suas cartas: o tempo está a acabar.",
       "myTurn": "É a sua vez.",
+      "myTurnEnding": "É a sua vez: o tempo está a acabar.",
       "reading": "A ler as cartas…",
       "seats": "A aguardar que dois jogadores se sentem.",
       "showdown": "As mãos são mostradas…",

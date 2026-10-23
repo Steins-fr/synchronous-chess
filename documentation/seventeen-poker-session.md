@@ -17,6 +17,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 - [Seats](#seats)
 - [A hand](#a-hand)
 - [End of the match](#end-of-the-match)
+- [The clock of a move](#the-clock-of-a-move)
 - [Reloading the page](#reloading-the-page)
 - [Messages](#messages)
 - [Interface](#interface)
@@ -30,10 +31,10 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `SEVENTEEN_DECK` | `classes/rules/seventeen-deck.ts` | The card of each of the 17 positions a mental deck deals |
 | `evaluateHand`, `compareHands` | `classes/rules/hand-evaluator.ts` | The value of a hand, the joker standing for the card giving the best one, and their comparison |
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
-| `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands |
+| `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The match in a room: seats, decks, cards, cheat reports |
-| `PokerTableComponent` | `components/poker-table` | Shows the session, and turns the clicks into seat requests and actions |
-| `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring while its player acts, what it won in the hand over |
+| `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move |
+| `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock of the move while its player acts, what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
 
 The cards and the chips themselves (`PlayingCardComponent`, `CardHandComponent`, `CardDeckComponent`,
@@ -52,6 +53,10 @@ The cards and the chips themselves (`PlayingCardComponent`, `CardHandComponent`,
   the other one.
 - The bets of a hand are capped by the stack of the poorer player, once the antes are paid: a player
   paying the ante with its last chips plays the hand to the showdown, without a bet.
+- Each move (an action of a betting round, an exchange) lasts 45 seconds at most (`turnTime`): once over, the player
+  checks, folds against a bet, or keeps its hand in the exchange. While a seated player is away, the move gets 30 more
+  seconds, once (`awayTime`): the player to act still away once the time is up loses the hand, as on a fold, and the
+  match, whatever the chips.
 - The player speaking first alternates, the other one deals the hand. The match ends after 10 hands, or once a player can not pay the
   ante; the player with the most chips wins.
 
@@ -125,6 +130,29 @@ keys, and each participant checks every shuffle, lock and key (see
 [Checking the deck](mental-poker.md#checking-the-deck)). The table tells the winner, or a draw, then
 whether every deck was fair.
 
+## The clock of a move
+
+The table starts the clock of a move when its page sees it: once the hand waits for the player to act, its cards dealt,
+and again at each action, a seat acting twice in a row included (a call, then the first exchange). The first tick seeing
+a seated player away adds 30 seconds to the move, once: a player leaving and coming back gets no more. The player to act
+plays meanwhile, even while the other one is away: its status tells its turn rather than the absence.
+The pages of the players and the spectators run their own clock, none in the chain, which holds no time: they show
+the same seconds within the delay of the messages. The clock reads the time of the page (`performance.now()`), not the
+one of the system, which a synchronization sets back or forward.
+
+When the clock of the local player runs out, its page plays the move for it (`timeOut()` of the table), through the
+buttons the table offers: `Check`, else `Fold`, and `Keep my hand` in the exchange, the cards selected dropped. An
+action sent meanwhile is the move: the table offers nothing while it waits for the chain. The clock of the other player
+stops at 0: still connected, its page plays the move; away, the page of the local player sends `SP_timeout` (`claimTimeout()`
+of the session), and the player away loses the match (`forfeit()` of the match, `forfeited` telling who). The timeout
+names its move, the index of the hand and the actions played in it (`moves`): the chain orders it with the move, and the
+first one counts, a move played before it making it void. A tick may come a bit before the end of the move: the move is
+over once less than half a tick is left.
+
+The bar of the clock follows the seconds left, from a second to the next one (a CSS transition of its width): it fills
+again for a new move of the same seat, and shows the time left at once on a page shown again, rather than an animation
+over the whole move, started late on a hidden page and never restarted on the same element.
+
 ## Reloading the page
 
 The chain replays every message to a reloaded page: the session plays the match again, creates the
@@ -141,12 +169,14 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 | `SP_deal` | `{ hand }`: the index of the hand | the dealer of the hand | between two hands |
 | `SP_bet` | `{ hand, action, amount? }`: the amount is the total of the player in the round | a player | its turn of a betting round |
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
+| `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over | a player | the time of the move of the other player over, while it is away |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |
 
 ## Interface
 
 - The seats, at the top and the bottom of the table: the player, its chips, as piles and as a count, and
-  a ring around the one to act.
+  a ring around the one to act, with the seconds left to its move and a bar emptying over them (in the color of an
+  error from 5 seconds left, second by second under `prefers-reduced-motion`).
 - The hands, in fans: the cards of the local player face up, the others face down until the showdown.
   During the exchange, the cards of the player are buttons selecting the ones to discard. At the
   showdown, each hand tells its kind, the winning one outlined, the other one dimmed.
@@ -156,7 +186,8 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 - Once a hand is over, its outcome on the cloth and the chips won on the seat of the winner (`+32`),
   until the next hand is dealt.
 - A status line (`<output>`, of the role `status`): what the table waits for, a player shuffling or giving its keys, a
-  player away from the room.
+  player away from the room, and once, from 5 seconds left, that the time of the move of the local player runs out,
+  without a count (a screen reader announces it before the page plays for the player).
 - The actions of the player: `Check`, `Call`, `Bet` or `Raise` with the amount set by steps of 5 chips,
   `Min` and `Max`, and `Fold` against a bet only (with nothing to call, a player checks for free).
 - The history of the hands, folded below the table, then the result of the match.
@@ -176,7 +207,16 @@ grows does not fly.
 
 ## Limits
 
-- A player leaving for good blocks the match: the deck waits for its keys, and there is no timeout.
+- A player leaving for good while the deck waits for its keys (a deal, the cards drawn in the exchange) blocks the match:
+  no move is awaited, so no clock runs. On its move, the other player wins once its time is over.
+- The clock runs on the page of each player, and no page can tell when the other one was away: a page changed not to
+  play the move once its time is over keeps the other player waiting while connected, and a page changed to send
+  `SP_timeout` early ends the match of the other player. Once the match is over, the decks are checked once the player
+  away is back, its keys disclosed.
+- A page hidden for long plays the move late: the browser runs its timers once a minute after 5 minutes hidden
+  (Chrome), and none on a frozen page (a phone putting it in the background), until it is shown again. As its deck
+  waits for its keys meanwhile, the other player waits for it either way.
+- A reloaded page starts the clock of the move in progress again, at 45 seconds.
 - The timing of the messages may tell something: the chain shows when each player acted.
 - The sequencer can delay the messages, as in every game of a room, and is watched for it by the
   anti-cheat.
@@ -188,6 +228,8 @@ grows does not fly.
 - The session: `seventeen-poker-session.spec.ts`, with a `RoomHub` and a small prime
   (`@testing/sra-test-group`): seats, deals, bets, exchanges, showdowns, the end of the match, a
   reloaded page and the cheats.
-- The table: `poker-table.component.spec.ts`, the session options given through `POKER_SESSION_OPTIONS`.
-- End to end: `e2e/seventeen-poker.e2e.ts`, a hand to the showdown, a fold and a player reloading the
-  page.
+- The table: `poker-table.component.spec.ts`, the session options given through `POKER_SESSION_OPTIONS`, the clock of
+  the moves on fake timers (`setInterval` and `performance` only: the decks run on real ones).
+- End to end: `e2e/seventeen-poker.e2e.ts`, a hand to the showdown, a fold, a player reloading the
+  page, the moves played once their time is over (a check, then a fold against a bet, `SLOW`), and the match of a player
+  leaving the room ended once the time of its move is over (`SLOW`).

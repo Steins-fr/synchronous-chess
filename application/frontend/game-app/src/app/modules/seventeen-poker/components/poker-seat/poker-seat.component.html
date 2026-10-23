@@ -11,6 +11,14 @@
         {{ t('gain', { amount: gain() }) }}
     </span>
     }
+    @let left = timeLeft();
+    @if (left !== null) {
+    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="left <= clockLow">{{ t('clock', { seconds: left }) }}</span>
+    <!-- The clock of the move, emptying over its time -->
+    <span class="absolute inset-x-3 bottom-1 h-1 rounded-full bg-app-border" aria-hidden="true">
+        <span class="turn-clock block h-full rounded-full bg-app-accent-text" [style.width.%]="clockFill()"></span>
+    </span>
+    }
     @if (canTake()) {
     <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('play') }}</button>
     }
