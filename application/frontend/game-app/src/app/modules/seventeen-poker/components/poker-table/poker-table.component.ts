@@ -250,12 +250,13 @@ export class PokerTableComponent implements OnDestroy {
         const session: SeventeenPokerSession = this.session();
         const hand: PokerHand | null = this.hand();
 
-        if (session.broken()) {
-            return { key: this.key(marker('table.status.broken', undefined, 'poker')) };
-        }
-
+        // A free seat, once a broken deck stopped the match too: the table waits for a player
         if (session.seats().includes(null)) {
             return { key: this.key(marker('table.status.seats', undefined, 'poker')) };
+        }
+
+        if (session.broken()) {
+            return { key: this.key(marker('table.status.broken', undefined, 'poker')) };
         }
 
         // The local player to act plays while the other one is away
@@ -359,7 +360,7 @@ export class PokerTableComponent implements OnDestroy {
     protected canRelease(seat: PokerSeat): boolean {
         const session: SeventeenPokerSession = this.session();
         const name: string | null = session.seats()[seat];
-        return session.seatsOpen() && session.mySeat() === otherSeat(seat) && name !== null && session.awayPlayers().includes(name);
+        return session.seatsOpen() && session.mySeat() === otherSeat(seat) && name !== null && session.awayPlayers().includes(name) && !session.sending();
     }
 
     /** The chips the player of a seat won in the hand over, while it keeps the seat */
@@ -393,7 +394,9 @@ export class PokerTableComponent implements OnDestroy {
     }
 
     protected release(seat: PokerSeat): void {
-        this.session().unseat(seat);
+        if (this.canRelease(seat)) {
+            this.session().unseat(seat);
+        }
     }
 
     /** A click on a button the page did not hide yet (a second click, the turn over meanwhile) does nothing */

@@ -701,7 +701,15 @@ describe('PokerTableComponent', () => {
         // Then
         await until(() => status() === 'A deck was cheated: the match stops.');
         expect(button('Deal')).toBeUndefined();
-        expect(button('Leave the seat')).toBeDefined();
+
+        // When: Alice leaves her seat, then takes it again
+        await click('Leave the seat');
+        await until(() => status() === 'Waiting for two players to sit.');
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
+        await until(() => button('Play again') !== undefined);
+
+        // Then
+        expect(status()).toEqual('A deck was cheated: the match stops.');
 
         // When
         await click('Play again');
@@ -827,7 +835,9 @@ describe('PokerTableComponent', () => {
             // When: Bob leaves the room
             hub.leave(rooms.get('bob') as Room<PokerPayloads>);
             await until(() => button('Free the seat') !== undefined);
-            await click('Free the seat');
+            const release: HTMLButtonElement = button('Free the seat') as HTMLButtonElement;
+            release.click();
+            release.click();
             await until(() => status() === 'Waiting for two players to sit.');
 
             // Then

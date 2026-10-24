@@ -75,6 +75,8 @@ export interface PokerRematchMessage {
 export interface PokerUnseatMessage {
     /** The seat freed */
     seat: PokerSeat;
+    /** The player of the seat, away: a request applied once another one took the seat frees nothing */
+    name: string;
 }
 
 export interface PokerGamePayloads {
@@ -308,7 +310,8 @@ export class SeventeenPokerSession {
 
     /** A seated player frees the seat of the other one, away */
     public unseat(seat: PokerSeat): void {
-        this.room.transmitMessage(SPGameSessionType.UNSEAT, { seat });
+        this._sending.set(true);
+        this.room.transmitMessage(SPGameSessionType.UNSEAT, { seat, name: this.seats()[seat] as string });
     }
 
     private seatOf(name: string): PokerSeat | null {
@@ -476,7 +479,7 @@ export class SeventeenPokerSession {
         }
 
         // The player away loses its seat too: it may not come back, and a spectator may take it for the next match
-        this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, otherSeat(seat), null));
+        this.freeSeat(otherSeat(seat));
         this.verifyOnceOver();
     }
 
@@ -506,12 +509,17 @@ export class SeventeenPokerSession {
      */
     private onUnseat(message: AppMessage<SPGameSessionType.UNSEAT, PokerUnseatMessage>): void {
         const seat: PokerSeat | null = this.seatOf(message.from);
+        const { seat: freed, name } = message.payload;
 
-        if (seat === null || !this.seatsOpen() || message.payload.seat !== otherSeat(seat)) {
+        if (seat === null || !this.seatsOpen() || freed !== otherSeat(seat) || this.seats()[freed] !== name) {
             return;
         }
 
-        this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, otherSeat(seat), null));
+        this.freeSeat(freed);
+    }
+
+    private freeSeat(seat: PokerSeat): void {
+        this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, seat, null));
     }
 
     /** Waits for the cards dealt: a broken deck stops the match */

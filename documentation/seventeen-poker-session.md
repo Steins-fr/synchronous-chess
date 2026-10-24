@@ -107,8 +107,9 @@ of its decks, which ends on each page at its own time, out of the chain, and nev
 A player leaving the room keeps its seat, but loses it with a match lost on time (see
 [The clock of a move](#the-clock-of-a-move)). While the seats are open, a seated player also frees the seat of the
 other one, away from the room, with `Free the seat` (`SP_unseat`), shown on that seat: no page can tell when the other
-one was away, as for a timeout, so the chain applies the request whatever the presence of the player. A spectator frees
-no seat: it could take it at once.
+one was away, as for a timeout, so the chain applies the request whatever the presence of the player. The request names
+the player freed: applied once another participant took the seat, it frees nothing. A spectator frees no seat: it could
+take it at once.
 
 A player draws a random **salt** for each seat it takes, given in its `SP_seat`: the id of each deck is made of the
 salts of both seats, the index of the match in the room and the index of the hand (`<salt 1>:<salt 2>:<match>:<hand>`).
@@ -212,7 +213,7 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
 | `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over; the player away loses its seat too | a player | the time of the move of the other player over, while it is away |
 | `SP_rematch` | `{ match }`: the index of the new match in the room | a player | once the match is over or stopped, both seats taken |
-| `SP_unseat` | `{ seat }`: the seat of the other player | a player | while the seats are open, the other player away |
+| `SP_unseat` | `{ seat, name }`: the seat of the other player, and its player | a player | while the seats are open, the other player away |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |
 
 ## Interface

@@ -790,16 +790,17 @@ describe('SeventeenPokerSession', () => {
                 expect(carol.seats()).toEqual([null, 'bob']);
             });
 
-            test.each<{ name: string; from: string; seat: unknown }>([
-                { name: 'a spectator', from: 'carol', seat: ONE },
-                { name: 'a player for its own seat', from: 'alice', seat: ONE },
-                { name: 'a seat that does not exist', from: 'alice', seat: 2 },
-            ])('should not free a seat asked by $name', async ({ from, seat }) => {
+            test.each<{ name: string; from: string; seat: unknown; player: string }>([
+                { name: 'a spectator', from: 'carol', seat: ONE, player: 'alice' },
+                { name: 'a player for its own seat', from: 'alice', seat: ONE, player: 'alice' },
+                { name: 'a seat that does not exist', from: 'alice', seat: 2, player: 'bob' },
+                { name: 'a player for another player than the one of the seat', from: 'bob', seat: ONE, player: 'dave' },
+            ])('should not free a seat asked by $name', async ({ from, seat, player }) => {
                 // Given
                 const [, bob, carol] = table(rules);
 
                 // When
-                hub.send({ from, type: SPGameSessionType.UNSEAT, payload: { seat } });
+                hub.send({ from, type: SPGameSessionType.UNSEAT, payload: { seat, name: player } });
                 bob.leaveSeat();
                 await settled([carol], (session: SeventeenPokerSession) => session.seats()[TWO] === null);
 
