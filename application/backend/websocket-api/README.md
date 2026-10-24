@@ -93,7 +93,7 @@ to the new connection, then the former socket closes. The room lives 20 minutes 
 (`leaseUntil`, renewed by each ping and by `reconnect`): more than a ping and the 10 minutes API Gateway waits before
 closing a silent connection, the lease ends only the room of a host gone without `$disconnect`. When the host connection
 closes, `$disconnect` keeps the room for 10 minutes (`expiresAt`): joins are refused (`Host disconnected`) until the
-host reconnects, and the room keeps its name until it expires. Meanwhile, a player of the room can take it over with
+host reconnects, and the room keeps its id until it expires. Meanwhile, a player of the room can take it over with
 `reconnect` and its own name and token: the room moves to its connection, and it becomes the host (`Host connected`
 while the former host connection is still open). The host declares again a player whose connection it restored:
 `playerAdd` of a player already in the room changes nothing.
@@ -123,8 +123,8 @@ joins its room again from the list, the join retried until the room has its plac
 
 - Without `search`, the 30 most recent rooms, the last created first. A page asks it once a person is on it, then
   again every 15 seconds.
-- With a `search`, the rooms whose name holds it, whatever the case: the names starting with it first, then by name,
-  the name equal to the search first. A page asks a search once typed, or on demand, not every 15 seconds.
+- With a `search`, the rooms whose id holds it, whatever the case, its tag included (a whole id pasted finds its
+  room): the ids starting with it first, then by id. A page asks a search once typed, or on demand, not every 15 seconds.
 - An unknown or missing game, a search longer than 64 characters or holding the NUL character, or a `game` or `search`
   given more than once: 400 `{ "message": "Payload not valid" }`, API Gateway joining the values of a repeated parameter
   with commas. The other parameters are ignored. A failure of the database: 500, without its message.
@@ -136,13 +136,20 @@ listed by `isPrivate`, never the hash of its password. The indexes of the `rooms
 | Index | Columns | Read by |
 |---|---|---|
 | `rooms_game_created_at` | `game`, `created_at` (the ISO date of the creation, sorted as a text) | the most recent rooms |
-| `rooms_name_key_trgm` | `name_key`, the name in lower case (`search.helper`), by trigram (`pg_trgm`) | a search |
+| `rooms_name_key_trgm` | `name_key`, the id in lower case (`search.helper`), by trigram (`pg_trgm`) | a search |
 | `rooms_expiry` | `coalesce(expires_at, lease_until)`: the end of the wait for the host, else of the lease | the cleanup of the expired rooms |
 
 The list refreshed every 15 seconds keeps the cluster awake while a page shows it to a person.
 
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
 searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones.
+
+`create` gives the name of the room, without `#`: the API trims it and adds a tag of 6 digits, the id of the room
+(`friday#451203`) it answers in `created`, then each request names the room by. The rooms of the same name, of any game,
+each get their tag: a name taken is never refused, nor a name of a room of another game the page does not list. The tag
+is drawn at random, 5 times at most, then, every tag drawn taken, it follows the highest one of the name in the table
+(read again 5 times at most, another creation taking it meanwhile): the creation fails once the tag `999999` of the name
+is taken.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, without the name of its host, `join` refuses it
@@ -167,7 +174,7 @@ the password.
 The room tells the clients apart by their IP, given by API Gateway (`requestContext.identity.sourceIp`), or by their
 connection without it: the API keeps a short HMAC of it (`source.helper`), keyed by a secret, never the IP. The attempts
 are counted apart from the rooms, in the `room_password_attempts` table (`PasswordAttemptRepository` of
-`RoomPasswordService`, by room and client), deleted with their room: a room created again under the name of an expired
+`RoomPasswordService`, by room and client), deleted with their room: a room created again under the id of an expired
 one starts without the attempts of the former one. The row of a room, read by every request, does not grow with the
 clients trying its password. The clients behind a same IP share their count. The lambdas reaching the cluster all read
 every table: the Data API grants a cluster, not a table.

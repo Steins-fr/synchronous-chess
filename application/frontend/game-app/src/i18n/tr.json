@@ -57,7 +57,6 @@
       "title": "Oda oluştur"
     },
     "errors": {
-      "alreadyExists": "Bu oda zaten var.",
       "fullOrGone": "Oda dolu ya da artık yok.",
       "hostDisconnected": "Odanın ev sahibinin bağlantısı kesildi.",
       "nameInRoom": "Bu adda bir oyuncu zaten odada.",
@@ -84,7 +83,8 @@
       "roomName": {
         "label": "Oda adı",
         "maxLength": "Oda adı en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir",
-        "required": "Oda adı zorunludur"
+        "required": "Oda adı zorunludur",
+        "tagSeparator": "Oda adı “#” içeremez"
       }
     },
     "join": {

@@ -57,7 +57,6 @@
       "title": "Utwórz pokój"
     },
     "errors": {
-      "alreadyExists": "Ten pokój już istnieje.",
       "fullOrGone": "Pokój jest pełny albo już nie istnieje.",
       "hostDisconnected": "Gospodarz pokoju się rozłączył.",
       "nameInRoom": "Gracz o tej nazwie jest już w pokoju.",
@@ -84,7 +83,8 @@
       "roomName": {
         "label": "Nazwa pokoju",
         "maxLength": "Nazwa pokoju ma co najwyżej {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
-        "required": "Nazwa pokoju jest wymagana"
+        "required": "Nazwa pokoju jest wymagana",
+        "tagSeparator": "Nazwa pokoju nie może zawierać „#”"
       }
     },
     "join": {

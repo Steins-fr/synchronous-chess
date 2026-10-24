@@ -29,17 +29,17 @@ test.describe('Open rooms', () => {
         // Then
         await bob.expectNotification('The password of the room is wrong.');
         await bob.expectSetupForm();
-        await bob.expectOpenRoom(room.name, true);
+        await bob.expectOpenRoom(room.id, true);
 
         // When
-        await bob.joinListedRoom(room.name, 'secret');
+        await bob.joinListedRoom(room.id, 'secret');
 
         // Then
         await bob.expectConnected(['alice', 'bob']);
         await alice.expectConnected(['alice', 'bob']);
     });
 
-    test('searches the rooms by a part of their name, whatever the case', async ({ room }) => {
+    test('searches the rooms by a part of their name, whatever the case, or by their id', async ({ room }) => {
         // Given
         const alice: RoomParticipant = await room.create('alice');
         await alice.expectParticipants(['alice']);
@@ -49,7 +49,13 @@ test.describe('Open rooms', () => {
         await carol.searchRooms(room.name.toUpperCase());
 
         // Then
-        await carol.expectListedRooms([room.name]);
+        await carol.expectListedRooms([room.id]);
+
+        // When: its whole id pasted, its tag included
+        await carol.searchRooms(room.id);
+
+        // Then
+        await carol.expectListedRooms([room.id]);
 
         // When
         await carol.searchRooms(`${ room.name }-missing`);
@@ -60,22 +66,25 @@ test.describe('Open rooms', () => {
         carol.expectNoApiSocket();
     });
 
-    test('lists a room on the page of its game only', async ({ browser, room }) => {
-        // Given a room of the poker
-        const poker = new TestRoom(browser, '/seventeen-poker', `${ room.name }-poker`);
+    test('lists a room on the page of its game only, a room of the same name in another game created', async ({ browser, room }) => {
+        // Given a room of the chat and a room of the poker of the same name
+        const poker = new TestRoom(browser, '/seventeen-poker', room.name);
 
         try {
-            const alice: RoomParticipant = await poker.create('alice');
+            const alice: RoomParticipant = await room.create('alice');
             await alice.expectParticipants(['alice']);
+            const bob: RoomParticipant = await poker.create('bob');
+            await bob.expectParticipants(['bob']);
 
             // When
-            const bob: RoomParticipant = await poker.join('bob');
             const carol: RoomParticipant = await room.visit('carol');
-            await carol.searchRooms(poker.name);
+            await carol.searchRooms(room.name);
+            const dave: RoomParticipant = await poker.join('dave');
 
             // Then
-            await bob.expectConnected(['alice', 'bob']);
-            await expect(carol.page.getByText(`No room contains “${ poker.name }”.`)).toBeVisible();
+            expect(poker.id).not.toEqual(room.id);
+            await carol.expectListedRooms([room.id]);
+            await dave.expectConnected(['bob', 'dave']);
         } finally {
             await poker.close();
         }

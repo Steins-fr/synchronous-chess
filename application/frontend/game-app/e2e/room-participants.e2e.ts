@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 import { SLOW, test } from './test-room';
 
@@ -13,17 +14,21 @@ test.describe('Room participants', () => {
     // Shorter than the 15 seconds a negotiation takes to time out
     const NEGOTIATION_TIMEOUT: number = 10_000;
 
-    test('refuses the creation of a room which exists already', async ({ room }) => {
+    test('creates a room under a name taken, with another tag', async ({ room }) => {
         // Given
         const [alice]: RoomParticipant[] = await room.connect('alice');
+        const aliceRoom: string = room.id;
 
         // When
         const bob: RoomParticipant = await room.create('bob');
 
-        // Then
-        await bob.expectNotification('The room already exists.');
-        await bob.expectSetupForm();
+        // Then: two rooms of the name, each listed under its id
+        await bob.expectParticipants(['bob']);
         await alice.expectParticipants(['alice']);
+        expect(room.id).not.toEqual(aliceRoom);
+        const carol: RoomParticipant = await room.visit('carol');
+        await carol.searchRooms(room.name);
+        await carol.expectListedRooms([aliceRoom, room.id].sort((a: string, b: string) => a.localeCompare(b, 'en')));
     });
 
     test('tells a player the host of the room it joins left', SLOW, async ({ room }) => {
@@ -31,10 +36,10 @@ test.describe('Room participants', () => {
         const [alice]: RoomParticipant[] = await room.connect('alice');
         const bob: RoomParticipant = await room.visit('bob');
         await alice.close();
-        await bob.expectRoomState(room.name, 'Host reconnecting');
+        await bob.expectRoomState(room.id, 'Host reconnecting');
 
         // When
-        await bob.joinListedRoom(room.name);
+        await bob.joinListedRoom(room.id);
 
         // Then
         await bob.expectNotification('The host of the room disconnected.', REFUSED_JOIN_TIMEOUT);
@@ -75,10 +80,10 @@ test.describe('Room participants', () => {
         // Given the chat room accepts 6 players
         const participants: RoomParticipant[] = await room.connect('alice', 'bob', 'carol', 'dave', 'eve', 'frank');
         const grace: RoomParticipant = await room.visit('grace');
-        await grace.expectRoomState(room.name, 'Full');
+        await grace.expectRoomState(room.id, 'Full');
 
         // When
-        await grace.joinListedRoom(room.name);
+        await grace.joinListedRoom(room.id);
 
         // Then
         await grace.expectNotification('The room is full.');
@@ -231,7 +236,7 @@ test.describe('Room participants', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When
-        await Promise.all([bob.reloadAndJoin(room.name), carol.reloadAndJoin(room.name)]);
+        await Promise.all([bob.reloadAndJoin(room.id), carol.reloadAndJoin(room.id)]);
 
         // Then
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'], RECONNECTION_TIMEOUT)));
@@ -245,8 +250,8 @@ test.describe('Room participants', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When the player reloads its page while it joins the room again
-        await bob.reloadAndJoin(room.name);
-        await bob.reloadAndJoin(room.name);
+        await bob.reloadAndJoin(room.id);
+        await bob.reloadAndJoin(room.id);
 
         // Then
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'], RECONNECTION_TIMEOUT)));
@@ -260,7 +265,7 @@ test.describe('Room participants', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When
-        const [, dave]: [void, RoomParticipant] = await Promise.all([carol.reloadAndJoin(room.name), room.join('dave')]);
+        const [, dave]: [void, RoomParticipant] = await Promise.all([carol.reloadAndJoin(room.id), room.join('dave')]);
 
         // Then
         const names: string[] = ['alice', 'bob', 'carol', 'dave'];

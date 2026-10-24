@@ -57,7 +57,6 @@
       "title": "Raum erstellen"
     },
     "errors": {
-      "alreadyExists": "Der Raum existiert bereits.",
       "fullOrGone": "Der Raum ist voll oder existiert nicht mehr.",
       "hostDisconnected": "Der Gastgeber des Raums hat die Verbindung getrennt.",
       "nameInRoom": "Ein Spieler mit diesem Namen ist bereits im Raum.",
@@ -84,7 +83,8 @@
       "roomName": {
         "label": "Raumname",
         "maxLength": "Der Raumname hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
-        "required": "Der Raumname ist erforderlich"
+        "required": "Der Raumname ist erforderlich",
+        "tagSeparator": "Der Raumname darf kein „#“ enthalten"
       }
     },
     "join": {

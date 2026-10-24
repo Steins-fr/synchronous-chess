@@ -4,7 +4,7 @@ import RoomHelper from '@helpers/room-helper';
 import Player from '@models/player';
 import Room from '@models/room';
 import { isRtcSignal } from '@protocol/rtc-signal';
-import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_ID_MAX_LENGTH } from '@protocol/room-limits';
 import {
     RoomApiRequestTypeEnum,
     RoomSocketApiNotificationEnum,
@@ -16,7 +16,7 @@ export default class SignalHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.SIGNAL);
 
-        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !isName(data.to, PLAYER_NAME_MAX_LENGTH) || !isRtcSignal(data.signal)) {
+        if (!isName(data.roomName, ROOM_ID_MAX_LENGTH) || !isName(data.to, PLAYER_NAME_MAX_LENGTH) || !isRtcSignal(data.signal)) {
             throw new BadRequestException(SignalHandler.ERROR_PARSING);
         }
 

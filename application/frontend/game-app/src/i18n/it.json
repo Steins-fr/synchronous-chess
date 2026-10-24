@@ -57,7 +57,6 @@
       "title": "Crea una stanza"
     },
     "errors": {
-      "alreadyExists": "La stanza esiste già.",
       "fullOrGone": "La stanza è piena o non esiste più.",
       "hostDisconnected": "L'host della stanza si è disconnesso.",
       "nameInRoom": "Un giocatore con questo nome è già nella stanza.",
@@ -84,7 +83,8 @@
       "roomName": {
         "label": "Nome della stanza",
         "maxLength": "Il nome della stanza ha al massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
-        "required": "Il nome della stanza è obbligatorio"
+        "required": "Il nome della stanza è obbligatorio",
+        "tagSeparator": "Il nome della stanza non può contenere «#»"
       }
     },
     "join": {

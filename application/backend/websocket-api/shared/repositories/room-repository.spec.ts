@@ -117,6 +117,42 @@ describe('RoomRepository', () => {
         });
     });
 
+    describe('findLastTag', () => {
+        test('should find the highest tag of the rooms of the name, of any game, expired or not', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'friday#000009' }));
+            await storeRoom(aRoom({ id: 'friday#000042', game: RoomGame.CHAT }));
+            await storeRoom(aRoom({ id: 'friday#000012', expiresAt: NOW }));
+            await storeRoom(aRoom({ id: 'friday-night#999999' }));
+            await storeRoom(aRoom({ id: 'fri#999999' }));
+            await storeRoom(aRoom({ id: 'friday' }));
+
+            // When / Then
+            expect(await repository.findLastTag('friday')).toEqual(42);
+        });
+
+        test('should find no tag without a room of the name', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'friday#000042' }));
+
+            // When / Then
+            expect(await repository.findLastTag('monday')).toBeUndefined();
+        });
+
+        test.each([
+            ['%', 'any text'],
+            ['_', 'any character'],
+            ['\\', 'the escape character'],
+        ])('should find the tags of a name holding %s, not %s', async (character: string) => {
+            // Given
+            await storeRoom(aRoom({ id: `a${ character }b#000001` }));
+            await storeRoom(aRoom({ id: 'axxb#000002' }));
+
+            // When / Then
+            expect(await repository.findLastTag(`a${ character }b`)).toEqual(1);
+        });
+    });
+
     describe('create', () => {
         test('should create a room with its host and the hash of its token', async () => {
             // Given

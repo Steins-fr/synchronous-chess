@@ -6,6 +6,7 @@ import { escapeLike } from '@helpers/search.helper';
 import Player from '@models/player';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
+import { ROOM_TAG_DIGITS, ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
 import { and, desc, eq, exists, gt, inArray, isNotNull, like, lte, or, SQL, sql } from 'drizzle-orm';
 import BaseRepository from './base-repository';
 
@@ -132,10 +133,24 @@ export default class RoomRepository extends BaseRepository {
     }
 
     /**
-     * Creates the room with its players and their tokens, replacing an expired room of the same name: a room waiting for
-     * its host keeps its name. Deletes the rooms expired at `now` with their rows, the one of that name included: no
-     * scheduled cleanup wakes the paused cluster
-     * @returns false when a room of that name exists at `now`: nothing created
+     * The highest tag of the rooms of the name, expired or not, the name holding no tag separator: undefined when no room
+     * has that name
+     */
+    public async findLastTag(name: string): Promise<number | undefined> {
+        const rows: { id: string }[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<{ id: string }[]> => this.db.select({ id: rooms.id }).from(rooms)
+            // The name, the separator and a tag of all its digits: the order of the ids is then the order of their tags
+            .where(like(rooms.id, `${ escapeLike(name) }${ ROOM_TAG_SEPARATOR }${ '_'.repeat(ROOM_TAG_DIGITS) }`))
+            .orderBy(sql`${ rooms.id } COLLATE "C" DESC`)
+            .limit(1));
+
+        return rows.length === 0 ? undefined : Number(rows[0].id.slice(-ROOM_TAG_DIGITS));
+    }
+
+    /**
+     * Creates the room with its players and their tokens, replacing an expired room of the same id: a room waiting for its
+     * host keeps its id. Deletes the rooms expired at `now` with their rows, the one of that id included: no scheduled
+     * cleanup wakes the paused cluster
+     * @returns false when a room of that id exists at `now`: nothing created
      */
     public async create(room: Room, now: number): Promise<boolean> {
         return this.run(DatabaseOperationEnum.PUT, (): Promise<boolean> => this.db.transaction(async (tx: DatabaseTransaction): Promise<boolean> => {

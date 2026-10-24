@@ -142,20 +142,30 @@ export default class RoomService {
     }
 
     /**
-     * Creates the room of the request, hosted by the connection: private with a password, kept as a hash. The token of
-     * the host is kept as a hash too, to reconnect the room later
-     * @throws {BadRequestException} when a room of that name exists, even waiting for its host
+     * The tag following the highest one of the rooms of the name, 0 for its first room: a tag no room of the name holds,
+     * unless another room takes it meanwhile. MAX_ROOM_TAG + 1 once the last tag is taken
      */
-    public async create(request: RoomCreateRequest, connectionId: string): Promise<void> {
+    public async nextRoomTag(name: string): Promise<number> {
+        const lastTag: number | undefined = await this.roomRepository.findLastTag(name);
+        return lastTag === undefined ? 0 : lastTag + 1;
+    }
+
+    /**
+     * Creates the room of the request under the id given, its name tagged, hosted by the connection: private with a
+     * password, kept as a hash. The token of the host is kept as a hash too, to reconnect the room later
+     * @returns false when a room of that id exists, even waiting for its host: nothing created
+     */
+    public async create(request: RoomCreateRequest, roomId: string, connectionId: string): Promise<boolean> {
         const now: number = epochSeconds();
         const room: Room = {
-            id: request.roomName,
+            id: roomId,
             connectionId,
             hostPlayer: request.playerName,
             maxPlayer: request.maxPlayer,
             game: request.game,
             createdAt: new Date().toISOString(),
-            nameKey: searchKey(request.roomName),
+            // The tag included: a search finds the room by its whole id
+            nameKey: searchKey(roomId),
             players: [{ playerName: request.playerName }],
             queue: [],
             tokenHashes: { [request.playerName]: hashToken(request.token) },
@@ -167,11 +177,7 @@ export default class RoomService {
             room.passwordHash = hashPassword(request.password);
         }
 
-        const created: boolean = await this.roomRepository.create(room, now);
-
-        if (!created) {
-            throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
-        }
+        return this.roomRepository.create(room, now);
     }
 
     /**

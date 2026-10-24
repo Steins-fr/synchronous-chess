@@ -104,12 +104,12 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 
 #### Rooms
 
-- id: Id of the room also the room name;
+- id: Id of the room: its name and the 6-digit tag the API draws at its creation (`friday#451203`), unique across the games;
 - connection_id: Websocket connection id of the host;
 - host_player: Player name of the host;
 - max_player: Maximum of player that can join the room;
 - game: The game of the room, chess, seventeen-poker or chat;
-- created_at, name_key: The date of its creation and its name in lower case, to list and search the rooms;
+- created_at, name_key: The date of its creation and its id in lower case, to list and search the rooms;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.
 - lease_until: While the host is connected, in epoch seconds: the room no longer exists after it, unless a ping of the host renews it.

@@ -10,6 +10,7 @@ import { TranslatableText } from '@app/types/translatable-text.type';
 import RoomCreateResponse from '@protocol/responses/room-create-response';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { PeerRoomNetwork, RoomAccess } from './classes/room-network/peer-room-network';
 import { JoinFailure, RoomNetwork } from './classes/room-network/room-network';
@@ -48,11 +49,13 @@ export default class RoomManagerService {
                     token,
                 });
 
-                if (response.playerName !== setup.playerName || response.roomName !== setup.roomName || response.maxPlayer !== maxPlayer) {
+                // The id of the room: its name and the tag the API drew
+                if (response.playerName !== setup.playerName || !response.roomName.startsWith(`${ setup.roomName.trim() }${ ROOM_TAG_SEPARATOR }`)
+                    || response.maxPlayer !== maxPlayer) {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, access);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, response.roomName, setup.playerName, setup.playerName, maxPlayer, access);
             } else {
                 const response: RoomJoinResponse = await this.join(setup, access, signal);
                 // The page left while the join was sent: no negotiation with the host
@@ -116,7 +119,7 @@ export default class RoomManagerService {
         const message: string | undefined = error instanceof Error ? error.message : undefined;
 
         if (setup.type === 'create') {
-            return message === RoomApiErrorMessage.ROOM_ALREADY_EXISTS ? marker('rooms.errors.alreadyExists') : marker('rooms.errors.notCreated');
+            return marker('rooms.errors.notCreated');
         }
 
         switch (message) {
