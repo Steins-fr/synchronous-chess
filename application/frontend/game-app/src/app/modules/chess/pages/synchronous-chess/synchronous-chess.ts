@@ -7,10 +7,7 @@ import { ChessPresentationComponent } from '@app/modules/chess/components/chess-
 import { ChessRulesComponent } from '@app/modules/chess/components/chess-rules/chess-rules.component';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
 import { mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
-import { roomFromSetup } from '@app/modules/room-layout/room-from-setup';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import RoomManagerService from '@app/services/room-manager/room-manager.service';
-import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
 import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-debug.component';
@@ -22,7 +19,7 @@ import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-deb
         RoomLayoutComponent, SyncChessGameComponent, ChatComponent, WebrtcDebugComponent, ChessPresentationComponent, ChessRulesComponent,
         TranslocoPipe,
     ],
-    providers: [RoomSetupService, RoomManagerService, RoomSocketApi],
+    providers: [provideRooms()],
 })
 export class SynchronousChess {
     protected readonly game: RoomGame = RoomGame.CHESS;

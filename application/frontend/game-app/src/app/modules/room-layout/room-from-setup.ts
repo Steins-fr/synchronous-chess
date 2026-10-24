@@ -1,13 +1,19 @@
-import { DestroyRef, inject, Signal, signal } from '@angular/core';
+import { DestroyRef, inject, Provider, Signal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import RoomSetupService, { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { notifyCheatFlags } from './cheat-notifications';
 
+/** The services of the room of a page, for roomFromSetup(): provided by the page, cleared with it */
+export function provideRooms(): Provider[] {
+    return [RoomSetupService, RoomManagerService, RoomSocketApi];
+}
+
 /**
  * The room of a page, built from the room setup form and cleared with the page, its cheats notified:
- * to call in an injection context, the page providing RoomSetupService, RoomManagerService and RoomSocketApi
+ * to call in an injection context, the page providing provideRooms()
  * @param maxPlayer the most players the room accepts
  * @param routing the block chain of each message type of the room
  */
