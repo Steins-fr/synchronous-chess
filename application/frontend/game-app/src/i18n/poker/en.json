@@ -82,6 +82,7 @@
     "result": {
       "draw": "Draw: both players end with {chips, plural, one {# chip} other {# chips}}.",
       "forfeit": "{loser} was away when the time ran out: {winner} wins the match.",
+      "stopped": "Stopped: a deck was cheated.",
       "win": "{winner} wins the match with {chips, plural, one {# chip} other {# chips}}."
     },
     "seat": {

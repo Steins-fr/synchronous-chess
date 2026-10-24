@@ -82,6 +82,7 @@
     "result": {
       "draw": "Égalité : les deux joueurs finissent avec {chips, plural, one {# jeton} other {# jetons}}.",
       "forfeit": "Temps écoulé en l'absence de {loser} : {winner} gagne la partie.",
+      "stopped": "Arrêtée : un paquet a été triché.",
       "win": "{winner} gagne la partie avec {chips, plural, one {# jeton} other {# jetons}}."
     },
     "seat": {

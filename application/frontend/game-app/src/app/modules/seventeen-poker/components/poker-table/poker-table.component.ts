@@ -49,8 +49,8 @@ interface PastResult {
     /** Its number in the room, from 1 */
     readonly number: number;
     readonly text: TranslatableText;
-    /** The check of its decks, which may end once the next match started */
-    readonly verification: TranslatableText;
+    /** The check of its decks, which may end once the next match started, none for a match stopped by a broken deck */
+    readonly verification: TranslatableText | null;
 }
 
 /** Chips flying from a place of the table to another one */
@@ -139,10 +139,10 @@ export class PokerTableComponent implements OnDestroy {
             && !session.broken() && session.match().result() === null && (hand === null || hand.phase === HandPhase.OVER);
     });
 
-    /** A seated player starts a new match once the former one is over, both seats taken */
+    /** A seated player starts a new match once the former one is over, or stopped by a broken deck, both seats taken */
     protected readonly canRematch: Signal<boolean> = computed((): boolean => {
         const session: SeventeenPokerSession = this.session();
-        return session.mySeat() !== null && !session.seats().includes(null) && session.match().result() !== null && !session.sending();
+        return session.mySeat() !== null && !session.seats().includes(null) && session.over() && !session.sending();
     });
 
     /** The seat whose player acts, which the table shows */
@@ -283,8 +283,7 @@ export class PokerTableComponent implements OnDestroy {
         return this.session().pastMatches().map((played: Readonly<PlayedMatch>, index: number): PastResult => ({
             number: index + 1,
             text: this.resultText(played),
-            // A match over started the check of its decks
-            verification: this.verificationText(played.verification()) as TranslatableText,
+            verification: this.verificationText(played.verification()),
         })).reverse();
     });
 
@@ -466,6 +465,10 @@ export class PokerTableComponent implements OnDestroy {
 
     /** The result of a match, with the names of its players */
     private resultText({ players, result, forfeited }: Readonly<Omit<PlayedMatch, 'verification'>>): TranslatableText {
+        if (result === null) {
+            return { key: this.key(marker('table.result.stopped', undefined, 'poker')) };
+        }
+
         if (forfeited !== null) {
             return { key: this.key(marker('table.result.forfeit', undefined, 'poker')), params: { loser: players[forfeited], winner: players[otherSeat(forfeited)] } };
         }

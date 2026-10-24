@@ -82,6 +82,7 @@
     "result": {
       "draw": "Empate: los dos jugadores terminan con {chips, plural, one {# ficha} other {# fichas}}.",
       "forfeit": "Se acabó el tiempo en ausencia de {loser}: {winner} gana la partida.",
+      "stopped": "Detenida: se hizo trampa con una baraja.",
       "win": "{winner} gana la partida con {chips, plural, one {# ficha} other {# fichas}}."
     },
     "seat": {

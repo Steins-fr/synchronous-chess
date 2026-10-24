@@ -82,6 +82,7 @@
     "result": {
       "draw": "Seri: kedua pemain selesai dengan {chips, plural, other {# chip}}.",
       "forfeit": "Waktu habis saat {loser} tidak hadir: {winner} memenangkan pertandingan.",
+      "stopped": "Dihentikan: ada kecurangan pada tumpukan kartu.",
       "win": "{winner} memenangkan pertandingan dengan {chips, plural, other {# chip}}."
     },
     "seat": {

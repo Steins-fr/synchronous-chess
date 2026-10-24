@@ -745,6 +745,36 @@ describe('SeventeenPokerSession', () => {
             expect(carol.myTurn()).toBe(true);
         });
 
+        test('should open the seats and start a new match once a broken deck stopped the match', async () => {
+            // Given: Bob locks the first deck with cards not of the deck
+            let cheat: boolean = true;
+            const [alice, bob, carol] = table(rules, {
+                bob: (message: AppMessage) => cheat && message.type === MentalDeckMessageType.LOCK ? { ...message, payload: { ...message.payload as object, cards: ['1'] } } : message,
+            });
+            bob.deal();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.broken());
+            cheat = false;
+
+            // When: Alice leaves her seat, Carol takes it and starts a new match
+            alice.leaveSeat();
+            carol.takeSeat(ONE);
+            carol.rematch();
+            await settled([alice, bob, carol], restarted);
+
+            // Then
+            expect(carol.pastMatches()).toMatchObject([{ players: ['alice', 'bob'], result: null, forfeited: null }]);
+            expect(carol.pastMatches()[0].verification()).toEqual(DeckVerification.PENDING);
+            expect(carol.broken()).toBe(false);
+            expect(carol.over()).toBe(false);
+
+            // When
+            await deal(carol, bob, alice);
+
+            // Then
+            expect(carol.deck()?.players).toEqual(['carol', 'bob']);
+            expect(carol.myTurn()).toBe(true);
+        });
+
         describe('a seat freed by the other player', () => {
             test('should free the seat of the other player while the seats are open', async () => {
                 // Given

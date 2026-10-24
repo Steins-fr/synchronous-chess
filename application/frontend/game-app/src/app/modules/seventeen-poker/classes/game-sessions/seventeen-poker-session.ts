@@ -92,7 +92,8 @@ export type PokerPayloads = PokerGamePayloads & MentalDeckPayloads;
 /** A match over, before the one in progress */
 export interface PlayedMatch {
     readonly players: SeatPair<string | null>;
-    readonly result: MatchResult;
+    /** None for a match stopped by a broken deck */
+    readonly result: MatchResult | null;
     /** The player who lost the match on time */
     readonly forfeited: PokerSeat | null;
     /** The check of its decks, which may end once the next match started: a player away gives its keys once back */
@@ -172,7 +173,7 @@ export class SeventeenPokerSession {
         return [one, two];
     });
     /** The seats are open before the first hand of a match, and once it is over */
-    public readonly seatsOpen: Signal<boolean> = computed((): boolean => this.match().hand() === null || this.match().result() !== null);
+    public readonly seatsOpen: Signal<boolean> = computed((): boolean => this.match().hand() === null || this.over());
     /** The connected participants without a seat */
     public readonly spectatorNumber: Signal<number> = computed((): number => {
         const seats: SeatPair<string | null> = this.seats();
@@ -198,8 +199,10 @@ export class SeventeenPokerSession {
     /** Cards are being dealt: the game waits for every player to read them */
     public readonly dealing: Signal<boolean> = this._dealing.asReadonly();
     private readonly _broken = signal<boolean>(false);
-    /** A deck was cheated: the match stops */
+    /** A deck was cheated: the match stops, without a result */
     public readonly broken: Signal<boolean> = this._broken.asReadonly();
+    /** The match is over, or stopped by a broken deck: its players may play a new one */
+    public readonly over: Signal<boolean> = computed((): boolean => this.match().result() !== null || this._broken());
     private readonly _historySteps = signal<number>(0);
     /**
      * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
@@ -336,7 +339,8 @@ export class SeventeenPokerSession {
             this._sending.set(false);
         }
 
-        if (this._broken()) {
+        // A broken deck stops the match: its seats open, a new match may start
+        if (this._broken() && message.type !== SPGameSessionType.SEAT && message.type !== SPGameSessionType.REMATCH && message.type !== SPGameSessionType.UNSEAT) {
             return;
         }
 
@@ -477,18 +481,18 @@ export class SeventeenPokerSession {
     }
 
     /**
-     * A player starts a new match once the former one is over, both seats taken: the first request starts it, the others
-     * name a match started already. The second seat deals its first hand, as in the first match
+     * A player starts a new match once the former one is over, or stopped by a broken deck, both seats taken: the first
+     * request starts it, the others name a match started already. The second seat deals its first hand, as in the first
+     * match
      */
     private onRematch(message: AppMessage<SPGameSessionType.REMATCH, PokerRematchMessage>): void {
-        const result: MatchResult | null = this.match().result();
-
-        if (this.seatOf(message.from) === null || this.seats().includes(null) || result === null || message.payload.match !== this._pastMatches().length + 1) {
+        if (this.seatOf(message.from) === null || this.seats().includes(null) || !this.over() || message.payload.match !== this._pastMatches().length + 1) {
             return;
         }
 
-        const verification: Signal<DeckVerification> = this._verification().asReadonly();
-        this._pastMatches.update((matches: ReadonlyArray<Readonly<PlayedMatch>>) => [...matches, { players: this.players(), result, forfeited: this.match().forfeited(), verification }]);
+        const played: PlayedMatch = { players: this.players(), result: this.match().result(), forfeited: this.match().forfeited(), verification: this._verification().asReadonly() };
+        this._pastMatches.update((matches: ReadonlyArray<Readonly<PlayedMatch>>) => [...matches, played]);
+        this._broken.set(false);
         this._match.set(new PokerMatch(this.options.rules));
         this.decks = [];
         this._deck.set(null);

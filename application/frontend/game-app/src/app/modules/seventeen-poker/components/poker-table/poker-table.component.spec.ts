@@ -701,6 +701,14 @@ describe('PokerTableComponent', () => {
         // Then
         await until(() => status() === 'A deck was cheated: the match stops.');
         expect(button('Deal')).toBeUndefined();
+        expect(button('Leave the seat')).toBeDefined();
+
+        // When
+        await click('Play again');
+        await until(() => status() === 'bob to deal.');
+
+        // Then
+        expect(text('#past-matches li')).toEqual('Match 1: Stopped: a deck was cheated.');
     });
 
     describe('end of the match', () => {

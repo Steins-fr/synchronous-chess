@@ -95,7 +95,7 @@ flowchart LR
 
 Each participant takes a seat with `Sit here`: the first request for a free seat gets it, a participant
 has a single seat, and `Leave the seat` frees it. The seats are final from the first hand of a match until it is
-over (`seatsOpen`); the other participants are spectators. Once the match is over, its
+over, or stopped by a broken deck (`seatsOpen`); the other participants are spectators. Once the match is over, its
 players may leave their seats and the spectators take the free ones, as before its first hand: the table keeps the
 names of the players of the match (`players`, read from the deck of its latest hand) for its result and its hands. A
 participant taking a seat shows the stack of the next match, without the cards, the gain nor the hand of the former
@@ -139,8 +139,10 @@ The table shows the local player at its bottom, a spectator the first seat.
 5. At the showdown, every participant opens both hands: the deck asks the keys of both players, and the
    match settles the pot with the cards opened. A folded hand stays hidden.
 
-A deck that breaks (a step that is not a deck, a hand that does not open) stops the match: the table
-tells it, and no hand is dealt anymore.
+A deck that breaks (a step that is not a deck, a hand that does not open) stops the match, without a result: the
+table tells it, and no hand is dealt anymore. The session then ignores every message of the game but the seats and a
+new match (`over` is true): the seats open, and a seated player may start a new match, as after a match over. The
+decks of the hands played before are not disclosed.
 
 ## End of the match
 
@@ -153,14 +155,15 @@ back.
 
 ## A new match
 
-Once the match is over, a seated player clicks `Play again` (`SP_rematch`), once both seats are taken, without waiting
-for the check of the decks: the request names the index of the new match in the room (1 for the second one). Every participant applies it
-in the order of the chain: the first request starts the new match, the others name a match started already and are
+Once the match is over, or stopped by a broken deck, a seated player clicks `Play again` (`SP_rematch`), once both
+seats are taken, without waiting for the check of the decks: the request names the index of the new match in the room
+(1 for the second one). Every participant applies it in the order of the chain: the first request starts the new match, the others name a match started already and are
 ignored, as a request of a spectator, or before the end of the match, or with a free seat.
 
 The new match starts over: a new `PokerMatch`, 150 chips each, the hands counted from 1, the second seat dealing the
 first hand, no deck, and the check of its decks pending. The result of the former match, with its players and the
-check of its decks, joins `pastMatches`, one line each in `Matches played` below the table. The seats stay open until
+check of its decks, joins `pastMatches`, one line each in `Matches played` below the table: a match stopped has no
+result nor check, its line tells it was stopped (`Stopped: a deck was cheated.`). The seats stay open until
 its first hand. The decks of the new match have ids of their own, so the decks of the former one may be checked later,
 or never: a cheat found then is reported to the room, and told on the line of its match.
 
@@ -208,7 +211,7 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 | `SP_bet` | `{ hand, action, amount? }`: the amount is the total of the player in the round | a player | its turn of a betting round |
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
 | `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over; the player away loses its seat too | a player | the time of the move of the other player over, while it is away |
-| `SP_rematch` | `{ match }`: the index of the new match in the room | a player | once the match is over, both seats taken |
+| `SP_rematch` | `{ match }`: the index of the new match in the room | a player | once the match is over or stopped, both seats taken |
 | `SP_unseat` | `{ seat }`: the seat of the other player | a player | while the seats are open, the other player away |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |
 
@@ -273,7 +276,7 @@ grows does not fly.
 - The session: `seventeen-poker-session.spec.ts`, with a `RoomHub` and a small prime
   (`@testing/sra-test-group`): seats, deals, bets, exchanges, showdowns, the end of the match, a new
   match (the seats open again, fresh deck ids, the check of the former decks ending later, a page reloaded during it),
-  the seat freed of a player away, a reloaded page and the cheats.
+  the seat freed of a player away, a new match after a broken deck, a reloaded page and the cheats.
 - The table: `poker-table.component.spec.ts`, the session options given through `POKER_SESSION_OPTIONS`, the clock of
   the moves on fake timers (`setInterval` and `performance` only: the decks run on real ones).
 - End to end: `e2e/seventeen-poker.e2e.ts`, a hand to the showdown, a fold, a player reloading the

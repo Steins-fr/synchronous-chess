@@ -82,6 +82,7 @@
     "result": {
       "draw": "Patta: entrambi i giocatori finiscono con {chips, plural, one {# fiche} other {# fiche}}.",
       "forfeit": "Il tempo è scaduto durante l'assenza di {loser}: {winner} vince la partita.",
+      "stopped": "Interrotta: un mazzo è stato truccato.",
       "win": "{winner} vince la partita con {chips, plural, one {# fiche} other {# fiche}}."
     },
     "seat": {
