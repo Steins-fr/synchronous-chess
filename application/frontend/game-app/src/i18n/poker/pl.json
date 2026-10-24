@@ -90,7 +90,8 @@
       "free": "Wolne miejsce",
       "gain": "+{amount}",
       "leave": "Zwolnij miejsce",
-      "play": "Usiądź"
+      "play": "Usiądź",
+      "release": "Usuń z miejsca"
     },
     "spectators": "Widzowie: {count}",
     "status": {

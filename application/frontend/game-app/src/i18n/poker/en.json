@@ -90,7 +90,8 @@
       "free": "Free seat",
       "gain": "+{amount}",
       "leave": "Leave the seat",
-      "play": "Sit here"
+      "play": "Sit here",
+      "release": "Free the seat"
     },
     "spectators": "Spectators: {count}",
     "status": {

@@ -11,7 +11,9 @@
         [timeLeft]="toAct() === top ? timeLeft() : null"
         [turnTime]="session().match().rules.turnTime"
         [canTake]="canTake(top)"
-        (take)="takeSeat(top)" />
+        [canRelease]="canRelease(top)"
+        (take)="takeSeat(top)"
+        (release)="release(top)" />
     <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
     @if (categories()[top]; as current) {
     <p class="table-line">{{ current.key | transloco: current.params }}</p>
@@ -141,7 +143,10 @@
         <summary class="cursor-pointer">{{ t('pastMatches') }}</summary>
         <ul class="m-0 mt-2 pl-0 list-none space-y-1">
             @for (past of pastResults(); track past.number) {
-            <li>{{ t('match', { number: past.number }) }} {{ past.text.key | transloco: past.text.params }}</li>
+            <li>
+                {{ t('match', { number: past.number }) }} {{ past.text.key | transloco: past.text.params }}
+                <span class="muted-note">{{ past.verification.key | transloco }}</span>
+            </li>
             }
         </ul>
     </details>

@@ -441,6 +441,10 @@ describe('PokerTableComponent', () => {
             expect(text('.badge')).toEqual('bob was away when the time ran out: alice wins the match.');
             expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 10.');
             expect(hub.types().filter((type: string) => type === SPGameSessionType.TIMEOUT)).toHaveLength(1);
+            // Bob loses his seat, Alice may start a new match once another participant takes it
+            expect(text('#seat-top')).toEqual('Free seat');
+            expect(button('Play again')).toBeUndefined();
+            expect(text('p.muted-note')).toEqual('Checking every deck…');
         });
 
         test('should play nothing once the time is over while the action of the player waits for the chain', async () => {
@@ -738,7 +742,7 @@ describe('PokerTableComponent', () => {
             expect(element().querySelector('.badge')?.classList).toContain('badge-draw');
         });
 
-        test('should play a new match once the match is over, every deck checked', async () => {
+        test('should play a new match once the match is over', async () => {
             // Given
             const bob: SeventeenPokerSession = await dealt(rules);
             await click('Bet 1');
@@ -756,7 +760,7 @@ describe('PokerTableComponent', () => {
             // Then: the new match starts from its own chips, without flights
             expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_rematch')).toHaveLength(1);
             expect(text('.badge')).toEqual('');
-            expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips.');
+            expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips. Every deck was fair.');
             expect(text('#seat-bottom')).toEqual('alice150 chipsLeave the seat');
             expect(text('#seat-top')).toEqual('bob150 chips');
             expect(element().querySelectorAll('details')).toHaveLength(1);
@@ -805,6 +809,48 @@ describe('PokerTableComponent', () => {
             expect(text('#seat-bottom')).toEqual('carol150 chips');
             expect(cards(1)).toEqual([]);
             expect(text('.badge')).toEqual('bob wins the match with 155 chips.');
+        });
+
+        test('should let a player free the seat of the other one, away, while the seats are open', async () => {
+            // Given
+            await seated(rules);
+            expect(button('Free the seat')).toBeUndefined();
+
+            // When: Bob leaves the room
+            hub.leave(rooms.get('bob') as Room<PokerPayloads>);
+            await until(() => button('Free the seat') !== undefined);
+            await click('Free the seat');
+            await until(() => status() === 'Waiting for two players to sit.');
+
+            // Then
+            expect(text('#seat-top')).toEqual('Free seat');
+            expect(hub.types().filter((type: string) => type === SPGameSessionType.UNSEAT)).toHaveLength(1);
+        });
+
+        test('should tell the check of the decks of a former match on its line, once it ends', async () => {
+            // Given: the check of the first match lasts until the next one started
+            let check: (verification: DeckVerification) => void = () => undefined;
+            const disclose = vi.spyOn(MentalDeck.prototype, 'disclose').mockReturnValue(new Promise<DeckVerification>((resolve) => check = resolve));
+            const bob: SeventeenPokerSession = await dealt(rules);
+            await click('Bet 1');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.FOLD);
+            await until(() => text('p.muted-note') === 'Checking every deck…');
+            disclose.mockRestore();
+
+            // When
+            await click('Play again');
+            await until(() => status() === 'bob to deal.');
+
+            // Then
+            expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips. Checking every deck…');
+
+            // When
+            check(DeckVerification.FAIR);
+
+            // Then
+            await until(() => text('#past-matches li') === 'Match 1: alice wins the match with 155 chips. Every deck was fair.');
+            expect(element().querySelector('p.muted-note')).toBeNull();
         });
 
         test.each<{ verification: Promise<DeckVerification>; text: string }>([

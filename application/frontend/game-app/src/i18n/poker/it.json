@@ -90,7 +90,8 @@
       "free": "Posto libero",
       "gain": "+{amount}",
       "leave": "Lascia il posto",
-      "play": "Siediti"
+      "play": "Siediti",
+      "release": "Libera il posto"
     },
     "spectators": "Spettatori: {count}",
     "status": {

@@ -90,7 +90,8 @@
       "free": "Boş yer",
       "gain": "+{amount}",
       "leave": "Yeri bırak",
-      "play": "Otur"
+      "play": "Otur",
+      "release": "Yeri boşalt"
     },
     "spectators": "İzleyiciler: {count}",
     "status": {

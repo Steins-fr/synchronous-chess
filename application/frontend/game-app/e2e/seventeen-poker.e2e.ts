@@ -121,7 +121,7 @@ test.describe('Seventeen poker', () => {
         await expect(table(carol).locator('details li')).toHaveText('Hand 1: alice folds, bob takes the pot of 11.', { timeout: 60_000 });
     });
 
-    test('ends the match of a player away once the time of its move is over, 30 seconds more', SLOW, async ({ poker }) => {
+    test('ends the match of a player away once the time of its move is over, 30 seconds more, freeing its seat', SLOW, async ({ poker }) => {
         // A move of 45 seconds and 30 more
         test.setTimeout(150_000);
         const [alice, bob, carol] = await seated(poker);
@@ -135,6 +135,15 @@ test.describe('Seventeen poker', () => {
         await expect(table(carol).locator('.badge-win')).toHaveText('bob was away when the time ran out: alice wins the match.', { timeout: 90_000 });
         await table(carol).getByText('Hands played').click();
         await expect(table(carol).locator('details li')).toHaveText('Hand 1: bob folds, alice takes the pot of 10.');
+
+        // Bob lost his seat: Carol takes it, Alice starts a new match, the decks of the first one waiting for his keys
+        await table(carol).locator('#seat-top').getByRole('button', { name: 'Sit here' }).click();
+        await table(alice).getByRole('button', { name: 'Play again' }).click();
+        await expect(table(alice).getByRole('status')).toHaveText('carol to deal.');
+        await table(alice).getByText('Matches played').click();
+        await expect(table(alice).locator('#past-matches li')).toHaveText(/Match 1: bob was away when the time ran out: alice wins the match\.\s+Checking every deck…/);
+        await table(carol).getByRole('button', { name: 'Deal' }).click();
+        await expect(table(alice).getByRole('status')).toHaveText('Your turn.');
     });
 
     test('gives the pot to the other player when a player folds, the folded hand staying hidden', async ({ poker }) => {

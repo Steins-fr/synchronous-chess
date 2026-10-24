@@ -90,7 +90,8 @@
       "free": "Kursi kosong",
       "gain": "+{amount}",
       "leave": "Tinggalkan kursi",
-      "play": "Duduk"
+      "play": "Duduk",
+      "release": "Kosongkan kursi"
     },
     "spectators": "Penonton: {count}",
     "status": {

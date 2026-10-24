@@ -90,7 +90,8 @@
       "free": "Freier Platz",
       "gain": "+{amount}",
       "leave": "Platz verlassen",
-      "play": "Hinsetzen"
+      "play": "Hinsetzen",
+      "release": "Platz freigeben"
     },
     "spectators": "Zuschauer: {count}",
     "status": {

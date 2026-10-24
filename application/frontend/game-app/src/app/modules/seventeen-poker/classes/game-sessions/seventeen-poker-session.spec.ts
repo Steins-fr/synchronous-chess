@@ -95,6 +95,7 @@ describe('SeventeenPokerSession', () => {
             [SPGameSessionType.EXCHANGE]: BlockChainName.POKER,
             [SPGameSessionType.TIMEOUT]: BlockChainName.POKER,
             [SPGameSessionType.REMATCH]: BlockChainName.POKER,
+            [SPGameSessionType.UNSEAT]: BlockChainName.POKER,
             [MentalDeckMessageType.SHUFFLE]: BlockChainName.POKER,
             [MentalDeckMessageType.LOCK]: BlockChainName.POKER,
             [MentalDeckMessageType.KEYS]: BlockChainName.POKER,
@@ -586,6 +587,22 @@ describe('SeventeenPokerSession', () => {
             await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
         });
 
+        test('should free the seat of the player away, its match lost on time', async () => {
+            // Given
+            const [alice, bob, carol] = table();
+            await deal(alice, bob, carol);
+
+            // When
+            bob.claimTimeout();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match().result() !== null);
+
+            // Then: the match keeps its players
+            expect(carol.seats()).toEqual([null, 'bob']);
+            expect(alice.mySeat()).toBeNull();
+            expect(carol.players()).toEqual(['alice', 'bob']);
+            expect(carol.seatsOpen()).toBe(true);
+        });
+
         test('should ignore a timeout before the first hand, once the move is played, of the player to act or of a spectator', async () => {
             // Given
             const [alice, bob, carol] = table();
@@ -656,7 +673,7 @@ describe('SeventeenPokerSession', () => {
         async function played(alice: SeventeenPokerSession, bob: SeventeenPokerSession, carol: SeventeenPokerSession): Promise<void> {
             await deal(alice, bob, carol);
             alice.bet(BetAction.FOLD);
-            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.checked());
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
         }
 
         /** The participants applied the new match */
@@ -679,29 +696,100 @@ describe('SeventeenPokerSession', () => {
             expect(alice.match().result()).toEqual({ winner: TWO, stacks: [145, 155] });
         });
 
-        test('should wait for the check of the decks of the match over to apply a seat request', async () => {
-            // Given: the check of Carol lasts until Alice leaves her seat
+        test('should not wait for the check of the decks of the match over, which ends on the line of the match', async () => {
+            // Given: the check of Carol lasts until the next match started
             const [alice, bob, carol] = table(rules);
             await deal(alice, bob, carol);
             let check: (verification: DeckVerification) => void = () => undefined;
             vi.spyOn(carol.deck() as NonNullable<ReturnType<typeof carol.deck>>, 'disclose').mockReturnValue(new Promise<DeckVerification>((resolve) => check = resolve));
             alice.bet(BetAction.FOLD);
-            await settled([alice, bob], (session: SeventeenPokerSession) => session.checked());
+            await settled([carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.CHECKING);
 
             // When
             alice.leaveSeat();
-            await settled([alice], (session: SeventeenPokerSession) => session.seats()[ONE] === null);
-            await flush();
+            carol.takeSeat(ONE);
+            bob.rematch();
+            await settled([alice, bob, carol], restarted);
 
             // Then
-            expect(carol.verification()).toEqual(DeckVerification.CHECKING);
-            expect(carol.seats()).toEqual(['alice', 'bob']);
+            expect(carol.seats()).toEqual(['carol', 'bob']);
+            expect(carol.pastMatches()[0].verification()).toEqual(DeckVerification.CHECKING);
+            expect(carol.verification()).toEqual(DeckVerification.PENDING);
 
             // When
             check(DeckVerification.FAIR);
 
             // Then
-            await settled([carol], (session: SeventeenPokerSession) => session.seats()[ONE] === null);
+            await vi.waitFor(() => expect(carol.pastMatches()[0].verification()).toEqual(DeckVerification.FAIR));
+            expect(carol.verification()).toEqual(DeckVerification.PENDING);
+        });
+
+        test('should start a new match once a player away lost the former one on time, its keys never given', async () => {
+            // Given: Alice leaves for good, on her move
+            const [alice, bob, carol] = table(rules);
+            await deal(alice, bob, carol);
+            alice.destroy();
+            hub.leave(rooms.get('alice') as Room<PokerPayloads>);
+
+            // When: Bob claims the timeout, Carol takes the seat of Alice, Bob starts a new match
+            bob.claimTimeout();
+            await settled([bob, carol], (session: SeventeenPokerSession) => session.seatsOpen());
+            carol.takeSeat(ONE);
+            bob.rematch();
+            await settled([bob, carol], restarted);
+            await deal(carol, bob, carol);
+
+            // Then: the decks of the former match wait for the keys of Alice
+            expect(carol.pastMatches()[0].verification()).toEqual(DeckVerification.CHECKING);
+            expect(carol.deck()?.players).toEqual(['carol', 'bob']);
+            expect(carol.myTurn()).toBe(true);
+        });
+
+        describe('a seat freed by the other player', () => {
+            test('should free the seat of the other player while the seats are open', async () => {
+                // Given
+                const [alice, bob, carol] = table(rules);
+                await settled(sessions, (session: SeventeenPokerSession) => !session.seats().includes(null));
+
+                // When
+                bob.unseat(ONE);
+                await settled(sessions, (session: SeventeenPokerSession) => session.seats()[ONE] === null);
+
+                // Then
+                expect(alice.mySeat()).toBeNull();
+                expect(carol.seats()).toEqual([null, 'bob']);
+            });
+
+            test.each<{ name: string; from: string; seat: unknown }>([
+                { name: 'a spectator', from: 'carol', seat: ONE },
+                { name: 'a player for its own seat', from: 'alice', seat: ONE },
+                { name: 'a seat that does not exist', from: 'alice', seat: 2 },
+            ])('should not free a seat asked by $name', async ({ from, seat }) => {
+                // Given
+                const [, bob, carol] = table(rules);
+
+                // When
+                hub.send({ from, type: SPGameSessionType.UNSEAT, payload: { seat } });
+                bob.leaveSeat();
+                await settled([carol], (session: SeventeenPokerSession) => session.seats()[TWO] === null);
+
+                // Then
+                expect(carol.seats()).toEqual(['alice', null]);
+            });
+
+            test('should not free a seat during a match', async () => {
+                // Given
+                const [alice, bob, carol] = table(rules);
+                await deal(alice, bob, carol);
+
+                // When
+                bob.unseat(ONE);
+                alice.bet(BetAction.CHECK);
+                await settled([carol], (session: SeventeenPokerSession) => session.match().hand()?.moves === 1);
+
+                // Then
+                expect(carol.seats()).toEqual(['alice', 'bob']);
+            });
         });
 
         test('should start a new match on the first request of a seated player, the second seat dealing its first hand', async () => {
@@ -717,7 +805,7 @@ describe('SeventeenPokerSession', () => {
 
             // Then
             sessions.forEach((session: SeventeenPokerSession) => {
-                expect(session.pastMatches()).toEqual([{ players: ['alice', 'bob'], result: { winner: TWO, stacks: [145, 155] }, forfeited: null }]);
+                expect(session.pastMatches()).toMatchObject([{ players: ['alice', 'bob'], result: { winner: TWO, stacks: [145, 155] }, forfeited: null }]);
                 expect(session.match().hand()).toBeNull();
                 expect(session.match().stacks()).toEqual([150, 150]);
                 expect(session.match().outcomes()).toEqual([]);
@@ -740,7 +828,7 @@ describe('SeventeenPokerSession', () => {
             // When
             await deal(alice, bob, carol);
             alice.bet(BetAction.FOLD);
-            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.checked());
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
 
             // Then
             expect(carol.deck()?.id).toEqual(`${ one }:${ two }:1:0`);
@@ -804,7 +892,7 @@ describe('SeventeenPokerSession', () => {
 
             // When: Alice leaves once the match is over, then asks for a new match
             alice.bet(BetAction.FOLD);
-            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.checked());
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
             bob.leaveSeat();
             alice.rematch();
             await settled([alice], (session: SeventeenPokerSession) => !session.sending());

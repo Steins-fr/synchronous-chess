@@ -58,6 +58,23 @@ describe('PokerSeatComponent', () => {
         expect(leave).toHaveBeenCalledTimes(1);
     });
 
+    test('should let the other player free the seat of its player, away', async () => {
+        // Given
+        const release = vi.fn();
+        fixture.componentInstance.release.subscribe(release);
+
+        // When
+        fixture.componentRef.setInput('name', 'bob');
+        fixture.componentRef.setInput('chips', 150);
+        fixture.componentRef.setInput('canRelease', true);
+        await fixture.whenStable();
+        button()?.click();
+
+        // Then
+        expect(text()).toEqual('bob150 chipsFree the seat');
+        expect(release).toHaveBeenCalledTimes(1);
+    });
+
     test('should show the clock of the move of its player, running out from 5 seconds', async () => {
         // Given
         const clock = (): HTMLElement | null => fixture.nativeElement.querySelector('.turn-clock');

@@ -90,7 +90,8 @@
       "free": "Свободное место",
       "gain": "+{amount}",
       "leave": "Освободить место",
-      "play": "Сесть"
+      "play": "Сесть",
+      "release": "Убрать с места"
     },
     "spectators": "Зрители: {count}",
     "status": {
