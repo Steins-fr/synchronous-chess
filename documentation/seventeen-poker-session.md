@@ -141,9 +141,12 @@ The table shows the local player at its bottom, a spectator the first seat.
    match settles the pot with the cards opened. A folded hand stays hidden.
 
 A deck that breaks (a step that is not a deck, a hand that does not open) stops the match, without a result: the
-table tells it, and no hand is dealt anymore. The session then ignores every message of the game but the seats and a
-new match (`over` is true): the seats open, and a seated player may start a new match, as after a match over. The
-decks of the hands played before are not disclosed.
+table tells it, and no hand is dealt anymore. The session then ignores the moves of the match (`SP_deal`, `SP_bet`,
+`SP_exchange`, `SP_timeout`) but applies the seats (`SP_seat`, `SP_unseat`) and a new match (`SP_rematch`), `over`
+being true: the seats open, and a seated player may start a new match, as after a match over. Every deck of the match
+is disclosed at once: the players drop their secrets, and the participants report the cheats of the decks played
+before, as a key not giving any card at the showdown. The broken deck discloses nothing. The match has no check of its
+own: while a seat is free, the note of the check tells the cheat, the status telling the table waits for a player.
 
 ## End of the match
 
@@ -260,7 +263,8 @@ grows does not fly.
 - The clock runs on the page of each player, and no page can tell when the other one was away: a page changed not to
   play the move once its time is over keeps the other player waiting while connected, and a page changed to send
   `SP_timeout` early ends the match of the other player, and a page changed to send `SP_unseat` frees the seat of the
-  other player between two matches, which it takes back with `Sit here`. Once the match is over, its decks are checked
+  other player between two matches: it takes it back with `Sit here`, unless another participant, an accomplice, takes
+  it first. Once the match is over, its decks are checked
   once the player away is back, its keys disclosed: never if it does not come back, the next match not waiting for it.
 - A page hidden for long plays the move late: the browser runs its timers once a minute after 5 minutes hidden
   (Chrome), and none on a frozen page (a phone putting it in the background), until it is shown again. As its deck

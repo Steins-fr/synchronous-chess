@@ -775,6 +775,26 @@ describe('SeventeenPokerSession', () => {
             expect(carol.myTurn()).toBe(true);
         });
 
+        test('should disclose the decks of a match a broken deck stopped', async () => {
+            // Given: a first hand played, Bob locks the deck of the second one with cards not of the deck
+            let cheat: boolean = false;
+            const [alice, bob, carol] = table(undefined, {
+                bob: (message: AppMessage) => cheat && message.type === MentalDeckMessageType.LOCK ? { ...message, payload: { ...message.payload as object, cards: ['1'] } } : message,
+            });
+            await deal(alice, bob, carol);
+            alice.bet(BetAction.FOLD);
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match().hand()?.phase === HandPhase.OVER);
+            cheat = true;
+
+            // When
+            alice.deal();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.broken());
+
+            // Then: both players give the keys of the first deck, the broken one giving none
+            await vi.waitFor(() => expect(messagesOf(MentalDeckMessageType.DISCLOSE)).toHaveLength(2));
+            expect(carol.verification()).toEqual(DeckVerification.PENDING);
+        });
+
         describe('a seat freed by the other player', () => {
             test('should free the seat of the other player while the seats are open', async () => {
                 // Given

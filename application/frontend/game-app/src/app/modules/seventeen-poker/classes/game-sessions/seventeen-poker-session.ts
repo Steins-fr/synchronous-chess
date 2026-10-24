@@ -136,6 +136,11 @@ interface SeatedPlayer {
     readonly salt: string;
 }
 
+/** The messages of a match in progress, which a broken deck stops */
+const MATCH_MOVES: ReadonlySet<SPGameSessionType> = new Set<SPGameSessionType>([
+    SPGameSessionType.DEAL, SPGameSessionType.BET, SPGameSessionType.EXCHANGE, SPGameSessionType.TIMEOUT,
+]);
+
 /** The bytes of the salt of a player */
 const SALT_LENGTH: number = 16;
 const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
@@ -342,8 +347,8 @@ export class SeventeenPokerSession {
             this._sending.set(false);
         }
 
-        // A broken deck stops the match: its seats open, a new match may start
-        if (this._broken() && message.type !== SPGameSessionType.SEAT && message.type !== SPGameSessionType.REMATCH && message.type !== SPGameSessionType.UNSEAT) {
+        // A broken deck stops the moves of the match: its seats open, a new match may start
+        if (this._broken() && MATCH_MOVES.has(message.type)) {
             return;
         }
 
@@ -522,6 +527,15 @@ export class SeventeenPokerSession {
         this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, seat, null));
     }
 
+    /**
+     * A broken deck stops the match. Its decks are disclosed, for the players to drop their secrets and the participants
+     * to report the cheats: a key not giving any card at the showdown tells who gave it
+     */
+    private stop(): void {
+        this._broken.set(true);
+        this.decks.forEach((deck: MentalDeck) => void deck.disclose());
+    }
+
     /** Waits for the cards dealt: a broken deck stops the match */
     private async dealt(dealing: Promise<unknown>): Promise<void> {
         this._dealing.set(true);
@@ -529,7 +543,7 @@ export class SeventeenPokerSession {
         try {
             await dealing;
         } catch {
-            this._broken.set(true);
+            this.stop();
         } finally {
             this._dealing.set(false);
         }
@@ -544,7 +558,7 @@ export class SeventeenPokerSession {
         try {
             opened = await deck.open([...positions[PokerSeat.ONE], ...positions[PokerSeat.TWO]]);
         } catch {
-            this._broken.set(true);
+            this.stop();
             return;
         }
 
@@ -552,7 +566,7 @@ export class SeventeenPokerSession {
 
         // A key not giving any card: the disclosure tells who gave it
         if (hands.some((cards: Array<number | undefined>) => cards.includes(undefined))) {
-            this._broken.set(true);
+            this.stop();
             return;
         }
 

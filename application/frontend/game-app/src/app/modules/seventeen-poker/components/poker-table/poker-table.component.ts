@@ -300,7 +300,16 @@ export class PokerTableComponent implements OnDestroy {
         return result === null ? null : this.resultText({ players: session.players(), result, forfeited: session.match().forfeited() });
     });
 
-    protected readonly verification: Signal<TranslatableText | null> = computed((): TranslatableText | null => this.verificationText(this.session().verification()));
+    protected readonly verification: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
+        const session: SeventeenPokerSession = this.session();
+
+        // A free seat takes the status of a match stopped by a broken deck: the note tells the cheat then
+        if (session.broken() && session.seats().includes(null)) {
+            return this.verificationText(DeckVerification.CHEATED);
+        }
+
+        return this.verificationText(session.verification());
+    });
 
     // The places of the chips on the table
     private readonly tableView: Signal<ElementRef<HTMLElement>> = viewChild.required('tableSection');

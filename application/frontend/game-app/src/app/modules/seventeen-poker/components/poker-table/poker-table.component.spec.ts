@@ -705,11 +705,17 @@ describe('PokerTableComponent', () => {
         // When: Alice leaves her seat, then takes it again
         await click('Leave the seat');
         await until(() => status() === 'Waiting for two players to sit.');
+
+        // Then: the note tells the cheat meanwhile
+        expect(text('p.muted-note')).toEqual('A deck was cheated.');
+
+        // When
         (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => button('Play again') !== undefined);
 
         // Then
         expect(status()).toEqual('A deck was cheated: the match stops.');
+        expect(element().querySelector('p.muted-note')).toBeNull();
 
         // When
         await click('Play again');
