@@ -136,6 +136,12 @@ describe('CreateHandler', () => {
         ['room name of other characters than spaces', { ...request, roomName: '   ' }],
         ['room name of a reasonable length', { ...request, roomName: 'r'.repeat(33) }],
         ['room name without a tag separator', { ...request, roomName: 'room#1' }],
+        ['room name without a space', { ...request, roomName: 'my room' }],
+        ['room name without a space around it', { ...request, roomName: ' room' }],
+        ['room name without a tab', { ...request, roomName: 'my\troom' }],
+        ['room name without a no-break space', { ...request, roomName: 'my\u00A0room' }],
+        ['room name without a zero width space', { ...request, roomName: 'my\u200Broom' }],
+        ['room name without a word joiner', { ...request, roomName: 'my\u2060room' }],
         ['player name of a reasonable length', { ...request, playerName: 'p'.repeat(33) }],
         ['player name', { ...request, playerName: '' }],
         ['player count', { ...request, maxPlayer: 0 }],
@@ -181,14 +187,6 @@ describe('CreateHandler', () => {
         expect(await readRoom('room#000042')).toBeNull();
     });
 
-    test('should create a room under the trimmed name', async () => {
-        // When
-        await create({ ...request, roomName: '  my room ' });
-
-        // Then
-        expect((await readRoom('my room#000042'))?.connectionId).toEqual(HOST_CONNECTION);
-    });
-
     test('should create a room whose name is taken under another tag, of any game', async () => {
         // Given: the name taken in another game, the first tag drawn taken
         const existing: Room = aRoom({ id: 'room#000042', game: RoomGame.CHAT, connectionId: 'other-connection' });
@@ -205,6 +203,19 @@ describe('CreateHandler', () => {
         expect(postedPackets(apiGateway)).toEqual([
             { to: HOST_CONNECTION, packet: { id: 7, type: 'created', data: { roomName: 'room#000007', playerName: 'host', maxPlayer: 4 } } },
         ]);
+    });
+
+    test('should create a room under another tag than a room of the same name of another case', async () => {
+        // Given: the first tag drawn taken by the name of another case
+        await storeRoom(aRoom({ id: 'Room#000042', connectionId: 'other-connection' }));
+        vi.mocked(randomRoomTag).mockReturnValueOnce(42).mockReturnValueOnce(7);
+
+        // When
+        await create(request);
+
+        // Then
+        expect(await readRoom('room#000042')).toBeNull();
+        expect((await readRoom('room#000007'))?.connectionId).toEqual(HOST_CONNECTION);
     });
 
     test('should create a room under the tag following the highest one of its name, once the tags drawn are taken', async () => {

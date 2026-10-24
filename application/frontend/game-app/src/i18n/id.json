@@ -81,6 +81,7 @@
         "required": "Nama pemain wajib diisi"
       },
       "roomName": {
+        "blank": "Nama ruang tidak boleh berisi spasi",
         "label": "Nama ruang",
         "maxLength": "Nama ruang paling banyak {maxLength, plural, other {# karakter}}",
         "required": "Nama ruang wajib diisi",

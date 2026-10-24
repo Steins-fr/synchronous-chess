@@ -81,6 +81,7 @@
         "required": "Nazwa gracza jest wymagana"
       },
       "roomName": {
+        "blank": "Nazwa pokoju nie może zawierać spacji",
         "label": "Nazwa pokoju",
         "maxLength": "Nazwa pokoju ma co najwyżej {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
         "required": "Nazwa pokoju jest wymagana",

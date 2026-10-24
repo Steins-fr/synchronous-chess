@@ -109,9 +109,9 @@ export default class RoomManagerService {
         };
     }
 
-    /** The id of the room of the name: the name trimmed, the separator, then the digits of the tag the API drew */
+    /** The id of the room of the name: the name, the separator, then the digits of the tag the API drew */
     private static isRoomId(roomId: string, roomName: string): boolean {
-        const prefix: string = `${ roomName.trim() }${ ROOM_TAG_SEPARATOR }`;
+        const prefix: string = `${ roomName }${ ROOM_TAG_SEPARATOR }`;
         const tag: string = roomId.slice(prefix.length);
         return roomId.startsWith(prefix) && tag.length === ROOM_TAG_DIGITS && /^\d+$/.test(tag);
     }

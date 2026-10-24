@@ -81,6 +81,7 @@
         "required": "Der Spielername ist erforderlich"
       },
       "roomName": {
+        "blank": "Der Raumname darf keine Leerzeichen enthalten",
         "label": "Raumname",
         "maxLength": "Der Raumname hat höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
         "required": "Der Raumname ist erforderlich",

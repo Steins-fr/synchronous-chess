@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "rooms_name_key" ON "rooms" ("name_key");

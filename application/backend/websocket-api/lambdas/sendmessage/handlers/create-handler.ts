@@ -4,7 +4,7 @@ import { randomRoomTag, tagRoomName } from '@helpers/room-tag.helper';
 import { isName } from '@helpers/text.helper';
 import { isToken } from '@helpers/token.helper';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
-import { PLAYER_NAME_MAX_LENGTH, ROOM_MAX_PLAYERS, ROOM_NAME_MAX_LENGTH, ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_MAX_PLAYERS, ROOM_NAME_BLANK, ROOM_NAME_MAX_LENGTH, ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
 import { isRoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
@@ -18,7 +18,7 @@ export default class CreateHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.CREATE);
 
-        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || data.roomName.includes(ROOM_TAG_SEPARATOR) || !CreateHandler.isMaxPlayer(data.maxPlayer)
+        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !CreateHandler.isRoomName(data.roomName) || !CreateHandler.isMaxPlayer(data.maxPlayer)
             || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isRoomGame(data.game)
             || (data.password !== undefined && !isPassword(data.password))) {
             throw new BadRequestException(CreateHandler.ERROR_PARSING);
@@ -41,10 +41,8 @@ export default class CreateHandler extends MessageHandler {
      * @throws {BadRequestException} when no tag is left for the name
      */
     private async createTagged(data: RoomCreateRequest): Promise<string> {
-        const name: string = data.roomName.trim();
-
         for (let attempt: number = 0; attempt < CreateHandler.RANDOM_TAG_ATTEMPTS; attempt++) {
-            const roomId: string = tagRoomName(name, randomRoomTag());
+            const roomId: string = tagRoomName(data.roomName, randomRoomTag());
             // eslint-disable-next-line no-await-in-loop -- the next tag drawn once this one is taken only
             if (await this.createRoom(data, roomId)) {
                 return roomId;
@@ -53,13 +51,13 @@ export default class CreateHandler extends MessageHandler {
 
         for (let attempt: number = 0; attempt < CreateHandler.NEXT_TAG_ATTEMPTS; attempt++) {
             // eslint-disable-next-line no-await-in-loop -- read again once another room took the tag read
-            const tag: number | undefined = await this.roomService.nextRoomTag(name);
+            const tag: number | undefined = await this.roomService.nextRoomTag(data.roomName);
 
             if (tag === undefined) {
                 break;
             }
 
-            const roomId: string = tagRoomName(name, tag);
+            const roomId: string = tagRoomName(data.roomName, tag);
             // eslint-disable-next-line no-await-in-loop -- the next tag read once this one is taken only
             if (await this.createRoom(data, roomId)) {
                 return roomId;
@@ -75,6 +73,11 @@ export default class CreateHandler extends MessageHandler {
         // host connection would never wait for it
         await this.createConnection(roomId);
         return this.roomService.create(data, roomId, this.connectionId);
+    }
+
+    /** A name its tag follows: without the tag separator, nor a blank hiding in it */
+    private static isRoomName(name: string): boolean {
+        return !name.includes(ROOM_TAG_SEPARATOR) && !ROOM_NAME_BLANK.test(name);
     }
 
     /** Listed to every player of the game: a whole number of players, from the host alone to ROOM_MAX_PLAYERS */

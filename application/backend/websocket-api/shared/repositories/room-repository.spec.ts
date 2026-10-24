@@ -103,6 +103,17 @@ describe('RoomRepository', () => {
             expect(await repository.findRoomsContaining(RoomGame.CHESS, 'eve', NOW, 1)).toStrictEqual([aListedRoom({ id: 'eve' })]);
         });
 
+        test('should find the room of the name searched before the longer names starting with it', async () => {
+            // Given: the characters before the separator in their order
+            await storeRoom(aRoom({ id: 'room!#000001' }));
+            await storeRoom(aRoom({ id: 'room#000042' }));
+            await storeRoom(aRoom({ id: 'Room#000007' }));
+
+            // When / Then
+            expect((await repository.findRoomsContaining(RoomGame.CHESS, 'room', NOW, 30)).map(({ id }: ListedRoom) => id))
+                .toEqual(['Room#000007', 'room#000042', 'room!#000001']);
+        });
+
         test('should find the rooms by their name only, not by the digits of their tags nor by the separator', async () => {
             // Given
             await storeRoom(aRoom({ id: 'friday#100001', nameKey: 'friday#100001' }));
@@ -138,18 +149,19 @@ describe('RoomRepository', () => {
     });
 
     describe('findLastTag', () => {
-        test('should find the highest tag of the rooms of the name not expired, of any game', async () => {
+        test('should find the highest tag of the rooms of the name not expired, of any game and any case', async () => {
             // Given
             await storeRoom(aRoom({ id: 'friday#000009', nameKey: 'friday#000009' }));
             await storeRoom(aRoom({ id: 'friday#000042', nameKey: 'friday#000042', game: RoomGame.CHAT }));
             await storeRoom(aRoom({ id: 'friday#000099', nameKey: 'friday#000099', expiresAt: NOW }));
             await storeRoom(aRoom({ id: 'Friday#000098', nameKey: 'friday#000098' }));
+            await storeRoom(aRoom({ id: 'friday#000097', nameKey: 'friday#000097' }));
             await storeRoom(aRoom({ id: 'friday-night#999999', nameKey: 'friday-night#999999' }));
             await storeRoom(aRoom({ id: 'fri#999999', nameKey: 'fri#999999' }));
             await storeRoom(aRoom({ id: 'friday', nameKey: 'friday' }));
 
-            // When / Then: of the same case
-            expect(await repository.findLastTag('friday', NOW)).toEqual(42);
+            // When / Then
+            expect(await repository.findLastTag('friday', NOW)).toEqual(98);
         });
 
         test('should find no tag without a room of the name', async () => {
@@ -194,8 +206,8 @@ describe('RoomRepository', () => {
             await storeTags('friday', '000000', '000001', '000003', '000004', '999999');
             await storeTags('Friday', '000002');
 
-            // When / Then: the tags of the name of another case not counted
-            expect(await repository.findFirstFreeTag('friday', NOW)).toEqual(2);
+            // When / Then: the tags of the name of another case counted
+            expect(await repository.findFirstFreeTag('friday', NOW)).toEqual(5);
         });
 
         test('should find the tag of a room expired', async () => {
@@ -263,6 +275,20 @@ describe('RoomRepository', () => {
             // Then
             expect(await readRoom('room')).toStrictEqual(room);
             expect(await getDatabase().select().from(roomPasswordAttempts)).toEqual([]);
+        });
+
+        test('should create no room of the id of a room of another case', async () => {
+            // Given
+            const existing: Room = aRoom({ id: 'Room#000042', connectionId: 'other-connection' });
+            await storeRoom(existing);
+
+            // When
+            const created: boolean = await repository.create(aRoom({ id: 'room#000042' }), NOW);
+
+            // Then
+            expect(created).toBe(false);
+            expect(await readRoom('Room#000042')).toStrictEqual(existing);
+            expect(await readRoom('room#000042')).toBeNull();
         });
 
         test('should delete the other rooms expired, the ones whose lease ended included', async () => {

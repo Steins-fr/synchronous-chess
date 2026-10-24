@@ -124,7 +124,8 @@ export default class RoomRepository extends BaseRepository {
 
     /**
      * The rooms of the game not expired at `now` whose name holds the search, whatever the case, or whose id holds it, for
-     * a search holding the tag separator: the ids starting with it first, then by id, the id equal to the search first
+     * a search holding the tag separator: the ids starting with it first, then by name, the name equal to the search
+     * first, then by id
      * @param search the search key (search.helper) of a part of the name, or of the id
      */
     public async findRoomsContaining(game: RoomGame, search: string, now: number, maxRooms: number): Promise<ListedRoom[]> {
@@ -136,44 +137,48 @@ export default class RoomRepository extends BaseRepository {
             : like(sql`split_part(${ rooms.nameKey }, ${ ROOM_TAG_SEPARATOR }, 1)`, pattern);
         const rows: ListedRoomRow[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<ListedRoomRow[]> => this.db.select(RoomRepository.LISTED_ROOM).from(rooms)
             .where(and(eq(rooms.game, game), notExpired(now), like(rooms.nameKey, pattern), nameHolds))
-            // The ids starting with the search first (false before true), then in the order of their characters: the
-            // same on PGlite and on the cluster whatever their locale
-            .orderBy(sql`strpos(${ rooms.nameKey }, ${ search }) <> 1`, sql`${ rooms.nameKey } COLLATE "C"`)
+            // The ids starting with the search first (false before true), then in the order of the characters of their
+            // name, a name before the longer ones, then of their tag: the same on PGlite and on the cluster whatever their
+            // locale
+            .orderBy(
+                sql`strpos(${ rooms.nameKey }, ${ search }) <> 1`,
+                sql`split_part(${ rooms.nameKey }, ${ ROOM_TAG_SEPARATOR }, 1) COLLATE "C"`,
+                sql`${ rooms.nameKey } COLLATE "C"`,
+            )
             .limit(maxRooms));
 
         return rows.map((row: ListedRoomRow): ListedRoom => RoomRepository.toListedRoom(row));
     }
 
     /**
-     * The rooms of the name not expired at `now`, the name holding no tag separator: their id is the name, the separator
-     * and a tag of all its digits. Read through the trigram index of their search key, then by their exact id, of the
-     * same case
+     * The rooms of the name not expired at `now`, whatever its case, the name holding no tag separator: their id is the
+     * name, the separator and a tag of all its digits. Read through the trigram index of their search key
      */
     private static ofName(name: string, now: number): SQL {
-        return and(like(rooms.nameKey, taggedPattern(searchKey(name))), like(rooms.id, taggedPattern(name)), notExpired(now)) as SQL;
+        return and(like(rooms.nameKey, taggedPattern(searchKey(name))), notExpired(now)) as SQL;
     }
 
     /**
-     * The highest tag of the rooms of the name not expired at `now`: undefined when no room has that name. An expired
-     * room is deleted by the creation of a room, its tag free
+     * The highest tag of the rooms of the name not expired at `now`, whatever its case: undefined when no room has that
+     * name. An expired room is deleted by the creation of a room, its tag free
      */
     public async findLastTag(name: string, now: number): Promise<number | undefined> {
-        const rows: { id: string }[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<{ id: string }[]> => this.db.select({ id: rooms.id }).from(rooms)
+        const rows: { nameKey: string }[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<{ nameKey: string }[]> => this.db.select({ nameKey: rooms.nameKey }).from(rooms)
             .where(RoomRepository.ofName(name, now))
-            // The tags of all their digits: the order of the ids is the order of their tags
-            .orderBy(sql`${ rooms.id } COLLATE "C" DESC`)
+            // The tags of all their digits after the same name: the order of the keys is the order of their tags
+            .orderBy(sql`${ rooms.nameKey } COLLATE "C" DESC`)
             .limit(1));
 
-        return rows.length === 0 ? undefined : Number(rows[0].id.slice(-ROOM_TAG_DIGITS));
+        return rows.length === 0 ? undefined : Number(rows[0].nameKey.slice(-ROOM_TAG_DIGITS));
     }
 
     /**
-     * The lowest tag no room of the name holds at `now`, once its highest tag is taken: 0, or the tag following a tag
+     * The lowest tag no room of the name holds at `now`, whatever its case, once its highest tag is taken: 0, or the tag following a tag
      * taken, the next one free. A single row read, whatever the rooms of the name. Undefined when every tag is taken
      */
     public async findFirstFreeTag(name: string, now: number): Promise<number | undefined> {
         // Written in the statement: a parameter is a bigint for the Data API, and right() takes an int
-        const tag: SQL<number> = sql<number>`right(${ rooms.id }, ${ sql.raw(String(ROOM_TAG_DIGITS)) })::int`;
+        const tag: SQL<number> = sql<number>`right(${ rooms.nameKey }, ${ sql.raw(String(ROOM_TAG_DIGITS)) })::int`;
         const tags = this.db.$with('tags').as(this.db.select({
             tag: tag.as('tag'),
             previous: sql<number | null>`lag(${ tag }) OVER (ORDER BY ${ tag })`.as('previous'),
@@ -197,7 +202,7 @@ export default class RoomRepository extends BaseRepository {
      * Creates the room with its players and their tokens, replacing an expired room of the same id: a room waiting for its
      * host keeps its id. Deletes the rooms expired at `now` with their rows, the one of that id included: no scheduled
      * cleanup wakes the paused cluster
-     * @returns false when a room of that id exists at `now`: nothing created
+     * @returns false when a room of that id exists at `now`, whatever its case: nothing created
      */
     public async create(room: Room, now: number): Promise<boolean> {
         return this.run(DatabaseOperationEnum.PUT, (): Promise<boolean> => this.db.transaction(async (tx: DatabaseTransaction): Promise<boolean> => {

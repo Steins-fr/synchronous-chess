@@ -1,8 +1,9 @@
-import { maxLength, minLength, PathKind, pattern, SchemaPath, SchemaPathRules } from '@angular/forms/signals';
+import { maxLength, minLength, PathKind, pattern, SchemaPath, SchemaPathRules, validate } from '@angular/forms/signals';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { requiredText } from '@app/modules/form/rules/required-text.rule';
 import {
     PLAYER_NAME_MAX_LENGTH,
+    ROOM_NAME_BLANK,
     ROOM_NAME_MAX_LENGTH,
     ROOM_PASSWORD_MAX_LENGTH,
     ROOM_PASSWORD_MIN_LENGTH,
@@ -12,10 +13,14 @@ import {
 /** The fields of the rooms, checked as the API checks them: the dialogs refuse what the API would */
 type TextPath<TPathKind extends PathKind> = SchemaPath<string, SchemaPathRules.Supported, TPathKind>;
 
-/** The name of a room: required, of the length the API accepts, without the separator of the tag the API adds to it */
+/**
+ * The name of a room: required, of the length the API accepts, without a blank hiding in it, nor the separator of the
+ * tag the API adds to it
+ */
 export function roomNameRules<TPathKind extends PathKind = PathKind.Root>(path: TextPath<TPathKind>): void {
     requiredText(path, marker('rooms.form.roomName.required'));
     maxLength(path, ROOM_NAME_MAX_LENGTH, { message: marker('rooms.form.roomName.maxLength') });
+    validate(path, ({ value }) => (ROOM_NAME_BLANK.test(value()) ? { kind: 'blank', message: marker('rooms.form.roomName.blank') } : undefined));
     pattern(path, new RegExp(`^[^${ ROOM_TAG_SEPARATOR }]*$`), { message: marker('rooms.form.roomName.tagSeparator') });
 }
 

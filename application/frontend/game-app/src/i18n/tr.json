@@ -81,6 +81,7 @@
         "required": "Oyuncu adı zorunludur"
       },
       "roomName": {
+        "blank": "Oda adı boşluk içeremez",
         "label": "Oda adı",
         "maxLength": "Oda adı en fazla {maxLength, plural, one {# karakter} other {# karakter}} olabilir",
         "required": "Oda adı zorunludur",

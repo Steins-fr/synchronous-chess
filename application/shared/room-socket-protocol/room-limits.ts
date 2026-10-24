@@ -7,6 +7,12 @@ export const ROOM_NAME_MAX_LENGTH: number = 32;
  */
 export const ROOM_TAG_SEPARATOR: string = '#';
 
+/**
+ * The blank characters a room name can not hold, which hide in a name: the spaces of every width, the tabs and line
+ * breaks (`\s`), and the zero width spaces
+ */
+export const ROOM_NAME_BLANK: RegExp = /[\s\u180E\u200B\u2060]/u;
+
 /** The digits of the tag the API draws for a room: rooms of the same name, of any game, each get their own */
 export const ROOM_TAG_DIGITS: number = 6;
 

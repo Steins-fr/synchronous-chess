@@ -81,6 +81,7 @@
         "required": "The player name is required"
       },
       "roomName": {
+        "blank": "The room name cannot contain spaces",
         "label": "Room name",
         "maxLength": "The room name is at most {maxLength, plural, one {# character} other {# characters}} long",
         "required": "The room name is required",

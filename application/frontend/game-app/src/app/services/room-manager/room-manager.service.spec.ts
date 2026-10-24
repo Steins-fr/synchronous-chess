@@ -105,17 +105,6 @@ describe('RoomManagerService', () => {
         expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.notCreated' });
     });
 
-    test('should create a room under the trimmed name', async () => {
-        // Given
-        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'my room#000042', maxPlayer: 2, playerName: 'host' });
-
-        // When
-        room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: ' my room ', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
-
-        // Then
-        expect(room.roomConnection.roomName).toEqual('my room#000042');
-    });
-
     test('should notify when the room can not be created', async () => {
         // Given
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error('No tag left for the room name'));

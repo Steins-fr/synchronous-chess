@@ -123,7 +123,8 @@ joins its room again from the list, the join retried until the room has its plac
 
 - Without `search`, the 30 most recent rooms, the last created first. A page asks it once a person is on it, then
   again every 15 seconds.
-- With a `search`, the rooms whose name holds it, whatever the case: the ids starting with it first, then by id. A
+- With a `search`, the rooms whose name holds it, whatever the case: the ids starting with it first, then by name, the
+  name equal to the search first, then by id. A
   search holding `#` reads the whole id, its tag included (a whole id pasted finds its room): without it, the digits of
   the tags would match a search of a digit. A page asks a search once typed, or on demand, not every 15 seconds.
 - An unknown or missing game, a search longer than 64 characters or holding the NUL character, or a `game` or `search`
@@ -137,7 +138,8 @@ listed by `isPrivate`, never the hash of its password. The indexes of the `rooms
 | Index | Columns | Read by |
 |---|---|---|
 | `rooms_game_created_at` | `game`, `created_at` (the ISO date of the creation, sorted as a text) | the most recent rooms |
-| `rooms_name_key_trgm` | `name_key`, the id in lower case (`search.helper`), by trigram (`pg_trgm`) | a search |
+| `rooms_name_key_trgm` | `name_key`, the id in lower case (`search.helper`), by trigram (`pg_trgm`) | a search, the tags of a name |
+| `rooms_name_key` | `name_key`, unique: one room of an id whatever its case | the creation of a room |
 | `rooms_expiry` | `coalesce(expires_at, lease_until)`: the end of the wait for the host, else of the lease | the cleanup of the expired rooms |
 
 The list refreshed every 15 seconds keeps the cluster awake while a page shows it to a person.
@@ -145,13 +147,14 @@ The list refreshed every 15 seconds keeps the cluster awake while a page shows i
 The names of the rooms and of the players are 32 characters at most, not of spaces only, the passwords 6 to 128, the
 searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol): the API refuses longer ones.
 
-`create` gives the name of the room, without `#`: the API trims it and adds a tag of 6 digits, the id of the room
-(`friday#451203`) it answers in `created`, then each request names the room by. The rooms of the same name, of any game,
-each get their tag: a name taken is never refused, nor a name of a room of another game the page does not list. The tag
+`create` gives the name of the room, without `#` nor blank characters (spaces of every width, tabs, line breaks, zero
+width spaces: `ROOM_NAME_BLANK`): the API adds a tag of 6 digits, the id of the room (`friday#451203`) it answers in
+`created`, then each request names the room by. The rooms of the same name, of any game and any case, each get their
+tag, the ids unique whatever their case (`Friday#000042` and `friday#000042` would be found by the same search): a name taken is never refused, nor a name of a room of another game the page does not list. The tag
 is drawn at random, 5 times at most, then, every tag drawn taken, read in the table (5 times at most, another creation
 taking it meanwhile): the tag following the highest one of the name, or, the tag `999999` taken, the lowest one free.
-The creation fails once every tag of the name is taken. Both reads find the rooms of the name through the trigram index
-of `name_key`, the expired ones left out: the creation deletes them.
+The creation fails once every tag of the name is taken. Both reads find the rooms of the name, whatever its case, through
+the trigram index of `name_key`, the expired ones left out: the creation deletes them.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, without the name of its host, `join` refuses it

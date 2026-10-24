@@ -160,7 +160,7 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
     const search: string = 'r';
     assert.deepEqual(await timed('search the rooms', (): Promise<unknown> => db.select({ id: rooms.id }).from(rooms)
         .where(and(eq(rooms.game, RoomGame.CHESS), notExpired(NOW), like(rooms.nameKey, `%${ search }%`), like(sql`split_part(${ rooms.nameKey }, '#', 1)`, `%${ search }%`)))
-        .orderBy(sql`strpos(${ rooms.nameKey }, ${ search })`, sql`${ rooms.nameKey } COLLATE "C"`).limit(31)), [
+        .orderBy(sql`strpos(${ rooms.nameKey }, ${ search })`, sql`split_part(${ rooms.nameKey }, '#', 1) COLLATE "C"`, sql`${ rooms.nameKey } COLLATE "C"`).limit(31)), [
         { id: 'Room' },
         { id: 'Private' },
     ]);
@@ -170,10 +170,10 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
         // eslint-disable-next-line no-await-in-loop -- created one after the other
         await createRoom(db, id);
     }
-    const ofName: SQL = and(like(rooms.nameKey, 'tag#______'), like(rooms.id, 'Tag#______'), notExpired(NOW)) as SQL;
-    assert.deepEqual(await timed('find the last tag of a name', (): Promise<unknown> => db.select({ id: rooms.id }).from(rooms)
-        .where(ofName).orderBy(sql`${ rooms.id } COLLATE "C" DESC`).limit(1)), [{ id: 'Tag#999999' }]);
-    const tag: SQL<number> = sql<number>`right(${ rooms.id }, 6)::int`;
+    const ofName: SQL = and(like(rooms.nameKey, 'tag#______'), notExpired(NOW)) as SQL;
+    assert.deepEqual(await timed('find the last tag of a name', (): Promise<unknown> => db.select({ nameKey: rooms.nameKey }).from(rooms)
+        .where(ofName).orderBy(sql`${ rooms.nameKey } COLLATE "C" DESC`).limit(1)), [{ nameKey: 'tag#999999' }]);
+    const tag: SQL<number> = sql<number>`right(${ rooms.nameKey }, 6)::int`;
     const tags = db.$with('tags').as(db.select({
         tag: tag.as('tag'),
         previous: sql<number | null>`lag(${ tag }) OVER (ORDER BY ${ tag })`.as('previous'),
@@ -185,6 +185,8 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
     END`;
     assert.deepEqual(await timed('find the first tag free of a name', (): Promise<unknown> => db.with(tags).select({ free }).from(tags)
         .where(isNotNull(free)).orderBy(free).limit(1)), [{ free: 2 }]);
+    // RoomRepository.create: no room of the id of a room of another case (rooms_name_key)
+    assert.equal(await createRoom(db, 'TAG#000000'), false, 'the id of another case');
     await db.delete(rooms).where(like(rooms.id, 'Tag#%'));
 
     // RoomRepository.reconnectHost

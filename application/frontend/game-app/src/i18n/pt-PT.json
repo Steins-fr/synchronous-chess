@@ -81,6 +81,7 @@
         "required": "O nome do jogador é obrigatório"
       },
       "roomName": {
+        "blank": "O nome da sala não pode conter espaços",
         "label": "Nome da sala",
         "maxLength": "O nome da sala tem, no máximo, {maxLength, plural, one {# carácter} other {# carateres}}",
         "required": "O nome da sala é obrigatório",
