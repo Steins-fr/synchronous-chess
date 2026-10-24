@@ -82,6 +82,7 @@
     "result": {
       "draw": "Remis: Beide Spieler enden mit {chips, plural, one {# Chip} other {# Chips}}.",
       "forfeit": "Die Zeit lief ab, während {loser} abwesend war: {winner} gewinnt die Partie.",
+      "stopped": "Abgebrochen: Bei einem Blatt wurde betrogen.",
       "win": "{winner} gewinnt die Partie mit {chips, plural, one {# Chip} other {# Chips}}."
     },
     "seat": {
@@ -90,7 +91,8 @@
       "free": "Freier Platz",
       "gain": "+{amount}",
       "leave": "Platz verlassen",
-      "play": "Hinsetzen"
+      "play": "Hinsetzen",
+      "release": "Platz freigeben"
     },
     "spectators": "Zuschauer: {count}",
     "status": {

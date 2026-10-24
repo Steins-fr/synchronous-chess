@@ -82,6 +82,7 @@
     "result": {
       "draw": "Empate: os dois jogadores terminam com {chips, plural, one {# ficha} other {# fichas}}.",
       "forfeit": "O tempo acabou com {loser} ausente: {winner} vence a partida.",
+      "stopped": "Interrompida: houve trapaça em um baralho.",
       "win": "{winner} vence a partida com {chips, plural, one {# ficha} other {# fichas}}."
     },
     "seat": {
@@ -90,7 +91,8 @@
       "free": "Lugar livre",
       "gain": "+{amount}",
       "leave": "Deixar o lugar",
-      "play": "Sentar"
+      "play": "Sentar",
+      "release": "Liberar o lugar"
     },
     "spectators": "Espectadores: {count}",
     "status": {

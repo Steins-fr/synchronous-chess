@@ -44,6 +44,15 @@ interface TablePoint {
     readonly y: number;
 }
 
+/** The result of a match over before the one in progress */
+interface PastResult {
+    /** Its number in the room, from 1 */
+    readonly number: number;
+    readonly text: TranslatableText;
+    /** The check of its decks, which may end once the next match started, none for a match stopped by a broken deck */
+    readonly verification: TranslatableText | null;
+}
+
 /** Chips flying from a place of the table to another one */
 interface ChipFlight {
     readonly id: number;
@@ -130,10 +139,10 @@ export class PokerTableComponent implements OnDestroy {
             && !session.broken() && session.match().result() === null && (hand === null || hand.phase === HandPhase.OVER);
     });
 
-    /** A seated player starts a new match once the former one is over, its decks checked, both seats taken */
+    /** A seated player starts a new match once the former one is over, or stopped by a broken deck, both seats taken */
     protected readonly canRematch: Signal<boolean> = computed((): boolean => {
         const session: SeventeenPokerSession = this.session();
-        return session.mySeat() !== null && !session.seats().includes(null) && session.checked() && !session.sending();
+        return session.mySeat() !== null && !session.seats().includes(null) && session.over() && !session.sending();
     });
 
     /** The seat whose player acts, which the table shows */
@@ -241,12 +250,13 @@ export class PokerTableComponent implements OnDestroy {
         const session: SeventeenPokerSession = this.session();
         const hand: PokerHand | null = this.hand();
 
-        if (session.broken()) {
-            return { key: this.key(marker('table.status.broken', undefined, 'poker')) };
-        }
-
+        // A free seat, once a broken deck stopped the match too: the table waits for a player
         if (session.seats().includes(null)) {
             return { key: this.key(marker('table.status.seats', undefined, 'poker')) };
+        }
+
+        if (session.broken()) {
+            return { key: this.key(marker('table.status.broken', undefined, 'poker')) };
         }
 
         // The local player to act plays while the other one is away
@@ -269,9 +279,13 @@ export class PokerTableComponent implements OnDestroy {
         return this.session().match().outcomes().map((outcome: Readonly<HandOutcome>, index: number) => handOutcomeText(outcome, index, players)).reverse();
     });
 
-    /** The result of each match over before the one in progress, by its number in the room, the latest first */
-    protected readonly pastResults: Signal<ReadonlyArray<Readonly<{ number: number; text: TranslatableText }>>> = computed(() => {
-        return this.session().pastMatches().map((played: Readonly<PlayedMatch>, index: number) => ({ number: index + 1, text: this.resultText(played) })).reverse();
+    /** The result of each match over before the one in progress, by its number in the room, then the check of its decks, the latest first */
+    protected readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> => {
+        return this.session().pastMatches().map((played: Readonly<PlayedMatch>, index: number): PastResult => ({
+            number: index + 1,
+            text: this.resultText(played),
+            verification: this.verificationText(played.verification()),
+        })).reverse();
     });
 
     /** The outcome of the hand over, on the cloth */
@@ -287,16 +301,14 @@ export class PokerTableComponent implements OnDestroy {
     });
 
     protected readonly verification: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
-        switch (this.session().verification()) {
-            case DeckVerification.PENDING:
-                return null;
-            case DeckVerification.CHECKING:
-                return { key: this.key(marker('table.verification.checking', undefined, 'poker')) };
-            case DeckVerification.FAIR:
-                return { key: this.key(marker('table.verification.fair', undefined, 'poker')) };
-            case DeckVerification.CHEATED:
-                return { key: this.key(marker('table.verification.cheated', undefined, 'poker')) };
+        const session: SeventeenPokerSession = this.session();
+
+        // A free seat takes the status of a match stopped by a broken deck: the note tells the cheat then
+        if (session.broken() && session.seats().includes(null)) {
+            return this.verificationText(DeckVerification.CHEATED);
         }
+
+        return this.verificationText(session.verification());
     });
 
     // The places of the chips on the table
@@ -353,6 +365,13 @@ export class PokerTableComponent implements OnDestroy {
         return this.session().seatsOpen() && this.session().mySeat() !== null;
     }
 
+    /** The local player frees the seat of the other player, away, while the seats are open */
+    protected canRelease(seat: PokerSeat): boolean {
+        const session: SeventeenPokerSession = this.session();
+        const name: string | null = session.seats()[seat];
+        return session.seatsOpen() && session.mySeat() === otherSeat(seat) && name !== null && session.awayPlayers().includes(name) && !session.sending();
+    }
+
     /** The chips the player of a seat won in the hand over, while it keeps the seat */
     protected gain(seat: PokerSeat): number {
         return this.matchSeats()[seat] ? this.outcome()?.gains[seat] ?? 0 : 0;
@@ -381,6 +400,12 @@ export class PokerTableComponent implements OnDestroy {
 
     protected leaveSeat(): void {
         this.session().leaveSeat();
+    }
+
+    protected release(seat: PokerSeat): void {
+        if (this.canRelease(seat)) {
+            this.session().unseat(seat);
+        }
     }
 
     /** A click on a button the page did not hide yet (a second click, the turn over meanwhile) does nothing */
@@ -451,7 +476,11 @@ export class PokerTableComponent implements OnDestroy {
     }
 
     /** The result of a match, with the names of its players */
-    private resultText({ players, result, forfeited }: Readonly<PlayedMatch>): TranslatableText {
+    private resultText({ players, result, forfeited }: Readonly<Omit<PlayedMatch, 'verification'>>): TranslatableText {
+        if (result === null) {
+            return { key: this.key(marker('table.result.stopped', undefined, 'poker')) };
+        }
+
         if (forfeited !== null) {
             return { key: this.key(marker('table.result.forfeit', undefined, 'poker')), params: { loser: players[forfeited], winner: players[otherSeat(forfeited)] } };
         }
@@ -459,6 +488,19 @@ export class PokerTableComponent implements OnDestroy {
         return result.winner === null
             ? { key: this.key(marker('table.result.draw', undefined, 'poker')), params: { chips: result.stacks[0] } }
             : { key: this.key(marker('table.result.win', undefined, 'poker')), params: { winner: players[result.winner], chips: result.stacks[result.winner] } };
+    }
+
+    private verificationText(verification: DeckVerification): TranslatableText | null {
+        switch (verification) {
+            case DeckVerification.PENDING:
+                return null;
+            case DeckVerification.CHECKING:
+                return { key: this.key(marker('table.verification.checking', undefined, 'poker')) };
+            case DeckVerification.FAIR:
+                return { key: this.key(marker('table.verification.fair', undefined, 'poker')) };
+            case DeckVerification.CHEATED:
+                return { key: this.key(marker('table.verification.cheated', undefined, 'poker')) };
+        }
     }
 
     /** The dealer the next hand waits for */

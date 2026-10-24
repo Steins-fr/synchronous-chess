@@ -82,6 +82,7 @@
     "result": {
       "draw": "Berabere: iki oyuncu da {chips, plural, one {# fişle} other {# fişle}} bitirdi.",
       "forfeit": "{loser} yokken süre doldu: {winner} maçı kazandı.",
+      "stopped": "Durduruldu: bir destede hile yapıldı.",
       "win": "{winner} maçı {chips, plural, one {# fişle} other {# fişle}} kazandı."
     },
     "seat": {
@@ -90,7 +91,8 @@
       "free": "Boş yer",
       "gain": "+{amount}",
       "leave": "Yeri bırak",
-      "play": "Otur"
+      "play": "Otur",
+      "release": "Yeri boşalt"
     },
     "spectators": "İzleyiciler: {count}",
     "status": {

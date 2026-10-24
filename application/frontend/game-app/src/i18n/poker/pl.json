@@ -82,6 +82,7 @@
     "result": {
       "draw": "Remis: obaj gracze kończą z {chips, plural, one {# żetonem} few {# żetonami} many {# żetonami} other {# żetonu}}.",
       "forfeit": "Czas minął podczas nieobecności gracza {loser}: {winner} wygrywa partię.",
+      "stopped": "Przerwana: w talii oszukano.",
       "win": "{winner} wygrywa partię, mając {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}."
     },
     "seat": {
@@ -90,7 +91,8 @@
       "free": "Wolne miejsce",
       "gain": "+{amount}",
       "leave": "Zwolnij miejsce",
-      "play": "Usiądź"
+      "play": "Usiądź",
+      "release": "Usuń z miejsca"
     },
     "spectators": "Widzowie: {count}",
     "status": {

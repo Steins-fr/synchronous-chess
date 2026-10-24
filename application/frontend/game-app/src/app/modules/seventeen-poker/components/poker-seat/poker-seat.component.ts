@@ -31,8 +31,11 @@ export class PokerSeatComponent {
     public readonly turnTime = input.required<number>();
     public readonly canTake = input<boolean>(false);
     public readonly canLeave = input<boolean>(false);
+    /** Whether the local player may free the seat of the other one, away */
+    public readonly canRelease = input<boolean>(false);
     public readonly take = output<void>();
     public readonly leave = output<void>();
+    public readonly release = output<void>();
 
     protected readonly clockLow: number = CLOCK_LOW;
     /** The part of the time of a move left, in percent: full while a player away gave the move more */
