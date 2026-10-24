@@ -15,7 +15,7 @@ import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/r
 import { merge, Subscription } from 'rxjs';
 import { BetAction } from '../rules/betting-round';
 import { HAND_SIZE } from '../rules/hand-evaluator';
-import { DRAW_PILE, HandPhase, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
+import { DRAW_PILE, HandPhase, MatchResult, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair, withSeat } from '../rules/poker-seat';
 import { SEVENTEEN_DECK, seventeenCard } from '../rules/seventeen-deck';
 
@@ -30,6 +30,8 @@ export enum SPGameSessionType {
     EXCHANGE = 'SP_exchange',
     /** A player tells the time of the move of the other one, away, is over: the other one loses the match */
     TIMEOUT = 'SP_timeout',
+    /** A player starts a new match, once the former one is over */
+    REMATCH = 'SP_rematch',
 }
 
 export interface PokerSeatMessage {
@@ -63,15 +65,29 @@ export interface PokerTimeoutMessage {
     move: number;
 }
 
+export interface PokerRematchMessage {
+    /** The index of the new match in the room, from 0 */
+    match: number;
+}
+
 export interface PokerGamePayloads {
     [SPGameSessionType.SEAT]: PokerSeatMessage;
     [SPGameSessionType.DEAL]: PokerDealMessage;
     [SPGameSessionType.BET]: PokerBetMessage;
     [SPGameSessionType.EXCHANGE]: PokerExchangeMessage;
     [SPGameSessionType.TIMEOUT]: PokerTimeoutMessage;
+    [SPGameSessionType.REMATCH]: PokerRematchMessage;
 }
 
 export type PokerPayloads = PokerGamePayloads & MentalDeckPayloads;
+
+/** A match over, before the one in progress */
+export interface PlayedMatch {
+    readonly players: SeatPair<string | null>;
+    readonly result: MatchResult;
+    /** The player who lost the match on time */
+    readonly forfeited: PokerSeat | null;
+}
 
 /** A card of a player, at its position in the deck, null while the local participant does not read it */
 export interface SeatCard {
@@ -90,6 +106,7 @@ export const pokerBlockChains: BlockChainRouting<PokerPayloads> = mergeBlockChai
     [SPGameSessionType.BET]: BlockChainName.POKER,
     [SPGameSessionType.EXCHANGE]: BlockChainName.POKER,
     [SPGameSessionType.TIMEOUT]: BlockChainName.POKER,
+    [SPGameSessionType.REMATCH]: BlockChainName.POKER,
 }, mentalDeckBlockChains(BlockChainName.POKER));
 
 export interface PokerSessionOptions {
@@ -110,8 +127,8 @@ const SALT_LENGTH: number = 16;
 const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
 
 /**
- * The Seventeen Poker in a room. The participants take the seats themselves, final once the first hand is dealt, and the
- * players deal by turns.
+ * The Seventeen Poker in a room. The participants take the seats themselves, final from the first hand of a match until
+ * it is over, its decks checked, and the players deal by turns. Then a player starts a new match, or leaves its seat.
  *
  * Every participant applies the messages of the game in the order of the chain, one after the other, awaiting the deck
  * of the hand: a hand deals its cards with a new mental deck, the betting opening once both hands are read, so the first
@@ -119,11 +136,17 @@ const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
  * hand stays hidden. Once the match is over, the players disclose the keys of every deck, and each participant checks
  * them all.
  *
- * The id of a deck holds the salt of each player, drawn when it took its seat: a deck of a former match, whose secrets a
- * page may still keep, never has the id of a deck of this one, whatever the other player sends.
+ * The id of a deck holds the salt of each player, drawn when it took its seat, and the index of the match in the room: a
+ * deck of a match in another room of the same name, whose secrets a page may still keep, never has the id of a deck of
+ * this one, whatever the other player sends, nor does a deck of a former match of the room.
  */
 export class SeventeenPokerSession {
-    public readonly match: PokerMatch = new PokerMatch(this.options.rules);
+    private readonly _match = signal<PokerMatch>(new PokerMatch(this.options.rules));
+    /** The match in progress, else the latest */
+    public readonly match: Signal<PokerMatch> = this._match.asReadonly();
+    private readonly _pastMatches = signal<ReadonlyArray<Readonly<PlayedMatch>>>([]);
+    /** The matches over before the one in progress, the first one first */
+    public readonly pastMatches: Signal<ReadonlyArray<Readonly<PlayedMatch>>> = this._pastMatches.asReadonly();
 
     private readonly seated = signal<SeatPair<Readonly<SeatedPlayer> | null>>([null, null]);
     /** The players of each seat */
@@ -131,7 +154,14 @@ export class SeventeenPokerSession {
         const [one, two] = this.seated();
         return [one?.name ?? null, two?.name ?? null];
     });
-    public readonly seatsOpen: Signal<boolean> = computed((): boolean => this.match.hand() === null);
+    /** The players of the match, the ones of the seats until its first hand: the seats may change once it is over */
+    public readonly players: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
+        // A hand of the match has its deck, shuffled by both players
+        const [one, two] = this.match().hand() === null ? this.seats() : (this._deck() as MentalDeck).players;
+        return [one, two];
+    });
+    /** The seats are open before the first hand of a match, and once it is over, its decks checked */
+    public readonly seatsOpen: Signal<boolean> = computed((): boolean => this.match().hand() === null || this.checked());
     /** The connected participants without a seat */
     public readonly spectatorNumber: Signal<number> = computed((): number => {
         const seats: SeatPair<string | null> = this.seats();
@@ -168,6 +198,8 @@ export class SeventeenPokerSession {
     private readonly _verification = signal<DeckVerification>(DeckVerification.PENDING);
     /** The check of every deck of the match, once it is over */
     public readonly verification: Signal<DeckVerification> = this._verification.asReadonly();
+    /** The match is over, every deck of it checked: its players may play a new one */
+    public readonly checked: Signal<boolean> = computed((): boolean => this._verification() === DeckVerification.FAIR || this._verification() === DeckVerification.CHEATED);
 
     /** The cards of each player the local participant reads, by position: its own, and both hands once shown */
     public readonly cards: Signal<SeatPair<ReadonlyArray<Readonly<SeatCard>>>> = computed((): SeatPair<ReadonlyArray<Readonly<SeatCard>>> => {
@@ -181,22 +213,25 @@ export class SeventeenPokerSession {
     });
 
     /** The cards left in the deck, the whole deck until it is ready to deal */
-    public readonly deckCount: Signal<number> = computed((): number => this._deck()?.phase() === DeckPhase.READY ? this.match.drawPile() : SEVENTEEN_DECK.length);
+    public readonly deckCount: Signal<number> = computed((): number => this._deck()?.phase() === DeckPhase.READY ? this.match().drawPile() : SEVENTEEN_DECK.length);
 
     /** Whether the hand in progress waits for the local player to act */
     public readonly myTurn: Signal<boolean> = computed((): boolean => {
-        const hand: PokerHand | null = this.match.hand();
+        const hand: PokerHand | null = this.match().hand();
         const seat: PokerSeat | null = this.mySeat();
 
         if (hand === null || seat === null || this._dealing() || this._broken() || this._sending()) {
             return false;
         }
 
-        return hand.phase === HandPhase.EXCHANGE ? this.match.exchanging() === seat : hand.round.toAct === seat;
+        return hand.phase === HandPhase.EXCHANGE ? this.match().exchanging() === seat : hand.round.toAct === seat;
     });
 
     private readonly table: MentalDeckTable;
-    private readonly decks: MentalDeck[] = [];
+    /** The decks of the match */
+    private decks: MentalDeck[] = [];
+    /** The check of the decks of the match over, which a page ends before another one: the seats wait for it */
+    private checking: Promise<void> = Promise.resolve();
     private readonly subscription: Subscription;
     /** The messages of the game apply one after the other, each one awaiting the deck it acts on */
     private queue: Promise<void> = Promise.resolve();
@@ -210,6 +245,7 @@ export class SeventeenPokerSession {
             room.messenger(SPGameSessionType.BET),
             room.messenger(SPGameSessionType.EXCHANGE),
             room.messenger(SPGameSessionType.TIMEOUT),
+            room.messenger(SPGameSessionType.REMATCH),
         ).subscribe((message: PokerGameMessage) => {
             this.queue = this.queue.then(() => logHandlingFailure(message, this.handle(message)));
         });
@@ -231,25 +267,31 @@ export class SeventeenPokerSession {
     /** The dealer starts the next hand */
     public deal(): void {
         this._sending.set(true);
-        this.room.transmitMessage(SPGameSessionType.DEAL, { hand: this.match.nextHand() });
+        this.room.transmitMessage(SPGameSessionType.DEAL, { hand: this.match().nextHand() });
     }
 
     public bet(action: BetAction, amount?: number): void {
         this._sending.set(true);
-        this.room.transmitMessage(SPGameSessionType.BET, { hand: this.match.hand()?.index ?? 0, action, ...amount === undefined ? {} : { amount } });
+        this.room.transmitMessage(SPGameSessionType.BET, { hand: this.match().hand()?.index ?? 0, action, ...amount === undefined ? {} : { amount } });
     }
 
     /** Discards the cards of these positions, none to keep the hand */
     public exchange(positions: ReadonlyArray<number>): void {
         this._sending.set(true);
-        this.room.transmitMessage(SPGameSessionType.EXCHANGE, { hand: this.match.hand()?.index ?? 0, positions: [...positions] });
+        this.room.transmitMessage(SPGameSessionType.EXCHANGE, { hand: this.match().hand()?.index ?? 0, positions: [...positions] });
     }
 
     /** The time of the move of the other player is over, while it is away: it loses the match */
     public claimTimeout(): void {
-        const hand: PokerHand | null = this.match.hand();
+        const hand: PokerHand | null = this.match().hand();
         this._sending.set(true);
         this.room.transmitMessage(SPGameSessionType.TIMEOUT, { hand: hand?.index ?? 0, move: hand?.moves ?? 0 });
+    }
+
+    /** A seated player starts a new match, once the former one is over */
+    public rematch(): void {
+        this._sending.set(true);
+        this.room.transmitMessage(SPGameSessionType.REMATCH, { match: this._pastMatches().length + 1 });
     }
 
     private seatOf(name: string): PokerSeat | null {
@@ -284,6 +326,11 @@ export class SeventeenPokerSession {
             return;
         }
 
+        // Every page applies them once the decks of the match over are checked, whenever it ends the check
+        if (message.type === SPGameSessionType.SEAT || message.type === SPGameSessionType.REMATCH) {
+            await this.checking;
+        }
+
         switch (message.type) {
             case SPGameSessionType.SEAT:
                 this.onSeat(message);
@@ -299,6 +346,9 @@ export class SeventeenPokerSession {
                 break;
             case SPGameSessionType.TIMEOUT:
                 this.onTimeout(message);
+                break;
+            case SPGameSessionType.REMATCH:
+                this.onRematch(message);
                 break;
         }
     }
@@ -328,12 +378,12 @@ export class SeventeenPokerSession {
         const [one, two] = this.seated();
         const { hand } = message.payload;
 
-        if (one === null || two === null || this.seatOf(message.from) !== this.match.dealer() || hand !== this.match.nextHand() || !this.match.startHand()) {
+        if (one === null || two === null || this.seatOf(message.from) !== this.match().dealer() || hand !== this.match().nextHand() || !this.match().startHand()) {
             return;
         }
 
         const deck: MentalDeck = this.table.deck({
-            id: `${ one.salt }:${ two.salt }:${ hand }`, size: SEVENTEEN_DECK.length, players: [one.name, two.name], cipher: this.options.cipher,
+            id: `${ one.salt }:${ two.salt }:${ this._pastMatches().length }:${ hand }`, size: SEVENTEEN_DECK.length, players: [one.name, two.name], cipher: this.options.cipher,
         });
         const positions: SeatPair<ReadonlyArray<number>> = [
             Array.from({ length: HAND_SIZE }, (_: unknown, index: number) => index),
@@ -353,12 +403,12 @@ export class SeventeenPokerSession {
             return;
         }
 
-        if (hand !== this.match.hand()?.index || !this.match.bet(seat, action, amount)) {
+        if (hand !== this.match().hand()?.index || !this.match().bet(seat, action, amount)) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
             return;
         }
 
-        if (this.match.hand()?.phase === HandPhase.SHOWDOWN) {
+        if (this.match().hand()?.phase === HandPhase.SHOWDOWN) {
             await this.showdown();
         }
 
@@ -374,11 +424,11 @@ export class SeventeenPokerSession {
         }
 
         const held: ReadonlyArray<number> = this._positions()[seat];
-        const drawn: number = DRAW_PILE - this.match.drawPile();
-        const valid: boolean = hand === this.match.hand()?.index && Array.isArray(discarded) && new Set(discarded).size === discarded.length
+        const drawn: number = DRAW_PILE - this.match().drawPile();
+        const valid: boolean = hand === this.match().hand()?.index && Array.isArray(discarded) && new Set(discarded).size === discarded.length
             && discarded.every((position: unknown) => held.includes(position as number));
 
-        if (!valid || !this.match.exchange(seat, discarded.length)) {
+        if (!valid || !this.match().exchange(seat, discarded.length)) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
             return;
         }
@@ -403,13 +453,33 @@ export class SeventeenPokerSession {
     private onTimeout(message: AppMessage<SPGameSessionType.TIMEOUT, PokerTimeoutMessage>): void {
         const seat: PokerSeat | null = this.seatOf(message.from);
         const { hand, move } = message.payload;
-        const current: PokerHand | null = this.match.hand();
+        const current: PokerHand | null = this.match().hand();
 
-        if (seat === null || hand !== current?.index || move !== current.moves || !this.match.forfeit(otherSeat(seat))) {
+        if (seat === null || hand !== current?.index || move !== current.moves || !this.match().forfeit(otherSeat(seat))) {
             return;
         }
 
         this.verifyOnceOver();
+    }
+
+    /**
+     * A player starts a new match once the former one is over, both seats taken: the first request starts it, the others
+     * name a match started already. The second seat deals its first hand, as in the first match
+     */
+    private onRematch(message: AppMessage<SPGameSessionType.REMATCH, PokerRematchMessage>): void {
+        const result: MatchResult | null = this.match().result();
+
+        if (this.seatOf(message.from) === null || this.seats().includes(null) || !this.checked() || result === null
+            || message.payload.match !== this._pastMatches().length + 1) {
+            return;
+        }
+
+        this._pastMatches.update((matches: ReadonlyArray<Readonly<PlayedMatch>>) => [...matches, { players: this.players(), result, forfeited: this.match().forfeited() }]);
+        this._match.set(new PokerMatch(this.options.rules));
+        this.decks = [];
+        this._deck.set(null);
+        this._positions.set([[], []]);
+        this._verification.set(DeckVerification.PENDING);
     }
 
     /** Waits for the cards dealt: a broken deck stops the match */
@@ -446,17 +516,17 @@ export class SeventeenPokerSession {
             return;
         }
 
-        this.match.showdown([hands[0].map((card: number | undefined) => seventeenCard(card as number)), hands[1].map((card: number | undefined) => seventeenCard(card as number))]);
+        this.match().showdown([hands[0].map((card: number | undefined) => seventeenCard(card as number)), hands[1].map((card: number | undefined) => seventeenCard(card as number))]);
     }
 
     /** Once the match is over, every deck is disclosed and checked */
     private verifyOnceOver(): void {
-        if (this.match.result() === null || this._verification() !== DeckVerification.PENDING) {
+        if (this.match().result() === null || this._verification() !== DeckVerification.PENDING) {
             return;
         }
 
         this._verification.set(DeckVerification.CHECKING);
-        void Promise.all(this.decks.map((deck: MentalDeck) => deck.disclose())).then((verifications: DeckVerification[]) => {
+        this.checking = Promise.all(this.decks.map((deck: MentalDeck) => deck.disclose())).then((verifications: DeckVerification[]) => {
             this._verification.set(verifications.every((verification: DeckVerification) => verification === DeckVerification.FAIR) ? DeckVerification.FAIR : DeckVerification.CHEATED);
         });
     }

@@ -63,18 +63,21 @@
       "max": "Máx",
       "min": "Mín",
       "more": "Apostar más",
-      "raise": "Subir a {amount}"
+      "raise": "Subir a {amount}",
+      "rematch": "Jugar otra vez"
     },
     "bet": "Apuesta {amount}",
     "category": "{category, select, fiveOfAKind {Repóker} royalFlush {Escalera real} fourOfAKind {Póker} fullHouse {Full} straight {Escalera} threeOfAKind {Trío} twoPair {Doble pareja} other {Pareja}}",
     "hand": "Mano {index} de {hands}",
     "history": "Manos jugadas",
+    "match": "Partida {number}:",
     "outcome": {
       "fold": "Mano {index}: {folder} se retira, {winner} se lleva el bote de {pot}.",
       "noContest": "Mano {index}: mano nula, los antes van a la banca.",
       "split": "Mano {index}: manos iguales ({category, select, fiveOfAKind {repóker} royalFlush {escalera real} fourOfAKind {póker} fullHouse {full} straight {escalera} threeOfAKind {trío} twoPair {doble pareja} other {pareja}}), se reparte el bote.",
       "win": "Mano {index}: {winner} se lleva el bote de {pot} con {category, select, fiveOfAKind {un repóker} royalFlush {una escalera real} fourOfAKind {un póker} fullHouse {un full} straight {una escalera} threeOfAKind {un trío} twoPair {doble pareja} other {una pareja}}."
     },
+    "pastMatches": "Partidas jugadas",
     "pot": "Bote {pot}",
     "result": {
       "draw": "Empate: los dos jugadores terminan con {chips, plural, one {# ficha} other {# fichas}}.",

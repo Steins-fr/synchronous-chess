@@ -40,6 +40,27 @@ async function deal(alice: RoomParticipant, bob: RoomParticipant): Promise<void>
     await expect(table(bob).getByRole('status')).toHaveText('alice to speak.');
 }
 
+/**
+ * Alice and Bob bet all their chips, then keep their hands: the showdown ends the match, unless the hands are equal and
+ * split the pot, Carol watching. Then they play the next hand the same way
+ */
+async function allIn(alice: RoomParticipant, bob: RoomParticipant, carol: RoomParticipant, index: number = 0): Promise<void> {
+    const [dealer, first] = index % 2 === 0 ? [bob, alice] : [alice, bob];
+    await table(dealer).getByRole('button', { name: 'Deal' }).click();
+    await table(first).getByRole('button', { name: 'Max' }).click();
+    await table(first).getByRole('button', { name: 'Bet 145' }).click();
+    await table(dealer).getByRole('button', { name: 'Call 145' }).click();
+    await table(first).getByRole('button', { name: 'Keep my hand' }).click();
+    await table(dealer).getByRole('button', { name: 'Keep my hand' }).click();
+    await table(first).getByRole('button', { name: 'Check' }).click();
+    await table(dealer).getByRole('button', { name: 'Check' }).click();
+    await expect(table(carol).locator('#hand-outcome')).toContainText(`Hand ${ index + 1 }:`);
+
+    if (!await table(carol).locator('.badge-win').isVisible()) {
+        await allIn(alice, bob, carol, index + 1);
+    }
+}
+
 async function cardsOf(participant: RoomParticipant, index: number): Promise<string[]> {
     return hand(participant, index).evaluateAll((images: Element[]) => images.map((image: Element) => image.getAttribute('aria-label') as string));
 }
@@ -131,6 +152,35 @@ test.describe('Seventeen poker', () => {
         expect(await cardsOf(carol, 1)).toEqual(FACE_DOWN);
         await table(carol).getByText('Hands played').click();
         await expect(table(carol).locator('details li')).toHaveText('Hand 1: bob folds, alice takes the pot of 11.');
+    });
+
+    test('plays a new match once the first one is over, a spectator taking the seat of a player', async ({ poker }) => {
+        const [alice, bob, carol] = await seated(poker);
+
+        // The first match: a hand takes the chips of the other player
+        await allIn(alice, bob, carol);
+        await expect(table(carol).locator('.badge-win')).toHaveText(/(alice|bob) wins the match with 300 chips\./);
+        await expect(table(carol).getByText('Every deck was fair.')).toBeVisible();
+
+        // Alice leaves her seat, Carol takes it and starts a new match
+        await table(alice).getByRole('button', { name: 'Leave the seat' }).click();
+        await table(carol).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
+        await expect(table(alice).locator('#seat-bottom')).toContainText('carol');
+        await table(carol).getByRole('button', { name: 'Play again' }).click();
+
+        await expect(table(alice).getByRole('status')).toHaveText('bob to deal.');
+        await expect(table(alice).locator('.badge-win')).toHaveCount(0);
+        await expect(table(alice).locator('#seat-bottom')).toContainText('150 chips');
+        await expect(table(alice).locator('#seat-top')).toContainText('150 chips');
+        await table(alice).getByText('Matches played').click();
+        await expect(table(alice).locator('#past-matches li')).toHaveText(/Match 1: (alice|bob) wins the match with 300 chips\./);
+
+        // Bob deals the first hand of the new match, Carol speaking first
+        await table(bob).getByRole('button', { name: 'Deal' }).click();
+        await expect(table(carol).getByRole('status')).toHaveText('Your turn.');
+        await expect.poll(() => cardsOf(carol, 1)).not.toContain('Face-down card');
+        await expect(table(alice).getByText('Hand 1 of 10')).toBeVisible();
+        expect(await cardsOf(alice, 1)).toEqual(FACE_DOWN);
     });
 
     test('gives back their cards and their seat to a player reloading the page', async ({ poker }) => {

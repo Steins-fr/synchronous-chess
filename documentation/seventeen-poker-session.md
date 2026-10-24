@@ -17,6 +17,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 - [Seats](#seats)
 - [A hand](#a-hand)
 - [End of the match](#end-of-the-match)
+- [A new match](#a-new-match)
 - [The clock of a move](#the-clock-of-a-move)
 - [Reloading the page](#reloading-the-page)
 - [Messages](#messages)
@@ -32,7 +33,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `evaluateHand`, `compareHands` | `classes/rules/hand-evaluator.ts` | The value of a hand, the joker standing for the card giving the best one, and their comparison |
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
-| `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The match in a room: seats, decks, cards, cheat reports |
+| `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
 | `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move |
 | `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock of the move while its player acts, what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
@@ -71,6 +72,7 @@ natural hand beats the same hand made with the joker.
 flowchart LR
     Page[SeventeenPoker page] -- room --> Table[PokerTableComponent]
     Table -- new --> Session[SeventeenPokerSession]
+    Session -- new, one per match --> Match[PokerMatch]
     Session -- MentalDeckTable --> Decks[MentalDeck, one per hand]
     Session -- transmitMessage --> Room[BlockRoom]
     Room -- SP_* messages, in order --> Session
@@ -86,19 +88,31 @@ flowchart LR
 - The messages of the game apply **one after the other**: each one awaits the deck it acts on (a deal,
   the showdown) before the next one applies. The messages of the decks apply meanwhile, so every
   participant reaches the same state.
+- The session plays the matches of the room one after the other: `match` is the match in progress, else the latest, a
+  new `PokerMatch` for each one (see [A new match](#a-new-match)).
 
 ## Seats
 
 Each participant takes a seat with `Sit here`: the first request for a free seat gets it, a participant
-has a single seat, and `Leave the seat` frees it. The seats are final once the first hand is dealt; the
-other participants are spectators.
+has a single seat, and `Leave the seat` frees it. The seats are final from the first hand of a match until it is
+over, every deck of it checked (`seatsOpen`); the other participants are spectators. Once the match is over, its
+players may leave their seats and the spectators take the free ones, as before its first hand: the table keeps the
+names of the players of the match (`players`, read from the deck of its latest hand) for its result and its hands. A
+participant taking a seat shows the stack of the next match, without the cards, the gain nor the hand of the former
+player.
 
-A player draws a random **salt** for each seat it takes, given in its `SP_seat`: the id of each deck of the
-match is made of the salts of both seats and the index of the hand (`<salt 1>:<salt 2>:<hand>`). A request
-without a salt of 32 hexadecimal digits is ignored. The page of a player keeps its secrets until the decks
+The check of the decks of the match over ends on each page at its own time, out of the chain: a page applies a
+`SP_seat` (or a `SP_rematch`) once its own check is over, so that a request sent by a page done checking is applied
+by every page alike.
+
+A player draws a random **salt** for each seat it takes, given in its `SP_seat`: the id of each deck is made of the
+salts of both seats, the index of the match in the room and the index of the hand (`<salt 1>:<salt 2>:<match>:<hand>`).
+A request without a salt of 32 hexadecimal digits is ignored. The page of a player keeps its secrets until the decks
 are disclosed, at the end of the match: its fresh salt keeps the other player from giving the id of a deck
 of a former match, in a room of the same name, which would make the page use its former secrets again, and
-show cards the other player knows.
+show cards the other player knows. The index of the match gives each deck of a new match an id of its own, though its
+players keep their seats and their salts: the table of the decks holds a single deck by id, and the secrets of a deck
+disclosed are dropped.
 
 The table shows the local player at its bottom, a spectator the first seat.
 
@@ -130,6 +144,17 @@ keys, and each participant checks every shuffle, lock and key (see
 [Checking the deck](mental-poker.md#checking-the-deck)). The table tells the winner, or a draw, then
 whether every deck was fair.
 
+## A new match
+
+Once the match is over and every deck checked, a seated player clicks `Play again` (`SP_rematch`), once both seats are
+taken: the request names the index of the new match in the room (1 for the second one). Every participant applies it
+in the order of the chain: the first request starts the new match, the others name a match started already and are
+ignored, as a request of a spectator, or before the end of the match, or with a free seat.
+
+The new match starts over: a new `PokerMatch`, 150 chips each, the hands counted from 1, the second seat dealing the
+first hand, no deck, and the check of its decks pending. The result of the former match, with its players, joins
+`pastMatches`, one line each in `Matches played` below the table. The seats stay open until its first hand.
+
 ## The clock of a move
 
 The table starts the clock of a move when its page sees it: once the hand waits for the player to act, its cards dealt,
@@ -159,17 +184,21 @@ The chain replays every message to a reloaded page: the session plays the match 
 decks again, and the `DeckKeyStore` gives back the secrets of the player, so it reads its cards and
 gives its keys again: the ids of the decks are the same, the salts being read back from the chain. A player leaving the room keeps its seat: the hand waits for it to come back.
 
+A page reloaded during a new match plays the former matches again, their decks checked again from the keys disclosed
+in the chain, before it comes back to the match in progress.
+
 ## Messages
 
 All the messages go through the `poker` chain, with the messages of the decks (`pokerBlockChains`).
 
 | Type | Payload | Sent by | When |
 |---|---|---|---|
-| `SP_seat` | `{ seat, salt }`: 0, 1, or null to leave; the salt of the player, 16 random bytes in hexadecimal | a participant | before the first hand |
+| `SP_seat` | `{ seat, salt }`: 0, 1, or null to leave; the salt of the player, 16 random bytes in hexadecimal | a participant | before the first hand of a match, or once it is over, its decks checked |
 | `SP_deal` | `{ hand }`: the index of the hand | the dealer of the hand | between two hands |
 | `SP_bet` | `{ hand, action, amount? }`: the amount is the total of the player in the round | a player | its turn of a betting round |
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
 | `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over | a player | the time of the move of the other player over, while it is away |
+| `SP_rematch` | `{ match }`: the index of the new match in the room | a player | once the match is over, its decks checked, both seats taken |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |
 
 ## Interface
@@ -190,7 +219,9 @@ All the messages go through the `poker` chain, with the messages of the decks (`
   without a count (a screen reader announces it before the page plays for the player).
 - The actions of the player: `Check`, `Call`, `Bet` or `Raise` with the amount set by steps of 5 chips,
   `Min` and `Max`, and `Fold` against a bet only (with nothing to call, a player checks for free).
-- The history of the hands, folded below the table, then the result of the match.
+- The history of the hands of the match, folded below the table, then the result of the match, and `Play again` for
+  its players once every deck is checked.
+- The results of the former matches of the room, folded below the table (`Matches played`).
 
 The animations (the deal, the turn over of the cards, the riffle, the chips, the ring) use
 `animate.enter` / `animate.leave` and CSS only, and stop under `prefers-reduced-motion`. Once the table
@@ -212,7 +243,8 @@ grows does not fly.
 - The clock runs on the page of each player, and no page can tell when the other one was away: a page changed not to
   play the move once its time is over keeps the other player waiting while connected, and a page changed to send
   `SP_timeout` early ends the match of the other player. Once the match is over, the decks are checked once the player
-  away is back, its keys disclosed.
+  away is back, its keys disclosed: the seats stay closed meanwhile, and the requests of seats and of a new match wait
+  for it.
 - A page hidden for long plays the move late: the browser runs its timers once a minute after 5 minutes hidden
   (Chrome), and none on a frozen page (a phone putting it in the background), until it is shown again. As its deck
   waits for its keys meanwhile, the other player waits for it either way.
@@ -226,10 +258,11 @@ grows does not fly.
 
 - The rules: `classes/rules/*.spec.ts`, every hand of the deck evaluated once.
 - The session: `seventeen-poker-session.spec.ts`, with a `RoomHub` and a small prime
-  (`@testing/sra-test-group`): seats, deals, bets, exchanges, showdowns, the end of the match, a
-  reloaded page and the cheats.
+  (`@testing/sra-test-group`): seats, deals, bets, exchanges, showdowns, the end of the match, a new
+  match (the seats open again, fresh deck ids, a page reloaded during it), a reloaded page and the cheats.
 - The table: `poker-table.component.spec.ts`, the session options given through `POKER_SESSION_OPTIONS`, the clock of
   the moves on fake timers (`setInterval` and `performance` only: the decks run on real ones).
 - End to end: `e2e/seventeen-poker.e2e.ts`, a hand to the showdown, a fold, a player reloading the
-  page, the moves played once their time is over (a check, then a fold against a bet, `SLOW`), and the match of a player
+  page, a second match once the first one is over (all in until a hand takes every chip), a spectator taking the seat of
+  a player, the moves played once their time is over (a check, then a fold against a bet, `SLOW`), and the match of a player
   leaving the room ended once the time of its move is over (`SLOW`).

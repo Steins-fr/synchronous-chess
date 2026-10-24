@@ -63,18 +63,21 @@
       "max": "Макс",
       "min": "Мин",
       "more": "Больше",
-      "raise": "Повысить до {amount}"
+      "raise": "Повысить до {amount}",
+      "rematch": "Сыграть ещё"
     },
     "bet": "Ставка {amount}",
     "category": "{category, select, fiveOfAKind {Покер} royalFlush {Роял-флеш} fourOfAKind {Каре} fullHouse {Фулл-хаус} straight {Стрит} threeOfAKind {Сет} twoPair {Две пары} other {Пара}}",
     "hand": "Раздача {index} из {hands}",
     "history": "Сыгранные раздачи",
+    "match": "Партия {number}:",
     "outcome": {
       "fold": "Раздача {index}: {folder} сбрасывает карты, {winner} забирает банк {pot}.",
       "noContest": "Раздача {index}: без победителя, анте уходят в казну.",
       "split": "Раздача {index}: равные комбинации ({category, select, fiveOfAKind {покер} royalFlush {роял-флеш} fourOfAKind {каре} fullHouse {фулл-хаус} straight {стрит} threeOfAKind {сет} twoPair {две пары} other {пара}}), банк делится.",
       "win": "Раздача {index}: {winner} забирает банк {pot} — {category, select, fiveOfAKind {покер} royalFlush {роял-флеш} fourOfAKind {каре} fullHouse {фулл-хаус} straight {стрит} threeOfAKind {сет} twoPair {две пары} other {пара}}."
     },
+    "pastMatches": "Сыгранные партии",
     "pot": "Банк {pot}",
     "result": {
       "draw": "Ничья: у обоих игроков по {chips, plural, one {# фишке} few {# фишки} many {# фишек} other {# фишки}}.",

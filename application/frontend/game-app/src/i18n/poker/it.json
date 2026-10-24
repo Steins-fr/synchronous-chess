@@ -63,18 +63,21 @@
       "max": "Max",
       "min": "Min",
       "more": "Punta di più",
-      "raise": "Rilancia a {amount}"
+      "raise": "Rilancia a {amount}",
+      "rematch": "Gioca ancora"
     },
     "bet": "Puntata {amount}",
     "category": "{category, select, fiveOfAKind {Pokerissimo} royalFlush {Scala reale} fourOfAKind {Poker} fullHouse {Full} straight {Scala} threeOfAKind {Tris} twoPair {Doppia coppia} other {Coppia}}",
     "hand": "Mano {index} di {hands}",
     "history": "Mani giocate",
+    "match": "Partita {number}:",
     "outcome": {
       "fold": "Mano {index}: {folder} lascia, {winner} prende il piatto di {pot}.",
       "noContest": "Mano {index}: mano nulla, gli ante vanno al banco.",
       "split": "Mano {index}: mani uguali ({category, select, fiveOfAKind {pokerissimo} royalFlush {scala reale} fourOfAKind {poker} fullHouse {full} straight {scala} threeOfAKind {tris} twoPair {doppia coppia} other {coppia}}), il piatto viene diviso.",
       "win": "Mano {index}: {winner} prende il piatto di {pot} con {category, select, fiveOfAKind {un pokerissimo} royalFlush {una scala reale} fourOfAKind {un poker} fullHouse {un full} straight {una scala} threeOfAKind {un tris} twoPair {una doppia coppia} other {una coppia}}."
     },
+    "pastMatches": "Partite giocate",
     "pot": "Piatto {pot}",
     "result": {
       "draw": "Patta: entrambi i giocatori finiscono con {chips, plural, one {# fiche} other {# fiche}}.",

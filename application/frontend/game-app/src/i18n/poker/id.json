@@ -63,18 +63,21 @@
       "max": "Maks",
       "min": "Min",
       "more": "Tambah",
-      "raise": "Naikkan ke {amount}"
+      "raise": "Naikkan ke {amount}",
+      "rematch": "Main lagi"
     },
     "bet": "Taruhan {amount}",
     "category": "{category, select, fiveOfAKind {Five of a kind} royalFlush {Royal flush} fourOfAKind {Four of a kind} fullHouse {Full house} straight {Straight} threeOfAKind {Three of a kind} twoPair {Two pair} other {One pair}}",
     "hand": "Putaran {index} dari {hands}",
     "history": "Putaran yang dimainkan",
+    "match": "Pertandingan {number}:",
     "outcome": {
       "fold": "Putaran {index}: {folder} menyerah, {winner} mengambil pot {pot}.",
       "noContest": "Putaran {index}: tanpa pemenang, ante masuk ke bank.",
       "split": "Putaran {index}: kombinasi sama ({category, select, fiveOfAKind {five of a kind} royalFlush {royal flush} fourOfAKind {four of a kind} fullHouse {full house} straight {straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}), pot dibagi.",
       "win": "Putaran {index}: {winner} mengambil pot {pot} dengan {category, select, fiveOfAKind {five of a kind} royalFlush {royal flush} fourOfAKind {four of a kind} fullHouse {full house} straight {straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}."
     },
+    "pastMatches": "Pertandingan yang dimainkan",
     "pot": "Pot {pot}",
     "result": {
       "draw": "Seri: kedua pemain selesai dengan {chips, plural, other {# chip}}.",

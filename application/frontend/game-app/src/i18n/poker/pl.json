@@ -63,18 +63,21 @@
       "max": "Maks",
       "min": "Min",
       "more": "Więcej",
-      "raise": "Przebij do {amount}"
+      "raise": "Przebij do {amount}",
+      "rematch": "Zagraj ponownie"
     },
     "bet": "Stawka {amount}",
     "category": "{category, select, fiveOfAKind {Pięć jednakowych} royalFlush {Poker królewski} fourOfAKind {Kareta} fullHouse {Full} straight {Strit} threeOfAKind {Trójka} twoPair {Dwie pary} other {Para}}",
     "hand": "Rozdanie {index} z {hands}",
     "history": "Rozegrane rozdania",
+    "match": "Partia {number}:",
     "outcome": {
       "fold": "Rozdanie {index}: {folder} pasuje, {winner} zgarnia pulę {pot}.",
       "noContest": "Rozdanie {index}: bez zwycięzcy, ante trafiają do banku.",
       "split": "Rozdanie {index}: równe układy ({category, select, fiveOfAKind {pięć jednakowych} royalFlush {poker królewski} fourOfAKind {kareta} fullHouse {full} straight {strit} threeOfAKind {trójka} twoPair {dwie pary} other {para}}), pula zostaje podzielona.",
       "win": "Rozdanie {index}: {winner} zgarnia pulę {pot} — {category, select, fiveOfAKind {pięć jednakowych} royalFlush {poker królewski} fourOfAKind {kareta} fullHouse {full} straight {strit} threeOfAKind {trójka} twoPair {dwie pary} other {para}}."
     },
+    "pastMatches": "Rozegrane partie",
     "pot": "Pula {pot}",
     "result": {
       "draw": "Remis: obaj gracze kończą z {chips, plural, one {# żetonem} few {# żetonami} many {# żetonami} other {# żetonu}}.",

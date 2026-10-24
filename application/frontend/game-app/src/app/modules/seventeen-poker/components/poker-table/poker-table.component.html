@@ -5,11 +5,11 @@
         #topSeatView
         id="seat-top"
         [name]="session().seats()[top]"
-        [chips]="session().match.stacks()[top]"
+        [chips]="chips()[top]"
         [gain]="gain(top)"
         [acting]="toAct() === top"
         [timeLeft]="toAct() === top ? timeLeft() : null"
-        [turnTime]="session().match.rules.turnTime"
+        [turnTime]="session().match().rules.turnTime"
         [canTake]="canTake(top)"
         (take)="takeSeat(top)" />
     <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
@@ -30,7 +30,7 @@
                 <app-chip-stack #potStack class="pot" [amount]="potChips()" />
                 <span class="text-xl font-bold">{{ t('pot', { pot: pot() }) }}</span>
                 @if (hand(); as current) {
-                <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match.rules.hands }) }}</span>
+                <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match().rules.hands }) }}</span>
                 }
             </div>
             <span class="text-sm text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
@@ -63,11 +63,11 @@
         #bottomSeatView
         id="seat-bottom"
         [name]="session().seats()[bottom]"
-        [chips]="session().match.stacks()[bottom]"
+        [chips]="chips()[bottom]"
         [gain]="gain(bottom)"
         [acting]="toAct() === bottom"
         [timeLeft]="toAct() === bottom ? timeLeft() : null"
-        [turnTime]="session().match.rules.turnTime"
+        [turnTime]="session().match().rules.turnTime"
         [canTake]="canTake(bottom)"
         [canLeave]="canLeave()"
         (take)="takeSeat(bottom)"
@@ -105,6 +105,9 @@
         @if (actions().includes(betAction.CALL)) {
         <button mat-stroked-button type="button" (click)="act(betAction.FOLD)">{{ t('action.fold') }}</button>
         }
+        @if (canRematch()) {
+        <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+        }
         @if (exchanging()) {
         <button mat-flat-button type="button" [disabled]="selected().length > maxExchange()" (click)="exchange()">
             {{ selected().length === 0 ? t('action.keep') : t('action.exchange', { count: selected().length }) }}
@@ -114,7 +117,7 @@
 
     @if (result(); as current) {
     <p class="m-0 text-center">
-        <span class="badge" [class.badge-win]="session().match.result()?.winner !== null" [class.badge-draw]="session().match.result()?.winner === null">
+        <span class="badge" [class.badge-win]="session().match().result()?.winner !== null" [class.badge-draw]="session().match().result()?.winner === null">
             {{ current.key | transloco: current.params }}
         </span>
     </p>
@@ -129,6 +132,16 @@
         <ul class="m-0 mt-2 pl-0 list-none space-y-1">
             @for (outcome of history(); track $index) {
             <li>{{ outcome.key | transloco: outcome.params }}</li>
+            }
+        </ul>
+    </details>
+    }
+    @if (pastResults().length > 0) {
+    <details id="past-matches">
+        <summary class="cursor-pointer">{{ t('pastMatches') }}</summary>
+        <ul class="m-0 mt-2 pl-0 list-none space-y-1">
+            @for (past of pastResults(); track past.number) {
+            <li>{{ t('match', { number: past.number }) }} {{ past.text.key | transloco: past.text.params }}</li>
             }
         </ul>
     </details>

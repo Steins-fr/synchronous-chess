@@ -226,6 +226,7 @@ Claude writes the translations of every new or changed key, into every language:
 | deck | paquet | baraja | baralho | baralho | Blatt | колода | deste | setumpuk kartu | talia | mazzo |
 | hand (a deal of the match) | main | mano | mão | mão | Hand | раздача | el | tangan | rozdanie | mano |
 | hand (the cards held) | main | mano | mão | mão | Hand | комбинация | el | kombinasi | układ | mano |
+| match (of poker) | partie | partida | partida | partida | Partie | партия | maç | pertandingan | partia | partita |
 | ace | as | as | ás | ás | Ass | туз | as | as | as | asso |
 | king (card) | roi | rey | rei | rei | König | король | papaz | raja | król | re |
 | queen (card) | dame | reina | dama | dama | Dame | дама | kız | ratu | dama | donna |
