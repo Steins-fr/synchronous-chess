@@ -8,7 +8,7 @@ import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/r
 import { RoomHub } from '@testing/room-hub';
 import { TEST_GROUP } from '@testing/sra-test-group';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { PokerPayloads, SeventeenPokerSession } from '../../classes/game-sessions/seventeen-poker-session';
+import { PokerPayloads, SeventeenPokerSession, SPGameSessionType } from '../../classes/game-sessions/seventeen-poker-session';
 import { BetAction } from '../../classes/rules/betting-round';
 import { HandEnd, PokerMatchRules, SEVENTEEN_POKER_RULES } from '../../classes/rules/poker-match';
 import { PokerSeat } from '../../classes/rules/poker-seat';
@@ -157,7 +157,8 @@ describe('PokerTableComponent', () => {
         expect(text('app-card-deck span')).toEqual('7');
         expect(element().textContent).toContain('Pot 10');
         expect(element().textContent).toContain('Hand 1 of 10');
-        expect(text('#seat-bottom')).toEqual('alice145 chips');
+        // The clock started meanwhile
+        expect(text('#seat-bottom')).toMatch(/^alice145 chips4[45] s$/);
         expect(element().querySelector('#seat-bottom .seat')?.classList).toContain('acting');
         expect(button('Check')).toBeDefined();
         expect(button('Fold')).toBeUndefined();
@@ -307,6 +308,169 @@ describe('PokerTableComponent', () => {
             .every((image: Element) => image.classList.contains('outline-3'));
         expect(outlined(1)).toEqual(outcome?.winner === PokerSeat.ONE);
         expect(outlined(0)).toEqual(outcome?.winner === PokerSeat.TWO);
+    });
+
+    describe('the clock of a move', () => {
+        /** The clock of the moves runs on fake timers, the room and the decks on real ones */
+        beforeEach(() => {
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        async function elapse(seconds: number): Promise<void> {
+            vi.advanceTimersByTime(seconds * 1000);
+            await fixture.whenStable();
+        }
+
+        test('should check for the player once the time of its move is over, and fold against a bet', async () => {
+            // Given
+            const bob: SeventeenPokerSession = await dealt();
+
+            // When
+            await elapse(40);
+
+            // Then: the status tells the time runs out, once
+            expect(status()).toEqual('Your turn: time is running out.');
+
+            // When
+            await elapse(4);
+
+            // Then
+            expect(status()).toEqual('Your turn: time is running out.');
+            expect(text('#seat-bottom')).toEqual('alice145 chips1 s');
+            expect(text('#seat-top')).toEqual('bob145 chips');
+
+            // When: the time is over
+            await elapse(1);
+            await until(() => status() === 'bob to speak.');
+
+            // Then: Alice checked, the clock of Bob starts
+            expect(bob.match.hand()?.round.bets).toEqual([0, 0]);
+            expect(text('#seat-bottom')).toEqual('alice145 chips');
+            expect(text('#seat-top')).toEqual('bob145 chips45 s');
+
+            // When
+            bob.bet(BetAction.BET, 5);
+            await until(() => status() === 'Your turn.');
+            await elapse(45);
+            await until(() => status() === 'Your turn to deal.');
+
+            // Then
+            expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 15.');
+        });
+
+        test('should keep the hand of the player once the time of its exchange is over', async () => {
+            // Given
+            const bob: SeventeenPokerSession = await dealt();
+            await click('Bet 1');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.CALL);
+            await until(() => status() === 'Select the cards to discard, then exchange them.');
+            const kept: string[] = cards(1);
+            element().querySelectorAll('app-card-hand')[1].querySelector('button')?.click();
+            await fixture.whenStable();
+
+            // When
+            await elapse(40);
+
+            // Then
+            expect(status()).toEqual('Exchange your cards: time is running out.');
+
+            // When
+            await elapse(5);
+            await until(() => status() === 'bob exchanges cards.');
+
+            // Then: the card selected stays in the hand
+            expect(bob.match.hand()?.exchanges).toEqual([0, null]);
+            expect(cards(1)).toEqual(kept);
+            expect(button('Exchange 1 card')).toBeUndefined();
+        });
+
+        test('should start the clock again for each move of a seat acting twice in a row', async () => {
+            // Given: Alice bets, Bob calls, then Alice exchanges first
+            const bob: SeventeenPokerSession = await dealt();
+            await elapse(10);
+            await click('Bet 1');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.CALL);
+            await until(() => status() === 'Select the cards to discard, then exchange them.');
+
+            // Then
+            expect(text('#seat-bottom')).toEqual('alice144 chips45 s');
+            expect((element().querySelector('#seat-bottom .turn-clock') as HTMLElement).style.width).toEqual('100%');
+        });
+
+        test('should give the move 30 more seconds, once, while a seated player is away, then end the match of a player away', async () => {
+            // Given
+            await dealt();
+            await elapse(10);
+            participant('carol');
+            await fixture.whenStable();
+
+            // Then: a spectator joining changes nothing
+            expect(text('#seat-bottom')).toEqual('alice145 chips35 s');
+
+            // When: Bob leaves the room
+            hub.leave(rooms.get('bob') as Room<PokerPayloads>);
+            await elapse(1);
+
+            // Then: Alice plays meanwhile, with 30 more seconds
+            expect(status()).toEqual('Your turn.');
+            expect(text('#seat-bottom')).toEqual('alice145 chips64 s');
+
+            // When: Bob comes back, then leaves again
+            const back: Room<PokerPayloads> = hub.room('bob');
+            await elapse(1);
+            hub.leave(back);
+            await elapse(1);
+
+            // Then: no more time
+            expect(text('#seat-bottom')).toEqual('alice145 chips62 s');
+
+            // When: the time of Alice is over, then the one of Bob, away: 45 seconds and 30 more
+            await elapse(62);
+            await until(() => status() === 'Waiting for bob to come back…');
+            expect(text('#seat-top')).toEqual('bob145 chips45 s');
+            await elapse(75);
+            await until(() => text('.badge') !== '');
+
+            // Then
+            expect(text('.badge')).toEqual('bob was away when the time ran out: alice wins the match.');
+            expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 10.');
+            expect(hub.types().filter((type: string) => type === SPGameSessionType.TIMEOUT)).toHaveLength(1);
+        });
+
+        test('should play nothing once the time is over while the action of the player waits for the chain', async () => {
+            // Given
+            await dealt();
+            hub.hold('alice');
+            await click('Check');
+
+            // When
+            await elapse(45);
+            hub.release();
+            await until(() => status() === 'bob to speak.');
+
+            // Then: the check sent is the move
+            expect(hub.types().filter((type: string) => type === SPGameSessionType.BET || type === SPGameSessionType.TIMEOUT)).toEqual([SPGameSessionType.BET]);
+        });
+
+        test('should leave the move of the other player to its page', async () => {
+            // Given
+            await dealt();
+            await click('Check');
+            await until(() => status() === 'bob to speak.');
+
+            // When
+            await elapse(50);
+
+            // Then: the clock of Bob stops at 0, his move awaited
+            expect(text('#seat-top')).toEqual('bob145 chips0 s');
+            expect(status()).toEqual('bob to speak.');
+        });
     });
 
     test('should raise or fold against a bet', async () => {

@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Each player pays an ante of 5 chips, and gets 5 cards.",
+      "away": "While a player is away, the move gets 30 more seconds, once: the player to act, still away when the time is up, loses the match.",
+      "clock": "Each move lasts 45 seconds at most: once the time is up, the player checks, folds against a bet, or keeps the hand in the exchange.",
       "exchange": "Exchange: each player in turn discards cards and draws as many; the second one draws from the cards left.",
       "firstRound": "First round: check, bet, raise, call or fold. When both players check, the antes go to the bank.",
       "secondRound": "Second round: a bet is at least the one of the first round, and 30 chips at most.",
@@ -76,10 +78,12 @@
     "pot": "Pot {pot}",
     "result": {
       "draw": "Draw: both players end with {chips, plural, one {# chip} other {# chips}}.",
+      "forfeit": "{loser} was away when the time ran out: {winner} wins the match.",
       "win": "{winner} wins the match with {chips, plural, one {# chip} other {# chips}}."
     },
     "seat": {
       "chips": "{count, plural, one {# chip} other {# chips}}",
+      "clock": "{seconds} s",
       "free": "Free seat",
       "gain": "+{amount}",
       "leave": "Leave the seat",
@@ -92,7 +96,9 @@
       "keys": "Waiting for the keys of {name}…",
       "myDeal": "Your turn to deal.",
       "myExchange": "Select the cards to discard, then exchange them.",
+      "myExchangeEnding": "Exchange your cards: time is running out.",
       "myTurn": "Your turn.",
+      "myTurnEnding": "Your turn: time is running out.",
       "reading": "Reading the cards…",
       "seats": "Waiting for two players to sit.",
       "showdown": "The hands are shown…",

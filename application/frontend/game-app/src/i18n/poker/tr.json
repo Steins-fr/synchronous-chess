@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Her oyuncu 5 fişlik ante öder ve 5 kart alır.",
+      "away": "Bir oyuncu yokken hamle bir kez 30 saniye daha kazanır: süre dolduğunda hâlâ dönmemiş olan sıradaki oyuncu maçı kaybeder.",
+      "clock": "Her hamle en fazla 45 saniye sürer: süre dolunca oyuncu pas der, bir bahse karşı çekilir ya da değişimde elini korur.",
       "exchange": "Değişim: her oyuncu sırayla kart atar ve aynı sayıda kart çeker; ikinci oyuncu kalan kartlardan çeker.",
       "firstRound": "İlk tur: pas, bahis, artırma, görme ya da çekilme. İki oyuncu da pas geçerse anteler bankaya gider.",
       "secondRound": "İkinci tur: bir bahis en az ilk turdaki kadar, en fazla 30 fiştir.",
@@ -76,10 +78,12 @@
     "pot": "Pot {pot}",
     "result": {
       "draw": "Berabere: iki oyuncu da {chips, plural, one {# fişle} other {# fişle}} bitirdi.",
+      "forfeit": "{loser} yokken süre doldu: {winner} maçı kazandı.",
       "win": "{winner} maçı {chips, plural, one {# fişle} other {# fişle}} kazandı."
     },
     "seat": {
       "chips": "{count, plural, one {# fiş} other {# fiş}}",
+      "clock": "{seconds} sn",
       "free": "Boş yer",
       "gain": "+{amount}",
       "leave": "Yeri bırak",
@@ -92,7 +96,9 @@
       "keys": "{name} kullanıcısının anahtarları bekleniyor…",
       "myDeal": "Kartları siz dağıtıyorsunuz.",
       "myExchange": "Atacağınız kartları seçin, sonra değiştirin.",
+      "myExchangeEnding": "Kartlarınızı değiştirin: süre doluyor.",
       "myTurn": "Sıra sizde.",
+      "myTurnEnding": "Sıra sizde: süre doluyor.",
       "reading": "Kartlar okunuyor…",
       "seats": "İki oyuncunun oturması bekleniyor.",
       "showdown": "Eller açılıyor…",

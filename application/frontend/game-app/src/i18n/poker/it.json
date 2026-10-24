@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Ogni giocatore paga un ante di 5 fiche e riceve 5 carte.",
+      "away": "Mentre un giocatore è assente, la mossa guadagna 30 secondi, una sola volta: il giocatore di turno, ancora assente allo scadere del tempo, perde la partita.",
+      "clock": "Ogni mossa dura al massimo 45 secondi: scaduto il tempo, il giocatore passa, lascia contro una puntata o tiene la sua mano al cambio.",
       "exchange": "Cambio: ogni giocatore a turno scarta delle carte e ne pesca altrettante; il secondo pesca tra le carte rimaste.",
       "firstRound": "Primo giro: passo, punta, rilancia, vedi o lascia. Se entrambi i giocatori passano, gli ante vanno al banco.",
       "secondRound": "Secondo giro: una puntata è almeno quella del primo giro, e al massimo di 30 fiche.",
@@ -76,10 +78,12 @@
     "pot": "Piatto {pot}",
     "result": {
       "draw": "Patta: entrambi i giocatori finiscono con {chips, plural, one {# fiche} other {# fiche}}.",
+      "forfeit": "Il tempo è scaduto durante l'assenza di {loser}: {winner} vince la partita.",
       "win": "{winner} vince la partita con {chips, plural, one {# fiche} other {# fiche}}."
     },
     "seat": {
       "chips": "{count, plural, one {# fiche} other {# fiche}}",
+      "clock": "{seconds} s",
       "free": "Posto libero",
       "gain": "+{amount}",
       "leave": "Lascia il posto",
@@ -92,7 +96,9 @@
       "keys": "In attesa delle chiavi di {name}…",
       "myDeal": "Tocca a te distribuire.",
       "myExchange": "Seleziona le carte da scartare, poi cambiale.",
+      "myExchangeEnding": "Cambia le tue carte: il tempo sta per scadere.",
       "myTurn": "Tocca a te.",
+      "myTurnEnding": "Tocca a te: il tempo sta per scadere.",
       "reading": "Lettura delle carte…",
       "seats": "In attesa che si siedano due giocatori.",
       "showdown": "Le mani vengono mostrate…",

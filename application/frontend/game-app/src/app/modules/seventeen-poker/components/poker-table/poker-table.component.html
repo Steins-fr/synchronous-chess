@@ -8,6 +8,8 @@
         [chips]="session().match.stacks()[top]"
         [gain]="gain(top)"
         [acting]="toAct() === top"
+        [timeLeft]="toAct() === top ? timeLeft() : null"
+        [turnTime]="session().match.rules.turnTime"
         [canTake]="canTake(top)"
         (take)="takeSeat(top)" />
     <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
@@ -64,6 +66,8 @@
         [chips]="session().match.stacks()[bottom]"
         [gain]="gain(bottom)"
         [acting]="toAct() === bottom"
+        [timeLeft]="toAct() === bottom ? timeLeft() : null"
+        [turnTime]="session().match.rules.turnTime"
         [canTake]="canTake(bottom)"
         [canLeave]="canLeave()"
         (take)="takeSeat(bottom)"

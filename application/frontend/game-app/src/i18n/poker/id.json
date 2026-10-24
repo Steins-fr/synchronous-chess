@@ -22,6 +22,8 @@
     },
     "hand": {
       "ante": "Setiap pemain membayar ante 5 chip dan menerima 5 kartu.",
+      "away": "Selama seorang pemain tidak hadir, langkah mendapat tambahan 30 detik, sekali saja: pemain yang mendapat giliran dan belum kembali saat waktu habis kalah dalam pertandingan.",
+      "clock": "Setiap langkah paling lama 45 detik: begitu waktunya habis, pemain cek, menyerah terhadap taruhan, atau mempertahankan kombinasinya saat tukar.",
       "exchange": "Tukar: setiap pemain bergiliran membuang kartu dan mengambil sejumlah yang sama; pemain kedua mengambil dari kartu yang tersisa.",
       "firstRound": "Ronde pertama: cek, taruhan, naikkan, ikut, atau menyerah. Jika kedua pemain cek, ante masuk ke bank.",
       "secondRound": "Ronde kedua: taruhan minimal sama dengan taruhan ronde pertama, dan maksimal 30 chip.",
@@ -76,10 +78,12 @@
     "pot": "Pot {pot}",
     "result": {
       "draw": "Seri: kedua pemain selesai dengan {chips, plural, other {# chip}}.",
+      "forfeit": "Waktu habis saat {loser} tidak hadir: {winner} memenangkan pertandingan.",
       "win": "{winner} memenangkan pertandingan dengan {chips, plural, other {# chip}}."
     },
     "seat": {
       "chips": "{count, plural, other {# chip}}",
+      "clock": "{seconds} dtk",
       "free": "Kursi kosong",
       "gain": "+{amount}",
       "leave": "Tinggalkan kursi",
@@ -92,7 +96,9 @@
       "keys": "Menunggu kunci dari {name}…",
       "myDeal": "Giliran Anda membagikan kartu.",
       "myExchange": "Pilih kartu yang dibuang, lalu tukar.",
+      "myExchangeEnding": "Tukar kartu Anda: waktu hampir habis.",
       "myTurn": "Giliran Anda.",
+      "myTurnEnding": "Giliran Anda: waktu hampir habis.",
       "reading": "Membaca kartu…",
       "seats": "Menunggu dua pemain duduk.",
       "showdown": "Kombinasi sedang dibuka…",
