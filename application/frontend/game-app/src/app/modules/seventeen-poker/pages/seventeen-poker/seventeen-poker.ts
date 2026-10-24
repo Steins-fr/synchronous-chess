@@ -1,10 +1,7 @@
 import { Component } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
-import { roomFromSetup } from '@app/modules/room-layout/room-from-setup';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
-import RoomManagerService from '@app/services/room-manager/room-manager.service';
-import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
 import { mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
@@ -22,7 +19,7 @@ import { PokerTableComponent } from '../../components/poker-table/poker-table.co
         RoomLayoutComponent, ChatComponent, WebrtcDebugComponent, PokerPresentationComponent, PokerRulesComponent, PokerTableComponent,
         TranslocoPipe,
     ],
-    providers: [RoomSetupService, RoomManagerService, RoomSocketApi],
+    providers: [provideRooms()],
 })
 export class SeventeenPoker {
     protected readonly game: RoomGame = RoomGame.SEVENTEEN_POKER;
