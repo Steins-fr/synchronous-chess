@@ -60,9 +60,17 @@ export class RoomParticipant {
         return new RoomParticipant(name, context, await context.newPage(), path);
     }
 
-    /** Creates the room, private with a password */
-    public async create(roomName: string, password?: string): Promise<void> {
+    /**
+     * Creates the room, private with a password
+     * @returns the id of the room: its name and the tag the API drew, read from the answer of the API
+     */
+    public async create(roomName: string, password?: string): Promise<string> {
         await this.page.goto(this.path);
+        // Opened by the creation: the page reaches the API once a person acts on it
+        const socket: Promise<WebSocket> = this.page.waitForEvent('websocket', {
+            predicate: (webSocket: WebSocket) => webSocket.url().startsWith(RoomParticipant.API_SOCKET),
+            timeout: RoomParticipant.LISTING_TIMEOUT,
+        });
         await this.page.getByRole('button', { name: 'Create a room', exact: true }).click();
         const dialog: Locator = this.page.locator('app-room-create-dialog');
         await dialog.getByRole('textbox', { name: 'Room name' }).fill(roomName);
@@ -71,6 +79,23 @@ export class RoomParticipant {
             await dialog.getByLabel('Password (private room)').fill(password);
         }
         await dialog.getByRole('button', { name: 'Create', exact: true }).click();
+
+        // The answer of the API: the room created, or the creation refused, failing at once with its message
+        const answer: { payload: string | Buffer } = await (await socket).waitForEvent('framereceived', {
+            predicate: ({ payload }: { payload: string | Buffer }) => ['created', 'error'].includes(RoomParticipant.packet(payload).type ?? ''),
+            timeout: RoomParticipant.LISTING_TIMEOUT,
+        });
+        const { type, data } = RoomParticipant.packet(answer.payload);
+        if (type === 'error') {
+            throw new Error(`The creation of the room ${ roomName } was refused: ${ data.message }`);
+        }
+
+        return data.roomName;
+    }
+
+    /** A packet the API sent the page */
+    private static packet(payload: string | Buffer): { type?: string; data: { roomName: string; message?: string } } {
+        return JSON.parse(payload.toString()) as { type?: string; data: { roomName: string; message?: string } };
     }
 
     /**

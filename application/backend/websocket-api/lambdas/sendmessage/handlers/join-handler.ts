@@ -1,7 +1,7 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { isName } from '@helpers/text.helper';
 import { isToken } from '@helpers/token.helper';
-import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_ID_MAX_LENGTH } from '@protocol/room-limits';
 import { isRoomGame } from '@protocol/room-game.enum';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import {
@@ -20,7 +20,7 @@ export default class JoinHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.JOIN);
 
-        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isRoomGame(data.game)) {
+        if (!isName(data.roomName, ROOM_ID_MAX_LENGTH) || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isRoomGame(data.game)) {
             throw new BadRequestException(JoinHandler.ERROR_PARSING);
         }
 

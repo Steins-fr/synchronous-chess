@@ -248,25 +248,26 @@ describe('RoomService', () => {
         });
     });
 
-    test('should create a room with its host as only player, keeping the hash of its token', async () => {
-        // Given: a room of the same name expired now, another one waiting for its host a second more
-        await storeRoom(aRoom({ connectionId: 'former-connection', expiresAt: now }));
+    test('should create a room under its id with its host as only player, keeping the hash of its token', async () => {
+        // Given: a room of the same id expired now, another one waiting for its host a second more
+        await storeRoom(aRoom({ id: 'room#000042', connectionId: 'former-connection', expiresAt: now }));
         const waiting: Room = aRoom({ id: 'waiting', nameKey: 'waiting', expiresAt: now + 1 });
         await storeRoom(waiting);
 
         // When
-        await service.create(createRequest, HOST_CONNECTION);
+        const created: boolean = await service.create(createRequest, 'Room#000042', HOST_CONNECTION);
 
-        // Then
+        // Then: searched by its whole id
+        expect(created).toBe(true);
         expect(await readRoom('waiting')).toStrictEqual(waiting);
-        expect(await readRoom('room')).toStrictEqual({
-            id: 'room',
+        expect(await readRoom('Room#000042')).toStrictEqual({
+            id: 'Room#000042',
             connectionId: HOST_CONNECTION,
             hostPlayer: 'host',
             maxPlayer: 4,
             game: RoomGame.CHAT,
             createdAt: new Date(now * 1000).toISOString(),
-            nameKey: 'room',
+            nameKey: 'room#000042',
             players: [{ playerName: 'host' }],
             queue: [],
             tokenHashes: { host: hashToken(HOST_TOKEN) },
@@ -275,14 +276,37 @@ describe('RoomService', () => {
         });
     });
 
-    test('should refuse to create a room whose name is taken', async () => {
+    test('should not create a room whose id is taken', async () => {
         // Given
         const existing: Room = aRoom({ connectionId: 'other-connection' });
         await storeRoom(existing);
 
         // When / Then
-        await expect(service.create(createRequest, HOST_CONNECTION)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
+        expect(await service.create(createRequest, 'room', HOST_CONNECTION)).toBe(false);
         expect(await readRoom('room')).toStrictEqual(existing);
+    });
+
+    test('should give the tag following the highest one of the rooms of the name', async () => {
+        // Given
+        await storeRoom(aRoom({ id: 'room#000041' }));
+        await storeRoom(aRoom({ id: 'room#000007' }));
+
+        // When / Then
+        expect(await service.nextRoomTag('room')).toEqual(42);
+    });
+
+    test('should give the lowest tag free once the last tag of the name is taken', async () => {
+        // Given
+        await storeRoom(aRoom({ id: 'room#000000' }));
+        await storeRoom(aRoom({ id: 'room#999999' }));
+
+        // When / Then
+        expect(await service.nextRoomTag('room')).toEqual(1);
+    });
+
+    test('should give the first tag to the first room of the name', async () => {
+        // When / Then
+        expect(await service.nextRoomTag('room')).toEqual(0);
     });
 
     test('should move a room to another connection of its host', async () => {

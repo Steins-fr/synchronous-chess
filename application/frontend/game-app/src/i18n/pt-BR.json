@@ -57,7 +57,6 @@
       "title": "Criar uma sala"
     },
     "errors": {
-      "alreadyExists": "A sala já existe.",
       "fullOrGone": "A sala está cheia ou não existe mais.",
       "hostDisconnected": "O anfitrião da sala se desconectou.",
       "nameInRoom": "Já há um jogador com esse nome na sala.",
@@ -82,9 +81,11 @@
         "required": "O nome do jogador é obrigatório"
       },
       "roomName": {
+        "blank": "O nome da sala não pode conter espaços",
         "label": "Nome da sala",
         "maxLength": "O nome da sala tem no máximo {maxLength, plural, one {# caractere} other {# caracteres}}",
-        "required": "O nome da sala é obrigatório"
+        "required": "O nome da sala é obrigatório",
+        "tagSeparator": "O nome da sala não pode conter “#”"
       }
     },
     "join": {

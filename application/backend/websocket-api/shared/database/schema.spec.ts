@@ -93,8 +93,13 @@ describe('schema', () => {
     });
 
     // What drizzle-kit generates the migrations from (`drizzle-kit check` in the CI)
-    test('should declare the indexes of the list and the search of the rooms, and of their expiry', () => {
-        expect(getTableConfig(rooms).indexes.map((index: Index) => index.config.name)).toEqual(['rooms_game_created_at', 'rooms_name_key_trgm', 'rooms_expiry']);
+    test('should declare the indexes of the list and the search of the rooms, of their expiry, and their unique search key', () => {
+        expect(getTableConfig(rooms).indexes.map((index: Index) => ({ name: index.config.name, unique: index.config.unique }))).toEqual([
+            { name: 'rooms_game_created_at', unique: false },
+            { name: 'rooms_name_key_trgm', unique: false },
+            { name: 'rooms_name_key', unique: true },
+            { name: 'rooms_expiry', unique: false },
+        ]);
     });
 
     test.each([

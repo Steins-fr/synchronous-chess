@@ -10,6 +10,7 @@ import { TranslatableText } from '@app/types/translatable-text.type';
 import RoomCreateResponse from '@protocol/responses/room-create-response';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
+import { ROOM_TAG_DIGITS, ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { PeerRoomNetwork, RoomAccess } from './classes/room-network/peer-room-network';
 import { JoinFailure, RoomNetwork } from './classes/room-network/room-network';
@@ -48,11 +49,11 @@ export default class RoomManagerService {
                     token,
                 });
 
-                if (response.playerName !== setup.playerName || response.roomName !== setup.roomName || response.maxPlayer !== maxPlayer) {
+                if (response.playerName !== setup.playerName || !RoomManagerService.isRoomId(response.roomName, setup.roomName) || response.maxPlayer !== maxPlayer) {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
-                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, setup.playerName, maxPlayer, access);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, response.roomName, setup.playerName, setup.playerName, maxPlayer, access);
             } else {
                 const response: RoomJoinResponse = await this.join(setup, access, signal);
                 // The page left while the join was sent: no negotiation with the host
@@ -108,6 +109,13 @@ export default class RoomManagerService {
         };
     }
 
+    /** The id of the room of the name: the name, the separator, then the digits of the tag the API drew */
+    private static isRoomId(roomId: string, roomName: string): boolean {
+        const prefix: string = `${ roomName }${ ROOM_TAG_SEPARATOR }`;
+        const tag: string = roomId.slice(prefix.length);
+        return roomId.startsWith(prefix) && tag.length === ROOM_TAG_DIGITS && /^\d+$/.test(tag);
+    }
+
     private static failureMessage(setup: RoomSetupInterface, error: unknown): TranslatableText {
         return { key: RoomManagerService.failureKey(setup, error) };
     }
@@ -116,7 +124,7 @@ export default class RoomManagerService {
         const message: string | undefined = error instanceof Error ? error.message : undefined;
 
         if (setup.type === 'create') {
-            return message === RoomApiErrorMessage.ROOM_ALREADY_EXISTS ? marker('rooms.errors.alreadyExists') : marker('rooms.errors.notCreated');
+            return marker('rooms.errors.notCreated');
         }
 
         switch (message) {

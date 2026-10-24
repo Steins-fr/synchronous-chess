@@ -1,7 +1,5 @@
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, Params } from '@angular/router';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
@@ -26,7 +24,7 @@ describe('RoomSetupComponent', () => {
     let socketWaiting: WritableSignal<boolean>;
 
     /** @param answered whether the lists of the open rooms are answered, the database they wake awake */
-    async function createComponent(queryParams: Params = {}, answered: boolean = true): Promise<void> {
+    async function createComponent(answered: boolean = true): Promise<void> {
         dialogService = TestHelper.cast<DialogService>({ open: vi.fn() });
         socketWaiting = signal(false);
         await TestBed.configureTestingModule({
@@ -35,7 +33,6 @@ describe('RoomSetupComponent', () => {
                 RoomSetupService,
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 { provide: DialogService, useValue: dialogService },
-                { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
                 // Provided by the page
                 { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: socketWaiting }) },
             ],
@@ -43,7 +40,6 @@ describe('RoomSetupComponent', () => {
 
         roomSetupService = TestBed.inject(RoomSetupService);
         vi.spyOn(roomSetupService, 'setup');
-        vi.spyOn(CryptoHelper, 'randomNumber').mockReturnValue(123456);
         fixture = TestBed.createComponent(RoomSetupComponent);
         fixture.componentRef.setInput('game', RoomGame.CHESS);
         if (answered) {
@@ -103,7 +99,7 @@ describe('RoomSetupComponent', () => {
     test('should create the room given once the list woke the database, its button disabled meanwhile', async () => {
         // Given: the list awaited, the database it wakes still asleep
         vi.useFakeTimers();
-        await createComponent({}, false);
+        await createComponent(false);
         vi.mocked(dialogService.open).mockResolvedValueOnce({ roomName: 'room', playerName: 'player' });
 
         // When
@@ -153,7 +149,7 @@ describe('RoomSetupComponent', () => {
     test('should set no room up once the page closed while the list wakes the database', async () => {
         // Given
         vi.useFakeTimers();
-        await createComponent({}, false);
+        await createComponent(false);
         vi.mocked(dialogService.open).mockResolvedValueOnce({ roomName: 'room', playerName: 'player' });
         createButton()?.click();
         await vi.advanceTimersByTimeAsync(0);
@@ -293,49 +289,5 @@ describe('RoomSetupComponent', () => {
         // Then
         expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
         expect(fixture.nativeElement.textContent).not.toContain('Starting the server…');
-    });
-
-    test('should automatically create the room', async () => {
-        // When
-        await createComponent({ 'auto-create': '', room: 'my-room' });
-
-        // Then
-        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHESS, roomName: 'my-room', playerName: '123456' });
-    });
-
-    test.each<[string, Params]>([
-        ['no room', { 'auto-create': '' }],
-        ['an empty room', { 'auto-create': '', room: '' }],
-    ])('should automatically create the default room for a link with %s', async (_case: string, params: Params) => {
-        // When
-        await createComponent(params);
-
-        // Then
-        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHESS, roomName: 'test', playerName: '123456' });
-    });
-
-    test('should automatically join the room after a delay', async () => {
-        // Given
-        vi.useFakeTimers();
-
-        // When
-        await createComponent({ 'auto-join': '', room: 'my-room' });
-
-        // Then
-        expect(roomSetupService.setup).not.toHaveBeenCalled();
-        await vi.advanceTimersByTimeAsync(1000);
-        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'my-room', playerName: '123456' });
-    });
-
-    test('should automatically join the default room', async () => {
-        // Given
-        vi.useFakeTimers();
-
-        // When
-        await createComponent({ 'auto-join': '' });
-        await vi.advanceTimersByTimeAsync(1000);
-
-        // Then
-        expect(roomSetupService.setup).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'test', playerName: '123456' });
     });
 });

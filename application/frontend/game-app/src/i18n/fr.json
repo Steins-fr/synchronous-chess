@@ -57,7 +57,6 @@
       "title": "Créer une salle"
     },
     "errors": {
-      "alreadyExists": "La salle existe déjà.",
       "fullOrGone": "La salle est pleine ou elle n'existe plus.",
       "hostDisconnected": "L'hôte de la salle s'est déconnecté.",
       "nameInRoom": "Un joueur de ce nom est déjà dans la salle.",
@@ -82,9 +81,11 @@
         "required": "Le nom du joueur est requis"
       },
       "roomName": {
+        "blank": "Le nom de la salle ne peut pas contenir d'espaces",
         "label": "Nom de la salle",
         "maxLength": "Le nom de la salle fait {maxLength, plural, one {# caractère} other {# caractères}} au plus",
-        "required": "Le nom de la salle est requis"
+        "required": "Le nom de la salle est requis",
+        "tagSeparator": "Le nom de la salle ne peut pas contenir « # »"
       }
     },
     "join": {

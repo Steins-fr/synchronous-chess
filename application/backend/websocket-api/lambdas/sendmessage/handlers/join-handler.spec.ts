@@ -8,6 +8,7 @@ import Room from '@models/room';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import RoomJoinRequest from '@protocol/requests/room-join-request';
 import { RoomGame } from '@protocol/room-game.enum';
+import { ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import {
     anApiGatewayClient,
@@ -54,6 +55,18 @@ describe('JoinHandler', () => {
         ]);
     });
 
+    test('should queue the player in a room of the longest id, a name of the longest and its tag', async () => {
+        // Given
+        const roomId: string = `${ 'r'.repeat(ROOM_NAME_MAX_LENGTH) }#000042`;
+        await storeRoom(aRoom({ id: roomId }));
+
+        // When
+        await join({ roomName: roomId, game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+
+        // Then
+        expect(await readConnections()).toEqual([{ connectionId: connection, roomName: roomId }]);
+    });
+
     test('should cancel the join of a player whose connection closed before its answer, telling the host', async () => {
         // Given
         const room: Room = aRoom();
@@ -94,7 +107,7 @@ describe('JoinHandler', () => {
 
     test.each([
         ['room name', { roomName: '', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
-        ['room name of a reasonable length', { roomName: 'r'.repeat(33), game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
+        ['room id of a reasonable length', { roomName: `${ 'r'.repeat(33) }#000042`, game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
         ['player name of a reasonable length', { roomName: 'room', game: RoomGame.CHESS, playerName: 'p'.repeat(33), token: 'other-token' }, 'Payload not valid'],
         ['player name', { roomName: 'room', game: RoomGame.CHESS, playerName: '', token: 'other-token' }, 'Payload not valid'],
         ['token', { roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: '' }, 'Payload not valid'],

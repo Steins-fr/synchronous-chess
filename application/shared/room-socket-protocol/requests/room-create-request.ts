@@ -2,6 +2,7 @@ import { RoomGame } from '../room-game.enum';
 
 export default interface RoomCreateRequest {
     playerName: string;
+    /** The name of the room, without the tag the API adds to it (ROOM_TAG_SEPARATOR) */
     roomName: string;
     maxPlayer: number;
     game: RoomGame;

@@ -2,9 +2,9 @@ import { GoneException, PostToConnectionCommand } from '@aws-sdk/client-apigatew
 import { getDatabase } from '@database/database';
 import { connections, rooms } from '@database/schema';
 import { verifyPassword } from '@helpers/password.helper';
+import { randomRoomTag } from '@helpers/room-tag.helper';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
-import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
 import { RoomGame } from '@protocol/room-game.enum';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
@@ -23,9 +23,14 @@ import {
     storeConnection,
     storeRoom,
 } from '@testing/api-mocks';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import RoomService from '@services/room-service';
 import CreateHandler from './create-handler';
+
+vi.mock('@helpers/room-tag.helper', async (importOriginal: () => Promise<typeof import('@helpers/room-tag.helper')>) => ({
+    ...await importOriginal(),
+    randomRoomTag: vi.fn(),
+}));
 
 // In epoch seconds
 const NOW: number = 1_800_000_000;
@@ -38,11 +43,15 @@ describe('CreateHandler', () => {
         return new CreateHandler(anApiGatewayClient(), HOST_CONNECTION, aRequest(RoomApiRequestTypeEnum.CREATE, data)).execute();
     }
 
+    beforeEach(() => {
+        vi.mocked(randomRoomTag).mockReturnValue(42);
+    });
+
     afterEach(() => {
         vi.useRealTimers();
     });
 
-    test('should create the room of its host, keeping the hash of its token and its creation date', async () => {
+    test('should create the room of its host under its name and a tag drawn, keeping the hash of its token and its creation date', async () => {
         // Given
         vi.useFakeTimers({ now: new Date('2026-10-11T12:00:00.000Z'), toFake: ['Date'] });
 
@@ -51,17 +60,17 @@ describe('CreateHandler', () => {
 
         // Then
         expect(postedPackets(apiGateway)).toEqual([
-            { to: HOST_CONNECTION, packet: { id: 7, type: 'created', data: { roomName: 'room', playerName: 'host', maxPlayer: 4 } } },
+            { to: HOST_CONNECTION, packet: { id: 7, type: 'created', data: { roomName: 'room#000042', playerName: 'host', maxPlayer: 4 } } },
         ]);
-        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room' }]);
-        expect(await readRoom('room')).toStrictEqual({
-            id: 'room',
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room#000042' }]);
+        expect(await readRoom('room#000042')).toStrictEqual({
+            id: 'room#000042',
             connectionId: HOST_CONNECTION,
             hostPlayer: 'host',
             maxPlayer: 4,
             game: RoomGame.CHESS,
             createdAt: '2026-10-11T12:00:00.000Z',
-            nameKey: 'room',
+            nameKey: 'room#000042',
             players: [{ playerName: 'host' }],
             queue: [],
             tokenHashes: { host: hashToken(HOST_TOKEN) },
@@ -81,7 +90,7 @@ describe('CreateHandler', () => {
 
         // Then: the room waits for its host, then expires, as a room whose host lost its connection
         expect(await readConnections()).toEqual([]);
-        expect((await readRoom('room'))?.expiresAt).toEqual(NOW + RoomService.HOST_RECONNECTION_DELAY);
+        expect((await readRoom('room#000042'))?.expiresAt).toEqual(NOW + RoomService.HOST_RECONNECTION_DELAY);
         expect(console.warn).toHaveBeenCalledWith(`Connection closed before its answer, disconnected: ${ HOST_CONNECTION }`);
     });
 
@@ -98,7 +107,7 @@ describe('CreateHandler', () => {
         await create(request);
 
         // Then: not a room hosted by nobody, listed until its lease ends
-        expect((await readRoom('room'))?.expiresAt).toEqual(NOW + RoomService.HOST_RECONNECTION_DELAY);
+        expect((await readRoom('room#000042'))?.expiresAt).toEqual(NOW + RoomService.HOST_RECONNECTION_DELAY);
     });
 
     test('should fail once its answer can not be sent otherwise', async () => {
@@ -108,7 +117,7 @@ describe('CreateHandler', () => {
 
         // When / Then
         await expect(create(request)).rejects.toBe(failure);
-        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room' }]);
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room#000042' }]);
     });
 
     test('should create a private room, keeping a hash of its password', async () => {
@@ -116,7 +125,7 @@ describe('CreateHandler', () => {
         await create({ ...request, password: 'secret' });
 
         // Then
-        const room = await readRoom('room') as Room;
+        const room = await readRoom('room#000042') as Room;
         expect(room.passwordHash).not.toContain('secret');
         expect(verifyPassword('secret', room.passwordHash as string)).toEqual(true);
         expect(room.isPrivate).toEqual(true);
@@ -126,6 +135,13 @@ describe('CreateHandler', () => {
         ['room name', { ...request, roomName: '' }],
         ['room name of other characters than spaces', { ...request, roomName: '   ' }],
         ['room name of a reasonable length', { ...request, roomName: 'r'.repeat(33) }],
+        ['room name without a tag separator', { ...request, roomName: 'room#1' }],
+        ['room name without a space', { ...request, roomName: 'my room' }],
+        ['room name without a space around it', { ...request, roomName: ' room' }],
+        ['room name without a tab', { ...request, roomName: 'my\troom' }],
+        ['room name without a no-break space', { ...request, roomName: 'my\u00A0room' }],
+        ['room name without a zero width space', { ...request, roomName: 'my\u200Broom' }],
+        ['room name without a word joiner', { ...request, roomName: 'my\u2060room' }],
         ['player name of a reasonable length', { ...request, playerName: 'p'.repeat(33) }],
         ['player name', { ...request, playerName: '' }],
         ['player count', { ...request, maxPlayer: 0 }],
@@ -156,8 +172,8 @@ describe('CreateHandler', () => {
         await create(request);
 
         // Then
-        expect((await readRoom('room'))?.connectionId).toEqual(HOST_CONNECTION);
-        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room' }]);
+        expect((await readRoom('room#000042'))?.connectionId).toEqual(HOST_CONNECTION);
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room#000042' }]);
     });
 
     test('should refuse to create a room on the connection of another room it hosts', async () => {
@@ -168,17 +184,95 @@ describe('CreateHandler', () => {
         // When / Then
         await expect(create(request)).rejects.toThrow('Already hosting a room');
         expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'hosted' }]);
-        expect(await readRoom('room')).toBeNull();
+        expect(await readRoom('room#000042')).toBeNull();
     });
 
-    test('should refuse a room name already taken', async () => {
-        // Given: a room of that name, its host connected
-        const existing: Room = aRoom({ connectionId: 'other-connection' });
+    test('should create a room whose name is taken under another tag, of any game', async () => {
+        // Given: the name taken in another game, the first tag drawn taken
+        const existing: Room = aRoom({ id: 'room#000042', game: RoomGame.CHAT, connectionId: 'other-connection' });
         await storeRoom(existing);
+        vi.mocked(randomRoomTag).mockReturnValueOnce(42).mockReturnValueOnce(7);
+
+        // When
+        await create(request);
+
+        // Then
+        expect(await readRoom('room#000042')).toStrictEqual(existing);
+        expect((await readRoom('room#000007'))?.game).toEqual(RoomGame.CHESS);
+        expect(await readConnections()).toEqual([{ connectionId: HOST_CONNECTION, roomName: 'room#000007' }]);
+        expect(postedPackets(apiGateway)).toEqual([
+            { to: HOST_CONNECTION, packet: { id: 7, type: 'created', data: { roomName: 'room#000007', playerName: 'host', maxPlayer: 4 } } },
+        ]);
+    });
+
+    test('should create a room under another tag than a room of the same name of another case', async () => {
+        // Given: the first tag drawn taken by the name of another case
+        await storeRoom(aRoom({ id: 'Room#000042', connectionId: 'other-connection' }));
+        vi.mocked(randomRoomTag).mockReturnValueOnce(42).mockReturnValueOnce(7);
+
+        // When
+        await create(request);
+
+        // Then
+        expect(await readRoom('room#000042')).toBeNull();
+        expect((await readRoom('room#000007'))?.connectionId).toEqual(HOST_CONNECTION);
+    });
+
+    test('should create a room under the tag following the highest one of its name, once the tags drawn are taken', async () => {
+        // Given: every tag drawn taken
+        await storeRoom(aRoom({ id: 'room#000042' }));
+        await storeRoom(aRoom({ id: 'room#000099' }));
+
+        // When
+        await create(request);
+
+        // Then
+        expect(randomRoomTag).toHaveBeenCalledTimes(5);
+        expect((await readRoom('room#000100'))?.connectionId).toEqual(HOST_CONNECTION);
+    });
+
+    test('should read the highest tag again once another room took the tag following it', async () => {
+        // Given: the tag following the highest one taken while the room is created
+        await storeRoom(aRoom({ id: 'room#000042' }));
+        vi.spyOn(RoomService.prototype, 'nextRoomTag').mockResolvedValueOnce(42);
+
+        // When
+        await create(request);
+
+        // Then
+        expect((await readRoom('room#000043'))?.connectionId).toEqual(HOST_CONNECTION);
+    });
+
+    test('should create a room under the lowest tag free once the last tag of its name is taken', async () => {
+        // Given: every tag drawn taken, the last one too
+        await storeRoom(aRoom({ id: 'room#000000' }));
+        await storeRoom(aRoom({ id: 'room#000042' }));
+        await storeRoom(aRoom({ id: 'room#999999' }));
+
+        // When
+        await create(request);
+
+        // Then
+        expect((await readRoom('room#000001'))?.connectionId).toEqual(HOST_CONNECTION);
+    });
+
+    test('should refuse a room once every tag of its name is taken', async () => {
+        // Given: the tag drawn taken, none left in the table
+        await storeRoom(aRoom({ id: 'room#000042' }));
+        vi.spyOn(RoomService.prototype, 'nextRoomTag').mockResolvedValue(undefined);
 
         // When / Then
-        await expect(create(request)).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
-        expect(await readRoom('room')).toStrictEqual(existing);
-        expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.ROOM_ALREADY_EXISTS)]);
+        await expect(create(request)).rejects.toThrow('No tag left for the room name');
+        expect(postedPackets(apiGateway)).toEqual([errorReply('No tag left for the room name')]);
+    });
+
+    test('should refuse a room once the tags read in the table are all taken meanwhile', async () => {
+        // Given
+        await storeRoom(aRoom({ id: 'room#000042' }));
+        vi.spyOn(RoomService.prototype, 'nextRoomTag').mockResolvedValue(42);
+
+        // When / Then
+        await expect(create(request)).rejects.toThrow('No tag left for the room name');
+        expect(RoomService.prototype.nextRoomTag).toHaveBeenCalledTimes(5);
     });
 });

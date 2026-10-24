@@ -15,6 +15,7 @@ import {
     smallint,
     snakeCase,
     text,
+    uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { RoomGame } from '@protocol/room-game.enum';
 
@@ -27,7 +28,7 @@ type ConstrainedColumns<Name extends string> = Record<Name, ExtraConfigColumn>;
 const ROOM_GAMES_SQL: string = ROOM_GAMES.map((game: RoomGame): string => `'${ game }'`).join(', ');
 
 export const rooms = snakeCase.table('rooms', {
-    /** The name of the room */
+    /** The id of the room: its name and its tag (`friday#451203`), unique across the games */
     id: text().primaryKey(),
     /** The connection of its host */
     connectionId: text().notNull(),
@@ -36,7 +37,7 @@ export const rooms = snakeCase.table('rooms', {
     game: text({ enum: ROOM_GAMES }).notNull(),
     /** An ISO 8601 date in UTC: its order as a text is its order in time */
     createdAt: text().notNull(),
-    /** The search key of its name (search.helper) */
+    /** The search key of its id (search.helper), its tag included: unique, the ids of the rooms differ whatever their case */
     nameKey: text().notNull(),
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash: text(),
@@ -55,6 +56,8 @@ export const rooms = snakeCase.table('rooms', {
     index('rooms_game_created_at').on(table.game, table.createdAt.desc().nullsFirst()),
     // The rooms whose name holds the search: pg_trgm, created by the first migration
     index('rooms_name_key_trgm').using('gin', table.nameKey.op('gin_trgm_ops')),
+    // A room of each id whatever its case: `Friday#000042` and `friday#000042` would be found by the same search
+    uniqueIndex('rooms_name_key').on(table.nameKey),
     // The expired rooms, deleted on the creation of a room: the end of the wait for the host, else of the lease (the
     // expiry of RoomRepository)
     index('rooms_expiry').on(sql`coalesce(${table.expiresAt}, ${table.leaseUntil})`),

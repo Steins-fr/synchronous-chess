@@ -1,11 +1,9 @@
-import { Component, OnInit, Signal, inject, input, signal } from '@angular/core';
+import { Component, Signal, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ActivatedRoute, ParamMap } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import RoomSetupService, { RoomSetupType } from '@app/services/room-setup/room-setup.service';
@@ -23,11 +21,10 @@ import { ServerBootingComponent } from './server-booting/server-booting.componen
     templateUrl: './room-setup.component.html',
     imports: [OpenRoomsComponent, MatButtonModule, MatProgressSpinnerModule, ServerBootingComponent, TranslocoPipe],
 })
-export class RoomSetupComponent implements OnInit {
+export class RoomSetupComponent {
     public readonly game = input.required<RoomGame>();
 
     private readonly roomSetupService = inject(RoomSetupService);
-    private readonly route = inject(ActivatedRoute);
     private readonly dialogService = inject(DialogService);
     /** A request of the setup awaits the API, not the connection to the peers after it: long, the server boots */
     protected readonly awaitingApi: Signal<boolean> = inject(RoomSocketApi).waiting;
@@ -41,21 +38,6 @@ export class RoomSetupComponent implements OnInit {
     // Given again to the dialogs, to try again once the room failed
     private createdRoomName: string = '';
     private playerName: string = '';
-
-    /**
-     * The links of development set the room up at once, without waiting for a person on the page: linked from no page, a
-     * bot never finds them. The tab joining waits a while for the tab creating the room, both opened together
-     */
-    public ngOnInit(): void {
-        const params = this.route.snapshot.queryParamMap;
-        if (params.has('auto-create')) {
-            this.setUp('create', this.linkRoom(params), this.randomPlayerName());
-        } else if (params.has('auto-join')) {
-            const roomName: string = this.linkRoom(params);
-            const playerName: string = this.randomPlayerName();
-            setTimeout(() => this.setUp('join', roomName, playerName), 1000);
-        }
-    }
 
     /** @param openRooms the list, which wakes the database: a room created once it answered meets it awake */
     protected async createRoom(openRooms: OpenRoomsComponent): Promise<void> {
@@ -114,15 +96,5 @@ export class RoomSetupComponent implements OnInit {
     private setUp(type: RoomSetupType, roomName: string, playerName: string, password?: string): void {
         this.playerName = playerName;
         this.roomSetupService.setup({ type, game: this.game(), roomName, playerName, password });
-    }
-
-    // The room of an auto link: the default one when the link gives none, or an empty one
-    private linkRoom(params: ParamMap): string {
-        const room: string = params.get('room') ?? '';
-        return room === '' ? 'test' : room;
-    }
-
-    private randomPlayerName(): string {
-        return `${ CryptoHelper.randomNumber(100_000, 999_999) }`;
     }
 }

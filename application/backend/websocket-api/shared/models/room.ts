@@ -2,6 +2,7 @@ import { RoomGame } from '@protocol/room-game.enum';
 import Player from './player';
 
 export default interface Room {
+    /** Its name and its tag (`friday#451203`), unique across the games */
     id: string;
     connectionId: string;
     hostPlayer: string;
@@ -9,7 +10,7 @@ export default interface Room {
     game: RoomGame;
     /** When the room was created, an ISO 8601 date in UTC: its order as a text is its order in time */
     createdAt: string;
-    /** The search key of its name (search.helper): what a search reads */
+    /** The search key of its id (search.helper), its tag included: what a search reads */
     nameKey: string;
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash?: string;

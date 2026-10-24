@@ -3,7 +3,7 @@ import { isName } from '@helpers/text.helper';
 import RoomHelper from '@helpers/room-helper';
 import Player from '@models/player';
 import Room from '@models/room';
-import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_ID_MAX_LENGTH } from '@protocol/room-limits';
 import {
     RoomApiRequestTypeEnum,
     RoomSocketApiNotificationEnum,
@@ -15,7 +15,7 @@ export default class FullHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.FULL);
 
-        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !isName(data.to, PLAYER_NAME_MAX_LENGTH)) {
+        if (!isName(data.roomName, ROOM_ID_MAX_LENGTH) || !isName(data.to, PLAYER_NAME_MAX_LENGTH)) {
             throw new BadRequestException(FullHandler.ERROR_PARSING);
         }
 

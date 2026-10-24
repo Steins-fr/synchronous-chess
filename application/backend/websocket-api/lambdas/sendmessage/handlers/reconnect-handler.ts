@@ -2,7 +2,7 @@ import BadRequestException from '@exceptions/bad-request-exception';
 import { isName } from '@helpers/text.helper';
 import { isToken } from '@helpers/token.helper';
 import Room from '@models/room';
-import { PLAYER_NAME_MAX_LENGTH, ROOM_NAME_MAX_LENGTH } from '@protocol/room-limits';
+import { PLAYER_NAME_MAX_LENGTH, ROOM_ID_MAX_LENGTH } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum, RoomApiResponseTypeEnum } from '@protocol/socket-packet-payload.type';
 import MessageHandler from './message-handler';
 
@@ -14,7 +14,7 @@ export default class ReconnectHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.RECONNECT);
 
-        if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token)) {
+        if (!isName(data.roomName, ROOM_ID_MAX_LENGTH) || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token)) {
             throw new BadRequestException(ReconnectHandler.ERROR_PARSING);
         }
 

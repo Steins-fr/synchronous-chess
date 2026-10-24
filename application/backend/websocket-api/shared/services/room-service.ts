@@ -1,5 +1,6 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { hashPassword } from '@helpers/password.helper';
+import { MAX_ROOM_TAG } from '@helpers/room-tag.helper';
 import { searchKey } from '@helpers/search.helper';
 import { epochSeconds } from '@helpers/time.helper';
 import { hashToken } from '@helpers/token.helper';
@@ -71,8 +72,9 @@ export default class RoomService {
     /**
      * The rooms of the game, the full ones and the ones waiting for their host included: a participant joins its room
      * again once it has a place or its host is back. Without search, the most recent first. With a search, the rooms
-     * whose name holds it, whatever the case: the names starting with it first, then by name
-     * @param search a part of the name of the room: none when empty
+     * whose name holds it, whatever the case, or whose id holds it for a search holding the tag separator: the ids
+     * starting with it first, then by id
+     * @param search a part of the name of the room, or of its id: none when empty
      */
     public async getOpenRooms(game: RoomGame, search: string = ''): Promise<RoomsResponse> {
         const searched: string = searchKey(search);
@@ -142,20 +144,37 @@ export default class RoomService {
     }
 
     /**
-     * Creates the room of the request, hosted by the connection: private with a password, kept as a hash. The token of
-     * the host is kept as a hash too, to reconnect the room later
-     * @throws {BadRequestException} when a room of that name exists, even waiting for its host
+     * A tag no room of the name holds, unless another room takes it meanwhile: the tag following the highest one, 0 for
+     * the first room of the name, else, the last tag taken, the lowest one free
+     * @returns undefined when every tag of the name is taken
      */
-    public async create(request: RoomCreateRequest, connectionId: string): Promise<void> {
+    public async nextRoomTag(name: string): Promise<number | undefined> {
+        const now: number = epochSeconds();
+        const lastTag: number | undefined = await this.roomRepository.findLastTag(name, now);
+
+        if (lastTag === undefined) {
+            return 0;
+        }
+
+        return lastTag < MAX_ROOM_TAG ? lastTag + 1 : this.roomRepository.findFirstFreeTag(name, now);
+    }
+
+    /**
+     * Creates the room of the request under the id given, its name tagged, hosted by the connection: private with a
+     * password, kept as a hash. The token of the host is kept as a hash too, to reconnect the room later
+     * @returns false when a room of that id exists, even waiting for its host: nothing created
+     */
+    public async create(request: RoomCreateRequest, roomId: string, connectionId: string): Promise<boolean> {
         const now: number = epochSeconds();
         const room: Room = {
-            id: request.roomName,
+            id: roomId,
             connectionId,
             hostPlayer: request.playerName,
             maxPlayer: request.maxPlayer,
             game: request.game,
             createdAt: new Date().toISOString(),
-            nameKey: searchKey(request.roomName),
+            // The tag included: a search finds the room by its whole id
+            nameKey: searchKey(roomId),
             players: [{ playerName: request.playerName }],
             queue: [],
             tokenHashes: { [request.playerName]: hashToken(request.token) },
@@ -167,11 +186,7 @@ export default class RoomService {
             room.passwordHash = hashPassword(request.password);
         }
 
-        const created: boolean = await this.roomRepository.create(room, now);
-
-        if (!created) {
-            throw new BadRequestException(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
-        }
+        return this.roomRepository.create(room, now);
     }
 
     /**

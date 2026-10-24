@@ -159,11 +159,35 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
     ]);
     const search: string = 'r';
     assert.deepEqual(await timed('search the rooms', (): Promise<unknown> => db.select({ id: rooms.id }).from(rooms)
-        .where(and(eq(rooms.game, RoomGame.CHESS), notExpired(NOW), like(rooms.nameKey, `%${ search }%`)))
-        .orderBy(sql`strpos(${ rooms.nameKey }, ${ search })`, sql`${ rooms.nameKey } COLLATE "C"`).limit(31)), [
+        .where(and(eq(rooms.game, RoomGame.CHESS), notExpired(NOW), like(rooms.nameKey, `%${ search }%`), like(sql`split_part(${ rooms.nameKey }, '#', 1)`, `%${ search }%`)))
+        .orderBy(sql`strpos(${ rooms.nameKey }, ${ search })`, sql`split_part(${ rooms.nameKey }, '#', 1) COLLATE "C"`, sql`${ rooms.nameKey } COLLATE "C"`).limit(31)), [
         { id: 'Room' },
         { id: 'Private' },
     ]);
+
+    // RoomRepository.findLastTag and findFirstFreeTag: the rooms of a name, through the trigram index of their search key
+    for (const id of ['Tag#000000', 'Tag#000001', 'Tag#999999']) {
+        // eslint-disable-next-line no-await-in-loop -- created one after the other
+        await createRoom(db, id);
+    }
+    const ofName: SQL = and(like(rooms.nameKey, 'tag#______'), notExpired(NOW)) as SQL;
+    assert.deepEqual(await timed('find the last tag of a name', (): Promise<unknown> => db.select({ nameKey: rooms.nameKey }).from(rooms)
+        .where(ofName).orderBy(sql`${ rooms.nameKey } COLLATE "C" DESC`).limit(1)), [{ nameKey: 'tag#999999' }]);
+    const tag: SQL<number> = sql<number>`right(${ rooms.nameKey }, 6)::int`;
+    const tags = db.$with('tags').as(db.select({
+        tag: tag.as('tag'),
+        previous: sql<number | null>`lag(${ tag }) OVER (ORDER BY ${ tag })`.as('previous'),
+        next: sql<number | null>`lead(${ tag }) OVER (ORDER BY ${ tag })`.as('next'),
+    }).from(rooms).where(ofName));
+    const free: SQL<number> = sql<number>`CASE
+        WHEN ${ tags.previous } IS NULL AND ${ tags.tag } > 0 THEN 0
+        WHEN ${ tags.tag } < ${ 999_999 } AND (${ tags.next } IS NULL OR ${ tags.next } > ${ tags.tag } + 1) THEN ${ tags.tag } + 1
+    END`;
+    assert.deepEqual(await timed('find the first tag free of a name', (): Promise<unknown> => db.with(tags).select({ free }).from(tags)
+        .where(isNotNull(free)).orderBy(free).limit(1)), [{ free: 2 }]);
+    // RoomRepository.create: no room of the id of a room of another case (rooms_name_key)
+    assert.equal(await createRoom(db, 'TAG#000000'), false, 'the id of another case');
+    await db.delete(rooms).where(like(rooms.id, 'Tag#%'));
 
     // RoomRepository.reconnectHost
     assert.equal((await reconnectHost(db, 'host', 'wrong-token')).length, 0, 'a wrong token');

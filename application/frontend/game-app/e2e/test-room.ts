@@ -4,16 +4,26 @@ import { RoomParticipant } from './room-participant';
 /** A room of its own for a test, a chat room by default, its players closed after it */
 export class TestRoom {
     private readonly participants: RoomParticipant[] = [];
+    private createdId?: string;
 
     /**
      * @param path the page of the game of the room
-     * @param name the name of the room: the local API keeps the rooms between two runs
+     * @param name the name of the room, the API adding a tag to it: the local API keeps the rooms between two runs
      */
     public constructor(
         private readonly browser: Browser,
         private readonly path: string = '/simple-chat',
         public readonly name: string = `room-${ Date.now() }`,
     ) {}
+
+    /** The id of the room, once created: its name and the tag the API drew, listed by the pages */
+    public get id(): string {
+        if (this.createdId === undefined) {
+            throw new Error(`The room ${ this.name } is not created`);
+        }
+
+        return this.createdId;
+    }
 
     private async open(playerName: string, locale?: string): Promise<RoomParticipant> {
         const participant: RoomParticipant = await RoomParticipant.open(this.browser, playerName, this.path, locale);
@@ -38,17 +48,17 @@ export class TestRoom {
         return connected;
     }
 
-    /** Creates the room under the name of the test, whether another player created it already or not */
+    /** Creates the room under the name of the test: a room of the same name created already, another one, its id the last */
     public async create(playerName: string, password?: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.create(this.name, password);
+        this.createdId = await player.create(this.name, password);
         return player;
     }
 
     /** Joins the room from the list of the open rooms, with the password of a private one */
     public async join(playerName: string, password?: string): Promise<RoomParticipant> {
         const player: RoomParticipant = await this.open(playerName);
-        await player.join(this.name, password);
+        await player.join(this.id, password);
         return player;
     }
 

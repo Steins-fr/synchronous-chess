@@ -57,7 +57,6 @@
       "title": "Buat ruang"
     },
     "errors": {
-      "alreadyExists": "Ruang ini sudah ada.",
       "fullOrGone": "Ruang ini penuh atau sudah tidak ada.",
       "hostDisconnected": "Tuan rumah ruang ini terputus.",
       "nameInRoom": "Pemain dengan nama ini sudah ada di ruang.",
@@ -82,9 +81,11 @@
         "required": "Nama pemain wajib diisi"
       },
       "roomName": {
+        "blank": "Nama ruang tidak boleh berisi spasi",
         "label": "Nama ruang",
         "maxLength": "Nama ruang paling banyak {maxLength, plural, other {# karakter}}",
-        "required": "Nama ruang wajib diisi"
+        "required": "Nama ruang wajib diisi",
+        "tagSeparator": "Nama ruang tidak boleh berisi “#”"
       }
     },
     "join": {

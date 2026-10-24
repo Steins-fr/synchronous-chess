@@ -53,9 +53,9 @@ describe('RoomManagerService', () => {
         vi.restoreAllMocks();
     });
 
-    test('should create a room as host', async () => {
+    test('should create a room as host, under its id', async () => {
         // Given
-        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host' });
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room#000042', maxPlayer: 2, playerName: 'host' });
 
         // When
         room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
@@ -64,13 +64,14 @@ describe('RoomManagerService', () => {
         expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
         expect(room.roomConnection.initiator).toEqual(true);
+        expect(room.roomConnection.roomName).toEqual('room#000042');
         expect(room.localPlayer.name).toEqual('host');
         expect(BlockRoom.createKeys).toHaveBeenCalledWith('host');
     });
 
     test('should notify the host when its room can not move to a new socket', async () => {
         // Given
-        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room', maxPlayer: 2, playerName: 'host' });
+        vi.mocked(roomSocketApi.send).mockResolvedValue({ roomName: 'room#000042', maxPlayer: 2, playerName: 'host' });
         vi.mocked(roomSocketApi.reconnect).mockRejectedValue(new RoomApiError('Room \'room\' does not exist'));
         vi.spyOn(console, 'error').mockImplementation(() => undefined);
         room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
@@ -80,14 +81,18 @@ describe('RoomManagerService', () => {
         await vi.waitFor(() => expect(notificationService.error).toHaveBeenCalled());
 
         // Then
-        expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room', playerName: 'host', token: 'token' });
+        expect(roomSocketApi.reconnect).toHaveBeenCalledWith({ roomName: 'room#000042', playerName: 'host', token: 'token' });
         expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.notifications.roomLost' });
     });
 
     test.each([
-        { roomName: 'room', maxPlayer: 2, playerName: 'other' },
-        { roomName: 'other', maxPlayer: 2, playerName: 'host' },
-        { roomName: 'room', maxPlayer: 3, playerName: 'host' },
+        { roomName: 'room#000042', maxPlayer: 2, playerName: 'other' },
+        { roomName: 'other#000042', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#00004x', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#0000042', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#000042', maxPlayer: 3, playerName: 'host' },
     ])('should fail the room creation on mismatched response %o', async (response) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue(response);
@@ -100,16 +105,16 @@ describe('RoomManagerService', () => {
         expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.notCreated' });
     });
 
-    test('should notify when the room to create exists already', async () => {
+    test('should notify when the room can not be created', async () => {
         // Given
-        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.ROOM_ALREADY_EXISTS));
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error('No tag left for the room name'));
 
         // When
         const build = service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host' }, 2, { move: BlockChainName.CHESS });
 
         // Then
-        await expect(build).rejects.toThrow(RoomApiErrorMessage.ROOM_ALREADY_EXISTS);
-        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.alreadyExists' });
+        await expect(build).rejects.toThrow('No tag left for the room name');
+        expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.notCreated' });
     });
 
     test('should reject an empty routing at compile time', () => {
@@ -134,19 +139,21 @@ describe('RoomManagerService', () => {
 
     test('should create a private room, and join it with its password', async () => {
         // Given
-        vi.mocked(roomSocketApi.send).mockResolvedValueOnce({ roomName: 'room', maxPlayer: 6, playerName: 'host' });
+        vi.mocked(roomSocketApi.send).mockResolvedValueOnce({ roomName: 'room#000042', maxPlayer: 6, playerName: 'host' });
         vi.mocked(roomSocketApi.send).mockResolvedValueOnce({ playerName: 'host' });
 
         // When
         room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'host', password: 'secret' }, 6, { move: BlockChainName.CHAT });
         room.clear();
-        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'peer', password: 'secret' }, 6, { move: BlockChainName.CHAT });
+        room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHAT, roomName: 'room#000042', playerName: 'peer', password: 'secret' }, 6, { move: BlockChainName.CHAT });
 
         // Then
         expect(roomSocketApi.send).toHaveBeenNthCalledWith(1, RoomApiRequestTypeEnum.CREATE, {
             roomName: 'room', maxPlayer: 6, game: RoomGame.CHAT, password: 'secret', playerName: 'host', token: 'token',
         });
-        expect(roomSocketApi.send).toHaveBeenNthCalledWith(2, RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHAT, password: 'secret', token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenNthCalledWith(2, RoomApiRequestTypeEnum.JOIN, {
+            roomName: 'room#000042', playerName: 'peer', game: RoomGame.CHAT, password: 'secret', token: 'token',
+        });
     });
 
     test.each([

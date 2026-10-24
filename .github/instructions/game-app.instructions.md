@@ -265,8 +265,7 @@ Claude writes the translations of every new or changed key, into every language:
 
 - A page reaches the APIs once a person is on it (`VisitorPresenceService`, listening as soon as the
   app starts: a gesture, a reload, a navigation of the app), never on its load alone: a bot rendering
-  it, a crawler running JavaScript, would wake the paused database. Only the links of development
-  (`?auto-create`, `?auto-join`), linked from no page, set a room up at once
+  it, a crawler running JavaScript, would wake the paused database
 - No health check: the first request wakes the database, a request awaited 3 seconds tells the server
   boots (`ServerBootingComponent`), and a list failed by the server (or the network) is asked again 2
   seconds later, while the page is visible, 5 times in a row at most: then it tells it failed (offline, or

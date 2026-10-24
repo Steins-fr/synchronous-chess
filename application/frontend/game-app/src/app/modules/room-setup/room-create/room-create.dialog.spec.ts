@@ -112,4 +112,33 @@ describe('RoomCreateDialog', () => {
         expect(rooms).toEqual([]);
         expect(errors()).toEqual(['The room name is at most 32 characters long', 'The player name is at most 32 characters long']);
     });
+
+    test('should refuse a room name holding the separator of the tag the API adds', async () => {
+        // Given
+        await createDialog({ roomName: 'friday#451203', playerName: 'alice' });
+
+        // When
+        await create();
+
+        // Then
+        expect(rooms).toEqual([]);
+        expect(errors()).toEqual(['The room name cannot contain “#”']);
+    });
+
+    test.each([
+        ['a space', 'friday night'],
+        ['a no-break space', 'friday\u00A0night'],
+        ['a zero width space', 'friday\u200Bnight'],
+        ['a space after it', 'friday '],
+    ])('should refuse a room name holding %s', async (_blank: string, roomName: string) => {
+        // Given
+        await createDialog({ roomName, playerName: 'alice' });
+
+        // When
+        await create();
+
+        // Then
+        expect(rooms).toEqual([]);
+        expect(errors()).toEqual(['The room name cannot contain spaces']);
+    });
 });

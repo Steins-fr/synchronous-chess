@@ -1,6 +1,24 @@
 /** The longest name of a room: the API refuses a longer one */
 export const ROOM_NAME_MAX_LENGTH: number = 32;
 
+/**
+ * Joins the name of a room to its tag, in its id (`friday#451203`): the name given to create a room can not hold it, the
+ * id splitting at it
+ */
+export const ROOM_TAG_SEPARATOR: string = '#';
+
+/**
+ * The blank characters a room name can not hold, which hide in a name: the spaces of every width, the tabs and line
+ * breaks (`\s`), and the zero width spaces
+ */
+export const ROOM_NAME_BLANK: RegExp = /[\s\u180E\u200B\u2060]/u;
+
+/** The digits of the tag the API draws for a room: rooms of the same name, of any game, each get their own */
+export const ROOM_TAG_DIGITS: number = 6;
+
+/** The longest id of a room, its name and its tag: the API refuses a longer one */
+export const ROOM_ID_MAX_LENGTH: number = ROOM_NAME_MAX_LENGTH + ROOM_TAG_SEPARATOR.length + ROOM_TAG_DIGITS;
+
 /** The longest name of a player: the API refuses a longer one */
 export const PLAYER_NAME_MAX_LENGTH: number = 32;
 

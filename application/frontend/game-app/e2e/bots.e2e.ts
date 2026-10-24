@@ -29,7 +29,7 @@ test.describe('Bots', () => {
         await bot.page.mouse.move(100, 100);
 
         // Then
-        await bot.expectOpenRoom(room.name, false);
+        await bot.expectOpenRoom(room.id, false);
     });
 
     test('lists the rooms of a page reloaded, by a person only, before any gesture', async ({ room }) => {
@@ -43,7 +43,7 @@ test.describe('Bots', () => {
         await reloading.page.reload({ waitUntil: 'networkidle' });
 
         // Then
-        await reloading.expectOpenRoom(room.name, false);
+        await reloading.expectOpenRoom(room.id, false);
         await expect(reloading.page.getByRole('button', { name: 'Show the open rooms' })).toBeHidden();
     });
 });

@@ -120,7 +120,7 @@ run by the CI.
 - One-time setup: `npx playwright install chromium` in the game app (the browser of `@playwright/test`, apart
   from the one of the MCP).
 - `e2e/test-room.ts` gives each test a room of its own (`room` fixture, a chat room; `new TestRoom(browser, path)` for
-  the page of another game), `e2e/room-participant.ts` drives a player: join, reload, messages, the participants it
+  the page of another game), listed under its `id` once created (its `name` and the tag the API drew, `room-1#004512`), `e2e/room-participant.ts` drives a player: join, reload, messages, the participants it
   sees, and `cutConnections()` to close its WebRTC connections as a network failure would.
 - A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`, without the snapshots of
   the DOM in `bots.e2e.ts` (they run in the page with a user gesture, which activates it). The servers' logs are not
@@ -160,8 +160,6 @@ run by the CI.
   the texts. The chips moved fly over the table (`.chip-flight`) until their animation ends.
 - A card thrown away keeps its element while it leaves the hand (`li.card-discarded`): read the cards
   without it, as `e2e/seventeen-poker.e2e.ts` does.
-- The `?auto-join` link draws a new player name at each load: reloading it joins as a new participant. Reload
-  then join the room from the list under the same name to come back to a seat.
 
 ### Cleanup after every browser test
 

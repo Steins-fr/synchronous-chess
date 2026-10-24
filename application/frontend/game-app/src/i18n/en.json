@@ -57,7 +57,6 @@
       "title": "Create a room"
     },
     "errors": {
-      "alreadyExists": "The room already exists.",
       "fullOrGone": "The room is full or no longer exists.",
       "hostDisconnected": "The host of the room disconnected.",
       "nameInRoom": "A player of this name is already in the room.",
@@ -82,9 +81,11 @@
         "required": "The player name is required"
       },
       "roomName": {
+        "blank": "The room name cannot contain spaces",
         "label": "Room name",
         "maxLength": "The room name is at most {maxLength, plural, one {# character} other {# characters}} long",
-        "required": "The room name is required"
+        "required": "The room name is required",
+        "tagSeparator": "The room name cannot contain “#”"
       }
     },
     "join": {

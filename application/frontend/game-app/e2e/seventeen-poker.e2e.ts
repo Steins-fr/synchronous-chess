@@ -199,7 +199,7 @@ test.describe('Seventeen poker', () => {
         await expect(table(bob).getByRole('status')).toHaveText('Your turn.');
         const bobCards: string[] = await cardsOf(bob, 1);
 
-        await bob.reloadAndJoin(poker.name);
+        await bob.reloadAndJoin(poker.id);
 
         await expect(table(bob).getByRole('status')).toHaveText('Your turn.');
         expect(await cardsOf(bob, 1)).toEqual(bobCards);
