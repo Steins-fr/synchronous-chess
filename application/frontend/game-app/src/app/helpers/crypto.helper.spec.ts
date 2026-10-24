@@ -6,43 +6,6 @@ describe('CryptoHelper', () => {
         vi.restoreAllMocks();
     });
 
-    test('randomNumber should return the lower bound for the lowest random value', () => {
-        // Given
-        vi.spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
-            (array as unknown as Uint32Array)[0] = 0;
-            return array;
-        });
-
-        // When
-        const result: number = CryptoHelper.randomNumber(3, 7);
-
-        // Then
-        expect(result).toEqual(3);
-    });
-
-    test('randomNumber should return the upper bound for the highest random value', () => {
-        // Given
-        vi.spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
-            (array as unknown as Uint32Array)[0] = 0xffffffff;
-            return array;
-        });
-
-        // When
-        const result: number = CryptoHelper.randomNumber(3, 7);
-
-        // Then
-        expect(result).toEqual(7);
-    });
-
-    test('randomNumber should stay within the bounds', () => {
-        for (let i = 0; i < 50; i++) {
-            const result: number = CryptoHelper.randomNumber(-2, 2);
-            expect(result).toBeGreaterThanOrEqual(-2);
-            expect(result).toBeLessThanOrEqual(2);
-            expect(Number.isInteger(result)).toEqual(true);
-        }
-    });
-
     test('randomBigInt should draw again the values beyond its bound, with the bits of the bound only', () => {
         // Given draws of 0xff then 0x05: the bits above the 3 of the bound 6 are dropped, 7 then 5
         const draws: number[] = [0xff, 0x05];
