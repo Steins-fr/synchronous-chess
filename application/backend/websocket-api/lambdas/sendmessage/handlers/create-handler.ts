@@ -1,6 +1,6 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { isPassword } from '@helpers/password.helper';
-import { MAX_ROOM_TAG, randomRoomTag, tagRoomName } from '@helpers/room-tag.helper';
+import { randomRoomTag, tagRoomName } from '@helpers/room-tag.helper';
 import { isName } from '@helpers/text.helper';
 import { isToken } from '@helpers/token.helper';
 import RoomCreateRequest from '@protocol/requests/room-create-request';
@@ -12,7 +12,7 @@ import MessageHandler from './message-handler';
 export default class CreateHandler extends MessageHandler {
     /** The tags drawn at random for a room, each taken by another room of its name, before the tags following the highest */
     private static readonly RANDOM_TAG_ATTEMPTS: number = 5;
-    /** The tags following the highest one of the name tried, each taken meanwhile by another room created under it */
+    /** The tags read in the table tried, each taken meanwhile by another room created under it */
     private static readonly NEXT_TAG_ATTEMPTS: number = 5;
 
     protected override async handle(): Promise<void> {
@@ -36,7 +36,7 @@ export default class CreateHandler extends MessageHandler {
 
     /**
      * Creates the room under its name and a tag no room holds: drawn at random, then, the tags drawn all taken, the tag
-     * following the highest one of the name
+     * following the highest one of the name, or the lowest one free once the last tag is taken
      * @returns the id of the room created
      * @throws {BadRequestException} when no tag is left for the name
      */
@@ -53,9 +53,9 @@ export default class CreateHandler extends MessageHandler {
 
         for (let attempt: number = 0; attempt < CreateHandler.NEXT_TAG_ATTEMPTS; attempt++) {
             // eslint-disable-next-line no-await-in-loop -- read again once another room took the tag read
-            const tag: number = await this.roomService.nextRoomTag(name);
+            const tag: number | undefined = await this.roomService.nextRoomTag(name);
 
-            if (tag > MAX_ROOM_TAG) {
+            if (tag === undefined) {
                 break;
             }
 

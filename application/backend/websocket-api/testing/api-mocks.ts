@@ -39,7 +39,7 @@ export const GUEST_TOKEN: string = 'guest-token';
 /** The lease of `aRoom()`, far ahead whatever the time of the spec */
 export const LEASED_UNTIL: number = 2_000_000_000;
 
-/** A room hosted by `host`, `guest` waiting in its queue */
+/** A room hosted by `host`, `guest` waiting in its queue, searched by its id */
 export function aRoom(room: Partial<Room> = {}): Room {
     return {
         id: 'room',
@@ -48,7 +48,7 @@ export function aRoom(room: Partial<Room> = {}): Room {
         maxPlayer: 2,
         game: RoomGame.CHESS,
         createdAt: '2026-10-11T12:00:00.000Z',
-        nameKey: 'room',
+        nameKey: (room.id ?? 'room').toLowerCase(),
         players: [{ playerName: 'host' }],
         queue: [{ playerName: 'guest', connectionId: GUEST_CONNECTION }],
         tokenHashes: { host: hashToken(HOST_TOKEN), guest: hashToken(GUEST_TOKEN) },

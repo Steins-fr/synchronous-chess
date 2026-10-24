@@ -148,9 +148,10 @@ searches 64, and a room has 16 players at most (`room-limits.ts` of the protocol
 `create` gives the name of the room, without `#`: the API trims it and adds a tag of 6 digits, the id of the room
 (`friday#451203`) it answers in `created`, then each request names the room by. The rooms of the same name, of any game,
 each get their tag: a name taken is never refused, nor a name of a room of another game the page does not list. The tag
-is drawn at random, 5 times at most, then, every tag drawn taken, it follows the highest one of the name in the table
-(read again 5 times at most, another creation taking it meanwhile): the creation fails once the tag `999999` of the name
-is taken.
+is drawn at random, 5 times at most, then, every tag drawn taken, read in the table (5 times at most, another creation
+taking it meanwhile): the tag following the highest one of the name, or, the tag `999999` taken, the lowest one free.
+The creation fails once every tag of the name is taken. Both reads find the rooms of the name through the trigram index
+of `name_key`, the expired ones left out: the creation deletes them.
 
 `join` sends the `game` of the page: a room of another game is refused (`Room of another game`), its peers running other
 messages. A room created with a `password` is private: listed with `isPrivate`, without the name of its host, `join` refuses it

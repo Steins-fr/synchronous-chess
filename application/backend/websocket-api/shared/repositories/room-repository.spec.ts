@@ -138,25 +138,26 @@ describe('RoomRepository', () => {
     });
 
     describe('findLastTag', () => {
-        test('should find the highest tag of the rooms of the name, of any game, expired or not', async () => {
+        test('should find the highest tag of the rooms of the name not expired, of any game', async () => {
             // Given
-            await storeRoom(aRoom({ id: 'friday#000009' }));
-            await storeRoom(aRoom({ id: 'friday#000042', game: RoomGame.CHAT }));
-            await storeRoom(aRoom({ id: 'friday#000012', expiresAt: NOW }));
-            await storeRoom(aRoom({ id: 'friday-night#999999' }));
-            await storeRoom(aRoom({ id: 'fri#999999' }));
-            await storeRoom(aRoom({ id: 'friday' }));
+            await storeRoom(aRoom({ id: 'friday#000009', nameKey: 'friday#000009' }));
+            await storeRoom(aRoom({ id: 'friday#000042', nameKey: 'friday#000042', game: RoomGame.CHAT }));
+            await storeRoom(aRoom({ id: 'friday#000099', nameKey: 'friday#000099', expiresAt: NOW }));
+            await storeRoom(aRoom({ id: 'Friday#000098', nameKey: 'friday#000098' }));
+            await storeRoom(aRoom({ id: 'friday-night#999999', nameKey: 'friday-night#999999' }));
+            await storeRoom(aRoom({ id: 'fri#999999', nameKey: 'fri#999999' }));
+            await storeRoom(aRoom({ id: 'friday', nameKey: 'friday' }));
 
-            // When / Then
-            expect(await repository.findLastTag('friday')).toEqual(42);
+            // When / Then: of the same case
+            expect(await repository.findLastTag('friday', NOW)).toEqual(42);
         });
 
         test('should find no tag without a room of the name', async () => {
             // Given
-            await storeRoom(aRoom({ id: 'friday#000042' }));
+            await storeRoom(aRoom({ id: 'friday#000042', nameKey: 'friday#000042' }));
 
             // When / Then
-            expect(await repository.findLastTag('monday')).toBeUndefined();
+            expect(await repository.findLastTag('monday', NOW)).toBeUndefined();
         });
 
         test.each([
@@ -165,11 +166,61 @@ describe('RoomRepository', () => {
             ['\\', 'the escape character'],
         ])('should find the tags of a name holding %s, not %s', async (character: string) => {
             // Given
-            await storeRoom(aRoom({ id: `a${ character }b#000001` }));
-            await storeRoom(aRoom({ id: 'axxb#000002' }));
+            await storeRoom(aRoom({ id: `a${ character }b#000001`, nameKey: `a${ character }b#000001` }));
+            await storeRoom(aRoom({ id: 'axxb#000002', nameKey: 'axxb#000002' }));
 
             // When / Then
-            expect(await repository.findLastTag(`a${ character }b`)).toEqual(1);
+            expect(await repository.findLastTag(`a${ character }b`, NOW)).toEqual(1);
+        });
+    });
+
+    describe('findFirstFreeTag', () => {
+        async function storeTags(name: string, ...tags: string[]): Promise<void> {
+            for (const tag of tags) {
+                await storeRoom(aRoom({ id: `${ name }#${ tag }`, nameKey: `${ name }#${ tag }`.toLowerCase() }));
+            }
+        }
+
+        test('should find the first tag when no room of the name holds it', async () => {
+            // Given
+            await storeTags('friday', '000001', '999999');
+
+            // When / Then
+            expect(await repository.findFirstFreeTag('friday', NOW)).toEqual(0);
+        });
+
+        test('should find the lowest tag free after the tags taken', async () => {
+            // Given
+            await storeTags('friday', '000000', '000001', '000003', '000004', '999999');
+            await storeTags('Friday', '000002');
+
+            // When / Then: the tags of the name of another case not counted
+            expect(await repository.findFirstFreeTag('friday', NOW)).toEqual(2);
+        });
+
+        test('should find the tag of a room expired', async () => {
+            // Given
+            await storeTags('friday', '000000', '999999');
+            await storeRoom(aRoom({ id: 'friday#000001', nameKey: 'friday#000001', expiresAt: NOW }));
+
+            // When / Then
+            expect(await repository.findFirstFreeTag('friday', NOW)).toEqual(1);
+        });
+
+        test('should find the tag following the highest one, below the last tag', async () => {
+            // Given
+            await storeTags('friday', '000000', '000001');
+
+            // When / Then
+            expect(await repository.findFirstFreeTag('friday', NOW)).toEqual(2);
+        });
+
+        test('should find no tag without a room of the name to read', async () => {
+            // Given
+            await storeTags('friday', '999999');
+
+            // When / Then
+            expect(await repository.findFirstFreeTag('monday', NOW)).toBeUndefined();
         });
     });
 

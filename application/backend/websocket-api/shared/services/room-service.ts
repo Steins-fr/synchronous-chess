@@ -1,5 +1,6 @@
 import BadRequestException from '@exceptions/bad-request-exception';
 import { hashPassword } from '@helpers/password.helper';
+import { MAX_ROOM_TAG } from '@helpers/room-tag.helper';
 import { searchKey } from '@helpers/search.helper';
 import { epochSeconds } from '@helpers/time.helper';
 import { hashToken } from '@helpers/token.helper';
@@ -143,12 +144,19 @@ export default class RoomService {
     }
 
     /**
-     * The tag following the highest one of the rooms of the name, 0 for its first room: a tag no room of the name holds,
-     * unless another room takes it meanwhile. MAX_ROOM_TAG + 1 once the last tag is taken
+     * A tag no room of the name holds, unless another room takes it meanwhile: the tag following the highest one, 0 for
+     * the first room of the name, else, the last tag taken, the lowest one free
+     * @returns undefined when every tag of the name is taken
      */
-    public async nextRoomTag(name: string): Promise<number> {
-        const lastTag: number | undefined = await this.roomRepository.findLastTag(name);
-        return lastTag === undefined ? 0 : lastTag + 1;
+    public async nextRoomTag(name: string): Promise<number | undefined> {
+        const now: number = epochSeconds();
+        const lastTag: number | undefined = await this.roomRepository.findLastTag(name, now);
+
+        if (lastTag === undefined) {
+            return 0;
+        }
+
+        return lastTag < MAX_ROOM_TAG ? lastTag + 1 : this.roomRepository.findFirstFreeTag(name, now);
     }
 
     /**

@@ -2,7 +2,8 @@ import { DatabaseTransaction } from '@database/database';
 import { connections, roomPlayers, roomQueue, rooms, roomTokens } from '@database/schema';
 import BadRequestException from '@exceptions/bad-request-exception';
 import { DatabaseOperationEnum } from '@exceptions/database-exception';
-import { escapeLike } from '@helpers/search.helper';
+import { MAX_ROOM_TAG } from '@helpers/room-tag.helper';
+import { escapeLike, searchKey } from '@helpers/search.helper';
 import Player from '@models/player';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
@@ -46,6 +47,11 @@ const ROOM_EXPIRY: SQL<number> = sql<number>`coalesce(${ rooms.expiresAt }, ${ r
 /** A room not expired at `now`: its host connected, its lease running, or the room waiting for it */
 function notExpired(now: number): SQL {
     return gt(ROOM_EXPIRY, now);
+}
+
+/** The LIKE pattern of the ids of a name: the name, its wildcards matched as they are, the separator and the digits of a tag */
+function taggedPattern(name: string): string {
+    return `${ escapeLike(name) }${ ROOM_TAG_SEPARATOR }${ '_'.repeat(ROOM_TAG_DIGITS) }`;
 }
 
 export default class RoomRepository extends BaseRepository {
@@ -139,17 +145,52 @@ export default class RoomRepository extends BaseRepository {
     }
 
     /**
-     * The highest tag of the rooms of the name, expired or not, the name holding no tag separator: undefined when no room
-     * has that name
+     * The rooms of the name not expired at `now`, the name holding no tag separator: their id is the name, the separator
+     * and a tag of all its digits. Read through the trigram index of their search key, then by their exact id, of the
+     * same case
      */
-    public async findLastTag(name: string): Promise<number | undefined> {
+    private static ofName(name: string, now: number): SQL {
+        return and(like(rooms.nameKey, taggedPattern(searchKey(name))), like(rooms.id, taggedPattern(name)), notExpired(now)) as SQL;
+    }
+
+    /**
+     * The highest tag of the rooms of the name not expired at `now`: undefined when no room has that name. An expired
+     * room is deleted by the creation of a room, its tag free
+     */
+    public async findLastTag(name: string, now: number): Promise<number | undefined> {
         const rows: { id: string }[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<{ id: string }[]> => this.db.select({ id: rooms.id }).from(rooms)
-            // The name, the separator and a tag of all its digits: the order of the ids is then the order of their tags
-            .where(like(rooms.id, `${ escapeLike(name) }${ ROOM_TAG_SEPARATOR }${ '_'.repeat(ROOM_TAG_DIGITS) }`))
+            .where(RoomRepository.ofName(name, now))
+            // The tags of all their digits: the order of the ids is the order of their tags
             .orderBy(sql`${ rooms.id } COLLATE "C" DESC`)
             .limit(1));
 
         return rows.length === 0 ? undefined : Number(rows[0].id.slice(-ROOM_TAG_DIGITS));
+    }
+
+    /**
+     * The lowest tag no room of the name holds at `now`, once its highest tag is taken: 0, or the tag following a tag
+     * taken, the next one free. A single row read, whatever the rooms of the name. Undefined when every tag is taken
+     */
+    public async findFirstFreeTag(name: string, now: number): Promise<number | undefined> {
+        // Written in the statement: a parameter is a bigint for the Data API, and right() takes an int
+        const tag: SQL<number> = sql<number>`right(${ rooms.id }, ${ sql.raw(String(ROOM_TAG_DIGITS)) })::int`;
+        const tags = this.db.$with('tags').as(this.db.select({
+            tag: tag.as('tag'),
+            previous: sql<number | null>`lag(${ tag }) OVER (ORDER BY ${ tag })`.as('previous'),
+            next: sql<number | null>`lead(${ tag }) OVER (ORDER BY ${ tag })`.as('next'),
+        }).from(rooms).where(RoomRepository.ofName(name, now)));
+        // 0 before the lowest tag taken, else the tag following a tag taken, the next one free: null for the others, not read
+        const free: SQL<number> = sql<number>`CASE
+            WHEN ${ tags.previous } IS NULL AND ${ tags.tag } > 0 THEN 0
+            WHEN ${ tags.tag } < ${ MAX_ROOM_TAG } AND (${ tags.next } IS NULL OR ${ tags.next } > ${ tags.tag } + 1) THEN ${ tags.tag } + 1
+        END`;
+        const rows: { free: number }[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<{ free: number }[]> => this.db.with(tags)
+            .select({ free }).from(tags)
+            .where(isNotNull(free))
+            .orderBy(free)
+            .limit(1));
+
+        return rows[0]?.free;
     }
 
     /**

@@ -232,17 +232,30 @@ describe('CreateHandler', () => {
         expect((await readRoom('room#000043'))?.connectionId).toEqual(HOST_CONNECTION);
     });
 
-    test('should refuse a room once the last tag of its name is taken', async () => {
-        // Given
+    test('should create a room under the lowest tag free once the last tag of its name is taken', async () => {
+        // Given: every tag drawn taken, the last one too
+        await storeRoom(aRoom({ id: 'room#000000' }));
         await storeRoom(aRoom({ id: 'room#000042' }));
         await storeRoom(aRoom({ id: 'room#999999' }));
+
+        // When
+        await create(request);
+
+        // Then
+        expect((await readRoom('room#000001'))?.connectionId).toEqual(HOST_CONNECTION);
+    });
+
+    test('should refuse a room once every tag of its name is taken', async () => {
+        // Given: the tag drawn taken, none left in the table
+        await storeRoom(aRoom({ id: 'room#000042' }));
+        vi.spyOn(RoomService.prototype, 'nextRoomTag').mockResolvedValue(undefined);
 
         // When / Then
         await expect(create(request)).rejects.toThrow('No tag left for the room name');
         expect(postedPackets(apiGateway)).toEqual([errorReply('No tag left for the room name')]);
     });
 
-    test('should refuse a room once the tags following the highest one are all taken meanwhile', async () => {
+    test('should refuse a room once the tags read in the table are all taken meanwhile', async () => {
         // Given
         await storeRoom(aRoom({ id: 'room#000042' }));
         vi.spyOn(RoomService.prototype, 'nextRoomTag').mockResolvedValue(42);

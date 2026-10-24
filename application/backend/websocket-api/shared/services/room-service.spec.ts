@@ -295,6 +295,15 @@ describe('RoomService', () => {
         expect(await service.nextRoomTag('room')).toEqual(42);
     });
 
+    test('should give the lowest tag free once the last tag of the name is taken', async () => {
+        // Given
+        await storeRoom(aRoom({ id: 'room#000000' }));
+        await storeRoom(aRoom({ id: 'room#999999' }));
+
+        // When / Then
+        expect(await service.nextRoomTag('room')).toEqual(1);
+    });
+
     test('should give the first tag to the first room of the name', async () => {
         // When / Then
         expect(await service.nextRoomTag('room')).toEqual(0);
