@@ -63,18 +63,21 @@
       "max": "En çok",
       "min": "En az",
       "more": "Daha çok",
-      "raise": "Artır: {amount}"
+      "raise": "Artır: {amount}",
+      "rematch": "Tekrar oyna"
     },
     "bet": "Bahis {amount}",
     "category": "{category, select, fiveOfAKind {Beşli} royalFlush {Royal floş} fourOfAKind {Kare} fullHouse {Full} straight {Kent} threeOfAKind {Üçlü} twoPair {Döper} other {Per}}",
     "hand": "El {index}/{hands}",
     "history": "Oynanan eller",
+    "match": "Maç {number}:",
     "outcome": {
       "fold": "El {index}: {folder} çekiliyor, {winner} {pot} fişlik potu alıyor.",
       "noContest": "El {index}: kazanan yok, anteler bankaya gidiyor.",
       "split": "El {index}: eşit eller ({category, select, fiveOfAKind {beşli} royalFlush {royal floş} fourOfAKind {kare} fullHouse {full} straight {kent} threeOfAKind {üçlü} twoPair {döper} other {per}}), pot paylaşılıyor.",
       "win": "El {index}: {winner} {pot} fişlik potu alıyor — {category, select, fiveOfAKind {beşli} royalFlush {royal floş} fourOfAKind {kare} fullHouse {full} straight {kent} threeOfAKind {üçlü} twoPair {döper} other {per}}."
     },
+    "pastMatches": "Oynanan maçlar",
     "pot": "Pot {pot}",
     "result": {
       "draw": "Berabere: iki oyuncu da {chips, plural, one {# fişle} other {# fişle}} bitirdi.",

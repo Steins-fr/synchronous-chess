@@ -25,7 +25,7 @@ For the Synchronous Chess rules, please refer to [this website](http://www.hexen
 
 ### Seventeen Poker demo
 
-The poker of the manga *Liar Game*, for two players: 17 cards (the aces, kings, queens and jacks, and a joker), 10 hands, 150 chips each. Each player takes a seat with `Sit here`, then the players deal the hands by turns with `Deal`. The others watch.
+The poker of the manga *Liar Game*, for two players: 17 cards (the aces, kings, queens and jacks, and a joker), 10 hands, 150 chips each. Each player takes a seat with `Sit here`, then the players deal the hands by turns with `Deal`. The others watch. Once the match is over, its players start a new one with `Play again`, or leave their seats to the others.
 
 No one deals the cards: the players shuffle each deck together, encrypted, and give each other the keys of the cards dealt, so no one, not even the server, sees a hand before its showdown. Once the match is over, every key is shown and each participant checks every deck. See [Mental poker](documentation/mental-poker.md) and [Seventeen Poker session](documentation/seventeen-poker-session.md).
 

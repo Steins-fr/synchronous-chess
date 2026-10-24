@@ -63,18 +63,21 @@
       "max": "Max",
       "min": "Min",
       "more": "Bet more",
-      "raise": "Raise to {amount}"
+      "raise": "Raise to {amount}",
+      "rematch": "Play again"
     },
     "bet": "Bet {amount}",
     "category": "{category, select, fiveOfAKind {Five of a kind} royalFlush {Royal flush} fourOfAKind {Four of a kind} fullHouse {Full house} straight {Straight} threeOfAKind {Three of a kind} twoPair {Two pair} other {One pair}}",
     "hand": "Hand {index} of {hands}",
     "history": "Hands played",
+    "match": "Match {number}:",
     "outcome": {
       "fold": "Hand {index}: {folder} folds, {winner} takes the pot of {pot}.",
       "noContest": "Hand {index}: no contest, the antes go to the bank.",
       "split": "Hand {index}: equal hands ({category, select, fiveOfAKind {five of a kind} royalFlush {royal flush} fourOfAKind {four of a kind} fullHouse {full house} straight {straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}), the pot is split.",
       "win": "Hand {index}: {winner} takes the pot of {pot} with {category, select, fiveOfAKind {five of a kind} royalFlush {a royal flush} fourOfAKind {four of a kind} fullHouse {a full house} straight {a straight} threeOfAKind {three of a kind} twoPair {two pair} other {one pair}}."
     },
+    "pastMatches": "Matches played",
     "pot": "Pot {pot}",
     "result": {
       "draw": "Draw: both players end with {chips, plural, one {# chip} other {# chips}}.",

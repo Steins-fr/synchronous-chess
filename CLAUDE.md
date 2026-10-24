@@ -152,7 +152,7 @@ run by the CI.
   dealer clicks `Deal`: the second seat deals the first hand, then the players deal by turns. The table shows
   the local player at its bottom. See `documentation/seventeen-poker-session.md`.
 - The actions are buttons named by their text (`Check`, `Bet 6`, `Call 6`, `Raise to 13`, `Fold`, `Bet more`,
-  `Min`, `Max`, `Keep my hand`, `Exchange 2 cards`); the cards of the player are buttons during the exchange,
+  `Min`, `Max`, `Keep my hand`, `Exchange 2 cards`, `Play again` once the match is over); the cards of the player are buttons during the exchange,
   `aria-pressed` once selected. A card is an image named by its card (`Ace of spades`, `Face-down card`), and
   the `status` role (`<output>`) tells what the table waits for.
 - The bets of the round lie on the cloth (`#bet-top` / `#bet-bottom`, `Bet 6`), and the outcome of a hand over

@@ -291,7 +291,7 @@ describe('PokerTableComponent', () => {
         await until(() => status() === 'Your turn to deal.');
 
         // Then: both hands are shown, the best one outlined, the other one dimmed
-        const outcome = bob.match.hand()?.outcome;
+        const outcome = bob.match().hand()?.outcome;
         const categories: string[] = Array.from(element().querySelectorAll('p.table-line'), (line: Element) => line.textContent?.trim() as string);
         expect(categories).toHaveLength(2);
         expect(text('#hand-outcome')).toEqual(text('details li'));
@@ -348,7 +348,7 @@ describe('PokerTableComponent', () => {
             await until(() => status() === 'bob to speak.');
 
             // Then: Alice checked, the clock of Bob starts
-            expect(bob.match.hand()?.round.bets).toEqual([0, 0]);
+            expect(bob.match().hand()?.round.bets).toEqual([0, 0]);
             expect(text('#seat-bottom')).toEqual('alice145 chips');
             expect(text('#seat-top')).toEqual('bob145 chips45 s');
 
@@ -384,7 +384,7 @@ describe('PokerTableComponent', () => {
             await until(() => status() === 'bob exchanges cards.');
 
             // Then: the card selected stays in the hand
-            expect(bob.match.hand()?.exchanges).toEqual([0, null]);
+            expect(bob.match().hand()?.exchanges).toEqual([0, null]);
             expect(cards(1)).toEqual(kept);
             expect(button('Exchange 1 card')).toBeUndefined();
         });
@@ -549,7 +549,7 @@ describe('PokerTableComponent', () => {
         alice.bet(BetAction.CHECK);
         await turn(bob);
         bob.bet(BetAction.CHECK);
-        await vi.waitFor(() => expect(alice.match.outcomes()).toHaveLength(1));
+        await vi.waitFor(() => expect(alice.match().outcomes()).toHaveLength(1));
 
         // When: Carol joins, the chain giving her its history, the page showing the hands being opened
         await table('carol');
@@ -736,6 +736,75 @@ describe('PokerTableComponent', () => {
             expect(flights()).toEqual([['5', '5']]);
             expect(text('.badge')).toEqual('Draw: both players end with 145 chips.');
             expect(element().querySelector('.badge')?.classList).toContain('badge-draw');
+        });
+
+        test('should play a new match once the match is over, every deck checked', async () => {
+            // Given
+            const bob: SeventeenPokerSession = await dealt(rules);
+            await click('Bet 1');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.FOLD);
+            await until(() => text('p.muted-note') === 'Every deck was fair.');
+            await landed();
+
+            // When: Alice asks for it twice
+            const rematch: HTMLButtonElement = button('Play again') as HTMLButtonElement;
+            rematch.click();
+            rematch.click();
+            await until(() => status() === 'bob to deal.');
+
+            // Then: the new match starts from its own chips, without flights
+            expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_rematch')).toHaveLength(1);
+            expect(text('.badge')).toEqual('');
+            expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips.');
+            expect(text('#seat-bottom')).toEqual('alice150 chipsLeave the seat');
+            expect(text('#seat-top')).toEqual('bob150 chips');
+            expect(element().querySelectorAll('details')).toHaveLength(1);
+            expect(cards(1)).toEqual([]);
+            expect(flights()).toEqual([]);
+
+            // When
+            bob.deal();
+            await until(() => status() === 'Your turn.');
+
+            // Then
+            expect(element().textContent).toContain('Hand 1 of 1');
+            expect(flights()).toEqual([['5'], ['5']]);
+            expect(button('Leave the seat')).toBeUndefined();
+        });
+
+        test('should open the seats once the match is over, the match keeping the names of its players', async () => {
+            // Given
+            const bob: SeventeenPokerSession = await dealt(rules);
+            expect(button('Leave the seat')).toBeUndefined();
+            await click('Check');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.BET, 1);
+            await until(() => status() === 'Your turn.');
+            await click('Fold');
+            await until(() => button('Leave the seat') !== undefined);
+
+            // When
+            await click('Leave the seat');
+            await until(() => status() === 'Waiting for two players to sit.');
+
+            // Then
+            expect(text('.badge')).toEqual('bob wins the match with 155 chips.');
+            expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 11.');
+            expect(text('#seat-bottom')).toEqual('Free seatSit here');
+            expect(text('#seat-top')).toEqual('bob155 chips +11');
+            expect(cards(1)).toEqual([]);
+            expect(cards(0)).toHaveLength(5);
+            expect(button('Play again')).toBeUndefined();
+
+            // When: Carol takes the seat of Alice
+            participant('carol').takeSeat(PokerSeat.ONE);
+            await until(() => text('#seat-bottom') !== 'Free seatSit here');
+
+            // Then: she does not show the chips nor the cards of Alice, but the stack of the next match
+            expect(text('#seat-bottom')).toEqual('carol150 chips');
+            expect(cards(1)).toEqual([]);
+            expect(text('.badge')).toEqual('bob wins the match with 155 chips.');
         });
 
         test.each<{ verification: Promise<DeckVerification>; text: string }>([

@@ -63,18 +63,21 @@
       "max": "Max",
       "min": "Min",
       "more": "Miser plus",
-      "raise": "Relancer à {amount}"
+      "raise": "Relancer à {amount}",
+      "rematch": "Rejouer"
     },
     "bet": "Mise {amount}",
     "category": "{category, select, fiveOfAKind {Cinq identiques} royalFlush {Quinte flush royale} fourOfAKind {Carré} fullHouse {Full} straight {Quinte} threeOfAKind {Brelan} twoPair {Double paire} other {Paire}}",
     "hand": "Main {index} sur {hands}",
     "history": "Mains jouées",
+    "match": "Partie {number} :",
     "outcome": {
       "fold": "Main {index} : {folder} se couche, {winner} remporte le pot de {pot}.",
       "noContest": "Main {index} : aucun vainqueur, les antes vont à la banque.",
       "split": "Main {index} : mains égales ({category, select, fiveOfAKind {cinq identiques} royalFlush {quinte flush royale} fourOfAKind {carré} fullHouse {full} straight {quinte} threeOfAKind {brelan} twoPair {double paire} other {paire}}), le pot est partagé.",
       "win": "Main {index} : {winner} remporte le pot de {pot} avec {category, select, fiveOfAKind {cinq identiques} royalFlush {une quinte flush royale} fourOfAKind {un carré} fullHouse {un full} straight {une quinte} threeOfAKind {un brelan} twoPair {une double paire} other {une paire}}."
     },
+    "pastMatches": "Parties jouées",
     "pot": "Pot {pot}",
     "result": {
       "draw": "Égalité : les deux joueurs finissent avec {chips, plural, one {# jeton} other {# jetons}}.",

@@ -15,12 +15,12 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import { PokerPayloads, PokerSessionOptions, SeatCard, SeventeenPokerSession } from '../../classes/game-sessions/seventeen-poker-session';
+import { PlayedMatch, PokerPayloads, PokerSessionOptions, SeatCard, SeventeenPokerSession } from '../../classes/game-sessions/seventeen-poker-session';
 import { handOutcomeText } from '../../helpers/hand-outcome-text.helper';
 import { ChipPlace, ChipPlaceKind, chipTransfers, ChipTransfer, TableChips } from '../../helpers/chip-transfers.helper';
 import { BetAction, BetLimits } from '../../classes/rules/betting-round';
 import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
-import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand } from '../../classes/rules/poker-match';
+import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand, PokerMatch } from '../../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../../classes/rules/poker-seat';
 import { CLOCK_LOW, PokerSeatComponent } from '../poker-seat/poker-seat.component';
 
@@ -79,20 +79,37 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly bottomSeat: Signal<PokerSeat> = computed((): PokerSeat => this.session().mySeat() ?? PokerSeat.ONE);
     protected readonly topSeat: Signal<PokerSeat> = computed((): PokerSeat => otherSeat(this.bottomSeat()));
 
-    /** The cards of each seat, as the hands show them */
+    /** Whether each seat holds the player of the match: once it is over, another participant may take it */
+    private readonly matchSeats: Signal<SeatPair<boolean>> = computed((): SeatPair<boolean> => {
+        const seats: SeatPair<string | null> = this.session().seats();
+        const players: SeatPair<string | null> = this.session().players();
+        return [seats[PokerSeat.ONE] === players[PokerSeat.ONE], seats[PokerSeat.TWO] === players[PokerSeat.TWO]];
+    });
+
+    /** The chips of each seat: a participant taking a seat once the match is over starts the next one with its stack */
+    protected readonly chips: Signal<SeatPair<number>> = computed((): SeatPair<number> => {
+        const match: PokerMatch = this.session().match();
+        const of = (seat: PokerSeat): number => this.matchSeats()[seat] ? match.stacks()[seat] : match.rules.stack;
+        return [of(PokerSeat.ONE), of(PokerSeat.TWO)];
+    });
+
+    /** The cards of each seat, as the hands show them, none for a seat its player of the match left */
     protected readonly hands: Signal<ReadonlyArray<ReadonlyArray<Readonly<HandCard>>>> = computed((): ReadonlyArray<ReadonlyArray<Readonly<HandCard>>> => {
         const deckId: string | undefined = this.session().deck()?.id;
-        return this.session().cards().map((cards: ReadonlyArray<Readonly<SeatCard>>) => cards.map(({ position, card }) => ({ id: `${ deckId }:${ position }`, card })));
+        const matchSeats: SeatPair<boolean> = this.matchSeats();
+        return this.session().cards().map((cards: ReadonlyArray<Readonly<SeatCard>>, seat: number) => {
+            return matchSeats[seat] ? cards.map(({ position, card }) => ({ id: `${ deckId }:${ position }`, card })) : [];
+        });
     });
 
     /** The ids of the cards of the local player selected to discard */
     protected readonly selected: WritableSignal<ReadonlyArray<string>> = signal<ReadonlyArray<string>>([]);
 
-    protected readonly hand: Signal<PokerHand | null> = computed((): PokerHand | null => this.session().match.hand());
+    protected readonly hand: Signal<PokerHand | null> = computed((): PokerHand | null => this.session().match().hand());
     protected readonly exchanging: Signal<boolean> = computed((): boolean => this.session().myTurn() && this.hand()?.phase === HandPhase.EXCHANGE);
     protected readonly betting: Signal<boolean> = computed((): boolean => this.session().myTurn() && this.hand()?.phase !== HandPhase.EXCHANGE);
     /** The most cards the local player discards: the cards left to draw */
-    protected readonly maxExchange: Signal<number> = computed((): number => Math.min(HAND_SIZE, this.session().match.drawPile()));
+    protected readonly maxExchange: Signal<number> = computed((): number => Math.min(HAND_SIZE, this.session().match().drawPile()));
 
     /** The bounds of a bet or a raise of the local player, null when it can not bet */
     protected readonly betRange: Signal<BetLimits | null> = computed((): BetLimits | null => this.betting() ? (this.hand() as PokerHand).round.betRange() : null);
@@ -109,8 +126,14 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly canDeal: Signal<boolean> = computed((): boolean => {
         const session: SeventeenPokerSession = this.session();
         const hand: PokerHand | null = this.hand();
-        return session.mySeat() === session.match.dealer() && !session.seats().includes(null) && !this.waiting() && !session.sending()
-            && !session.broken() && session.match.result() === null && (hand === null || hand.phase === HandPhase.OVER);
+        return session.mySeat() === session.match().dealer() && !session.seats().includes(null) && !this.waiting() && !session.sending()
+            && !session.broken() && session.match().result() === null && (hand === null || hand.phase === HandPhase.OVER);
+    });
+
+    /** A seated player starts a new match once the former one is over, its decks checked, both seats taken */
+    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
+        const session: SeventeenPokerSession = this.session();
+        return session.mySeat() !== null && !session.seats().includes(null) && session.checked() && !session.sending();
     });
 
     /** The seat whose player acts, which the table shows */
@@ -121,7 +144,7 @@ export class PokerTableComponent implements OnDestroy {
             return null;
         }
 
-        return this.session().match.toAct();
+        return this.session().match().toAct();
     });
 
     /** A seated player is away: the table waits for it, the clock of the move running */
@@ -138,7 +161,7 @@ export class PokerTableComponent implements OnDestroy {
             return;
         }
 
-        const { turnTime, awayTime } = this.session().match.rules;
+        const { turnTime, awayTime } = this.session().match().rules;
         // The time of the page, which the clock of the system does not set back or forward
         let deadline: number = performance.now() + turnTime * MS_PER_SECOND;
         let extended: boolean = false;
@@ -192,7 +215,7 @@ export class PokerTableComponent implements OnDestroy {
     /** The kind of hand of each seat, once shown */
     protected readonly categories: Signal<SeatPair<TranslatableText | null>> = computed((): SeatPair<TranslatableText | null> => {
         const hands: SeatPair<HandValue> | null | undefined = this.outcome()?.hands;
-        const of = (seat: PokerSeat): TranslatableText | null => hands ? { key: this.key(marker('table.category', undefined, 'poker')), params: { category: hands[seat].category } } : null;
+        const of = (seat: PokerSeat): TranslatableText | null => hands && this.matchSeats()[seat] ? { key: this.key(marker('table.category', undefined, 'poker')), params: { category: hands[seat].category } } : null;
         return [of(PokerSeat.ONE), of(PokerSeat.TWO)];
     });
 
@@ -227,12 +250,12 @@ export class PokerTableComponent implements OnDestroy {
         }
 
         // The local player to act plays while the other one is away
-        if (this.waiting() && session.match.result() === null && !session.myTurn()) {
+        if (this.waiting() && session.match().result() === null && !session.myTurn()) {
             return { key: this.key(marker('table.status.away', undefined, 'poker')), params: { name: session.awayPlayers().join(', ') } };
         }
 
         if (hand === null || hand.phase === HandPhase.OVER) {
-            return session.match.result() === null ? this.dealStatus() : null;
+            return session.match().result() === null ? this.dealStatus() : null;
         }
 
         // A hand in progress has its deck
@@ -240,35 +263,27 @@ export class PokerTableComponent implements OnDestroy {
         return deck.phase() !== DeckPhase.READY || session.dealing() ? this.deckStatus(deck) : this.turnStatus(hand);
     });
 
-    /** The outcome of each hand played, the latest first */
+    /** The outcome of each hand played in the match, the latest first */
     protected readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => {
-        const seats: SeatPair<string | null> = this.session().seats();
-        return this.session().match.outcomes().map((outcome: Readonly<HandOutcome>, index: number) => handOutcomeText(outcome, index, seats)).reverse();
+        const players: SeatPair<string | null> = this.session().players();
+        return this.session().match().outcomes().map((outcome: Readonly<HandOutcome>, index: number) => handOutcomeText(outcome, index, players)).reverse();
+    });
+
+    /** The result of each match over before the one in progress, by its number in the room, the latest first */
+    protected readonly pastResults: Signal<ReadonlyArray<Readonly<{ number: number; text: TranslatableText }>>> = computed(() => {
+        return this.session().pastMatches().map((played: Readonly<PlayedMatch>, index: number) => ({ number: index + 1, text: this.resultText(played) })).reverse();
     });
 
     /** The outcome of the hand over, on the cloth */
     protected readonly outcomeText: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
         const outcome: Readonly<HandOutcome> | null = this.outcome();
-        return outcome === null ? null : handOutcomeText(outcome, (this.hand() as PokerHand).index, this.session().seats());
+        return outcome === null ? null : handOutcomeText(outcome, (this.hand() as PokerHand).index, this.session().players());
     });
 
     protected readonly result: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
-        const result: MatchResult | null = this.session().match.result();
-
-        if (result === null) {
-            return null;
-        }
-
-        const forfeited: PokerSeat | null = this.session().match.forfeited();
-
-        if (forfeited !== null) {
-            const seats: SeatPair<string | null> = this.session().seats();
-            return { key: this.key(marker('table.result.forfeit', undefined, 'poker')), params: { loser: seats[forfeited], winner: seats[otherSeat(forfeited)] } };
-        }
-
-        return result.winner === null
-            ? { key: this.key(marker('table.result.draw', undefined, 'poker')), params: { chips: result.stacks[0] } }
-            : { key: this.key(marker('table.result.win', undefined, 'poker')), params: { winner: this.session().seats()[result.winner], chips: result.stacks[result.winner] } };
+        const session: SeventeenPokerSession = this.session();
+        const result: MatchResult | null = session.match().result();
+        return result === null ? null : this.resultText({ players: session.players(), result, forfeited: session.match().forfeited() });
     });
 
     protected readonly verification: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
@@ -295,19 +310,22 @@ export class PokerTableComponent implements OnDestroy {
 
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
 
-    /** The chips on the table last shown, with their session and the steps of its history applied then */
-    private shown: { readonly session: SeventeenPokerSession; readonly chips: Readonly<TableChips>; readonly historySteps: number } | null = null;
+    /** The chips on the table last shown, with their session, its match and the steps of its history applied then */
+    private shown: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly chips: Readonly<TableChips>; readonly historySteps: number } | null = null;
 
     // Once the table shows a change, the chips it moved fly from where they were to where they are
     private readonly chipMoves = afterRenderEffect({
         earlyRead: (): ReadonlyArray<Readonly<ChipFlight>> => {
             const session: SeventeenPokerSession = this.session();
-            const chips: Readonly<TableChips> = { stacks: session.match.stacks(), bets: this.bets(), pot: this.potChips() };
+            const match: PokerMatch = session.match();
+            const chips: Readonly<TableChips> = { stacks: match.stacks(), bets: this.bets(), pot: this.potChips() };
             const historySteps: number = session.historySteps();
-            // A new session starts from its own chips, and the history of the room it catches up with moves none
-            const previous: Readonly<TableChips> | null = this.shown?.session === session && this.shown.historySteps === historySteps ? this.shown.chips : null;
+            // A new session or a new match starts from its own chips, and the history of the room it catches up with moves none
+            const previous: Readonly<TableChips> | null = this.shown?.session === session && this.shown.match === match && this.shown.historySteps === historySteps
+                ? this.shown.chips
+                : null;
             const transfers: ReadonlyArray<Readonly<ChipTransfer>> = previous === null ? [] : chipTransfers(previous, chips);
-            this.shown = { session, chips, historySteps };
+            this.shown = { session, match, chips, historySteps };
             return this.flightsOf(transfers);
         },
         write: (flights: Signal<ReadonlyArray<Readonly<ChipFlight>>>): void => {
@@ -324,20 +342,20 @@ export class PokerTableComponent implements OnDestroy {
         this.session().destroy();
     }
 
-    /** A participant without a seat takes a free one before the first hand */
+    /** A participant without a seat takes a free one while the seats are open */
     protected canTake(seat: PokerSeat): boolean {
         const session: SeventeenPokerSession = this.session();
         return session.seatsOpen() && session.seats()[seat] === null && session.mySeat() === null;
     }
 
-    /** The local player leaves its seat, at the bottom of the table, before the first hand */
+    /** The local player leaves its seat, at the bottom of the table, while the seats are open */
     protected canLeave(): boolean {
         return this.session().seatsOpen() && this.session().mySeat() !== null;
     }
 
-    /** The chips the player of a seat won in the hand over */
+    /** The chips the player of a seat won in the hand over, while it keeps the seat */
     protected gain(seat: PokerSeat): number {
-        return this.outcome()?.gains[seat] ?? 0;
+        return this.matchSeats()[seat] ? this.outcome()?.gains[seat] ?? 0 : 0;
     }
 
     /** Whether the hand of a seat lost at the showdown */
@@ -369,6 +387,12 @@ export class PokerTableComponent implements OnDestroy {
     protected deal(): void {
         if (this.canDeal()) {
             this.session().deal();
+        }
+    }
+
+    protected rematch(): void {
+        if (this.canRematch()) {
+            this.session().rematch();
         }
     }
 
@@ -426,9 +450,20 @@ export class PokerTableComponent implements OnDestroy {
         }
     }
 
+    /** The result of a match, with the names of its players */
+    private resultText({ players, result, forfeited }: Readonly<PlayedMatch>): TranslatableText {
+        if (forfeited !== null) {
+            return { key: this.key(marker('table.result.forfeit', undefined, 'poker')), params: { loser: players[forfeited], winner: players[otherSeat(forfeited)] } };
+        }
+
+        return result.winner === null
+            ? { key: this.key(marker('table.result.draw', undefined, 'poker')), params: { chips: result.stacks[0] } }
+            : { key: this.key(marker('table.result.win', undefined, 'poker')), params: { winner: players[result.winner], chips: result.stacks[result.winner] } };
+    }
+
     /** The dealer the next hand waits for */
     private dealStatus(): TranslatableText {
-        const dealer: PokerSeat = this.session().match.dealer();
+        const dealer: PokerSeat = this.session().match().dealer();
 
         return dealer === this.session().mySeat()
             ? { key: this.key(marker('table.status.myDeal', undefined, 'poker')) }

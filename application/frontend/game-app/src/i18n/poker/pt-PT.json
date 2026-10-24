@@ -63,18 +63,21 @@
       "max": "Máx",
       "min": "Mín",
       "more": "Apostar mais",
-      "raise": "Aumentar para {amount}"
+      "raise": "Aumentar para {amount}",
+      "rematch": "Jogar outra vez"
     },
     "bet": "Aposta {amount}",
     "category": "{category, select, fiveOfAKind {Quina} royalFlush {Sequência real} fourOfAKind {Póquer} fullHouse {Full house} straight {Sequência} threeOfAKind {Trio} twoPair {Dois pares} other {Par}}",
     "hand": "Mão {index} de {hands}",
     "history": "Mãos jogadas",
+    "match": "Partida {number}:",
     "outcome": {
       "fold": "Mão {index}: {folder} desiste, {winner} leva o pote de {pot}.",
       "noContest": "Mão {index}: mão anulada, os antes vão para a banca.",
       "split": "Mão {index}: mãos iguais ({category, select, fiveOfAKind {quina} royalFlush {sequência real} fourOfAKind {póquer} fullHouse {full house} straight {sequência} threeOfAKind {trio} twoPair {dois pares} other {par}}), o pote é dividido.",
       "win": "Mão {index}: {winner} leva o pote de {pot} com {category, select, fiveOfAKind {uma quina} royalFlush {uma sequência real} fourOfAKind {um póquer} fullHouse {um full house} straight {uma sequência} threeOfAKind {um trio} twoPair {dois pares} other {um par}}."
     },
+    "pastMatches": "Partidas jogadas",
     "pot": "Pote {pot}",
     "result": {
       "draw": "Empate: os dois jogadores terminam com {chips, plural, one {# ficha} other {# fichas}}.",

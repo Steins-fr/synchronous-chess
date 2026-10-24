@@ -63,18 +63,21 @@
       "max": "Max",
       "min": "Min",
       "more": "Mehr setzen",
-      "raise": "Erhöhen auf {amount}"
+      "raise": "Erhöhen auf {amount}",
+      "rematch": "Nochmal spielen"
     },
     "bet": "Einsatz {amount}",
     "category": "{category, select, fiveOfAKind {Fünfling} royalFlush {Royal Flush} fourOfAKind {Vierling} fullHouse {Full House} straight {Straße} threeOfAKind {Drilling} twoPair {Zwei Paare} other {Ein Paar}}",
     "hand": "Hand {index} von {hands}",
     "history": "Gespielte Hände",
+    "match": "Partie {number}:",
     "outcome": {
       "fold": "Hand {index}: {folder} steigt aus, {winner} gewinnt den Pot von {pot}.",
       "noContest": "Hand {index}: kein Spiel, die Antes gehen an die Bank.",
       "split": "Hand {index}: gleiche Hände ({category, select, fiveOfAKind {Fünfling} royalFlush {Royal Flush} fourOfAKind {Vierling} fullHouse {Full House} straight {Straße} threeOfAKind {Drilling} twoPair {zwei Paare} other {ein Paar}}), der Pot wird geteilt.",
       "win": "Hand {index}: {winner} gewinnt den Pot von {pot} mit {category, select, fiveOfAKind {einem Fünfling} royalFlush {einem Royal Flush} fourOfAKind {einem Vierling} fullHouse {einem Full House} straight {einer Straße} threeOfAKind {einem Drilling} twoPair {zwei Paaren} other {einem Paar}}."
     },
+    "pastMatches": "Gespielte Partien",
     "pot": "Pot {pot}",
     "result": {
       "draw": "Remis: Beide Spieler enden mit {chips, plural, one {# Chip} other {# Chips}}.",
