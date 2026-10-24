@@ -117,14 +117,20 @@ export default class RoomRepository extends BaseRepository {
     }
 
     /**
-     * The rooms of the game not expired at `now` whose name holds the search, whatever the case: the names starting with
-     * it first, then by name, the name equal to the search first
-     * @param search the search key (search.helper) of a part of the name
+     * The rooms of the game not expired at `now` whose name holds the search, whatever the case, or whose id holds it, for
+     * a search holding the tag separator: the ids starting with it first, then by id, the id equal to the search first
+     * @param search the search key (search.helper) of a part of the name, or of the id
      */
     public async findRoomsContaining(game: RoomGame, search: string, now: number, maxRooms: number): Promise<ListedRoom[]> {
+        const pattern: string = `%${ escapeLike(search) }%`;
+        // Without the separator, the name only: not the digits of the tags, nor the separator every id holds. The id
+        // read through the index first
+        const nameHolds: SQL | undefined = search.includes(ROOM_TAG_SEPARATOR)
+            ? undefined
+            : like(sql`split_part(${ rooms.nameKey }, ${ ROOM_TAG_SEPARATOR }, 1)`, pattern);
         const rows: ListedRoomRow[] = await this.run(DatabaseOperationEnum.QUERY, (): Promise<ListedRoomRow[]> => this.db.select(RoomRepository.LISTED_ROOM).from(rooms)
-            .where(and(eq(rooms.game, game), notExpired(now), like(rooms.nameKey, `%${ escapeLike(search) }%`)))
-            // The names starting with the search first (false before true), then in the order of their characters: the
+            .where(and(eq(rooms.game, game), notExpired(now), like(rooms.nameKey, pattern), nameHolds))
+            // The ids starting with the search first (false before true), then in the order of their characters: the
             // same on PGlite and on the cluster whatever their locale
             .orderBy(sql`strpos(${ rooms.nameKey }, ${ search }) <> 1`, sql`${ rooms.nameKey } COLLATE "C"`)
             .limit(maxRooms));
@@ -188,7 +194,7 @@ export default class RoomRepository extends BaseRepository {
     /**
      * Moves the room to a connection of the player, which becomes its host: the host, or another player while the room
      * waits for its host. The room no longer waits for its host, its lease renewed until `leaseUntil`
-     * @returns false when the token hash is not the one of the player (another room took its name), the room expired at
+     * @returns false when the token hash is not the one of the player (another room took its id), the room expired at
      * `now`, or the player is not the host while the host is connected
      */
     public async reconnectHost(room: Room, connectionId: string, playerName: string, tokenHash: string, now: number, leaseUntil: number): Promise<boolean> {

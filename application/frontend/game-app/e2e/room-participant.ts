@@ -80,16 +80,22 @@ export class RoomParticipant {
         }
         await dialog.getByRole('button', { name: 'Create', exact: true }).click();
 
-        const created: { payload: string | Buffer } = await (await socket).waitForEvent('framereceived', {
-            predicate: ({ payload }: { payload: string | Buffer }) => RoomParticipant.packet(payload).type === 'created',
+        // The answer of the API: the room created, or the creation refused, failing at once with its message
+        const answer: { payload: string | Buffer } = await (await socket).waitForEvent('framereceived', {
+            predicate: ({ payload }: { payload: string | Buffer }) => ['created', 'error'].includes(RoomParticipant.packet(payload).type ?? ''),
             timeout: RoomParticipant.LISTING_TIMEOUT,
         });
-        return RoomParticipant.packet(created.payload).data.roomName;
+        const { type, data } = RoomParticipant.packet(answer.payload);
+        if (type === 'error') {
+            throw new Error(`The creation of the room ${ roomName } was refused: ${ data.message }`);
+        }
+
+        return data.roomName;
     }
 
     /** A packet the API sent the page */
-    private static packet(payload: string | Buffer): { type?: string; data: { roomName: string } } {
-        return JSON.parse(payload.toString()) as { type?: string; data: { roomName: string } };
+    private static packet(payload: string | Buffer): { type?: string; data: { roomName: string; message?: string } } {
+        return JSON.parse(payload.toString()) as { type?: string; data: { roomName: string; message?: string } };
     }
 
     /**

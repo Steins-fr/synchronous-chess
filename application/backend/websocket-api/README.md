@@ -123,8 +123,9 @@ joins its room again from the list, the join retried until the room has its plac
 
 - Without `search`, the 30 most recent rooms, the last created first. A page asks it once a person is on it, then
   again every 15 seconds.
-- With a `search`, the rooms whose id holds it, whatever the case, its tag included (a whole id pasted finds its
-  room): the ids starting with it first, then by id. A page asks a search once typed, or on demand, not every 15 seconds.
+- With a `search`, the rooms whose name holds it, whatever the case: the ids starting with it first, then by id. A
+  search holding `#` reads the whole id, its tag included (a whole id pasted finds its room): without it, the digits of
+  the tags would match a search of a digit. A page asks a search once typed, or on demand, not every 15 seconds.
 - An unknown or missing game, a search longer than 64 characters or holding the NUL character, or a `game` or `search`
   given more than once: 400 `{ "message": "Payload not valid" }`, API Gateway joining the values of a repeated parameter
   with commas. The other parameters are ignored. A failure of the database: 500, without its message.

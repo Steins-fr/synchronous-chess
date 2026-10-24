@@ -103,6 +103,26 @@ describe('RoomRepository', () => {
             expect(await repository.findRoomsContaining(RoomGame.CHESS, 'eve', NOW, 1)).toStrictEqual([aListedRoom({ id: 'eve' })]);
         });
 
+        test('should find the rooms by their name only, not by the digits of their tags nor by the separator', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'friday#100001', nameKey: 'friday#100001' }));
+            await storeRoom(aRoom({ id: 'room1#000042', nameKey: 'room1#000042' }));
+
+            // When / Then
+            expect((await repository.findRoomsContaining(RoomGame.CHESS, '1', NOW, 30)).map(({ id }: ListedRoom) => id)).toEqual(['room1#000042']);
+            expect(await repository.findRoomsContaining(RoomGame.CHESS, 'day#', NOW, 30)).toStrictEqual([aListedRoom({ id: 'friday#100001' })]);
+        });
+
+        test('should find the rooms by their id for a search holding the separator, whatever the case', async () => {
+            // Given
+            await storeRoom(aRoom({ id: 'Friday#100001', nameKey: 'friday#100001' }));
+            await storeRoom(aRoom({ id: 'friday#100002', nameKey: 'friday#100002' }));
+
+            // When / Then
+            expect(await repository.findRoomsContaining(RoomGame.CHESS, 'friday#100001', NOW, 30)).toStrictEqual([aListedRoom({ id: 'Friday#100001' })]);
+            expect(await repository.findRoomsContaining(RoomGame.CHESS, '#100002', NOW, 30)).toStrictEqual([aListedRoom({ id: 'friday#100002' })]);
+        });
+
         test.each([
             ['%', 'any text'],
             ['_', 'any character'],

@@ -89,6 +89,9 @@ describe('RoomManagerService', () => {
         { roomName: 'room#000042', maxPlayer: 2, playerName: 'other' },
         { roomName: 'other#000042', maxPlayer: 2, playerName: 'host' },
         { roomName: 'room', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#00004x', maxPlayer: 2, playerName: 'host' },
+        { roomName: 'room#0000042', maxPlayer: 2, playerName: 'host' },
         { roomName: 'room#000042', maxPlayer: 3, playerName: 'host' },
     ])('should fail the room creation on mismatched response %o', async (response) => {
         // Given

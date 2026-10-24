@@ -10,7 +10,7 @@ import { TranslatableText } from '@app/types/translatable-text.type';
 import RoomCreateResponse from '@protocol/responses/room-create-response';
 import RoomJoinResponse from '@protocol/responses/room-join-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
-import { ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
+import { ROOM_TAG_DIGITS, ROOM_TAG_SEPARATOR } from '@protocol/room-limits';
 import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { PeerRoomNetwork, RoomAccess } from './classes/room-network/peer-room-network';
 import { JoinFailure, RoomNetwork } from './classes/room-network/room-network';
@@ -49,9 +49,7 @@ export default class RoomManagerService {
                     token,
                 });
 
-                // The id of the room: its name and the tag the API drew
-                if (response.playerName !== setup.playerName || !response.roomName.startsWith(`${ setup.roomName.trim() }${ ROOM_TAG_SEPARATOR }`)
-                    || response.maxPlayer !== maxPlayer) {
+                if (response.playerName !== setup.playerName || !RoomManagerService.isRoomId(response.roomName, setup.roomName) || response.maxPlayer !== maxPlayer) {
                     throw new Error('Room creation failed, mismatched parameters');
                 }
 
@@ -109,6 +107,13 @@ export default class RoomManagerService {
                 ? marker('rooms.notifications.hostReconnecting')
                 : marker('rooms.notifications.nameStillInRoom'),
         };
+    }
+
+    /** The id of the room of the name: the name trimmed, the separator, then the digits of the tag the API drew */
+    private static isRoomId(roomId: string, roomName: string): boolean {
+        const prefix: string = `${ roomName.trim() }${ ROOM_TAG_SEPARATOR }`;
+        const tag: string = roomId.slice(prefix.length);
+        return roomId.startsWith(prefix) && tag.length === ROOM_TAG_DIGITS && /^\d+$/.test(tag);
     }
 
     private static failureMessage(setup: RoomSetupInterface, error: unknown): TranslatableText {

@@ -96,10 +96,10 @@ describe('RoomSocketApi', () => {
         const { response, socket, id } = await sendRequest(() => api.send(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' }));
 
         // When
-        socket.receive({ id, type: 'error', data: { message: 'Room already exists' } });
+        socket.receive({ id, type: 'error', data: { message: 'No tag left for the room name' } });
 
         // Then
-        await expect(response).rejects.toThrow('Room already exists');
+        await expect(response).rejects.toThrow('No tag left for the room name');
         await expect(response).rejects.toBeInstanceOf(RoomApiError);
     });
 

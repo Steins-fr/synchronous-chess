@@ -27,7 +27,7 @@ type ConstrainedColumns<Name extends string> = Record<Name, ExtraConfigColumn>;
 const ROOM_GAMES_SQL: string = ROOM_GAMES.map((game: RoomGame): string => `'${ game }'`).join(', ');
 
 export const rooms = snakeCase.table('rooms', {
-    /** The name of the room */
+    /** The id of the room: its name and its tag (`friday#451203`), unique across the games */
     id: text().primaryKey(),
     /** The connection of its host */
     connectionId: text().notNull(),
@@ -36,7 +36,7 @@ export const rooms = snakeCase.table('rooms', {
     game: text({ enum: ROOM_GAMES }).notNull(),
     /** An ISO 8601 date in UTC: its order as a text is its order in time */
     createdAt: text().notNull(),
-    /** The search key of its name (search.helper) */
+    /** The search key of its id (search.helper), its tag included */
     nameKey: text().notNull(),
     /** Set for a private room: the hash of its password (password.helper) */
     passwordHash: text(),

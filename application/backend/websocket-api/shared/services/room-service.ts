@@ -71,8 +71,9 @@ export default class RoomService {
     /**
      * The rooms of the game, the full ones and the ones waiting for their host included: a participant joins its room
      * again once it has a place or its host is back. Without search, the most recent first. With a search, the rooms
-     * whose name holds it, whatever the case: the names starting with it first, then by name
-     * @param search a part of the name of the room: none when empty
+     * whose name holds it, whatever the case, or whose id holds it for a search holding the tag separator: the ids
+     * starting with it first, then by id
+     * @param search a part of the name of the room, or of its id: none when empty
      */
     public async getOpenRooms(game: RoomGame, search: string = ''): Promise<RoomsResponse> {
         const searched: string = searchKey(search);
