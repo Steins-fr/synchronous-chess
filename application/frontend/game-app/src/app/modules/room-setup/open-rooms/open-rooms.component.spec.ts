@@ -692,7 +692,7 @@ describe('OpenRoomsComponent', () => {
         expect(textFieldInput(fixture.nativeElement, 'Search for a room').value).toBe('room#000001');
     });
 
-    test('should find no room of an id the API does not list, nor once the list failed', async () => {
+    test('should find no room of an id the API does not list', async () => {
         // Given
         await createComponent();
         await answer({ rooms: [], hasMore: false });
@@ -701,16 +701,49 @@ describe('OpenRoomsComponent', () => {
         const unknown: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000001');
         await render(OpenRoomsComponent.SEARCH_DELAY + 1);
         await answer({ rooms: [publicRoom], hasMore: false }, 'room%23000001');
-        const failed: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000002');
-        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
-        await fail('room%23000002');
 
         // Then
         await expect(unknown).resolves.toBeUndefined();
-        await expect(failed).resolves.toBeUndefined();
     });
 
-    test('should find no room once the list is removed', async () => {
+    test('should fail to find a room once the list of its search failed, not on the failure of the list shown before', async () => {
+        // Given: the list shown failed
+        await createComponent();
+        await fail();
+
+        // When
+        const found: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000001');
+        const settled = vi.fn();
+        found.then(settled, settled);
+        await render();
+
+        // Then: the search is awaited
+        expect(settled).not.toHaveBeenCalled();
+
+        // When
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await fail('room%23000001');
+
+        // Then
+        await expect(found).rejects.toThrow('could not be searched');
+    });
+
+    test('should fail to find a room once the person typed another search', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [], hasMore: false });
+        const found: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000001');
+        const rejected = expect(found).rejects.toThrow('could not be searched');
+
+        // When
+        await typeSearch('alice');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+
+        // Then
+        await rejected;
+    });
+
+    test('should fail to find a room once the list is removed', async () => {
         // Given
         await createComponent();
         await answer({ rooms: [], hasMore: false });
@@ -720,7 +753,7 @@ describe('OpenRoomsComponent', () => {
         fixture.destroy();
 
         // Then
-        await expect(found).resolves.toBeUndefined();
+        await expect(found).rejects.toThrow();
     });
 
     test('should not ask the list failed by the server again while the page is hidden, until it is visible again', async () => {

@@ -146,6 +146,38 @@ describe('roomFromSetup', () => {
 
         // Then
         expect(sessions.get('room#000001')).toBeUndefined();
-        expect(lock.release).toHaveBeenCalledOnce();
+        await vi.waitFor(() => expect(lock.release).toHaveBeenCalledOnce());
+    });
+
+    test('should remove the session of the room being resumed once the page left through the app', async () => {
+        // Given
+        sessions.save('room#000001', { playerName: 'alice', token: 'a1' });
+        vi.mocked(roomManagerService.buildBlockRoom).mockReturnValue(new Promise<never>(() => undefined));
+        roomSetupService.setup({ ...setup, type: 'resume' });
+        await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
+
+        // When
+        fixture.destroy();
+
+        // Then
+        expect(sessions.get('room#000001')).toBeUndefined();
+    });
+
+    test('should not show the room built in the URL while the app navigates, the player leaving the page', async () => {
+        // Given
+        let build: (built: Room<object>) => void = () => undefined;
+        vi.mocked(roomManagerService.buildBlockRoom).mockReturnValue(TestHelper.cast(new Promise<Room<object>>((resolve) => build = resolve)));
+        roomSetupService.setup(setup);
+        await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
+        vi.spyOn(router, 'currentNavigation').mockReturnValue(TestHelper.cast({}));
+        const navigateByUrl = vi.spyOn(router, 'navigateByUrl');
+
+        // When
+        build(room);
+        await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
+
+        // Then
+        expect(navigateByUrl).not.toHaveBeenCalled();
+        expect(router.url).toBe('/?tab=1');
     });
 });

@@ -34,8 +34,8 @@ export default class RoomSetupService {
         this.setupSubject.next(setup);
     }
 
-    // The lock of the player in the room the page holds, and its name: a page holds one room at a time
-    private roomLock?: RoomLock;
+    // The lock of the player in the room the page holds, held or asked, and its name: a page holds one room at a time
+    private roomLock?: Promise<RoomLock | undefined>;
     private roomLockName?: string;
 
     public roomIsSetup(roomIsSetup: boolean): void {
@@ -44,34 +44,34 @@ export default class RoomSetupService {
     }
 
     /**
-     * Holds the lock of the player in the room among the tabs of the browser, the one held kept, the former one released
+     * Holds the lock of the player in the room among the tabs of the browser, the one held or asked kept, the former one
+     * released
      * @param wait how long to wait for it, held by another tab
      * @returns whether the page holds it: another tab holds the room under that name else
      */
     public async holdLock(roomId: string, playerName: string, wait: number = 0): Promise<boolean> {
         const name: string = JSON.stringify([roomId, playerName]);
 
-        if (this.roomLock !== undefined && this.roomLockName === name) {
-            return true;
-        }
-
-        this.releaseLock();
-        this.roomLockName = name;
-        const lock: RoomLock | undefined = await RoomLocks.hold(roomId, playerName, wait);
-
-        // Released meanwhile, the page gave the room up
         if (this.roomLockName !== name) {
-            lock?.release();
-            return false;
+            this.releaseLock();
+            this.roomLockName = name;
+            this.roomLock = RoomLocks.hold(roomId, playerName, wait).then((lock: RoomLock | undefined) => {
+                // Held by another tab: asked again next time, once it may have left
+                if (lock === undefined && this.roomLockName === name) {
+                    this.roomLockName = undefined;
+                }
+                return lock;
+            });
         }
 
-        this.roomLock = lock;
-        return lock !== undefined;
+        const asked: Promise<RoomLock | undefined> | undefined = this.roomLock;
+        // Not once released meanwhile, the page gave the room up
+        return await asked !== undefined && this.roomLock === asked;
     }
 
-    /** Once the page gave the room up */
+    /** Once the page gave the room up: the lock asked is released once held */
     public releaseLock(): void {
-        this.roomLock?.release();
+        void this.roomLock?.then((lock: RoomLock | undefined) => lock?.release());
         this.roomLock = undefined;
         this.roomLockName = undefined;
     }

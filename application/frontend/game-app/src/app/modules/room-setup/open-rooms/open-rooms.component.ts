@@ -196,16 +196,24 @@ export class OpenRoomsComponent {
     }
 
     /**
-     * Searches the room of an id, the list showing it: the room listed under that id, undefined once the API lists none
-     * (an id ended or unknown), the list failed or removed meanwhile. Not before a person is on the page
+     * Searches the room of an id, the list showing it. Not before a person is on the page
+     * @returns the room listed under that id, undefined once the API lists none: an id ended or unknown
+     * @throws {Error} once the list of the search failed, the person typed another search, or the list was removed:
+     * nothing is known of the room
      */
     public async findRoom(roomId: string): Promise<Readonly<OpenRoom> | undefined> {
         this.search.set({ text: roomId });
-        const answer: ResourceSnapshot<RoomsList | undefined> | undefined = await firstValueFrom(this.listSnapshot$.pipe(
-            filter((snapshot: ResourceSnapshot<RoomsList | undefined>) => snapshot.status === 'error' || (snapshot.status === 'resolved' && snapshot.value?.search === roomId)),
-        ), { defaultValue: undefined });
+        // The answer of the search of the id, not the list shown before it (failed included), nor a search typed since
+        const answer: ResourceSnapshot<RoomsList | undefined> = await firstValueFrom(this.listSnapshot$.pipe(
+            filter((snapshot: ResourceSnapshot<RoomsList | undefined>) => untracked(this.search).text !== roomId
+                || (untracked(this.query) === roomId && (snapshot.status === 'error' || snapshot.status === 'resolved'))),
+        ));
 
-        return answer?.status === 'resolved' ? answer.value?.rooms.find((room: Readonly<OpenRoom>) => room.roomName === roomId) : undefined;
+        if (answer.status !== 'resolved' || untracked(this.search).text !== roomId) {
+            throw new Error(`The room ${ roomId } could not be searched`);
+        }
+
+        return answer.value?.rooms.find((room: Readonly<OpenRoom>) => room.roomName === roomId);
     }
 
     /** Not again while a list is awaited: the resource reloads once loaded only */

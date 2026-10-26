@@ -388,9 +388,10 @@ describe('RoomSetupComponent', () => {
             expect(roomSetupService.holdLock).not.toHaveBeenCalled();
         });
 
-        test('should open the join dialog of the room another tab holds under the name of the session, a duplicated tab', async () => {
-            // Given
+        test('should open the join dialog of the room another tab holds under the name of the session, asking another name', async () => {
+            // Given a duplicated tab, its session and the name typed last copied
             keepSession();
+            localStorage.setItem(RoomSetupComponent.PLAYER_NAME_KEY, 'alice');
             vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
             await createComponent(true, url);
 
@@ -398,8 +399,42 @@ describe('RoomSetupComponent', () => {
             await answerSearch([listedRoom]);
 
             // Then
-            await vi.waitFor(() => expect(dialogService.open).toHaveBeenCalledOnce());
+            await vi.waitFor(() => expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomJoinDialog, {
+                title: 'rooms.join.title',
+                inputs: { roomName: 'room#000001', isPrivate: true, playerName: '' },
+            }));
             expect(roomSetupService.setup).not.toHaveBeenCalled();
+        });
+
+        test('should resume the room of a URL copied with blanks', async () => {
+            // Given
+            keepSession();
+
+            // When
+            await createComponent(true, '/?room=room%23000001%20');
+
+            // Then
+            await vi.waitFor(() => expect(roomSetupService.setup).toHaveBeenCalledWith(expect.objectContaining({ type: 'resume', roomName: 'room#000001' })));
+        });
+
+        test('should tell nothing of the room of a link once its search failed, kept in the URL', async () => {
+            // Given
+            await createComponent(true, url);
+            const request: TestRequest = await vi.waitFor(() => {
+                const [search]: TestRequest[] = TestBed.inject(HttpTestingController)
+                    .match((asked: { urlWithParams: string }) => asked.urlWithParams.endsWith('&search=room%23000001'));
+                expect(search).toBeDefined();
+                return search;
+            });
+
+            // When
+            request.flush({ message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+            await fixture.whenStable();
+
+            // Then
+            expect(notificationService.error).not.toHaveBeenCalled();
+            expect(dialogService.open).not.toHaveBeenCalled();
+            expect(TestBed.inject(Router).url).toBe(url);
         });
 
         test('should tell a room ended or unknown, removed from the URL and the session of the tab', async () => {

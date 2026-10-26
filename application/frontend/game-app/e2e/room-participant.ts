@@ -183,7 +183,7 @@ export class RoomParticipant {
         await expect(this.page).toHaveURL((url: URL) => !url.searchParams.has('room'));
     }
 
-    /** The join dialog of a room opened, under the name given last, filled in with the name of the player, then sent */
+    /** The join dialog of a room opened, the name it gives */
     public async expectJoinDialog(roomId: string, playerName: string): Promise<void> {
         const dialog: Locator = this.page.locator('app-room-join-dialog');
         await expect(dialog).toContainText(roomId);

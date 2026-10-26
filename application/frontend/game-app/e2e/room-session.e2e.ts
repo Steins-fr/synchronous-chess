@@ -65,7 +65,7 @@ test.describe('Room session', () => {
         await bob.expectNoRoomUrl();
     });
 
-    test('asks another name to a duplicated tab, the name typed last given', async ({ room }) => {
+    test('asks another name to a duplicated tab', async ({ room }) => {
         // Given
         const [alice, bob]: RoomParticipant[] = await room.connect('alice', 'bob');
         await bob.roomUrl(room.id);
@@ -74,7 +74,7 @@ test.describe('Room session', () => {
         const copy: RoomParticipant = await bob.duplicateTab('bobby');
 
         // Then
-        await copy.expectJoinDialog(room.id, 'bob');
+        await copy.expectJoinDialog(room.id, '');
         await copy.sendJoinDialog();
         await Promise.all([alice, bob, copy].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'bobby'])));
     });

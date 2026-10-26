@@ -78,18 +78,26 @@ export class RoomSetupComponent {
         }
 
         const session: Readonly<RoomSession> | undefined = this.roomSessions.get(roomId);
-        if (session !== undefined && await this.roomSetupService.holdLock(roomId, session.playerName, RoomSetupComponent.LOCK_WAIT)) {
-            await this.setUpOnceReady(openRooms, 'resume', roomId, session.playerName, undefined, session.token);
-            return;
+        if (session !== undefined) {
+            if (await this.roomSetupService.holdLock(roomId, session.playerName, RoomSetupComponent.LOCK_WAIT)) {
+                await this.setUpOnceReady(openRooms, 'resume', roomId, session.playerName, undefined, session.token);
+                return;
+            }
+
+            // Another tab holds the room under the name typed last: the dialog asks another one
+            this.playerName = '';
         }
 
         if (!await openRooms.whenServerReady()) {
             return;
         }
 
-        const room: Readonly<OpenRoom> | undefined = roomId.length <= ROOM_ID_MAX_LENGTH ? await openRooms.findRoom(roomId) : undefined;
-        // Not once the list was removed meanwhile: a room of the list joined, or the page closed
-        if (this.openRooms() !== openRooms) {
+        let room: Readonly<OpenRoom> | undefined;
+        try {
+            room = roomId.length <= ROOM_ID_MAX_LENGTH ? await openRooms.findRoom(roomId) : undefined;
+        } catch {
+            // The list failed, shown failed, the person searched another room, or the list was removed (a room of the
+            // list joined, the page closed): nothing is known of the room, kept in the URL
             return;
         }
 

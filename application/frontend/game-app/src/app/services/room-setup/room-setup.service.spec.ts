@@ -79,17 +79,35 @@ describe('RoomSetupService', () => {
 
             // Then
             expect(held).toBe(true);
-            expect(former.release).toHaveBeenCalledOnce();
+            await vi.waitFor(() => expect(former.release).toHaveBeenCalledOnce());
         });
 
-        test('should tell the lock another tab holds', async () => {
+        test('should tell the lock another tab holds, asked again next time', async () => {
             // Given
             const service: RoomSetupService = new RoomSetupService();
-            vi.spyOn(RoomLocks, 'hold').mockResolvedValue(undefined);
+            const holdRoomLock = vi.spyOn(RoomLocks, 'hold').mockResolvedValueOnce(undefined).mockResolvedValueOnce(lock());
 
-            // When, Then
+            // When, Then: the other tab left meanwhile
             await expect(service.holdLock('room#000001', 'alice')).resolves.toBe(false);
-            await expect(service.holdLock('room#000001', 'alice')).resolves.toBe(false);
+            await expect(service.holdLock('room#000001', 'alice')).resolves.toBe(true);
+            expect(holdRoomLock).toHaveBeenCalledTimes(2);
+        });
+
+        test('should ask the lock once for the calls of the same name meanwhile', async () => {
+            // Given
+            const service: RoomSetupService = new RoomSetupService();
+            const held: RoomLock = lock();
+            const holdRoomLock = vi.spyOn(RoomLocks, 'hold').mockResolvedValue(held);
+
+            // When
+            const holding: boolean[] = await Promise.all([service.holdLock('room#000001', 'alice'), service.holdLock('room#000001', 'alice')]);
+            service.releaseLock();
+            await Promise.resolve();
+
+            // Then
+            expect(holding).toEqual([true, true]);
+            expect(holdRoomLock).toHaveBeenCalledOnce();
+            expect(held.release).toHaveBeenCalledOnce();
         });
 
         test('should release the lock, the one held meanwhile included', async () => {
@@ -108,7 +126,7 @@ describe('RoomSetupService', () => {
             // Then
             await expect(holding).resolves.toBe(false);
             expect(held.release).toHaveBeenCalledOnce();
-            expect(late.release).toHaveBeenCalledOnce();
+            await vi.waitFor(() => expect(late.release).toHaveBeenCalledOnce());
             expect(() => service.releaseLock()).not.toThrow();
         });
     });

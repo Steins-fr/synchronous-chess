@@ -31,6 +31,8 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     const room = signal<BlockRoom<M> | undefined>(undefined);
     // Aborted once the page left: stops the join asked again for a while
     const destroyed: AbortController = new AbortController();
+    // The room being built: left meanwhile, the player gave it up too
+    let building: string | undefined;
 
     // The room given up: a reload shows the list, or the join dialog of a room still in the URL
     const giveUp = (roomId: string | undefined): void => {
@@ -41,6 +43,7 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     };
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
+        building = setup.roomName;
         try {
             const built: BlockRoom<M> = await roomManagerService.buildBlockRoom<M>(setup, maxPlayer, routing, destroyed.signal);
             if (destroyed.signal.aborted) {
@@ -70,16 +73,18 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             roomSetupService.roomIsSetup(false);
             giveUp(setup.roomName);
             showRoomInUrl(router, null);
+        } finally {
+            building = undefined;
         }
     };
 
     roomSetupService.setup$.pipe(takeUntilDestroyed()).subscribe((setup: RoomSetupInterface) => void buildRoom(setup));
     inject(DestroyRef).onDestroy(() => {
         destroyed.abort();
-        // Left through the app: the player left its room
+        // Left through the app: the player left its room, or the one it was joining
         const left: BlockRoom<M> | undefined = room();
         left?.clear();
-        giveUp(left?.roomName);
+        giveUp(left?.roomName ?? building);
     });
     notifyCheatFlags(() => room()?.cheatFlags());
 
