@@ -36,8 +36,10 @@ The code lives in `application/frontend/game-app/src/app/modules/russian-roulett
 | `Cylinder` | `classes/cylinder/cylinder.ts` | Applies the messages of a cylinder, makes the steps of the local player (its load, its spin, its shares, its disclosure) |
 | `verifyCylinder` | `classes/cylinder/cylinder-verification.ts` | Checks the spins once both players disclosed their keys |
 | `SecretStore` | `modules/mental-poker/classes/secret-store.ts` | Keeps the secrets of the player across the reloads of the page, as for the decks of the poker |
+| `KeptSecrets`, `StepRunner` | `modules/mental-poker/classes` | The secrets of the player in the cylinder and its steps one at a time, shared with the decks of the poker |
 | `PlayedGame` | `classes/game-sessions/played-game.ts` | A game of the room: its rules, its cylinder, its check and its result, final once checked |
 | `RussianRouletteSession` | `classes/game-sessions/russian-roulette-session.ts` | The games of the room: seats, moves, timeouts, a new game once one is over |
+| `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `RouletteTableComponent` | `components/roulette-table` | Shows the session, turns the clicks into seat requests and moves, and runs the clock of each move |
 | `RouletteCylinderComponent` | `components/roulette-cylinder` | The 24 chambers around the cylinder: buttons while the player places its bullets, then the chambers fired |
 | `RouletteSeatComponent` | `components/roulette-seat` | A seat: its player, its chips and its deaths, a ring and the clock of the move while the game waits for its player, the stamp of a pass, the shot of its player |
@@ -137,6 +139,9 @@ flowchart LR
 
 ## Seats
 
+The seats are a `TableSeats`, shared with the [Seventeen Poker](seventeen-poker-session.md#seats): the session
+applies its messages in the order of the chain, and tells when the seats are open.
+
 Each participant takes a seat with `Sit here` (`RR_seat`): the first request for a free seat gets it, a participant has
 a single seat, and `Leave the seat` frees it. Once both seats are taken, the session prepares the cylinder of their
 players, a new one when a seat changes; the first key given makes the seats final, until the game is settled: over, and
@@ -149,7 +154,8 @@ A player losing on time loses its seat too. While the seats are open, a seated p
 away from the room, with `Free the seat` (`RR_unseat`): no page can tell when the other one was away, so the chain
 applies the request whatever the presence of the player. A spectator frees no seat.
 
-The table shows the local player at its bottom, a spectator the first seat.
+The table shows the local player at its bottom. A spectator sees it from the free seat it may take, the only one
+showing `Sit here`: it clicks where it then sits. Once both seats are taken, it sees the first seat at the bottom.
 
 ## A game
 
@@ -238,9 +244,10 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
   chambers are buttons (`aria-pressed`, 3 at most); its bullets show until the spins; then the cylinder turns at each
   shot, the chamber to fire under the hammer, the chambers fired showing empty, a bullet, or two. It turns on itself
   while the players load and spin it.
-- The revolver, from its side, lying on the cloth (see [A shot on the table](#a-shot-on-the-table)). Once the cylinder
-  is spun, the revolver lies in the vertical middle of the cloth, the cylinder at its right, twice its height, both
-  centered together. The table observes its size (`ResizeObserver`): the revolver finds its place again once the window
+- The revolver, from its side, lying on the cloth (see [A shot on the table](#a-shot-on-the-table)), the cylinder at its
+  right, twice its height, both centered together. While the players load it, the cylinder is larger: each chamber, a
+  button, is a target of 24 pixels at least (WCAG 2.5.8), in the room of the chips of the table, hidden until the
+  cylinder is spun; on a phone, the revolver lies below it then. The table observes its size (`ResizeObserver`): the revolver finds its place again once the window
   is resized, or a move told.
 - A status line (`<output>`, of the role `status`): what the table waits for.
 - The moves of the player: `Load (n/3)`, `Shoot`, `Pass (price)`, disabled when the player can not pay.
@@ -248,13 +255,21 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
   table; `Play again` for its players, `Free the seat` on the seat of the other player away; the results of the former
   games, folded below the table (`Games played`).
 
+The page never jumps: what comes and goes keeps its place. The status line and the row of the moves are always there,
+empty or not, as are the lines of the result and of its check, the place of the latest move on the cloth (two lines),
+and the moves of the game and the former games below the table. The cloth, the seats and the block of the status keep
+the tallest height they had (`SteadyHeightDirective` of `modules/room-layout`): a text on two lines in another language
+or on a phone moves nothing. On a phone, a seat keeps two
+rows, the status and the result two lines.
+
 The animations use CSS only, and stop under `prefers-reduced-motion`: the shot keeps its hold, the result waiting for
 it, without trembling nor recoil.
 
 ### A pass on the table
 
 The pass is stamped on the seat of its player (`Pass (2)`), landing turned then fading out, and its chips fly from its
-stack to the table; the 5th one in a row takes the chips of the table to the bank. The seat getting the turn lights up,
+stack to the table; the 5th one in a row takes the chips of the table to the bank. The chips fly over the table as in
+the Seventeen Poker (`ChipFlightsComponent` of `modules/two-seat-table`). The seat getting the turn lights up,
 a glow around it, before its ring pulses.
 
 ### A shot on the table
@@ -274,7 +289,8 @@ A shot, or a chamber revealed, plays in front of everyone, keeping its result fo
    the cloth.
 
 Until the shot is over, the table shows the state before it (`view`): the chambers fired, the stacks, the deaths, the
-latest move and the result of the game. Its turn waits too: from the shot, while the shares of the chamber come, until
+latest move and the result of the game. The render showing the shot applied keeps it too, the table playing its new
+moves once rendered (`unplayed`): it never shows the result of a shot before the revolver fires. Its turn waits too: from the shot, while the shares of the chamber come, until
 it is over, no seat shows its ring nor its clock, which runs meanwhile, and no button shows, the status telling the
 chamber fires. The history of the room a reloaded page catches up with plays nothing, nor does a hidden page: their moves show
 at once.

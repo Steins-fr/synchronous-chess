@@ -2,7 +2,9 @@ import { CdkDrag, CdkDropList } from '@angular/cdk/drag-drop';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ChessBoardComponent } from './chess-board.component';
+import { ChessPieceComponent } from '../chess-piece/chess-piece.component';
 import { Vec2 } from '@app/modules/chess/classes/vector/vec2';
+import { FenPiece } from '@app/modules/chess/enums/fen-piece.enum';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
 import { Column, Row } from '@app/modules/chess/interfaces/CoordinateMove';
@@ -44,6 +46,29 @@ describe('ChessBoardComponent', () => {
         expect(fixture.nativeElement.querySelectorAll('#board-grid app-chess-piece')).toHaveLength(32);
         expect(fixture.nativeElement.querySelector('.column-labels').textContent.replace(/\s/g, '')).toEqual('ABCDEFGH');
         expect(fixture.nativeElement.querySelector('.row-labels').textContent.replace(/\s/g, '')).toEqual('87654321');
+    });
+
+    test('should show the board from the side of Black, its cells keeping their coordinates', async () => {
+        // Given
+        const dropped: Vec2[] = [];
+        component.pieceDropped.subscribe((cellPos: Vec2) => dropped.push(cellPos));
+
+        // When
+        fixture.componentRef.setInput('flipped', true);
+        await fixture.whenStable();
+
+        // Then: the 1st rank at the top, the H column on the left
+        expect(fixture.nativeElement.querySelector('.column-labels').textContent.replace(/\s/g, '')).toEqual('HGFEDCBA');
+        expect(fixture.nativeElement.querySelector('.row-labels').textContent.replace(/\s/g, '')).toEqual('12345678');
+        // The white pieces at the top, from H1: the king on the 4th cell
+        expect(fixture.debugElement.queryAll(By.directive(ChessPieceComponent)).slice(0, 5).map((piece) => piece.componentInstance.piece()))
+            .toEqual([FenPiece.WHITE_ROOK, FenPiece.WHITE_KNIGHT, FenPiece.WHITE_BISHOP, FenPiece.WHITE_KING, FenPiece.WHITE_QUEEN]);
+
+        // When a piece is dropped on the first cell shown
+        fixture.debugElement.queryAll(By.directive(CdkDropList))[0].triggerEventHandler('cdkDropListDropped', {});
+
+        // Then
+        expect(dropped).toEqual([new Vec2(Column.H, Row._1)]);
     });
 
     test('should highlight the valid plays and reset them when the board changes', async () => {

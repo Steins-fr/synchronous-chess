@@ -1,0 +1,13 @@
+@for (flight of flights(); track flight.id) {
+<app-chip-stack
+    class="chip-flight absolute pointer-events-none"
+    [amount]="flight.amount"
+    [placed]="false"
+    [style.left.px]="flight.from.x"
+    [style.top.px]="flight.from.y"
+    [style.--flight-x.px]="flight.to.x - flight.from.x"
+    [style.--flight-y.px]="flight.to.y - flight.from.y"
+    [style.--flight-delay.ms]="flight.delay ?? 0"
+    (animationend)="land(flight.id, $event)"
+    (animationcancel)="land(flight.id, $event)" />
+}

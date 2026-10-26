@@ -34,6 +34,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
+| `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move |
 | `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock of the move while its player acts, what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
@@ -93,6 +94,9 @@ flowchart LR
 
 ## Seats
 
+The seats are a `TableSeats`, shared with the [Russian roulette](russian-roulette-session.md#seats): the session
+applies its messages in the order of the chain, and tells when the seats are open.
+
 Each participant takes a seat with `Sit here`: the first request for a free seat gets it, a participant
 has a single seat, and `Leave the seat` frees it. The seats are final from the first hand of a match until it is
 over, or stopped by a broken deck (`seatsOpen`); the other participants are spectators. Once the match is over, its
@@ -120,7 +124,8 @@ show cards the other player knows. The index of the match gives each deck of a n
 players keep their seats and their salts: the table of the decks holds a single deck by id, and the secrets of a deck
 disclosed are dropped.
 
-The table shows the local player at its bottom, a spectator the first seat.
+The table shows the local player at its bottom. A spectator sees it from the free seat it may take, the only one
+showing `Sit here`: it clicks where it then sits. Once both seats are taken, it sees the first seat at the bottom.
 
 ## A hand
 
@@ -198,7 +203,8 @@ over the whole move, started late on a hidden page and never restarted on the sa
 ## Reloading the page
 
 The chain replays every message to a reloaded page: the session plays the match again, creates the
-decks again, and the `SecretStore` gives back the secrets of the player, so it reads its cards and
+decks again, and the `SecretStore` gives back the secrets of the player (through `KeptSecrets`, shared with the cylinders
+of the Russian roulette), so it reads its cards and
 gives its keys again: the ids of the decks are the same, the salts being read back from the chain. A player leaving the room keeps its seat: the hand waits for it to come back.
 
 A page reloaded during a new match plays the former matches again, then the match in progress, the decks of the former
@@ -243,14 +249,22 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 - The results of the former matches of the room, each one with the check of its decks, folded below the table
   (`Matches played`).
 
+The page never jumps: what comes and goes keeps its place. The hands keep the height of a card before the deal, the
+lines of the kinds of hands, the count of the hands and the outcome of a hand theirs on the cloth, and the status line,
+the row of the actions and the lines of the result and of the check of the decks are always there, empty or not, as
+are the hands played and the former matches below the table. The cloth, the seats and the block of the status keep the
+tallest height they had (`SteadyHeightDirective` of `modules/room-layout`): a text on two lines in another language or
+on a phone moves nothing. On a phone, a seat keeps two rows, the status, the outcome of a hand and the result two
+lines, and the actions two rows: the amount of a bet below them.
+
 The animations (the deal, the turn over of the cards, the riffle, the chips, the ring) use
 `animate.enter` / `animate.leave` and CSS only, and stop under `prefers-reduced-motion`. Once the table
 shows a change of its chips, `chipTransfers` tells the chips it moved: a bet from a stack to the cloth,
 the antes and the bets of a round over to the pot, the pot to its winner, half to each player when it is
 split, to the bank on a no contest; a player taking the pot alone takes the bets of the cloth with it (a
-fold). The chips of each move fly between the places as the page shows them, measured once rendered,
-then the stack there shows them dropping on it, the gains and the outcome with them. A stack paying out
-shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights,
+fold). The chips of each move fly between the places as the page shows them, measured once rendered
+(`ChipFlightsComponent` of `modules/two-seat-table`, shared with the Russian roulette), then the stack there shows them dropping on it, the gains and the outcome with them, the chips it changes for others
+fading out then. A stack paying out shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights,
 as does the history of the room a reloaded page or a participant joining late catches up with: the
 session counts the steps of the history it applies (`historySteps`: the start and the end of each of its
 messages, a showdown moving the chips once the cards are opened), and a change of the table while it

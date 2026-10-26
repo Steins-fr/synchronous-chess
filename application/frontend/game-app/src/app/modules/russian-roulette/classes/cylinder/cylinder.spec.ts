@@ -575,6 +575,26 @@ describe('Cylinder', { timeout: 30_000 }, () => {
             expect(messagesOf(CylinderMessageType.DISCLOSE, 'b')).toHaveLength(0);
         });
 
+        test.each<[string, object]>([
+            ['a key out of the group', { secret: 'zz', nonce: '0'.repeat(32), bullets: [1] }],
+            ['no random part', { secret: '1', bullets: [1] }],
+            ['no chambers', { secret: '1', nonce: '0'.repeat(32) }],
+        ])('should tell its secrets lost with a storage holding %s', async (_: string, stored: object) => {
+            // Given
+            const [a, b] = table();
+            await loaded(a, b);
+            await ready();
+
+            // When
+            new SecretStore<CylinderSecrets>('cylinder', 'room', 'b').save(ID, stored as CylinderSecrets);
+            const reloaded: Page = reload('b');
+            ask((cylinder: Cylinder) => cylinder.requestShot(0));
+
+            // Then
+            await eventually(() => expect(reloaded.cylinder.secretsLost()).toBe(true));
+            expect(messagesOf(CylinderMessageType.SHARE, 'b')).toHaveLength(0);
+        });
+
         test('should load, spin and fire with the storage of the tab blocked, the page keeping its secrets', async () => {
             // Given
             const blocked: SecretStore<CylinderSecrets> = new SecretStore<CylinderSecrets>('cylinder', 'room', 'a', () => {

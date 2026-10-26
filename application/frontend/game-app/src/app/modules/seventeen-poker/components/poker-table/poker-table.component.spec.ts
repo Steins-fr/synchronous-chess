@@ -116,19 +116,26 @@ describe('PokerTableComponent', () => {
         vi.restoreAllMocks();
     });
 
-    test('should seat the participants on the free seats', async () => {
+    test('should seat the participants on the free seats, a spectator seeing the table from the seat it may take', async () => {
         // Given
         await table('alice');
         const bob: SeventeenPokerSession = participant('bob');
 
-        // Then
+        // Then: a single seat to take, at the bottom of the table
         expect(status()).toEqual('Waiting for two players to sit.');
-        expect(text('#seat-top')).toEqual('Free seatSit here');
+        expect(text('#seat-top')).toEqual('Free seat');
         expect(text('#seat-bottom')).toEqual('Free seatSit here');
 
-        // When: Alice sits on the second seat, at the top of the table, then at its bottom
-        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        // When: Bob sits on the first seat
         bob.takeSeat(PokerSeat.ONE);
+        await fixture.whenStable();
+
+        // Then: the second seat comes at the bottom
+        expect(text('#seat-top')).toEqual('bob150 chips');
+        expect(text('#seat-bottom')).toEqual('Free seatSit here');
+
+        // When: Alice sits there
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => status() === 'Your turn to deal.');
 
         // Then
@@ -142,9 +149,9 @@ describe('PokerTableComponent', () => {
         await click('Leave the seat');
         await until(() => status() === 'Waiting for two players to sit.');
 
-        // Then: Bob sits at the bottom of the table of a spectator
-        expect(text('#seat-bottom')).toEqual('bob150 chips');
-        expect(text('#seat-top')).toEqual('Free seatSit here');
+        // Then: the free seat comes back at the bottom
+        expect(text('#seat-bottom')).toEqual('Free seatSit here');
+        expect(text('#seat-top')).toEqual('bob150 chips');
     });
 
     test('should deal the hand, the cards of the player only face up', async () => {
@@ -499,7 +506,8 @@ describe('PokerTableComponent', () => {
         expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#seat-bottom')).toEqual('alice142 chips');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
-        expect(element().querySelectorAll('p.table-line')).toHaveLength(0);
+        // A folded hand is not shown: no kind of hand
+        expect(Array.from(element().querySelectorAll('p.table-line'), (line: Element) => line.textContent?.trim())).toEqual(['', '']);
         // The pot flies to Bob, the bets with it
         expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5']]);
     });
@@ -627,7 +635,8 @@ describe('PokerTableComponent', () => {
         // Given: Alice deals the first hand, on the second seat
         await table('alice');
         participant('bob').takeSeat(PokerSeat.ONE);
-        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        await fixture.whenStable();
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => button('Deal') !== undefined);
 
         // When
@@ -715,7 +724,7 @@ describe('PokerTableComponent', () => {
 
         // Then
         expect(status()).toEqual('A deck was cheated: the match stops.');
-        expect(element().querySelector('p.muted-note')).toBeNull();
+        expect(text('p.muted-note')).toEqual('');
 
         // When
         await click('Play again');
@@ -741,7 +750,7 @@ describe('PokerTableComponent', () => {
             // Then
             expect(text('.badge')).toEqual('alice wins the match with 155 chips.');
             expect(element().querySelector('.badge')?.classList).toContain('badge-win');
-            expect(element().querySelector('output')).toBeNull();
+            expect(status()).toEqual('');
             expect(button('Deal')).toBeUndefined();
             expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 11.');
             await until(() => text('p.muted-note') === 'Every deck was fair.');
@@ -785,7 +794,8 @@ describe('PokerTableComponent', () => {
             expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips. Every deck was fair.');
             expect(text('#seat-bottom')).toEqual('alice150 chipsLeave the seat');
             expect(text('#seat-top')).toEqual('bob150 chips');
-            expect(element().querySelectorAll('details')).toHaveLength(1);
+            // No hand played in the new match
+            expect(element().querySelectorAll('details:not(#past-matches) li')).toHaveLength(0);
             expect(cards(1)).toEqual([]);
             expect(flights()).toEqual([]);
 
@@ -874,7 +884,7 @@ describe('PokerTableComponent', () => {
 
             // Then
             await until(() => text('#past-matches li') === 'Match 1: alice wins the match with 155 chips. Every deck was fair.');
-            expect(element().querySelector('p.muted-note')).toBeNull();
+            expect(text('p.muted-note')).toEqual('');
         });
 
         test.each<{ verification: Promise<DeckVerification>; text: string }>([

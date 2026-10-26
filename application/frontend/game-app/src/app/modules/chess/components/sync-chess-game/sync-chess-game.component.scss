@@ -3,19 +3,9 @@
     flex-direction: column;
 
     .player {
-        width: 100%;
-        text-align: center;
-
         .seat-button {
             margin: 4px 0 4px 8px;
         }
-    }
-
-    .game-result {
-        margin: 8px 0;
-        text-align: center;
-        font-size: 20px;
-        font-weight: bold;
     }
 
     #board-section {
@@ -57,13 +47,7 @@
                 border-radius: 10%;
                 overflow: hidden;
 
-                &.white-player {
-                    bottom: 38px;
-                }
-
-                &.black-player {
-                    top: 40px;
-                }
+                bottom: 38px;
             }
         }
 
@@ -94,7 +78,7 @@
                     background-color: var(--app-board-light);
                 }
 
-                &.white-player {
+                &.bottom-player {
                     justify-content: flex-end;
                 }
 

@@ -60,9 +60,29 @@
     @apply m-0 text-center font-medium;
 }
 
-/* A hand of the poker table, dimmed when it loses */
+/* A seat of a table of two players: its player, its chips and its buttons, on two rows kept on a phone */
+@utility table-seat {
+    @apply relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-14 max-sm:min-h-[5.75rem] max-sm:content-start px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised;
+}
+
+/* What a table of two players waits for, always there: two lines kept on a phone */
+@utility table-status {
+    @apply table-line block min-h-lh max-sm:min-h-[2lh];
+}
+
+/* The line of the result of a game of two players, kept while it is played: two lines on a phone */
+@utility table-result {
+    @apply m-0 min-h-lh max-sm:min-h-[2lh] text-center;
+}
+
+/* A seat of the chess board, above or below it: the height of its button kept, shown or not */
+@utility chess-seat {
+    @apply flex flex-wrap items-center justify-center w-full min-h-12 text-center;
+}
+
+/* A hand of the poker table, dimmed when it loses: its place is kept before the deal, a card (5/7) and the room of its fan */
 @utility table-hand {
-    @apply transition-opacity duration-(--app-motion-medium);
+    @apply min-h-[calc(var(--app-card-width)*7/5+3rem)] transition-opacity duration-(--app-motion-medium);
 }
 
 /* A game of the home page: the whole card links to its page */

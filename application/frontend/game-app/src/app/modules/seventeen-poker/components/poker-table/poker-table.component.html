@@ -1,8 +1,10 @@
 <section *transloco="let t; prefix: 'poker.table'" class="relative flex flex-col gap-3 py-4" #tableSection>
+    @let seats = session().tableSeats;
     @let top = topSeat();
     @let bottom = bottomSeat();
     <app-poker-seat
         #topSeatView
+        appSteadyHeight
         id="seat-top"
         [name]="session().seats()[top]"
         [chips]="chips()[top]"
@@ -10,16 +12,14 @@
         [acting]="toAct() === top"
         [timeLeft]="toAct() === top ? timeLeft() : null"
         [turnTime]="session().match().rules.turnTime"
-        [canTake]="canTake(top)"
-        [canRelease]="canRelease(top)"
-        (take)="takeSeat(top)"
+        [canRelease]="seats.canRelease(top)"
         (release)="release(top)" />
     <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
-    @if (categories()[top]; as current) {
-    <p class="table-line">{{ current.key | transloco: current.params }}</p>
-    }
+    <!-- The kind of each hand shown, its line kept before the showdown -->
+    @let topCategory = categories()[top];
+    <p class="table-line min-h-lh">{{ topCategory ? (topCategory.key | transloco: topCategory.params) : '' }}</p>
 
-    <div #cloth class="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-app-felt text-app-on-color">
+    <div #cloth appSteadyHeight class="flex flex-col gap-2 px-4 py-3 rounded-2xl bg-app-felt text-app-on-color">
         <div id="bet-top" class="bet-zone">
             <app-chip-stack #topBet [amount]="bets()[top]" />
             @if (bets()[top] > 0) {
@@ -31,17 +31,19 @@
             <div class="flex flex-col items-center gap-1">
                 <app-chip-stack #potStack class="pot" [amount]="potChips()" />
                 <span class="text-xl font-bold">{{ t('pot', { pot: pot() }) }}</span>
-                @if (hand(); as current) {
-                <span class="text-sm">{{ t('hand', { index: current.index + 1, hands: session().match().rules.hands }) }}</span>
-                }
+                @let currentHand = hand();
+                <span class="text-sm min-h-lh">{{ currentHand ? t('hand', { index: currentHand.index + 1, hands: session().match().rules.hands }) : '' }}</span>
             </div>
             <span class="text-sm text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
         </div>
-        @if (outcomeText(); as current) {
-        <p id="hand-outcome" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center font-bold" animate.enter="outcome-shown">
-            {{ current.key | transloco: current.params }}
-        </p>
-        }
+        <!-- The place of the outcome of the hand over, kept while the hand is played -->
+        <div class="flex min-h-[calc(1lh+0.5rem)] max-sm:min-h-[calc(2lh+0.5rem)] items-center justify-center font-bold">
+            @if (outcomeText(); as current) {
+            <p id="hand-outcome" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center" animate.enter="outcome-shown">
+                {{ current.key | transloco: current.params }}
+            </p>
+            }
+        </div>
         <div id="bet-bottom" class="bet-zone">
             <app-chip-stack #bottomBet [amount]="bets()[bottom]" />
             @if (bets()[bottom] > 0) {
@@ -50,9 +52,8 @@
         </div>
     </div>
 
-    @if (categories()[bottom]; as current) {
-    <p class="table-line">{{ current.key | transloco: current.params }}</p>
-    }
+    @let bottomCategory = categories()[bottom];
+    <p class="table-line min-h-lh">{{ bottomCategory ? (bottomCategory.key | transloco: bottomCategory.params) : '' }}</p>
     <app-card-hand
         class="table-hand [--deal-from-y:-8.5rem]"
         [class.opacity-50]="losing(bottom)"
@@ -63,6 +64,7 @@
         (selectedChange)="selected.set($event)" />
     <app-poker-seat
         #bottomSeatView
+        appSteadyHeight
         id="seat-bottom"
         [name]="session().seats()[bottom]"
         [chips]="chips()[bottom]"
@@ -70,65 +72,68 @@
         [acting]="toAct() === bottom"
         [timeLeft]="toAct() === bottom ? timeLeft() : null"
         [turnTime]="session().match().rules.turnTime"
-        [canTake]="canTake(bottom)"
-        [canLeave]="canLeave()"
+        [canTake]="seats.canTake(bottom)"
+        [canLeave]="seats.canLeave()"
         (take)="takeSeat(bottom)"
         (leave)="leaveSeat()" />
 
-    @if (status(); as current) {
-    <output class="table-line block">{{ current.key | transloco: current.params }}</output>
-    }
+    <!-- What the table waits for, the actions of the local player and the result, their place kept as buttons come and go -->
+    <div appSteadyHeight class="flex flex-col gap-3">
+        @let currentStatus = status();
+        <output class="table-status">{{ currentStatus ? (currentStatus.key | transloco: currentStatus.params) : '' }}</output>
 
-    <div class="flex flex-wrap items-center justify-center gap-2">
-        @if (canDeal()) {
-        <button mat-flat-button type="button" (click)="deal()">{{ t('action.deal') }}</button>
-        }
-        @if (actions().includes(betAction.CHECK)) {
-        <button mat-stroked-button type="button" (click)="act(betAction.CHECK)">{{ t('action.check') }}</button>
-        }
-        @if (actions().includes(betAction.CALL)) {
-        <button mat-flat-button type="button" (click)="act(betAction.CALL)">{{ t('action.call', { amount: toCall() }) }}</button>
-        }
-        @if (betRange(); as range) {
-        <div class="flex items-center gap-1">
-            <button mat-stroked-button type="button" class="min-w-10!" [disabled]="amount() <= range.min" [attr.aria-label]="t('action.less')" (click)="step(-1)">−</button>
-            <span class="min-w-10 text-center font-bold tabular-nums" aria-live="polite">{{ amount() }}</span>
-            <button mat-stroked-button type="button" class="min-w-10!" [disabled]="amount() >= range.max" [attr.aria-label]="t('action.more')" (click)="step(1)">+</button>
-            <button mat-button type="button" (click)="setAmount(range.min)">{{ t('action.min') }}</button>
-            <button mat-button type="button" (click)="setAmount(range.max)">{{ t('action.max') }}</button>
+        <!-- On a phone, the amount of a bet below the actions: two rows, kept -->
+        <div class="flex flex-wrap items-center justify-center gap-2 min-h-10 max-sm:min-h-[5.5rem]">
+            @if (canDeal()) {
+            <button mat-flat-button type="button" (click)="deal()">{{ t('action.deal') }}</button>
+            }
+            @if (actions().includes(betAction.CHECK)) {
+            <button mat-stroked-button type="button" (click)="act(betAction.CHECK)">{{ t('action.check') }}</button>
+            }
+            @if (actions().includes(betAction.CALL)) {
+            <button mat-flat-button type="button" (click)="act(betAction.CALL)">{{ t('action.call', { amount: toCall() }) }}</button>
+            }
+            @if (betRange(); as range) {
+            <div class="flex items-center gap-1 max-sm:order-last">
+                <button mat-stroked-button type="button" class="min-w-10!" [disabled]="amount() <= range.min" [attr.aria-label]="t('action.less')" (click)="step(-1)">−</button>
+                <span class="min-w-10 text-center font-bold tabular-nums" aria-live="polite">{{ amount() }}</span>
+                <button mat-stroked-button type="button" class="min-w-10!" [disabled]="amount() >= range.max" [attr.aria-label]="t('action.more')" (click)="step(1)">+</button>
+                <button mat-button type="button" (click)="setAmount(range.min)">{{ t('action.min') }}</button>
+                <button mat-button type="button" (click)="setAmount(range.max)">{{ t('action.max') }}</button>
+            </div>
+            @if (actions().includes(betAction.RAISE)) {
+            <button mat-flat-button type="button" (click)="act(betAction.RAISE)">{{ t('action.raise', { amount: amount() }) }}</button>
+            } @else {
+            <button mat-flat-button type="button" (click)="act(betAction.BET)">{{ t('action.bet', { amount: amount() }) }}</button>
+            }
+            }
+            <!-- Folding is offered against a bet only: with nothing to call, a player checks for free -->
+            @if (actions().includes(betAction.CALL)) {
+            <button mat-stroked-button type="button" (click)="act(betAction.FOLD)">{{ t('action.fold') }}</button>
+            }
+            @if (canRematch()) {
+            <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+            }
+            @if (exchanging()) {
+            <button mat-flat-button type="button" [disabled]="selected().length > maxExchange()" (click)="exchange()">
+                {{ selected().length === 0 ? t('action.keep') : t('action.exchange', { count: selected().length }) }}
+            </button>
+            }
         </div>
-        @if (actions().includes(betAction.RAISE)) {
-        <button mat-flat-button type="button" (click)="act(betAction.RAISE)">{{ t('action.raise', { amount: amount() }) }}</button>
-        } @else {
-        <button mat-flat-button type="button" (click)="act(betAction.BET)">{{ t('action.bet', { amount: amount() }) }}</button>
-        }
-        }
-        <!-- Folding is offered against a bet only: with nothing to call, a player checks for free -->
-        @if (actions().includes(betAction.CALL)) {
-        <button mat-stroked-button type="button" (click)="act(betAction.FOLD)">{{ t('action.fold') }}</button>
-        }
-        @if (canRematch()) {
-        <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
-        }
-        @if (exchanging()) {
-        <button mat-flat-button type="button" [disabled]="selected().length > maxExchange()" (click)="exchange()">
-            {{ selected().length === 0 ? t('action.keep') : t('action.exchange', { count: selected().length }) }}
-        </button>
-        }
+
+        <!-- The lines of the result and of the check of the decks, kept while the match is played -->
+        <p class="table-result">
+            @if (result(); as current) {
+            <span class="badge" [class.badge-win]="session().match().result()?.winner !== null" [class.badge-draw]="session().match().result()?.winner === null">
+                {{ current.key | transloco: current.params }}
+            </span>
+            }
+        </p>
+        @let currentVerification = verification();
+        <p class="m-0 min-h-lh text-center muted-note">{{ currentVerification ? (currentVerification.key | transloco) : '' }}</p>
     </div>
 
-    @if (result(); as current) {
-    <p class="m-0 text-center">
-        <span class="badge" [class.badge-win]="session().match().result()?.winner !== null" [class.badge-draw]="session().match().result()?.winner === null">
-            {{ current.key | transloco: current.params }}
-        </span>
-    </p>
-    }
-    @if (verification(); as current) {
-    <p class="m-0 text-center muted-note">{{ current.key | transloco }}</p>
-    }
-
-    @if (history().length > 0) {
+    <!-- Shown before the first hand is over: it appearing would move the page below -->
     <details>
         <summary class="cursor-pointer">{{ t('history') }}</summary>
         <ul class="m-0 mt-2 pl-0 list-none space-y-1">
@@ -137,8 +142,6 @@
             }
         </ul>
     </details>
-    }
-    @if (pastResults().length > 0) {
     <details id="past-matches">
         <summary class="cursor-pointer">{{ t('pastMatches') }}</summary>
         <ul class="m-0 mt-2 pl-0 list-none space-y-1">
@@ -152,19 +155,7 @@
             }
         </ul>
     </details>
-    }
 
     <!-- The chips moved from a place of the table to another one, flying over it -->
-    @for (flight of flights(); track flight.id) {
-    <app-chip-stack
-        class="chip-flight absolute pointer-events-none"
-        [amount]="flight.amount"
-        [placed]="false"
-        [style.left.px]="flight.from.x"
-        [style.top.px]="flight.from.y"
-        [style.--flight-x.px]="flight.to.x - flight.from.x"
-        [style.--flight-y.px]="flight.to.y - flight.from.y"
-        (animationend)="land(flight.id, $event)"
-        (animationcancel)="land(flight.id, $event)" />
-    }
+    <app-chip-flights #chipFlights />
 </section>

@@ -65,7 +65,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
     const element = (): HTMLElement => fixture.nativeElement;
     const text = (selector: string): string => element().querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
     const status = (): string => text('output');
-    const button = (label: string | RegExp): HTMLButtonElement | undefined => Array.from(element().querySelectorAll<HTMLButtonElement>(':scope > section > div > button'))
+    const button = (label: string | RegExp): HTMLButtonElement | undefined => Array.from(element().querySelectorAll<HTMLButtonElement>(':scope > section > div > div > button'))
         .find((candidate: HTMLButtonElement) => typeof label === 'string' ? candidate.textContent?.trim() === label : label.test(candidate.textContent?.trim() ?? ''));
     const revolver = (): RouletteRevolverComponent => fixture.debugElement.query(By.directive(RouletteRevolverComponent)).componentInstance;
     const chamber = (index: number): HTMLButtonElement => element().querySelectorAll<HTMLButtonElement>('app-roulette-cylinder button')[index];
@@ -168,7 +168,6 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
 
         // Then
         expect(placing).toHaveBeenCalled();
-        expect(element().querySelector('app-roulette-cylinder')?.classList).not.toContain('compact');
 
         // When
         fixture.destroy();
@@ -182,9 +181,10 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await table('alice', RUSSIAN_ROULETTE_RULES);
         const bob: RussianRouletteSession = participant('bob', RUSSIAN_ROULETTE_RULES);
 
-        // Then
+        // Then: a single seat to take, at the bottom of the table
         expect(status()).toEqual('Waiting for two players to sit.');
-        expect(text('#seat-top')).toEqual('Free seatSit here');
+        expect(text('#seat-top')).toEqual('Free seat');
+        expect(text('#seat-bottom')).toEqual('Free seatSit here');
         expect(text('#bank')).toEqual('Bank: 0');
         expect(text('#table-chips')).toEqual('Table: 0 chips');
 
@@ -197,6 +197,10 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         expect(text('#seat-bottom')).toEqual('alice150 chips0 deathsLeave the seat');
         expect(text('#seat-top')).toEqual('bob150 chips0 deaths');
         expect(button('Load (0/3)')?.disabled).toBe(true);
+        // The cylinder to load lies beside the revolver, larger, in the room of the chips of the table
+        expect(element().querySelector('app-roulette-cylinder')?.parentElement?.querySelector('div')?.classList).toContain('w-36');
+        expect(element().querySelector('app-roulette-cylinder')?.classList).toContain('large');
+        expect(element().querySelector('#table-chips')?.parentElement?.classList).toContain('hidden');
 
         // When
         [0, 5, 9].forEach((index: number) => chamber(index).click());
@@ -263,10 +267,10 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         const bob: RussianRouletteSession = await started(SHORT);
         await aliceToAct(bob);
 
-        // Then the cylinder spun lies beside the revolver, in the middle of the cloth
-        const cylinder: Element = element().querySelector('app-roulette-cylinder') as Element;
-        expect(cylinder.classList).toContain('compact');
-        expect(cylinder.parentElement?.parentElement?.classList).toContain('grid-rows-[1fr_auto_1fr]');
+        // Then the cylinder spun lies beside the revolver, smaller, the chips of the table below them
+        expect(element().querySelector('app-roulette-cylinder')?.parentElement?.querySelector('div')?.classList).toContain('w-36');
+        expect(element().querySelector('app-roulette-cylinder')?.classList).not.toContain('large');
+        expect(element().querySelector('#table-chips')?.parentElement?.classList).not.toContain('hidden');
 
         // When
         await click(/^Pass/);
@@ -417,7 +421,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then the chips of the 5 passes fly to the bank
         await eventually(async () => {
             await fixture.whenStable();
-            expect(fixture.componentInstance['flights']().map(({ amount }) => amount)).toEqual([1, 2, 4, 8, 16, 31]);
+            expect(fixture.componentInstance['chipFlights']()['flights']().map(({ amount }) => amount)).toEqual([1, 2, 4, 8, 16, 31]);
         });
     });
 
@@ -825,11 +829,12 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await fixture.whenStable();
         carol.unseat(RouletteSeat.TWO);
 
-        // Then
-        await until(() => text('#seat-top') === 'Free seatSit here');
+        // Then Alice sees the table from the seat freed
+        await until(() => text('#seat-bottom') === 'Free seatSit here');
+        expect(text('#seat-top')).toMatch(/^carol/);
 
         // When Alice takes it, then frees the seat of Carol gone
-        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => text('#seat-bottom').startsWith('alice'));
         hub.leave(rooms.get('carol') as Room<RoulettePayloads>);
         await until(() => button('Free the seat') === undefined && element().querySelector('#seat-top button')?.textContent?.trim() === 'Free the seat');

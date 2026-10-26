@@ -4,8 +4,9 @@
         <ng-container *ngTemplateOutlet="rowLabels" />
         <div [ngClass]="{'grabbing-cursor': !pieceDragged().equal(-1, -1)}" cdkDropListGroup id="board-grid">
             <mat-grid-list cols="8" gutterSize="0">
-                @for (row of fenBoard(); track $index; let y = $index) {
-                @for (piece of row; track $index; let x = $index) {
+                @for (y of order(); track y) {
+                @for (x of order(); track x) {
+                @let piece = fenBoard()[y][x];
                 @let pos = [x, y] | vector2d;
                 <mat-grid-tile
                     [ngClass]="{
@@ -52,7 +53,7 @@
     <div class="row">
         <div class="fake-column"></div>
         <div class="column-labels">
-            @for (i of range; track i) {
+            @for (i of order(); track i) {
             <div>
                 <span class="full-center">{{ 'ABCDEFGH'.charAt(i)}}</span>
             </div>
@@ -64,7 +65,7 @@
 
 <ng-template #rowLabels>
     <div class="row-labels">
-        @for (i of range; track i) {
+        @for (i of order(); track i) {
         <div>
             <span class="full-center">{{ 8 - i }}</span>
         </div>

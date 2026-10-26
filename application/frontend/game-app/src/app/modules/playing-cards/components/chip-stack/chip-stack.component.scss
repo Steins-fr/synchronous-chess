@@ -19,6 +19,12 @@
     animation: chip-taken var(--app-motion-fast) ease-in forwards;
 }
 
+// A growing stack changes its chips once the chips moved to it reached it, as its chips placed: until then, it shows the
+// chips it had
+:host(:not(.still)) .chip-taken {
+    animation-delay: var(--app-motion-slow);
+}
+
 @keyframes chip-taken {
     to {
         opacity: 0;

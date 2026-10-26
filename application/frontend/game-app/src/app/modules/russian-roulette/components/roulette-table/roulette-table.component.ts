@@ -1,4 +1,3 @@
-import { NgTemplateOutlet } from '@angular/common';
 import {
     afterNextRender, afterRenderEffect, Component, computed, DestroyRef, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
@@ -7,6 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
+import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
+import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
+import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
@@ -39,24 +41,9 @@ const BARREL_RISE: number = 0.08;
 /** The chips of the table go to the bank once the chips of the 5th pass reached it, in milliseconds */
 const BANK_DELAY: number = 500;
 
-/** A place of the table, from its top left corner */
-interface TablePoint {
-    readonly x: number;
-    readonly y: number;
-}
-
 /** Where the revolver lies or aims, its turn in degrees */
 interface RevolverPlace extends TablePoint {
     readonly angle: number;
-}
-
-/** Chips flying from a place of the table to another one, once the delay is over */
-interface ChipFlight {
-    readonly id: number;
-    readonly amount: number;
-    readonly from: TablePoint;
-    readonly to: TablePoint;
-    readonly delay: number;
 }
 
 /** Where the revolver aims without a player: at the sky, to reveal a chamber */
@@ -99,6 +86,13 @@ interface Firing {
     readonly before: Readonly<TableView>;
 }
 
+/** The moves of a game the table played, as it showed them after its latest render */
+interface PlayedMoves {
+    readonly game: RouletteGame;
+    readonly moves: number;
+    readonly view: Readonly<TableView>;
+}
+
 /** What the moves applied since the latest render play on the table */
 interface MovePlay {
     readonly flights: ReadonlyArray<Readonly<ChipFlight>>;
@@ -120,7 +114,7 @@ interface PastResult {
     selector: 'app-roulette-table',
     templateUrl: './roulette-table.component.html',
     styleUrl: './roulette-table.component.scss',
-    imports: [ChipStackComponent, MatButtonModule, NgTemplateOutlet, RouletteCylinderComponent, RouletteRevolverComponent, RouletteSeatComponent, TranslocoDirective, TranslocoPipe],
+    imports: [ChipFlightsComponent, ChipStackComponent, MatButtonModule, RouletteCylinderComponent, RouletteRevolverComponent, RouletteSeatComponent, SteadyHeightDirective, TranslocoDirective, TranslocoPipe],
     host: { class: 'block max-w-[720px] mx-auto px-4' },
 })
 export class RouletteTableComponent implements OnDestroy {
@@ -137,8 +131,8 @@ export class RouletteTableComponent implements OnDestroy {
     protected readonly game: Signal<RouletteGame> = computed((): RouletteGame => this.session().game());
 
     /** The seat at the bottom of the table: the one of the local player, the first one for a spectator */
-    protected readonly bottomSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().mySeat() ?? RouletteSeat.ONE);
-    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => otherSeat(this.bottomSeat()));
+    protected readonly bottomSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.bottomSeat());
+    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.topSeat());
 
     /** Whether each seat holds the player of the game: once it is over, another participant may take it */
     private readonly gameSeats: Signal<SeatPair<boolean>> = computed((): SeatPair<boolean> => {
@@ -177,12 +171,28 @@ export class RouletteTableComponent implements OnDestroy {
     private readonly _firing = signal<Readonly<Firing> | null>(null);
     /** The revolver fired the chamber, after it held in front of the player: the seat and the table tell what it held */
     protected readonly blasted: WritableSignal<boolean> = signal<boolean>(false);
+    private readonly _played = signal<Readonly<PlayedMoves> | null>(null);
+    /**
+     * A shot, or a chamber revealed, in the game the table did not play yet: the moves play once the table is rendered,
+     * the render showing them keeps the table as it was, not the result of the shot
+     */
+    private readonly unplayed: Signal<Readonly<RouletteAction> | null> = computed((): Readonly<RouletteAction> | null => {
+        const played: Readonly<PlayedMoves> | null = this._played();
+        const game: RouletteGame = this.game();
+        return played?.game === game ? game.actions().slice(played.moves).find((action: Readonly<RouletteAction>) => action.kind !== RouletteActionKind.PASS) ?? null : null;
+    });
     /** What the table shows: the state before the chamber the revolver fires, until the shot is over */
-    protected readonly view: Signal<Readonly<TableView>> = computed((): Readonly<TableView> => this._firing()?.before ?? this.liveView());
+    protected readonly view: Signal<Readonly<TableView>> = computed((): Readonly<TableView> => {
+        const firing: Readonly<Firing> | null = this._firing();
+        if (firing !== null) {
+            return firing.before;
+        }
+        return this.unplayed() === null ? this.liveView() : (this._played() as Readonly<PlayedMoves>).view;
+    });
 
     /** The seat the revolver aims at, the sky when it reveals a chamber, null while it lies on the cloth */
     private readonly target: Signal<RevolverTarget> = computed((): RevolverTarget => {
-        const action: Readonly<RouletteAction> | undefined = this._firing()?.action;
+        const action: Readonly<RouletteAction> | undefined = this._firing()?.action ?? this.unplayed() ?? undefined;
         const game: RouletteGame = this.game();
 
         if (action !== undefined) {
@@ -208,10 +218,6 @@ export class RouletteTableComponent implements OnDestroy {
     protected readonly revolverPlace: Signal<Readonly<RevolverPlace> | null> = this._revolverPlace.asReadonly();
 
     private readonly _stamp = signal<Readonly<PassStamp> | null>(null);
-    private readonly _flights = signal<ReadonlyArray<Readonly<ChipFlight>>>([]);
-    /** The chips moved by the latest moves, flying over the table */
-    protected readonly flights: Signal<ReadonlyArray<Readonly<ChipFlight>>> = this._flights.asReadonly();
-    private nextFlight: number = 0;
 
     /** The chambers the local player picks for its bullets, none for a new cylinder: a new game, or other players */
     protected readonly selected: WritableSignal<ReadonlyArray<number>> = linkedSignal<Cylinder | null, ReadonlyArray<number>>({
@@ -227,8 +233,8 @@ export class RouletteTableComponent implements OnDestroy {
             ? cylinder.bullets()
             : [];
     });
-    /** The cylinder is loaded and spun, the first shooter drawn: it lies beside the revolver, in the middle of the cloth */
-    protected readonly cylinderSpun: Signal<boolean> = computed((): boolean => this.game().first() !== null);
+    /** The players load the cylinder, until it is spun and the first shooter drawn: it shows larger */
+    protected readonly loading: Signal<boolean> = computed((): boolean => this.game().first() === null);
     /** The players load and spin the cylinder, until the game is lost on time */
     protected readonly spinning: Signal<boolean> = computed((): boolean => {
         const phase: CylinderPhase | undefined = this.session().cylinder()?.phase();
@@ -236,7 +242,7 @@ export class RouletteTableComponent implements OnDestroy {
     });
 
     /** The player to act waits for the shot of the other one to be over */
-    protected readonly canShoot: Signal<boolean> = computed((): boolean => this.session().myTurn() && this._firing() === null);
+    protected readonly canShoot: Signal<boolean> = computed((): boolean => this.session().myTurn() && this._firing() === null && this.unplayed() === null);
     protected readonly canPass: Signal<boolean> = computed((): boolean => this.canShoot() && this.game().canPass(this.session().mySeat() as RouletteSeat));
 
     /**
@@ -297,6 +303,11 @@ export class RouletteTableComponent implements OnDestroy {
         if (firing !== null) {
             return this.firingStatus(firing.action.kind, firing.before.chambers.length + 1);
         }
+        // A shot the table did not play yet: the next chamber fires, the table as it was
+        const unplayed: Readonly<RouletteAction> | null = this.unplayed();
+        if (unplayed !== null) {
+            return this.firingStatus(unplayed.kind, this.view().chambers.length + 1);
+        }
         if (session.over()) {
             return session.awaited().length > 0 ? { key: this.key(marker('table.status.disclosing', undefined, 'roulette')) } : null;
         }
@@ -349,7 +360,7 @@ export class RouletteTableComponent implements OnDestroy {
 
     /** The result of the game, once its last shot is over */
     protected readonly result: Signal<TranslatableText | null> = computed((): TranslatableText | null =>
-        this._firing() === null ? this.resultText(this.session().played()) : null);
+        this._firing() === null && this.unplayed() === null ? this.resultText(this.session().played()) : null);
 
     /** The check of the cylinder, with the result of the game */
     protected readonly verification: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
@@ -376,6 +387,8 @@ export class RouletteTableComponent implements OnDestroy {
     private readonly restView: Signal<ElementRef<HTMLElement>> = viewChild.required('revolverRest');
     private readonly topSeatView: Signal<RouletteSeatComponent> = viewChild.required('topSeatView');
     private readonly bottomSeatView: Signal<RouletteSeatComponent> = viewChild.required('bottomSeatView');
+    /** The chips moved by the latest moves, flying over the table */
+    private readonly chipFlights: Signal<ChipFlightsComponent> = viewChild.required('chipFlights');
 
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
     private readonly destroyRef: DestroyRef = inject(DestroyRef);
@@ -386,7 +399,7 @@ export class RouletteTableComponent implements OnDestroy {
     // Once the table shows new moves, they play: a pass stamps its seat and its chips fly to the table, the 5th one in a
     // row taking them to the bank; a shot or a chamber revealed fires the revolver
     private readonly movePlays = afterRenderEffect({
-        earlyRead: (): Readonly<MovePlay> | null => {
+        earlyRead: (): Readonly<{ game: RouletteGame; moves: number; play: Readonly<MovePlay> | null }> => {
             const session: RussianRouletteSession = this.session();
             const game: RouletteGame = this.game();
             const actions: ReadonlyArray<Readonly<RouletteAction>> = game.actions();
@@ -399,21 +412,25 @@ export class RouletteTableComponent implements OnDestroy {
             // nor does a hidden page: its animations would wait for it to be shown
             if (previous?.session !== session || previous.game !== game || previous.historySteps !== historySteps || actions.length <= previous.moves
                 || !untracked(this.pageVisibility.visible)) {
-                return null;
+                return { game, moves: actions.length, play: null };
             }
-            return this.play(actions.slice(previous.moves), previous.moves, previous.view, view);
+            return { game, moves: actions.length, play: this.play(actions.slice(previous.moves), previous.moves, previous.view, view) };
         },
-        write: (play: Signal<Readonly<MovePlay> | null>): void => {
-            const played: Readonly<MovePlay> | null = play();
+        write: (moves: Signal<Readonly<{ game: RouletteGame; moves: number; play: Readonly<MovePlay> | null }>>): void => {
+            const { game, moves: count, play } = moves();
 
             // The phase depends on the moves played only: the signals it writes must not run it again
-            untracked(() => played !== null && this.start(played));
+            untracked(() => {
+                if (play !== null) {
+                    this.start(play);
+                }
+                this._played.set({ game, moves: count, view: this._firing()?.before ?? this.liveView() });
+            });
         },
     });
 
     private readonly _resized = signal<number>(0);
-    // The table changes its size with the window, a move told or the cloth of the cylinder spun: the revolver finds its
-    // place again
+    // The table changes its size with the window, a move told or the cylinder loaded: the revolver finds its place again
     private readonly resizing = afterNextRender(() => {
         const observer = new ResizeObserver(() => this._resized.update((resizes: number) => resizes + 1));
         observer.observe(this.tableView().nativeElement);
@@ -424,7 +441,7 @@ export class RouletteTableComponent implements OnDestroy {
     private readonly revolverPlacing = afterRenderEffect({
         earlyRead: (): Readonly<RevolverPlace> => {
             this._resized();
-            this.cylinderSpun();
+            this.loading();
             return this.revolverPoint(this.target());
         },
         write: (place: Signal<Readonly<RevolverPlace>>): void => {
@@ -463,7 +480,7 @@ export class RouletteTableComponent implements OnDestroy {
 
     /** The moves start playing: their chips fly, a pass is stamped, a shot fires the revolver, ending a shot still firing */
     private start(played: Readonly<MovePlay>): void {
-        this._flights.update((flying: ReadonlyArray<Readonly<ChipFlight>>) => [...flying, ...played.flights]);
+        this.chipFlights().launch(played.flights);
         if (played.stamp !== null) {
             this._stamp.set(played.stamp);
         }
@@ -488,6 +505,10 @@ export class RouletteTableComponent implements OnDestroy {
         const { action } = firing;
         this._firing.set(null);
         this.blasted.set(false);
+        // The table shows the result, as rendered last: a next shot keeps it until the table plays it, a shot applied since
+        // not shown. A shot fires once the table rendered and played it
+        const rendered: Readonly<TableView> = (this.shown as NonNullable<typeof this.shown>).view;
+        this._played.update((played: Readonly<PlayedMoves> | null) => ({ ...played as Readonly<PlayedMoves>, view: rendered }));
 
         if (action.kind === RouletteActionKind.REVEAL || !this.pageVisibility.visible()) {
             return;
@@ -497,14 +518,7 @@ export class RouletteTableComponent implements OnDestroy {
         const flights: Array<Readonly<ChipFlight>> = action.bullets === 0
             ? [this.flight(TablePlace.TABLE, action.seat, action.chips, 0, origin)]
             : [this.flight(action.seat, otherSeat(action.seat), this.game().rules.death, 0, origin), this.flight(TablePlace.TABLE, otherSeat(action.seat), action.chips, 0, origin)];
-        this._flights.update((flying: ReadonlyArray<Readonly<ChipFlight>>) => [...flying, ...flights.filter((flight: Readonly<ChipFlight>) => flight.amount > 0)]);
-    }
-
-    /** Chips flown to their place, or whose flight was cancelled: the animation of a chip inside them ends earlier */
-    protected land(id: number, event: Event): void {
-        if (event.target === event.currentTarget) {
-            this._flights.update((flights: ReadonlyArray<Readonly<ChipFlight>>) => flights.filter((flight: Readonly<ChipFlight>) => flight.id !== id));
-        }
+        this.chipFlights().launch(flights.filter((flight: Readonly<ChipFlight>) => flight.amount > 0));
     }
 
     /**
@@ -554,7 +568,7 @@ export class RouletteTableComponent implements OnDestroy {
     }
 
     private flight(from: ChipPlace, to: ChipPlace, amount: number, delay: number, origin: DOMRect): Readonly<ChipFlight> {
-        return { id: this.nextFlight++, amount, from: this.chipPoint(from, origin), to: this.chipPoint(to, origin), delay };
+        return { amount, from: this.chipPoint(from, origin), to: this.chipPoint(to, origin), delay };
     }
 
     /** The middle of a place of the chips, from the top left corner of the table */
@@ -567,13 +581,13 @@ export class RouletteTableComponent implements OnDestroy {
         } else {
             element = this.seatView(place).chipsPlace();
         }
-        return RouletteTableComponent.middle(element.getBoundingClientRect(), origin);
+        return middle(element.getBoundingClientRect(), origin);
     }
 
     /** Where the revolver lies on the cloth, aims next to the name of the player shooting, or points to the sky */
     private revolverPoint(target: RevolverTarget): Readonly<RevolverPlace> {
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
-        const rest: TablePoint = RouletteTableComponent.middle(this.restView().nativeElement.getBoundingClientRect(), origin);
+        const rest: TablePoint = middle(this.restView().nativeElement.getBoundingClientRect(), origin);
 
         if (target === null) {
             return { ...rest, angle: 0 };
@@ -583,7 +597,7 @@ export class RouletteTableComponent implements OnDestroy {
         }
         // On the cloth, next to the seat, the muzzle (on the left of the revolver) turned to the name of the player
         const seat: RouletteSeatComponent = this.seatView(target);
-        const name: TablePoint = RouletteTableComponent.middle(seat.namePlace().getBoundingClientRect(), origin);
+        const name: TablePoint = middle(seat.namePlace().getBoundingClientRect(), origin);
         const seatRect: DOMRect = seat.seatPlace().getBoundingClientRect();
         const x: number = name.x + AIM_SHIFT;
         const y: number = target === this.topSeat() ? seatRect.bottom - origin.top + AIM_GAP : seatRect.top - origin.top - AIM_GAP;
@@ -597,28 +611,6 @@ export class RouletteTableComponent implements OnDestroy {
         return seat === this.topSeat() ? this.topSeatView() : this.bottomSeatView();
     }
 
-    private static middle(rect: DOMRect, origin: DOMRect): TablePoint {
-        return { x: rect.left + rect.width / 2 - origin.left, y: rect.top + rect.height / 2 - origin.top };
-    }
-
-    /** A participant without a seat takes a free one while the seats are open */
-    protected canTake(seat: RouletteSeat): boolean {
-        const session: RussianRouletteSession = this.session();
-        return session.seatsOpen() && session.seats()[seat] === null && session.mySeat() === null;
-    }
-
-    /** The local player leaves its seat, at the bottom of the table, while the seats are open */
-    protected canLeave(): boolean {
-        return this.session().seatsOpen() && this.session().mySeat() !== null;
-    }
-
-    /** The local player frees the seat of the other player, away, while the seats are open */
-    protected canRelease(seat: RouletteSeat): boolean {
-        const session: RussianRouletteSession = this.session();
-        const name: string | null = session.seats()[seat];
-        return session.seatsOpen() && session.mySeat() === otherSeat(seat) && name !== null && session.awayPlayers().includes(name) && !session.sending();
-    }
-
     protected takeSeat(seat: RouletteSeat): void {
         this.session().takeSeat(seat);
     }
@@ -628,7 +620,7 @@ export class RouletteTableComponent implements OnDestroy {
     }
 
     protected release(seat: RouletteSeat): void {
-        if (this.canRelease(seat)) {
+        if (this.session().tableSeats.canRelease(seat)) {
             this.session().unseat(seat);
         }
     }

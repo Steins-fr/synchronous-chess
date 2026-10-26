@@ -1,10 +1,12 @@
 <section *transloco="let t; prefix: 'roulette.table'" #tableSection class="relative flex flex-col gap-3 py-4"
     [class.table-shake]="shaking()">
+    @let seats = session().tableSeats;
     @let top = topSeat();
     @let bottom = bottomSeat();
     @let shown = view();
     <app-roulette-seat
         #topSeatView
+        appSteadyHeight
         id="seat-top"
         [name]="session().seats()[top]"
         [chips]="shown.chips[top]"
@@ -15,67 +17,52 @@
         [acting]="shownAwaited().includes(top)"
         [timeLeft]="shownAwaited().includes(top) ? timeLeft() : null"
         [turnTime]="game().rules.turnTime"
-        [canTake]="canTake(top)"
-        [canRelease]="canRelease(top)"
-        (take)="takeSeat(top)"
+        [canRelease]="seats.canRelease(top)"
         (release)="release(top)" />
 
-    <!-- The cloth: once the cylinder is spun, the revolver lies in its middle, the cylinder at its right -->
-    @let spun = cylinderSpun();
-    <div class="grid justify-items-center gap-3 px-4 py-4 rounded-2xl bg-app-felt text-app-on-color" [class]="{ 'grid-rows-[1fr_auto_1fr]': spun }">
-        <div class="flex w-full flex-col items-center gap-3 self-start">
-            <div class="flex w-full items-start justify-between gap-3 text-sm">
-                <span #bankView id="bank">{{ t('bank', { chips: shown.bank }) }}</span>
-                <span class="text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
-            </div>
-            @if (!spun) {
-            <ng-container *ngTemplateOutlet="cylinderView" />
-            }
+    <!-- The cloth: the revolver lies on it, the cylinder at its right, larger while the players load it -->
+    @let isLoading = loading();
+    <div appSteadyHeight class="flex flex-col items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-app-felt text-app-on-color">
+        <div class="flex w-full items-start justify-between gap-3 text-sm">
+            <span #bankView id="bank">{{ t('bank', { chips: shown.bank }) }}</span>
+            <span class="text-right">{{ t('spectators', { count: session().spectatorNumber() }) }}</span>
         </div>
-        <div class="flex items-center justify-center gap-y-2" [class.flex-wrap]="!spun" [class.gap-x-8]="!spun" [class.gap-x-3]="spun">
+        <!-- The hammer above the cylinder in its room. The large cylinder too wide beside it, the revolver lies below -->
+        <div class="flex flex-wrap-reverse items-center justify-center gap-x-3 gap-y-2 pt-3">
             <!-- Where the revolver lies on the cloth, between two shots -->
             <div #revolverRest class="w-36 h-18 shrink-0"></div>
-            @if (spun) {
-            <ng-container *ngTemplateOutlet="cylinderView" />
-            } @else {
-            <ng-container *ngTemplateOutlet="tableChips" />
-            }
+            <app-roulette-cylinder
+                [chambers]="game().rules.chambers"
+                [selectable]="placing()"
+                [selected]="selected()"
+                (selectedChange)="selected.set($event)"
+                [bullets]="game().rules.bullets"
+                [loaded]="loaded()"
+                [fired]="shown.chambers"
+                [spinning]="spinning()"
+                [large]="isLoading" />
         </div>
-        <div class="flex flex-col items-center gap-3 self-start">
-            @if (spun) {
-            <ng-container *ngTemplateOutlet="tableChips" />
-            }
-            @if (lastMove(); as current) {
-            <p id="last-move" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center font-bold">
-                {{ current.key | transloco: current.params }}
-            </p>
-            }
+        <div class="flex flex-col items-center gap-3">
+            <!-- No chips on the table nor bullet fired while the players load: the cylinder takes its room -->
+            <div class="flex flex-col items-center gap-1" [class.hidden]="isLoading">
+                <app-chip-stack #tableStack [amount]="shown.table" />
+                <span id="table-chips" class="text-xl font-bold">{{ t('table', { chips: shown.table }) }}</span>
+                <span class="text-sm">{{ t('bullets', { count: bulletsLeft() }) }}</span>
+            </div>
+            <!-- The place of the latest move, kept for two lines: a move told on one line or two moves nothing -->
+            <div class="flex min-h-[calc(2lh+0.5rem)] items-center font-bold">
+                @if (lastMove(); as current) {
+                <p id="last-move" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center">
+                    {{ current.key | transloco: current.params }}
+                </p>
+                }
+            </div>
         </div>
     </div>
 
-    <ng-template #cylinderView>
-        <app-roulette-cylinder
-            [chambers]="game().rules.chambers"
-            [selectable]="placing()"
-            [selected]="selected()"
-            (selectedChange)="selected.set($event)"
-            [bullets]="game().rules.bullets"
-            [loaded]="loaded()"
-            [fired]="shown.chambers"
-            [spinning]="spinning()"
-            [compact]="spun" />
-    </ng-template>
-
-    <ng-template #tableChips>
-        <div class="flex flex-col items-center gap-1">
-            <app-chip-stack #tableStack [amount]="shown.table" />
-            <span id="table-chips" class="text-xl font-bold">{{ t('table', { chips: shown.table }) }}</span>
-            <span class="text-sm">{{ t('bullets', { count: bulletsLeft() }) }}</span>
-        </div>
-    </ng-template>
-
     <app-roulette-seat
         #bottomSeatView
+        appSteadyHeight
         id="seat-bottom"
         [name]="session().seats()[bottom]"
         [chips]="shown.chips[bottom]"
@@ -86,42 +73,44 @@
         [acting]="shownAwaited().includes(bottom)"
         [timeLeft]="shownAwaited().includes(bottom) ? timeLeft() : null"
         [turnTime]="game().rules.turnTime"
-        [canTake]="canTake(bottom)"
-        [canLeave]="canLeave()"
+        [canTake]="seats.canTake(bottom)"
+        [canLeave]="seats.canLeave()"
         (take)="takeSeat(bottom)"
         (leave)="leaveSeat()" />
 
-    @if (status(); as current) {
-    <output class="table-line block">{{ current.key | transloco: current.params }}</output>
-    }
+    <!-- What the table waits for, the moves of the local player and the result, their place kept as buttons come and go -->
+    <div appSteadyHeight class="flex flex-col gap-3">
+        @let currentStatus = status();
+        <output class="table-status">{{ currentStatus ? (currentStatus.key | transloco: currentStatus.params) : '' }}</output>
 
-    <div class="flex flex-wrap items-center justify-center gap-2">
-        @if (placing()) {
-        <button mat-flat-button type="button" [disabled]="selected().length !== game().rules.bullets" (click)="load()">
-            {{ t('action.load', { count: selected().length, bullets: game().rules.bullets }) }}
-        </button>
-        }
-        @if (canShoot()) {
-        <button mat-flat-button type="button" (click)="shoot()">{{ t('action.shoot') }}</button>
-        <button mat-stroked-button type="button" [disabled]="!canPass()" (click)="pass()">{{ t('action.pass', { price: game().passPrice() }) }}</button>
-        }
-        @if (canRematch()) {
-        <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
-        }
+        <div class="flex flex-wrap items-center justify-center gap-2 min-h-10">
+            @if (placing()) {
+            <button mat-flat-button type="button" [disabled]="selected().length !== game().rules.bullets" (click)="load()">
+                {{ t('action.load', { count: selected().length, bullets: game().rules.bullets }) }}
+            </button>
+            }
+            @if (canShoot()) {
+            <button mat-flat-button type="button" (click)="shoot()">{{ t('action.shoot') }}</button>
+            <button mat-stroked-button type="button" [disabled]="!canPass()" (click)="pass()">{{ t('action.pass', { price: game().passPrice() }) }}</button>
+            }
+            @if (canRematch()) {
+            <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+            }
+        </div>
+
+        <!-- The lines of the result and of its check, kept while the game is played -->
+        <p class="table-result">
+            @if (result(); as current) {
+            <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">
+                {{ current.key | transloco: current.params }}
+            </span>
+            }
+        </p>
+        @let currentVerification = verification();
+        <p class="m-0 min-h-lh text-center muted-note">{{ currentVerification ? (currentVerification.key | transloco) : '' }}</p>
     </div>
 
-    @if (result(); as current) {
-    <p class="m-0 text-center">
-        <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">
-            {{ current.key | transloco: current.params }}
-        </span>
-    </p>
-    }
-    @if (verification(); as current) {
-    <p class="m-0 text-center muted-note">{{ current.key | transloco }}</p>
-    }
-
-    @if (history().length > 0) {
+    <!-- Shown before the first move: it appearing would move the page below -->
     <details>
         <summary class="cursor-pointer">{{ t('history') }}</summary>
         <ul class="m-0 mt-2 pl-0 list-none space-y-1">
@@ -130,8 +119,6 @@
             }
         </ul>
     </details>
-    }
-    @if (pastResults().length > 0) {
     <details id="past-games">
         <summary class="cursor-pointer">{{ t('pastGames') }}</summary>
         <ul class="m-0 mt-2 pl-0 list-none space-y-1">
@@ -145,7 +132,6 @@
             }
         </ul>
     </details>
-    }
 
     <!-- The revolver, from its side: on the cloth, then held next to the player shooting, firing -->
     @let place = revolverPlace();
@@ -161,17 +147,5 @@
         (fired)="fired()" />
 
     <!-- The chips moved from a place of the table to another one, flying over it -->
-    @for (flight of flights(); track flight.id) {
-    <app-chip-stack
-        class="chip-flight absolute pointer-events-none"
-        [amount]="flight.amount"
-        [placed]="false"
-        [style.left.px]="flight.from.x"
-        [style.top.px]="flight.from.y"
-        [style.--flight-x.px]="flight.to.x - flight.from.x"
-        [style.--flight-y.px]="flight.to.y - flight.from.y"
-        [style.--flight-delay.ms]="flight.delay"
-        (animationend)="land(flight.id, $event)"
-        (animationcancel)="land(flight.id, $event)" />
-    }
+    <app-chip-flights #chipFlights />
 </section>

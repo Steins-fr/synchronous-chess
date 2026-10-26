@@ -25,14 +25,16 @@ const CHIP_COLORS: Readonly<Record<ChipValue, string>> = {
 /**
  * An amount as piles of chips, the fewest chips making it, a pile for each value. Decorative: the page writes the amount.
  *
- * A chip joining a growing stack drops on its pile once the chips the page moves to it reached it, a chip leaving it
- * fades out: the page shows the chips moved from a stack to another one. The change a stack makes shows at once.
+ * A growing stack changes its chips once the chips the page moves to it reached it: a chip joining it drops on its pile,
+ * a chip it changes for others fades out then. A chip leaving a stack paying out fades out at once, the page showing
+ * the chips moved from a stack to another one: the change a stack makes shows at once.
  */
 @Component({
     selector: 'app-chip-stack',
     templateUrl: './chip-stack.component.html',
     styleUrl: './chip-stack.component.scss',
-    host: { 'class': 'inline-grid items-end pt-[0.6rem]', 'aria-hidden': 'true', '[class.still]': '!placed() || !growing()' },
+    // An empty stack keeps the height of a chip: its chips coming move nothing around it
+    host: { 'class': 'inline-grid items-end min-h-[1.85rem] pt-[0.6rem]', 'aria-hidden': 'true', '[class.still]': '!placed() || !growing()' },
 })
 export class ChipStackComponent {
     public readonly amount = input.required<number>();
