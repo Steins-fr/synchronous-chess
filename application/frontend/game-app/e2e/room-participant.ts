@@ -1,4 +1,4 @@
-import { Browser, BrowserContext, expect, Locator, Page, Request, WebSocket } from '@playwright/test';
+import { Browser, BrowserContext, Dialog, expect, Locator, Page, Request, WebSocket } from '@playwright/test';
 
 declare global {
     interface Window {
@@ -21,6 +21,8 @@ export class RoomParticipant {
     private readonly apiSockets: string[] = [];
     /** The URLs of the requests the page sent to the HTTP API */
     private readonly apiRequests: string[] = [];
+    /** The times the browser asked to confirm the unload of the page: a match left */
+    private unloadPrompts: number = 0;
 
     private constructor(
         public readonly name: string,
@@ -37,6 +39,13 @@ export class RoomParticipant {
             if (request.url().startsWith(RoomParticipant.API_SERVER)) {
                 this.apiRequests.push(request.url());
             }
+        });
+        // The player confirms leaving its match: a reload, a close, a link out of the app
+        page.on('dialog', (dialog: Dialog) => {
+            if (dialog.type() === 'beforeunload') {
+                this.unloadPrompts++;
+            }
+            void dialog.accept();
         });
     }
 
@@ -58,6 +67,24 @@ export class RoomParticipant {
         });
 
         return new RoomParticipant(name, context, await context.newPage(), path);
+    }
+
+    /** Another tab of the browser of the player, under another name: its session storage apart */
+    public async newTab(name: string): Promise<RoomParticipant> {
+        return new RoomParticipant(name, this.context, await this.context.newPage(), this.path);
+    }
+
+    /** The tab duplicated, opened at the same URL with a copy of its session storage, under another name */
+    public async duplicateTab(name: string): Promise<RoomParticipant> {
+        const [copy]: [Page, void] = await Promise.all([
+            this.context.waitForEvent('page'),
+            this.page.evaluate(() => {
+                window.open(window.location.href);
+            }),
+        ]);
+        await copy.waitForLoadState('networkidle');
+        await copy.mouse.move(100, 100);
+        return new RoomParticipant(name, this.context, copy, this.path);
     }
 
     /**
@@ -124,9 +151,10 @@ export class RoomParticipant {
     /**
      * Opens the page of the room as a person, the pointer moving over it once it settles, the app listening: its list
      * of the open rooms
+     * @param url another URL of the app, a link received: the URL of a room
      */
-    public async visit(): Promise<void> {
-        await this.page.goto(this.path, { waitUntil: 'networkidle' });
+    public async visit(url: string = this.path): Promise<void> {
+        await this.page.goto(url, { waitUntil: 'networkidle' });
         await this.page.mouse.move(100, 100);
     }
 
@@ -136,10 +164,45 @@ export class RoomParticipant {
         await this.joinListedRoom(roomName, password);
     }
 
-    /** Reloads the page, then joins the room again from the list */
-    public async reloadAndJoin(roomName: string): Promise<void> {
+    /**
+     * Reloads the page, which joins its room again by itself, under the name and with the token its tab kept: the browser
+     * asks to confirm leaving a match
+     */
+    public async reload(): Promise<void> {
         await this.page.reload();
-        await this.joinListedRoom(roomName);
+    }
+
+    /** The URL of the page once it holds its room, the id of the room in it: a link to send */
+    public async roomUrl(roomId: string): Promise<string> {
+        await expect(this.page).toHaveURL((url: URL) => url.searchParams.get('room') === roomId);
+        return this.page.url();
+    }
+
+    /** The page holds no room in its URL */
+    public async expectNoRoomUrl(): Promise<void> {
+        await expect(this.page).toHaveURL((url: URL) => !url.searchParams.has('room'));
+    }
+
+    /** The join dialog of a room opened, under the name given last, filled in with the name of the player, then sent */
+    public async expectJoinDialog(roomId: string, playerName: string): Promise<void> {
+        const dialog: Locator = this.page.locator('app-room-join-dialog');
+        await expect(dialog).toContainText(roomId);
+        await expect(dialog.getByRole('textbox', { name: 'Player name' })).toHaveValue(playerName);
+    }
+
+    /** Sends the join dialog open, under the name of the player, with the password of a private room */
+    public async sendJoinDialog(password?: string): Promise<void> {
+        const dialog: Locator = this.page.locator('app-room-join-dialog');
+        await dialog.getByRole('textbox', { name: 'Player name' }).fill(this.name);
+        if (password !== undefined) {
+            await dialog.getByLabel('Password').fill(password);
+        }
+        await dialog.getByRole('button', { name: 'Join', exact: true }).click();
+    }
+
+    /** The times the browser asked to confirm the unload of the page, each one accepted */
+    public expectUnloadPrompts(count: number): void {
+        expect(this.unloadPrompts).toEqual(count);
     }
 
     /**
@@ -154,13 +217,7 @@ export class RoomParticipant {
             await expect(joinButton).toBeVisible({ timeout: 2000 });
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
         await joinButton.click();
-
-        const dialog: Locator = this.page.locator('app-room-join-dialog');
-        await dialog.getByRole('textbox', { name: 'Player name' }).fill(this.name);
-        if (password !== undefined) {
-            await dialog.getByLabel('Password').fill(password);
-        }
-        await dialog.getByRole('button', { name: 'Join', exact: true }).click();
+        await this.sendJoinDialog(password);
     }
 
     /** A room of the list of the open rooms, private or public */

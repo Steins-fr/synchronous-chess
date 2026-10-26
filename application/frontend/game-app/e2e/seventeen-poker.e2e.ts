@@ -217,8 +217,9 @@ test.describe('Seventeen poker', () => {
         await expect(table(bob).getByRole('status')).toHaveText('Your turn.');
         const bobCards: string[] = await cardsOf(bob, 1);
 
-        await bob.reloadAndJoin(poker.id);
+        await bob.reload();
 
+        bob.expectUnloadPrompts(1);
         await expect(table(bob).getByRole('status')).toHaveText('Your turn.');
         expect(await cardsOf(bob, 1)).toEqual(bobCards);
         await table(bob).getByRole('button', { name: 'Check' }).click();

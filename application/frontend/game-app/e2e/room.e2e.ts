@@ -23,7 +23,7 @@ test.describe('Room', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When
-        await alice.reloadAndJoin(room.id);
+        await alice.reload();
 
         // Then
         for (const participant of [alice, bob, carol]) {
