@@ -494,6 +494,23 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         expect(text('#seat-top')).toContain('151 chips');
     });
 
+    test('should tell the shot of an empty chamber without chips on the table', async () => {
+        // Given the first chambers empty, Alice playing first
+        fixedCylinder();
+        const bob: RussianRouletteSession = await seated(SHORT);
+        bob.load([3]);
+        chamber(2).click();
+        await fixture.whenStable();
+        await click(/^Load/);
+        await until(() => status() === 'Your turn: shoot, or pass.');
+
+        // When
+        await click('Shoot');
+
+        // Then
+        await until(() => text('#last-move') === 'alice fires chamber 1: empty.');
+    });
+
     test('should tell a chamber of two bullets revealed', async () => {
         // Given both players loading the first chamber
         fixedCylinder();
