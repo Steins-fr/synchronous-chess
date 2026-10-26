@@ -689,7 +689,15 @@ describe('OpenRoomsComponent', () => {
 
         // Then
         await expect(found).resolves.toEqual(listed);
-        expect(textFieldInput(fixture.nativeElement, 'Search for a room').value).toBe('room#000001');
+
+        // When: its case changed, as the search of the API
+        const retyped: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('Room#000001');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [listed], hasMore: false }, 'Room%23000001');
+
+        // Then
+        await expect(retyped).resolves.toEqual(listed);
+        expect(textFieldInput(fixture.nativeElement, 'Search for a room').value).toBe('Room#000001');
     });
 
     test('should find no room of an id the API does not list', async () => {

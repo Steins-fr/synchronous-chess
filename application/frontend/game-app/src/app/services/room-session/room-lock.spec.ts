@@ -5,6 +5,10 @@ import { RoomLock, RoomLocks } from './room-lock';
 class FakeLockManager {
     private readonly held = new Map<string, Array<() => void>>();
 
+    public query(): Promise<{ held: Array<{ name: string }> }> {
+        return Promise.resolve({ held: [...this.held].filter(([, holders]) => holders.length > 0).map(([name]) => ({ name })) });
+    }
+
     public request(name: string, options: LockOptions, callback: (lock: object | null) => Promise<void> | undefined): Promise<void> {
         return new Promise<void>((resolve: () => void, reject: (reason: unknown) => void) => {
             const grant = (): void => void callback({ name })?.then(() => {
@@ -95,5 +99,29 @@ describe('RoomLocks', () => {
         // When, Then
         await expect(RoomLocks.hold('room#000001', 'alice')).resolves.toBeDefined();
         await expect(RoomLocks.hold('room#000001', 'alice', 2000)).resolves.toBeDefined();
+    });
+
+    test('should tell whether a tab holds the room under a name', async () => {
+        // Given
+        useLocks(new FakeLockManager());
+        await RoomLocks.hold('room#000001', 'alice');
+
+        // When, Then
+        await expect(RoomLocks.isHeld('room#000001', 'alice')).resolves.toBe(true);
+        await expect(RoomLocks.isHeld('room#000001', 'bob')).resolves.toBe(false);
+    });
+
+    test.each<[string, object | undefined]>([
+        ['without the locks of the browser', undefined],
+        ['when the browser refuses the locks', { query: () => Promise.reject(new DOMException('No origin', 'SecurityError')) }],
+        ['when the browser tells no lock held', { query: () => Promise.resolve({}) }],
+    ])('should tell no tab holds the room %s', async (_case: string, locks: object | undefined) => {
+        // Given
+        if (locks !== undefined) {
+            useLocks(locks);
+        }
+
+        // When, Then
+        await expect(RoomLocks.isHeld('room#000001', 'alice')).resolves.toBe(false);
     });
 });

@@ -1,6 +1,4 @@
-import { computed, DestroyRef, DOCUMENT, inject, Injectable, Signal, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { fromEvent } from 'rxjs';
+import { computed, DestroyRef, DOCUMENT, effect, inject, Injectable, Signal, signal } from '@angular/core';
 
 /**
  * Warns the player of a page before it leaves the match it plays, the other player waiting for it: the browser asks to
@@ -17,11 +15,20 @@ export class MatchLeaveWarning {
     public constructor() {
         // The window of the document, a browser one
         const window: Window = inject(DOCUMENT).defaultView as Window;
-        fromEvent<BeforeUnloadEvent>(window, 'beforeunload').pipe(takeUntilDestroyed()).subscribe((event: BeforeUnloadEvent) => {
-            if (this.inMatch()) {
-                event.preventDefault();
+        // Listened during a match only: a page listening to its unload may be kept out of the back and forward cache
+        effect((onCleanup: (cleanup: () => void) => void): void => {
+            if (!this.inMatch()) {
+                return;
             }
+
+            window.addEventListener('beforeunload', MatchLeaveWarning.warn);
+            onCleanup(() => window.removeEventListener('beforeunload', MatchLeaveWarning.warn));
         });
+    }
+
+    /** The browser asks to confirm the unload of the page */
+    private static warn(this: void, event: BeforeUnloadEvent): void {
+        event.preventDefault();
     }
 
     /**

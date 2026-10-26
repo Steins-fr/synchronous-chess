@@ -11,7 +11,8 @@ export interface MatchPage {
 
 /**
  * A navigation of the app leaving the page of a match the local player plays (a link of the toolbar, back) asks it to
- * confirm: its seat then follows the one of a closed tab, freed once the player is away
+ * confirm: its seat then follows the one of a closed tab, freed once the player is away. Without page (its outlet not
+ * activated), nothing to confirm
  */
-export const leaveMatchGuard: CanDeactivateFn<MatchPage> = (page: MatchPage): boolean | Promise<boolean> =>
-    !page.leaveWarning.inMatch() || inject(DialogService).confirm(marker('rooms.leave.title'), marker('rooms.leave.message'), 'confirm-cancel');
+export const leaveMatchGuard: CanDeactivateFn<MatchPage> = (page: MatchPage | null): boolean | Promise<boolean> =>
+    page?.leaveWarning.inMatch() !== true || inject(DialogService).confirm(marker('rooms.leave.title'), marker('rooms.leave.message'), 'confirm-cancel');

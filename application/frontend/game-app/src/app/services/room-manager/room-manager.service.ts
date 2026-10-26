@@ -108,8 +108,24 @@ export default class RoomManagerService {
             }
 
             signal?.throwIfAborted();
+            return this.reconnectOrJoin(setup, access, signal);
+        }
+    }
+
+    /**
+     * Reconnects the room resumed as its host. Another participant took it over meanwhile: the player joins it
+     * @returns the name of the host
+     */
+    private async reconnectOrJoin(setup: RoomSetupInterface, access: RoomAccess, signal: AbortSignal | undefined): Promise<string> {
+        try {
             await this.roomSocketApi.reconnect({ roomName: setup.roomName, playerName: setup.playerName, token: setup.token });
             return setup.playerName;
+        } catch (e) {
+            if (!(e instanceof RoomApiError) || e.message !== RoomApiErrorMessage.HOST_CONNECTED) {
+                throw e;
+            }
+
+            return (await this.join(setup, access, signal)).playerName;
         }
     }
 

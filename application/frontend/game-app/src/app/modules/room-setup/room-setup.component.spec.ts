@@ -7,6 +7,7 @@ import { DialogService } from '@app/services/dialog/dialog.service';
 import { NotificationService } from '@app/services/notification/notification.service';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomLocks } from '@app/services/room-session/room-lock';
 import { RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
@@ -393,6 +394,7 @@ describe('RoomSetupComponent', () => {
             keepSession();
             localStorage.setItem(RoomSetupComponent.PLAYER_NAME_KEY, 'alice');
             vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
+            const isHeld = vi.spyOn(RoomLocks, 'isHeld').mockResolvedValue(true);
             await createComponent(true, url);
 
             // When
@@ -404,6 +406,26 @@ describe('RoomSetupComponent', () => {
                 inputs: { roomName: 'room#000001', isPrivate: true, playerName: '' },
             }));
             expect(roomSetupService.setup).not.toHaveBeenCalled();
+            expect(isHeld).toHaveBeenCalledExactlyOnceWith('room#000001', 'alice');
+        });
+
+        test('should give up resuming the room of the URL once the person gave another room while its lock was awaited', async () => {
+            // Given
+            keepSession();
+            let held: (holds: boolean) => void = () => undefined;
+            vi.mocked(RoomSetupService.prototype.holdLock).mockReturnValue(new Promise<boolean>((resolve) => held = resolve));
+            const releaseLock = vi.spyOn(RoomSetupService.prototype, 'releaseLock');
+            await createComponent(true, url);
+            await vi.waitFor(() => expect(roomSetupService.holdLock).toHaveBeenCalled());
+
+            // When
+            await joinOpenRoom('public', { playerName: 'bob' });
+            held(true);
+            await fixture.whenStable();
+
+            // Then: the room given only
+            expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ type: 'join', roomName: 'public' }));
+            expect(releaseLock).toHaveBeenCalledOnce();
         });
 
         test('should resume the room of a URL copied with blanks', async () => {

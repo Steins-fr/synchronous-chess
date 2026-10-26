@@ -197,7 +197,8 @@ export class OpenRoomsComponent {
 
     /**
      * Searches the room of an id, the list showing it. Not before a person is on the page
-     * @returns the room listed under that id, undefined once the API lists none: an id ended or unknown
+     * @returns the room listed under that id, whatever its case, as the search of the API: undefined once the API lists
+     * none, an id ended or unknown
      * @throws {Error} once the list of the search failed, the person typed another search, or the list was removed:
      * nothing is known of the room
      */
@@ -213,7 +214,8 @@ export class OpenRoomsComponent {
             throw new Error(`The room ${ roomId } could not be searched`);
         }
 
-        return answer.value?.rooms.find((room: Readonly<OpenRoom>) => room.roomName === roomId);
+        const key: string = roomId.toLocaleLowerCase();
+        return answer.value?.rooms.find((room: Readonly<OpenRoom>) => room.roomName.toLocaleLowerCase() === key);
     }
 
     /** Not again while a list is awaited: the resource reloads once loaded only */

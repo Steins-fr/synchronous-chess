@@ -20,8 +20,9 @@ describe('MatchLeaveWarning', () => {
         warning = TestBed.inject(MatchLeaveWarning);
     });
 
-    /** Whether the page asked the browser to confirm its unload */
+    /** Whether the page asked the browser to confirm its unload, its effects run */
     function unloadPrevented(): boolean {
+        TestBed.tick();
         const event: Event = new Event('beforeunload', { cancelable: true });
         window.dispatchEvent(event);
         return event.defaultPrevented;
@@ -70,10 +71,14 @@ describe('MatchLeaveWarning', () => {
         const game = TestBed.createComponent(GameComponent);
         game.componentInstance.inMatch.set(true);
 
+        expect(unloadPrevented()).toBe(true);
+
         // When
         TestBed.resetTestingModule();
 
         // Then
-        expect(unloadPrevented()).toBe(false);
+        const event: Event = new Event('beforeunload', { cancelable: true });
+        window.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(false);
     });
 });

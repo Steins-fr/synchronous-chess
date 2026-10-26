@@ -15,14 +15,16 @@ describe('leaveMatchGuard', () => {
         TestBed.configureTestingModule({ providers: [{ provide: DialogService, useValue: dialogService }] });
     });
 
-    function leave(inMatch: boolean): boolean | Promise<boolean> {
-        const page: MatchPage = { leaveWarning: TestHelper.cast<MatchLeaveWarning>({ inMatch: signal(inMatch) }) };
+    function leave(inMatch: boolean | null): boolean | Promise<boolean> {
+        const page: MatchPage | null = inMatch === null ? null : { leaveWarning: TestHelper.cast<MatchLeaveWarning>({ inMatch: signal(inMatch) }) };
         const state: RouterStateSnapshot = TestHelper.cast<RouterStateSnapshot>({});
-        return TestBed.runInInjectionContext(() => leaveMatchGuard(page, TestHelper.cast<ActivatedRouteSnapshot>({}), state, state) as boolean | Promise<boolean>);
+        return TestBed.runInInjectionContext(() => leaveMatchGuard(TestHelper.cast<MatchPage>(page), TestHelper.cast<ActivatedRouteSnapshot>({}), state, state) as boolean | Promise<boolean>);
     }
 
-    test('should let the page of a game be left without a match of its player', () => {
+    test('should let the page of a game be left without a match of its player, or without page', () => {
         expect(leave(false)).toBe(true);
+        // Its outlet not activated
+        expect(leave(null)).toBe(true);
         expect(dialogService.confirm).not.toHaveBeenCalled();
     });
 

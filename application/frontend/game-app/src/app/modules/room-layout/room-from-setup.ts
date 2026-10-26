@@ -34,12 +34,18 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     // The room being built: left meanwhile, the player gave it up too
     let building: string | undefined;
 
-    // The room given up: a reload shows the list, or the join dialog of a room still in the URL
-    const giveUp = (roomId: string | undefined): void => {
+    // The room left: a reload shows the list, or the join dialog of a room still in the URL
+    const forget = (roomId: string | undefined): void => {
         if (roomId !== undefined) {
             roomSessions.remove(roomId);
         }
         roomSetupService.releaseLock();
+    };
+    // The room given up, already notified: the form is available again, to try again or join another room
+    const giveUp = (roomId: string): void => {
+        roomSetupService.roomIsSetup(false);
+        forget(roomId);
+        showRoomInUrl(router, null);
     };
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
@@ -57,22 +63,15 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             roomSessions.save(built.roomName, { playerName: setup.playerName, token: setup.token });
             showRoomInUrl(router, built.roomName);
             void roomSetupService.holdLock(built.roomName, setup.playerName);
-            // Already notified: the form is available again, to try again or join another room
             built.roomConnection.joinFailed$.subscribe(() => {
                 built.clear();
                 room.set(undefined);
-                roomSetupService.roomIsSetup(false);
                 giveUp(built.roomName);
-                showRoomInUrl(router, null);
             });
         } catch {
-            if (destroyed.signal.aborted) {
-                return;
+            if (!destroyed.signal.aborted) {
+                giveUp(setup.roomName);
             }
-            // Already notified: the form is available again, to try another room or name
-            roomSetupService.roomIsSetup(false);
-            giveUp(setup.roomName);
-            showRoomInUrl(router, null);
         } finally {
             building = undefined;
         }
@@ -84,7 +83,7 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
         // Left through the app: the player left its room, or the one it was joining
         const left: BlockRoom<M> | undefined = room();
         left?.clear();
-        giveUp(left?.roomName ?? building);
+        forget(left?.roomName ?? building);
     });
     notifyCheatFlags(() => room()?.cheatFlags());
 

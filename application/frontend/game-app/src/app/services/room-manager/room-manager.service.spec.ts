@@ -299,6 +299,26 @@ describe('RoomManagerService', () => {
         expect(notificationService.error).not.toHaveBeenCalled();
     });
 
+    test('should join the room resumed another participant took over while its host reconnected it', async () => {
+        // Given the join gave up on a room waiting for its host, which another participant reconnects meanwhile
+        vi.useFakeTimers();
+        vi.mocked(roomSocketApi.send).mockImplementation(() => vi.mocked(roomSocketApi.reconnect).mock.calls.length === 0
+            ? Promise.reject(new RoomApiError(RoomApiErrorMessage.HOST_DISCONNECTED))
+            : Promise.resolve({ playerName: 'bob' }));
+        vi.mocked(roomSocketApi.reconnect).mockRejectedValue(new RoomApiError(RoomApiErrorMessage.HOST_CONNECTED));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'resume', game: RoomGame.CHESS, roomName: 'room#000042', playerName: 'alice', token: 'kept' }, 2, { move: BlockChainName.CHESS });
+        await vi.advanceTimersByTimeAsync(20_000);
+        room = await build;
+
+        // Then
+        expect(roomSocketApi.reconnect).toHaveBeenCalledOnce();
+        expect(roomSocketApi.send).toHaveBeenCalledTimes(12);
+        expect(room.hostName).toBe('bob');
+        expect(notificationService.error).not.toHaveBeenCalled();
+    });
+
     test('should notify a room resumed its host could not reconnect', async () => {
         // Given
         vi.useFakeTimers();

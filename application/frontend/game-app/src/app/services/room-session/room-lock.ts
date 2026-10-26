@@ -25,7 +25,7 @@ export class RoomLocks {
         const options: LockOptions = wait === 0 ? { ifAvailable: true } : { signal: AbortSignal.timeout(wait) };
 
         return new Promise<RoomLock | undefined>((resolve: (lock: RoomLock | undefined) => void) => {
-            locks.request(`synchronous-chess:room:${ roomId }:${ playerName }`, options, (lock: Lock | null) => {
+            locks.request(RoomLocks.lockName(roomId, playerName), options, (lock: Lock | null) => {
                 if (lock === null) { // Not available at once
                     resolve(undefined);
                     return undefined;
@@ -39,5 +39,22 @@ export class RoomLocks {
                 resolve(options.signal?.aborted ? undefined : RoomLocks.FREE_LOCK);
             });
         });
+    }
+
+    /** Whether a tab of the browser holds the room under the name: the player is in the room already */
+    public static async isHeld(roomId: string, playerName: string): Promise<boolean> {
+        const locks: LockManager | undefined = globalThis.navigator.locks as LockManager | undefined;
+        const name: string = RoomLocks.lockName(roomId, playerName);
+
+        try {
+            return (await locks?.query())?.held?.some((lock: LockInfo) => lock.name === name) ?? false;
+        } catch {
+            // Without locks to read (a document without origin): not told
+            return false;
+        }
+    }
+
+    private static lockName(roomId: string, playerName: string): string {
+        return `synchronous-chess:room:${ roomId }:${ playerName }`;
     }
 }

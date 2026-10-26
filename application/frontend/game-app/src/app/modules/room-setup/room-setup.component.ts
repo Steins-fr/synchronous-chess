@@ -11,6 +11,7 @@ import { roomInUrl, showRoomInUrl } from '@app/modules/room-layout/room-url';
 import { DialogService } from '@app/services/dialog/dialog.service';
 import { NotificationService } from '@app/services/notification/notification.service';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomLocks } from '@app/services/room-session/room-lock';
 import { RoomSession, RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService, { RoomSetupType } from '@app/services/room-setup/room-setup.service';
 import { OpenRoom } from '@protocol/responses/rooms-response';
@@ -78,14 +79,15 @@ export class RoomSetupComponent {
         }
 
         const session: Readonly<RoomSession> | undefined = this.roomSessions.get(roomId);
-        if (session !== undefined) {
-            if (await this.roomSetupService.holdLock(roomId, session.playerName, RoomSetupComponent.LOCK_WAIT)) {
+        const given: number = this.roomsGiven;
+        if (session !== undefined && await this.roomSetupService.holdLock(roomId, session.playerName, RoomSetupComponent.LOCK_WAIT)) {
+            // Not once the person gave a room meanwhile: the list shows while the lock is awaited
+            if (given === this.roomsGiven) {
                 await this.setUpOnceReady(openRooms, 'resume', roomId, session.playerName, undefined, session.token);
-                return;
+            } else {
+                this.roomSetupService.releaseLock();
             }
-
-            // Another tab holds the room under the name typed last: the dialog asks another one
-            this.playerName = '';
+            return;
         }
 
         if (!await openRooms.whenServerReady()) {
@@ -108,6 +110,11 @@ export class RoomSetupComponent {
             return;
         }
 
+        // Another tab holds the room under the name typed last (a duplicated tab, a link opened in a new one): the dialog
+        // asks another one
+        if (await RoomLocks.isHeld(room.roomName, this.playerName)) {
+            this.playerName = '';
+        }
         await this.joinOpenRoom(room, openRooms);
     }
 
