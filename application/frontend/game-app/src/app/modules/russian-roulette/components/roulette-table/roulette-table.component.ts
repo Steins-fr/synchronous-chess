@@ -86,6 +86,13 @@ interface Firing {
     readonly before: Readonly<TableView>;
 }
 
+/** The moves of a game the table played, as it showed them after its latest render */
+interface PlayedMoves {
+    readonly game: RouletteGame;
+    readonly moves: number;
+    readonly view: Readonly<TableView>;
+}
+
 /** What the moves applied since the latest render play on the table */
 interface MovePlay {
     readonly flights: ReadonlyArray<Readonly<ChipFlight>>;
@@ -164,12 +171,28 @@ export class RouletteTableComponent implements OnDestroy {
     private readonly _firing = signal<Readonly<Firing> | null>(null);
     /** The revolver fired the chamber, after it held in front of the player: the seat and the table tell what it held */
     protected readonly blasted: WritableSignal<boolean> = signal<boolean>(false);
+    private readonly _played = signal<Readonly<PlayedMoves> | null>(null);
+    /**
+     * A shot, or a chamber revealed, in the game the table did not play yet: the moves play once the table is rendered,
+     * the render showing them keeps the table as it was, not the result of the shot
+     */
+    private readonly unplayed: Signal<Readonly<RouletteAction> | null> = computed((): Readonly<RouletteAction> | null => {
+        const played: Readonly<PlayedMoves> | null = this._played();
+        const game: RouletteGame = this.game();
+        return played?.game === game ? game.actions().slice(played.moves).find((action: Readonly<RouletteAction>) => action.kind !== RouletteActionKind.PASS) ?? null : null;
+    });
     /** What the table shows: the state before the chamber the revolver fires, until the shot is over */
-    protected readonly view: Signal<Readonly<TableView>> = computed((): Readonly<TableView> => this._firing()?.before ?? this.liveView());
+    protected readonly view: Signal<Readonly<TableView>> = computed((): Readonly<TableView> => {
+        const firing: Readonly<Firing> | null = this._firing();
+        if (firing !== null) {
+            return firing.before;
+        }
+        return this.unplayed() === null ? this.liveView() : (this._played() as Readonly<PlayedMoves>).view;
+    });
 
     /** The seat the revolver aims at, the sky when it reveals a chamber, null while it lies on the cloth */
     private readonly target: Signal<RevolverTarget> = computed((): RevolverTarget => {
-        const action: Readonly<RouletteAction> | undefined = this._firing()?.action;
+        const action: Readonly<RouletteAction> | undefined = this._firing()?.action ?? this.unplayed() ?? undefined;
         const game: RouletteGame = this.game();
 
         if (action !== undefined) {
@@ -219,7 +242,7 @@ export class RouletteTableComponent implements OnDestroy {
     });
 
     /** The player to act waits for the shot of the other one to be over */
-    protected readonly canShoot: Signal<boolean> = computed((): boolean => this.session().myTurn() && this._firing() === null);
+    protected readonly canShoot: Signal<boolean> = computed((): boolean => this.session().myTurn() && this._firing() === null && this.unplayed() === null);
     protected readonly canPass: Signal<boolean> = computed((): boolean => this.canShoot() && this.game().canPass(this.session().mySeat() as RouletteSeat));
 
     /**
@@ -332,7 +355,7 @@ export class RouletteTableComponent implements OnDestroy {
 
     /** The result of the game, once its last shot is over */
     protected readonly result: Signal<TranslatableText | null> = computed((): TranslatableText | null =>
-        this._firing() === null ? this.resultText(this.session().played()) : null);
+        this._firing() === null && this.unplayed() === null ? this.resultText(this.session().played()) : null);
 
     /** The check of the cylinder, with the result of the game */
     protected readonly verification: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
@@ -371,7 +394,7 @@ export class RouletteTableComponent implements OnDestroy {
     // Once the table shows new moves, they play: a pass stamps its seat and its chips fly to the table, the 5th one in a
     // row taking them to the bank; a shot or a chamber revealed fires the revolver
     private readonly movePlays = afterRenderEffect({
-        earlyRead: (): Readonly<MovePlay> | null => {
+        earlyRead: (): Readonly<{ game: RouletteGame; moves: number; play: Readonly<MovePlay> | null }> => {
             const session: RussianRouletteSession = this.session();
             const game: RouletteGame = this.game();
             const actions: ReadonlyArray<Readonly<RouletteAction>> = game.actions();
@@ -384,15 +407,20 @@ export class RouletteTableComponent implements OnDestroy {
             // nor does a hidden page: its animations would wait for it to be shown
             if (previous?.session !== session || previous.game !== game || previous.historySteps !== historySteps || actions.length <= previous.moves
                 || !untracked(this.pageVisibility.visible)) {
-                return null;
+                return { game, moves: actions.length, play: null };
             }
-            return this.play(actions.slice(previous.moves), previous.moves, previous.view, view);
+            return { game, moves: actions.length, play: this.play(actions.slice(previous.moves), previous.moves, previous.view, view) };
         },
-        write: (play: Signal<Readonly<MovePlay> | null>): void => {
-            const played: Readonly<MovePlay> | null = play();
+        write: (moves: Signal<Readonly<{ game: RouletteGame; moves: number; play: Readonly<MovePlay> | null }>>): void => {
+            const { game, moves: count, play } = moves();
 
             // The phase depends on the moves played only: the signals it writes must not run it again
-            untracked(() => played !== null && this.start(played));
+            untracked(() => {
+                if (play !== null) {
+                    this.start(play);
+                }
+                this._played.set({ game, moves: count, view: this._firing()?.before ?? this.liveView() });
+            });
         },
     });
 

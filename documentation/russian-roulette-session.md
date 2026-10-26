@@ -281,7 +281,8 @@ A shot, or a chamber revealed, plays in front of everyone, keeping its result fo
    the cloth.
 
 Until the shot is over, the table shows the state before it (`view`): the chambers fired, the stacks, the deaths, the
-latest move and the result of the game. Its turn waits too: from the shot, while the shares of the chamber come, until
+latest move and the result of the game. The render showing the shot applied keeps it too, the table playing its new
+moves once rendered (`unplayed`): it never shows the result of a shot before the revolver fires. Its turn waits too: from the shot, while the shares of the chamber come, until
 it is over, no seat shows its ring nor its clock, which runs meanwhile, and no button shows, the status telling the
 chamber fires. The history of the room a reloaded page catches up with plays nothing, nor does a hidden page: their moves show
 at once.
