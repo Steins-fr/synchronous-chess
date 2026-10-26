@@ -8,7 +8,7 @@ import { LanguageMenuComponent } from '@app/modules/language-menu/language-menu.
 import { PageLoaderComponent } from '@app/modules/page-loader/page-loader.component';
 import { ThemeModeEnum } from '@app/services/theme/enums/theme-mode.enum';
 import { ShownTheme, ThemeService } from '@app/services/theme/theme.service';
-import { chatPath, chessPath, homePath, pokerPath } from './app.routes';
+import { chatPath, chessPath, homePath, pokerPath, roulettePath } from './app.routes';
 
 type ThemeButton = {
     icon: string;
@@ -37,6 +37,7 @@ export class AppComponent {
     protected readonly chessPath: string = `/${chessPath}`;
     protected readonly chatPath: string = `/${chatPath}`;
     protected readonly pokerPath: string = `/${pokerPath}`;
+    protected readonly roulettePath: string = `/${roulettePath}`;
 
     protected readonly themeService = inject(ThemeService);
     protected readonly themeButton = computed<Readonly<ThemeButton>>(() => AppComponent.themeButtons[this.themeService.theme()]);

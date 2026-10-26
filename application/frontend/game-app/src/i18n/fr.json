@@ -8,7 +8,8 @@
       "chat": "Tchat",
       "chess": "Échecs",
       "home": "Accueil",
-      "poker": "Poker"
+      "poker": "Poker",
+      "roulette": "Roulette"
     },
     "theme": {
       "toDark": "Passer au thème sombre",
@@ -17,8 +18,8 @@
     "title": "Échecs synchrones"
   },
   "cheat": {
-    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} poker {poker} other {}}) de {author} est signalé comme triché par {reporters}",
-    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} poker {poker} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
+    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} poker {poker} roulette {roulette} other {}}) de {author} est signalé comme triché par {reporters}",
+    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} poker {poker} roulette {roulette} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
   },
   "dialog": {
     "cancel": "Annuler",
@@ -43,6 +44,11 @@
       "action": "Jouer",
       "description": "Un poker à deux avec un paquet de 17 cartes que personne ne distribue : les joueurs le mélangent ensemble, chiffré.",
       "title": "Poker à dix-sept cartes"
+    },
+    "roulette": {
+      "action": "Jouer",
+      "description": "Un duel avec un revolver de 24 chambres, où chaque joueur charge ses propres balles : tirer, ou payer pour passer.",
+      "title": "Roulette russe"
     },
     "title": "Choisissez un jeu"
   },

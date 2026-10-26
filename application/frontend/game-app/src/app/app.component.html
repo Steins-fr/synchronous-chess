@@ -1,11 +1,15 @@
 <nav *transloco="let t; prefix: 'app'" class="flex items-center">
-    <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="nav-link"
-        routerLinkActive="text-app-link-active">{{ t('nav.home') }}</a>
-    <a [routerLink]="[ chessPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.chess') }}</a>
-    <a [routerLink]="[ pokerPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.poker') }}</a>
-    <a [routerLink]="[ chatPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.chat') }}</a>
+    <!-- The links of the games hold on a phone of 360 pixels, but in the longest languages: then they scroll, not the page -->
+    <div class="flex min-w-0 overflow-x-auto">
+        <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="nav-link"
+            routerLinkActive="text-app-link-active">{{ t('nav.home') }}</a>
+        <a [routerLink]="[ chessPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.chess') }}</a>
+        <a [routerLink]="[ pokerPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.poker') }}</a>
+        <a [routerLink]="[ roulettePath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.roulette') }}</a>
+        <a [routerLink]="[ chatPath ]" class="nav-link" routerLinkActive="text-app-link-active">{{ t('nav.chat') }}</a>
+    </div>
     <!-- The touch target of an icon button exceeds it by 4px: held in the page, it scrolls nothing at its right edge -->
-    <div class="ml-auto mr-1 flex items-center">
+    <div class="ml-auto mr-1 flex shrink-0 items-center">
         <!-- The menu, with the overlay it opens, loads once the app is idle: out of the bundle of its start -->
         @defer (on idle) {
         <app-language-menu />

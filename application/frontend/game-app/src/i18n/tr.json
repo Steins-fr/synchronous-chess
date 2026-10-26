@@ -8,7 +8,8 @@
       "chat": "Sohbet",
       "chess": "Satranç",
       "home": "Ana sayfa",
-      "poker": "Poker"
+      "poker": "Poker",
+      "roulette": "Rulet"
     },
     "theme": {
       "toDark": "Koyu temaya geç",
@@ -17,8 +18,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",
@@ -43,6 +44,11 @@
       "action": "Oyna",
       "description": "Kimsenin dağıtmadığı 17 kartlık bir desteyle iki kişilik poker: oyuncular desteyi şifreli olarak birlikte karıştırır.",
       "title": "On yedi kartlık poker"
+    },
+    "roulette": {
+      "action": "Oyna",
+      "description": "Her oyuncunun kendi mermilerini doldurduğu 24 hazneli bir altıpatlarla düello: ateş edin ya da pas geçmek için ödeyin.",
+      "title": "Rus ruleti"
     },
     "title": "Bir oyun seçin"
   },

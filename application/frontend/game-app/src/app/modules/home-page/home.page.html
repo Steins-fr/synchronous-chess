@@ -17,6 +17,17 @@
             <p class="muted-note">{{ t('poker.description') }}</p>
             <span class="game-card-action">{{ t('poker.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
+        <a [routerLink]="roulettePath" class="game-card" id="game-card-roulette">
+            <!-- The cylinder of a revolver, seen from its end: a chamber in each hole -->
+            <span aria-hidden="true" class="game-card-glyph">
+                <svg class="size-18" fill="currentColor" fill-rule="evenodd" viewBox="0 0 100 100">
+                    <path d="M4 50 a46 46 0 1 0 92 0 a46 46 0 1 0 -92 0 M44 50 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0 M50 20 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M76 35 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M76 65 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M50 80 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M24 65 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M24 35 m-11 0 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0" />
+                </svg>
+            </span>
+            <h2 class="m-0 mat-title-large">{{ t('roulette.title') }}</h2>
+            <p class="muted-note">{{ t('roulette.description') }}</p>
+            <span class="game-card-action">{{ t('roulette.action') }} <mat-icon>arrow_forward</mat-icon></span>
+        </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->
             <span aria-hidden="true" class="game-card-visual bg-app-surface text-app-accent-text">

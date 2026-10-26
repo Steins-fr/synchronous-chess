@@ -8,7 +8,8 @@
       "chat": "Bate-papo",
       "chess": "Xadrez",
       "home": "Início",
-      "poker": "Pôquer"
+      "poker": "Pôquer",
+      "roulette": "Roleta"
     },
     "theme": {
       "toDark": "Mudar para o tema escuro",
@@ -17,8 +18,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} other {}}) de {author} foi denunciada como trapaça por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} other {}}) de {author} foi denunciada como trapaça por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -43,6 +44,11 @@
       "action": "Jogar",
       "description": "Pôquer a dois com um baralho de 17 cartas que ninguém distribui: os jogadores o embaralham juntos, criptografado.",
       "title": "Pôquer de dezessete cartas"
+    },
+    "roulette": {
+      "action": "Jogar",
+      "description": "Um duelo com um revólver de 24 câmaras, em que cada jogador carrega as próprias balas: atirar, ou pagar para passar.",
+      "title": "Roleta-russa"
     },
     "title": "Escolha um jogo"
   },

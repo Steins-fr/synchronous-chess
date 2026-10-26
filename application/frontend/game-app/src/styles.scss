@@ -71,6 +71,21 @@ html {
     // The cloth of the poker table, under a white text, and the gains of a hand
     --app-felt: light-dark(#2f6b4a, #1f4a34);
     --app-chip: light-dark(#f2c14e, #d9a93a);
+    // The cylinder of the roulette: its steel, the holes of its chambers, the brass of a bullet and the red of a death
+    --app-steel: light-dark(#8a9099, #4d525a);
+    --app-steel-light: light-dark(#c9ced6, #6f757e);
+    --app-steel-edge: light-dark(#5f656e, #2f3238);
+    --app-chamber: light-dark(#26282c, #121316);
+    --app-bullet: light-dark(#c9973a, #b8862b);
+    --app-bullet-primer: light-dark(#e9cf8c, #d8bb72);
+    --app-death: var(--mat-sys-error);
+    // The revolver: its grip of wood, the flash and the smoke of its shot, and the relief of an empty chamber
+    --app-grip: light-dark(#8a5a36, #6b4429);
+    --app-grip-edge: light-dark(#5a3820, #3f2716);
+    --app-flash: #ffb300;
+    --app-flash-core: #fff8e1;
+    --app-smoke: light-dark(rgb(90 90 90 / 55%), rgb(220 220 220 / 45%));
+    --app-survive: var(--app-success);
     // The clock of a move about to run out
     --app-clock-low: var(--mat-sys-error);
     // The chips, by value: their face and the stripes of their edge, the black one lighter on the dark page

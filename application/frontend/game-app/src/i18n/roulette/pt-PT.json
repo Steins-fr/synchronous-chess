@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Câmara {number}: uma bala",
+    "chamber": "Câmara {number}",
+    "double": "Câmara {number}: duas balas",
+    "empty": "Câmara {number}: vazia",
+    "hidden": "Câmara {number}",
+    "label": "Tambor",
+    "loaded": "Câmara {number}: a sua bala"
+  },
+  "presentation": {
+    "intro": "Cada jogador carrega 3 balas nas câmaras que escolher e depois o tambor roda. À vez, dispare para ficar com as fichas da mesa, ou passe pagando, com o preço a duplicar a cada passagem seguida. Uma bala é uma morte, que custa 50 fichas: quando as 6 balas forem disparadas, ganha quem tiver menos mortes.",
+    "points": {
+      "checked": "Quando a partida termina, todas as chaves são mostradas: cada participante verifica que ninguém fez batota.",
+      "hidden": "Os dois jogadores rodam o tambor à vez: ninguém, nem mesmo o servidor, sabe que câmara vem a seguir, nem de quem é a bala disparada.",
+      "placed": "As suas balas só são conhecidas por si: são cifradas antes de o outro jogador as ver."
+    },
+    "rooms": "Crie uma sala ou entre numa aberta: os participantes sem lugar assistem à partida.",
+    "tagline": "Um duelo para dois jogadores, com um revólver de 24 câmaras.",
+    "title": "Roleta russa"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Cada jogador carrega 3 balas nas câmaras que escolher, em segredo: uma câmara pode ter uma bala de cada jogador.",
+      "spin": "Depois, cada jogador roda o tambor à vez: ninguém sabe que câmara vem a seguir, mas as balas de cada jogador mantêm o seu espaçamento. Um sorteio decide quem joga primeiro.",
+      "title": "O tambor"
+    },
+    "end": {
+      "title": "Fim da partida",
+      "winner": "A partida termina quando as 6 balas são disparadas. Ganha o jogador com menos mortes, depois o que tiver mais fichas; caso contrário, é empate."
+    },
+    "fair": {
+      "checked": "Quando a partida termina, as duas chaves são mostradas e cada participante verifica as rodagens do tambor: o resultado passa a ser definitivo. Um jogador que fez batota, ou que guarda a sua chave, perde a partida.",
+      "hidden": "Cada câmara é cifrada com as chaves dos dois jogadores: um disparo só indica quantas balas a câmara tinha, nunca de quem eram. Nem o servidor conhece o tambor.",
+      "title": "Jogo limpo"
+    },
+    "summary": "Regras do jogo",
+    "title": "Regras",
+    "turn": {
+      "away": "Enquanto um jogador está ausente, a jogada ganha mais 30 segundos, uma vez: o jogador ainda ausente perde a partida.",
+      "clock": "Cada jogada dura no máximo 45 segundos: depois, a página passa pelo jogador, ou dispara se este não puder pagar, e carrega 3 câmaras ao acaso para um jogador que não carregou.",
+      "death": "Disparar uma bala, ou duas: uma morte. O atirador dá 50 fichas e as fichas da mesa ao outro jogador, endividando-se se for preciso.",
+      "empty": "Disparar uma câmara vazia: ficar com as fichas da mesa.",
+      "pass": "Passar: pôr fichas na mesa, 1 ficha, duplicada a cada passagem seguida (1, 2, 4, 8, 16). Um jogador que não pode pagar tem de disparar.",
+      "reveal": "Após 5 passagens seguidas, a banca fica com as 31 fichas da mesa e a câmara seguinte é revelada: as suas balas perdem-se, sem morte. Passar nunca evita uma bala.",
+      "title": "Em cada turno"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Carregar ({count}/{bullets})",
+      "pass": "Passar ({price})",
+      "rematch": "Jogar outra vez",
+      "shoot": "Disparar"
+    },
+    "bank": "Banca: {chips}",
+    "bullets": "{count, plural, one {Resta # bala} other {Restam # balas}}",
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "move": {
+      "death": "{name} dispara a câmara {chamber}: uma bala, uma morte.",
+      "deathDouble": "{name} dispara a câmara {chamber}: duas balas, uma morte.",
+      "draw": "{name} passa, {chips} fichas: a 5.ª passagem seguida, a banca fica com a mesa.",
+      "empty": "{name} dispara a câmara {chamber}: vazia, e fica com {chips, plural, one {# ficha} other {# fichas}}.",
+      "emptyTable": "{name} dispara a câmara {chamber}: vazia.",
+      "pass": "{name} passa: {chips, plural, one {# ficha} other {# fichas}} na mesa.",
+      "revealBullet": "A 5.ª passagem de {name} revela a câmara {chamber}: uma bala, perdida.",
+      "revealDouble": "A 5.ª passagem de {name} revela a câmara {chamber}: duas balas, perdidas.",
+      "revealEmpty": "A 5.ª passagem de {name} revela a câmara {chamber}: vazia."
+    },
+    "pastGames": "Partidas jogadas",
+    "provisional": "Resultado provisório: o tambor é verificado quando as duas chaves forem mostradas.",
+    "result": {
+      "bothCheated": "Os dois jogadores fizeram batota no tambor: nenhum vencedor.",
+      "cheated": "{loser} fez batota no tambor: {winner} ganha a partida.",
+      "draw": "Empate: os dois jogadores terminam com tantas mortes e fichas.",
+      "forfeit": "O tempo de {loser} esgotou-se: {winner} ganha a partida.",
+      "stopped": "Interrompida: houve batota no tambor.",
+      "win": "{winner} ganha a partida: {deaths} contra {otherDeaths, plural, one {# morte} other {# mortes}}, com {chips, plural, one {# ficha} other {# fichas}}.",
+      "withheld": "{loser} não mostrou a sua chave: {winner} ganha a partida."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "clock": "{seconds} s",
+      "deaths": "{count, plural, one {# morte} other {# mortes}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "play": "Sentar-se",
+      "release": "Libertar o lugar"
+    },
+    "spectators": "Espetadores: {count}",
+    "status": {
+      "away": "A aguardar que {name} volte…",
+      "broken": "Houve batota no tambor: a partida foi interrompida.",
+      "disclosing": "Os jogadores mostram as suas chaves para verificar o tambor…",
+      "firing": "A câmara {chamber} dispara…",
+      "hurry": "É a sua vez: o tempo está a acabar.",
+      "loading": "A carregar as balas: {name}…",
+      "lost": "Esta página perdeu as suas chaves: já não pode jogar esta partida.",
+      "myTurn": "É a sua vez: dispare ou passe.",
+      "place": "Escolha as câmaras das suas {count} balas e depois carregue-as.",
+      "placeOther": "A aguardar que {name} carregue…",
+      "placing": "Os jogadores escolhem as câmaras das suas balas.",
+      "revealing": "A câmara {chamber} é revelada…",
+      "seats": "A aguardar que dois jogadores se sentem.",
+      "spinning": "A rodar o tambor: {name}…",
+      "theirTurn": "{name} dispara ou passa…"
+    },
+    "table": "Mesa: {chips, plural, one {# ficha} other {# fichas}}",
+    "verification": {
+      "cheated": "Houve batota no tambor.",
+      "fair": "O tambor foi limpo."
+    }
+  }
+}

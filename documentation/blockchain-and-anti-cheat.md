@@ -18,6 +18,7 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 - [Changing the sequencer](#changing-the-sequencer)
 - [Hidden moves: commit then reveal](#hidden-moves-commit-then-reveal)
 - [Hidden cards: mental poker](#hidden-cards-mental-poker)
+- [Hidden bullets: the cylinder of the roulette](#hidden-bullets-the-cylinder-of-the-roulette)
 - [Anti-cheat](#anti-cheat)
 - [Messages](#messages)
 - [Trust model and limits](#trust-model-and-limits)
@@ -25,8 +26,8 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 
 ## Overview
 
-A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess` or
-`poker`. Each chain orders its
+A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess`,
+`poker` or `roulette`. Each chain orders its
 blocks on its own, so a busy chat never delays the moves of the game. The chains share the WebRTC
 connections and the identity of the participants.
 
@@ -66,6 +67,8 @@ flowchart LR
 | `SealedTurnStore` | `modules/chess/classes/game-sessions` | Keeps the hidden moves across the reloads of the page |
 | `MentalDeck` | `modules/mental-poker/classes` | Shuffles, deals and opens a deck no participant sees, checks it at the end of the game (see [Mental poker](mental-poker.md)) |
 | `SeventeenPokerSession` | `modules/seventeen-poker/classes/game-sessions` | Seats the players, deals each hand with a mental deck, reports the illegal actions (see [Seventeen Poker session](seventeen-poker-session.md)) |
+| `Cylinder` | `modules/russian-roulette/classes/cylinder` | Loads, spins and fires a cylinder no participant sees, checks it at the end of the game (see [Russian roulette session](russian-roulette-session.md#the-cylinder)) |
+| `RussianRouletteSession` | `modules/russian-roulette/classes/game-sessions` | Seats the players, fires the chambers of the cylinder, reports the illegal moves (see [Russian roulette session](russian-roulette-session.md)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
 message is delivered to every participant, its sender included, once its block is added to the chain
@@ -321,6 +324,17 @@ player but its recipient, and opened by asking all of them. Once the game is ove
 all their keys and every participant checks the deck. See [Mental poker](mental-poker.md), and the
 Seventeen Poker, its first game, in [Seventeen Poker session](seventeen-poker-session.md).
 
+## Hidden bullets: the cylinder of the roulette
+
+The 24-shot Russian roulette hides the bullets each player loads, and the offset of the cylinder, from every
+participant, the players included: a shot tells only the count of bullets of its chamber. The `Cylinder`
+(`modules/russian-roulette`) runs the exponential ElGamal over the chain of its game: each player gives its share of
+the key with its proof, loads its bullets under the key of both with the proof of a bit for each chamber and of their
+count, then each player turns the cylinder and re-randomizes it. A chamber fires with the share of each player, proven
+made with its key. Once the game is over, the players disclose their keys and every participant checks the spins. See
+[Russian roulette session](russian-roulette-session.md#the-cylinder) and
+[The exponential ElGamal](mental-poker.md#the-exponential-elgamal).
+
 ## Anti-cheat
 
 The participants report the cheats they detect with an `anti_cheat` message to all the others, outside
@@ -337,10 +351,13 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `invalidBlock` | The hash of a block of the sequencer does not match its content | the sequencer | not added |
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
-| `illegalMove` | A revealed move, or an action of the poker (a bet, an exchange), is against the rules | the player | yes |
-| `invalidReveal` | A revealed move does not match its commitment, or its turn | the player | yes |
+| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange) or a move of the roulette (a pass, a shot) is against the rules | the player | yes |
+| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of the draw of the roulette its commitment | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
 | `invalidCardKey` | A key is malformed, does not give the card to its recipient (with two players), or is not the one disclosed at the end of the game | the player | a malformed key |
+| `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
+| `invalidSpin` | A spin of a cylinder is not one (a chamber missing or out of the group), or, once the keys are disclosed, not the cylinder received turned | the player | a spin that is not a cylinder breaks the cylinder |
+| `invalidShare` | A share of a chamber without its proof, or a key disclosed that is not the one of its player | the player | yes |
 
 The reasons **against the sequencer** count to take the ordering away from it: only reports from
 connected participants other than the sequencer count, and more than half of them must have reported
@@ -387,7 +404,8 @@ The `block_room_service` messages carry the name of their chain in a `chain` fie
 their payload is trusted, and a payload making a handler throw is logged.
 
 The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
-`chess` chain, the chat `chatMessage` through the `chat` chain.
+`chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
+messages through the `roulette` chain, the chat `chatMessage` through the `chat` chain.
 
 ## Trust model and limits
 

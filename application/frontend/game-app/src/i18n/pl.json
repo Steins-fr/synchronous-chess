@@ -8,7 +8,8 @@
       "chat": "Czat",
       "chess": "Szachy",
       "home": "Start",
-      "poker": "Poker"
+      "poker": "Poker",
+      "roulette": "Ruletka"
     },
     "theme": {
       "toDark": "Przełącz na ciemny motyw",
@@ -17,8 +18,8 @@
     "title": "Szachy synchroniczne"
   },
   "cheat": {
-    "flagged": "Wiadomość {index} ({chain, select, chess {szachy} chat {czat} poker {poker} other {}}) od {author} została zgłoszona jako oszustwo przez: {reporters}",
-    "ignored": "Wiadomość ({chain, select, chess {szachy} chat {czat} poker {poker} other {}}) od {author} jest pomijana przez {sequencer}, zgłoszona przez: {reporters}"
+    "flagged": "Wiadomość {index} ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} other {}}) od {author} została zgłoszona jako oszustwo przez: {reporters}",
+    "ignored": "Wiadomość ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} other {}}) od {author} jest pomijana przez {sequencer}, zgłoszona przez: {reporters}"
   },
   "dialog": {
     "cancel": "Anuluj",
@@ -43,6 +44,11 @@
       "action": "Graj",
       "description": "Poker we dwoje z talią 17 kart, której nikt nie rozdaje: gracze tasują ją razem, zaszyfrowaną.",
       "title": "Poker na siedemnaście kart"
+    },
+    "roulette": {
+      "action": "Graj",
+      "description": "Pojedynek rewolwerem o 24 komorach, do którego każdy gracz ładuje własne kule: strzel albo zapłać, by spasować.",
+      "title": "Rosyjska ruletka"
     },
     "title": "Wybierz grę"
   },

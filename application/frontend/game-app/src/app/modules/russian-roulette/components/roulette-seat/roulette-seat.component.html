@@ -1,0 +1,36 @@
+<div *transloco="let t; prefix: 'roulette.table.seat'"
+    class="seat relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-14 px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised"
+    [class.acting]="acting()"
+    [class.shot-death]="shot() === death"
+    [class.shot-empty]="shot() === survived">
+    <span #nameView class="font-medium">{{ name() ?? t('free') }}</span>
+    @if (name() !== null) {
+    <!-- A stack below 0, a debt, shows no chip -->
+    <app-chip-stack #stack [amount]="chips() > 0 ? chips() : 0" />
+    <span class="muted-note text-sm">{{ t('chips', { count: chips() }) }}</span>
+    <span class="text-sm font-bold" [class.text-app-death]="deaths() > 0">{{ t('deaths', { count: deaths() }) }}</span>
+    }
+    @if (passed(); as chips) {
+    <!-- The pass, stamped on the seat as the turn goes to the other player -->
+    <span class="pass-stamp" aria-hidden="true" (animationend)="endStamp($event)">
+        {{ 'roulette.table.action.pass' | transloco: { price: chips } }}
+    </span>
+    }
+    @let left = timeLeft();
+    @if (left !== null) {
+    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="left <= clockLow">{{ t('clock', { seconds: left }) }}</span>
+    <!-- The clock of the move, emptying over its time -->
+    <span class="absolute inset-x-3 bottom-1 h-1 rounded-full bg-app-border" aria-hidden="true">
+        <span class="turn-clock block h-full rounded-full bg-app-accent-text" [style.width.%]="clockFill()"></span>
+    </span>
+    }
+    @if (canTake()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('play') }}</button>
+    }
+    @if (canLeave()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+    }
+    @if (canRelease()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="release.emit()">{{ t('release') }}</button>
+    }
+</div>

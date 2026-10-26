@@ -29,6 +29,12 @@ The poker of the manga *Liar Game*, for two players: 17 cards (the aces, kings, 
 
 No one deals the cards: the players shuffle each deck together, encrypted, and give each other the keys of the cards dealt, so no one, not even the server, sees a hand before its showdown. Once the match is over, every key is shown and each participant checks every deck. See [Mental poker](documentation/mental-poker.md) and [Seventeen Poker session](documentation/seventeen-poker-session.md).
 
+### Russian Roulette demo
+
+The 24-shot Russian roulette of the manga *Liar Game*, for two players: a revolver of 24 chambers, 3 bullets loaded by each player in the chambers of its choice, 150 chips each. Each player takes a seat with `Sit here`, picks its chambers and clicks `Load`. In turn, a player shoots to take the chips on the table, or passes by paying, the price doubling at each pass in a row, the 5th one in a row revealing the next chamber; a bullet is a death, which costs 50 chips. Once the 6 bullets fired, the fewest deaths win. The others watch, and the players start a new game with `Play again`.
+
+No one knows the cylinder: each chamber is encrypted with the keys of both players, and each player spins it in turn, so a shot only tells how many bullets the chamber held, never whose they were, and no one, not even the server, knows which chamber comes next. Once the game is over, both keys are shown and each participant checks the spins. See [Russian roulette session](documentation/russian-roulette-session.md).
+
 ### Chat demo
 
 A simple chat demo with ping displayed between peers. For the moment, you have to click on the send button for sending the message. The `Enter` key is not supported.
@@ -80,14 +86,15 @@ The API is composed of 4 lambdas for managing websocket connection, disconnectio
 ### **Frontend**
 ---
 
-The synchronous chess board game and the Seventeen Poker, with chat. 
+The synchronous chess board game, the Seventeen Poker and the 24-shot Russian roulette, with chat.
 
 The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
-which the other participants watch for cheats. The moves stay hidden until both players are committed, and the
-cards of the poker until their showdown.
+which the other participants watch for cheats. The moves stay hidden until both players are committed, the
+cards of the poker until their showdown, and the bullets of the roulette until their chamber fires.
 See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md),
-[Chess game session](documentation/chess-game-session.md), [Mental poker](documentation/mental-poker.md) and
-[Seventeen Poker session](documentation/seventeen-poker-session.md).
+[Chess game session](documentation/chess-game-session.md), [Mental poker](documentation/mental-poker.md),
+[Seventeen Poker session](documentation/seventeen-poker-session.md) and
+[Russian roulette session](documentation/russian-roulette-session.md).
 
 **Required**: Backend API (its websocket API and its HTTP API).
 
@@ -108,7 +115,7 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 - connection_id: Websocket connection id of the host;
 - host_player: Player name of the host;
 - max_player: Maximum of player that can join the room;
-- game: The game of the room, chess, seventeen-poker or chat;
+- game: The game of the room, chess, seventeen-poker, russian-roulette or chat;
 - created_at, name_key: The date of its creation and its id in lower case, to list and search the rooms, unique: the ids differ whatever their case;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.

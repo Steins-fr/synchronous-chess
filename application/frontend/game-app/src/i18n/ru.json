@@ -8,7 +8,8 @@
       "chat": "Чат",
       "chess": "Шахматы",
       "home": "Главная",
-      "poker": "Покер"
+      "poker": "Покер",
+      "roulette": "Рулетка"
     },
     "theme": {
       "toDark": "Включить тёмную тему",
@@ -17,8 +18,8 @@
     "title": "Синхронные шахматы"
   },
   "cheat": {
-    "flagged": "Сообщение {index} ({chain, select, chess {шахматы} chat {чат} poker {покер} other {}}) от {author} помечено как жульничество игроками: {reporters}",
-    "ignored": "Сообщение ({chain, select, chess {шахматы} chat {чат} poker {покер} other {}}) от {author} проигнорировано игроком {sequencer}, отмечено игроками: {reporters}"
+    "flagged": "Сообщение {index} ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} other {}}) от {author} помечено как жульничество игроками: {reporters}",
+    "ignored": "Сообщение ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} other {}}) от {author} проигнорировано игроком {sequencer}, отмечено игроками: {reporters}"
   },
   "dialog": {
     "cancel": "Отмена",
@@ -43,6 +44,11 @@
       "action": "Играть",
       "description": "Покер вдвоём с колодой из 17 карт, которую никто не сдаёт: игроки тасуют её вместе, в зашифрованном виде.",
       "title": "Покер на семнадцать карт"
+    },
+    "roulette": {
+      "action": "Играть",
+      "description": "Дуэль с револьвером на 24 гнезда, куда каждый игрок заряжает свои пули: выстрелить или заплатить, чтобы пропустить.",
+      "title": "Русская рулетка"
     },
     "title": "Выберите игру"
   },

@@ -1,0 +1,14 @@
+<app-room-layout [game]="game" [dimContent]="false">
+    <app-roulette-presentation roomPresentation />
+    @if (room(); as myRoom) {
+    <app-roulette-table [room]="myRoom" />
+    <details class="rules-details">
+        <summary>{{ 'roulette.rules.summary' | transloco }}</summary>
+        <app-roulette-rules [withTitle]="false" />
+    </details>
+    <app-chat [room]="myRoom" />
+    <app-debug-webrtc [room]="myRoom"/>
+    } @else {
+    <app-roulette-rules />
+    }
+</app-room-layout>

@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Komora {number}: jedna kula",
+    "chamber": "Komora {number}",
+    "double": "Komora {number}: dwie kule",
+    "empty": "Komora {number}: pusta",
+    "hidden": "Komora {number}",
+    "label": "Bęben",
+    "loaded": "Komora {number}: twoja kula"
+  },
+  "presentation": {
+    "intro": "Każdy gracz ładuje 3 kule do wybranych komór, po czym bęben zostaje zakręcony. Na zmianę strzelasz, by zgarnąć żetony ze stołu, albo pasujesz, płacąc cenę, która podwaja się przy każdym kolejnym pasie z rzędu. Kula to śmierć, która kosztuje 50 żetonów: po wystrzeleniu 6 kul wygrywa ten, kto ma mniej śmierci.",
+    "points": {
+      "checked": "Po zakończeniu partii wszystkie klucze są pokazywane: każdy uczestnik sprawdza, że nikt nie oszukiwał.",
+      "hidden": "Gracze kręcą bębnem na zmianę: nikt, nawet serwer, nie wie, która komora jest następna ani czyja kula wystrzeli.",
+      "placed": "Tylko ty wiesz, gdzie są twoje kule: są szyfrowane, zanim zobaczy je drugi gracz."
+    },
+    "rooms": "Utwórz pokój lub dołącz do otwartego: uczestnicy bez miejsca oglądają partię.",
+    "tagline": "Pojedynek dla dwóch graczy z rewolwerem o 24 komorach.",
+    "title": "Rosyjska ruletka"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Każdy gracz w tajemnicy ładuje 3 kule do wybranych komór: komora może mieścić kulę każdego gracza.",
+      "spin": "Potem gracze po kolei kręcą bębnem: nikt nie wie, która komora będzie następna, ale kule każdego gracza zachowują swoje odstępy. Losowanie decyduje, kto zaczyna.",
+      "title": "Bęben"
+    },
+    "end": {
+      "title": "Koniec partii",
+      "winner": "Partia kończy się po wystrzeleniu 6 kul. Wygrywa gracz z mniejszą liczbą śmierci, potem ten z większą liczbą żetonów; w przeciwnym razie jest remis."
+    },
+    "fair": {
+      "checked": "Po zakończeniu partii oba klucze są pokazywane, a każdy uczestnik sprawdza obroty bębna: wtedy wynik jest ostateczny. Gracz, który oszukiwał lub zatrzymuje swój klucz, przegrywa partię.",
+      "hidden": "Każda komora jest szyfrowana kluczami obu graczy: strzał mówi tylko, ile kul było w komorze, nigdy czyje. Nawet serwer nie zna bębna.",
+      "title": "Uczciwa gra"
+    },
+    "summary": "Zasady gry",
+    "title": "Zasady",
+    "turn": {
+      "away": "Gdy gracza nie ma, ruch dostaje jeszcze 30 sekund, jeden raz: gracz, którego nadal nie ma, przegrywa partię.",
+      "clock": "Każdy ruch trwa najwyżej 45 sekund: potem strona pasuje za gracza albo strzela, gdy nie może zapłacić, i ładuje 3 losowe komory za gracza, który nie załadował.",
+      "death": "Strzał z kulą, albo z dwiema: jedna śmierć. Strzelający oddaje drugiemu graczowi 50 żetonów i żetony ze stołu, w razie potrzeby na dług.",
+      "empty": "Strzał w pustą komorę: zgarnij żetony ze stołu.",
+      "pass": "Pasuj: połóż żetony na stole, 1 żeton, podwajany przy każdym pasie z rzędu (1, 2, 4, 8, 16). Gracz, który nie może zapłacić, musi strzelić.",
+      "reveal": "Po 5 pasach z rzędu bank zabiera 31 żetonów ze stołu, a następna komora zostaje odsłonięta: jej kule przepadają, bez śmierci. Pasowanie nigdy nie chroni przed kulą.",
+      "title": "W każdej turze"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Załaduj ({count}/{bullets})",
+      "pass": "Pasuj ({price})",
+      "rematch": "Zagraj ponownie",
+      "shoot": "Strzel"
+    },
+    "bank": "Bank: {chips}",
+    "bullets": "{count, plural, one {Została # kula} few {Zostały # kule} many {Zostało # kul} other {Zostało # kuli}}",
+    "game": "Partia {number}:",
+    "history": "Ruchy partii",
+    "move": {
+      "death": "{name} strzela z komory {chamber}: jedna kula, jedna śmierć.",
+      "deathDouble": "{name} strzela z komory {chamber}: dwie kule, jedna śmierć.",
+      "draw": "{name} pasuje, {chips} żetonów: 5. pas z rzędu, bank zabiera stół.",
+      "empty": "{name} strzela z komory {chamber}: pusta, i zgarnia {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}.",
+      "emptyTable": "{name} strzela z komory {chamber}: pusta.",
+      "pass": "{name} pasuje: {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}} na stole.",
+      "revealBullet": "5. pas gracza {name} odsłania komorę {chamber}: jedna kula, przepada.",
+      "revealDouble": "5. pas gracza {name} odsłania komorę {chamber}: dwie kule, przepadają.",
+      "revealEmpty": "5. pas gracza {name} odsłania komorę {chamber}: pusta."
+    },
+    "pastGames": "Rozegrane partie",
+    "provisional": "Wynik tymczasowy: bęben zostanie sprawdzony po pokazaniu obu kluczy.",
+    "result": {
+      "bothCheated": "Obaj gracze oszukiwali przy bębnie: brak zwycięzcy.",
+      "cheated": "{loser} oszukiwał przy bębnie: {winner} wygrywa partię.",
+      "draw": "Remis: obaj gracze mają tyle samo śmierci i żetonów.",
+      "forfeit": "Czas gracza {loser} minął: {winner} wygrywa partię.",
+      "stopped": "Przerwana: przy bębnie oszukiwano.",
+      "win": "{winner} wygrywa partię: {deaths} przeciw {otherDeaths, plural, one {# śmierci} few {# śmierciom} many {# śmierciom} other {# śmierci}}, żetony: {chips}.",
+      "withheld": "{loser} nie pokazał swojego klucza: {winner} wygrywa partię."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+      "clock": "{seconds} s",
+      "deaths": "{count, plural, one {# śmierć} few {# śmierci} many {# śmierci} other {# śmierci}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "play": "Usiądź",
+      "release": "Usuń z miejsca"
+    },
+    "spectators": "Widzowie: {count}",
+    "status": {
+      "away": "Czekamy na powrót gracza {name}…",
+      "broken": "Przy bębnie oszukiwano: partia została przerwana.",
+      "disclosing": "Gracze pokazują klucze, by sprawdzić bęben…",
+      "firing": "Strzał z komory {chamber}…",
+      "hurry": "Twoja kolej: czas się kończy.",
+      "loading": "Ładowanie kul: {name}…",
+      "lost": "Ta strona zgubiła twoje klucze: nie możesz już grać w tej partii.",
+      "myTurn": "Twoja kolej: strzel albo pasuj.",
+      "place": "Wybierz komory dla swoich kul ({count}), a potem je załaduj.",
+      "placeOther": "Czekamy, aż {name} załaduje…",
+      "placing": "Gracze wybierają komory swoich kul.",
+      "revealing": "Odsłanianie komory {chamber}…",
+      "seats": "Czekamy, aż usiądzie dwóch graczy.",
+      "spinning": "Kręcenie bębnem: {name}…",
+      "theirTurn": "{name} strzela albo pasuje…"
+    },
+    "table": "Stół: {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+    "verification": {
+      "cheated": "Przy bębnie oszukiwano.",
+      "fair": "Bęben był uczciwy."
+    }
+  }
+}

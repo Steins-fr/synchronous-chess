@@ -1,0 +1,75 @@
+<svg class="block w-full h-auto overflow-visible" viewBox="0 0 200 100">
+    <defs>
+        <!-- The sheen of the steel, light on its top edge -->
+        <linearGradient id="revolver-steel" x1="0" x2="0" y1="0" y2="1">
+            <stop class="steel-highlight" offset="0" />
+            <stop class="steel-base" offset="0.45" />
+            <stop class="steel-shadow" offset="1" />
+        </linearGradient>
+        <linearGradient id="revolver-wood" x1="0" x2="1" y1="0" y2="1">
+            <stop class="wood-light" offset="0" />
+            <stop class="wood-dark" offset="1" />
+        </linearGradient>
+        <!-- The blast: a glow fading out from the muzzle -->
+        <radialGradient id="revolver-blast">
+            <stop class="blast-core" offset="0" />
+            <stop class="blast-glow" offset="0.45" />
+            <stop class="blast-edge" offset="1" />
+        </radialGradient>
+        <!-- The window of the cylinder in the frame: its flutes turn behind it -->
+        <clipPath id="revolver-cylinder">
+            <rect x="100" y="24" width="38" height="32" rx="7" />
+        </clipPath>
+    </defs>
+    <!-- The body recoils around the hand on the grip, the muzzle rising -->
+    <g class="revolver-body" (animationend)="end($event)">
+        <!-- The smoke and the blast, at the muzzle -->
+        <g class="smoke">
+            <circle cx="0" cy="30" r="8" />
+            <circle cx="-11" cy="22" r="6" />
+            <circle cx="-18" cy="34" r="5" />
+        </g>
+        <circle class="blast" cx="2" cy="34" r="36" fill="url(#revolver-blast)" />
+        <path class="flash" d="M9 34 L-16 18 L-5 29 L-32 34 L-5 39 L-16 50 Z" />
+        <path class="flash-core" d="M9 34 L-7 27 L-14 34 L-7 41 Z" />
+
+        <!-- The barrel: its rib and sight on top, the ejector rod under it, the crown of the muzzle -->
+        <rect class="steel" x="10" y="28" width="92" height="13" rx="2" />
+        <rect class="steel-edge-fill" x="10" y="25" width="92" height="4" rx="1.5" />
+        <path class="steel-edge-fill" d="M13 25 L15 19 H20 L21 25 Z" />
+        <rect class="steel" x="42" y="41" width="58" height="7" rx="3.5" />
+        <rect class="steel-edge-fill" x="38" y="42" width="6" height="5" rx="2" />
+        <rect class="muzzle" x="8" y="27" width="4" height="15" rx="1.5" />
+
+        <!-- The frame around the cylinder, up to the hammer -->
+        <path class="steel" d="M98 21 H150 Q156 21 158 27 L160 50 Q160 54 156 54 H134 L126 62 H104 L98 56 Z" />
+        <!-- The cylinder, its flutes turning one chamber as the hammer is cocked -->
+        <rect class="cylinder" x="100" y="24" width="38" height="32" rx="7" />
+        <g clip-path="url(#revolver-cylinder)">
+            <g class="cylinder-turn">
+                <rect class="flute" x="104" y="12" width="30" height="5" rx="2.5" />
+                <rect class="flute" x="104" y="23" width="30" height="5" rx="2.5" />
+                <rect class="flute" x="104" y="34" width="30" height="5" rx="2.5" />
+                <rect class="flute" x="104" y="45" width="30" height="5" rx="2.5" />
+                <rect class="flute" x="104" y="56" width="30" height="5" rx="2.5" />
+            </g>
+        </g>
+        <path class="cylinder-edges" d="M102 27 V53 M136 27 V53" />
+        <circle class="screw" cx="148" cy="44" r="2" />
+
+        <!-- The hammer and its spur, cocked while the revolver aims -->
+        <path class="hammer steel" d="M150 30 L153 12 Q154 6 160 4 L168 5 Q164 9 162 13 L158 31 Z" />
+
+        <!-- The trigger and its guard -->
+        <path class="guard" d="M124 60 Q122 76 136 76 Q146 76 146 58" />
+        <path class="steel-edge-fill" d="M133 56 Q129 64 133 70 L136 69 Q133 64 136 56 Z" />
+
+        <!-- The grip, in wood, checkered, with its screw -->
+        <path class="grip" d="M144 52 L162 44 Q178 60 175 88 Q174 98 162 98 L150 98 Q147 78 136 62 Z" />
+        <path class="checkering" d="M150 60 L168 88 M156 56 L171 80 M146 66 L160 92 M160 52 L172 66 M152 92 L170 64 M147 82 L166 56 M145 70 L158 52" />
+        <circle class="screw" cx="160" cy="74" r="2.5" />
+
+        <!-- The dry click of the hammer on an empty chamber -->
+        <path class="click" d="M170 0 L177 -7 M175 9 L184 8 M163 -3 L163 -11" />
+    </g>
+</svg>

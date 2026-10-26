@@ -6,9 +6,9 @@ import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { MentalDeckMessage, MentalDeckMessageType, MentalDeckPayloads } from '../mental-deck-messages';
-import { DeckKeyStore, DeckSecrets } from './deck-key-store';
 import { verifyDeck } from './deck-verification';
 import { DeckCheat, DeckPhase, DeckStep, MentalDeckState, PublishedKey } from './mental-deck-state';
+import { SecretStore } from './secret-store';
 import { SraCipher } from './sra-cipher';
 
 export enum DeckVerification {
@@ -17,6 +17,16 @@ export enum DeckVerification {
     CHECKING = 'checking',
     FAIR = 'fair',
     CHEATED = 'cheated',
+}
+
+/** What a player keeps secret of a deck until the game is over, its keys in hexadecimal */
+export interface DeckSecrets {
+    /** The key encrypting the deck before the player shuffles it */
+    shuffleKey: string;
+    /** Where the player put each card when it shuffled the deck */
+    permutation: ReadonlyArray<number>;
+    /** The key encrypting each card, by position, once the player locked the deck */
+    cardKeys: ReadonlyArray<string>;
 }
 
 export interface MentalDeckOptions {
@@ -30,7 +40,7 @@ export interface MentalDeckOptions {
     /** The players shuffling the deck, in the same order for every participant; the others are spectators */
     players: ReadonlyArray<string>;
     cipher?: SraCipher;
-    store?: DeckKeyStore;
+    store?: SecretStore<DeckSecrets>;
 }
 
 /** The secrets of the local player, as numbers */
@@ -64,7 +74,7 @@ export class MentalDeck {
     public readonly id: string;
     private readonly state: MentalDeckState;
     private readonly cipher: SraCipher;
-    private readonly store: DeckKeyStore;
+    private readonly store: SecretStore<DeckSecrets>;
     private readonly localName: string;
 
     private readonly _phase = signal<DeckPhase>(DeckPhase.SHUFFLING);
@@ -109,7 +119,7 @@ export class MentalDeck {
         this.id = options.id;
         this.cipher = options.cipher ?? new SraCipher();
         this.localName = room.localPlayer.name;
-        this.store = options.store ?? new DeckKeyStore(room.roomName, this.localName);
+        this.store = options.store ?? new SecretStore<DeckSecrets>('deck', room.roomName, this.localName);
         this.state = new MentalDeckState(options.size, options.players, this.cipher);
         this.verified = new Promise<DeckVerification>((resolve) => this.resolveVerified = resolve);
         this.cardOfValue = new Map(this.state.plainDeck.map((value: bigint, card: number) => [value, card]));

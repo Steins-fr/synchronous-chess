@@ -8,7 +8,8 @@
       "chat": "Chat",
       "chess": "Schach",
       "home": "Start",
-      "poker": "Poker"
+      "poker": "Poker",
+      "roulette": "Roulette"
     },
     "theme": {
       "toDark": "Zum dunklen Design wechseln",
@@ -17,8 +18,8 @@
     "title": "Synchrones Schach"
   },
   "cheat": {
-    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
-    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
+    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
+    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
   },
   "dialog": {
     "cancel": "Abbrechen",
@@ -43,6 +44,11 @@
       "action": "Spielen",
       "description": "Poker zu zweit mit einem Blatt aus 17 Karten, das niemand austeilt: Die Spieler mischen es gemeinsam, verschlüsselt.",
       "title": "Siebzehn-Karten-Poker"
+    },
+    "roulette": {
+      "action": "Spielen",
+      "description": "Ein Duell mit einem Revolver mit 24 Kammern, in den jeder Spieler seine eigenen Kugeln lädt: abdrücken oder zahlen, um zu passen.",
+      "title": "Russisches Roulette"
     },
     "title": "Wähle ein Spiel"
   },

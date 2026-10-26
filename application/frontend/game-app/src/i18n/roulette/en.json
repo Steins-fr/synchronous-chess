@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Chamber {number}: a bullet",
+    "chamber": "Chamber {number}",
+    "double": "Chamber {number}: two bullets",
+    "empty": "Chamber {number}: empty",
+    "hidden": "Chamber {number}",
+    "label": "Cylinder",
+    "loaded": "Chamber {number}: your bullet"
+  },
+  "presentation": {
+    "intro": "Each player loads 3 bullets into the chambers of its choice, then the cylinder is spun. In turn, shoot to take the chips on the table, or pass by paying, the price doubling at each pass in a row. A bullet is a death, which costs 50 chips: once the 6 bullets have fired, the fewest deaths win.",
+    "points": {
+      "checked": "Once the game is over, every key is shown: each participant checks that no one cheated.",
+      "hidden": "The two players spin the cylinder in turn: no one, not even the server, knows which chamber comes next, nor whose bullet fires.",
+      "placed": "Only you know where your bullets are: they are encrypted before the other player sees them."
+    },
+    "rooms": "Create a room or join an open one: the participants without a seat watch the game.",
+    "tagline": "A duel for two players, with a revolver of 24 chambers.",
+    "title": "Russian roulette"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Each player loads 3 bullets in the chambers of their choice, in secret: a chamber may hold a bullet of each player.",
+      "spin": "Then each player spins the cylinder in turn: no one knows which chamber comes next, but the bullets of each player keep their spacing. A draw tells who plays first.",
+      "title": "The cylinder"
+    },
+    "end": {
+      "title": "End of the game",
+      "winner": "The game ends once the 6 bullets have fired. The player with fewer deaths wins, then the one with more chips; otherwise it is a draw."
+    },
+    "fair": {
+      "checked": "Once the game is over, both keys are shown and every participant checks the spins: the result is final then. A player who cheated, or keeps their key, loses the game.",
+      "hidden": "Each chamber is encrypted with the keys of both players: a shot only tells how many bullets the chamber held, never whose they were. Not even the server knows the cylinder.",
+      "title": "Fair play"
+    },
+    "summary": "Rules of the game",
+    "title": "Rules",
+    "turn": {
+      "away": "While a player is away, the move gets 30 more seconds, once: the player still away loses the game.",
+      "clock": "Each move lasts 45 seconds at most: then the page passes for the player, or shoots when it can not pay, and loads 3 chambers at random for a player who did not load.",
+      "death": "Shoot a bullet, or two: one death. The shooter gives 50 chips and the chips of the table to the other player, going into debt if need be.",
+      "empty": "Shoot an empty chamber: take the chips of the table.",
+      "pass": "Pass: put chips on the table, 1 chip, doubled at each pass in a row (1, 2, 4, 8, 16). A player who can not pay must shoot.",
+      "reveal": "After 5 passes in a row, the bank takes the 31 chips of the table, and the next chamber is revealed: its bullets are spent, without a death. Passing never dodges a bullet.",
+      "title": "Each turn"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Load ({count}/{bullets})",
+      "pass": "Pass ({price})",
+      "rematch": "Play again",
+      "shoot": "Shoot"
+    },
+    "bank": "Bank: {chips}",
+    "bullets": "{count, plural, one {# bullet} other {# bullets}} left",
+    "game": "Game {number}:",
+    "history": "Moves of the game",
+    "move": {
+      "death": "{name} fires chamber {chamber}: a bullet, one death.",
+      "deathDouble": "{name} fires chamber {chamber}: two bullets, one death.",
+      "draw": "{name} passes, {chips} chips: the 5th pass in a row, the bank takes the table.",
+      "empty": "{name} fires chamber {chamber}: empty, and takes {chips, plural, one {# chip} other {# chips}}.",
+      "emptyTable": "{name} fires chamber {chamber}: empty.",
+      "pass": "{name} passes: {chips, plural, one {# chip} other {# chips}} on the table.",
+      "revealBullet": "The 5th pass of {name} reveals chamber {chamber}: a bullet, spent.",
+      "revealDouble": "The 5th pass of {name} reveals chamber {chamber}: two bullets, spent.",
+      "revealEmpty": "The 5th pass of {name} reveals chamber {chamber}: empty."
+    },
+    "pastGames": "Games played",
+    "provisional": "Provisional result: the cylinder is checked once both keys are shown.",
+    "result": {
+      "bothCheated": "Both players cheated on the cylinder: no winner.",
+      "cheated": "{loser} cheated on the cylinder: {winner} wins the game.",
+      "draw": "Draw: both players end with as many deaths and chips.",
+      "forfeit": "{loser} ran out of time: {winner} wins the game.",
+      "stopped": "Stopped: the cylinder was cheated.",
+      "win": "{winner} wins the game: {deaths} against {otherDeaths, plural, one {# death} other {# deaths}}, with {chips, plural, one {# chip} other {# chips}}.",
+      "withheld": "{loser} did not show their key: {winner} wins the game."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# chip} other {# chips}}",
+      "clock": "{seconds} s",
+      "deaths": "{count, plural, one {# death} other {# deaths}}",
+      "free": "Free seat",
+      "leave": "Leave the seat",
+      "play": "Sit here",
+      "release": "Free the seat"
+    },
+    "spectators": "Spectators: {count}",
+    "status": {
+      "away": "Waiting for {name} to come back…",
+      "broken": "The cylinder was cheated: the game stopped.",
+      "disclosing": "The players show their keys, to check the cylinder…",
+      "firing": "Chamber {chamber} fires…",
+      "hurry": "Your turn: time is running out.",
+      "loading": "Loading the bullets: {name}…",
+      "lost": "This page lost your keys: you can no longer play this game.",
+      "myTurn": "Your turn: shoot, or pass.",
+      "place": "Pick the chambers of your {count} bullets, then load them.",
+      "placeOther": "Waiting for {name} to load…",
+      "placing": "The players pick the chambers of their bullets.",
+      "revealing": "Chamber {chamber} is revealed…",
+      "seats": "Waiting for two players to sit.",
+      "spinning": "Spinning the cylinder: {name}…",
+      "theirTurn": "{name} shoots or passes…"
+    },
+    "table": "Table: {chips, plural, one {# chip} other {# chips}}",
+    "verification": {
+      "cheated": "The cylinder was cheated.",
+      "fair": "The cylinder was fair."
+    }
+  }
+}

@@ -1,0 +1,34 @@
+<ng-container *transloco="let t; prefix: 'roulette.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('cylinder.title') }}</h3>
+        <p class="my-2">{{ t('cylinder.load') }}</p>
+        <p class="my-2">{{ t('cylinder.spin') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('turn.title') }}</h3>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('turn.pass') }}</li>
+            <li>{{ t('turn.reveal') }}</li>
+            <li>{{ t('turn.empty') }}</li>
+            <li>{{ t('turn.death') }}</li>
+        </ul>
+        <p class="my-2">{{ t('turn.clock') }}</p>
+        <p class="my-2">{{ t('turn.away') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('end.title') }}</h3>
+        <p class="my-2">{{ t('end.winner') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.hidden') }}</p>
+        <p class="my-2">{{ t('fair.checked') }}</p>
+    </section>
+</ng-container>

@@ -8,10 +8,10 @@ import { TestHelper } from '@testing/test.helper';
 import { TEST_GROUP } from '@testing/sra-test-group';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CardKey, CardKeysMessage, DeckStepMessage, mentalDeckBlockChains, MentalDeckMessageType, MentalDeckPayloads } from '../mental-deck-messages';
-import { DeckKeyStore } from './deck-key-store';
-import { DeckVerification, MentalDeck } from './mental-deck';
+import { DeckSecrets, DeckVerification, MentalDeck } from './mental-deck';
 import { MentalDeckTable } from './mental-deck-table';
 import { DeckPhase } from './mental-deck-state';
+import { SecretStore } from './secret-store';
 import { SraCipher } from './sra-cipher';
 
 const SIZE: number = 17;
@@ -176,7 +176,7 @@ describe('MentalDeck', () => {
         const [a, , c] = table();
         await Promise.all([deal(hand(0), 'a'), deal(hand(5), 'b')]);
         const cardsOfA: ReadonlyMap<number, number> = a.cards();
-        new DeckKeyStore('room', 'a').save('game:2', { shuffleKey: '1', permutation: [], cardKeys: [] });
+        new SecretStore<DeckSecrets>('deck', 'room', 'a').save('game:2', { shuffleKey: '1', permutation: [], cardKeys: [] });
 
         // When
         const verifications: Promise<DeckVerification[]> = disclose();
@@ -192,8 +192,8 @@ describe('MentalDeck', () => {
         expect(new Set(c.cards().values()).size).toEqual(SIZE);
         hand(0).forEach((position: number) => expect(c.cards().get(position)).toEqual(cardsOfA.get(position)));
         // The secrets of the deck are not secret anymore, the ones of another deck are kept
-        expect(new DeckKeyStore('room', 'a').get(ID)).toBeUndefined();
-        expect(new DeckKeyStore('room', 'a').get('game:2')).toBeDefined();
+        expect(new SecretStore<DeckSecrets>('deck', 'room', 'a').get(ID)).toBeUndefined();
+        expect(new SecretStore<DeckSecrets>('deck', 'room', 'a').get('game:2')).toBeDefined();
     });
 
     describe('cheats', () => {
@@ -299,7 +299,7 @@ describe('MentalDeck', () => {
             expect(hub.reports).toHaveLength(3);
             expect(await c.disclose()).toEqual(DeckVerification.CHEATED);
             expect(c.verification()).toEqual(DeckVerification.CHEATED);
-            expect(new DeckKeyStore('room', 'a').get(ID)).toBeUndefined();
+            expect(new SecretStore<DeckSecrets>('deck', 'room', 'a').get(ID)).toBeUndefined();
         });
 
         test('should break on a deck holding a value that is not a square, a card marked to follow it', async () => {
@@ -458,7 +458,7 @@ describe('MentalDeck', () => {
 
     test('should stop with a failure, as a store throwing', async () => {
         // Given
-        vi.spyOn(DeckKeyStore.prototype, 'get').mockImplementation(() => {
+        vi.spyOn(SecretStore.prototype, 'get').mockImplementation(() => {
             throw new Error('store');
         });
 
@@ -555,7 +555,7 @@ describe('MentalDeck', () => {
             // Given
             table();
             await ready(...decks);
-            new DeckKeyStore('room', 'b').save(ID, { shuffleKey: 'zz', permutation: [], cardKeys: [] });
+            new SecretStore<DeckSecrets>('deck', 'room', 'b').save(ID, { shuffleKey: 'zz', permutation: [], cardKeys: [] });
 
             // When
             const b: MentalDeck = reload(1, 'b');
@@ -587,7 +587,7 @@ describe('MentalDeck', () => {
             expect(TimedLogger.warn).toHaveBeenCalledOnce();
             expect(messagesOf(MentalDeckMessageType.KEYS, 'a').map((message: AppMessage) => (message.payload as CardKeysMessage).keys.map(({ position }) => position)))
                 .toEqual([hand(0)]);
-            expect(new DeckKeyStore('room', 'a').get(ID)).toBeUndefined();
+            expect(new SecretStore<DeckSecrets>('deck', 'room', 'a').get(ID)).toBeUndefined();
         });
 
         test('should not lock the deck once its secrets are lost, nor disclose them', async () => {

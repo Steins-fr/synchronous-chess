@@ -8,7 +8,8 @@
       "chat": "Chat",
       "chess": "Chess",
       "home": "Home",
-      "poker": "Poker"
+      "poker": "Poker",
+      "roulette": "Roulette"
     },
     "theme": {
       "toDark": "Switch to the dark theme",
@@ -17,8 +18,8 @@
     "title": "Synchronous Chess"
   },
   "cheat": {
-    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} other {}}) from {author} is reported as cheating by {reporters}",
-    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
+    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} other {}}) from {author} is reported as cheating by {reporters}",
+    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
   },
   "dialog": {
     "cancel": "Cancel",
@@ -43,6 +44,11 @@
       "action": "Play",
       "description": "Heads-up poker with a deck of 17 cards that no one deals: the players shuffle it together, encrypted.",
       "title": "Seventeen poker"
+    },
+    "roulette": {
+      "action": "Play",
+      "description": "A duel with a revolver of 24 chambers, where each player loads its own bullets: shoot, or pay to pass.",
+      "title": "Russian roulette"
     },
     "title": "Choose a game"
   },

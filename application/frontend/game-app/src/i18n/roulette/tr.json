@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Hazne {number}: bir mermi",
+    "chamber": "Hazne {number}",
+    "double": "Hazne {number}: iki mermi",
+    "empty": "Hazne {number}: boş",
+    "hidden": "Hazne {number}",
+    "label": "Tambur",
+    "loaded": "Hazne {number}: merminiz"
+  },
+  "presentation": {
+    "intro": "Her oyuncu seçtiği haznelere 3 mermi doldurur, ardından tambur çevrilir. Sırayla ateş ederek masadaki fişleri alın ya da ödeyerek pas geçin; fiyat art arda her pasta ikiye katlanır. Bir mermi bir ölümdür ve 50 fişe mal olur: 6 mermi de ateşlendiğinde en az ölümü olan kazanır.",
+    "points": {
+      "checked": "Oyun bittiğinde tüm anahtarlar gösterilir: her katılımcı kimsenin hile yapmadığını doğrular.",
+      "hidden": "İki oyuncu tamburu sırayla çevirir: sunucu dahil hiç kimse sıradaki hazneyi ya da ateşlenen merminin kime ait olduğunu bilmez.",
+      "placed": "Mermilerinizin yerini yalnızca siz bilirsiniz: diğer oyuncu görmeden önce şifrelenirler."
+    },
+    "rooms": "Bir oda oluşturun ya da açık bir odaya katılın: yeri olmayan katılımcılar oyunu izler.",
+    "tagline": "24 hazneli bir altıpatlarla iki oyunculu bir düello.",
+    "title": "Rus ruleti"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Her oyuncu seçtiği haznelere gizlice 3 mermi doldurur: bir hazne her oyuncudan birer mermi alabilir.",
+      "spin": "Ardından her oyuncu sırayla tamburu çevirir: kimse sıradaki hazneyi bilmez, ama her oyuncunun mermileri aralarındaki mesafeyi korur. Kimin önce oynayacağını kura belirler.",
+      "title": "Tambur"
+    },
+    "end": {
+      "title": "Oyunun sonu",
+      "winner": "Oyun 6 mermi de ateşlendiğinde biter. En az ölümü olan oyuncu kazanır, ardından en çok fişi olan; aksi hâlde berabere."
+    },
+    "fair": {
+      "checked": "Oyun bittiğinde iki anahtar da gösterilir ve her katılımcı tambur çevirmelerini doğrular: sonuç o zaman kesinleşir. Hile yapan ya da anahtarını saklayan oyuncu oyunu kaybeder.",
+      "hidden": "Her hazne iki oyuncunun anahtarlarıyla şifrelenir: bir atış yalnızca haznede kaç mermi olduğunu söyler, kime ait olduklarını asla. Sunucu bile tamburu bilmez.",
+      "title": "Dürüst oyun"
+    },
+    "summary": "Oyunun kuralları",
+    "title": "Kurallar",
+    "turn": {
+      "away": "Bir oyuncu yokken hamle bir kez 30 saniye daha alır: hâlâ olmayan oyuncu oyunu kaybeder.",
+      "clock": "Her hamle en fazla 45 saniye sürer: ardından sayfa oyuncu adına pas geçer ya da ödeyemiyorsa ateş eder; doldurmamış bir oyuncu için de rastgele 3 hazne doldurur.",
+      "death": "Bir ya da iki mermiye ateş edin: bir ölüm. Ateş eden, gerekirse borçlanarak diğer oyuncuya 50 fiş ve masadaki fişleri verir.",
+      "empty": "Boş bir hazneye ateş edin: masadaki fişleri alın.",
+      "pass": "Pas geç: masaya fiş koyun, 1 fiş, art arda her pasta ikiye katlanır (1, 2, 4, 8, 16). Ödeyemeyen oyuncu ateş etmek zorundadır.",
+      "reveal": "Art arda 5 pastan sonra banka masadaki 31 fişi alır ve sıradaki hazne açılır: mermileri ölüm olmadan harcanır. Pas geçmek mermiden asla kaçırmaz.",
+      "title": "Her tur"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Doldur ({count}/{bullets})",
+      "pass": "Pas ({price})",
+      "rematch": "Tekrar oyna",
+      "shoot": "Ateş et"
+    },
+    "bank": "Banka: {chips}",
+    "bullets": "{count, plural, one {# mermi kaldı} other {# mermi kaldı}}",
+    "game": "Oyun {number}:",
+    "history": "Oyunun hamleleri",
+    "move": {
+      "death": "{name} {chamber}. hazneye ateş ediyor: bir mermi, bir ölüm.",
+      "deathDouble": "{name} {chamber}. hazneye ateş ediyor: iki mermi, bir ölüm.",
+      "draw": "{name} pas geçiyor, {chips} fiş: art arda 5. pas, banka masayı alıyor.",
+      "empty": "{name} {chamber}. hazneye ateş ediyor: boş, ve {chips, plural, one {# fiş} other {# fiş}} alıyor.",
+      "emptyTable": "{name} {chamber}. hazneye ateş ediyor: boş.",
+      "pass": "{name} pas geçiyor: masada {chips, plural, one {# fiş} other {# fiş}}.",
+      "revealBullet": "{name} kullanıcısının 5. pası {chamber}. hazneyi açıyor: bir mermi, harcandı.",
+      "revealDouble": "{name} kullanıcısının 5. pası {chamber}. hazneyi açıyor: iki mermi, harcandı.",
+      "revealEmpty": "{name} kullanıcısının 5. pası {chamber}. hazneyi açıyor: boş."
+    },
+    "pastGames": "Oynanan oyunlar",
+    "provisional": "Geçici sonuç: tambur, iki anahtar da gösterildiğinde doğrulanır.",
+    "result": {
+      "bothCheated": "İki oyuncu da tamburda hile yaptı: kazanan yok.",
+      "cheated": "{loser} tamburda hile yaptı: {winner} oyunu kazanıyor.",
+      "draw": "Berabere: iki oyuncunun da ölüm ve fiş sayısı eşit.",
+      "forfeit": "{loser} için süre doldu: {winner} oyunu kazanıyor.",
+      "stopped": "Durduruldu: tamburda hile yapıldı.",
+      "win": "{winner} oyunu kazanıyor: {deaths} ölüme karşı {otherDeaths, plural, one {# ölüm} other {# ölüm}}, {chips, plural, one {# fiş} other {# fiş}} ile.",
+      "withheld": "{loser} anahtarını göstermedi: {winner} oyunu kazanıyor."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# fiş} other {# fiş}}",
+      "clock": "{seconds} sn",
+      "deaths": "{count, plural, one {# ölüm} other {# ölüm}}",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "play": "Otur",
+      "release": "Yeri boşalt"
+    },
+    "spectators": "İzleyiciler: {count}",
+    "status": {
+      "away": "{name} kullanıcısının dönmesi bekleniyor…",
+      "broken": "Tamburda hile yapıldı: oyun durduruldu.",
+      "disclosing": "Oyuncular tamburu doğrulamak için anahtarlarını gösteriyor…",
+      "firing": "{chamber}. hazne ateşleniyor…",
+      "hurry": "Sıra sizde: süre doluyor.",
+      "loading": "Mermiler dolduruluyor: {name}…",
+      "lost": "Bu sayfa anahtarlarınızı kaybetti: bu oyunu artık oynayamazsınız.",
+      "myTurn": "Sıra sizde: ateş edin ya da pas geçin.",
+      "place": "{count} merminiz için hazneleri seçin, sonra doldurun.",
+      "placeOther": "{name} kullanıcısının doldurması bekleniyor…",
+      "placing": "Oyuncular mermilerinin haznelerini seçiyor.",
+      "revealing": "{chamber}. hazne açılıyor…",
+      "seats": "İki oyuncunun oturması bekleniyor.",
+      "spinning": "Tambur çevriliyor: {name}…",
+      "theirTurn": "{name} ateş ediyor ya da pas geçiyor…"
+    },
+    "table": "Masa: {chips, plural, one {# fiş} other {# fiş}}",
+    "verification": {
+      "cheated": "Tamburda hile yapıldı.",
+      "fair": "Tambur dürüsttü."
+    }
+  }
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "rooms" DROP CONSTRAINT "rooms_game", ADD CONSTRAINT "rooms_game" CHECK ("game" IN ('chess', 'chat', 'seventeen-poker', 'russian-roulette'));

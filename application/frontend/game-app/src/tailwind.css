@@ -27,6 +27,19 @@
     --color-app-felt: var(--app-felt);
     --color-app-chip: var(--app-chip);
     --color-app-clock-low: var(--app-clock-low);
+    --color-app-steel: var(--app-steel);
+    --color-app-steel-light: var(--app-steel-light);
+    --color-app-steel-edge: var(--app-steel-edge);
+    --color-app-chamber: var(--app-chamber);
+    --color-app-bullet: var(--app-bullet);
+    --color-app-bullet-primer: var(--app-bullet-primer);
+    --color-app-death: var(--app-death);
+    --color-app-grip: var(--app-grip);
+    --color-app-grip-edge: var(--app-grip-edge);
+    --color-app-flash: var(--app-flash);
+    --color-app-flash-core: var(--app-flash-core);
+    --color-app-smoke: var(--app-smoke);
+    --color-app-survive: var(--app-survive);
     --color-app-chip-1: var(--app-chip-1);
     --color-app-chip-1-edge: var(--app-chip-1-edge);
     --color-app-chip-5: var(--app-chip-5);
@@ -63,9 +76,9 @@
     @apply flex justify-center items-center h-32 rounded-lg;
 }
 
-/* A link of the navigation: closer to the others on a phone, the four links and the two buttons holding on its width */
+/* A link of the navigation: smaller and closer to the others on a phone, the five links and the two buttons holding on its width */
 @utility nav-link {
-    @apply mx-1.5 my-2.5 sm:mx-2.5;
+    @apply mx-1 my-2.5 text-sm sm:mx-2.5 sm:text-base;
 }
 
 /* The picture of a card drawn with a glyph of the game, on the light square of the board */

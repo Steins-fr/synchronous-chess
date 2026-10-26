@@ -82,13 +82,28 @@ export function jacobi(value: bigint, modulus: bigint): number {
     return odd === 1n ? symbol : 0;
 }
 
+const HEX: RegExp = /^[0-9a-f]{1,1024}$/;
+
+/** A number received from a peer, in lowercase hexadecimal, undefined when it is not one */
+export function parseHex(hex: unknown): bigint | undefined {
+    return typeof hex === 'string' && HEX.test(hex) ? BigInt(`0x${ hex }`) : undefined;
+}
+
+/**
+ * A value of the subgroup of the squares received from a peer, undefined when it is not one: a value that is not a
+ * square would be told from the others by its symbol of Legendre (the attack of Lipton). 1 is left out too: a cipher
+ * text or a key never gives it, but by a chance of 1 in q
+ */
+export function parseGroupValue(hex: unknown, group: SraGroup): bigint | undefined {
+    const value: bigint | undefined = parseHex(hex);
+    return value !== undefined && value > 1n && value < group.prime && jacobi(value, group.prime) === 1 ? value : undefined;
+}
+
 /**
  * The commutative cipher of Shamir, Rivest and Adleman: a value encrypted with several keys, in any order, is decrypted
  * with their inverses, in any order. A key is an exponent modulo q, its inverse decrypts.
  */
 export class SraCipher {
-    private static readonly HEX: RegExp = /^[0-9a-f]{1,1024}$/;
-
     public constructor(public readonly group: SraGroup = MODP_2048_GROUP) {
     }
 
@@ -129,21 +144,16 @@ export class SraCipher {
      * told from the others by its symbol of Legendre, a card marked to follow it
      */
     public parseValue(hex: unknown): bigint | undefined {
-        const value: bigint | undefined = SraCipher.parse(hex);
-        return value !== undefined && value > 1n && value < this.group.prime && jacobi(value, this.group.prime) === 1 ? value : undefined;
+        return parseGroupValue(hex, this.group);
     }
 
     /** A key received from a peer, undefined when it is not one */
     public parseKey(hex: unknown): bigint | undefined {
-        const key: bigint | undefined = SraCipher.parse(hex);
+        const key: bigint | undefined = parseHex(hex);
         return key !== undefined && key > 0n && key < this.group.order ? key : undefined;
     }
 
     public static toHex(value: bigint): string {
         return value.toString(16);
-    }
-
-    private static parse(hex: unknown): bigint | undefined {
-        return typeof hex === 'string' && SraCipher.HEX.test(hex) ? BigInt(`0x${ hex }`) : undefined;
     }
 }
