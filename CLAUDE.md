@@ -136,12 +136,13 @@ run by the CI.
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
   the Russian roulette page `/russian-roulette`: the home page only links to them.
-- Each participant, the host included, takes a seat with the `Play white` / `Play black`
-  buttons: two tabs are enough. See `documentation/chess-game-session.md`.
+- Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
+  `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
   `mcp__playwright__browser_run_code_unsafe`: `mouse.down()` on the origin cell, a first small
   `mouse.move` to start the drag, then a `mouse.move` with `steps` to the destination and
-  `mouse.up()`. The cells are `#board-grid mat-grid-tile`, rank 8 first, not flipped for black.
+  `mouse.up()`. The cells are `#board-grid mat-grid-tile`, rank 8 and the A column first, flipped for the
+  board seen from black (the black player, a spectator who may take black): rank 1 and the H column first.
 - `page.context().pages()` reaches every tab from one script, to compare the boards after a turn.
 - The MCP only records the console of the selected tab: select each tab and call
   `mcp__playwright__browser_console_messages` to check it.

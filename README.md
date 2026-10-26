@@ -17,7 +17,7 @@ The room creator is the host, if he leave the room, the participants can continu
 
 ### Synchronous Chess demo
 
-Each participant, the host included, takes a free seat with the `Play white` / `Play black` buttons. The seats are final once the first move is played; the others are spectators.
+Each participant, the host included, takes the free seat below the board with `Play white`, or `Play black` once white is taken: the board shows from the side of the local player. The seats are final once the first move is played; the others are spectators.
 
 Drag & Drop a piece to validate a move. The registered move will be displayed with two green cells: the origin and the destination. When both players has played, both moves will be played.
 

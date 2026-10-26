@@ -1,5 +1,5 @@
 
-import { Component, OnDestroy, computed, input, signal, untracked } from '@angular/core';
+import { Component, OnDestroy, Signal, computed, input, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
@@ -44,10 +44,23 @@ export class SyncChessGameComponent implements OnDestroy {
 
     private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
     protected readonly validPlayBoard = signal<ValidPlayBoard>(ChessBoardHelper.createFilledBoard(false));
-    protected blackPiece: FenPiece = FenPiece.BLACK_KING;
-    protected whitePiece: FenPiece = FenPiece.WHITE_KING;
     protected whiteColor: PieceColor = PieceColor.WHITE;
     protected blackColor: PieceColor = PieceColor.BLACK;
+
+    /**
+     * The color at the bottom of the board: the one of the local player. A spectator sees the board from the free seat
+     * it may take, where it shows once seated, else from the side of White
+     */
+    protected readonly bottomColor: Signal<PieceColor> = computed((): PieceColor => {
+        const session: SynchronousChessGameSession = this.gameSession();
+        const { whitePlayer, blackPlayer } = session.configuration();
+
+        if (session.myColor !== PieceColor.NONE) {
+            return session.myColor;
+        }
+        return session.seatsOpen() && whitePlayer !== undefined && blackPlayer === undefined ? PieceColor.BLACK : PieceColor.WHITE;
+    });
+    protected readonly topColor: Signal<PieceColor> = computed((): PieceColor => this.bottomColor() === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
 
     public ngOnDestroy(): void {
         this.gameSession().destroy();
@@ -109,34 +122,33 @@ export class SyncChessGameComponent implements OnDestroy {
         return this.gameSession().game.getTurnType() === TurnType.CHOICE_PROMOTION;
     }
 
-    public whiteHasPlayed(): boolean {
-        return this.gameSession().game.hasPlayed(PieceColor.WHITE);
+    public hasPlayed(color: PieceColor): boolean {
+        return this.gameSession().game.hasPlayed(color);
     }
 
-    public blackHasPlayed(): boolean {
-        return this.gameSession().game.hasPlayed(PieceColor.BLACK);
-    }
-
-    public whiteLastMove(): TranslatableText {
+    public lastMove(color: PieceColor): TranslatableText {
         const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
-        return action === null
-            ? { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.none', undefined, 'chess')) }
-            : this.formatLastMove(action.whiteMove);
+        if (action === null) {
+            return { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.none', undefined, 'chess')) };
+        }
+        return this.formatLastMove(color === PieceColor.WHITE ? action.whiteMove : action.blackMove);
     }
 
-    public blackLastMove(): TranslatableText {
-        const action: MoveTurnAction | null = this.gameSession().game.lastMoveTurnAction();
-        return action === null
-            ? { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.none', undefined, 'chess')) }
-            : this.formatLastMove(action.blackMove);
+    public displayInteractions(color: PieceColor): boolean {
+        return this.gameSession().playingColor === color && !this.gameSession().game.isGameOver();
     }
 
-    public displayBlackInteractions(): boolean {
-        return this.gameSession().playingColor === PieceColor.BLACK && !this.gameSession().game.isGameOver();
+    public inCheck(color: PieceColor): boolean {
+        return color === PieceColor.WHITE ? this.gameSession().game.isWhiteInCheck() : this.gameSession().game.isBlackInCheck();
     }
 
-    public displayWhiteInteractions(): boolean {
-        return this.gameSession().playingColor === PieceColor.WHITE && !this.gameSession().game.isGameOver();
+    public inCheckmate(color: PieceColor): boolean {
+        return color === PieceColor.WHITE ? this.gameSession().game.isWhiteInCheckmate() : this.gameSession().game.isBlackInCheckmate();
+    }
+
+    /** The king standing for the player of a color */
+    protected king(color: PieceColor): FenPiece {
+        return color === PieceColor.WHITE ? FenPiece.WHITE_KING : FenPiece.BLACK_KING;
     }
 
     /** The end of the game, once over. A win picks its sentence by the winner (an ICU select): no color word fits in it */
@@ -175,13 +187,14 @@ export class SyncChessGameComponent implements OnDestroy {
         this.gameSession().move(null);
     }
 
-    /** A free seat, until the game starts: the local player may take it, leaving its other seat */
-    public canTakeSeat(color: PieceColor): boolean {
-        return this.gameSession().seatsOpen() && this.seatedPlayer(color) === undefined;
+    /** A participant without a seat takes the free one at the bottom of the board, until the game starts */
+    public canTakeSeat(): boolean {
+        return this.gameSession().seatsOpen() && this.gameSession().myColor === PieceColor.NONE && this.seatedPlayer(this.bottomColor()) === undefined;
     }
 
-    public canLeaveSeat(color: PieceColor): boolean {
-        return this.gameSession().seatsOpen() && this.gameSession().myColor === color;
+    /** The local player leaves its seat, at the bottom of the board, until the game starts */
+    public canLeaveSeat(): boolean {
+        return this.gameSession().seatsOpen() && this.gameSession().myColor !== PieceColor.NONE;
     }
 
     public takeSeat(color: PieceColor): void {
@@ -192,7 +205,7 @@ export class SyncChessGameComponent implements OnDestroy {
         this.gameSession().leaveSeat();
     }
 
-    private seatedPlayer(color: PieceColor): string | undefined {
+    protected seatedPlayer(color: PieceColor): string | undefined {
         const { whitePlayer, blackPlayer } = this.gameSession().configuration();
         return color === PieceColor.WHITE ? whitePlayer : blackPlayer;
     }

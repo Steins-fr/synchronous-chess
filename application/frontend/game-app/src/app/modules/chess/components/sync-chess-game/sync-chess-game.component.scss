@@ -57,13 +57,7 @@
                 border-radius: 10%;
                 overflow: hidden;
 
-                &.white-player {
-                    bottom: 38px;
-                }
-
-                &.black-player {
-                    top: 40px;
-                }
+                bottom: 38px;
             }
         }
 
@@ -94,7 +88,7 @@
                     background-color: var(--app-board-light);
                 }
 
-                &.white-player {
+                &.bottom-player {
                     justify-content: flex-end;
                 }
 

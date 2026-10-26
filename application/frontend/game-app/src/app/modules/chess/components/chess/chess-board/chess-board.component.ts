@@ -1,6 +1,6 @@
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { Component, effect, input, model, output, signal } from '@angular/core';
+import { Component, computed, effect, input, model, output, signal, Signal } from '@angular/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import CoordinateMove from '@app/modules/chess/interfaces/CoordinateMove';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
@@ -27,12 +27,18 @@ export class ChessBoardComponent {
     public readonly validPlayBoard = model.required<ValidPlayBoard>();
     public readonly grabColor = input.required<PieceColor>();
     public readonly movePreview = input.required<CoordinateMove | undefined>();
+    /** The board seen from the side of Black: the 1st rank at the top, the H column on the left */
+    public readonly flipped = input<boolean>(false);
 
     public readonly fromPreview = signal<Vec2 | null>(null);
     public readonly toPreview = signal<Vec2 | null>(null);
     public readonly pieceDragged = signal<Vec2>(new Vec2(-1, -1));
     public readonly cellHovered = signal<Vec2>(new Vec2(-1, -1));
-    protected readonly range = [...new Array(8).keys()];
+    /** The indexes of the ranks from the top of the board, and of the columns from its left, as seen */
+    protected readonly order: Signal<ReadonlyArray<number>> = computed((): ReadonlyArray<number> => {
+        const indexes: number[] = [...new Array(8).keys()];
+        return this.flipped() ? indexes.reverse() : indexes;
+    });
 
     public constructor() {
         // When fenBoard changes, reset valid plays.

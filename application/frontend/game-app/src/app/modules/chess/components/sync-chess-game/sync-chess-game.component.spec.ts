@@ -103,11 +103,18 @@ describe('SyncChessGameComponent', () => {
         await refresh();
     }
 
-    // The local player takes its seat with its button, the remote one takes the other seat
+    // The local player takes its seat with its button, the remote one takes the other seat: before it for black, the
+    // local player seeing the board from the free seat
     async function createOnlineGame(localColor: PieceColor = PieceColor.WHITE): Promise<void> {
         await joinOnlineRoom();
-        seatButton(localColor === PieceColor.WHITE ? 'white' : 'black', localColor === PieceColor.WHITE ? 'Play white' : 'Play black')?.click();
-        remoteSeat(localColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
+        if (localColor === PieceColor.WHITE) {
+            seatButton('white', 'Play white')?.click();
+            remoteSeat(PieceColor.BLACK);
+        } else {
+            remoteSeat(PieceColor.WHITE);
+            await refresh();
+            seatButton('black', 'Play black')?.click();
+        }
         await refresh();
     }
 
@@ -152,49 +159,64 @@ describe('SyncChessGameComponent', () => {
         expect(skipButton('black')).toBeNull();
     });
 
-    test('should let the participants take the free seats, then change or leave theirs', async () => {
+    test('should let a participant take the free seat at the bottom of the board, then leave it', async () => {
         // Given
         await joinOnlineRoom();
 
-        // Then
-        expect(text('.black-seat')).toEqual('Black player: Waiting Play black');
-        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
+        // Then: a single seat to take, white at the bottom
+        expect(text('#seat-top')).toEqual('Black player: Waiting');
+        expect(text('#seat-bottom')).toEqual('White player: Waiting Play white');
         expect(text('.spectators')).toEqual('Spectators: 2');
         expect(component.moveColor()).toEqual(PieceColor.NONE);
+        expect(board().flipped()).toBe(false);
 
         // When
         seatButton('white', 'Play white')?.click();
         await refresh();
 
-        // Then the local player may still take the other seat
-        expect(text('.white-seat')).toEqual('White player: local Leave the seat');
-        expect(text('.black-seat')).toEqual('Black player: Waiting Play black');
+        // Then
+        expect(text('#seat-bottom')).toEqual('White player: local Leave the seat');
+        expect(text('#seat-top')).toEqual('Black player: Waiting');
         expect(text('.spectators')).toEqual('Spectators: 1');
+
+        // When
+        seatButton('white', 'Leave the seat')?.click();
+        await refresh();
+
+        // Then
+        expect(text('#seat-bottom')).toEqual('White player: Waiting Play white');
+        expect(text('.spectators')).toEqual('Spectators: 2');
+    });
+
+    test('should show the board from the side of black to a participant who may take it, then plays it', async () => {
+        // Given
+        await joinOnlineRoom();
+
+        // When
+        remoteSeat(PieceColor.WHITE);
+        await refresh();
+
+        // Then
+        expect(text('#seat-top')).toEqual('White player: remote');
+        expect(text('#seat-bottom')).toEqual('Black player: Waiting Play black');
+        expect(board().flipped()).toBe(true);
+        expect(text('.player-information.top-player')).toContain('waiting');
 
         // When
         seatButton('black', 'Play black')?.click();
         await refresh();
 
         // Then
-        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
-        expect(text('.black-seat')).toEqual('Black player: local Leave the seat');
+        expect(text('#seat-bottom')).toEqual('Black player: local Leave the seat');
+        expect(board().flipped()).toBe(true);
+        expect(fixture.nativeElement.querySelector('.player-information.bottom-player.black-player')).not.toBeNull();
 
         // When
         seatButton('black', 'Leave the seat')?.click();
         await refresh();
 
-        // Then
-        expect(text('.black-seat')).toEqual('Black player: Waiting Play black');
-        expect(text('.spectators')).toEqual('Spectators: 2');
-
-        // When
-        seatButton('white', 'Play white')?.click();
-        await refresh();
-        seatButton('white', 'Leave the seat')?.click();
-        await refresh();
-
-        // Then
-        expect(text('.white-seat')).toEqual('White player: Waiting Play white');
+        // Then: the free seat stays at the bottom
+        expect(text('#seat-bottom')).toEqual('Black player: Waiting Play black');
     });
 
     test('should not offer a seat taken by another participant', async () => {
@@ -247,7 +269,7 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then
-        expect(component.blackHasPlayed()).toEqual(true);
+        expect(component.hasPlayed(PieceColor.BLACK)).toEqual(true);
         expect(text('.player-information.black-player')).toContain('played');
     });
 
@@ -261,8 +283,8 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then
-        expect(component.whiteHasPlayed()).toEqual(true);
-        expect(component.blackHasPlayed()).toEqual(false);
+        expect(component.hasPlayed(PieceColor.WHITE)).toEqual(true);
+        expect(component.hasPlayed(PieceColor.BLACK)).toEqual(false);
         expect(text('.player-information.white-player')).toContain('played');
 
         // When
@@ -270,8 +292,8 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then
-        expect(component.whiteLastMove()).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E2', to: 'E4' } });
-        expect(component.blackLastMove()).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
+        expect(component.lastMove(PieceColor.WHITE)).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E2', to: 'E4' } });
+        expect(component.lastMove(PieceColor.BLACK)).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
         expect(text('.player-information.black-player')).toContain('E7 -> E5');
     });
 
@@ -288,7 +310,7 @@ describe('SyncChessGameComponent', () => {
         // Then
         expect(skipButton('black')).toBeNull();
         expect(component.turnType()).toEqual('chess.game.turn.sync');
-        expect(component.whiteLastMove()).toEqual({ key: 'chess.game.lastMove.passed' });
+        expect(component.lastMove(PieceColor.WHITE)).toEqual({ key: 'chess.game.lastMove.passed' });
         expect(text('.player-information.white-player')).toContain('passed');
         expect(component.canSkip()).toEqual(false);
     });
@@ -313,8 +335,8 @@ describe('SyncChessGameComponent', () => {
         vi.spyOn(session().game, 'lastMoveTurnAction').mockReturnValue({ whiteMove: null, blackMove });
 
         // Then
-        expect(component.whiteLastMove()).toEqual({ key: 'chess.game.lastMove.passed' });
-        expect(component.blackLastMove()).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
+        expect(component.lastMove(PieceColor.WHITE)).toEqual({ key: 'chess.game.lastMove.passed' });
+        expect(component.lastMove(PieceColor.BLACK)).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
     });
 
     test('should display the black interactions when black is playing', async () => {
@@ -358,6 +380,13 @@ describe('SyncChessGameComponent', () => {
         expect(skipButton('white')).toBeNull();
         expect(text('.player-information.white-player .check')).toEqual('Check');
 
+        // When the other player is in check, at the top of the board
+        gameState(session().game)._isBlackInCheck.set(true);
+        await refresh();
+
+        // Then
+        expect(text('.player-information.top-player.black-player .check')).toEqual('Check');
+
         // When
         gameState(session().game)._isWhiteInCheckmate.set(true);
         gameState(session().game)._isBlackInCheck.set(true);
@@ -369,8 +398,8 @@ describe('SyncChessGameComponent', () => {
         expect(text('.player-information.white-player .check')).toEqual('Checkmate');
         expect(text('.player-information.black-player .check')).toEqual('Checkmate');
         expect(text('.player-information.white-player')).not.toContain('Last move');
-        expect(component.displayWhiteInteractions()).toEqual(false);
-        expect(component.displayBlackInteractions()).toEqual(false);
+        expect(component.displayInteractions(PieceColor.WHITE)).toEqual(false);
+        expect(component.displayInteractions(PieceColor.BLACK)).toEqual(false);
     });
 
     test.each([
@@ -396,7 +425,7 @@ describe('SyncChessGameComponent', () => {
 
         // Then
         expect(text('.game-result')).toEqual(message);
-        expect(component.displayWhiteInteractions()).toEqual(false);
+        expect(component.displayInteractions(PieceColor.WHITE)).toEqual(false);
         expect(text('.player-information.white-player')).not.toContain('Last move');
     });
 
