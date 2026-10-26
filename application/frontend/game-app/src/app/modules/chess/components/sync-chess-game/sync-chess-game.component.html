@@ -17,7 +17,9 @@
                 [flipped]="bottom === blackColor" />
             <!-- The end of the game, over the board: the board does not move -->
             @if (resultText(); as result) {
-            <div class="game-result">{{ result.key | transloco: result.params }}</div>
+            <div class="game-result absolute top-1/2 left-1/2 z-1 max-w-[90%] -translate-1/2 px-4 py-2 rounded-xl bg-app-surface-raised shadow-[0_4px_16px_color-mix(in_srgb,var(--app-shadow)_50%,transparent)] text-center text-xl font-bold pointer-events-none">
+                {{ result.key | transloco: result.params }}
+            </div>
             }
             @if (isPromotion()) {
             <div id="promotion-title">

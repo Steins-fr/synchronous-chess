@@ -16,23 +16,6 @@
             flex: auto;
             position: relative;
 
-            .game-result {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                z-index: 1;
-                max-width: 90%;
-                padding: 8px 16px;
-                border-radius: 12px;
-                background-color: var(--app-surface-raised);
-                box-shadow: 0 4px 16px color-mix(in srgb, var(--app-shadow) 50%, transparent);
-                transform: translate(-50%, -50%);
-                text-align: center;
-                font-size: 20px;
-                font-weight: bold;
-                pointer-events: none;
-            }
-
             #promotion-title {
                 position: absolute;
                 top: 0;

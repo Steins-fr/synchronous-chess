@@ -95,22 +95,27 @@ function recordSeatChips(): void {
 }
 
 /**
- * Records in the page, at each frame for 2.5 seconds, the value of the chips the stack of the table shows, but the ones
- * faded out: run in the page, it holds all its code
+ * Records in the page, at each frame, the value of the chips the stack of the table shows, but the ones faded out: run in
+ * the page, it holds all its code
  */
 function recordTableChips(): void {
     const shown: number[] = [];
-    const start: number = performance.now();
     const frame = (): void => {
         const chips: HTMLElement[] = Array.from(document.querySelectorAll<HTMLElement>('div:has(> #table-chips) > app-chip-stack .chip'));
         shown.push(chips.filter((chip: HTMLElement) => Number(getComputedStyle(chip).opacity) > 0.5)
             .reduce((sum: number, chip: HTMLElement) => sum + Number(chip.dataset['value']), 0));
-        if (performance.now() - start < 2500) {
-            requestAnimationFrame(frame);
-        }
+        requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
     (globalThis as unknown as { shownTable: number[] }).shownTable = shown;
+}
+
+/** The chips moved by the latest moves landed on the table of each page */
+async function landed(participants: ReadonlyArray<RoomParticipant>): Promise<void> {
+    for (const participant of participants) {
+        // eslint-disable-next-line no-await-in-loop -- the pages one after the other
+        await expect(table(participant).locator('.chip-flight')).toHaveCount(0);
+    }
 }
 
 /** No chip joined the seats of each page until the revolver fired, and they showed the chips they had before the shot */
@@ -201,7 +206,7 @@ test.describe('Russian roulette', () => {
 
         // The next shot, once the chips of the first one landed
         await expect(table(await actor(alice, bob, carol)).getByRole('button', { name: 'Shoot' })).toBeVisible({ timeout: SHOT_TIME });
-        await carol.page.waitForTimeout(1500);
+        await landed(participants);
         await Promise.all(participants.map(({ page }) => page.evaluate(recordSeatChips)));
         await play('Shoot', alice, bob, carol);
         await expectSeatChipsKept(participants);
@@ -213,16 +218,15 @@ test.describe('Russian roulette', () => {
         await play(/^Pass \(1\)$/, alice, bob, carol);
         await play(/^Pass \(2\)$/, alice, bob, carol);
         await expect(table(carol).locator('#table-chips')).toHaveText('Table: 3 chips');
-        await carol.page.waitForTimeout(1000);
+        await landed([carol]);
 
         // The table of 3 chips (1, 1, 1) gets 4 more: 7 chips (5, 1, 1), a chip of 1 leaving it
         await carol.page.evaluate(recordTableChips);
         await play(/^Pass \(4\)$/, alice, bob, carol);
-        await carol.page.waitForTimeout(2500);
+        const shownTable = (): Promise<number[]> => carol.page.evaluate(() => (globalThis as unknown as { shownTable: number[] }).shownTable);
+        await expect.poll(async () => (await shownTable()).at(-1)).toEqual(7);
 
-        const shown: number[] = await carol.page.evaluate(() => (globalThis as unknown as { shownTable: number[] }).shownTable);
-        expect(shown.filter((chips: number) => chips < 3)).toEqual([]);
-        expect(shown.at(-1)).toEqual(7);
+        expect((await shownTable()).filter((chips: number) => chips < 3)).toEqual([]);
     });
 
     test('plays a shot with reduced motion, the revolver firing without moving', async ({ roulette }) => {

@@ -505,8 +505,10 @@ export class RouletteTableComponent implements OnDestroy {
         const { action } = firing;
         this._firing.set(null);
         this.blasted.set(false);
-        // The table shows the result: a next shot keeps it until the table plays it. A shot fires once the table played it
-        this._played.update((played: Readonly<PlayedMoves> | null) => ({ ...played as Readonly<PlayedMoves>, view: this.liveView() }));
+        // The table shows the result, as rendered last: a next shot keeps it until the table plays it, a shot applied since
+        // not shown. A shot fires once the table rendered and played it
+        const rendered: Readonly<TableView> = (this.shown as NonNullable<typeof this.shown>).view;
+        this._played.update((played: Readonly<PlayedMoves> | null) => ({ ...played as Readonly<PlayedMoves>, view: rendered }));
 
         if (action.kind === RouletteActionKind.REVEAL || !this.pageVisibility.visible()) {
             return;
