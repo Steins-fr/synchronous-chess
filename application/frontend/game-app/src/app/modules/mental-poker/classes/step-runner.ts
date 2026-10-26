@@ -41,6 +41,11 @@ export class StepRunner {
         } finally {
             this.running = false;
         }
+
+        // A step failed while the chain changed meanwhile: the steps are made again, no message coming to ask for them
+        if (this.again && !this._stopped) {
+            await this.run();
+        }
     }
 
     public stop(): void {

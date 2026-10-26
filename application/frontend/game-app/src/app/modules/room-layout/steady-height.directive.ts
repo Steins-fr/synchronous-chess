@@ -16,15 +16,14 @@ export class SteadyHeightDirective {
         const destroyRef: DestroyRef = inject(DestroyRef);
 
         afterNextRender(() => {
-            const observer = new ResizeObserver(() => this.resized());
+            const observer = new ResizeObserver(([entry]: ResizeObserverEntry[]) => this.resized(entry.borderBoxSize[0]));
             observer.observe(this.element);
             destroyRef.onDestroy(() => observer.disconnect());
         });
     }
 
-    private resized(): void {
-        const { width, height } = this.element.getBoundingClientRect();
-
+    /** The size of the part as laid out, an animation moving it (a table shaking) aside */
+    private resized({ inlineSize: width, blockSize: height }: ResizeObserverSize): void {
         if (width !== this.width) {
             this.width = width;
             // Out of the observer, a height set in it would resize the part again in the same frame

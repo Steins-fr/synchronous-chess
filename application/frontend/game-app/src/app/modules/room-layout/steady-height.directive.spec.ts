@@ -11,7 +11,7 @@ class SteadyHostComponent {}
 
 describe('SteadyHeightDirective', () => {
     let fixture: ComponentFixture<SteadyHostComponent>;
-    let resize: () => void;
+    let resize: (entries: ReadonlyArray<Partial<ResizeObserverEntry>>) => void;
     let disconnect: ReturnType<typeof vi.fn>;
     /** The box of the part, its height the one of its content unless its min-height is larger */
     let box: { width: number; content: number };
@@ -19,10 +19,11 @@ describe('SteadyHeightDirective', () => {
     const part = (): HTMLElement => fixture.nativeElement.querySelector('div');
     const minHeight = (): string => part().style.minHeight;
 
-    /** The content of the part changes, at a width */
+    /** The content of the part changes, at a width: the observer tells the size of the part */
     function laidOut(width: number, content: number): void {
         box = { width, content };
-        resize();
+        const { height } = part().getBoundingClientRect();
+        resize([{ borderBoxSize: [{ inlineSize: width, blockSize: height }] }]);
     }
 
     beforeEach(async () => {
@@ -30,7 +31,7 @@ describe('SteadyHeightDirective', () => {
         vi.stubGlobal('ResizeObserver', class {
             public readonly disconnect = disconnect;
 
-            public constructor(callback: () => void) {
+            public constructor(callback: (entries: ReadonlyArray<Partial<ResizeObserverEntry>>) => void) {
                 resize = callback;
             }
 

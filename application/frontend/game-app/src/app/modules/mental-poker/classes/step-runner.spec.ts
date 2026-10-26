@@ -54,6 +54,25 @@ describe('StepRunner', () => {
         expect(releases).toHaveLength(1);
     });
 
+    test('should make the steps again after a step failing, once asked again meanwhile', async () => {
+        // Given the steps fail once, asked again while they run
+        let calls: number = 0;
+        const failing = new StepRunner(async () => {
+            calls++;
+            if (calls === 1) {
+                void failing.run();
+                throw new Error('closed');
+            }
+        }, () => 'The game failed');
+
+        // When
+        await failing.run();
+
+        // Then
+        expect(calls).toEqual(2);
+        expect(TimedLogger.error).toHaveBeenCalledOnce();
+    });
+
     test('should log a step failing, and make the steps again at the next run', async () => {
         // Given
         const error = new Error('closed');

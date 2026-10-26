@@ -1,7 +1,7 @@
 <div *transloco="let t; prefix: 'chess.game'" id="game">
     @let top = topColor();
     @let bottom = bottomColor();
-    <div appSteadyHeight class="player" id="seat-top" [class.white-seat]="top === whiteColor" [class.black-seat]="top === blackColor">
+    <div appSteadyHeight class="player chess-seat" id="seat-top" [class.white-seat]="top === whiteColor" [class.black-seat]="top === blackColor">
         {{ t(top === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(top) || t('seat.free') }}
     </div>
     <div id="board-section">
@@ -81,7 +81,7 @@
             </div>
         </div>
     </div>
-    <div appSteadyHeight class="player" id="seat-bottom" [class.white-seat]="bottom === whiteColor" [class.black-seat]="bottom === blackColor">
+    <div appSteadyHeight class="player chess-seat" id="seat-bottom" [class.white-seat]="bottom === whiteColor" [class.black-seat]="bottom === blackColor">
         {{ t(bottom === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(bottom) || t('seat.free') }}
         @if (canTakeSeat()) {
         <button (click)="takeSeat(bottom)" class="seat-button" mat-stroked-button>{{ t(bottom === whiteColor ? 'seat.playWhite' : 'seat.playBlack') }}</button>

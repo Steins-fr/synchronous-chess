@@ -80,7 +80,7 @@
     <!-- What the table waits for, the actions of the local player and the result, their place kept as buttons come and go -->
     <div appSteadyHeight class="flex flex-col gap-3">
         @let currentStatus = status();
-        <output class="table-line block min-h-lh max-sm:min-h-[2lh]">{{ currentStatus ? (currentStatus.key | transloco: currentStatus.params) : '' }}</output>
+        <output class="table-status">{{ currentStatus ? (currentStatus.key | transloco: currentStatus.params) : '' }}</output>
 
         <!-- On a phone, the amount of a bet below the actions: two rows, kept -->
         <div class="flex flex-wrap items-center justify-center gap-2 min-h-10 max-sm:min-h-[5.5rem]">
@@ -122,7 +122,7 @@
         </div>
 
         <!-- The lines of the result and of the check of the decks, kept while the match is played -->
-        <p class="m-0 min-h-lh max-sm:min-h-[2lh] text-center">
+        <p class="table-result">
             @if (result(); as current) {
             <span class="badge" [class.badge-win]="session().match().result()?.winner !== null" [class.badge-draw]="session().match().result()?.winner === null">
                 {{ current.key | transloco: current.params }}

@@ -1,5 +1,5 @@
 <div *transloco="let t; prefix: 'roulette.table.seat'"
-    class="seat relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-14 max-sm:min-h-[5.75rem] max-sm:content-start px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised"
+    class="seat table-seat"
     [class.acting]="acting()"
     [class.shot-death]="shot() === death"
     [class.shot-empty]="shot() === survived">

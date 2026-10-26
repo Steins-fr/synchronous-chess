@@ -113,6 +113,16 @@ function recordTableChips(): void {
     (globalThis as unknown as { shownTable: number[] }).shownTable = shown;
 }
 
+/** No chip joined the seats of each page until the revolver fired, and they showed the chips they had before the shot */
+async function expectSeatChipsKept(participants: ReadonlyArray<RoomParticipant>): Promise<void> {
+    for (const participant of participants) {
+        // eslint-disable-next-line no-await-in-loop -- the pages one after the other
+        const shown: string[] = await participant.page.evaluate(() => (globalThis as unknown as { shownChips: string[] }).shownChips);
+        expect(shown.filter((chips: string) => chips.includes('joining')), participant.name).toEqual([]);
+        expect(shown.at(-1), participant.name).toEqual(shown[0]);
+    }
+}
+
 test.describe('Russian roulette', () => {
     test('plays a game to its end, the spectator seeing the chambers once fired only', SLOW, async ({ roulette }) => {
         // Up to 24 shots of 5 seconds
@@ -176,24 +186,25 @@ test.describe('Russian roulette', () => {
         await expect(table(await actor(alice, bob, carol)).getByRole('button', { name: 'Pass (1)' })).toBeVisible();
     });
 
-    test('keeps the table as it was until the revolver fires, the chips of the seats included', async ({ roulette }) => {
-        const [alice, bob, carol] = await seated(roulette);
+    test('keeps the table as it was until the revolver fires, the chips of the seats included, a shot after another too', async ({ roulette }) => {
+        const participants: RoomParticipant[] = await seated(roulette);
+        const [alice, bob, carol] = participants;
         await loaded(alice, bob, carol);
         await play(/^Pass \(1\)$/, alice, bob, carol);
         await play(/^Pass \(2\)$/, alice, bob, carol);
         await expect(table(carol).locator('#table-chips')).toHaveText('Table: 3 chips');
 
         // The chips of the seats each page shows from the shot until the revolver fires, a chip leaving a stack fading out
-        await Promise.all([alice, bob, carol].map(({ page }) => page.evaluate(recordSeatChips)));
-
+        await Promise.all(participants.map(({ page }) => page.evaluate(recordSeatChips)));
         await play('Shoot', alice, bob, carol);
+        await expectSeatChipsKept(participants);
 
-        for (const participant of [alice, bob, carol]) {
-            // eslint-disable-next-line no-await-in-loop -- the pages one after the other
-            const shown: string[] = await participant.page.evaluate(() => (globalThis as unknown as { shownChips: string[] }).shownChips);
-            expect(shown.filter((chips: string) => chips.includes('joining')), participant.name).toEqual([]);
-            expect(shown.at(-1), participant.name).toEqual(shown[0]);
-        }
+        // The next shot, once the chips of the first one landed
+        await expect(table(await actor(alice, bob, carol)).getByRole('button', { name: 'Shoot' })).toBeVisible({ timeout: SHOT_TIME });
+        await carol.page.waitForTimeout(1500);
+        await Promise.all(participants.map(({ page }) => page.evaluate(recordSeatChips)));
+        await play('Shoot', alice, bob, carol);
+        await expectSeatChipsKept(participants);
     });
 
     test('changes the chips of a growing stack once the chips moved to it reached it', async ({ roulette }) => {

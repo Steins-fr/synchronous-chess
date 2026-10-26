@@ -81,7 +81,7 @@
     <!-- What the table waits for, the moves of the local player and the result, their place kept as buttons come and go -->
     <div appSteadyHeight class="flex flex-col gap-3">
         @let currentStatus = status();
-        <output class="table-line block min-h-lh max-sm:min-h-[2lh]">{{ currentStatus ? (currentStatus.key | transloco: currentStatus.params) : '' }}</output>
+        <output class="table-status">{{ currentStatus ? (currentStatus.key | transloco: currentStatus.params) : '' }}</output>
 
         <div class="flex flex-wrap items-center justify-center gap-2 min-h-10">
             @if (placing()) {
@@ -99,7 +99,7 @@
         </div>
 
         <!-- The lines of the result and of its check, kept while the game is played -->
-        <p class="m-0 min-h-lh max-sm:min-h-[2lh] text-center">
+        <p class="table-result">
             @if (result(); as current) {
             <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">
                 {{ current.key | transloco: current.params }}

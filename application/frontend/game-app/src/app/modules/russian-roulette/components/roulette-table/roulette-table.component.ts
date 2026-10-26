@@ -303,6 +303,11 @@ export class RouletteTableComponent implements OnDestroy {
         if (firing !== null) {
             return this.firingStatus(firing.action.kind, firing.before.chambers.length + 1);
         }
+        // A shot the table did not play yet: the next chamber fires, the table as it was
+        const unplayed: Readonly<RouletteAction> | null = this.unplayed();
+        if (unplayed !== null) {
+            return this.firingStatus(unplayed.kind, this.view().chambers.length + 1);
+        }
         if (session.over()) {
             return session.awaited().length > 0 ? { key: this.key(marker('table.status.disclosing', undefined, 'roulette')) } : null;
         }
@@ -500,6 +505,8 @@ export class RouletteTableComponent implements OnDestroy {
         const { action } = firing;
         this._firing.set(null);
         this.blasted.set(false);
+        // The table shows the result: a next shot keeps it until the table plays it. A shot fires once the table played it
+        this._played.update((played: Readonly<PlayedMoves> | null) => ({ ...played as Readonly<PlayedMoves>, view: this.liveView() }));
 
         if (action.kind === RouletteActionKind.REVEAL || !this.pageVisibility.visible()) {
             return;
