@@ -1,0 +1,59 @@
+// The revolver over the table: its middle on its place (left and top), turned by --aim. It moves from the cloth to the
+// player shooting and back
+.revolver-place {
+    position: absolute;
+    z-index: 2;
+    transform: translate(-50%, -50%) rotate(var(--aim));
+    transition-property: left, top, transform;
+    transition-duration: var(--app-motion-medium);
+    transition-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+// Chips moved from a place of the table to another one fly from the first one (left and top, the middle of the chips)
+// to the other one (--flight-x and --flight-y), once their delay is over, and fade out as the stack there shows them
+.chip-flight {
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    animation: chip-flight var(--app-motion-slow) cubic-bezier(0.3, 0.7, 0.3, 1) var(--flight-delay) both;
+}
+
+@keyframes chip-flight {
+    90% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y)));
+    }
+}
+
+// A bullet fired shakes the table
+.table-shake {
+    animation: table-shake var(--app-motion-medium) ease-out;
+}
+
+@keyframes table-shake {
+    10% {
+        transform: translate(-0.25rem, 0.125rem);
+    }
+
+    25% {
+        transform: translate(0.25rem, -0.125rem);
+    }
+
+    40% {
+        transform: translate(-0.125rem, 0);
+    }
+
+    55%,
+    to {
+        transform: translate(0, 0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .table-shake {
+        animation: none;
+    }
+}

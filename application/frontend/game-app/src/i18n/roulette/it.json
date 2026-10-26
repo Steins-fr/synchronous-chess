@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Camera {number}: un proiettile",
+    "chamber": "Camera {number}",
+    "double": "Camera {number}: due proiettili",
+    "empty": "Camera {number}: vuota",
+    "hidden": "Camera {number}",
+    "label": "Tamburo",
+    "loaded": "Camera {number}: il tuo proiettile"
+  },
+  "presentation": {
+    "intro": "Ogni giocatore carica 3 proiettili nelle camere che sceglie, poi il tamburo viene fatto girare. A turno, spara per prendere le fiche sul tavolo, o passa pagando, con un prezzo che raddoppia a ogni passo di fila. Un proiettile è una morte, che costa 50 fiche: sparati i 6 proiettili, vince chi ha meno morti.",
+    "points": {
+      "checked": "Finita la partita, tutte le chiavi vengono mostrate: ogni partecipante verifica che nessuno abbia imbrogliato.",
+      "hidden": "I due giocatori fanno girare il tamburo a turno: nessuno, nemmeno il server, sa quale camera viene dopo né di chi è il proiettile sparato.",
+      "placed": "Solo tu sai dove sono i tuoi proiettili: vengono cifrati prima che l'altro giocatore li veda."
+    },
+    "rooms": "Crea una stanza o entra in una aperta: i partecipanti senza posto guardano la partita.",
+    "tagline": "Un duello per due giocatori, con un revolver da 24 camere.",
+    "title": "Roulette russa"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Ogni giocatore carica in segreto 3 proiettili nelle camere che sceglie: una camera può contenere un proiettile di ciascun giocatore.",
+      "spin": "Poi ogni giocatore, a turno, fa girare il tamburo: nessuno sa quale camera viene dopo, ma i proiettili di ogni giocatore mantengono la loro distanza. Un sorteggio decide chi gioca per primo.",
+      "title": "Il tamburo"
+    },
+    "end": {
+      "title": "Fine della partita",
+      "winner": "La partita finisce quando sono stati sparati i 6 proiettili. Vince il giocatore con meno morti, poi quello con più fiche; altrimenti è patta."
+    },
+    "fair": {
+      "checked": "Finita la partita, le due chiavi vengono mostrate e ogni partecipante verifica i giri del tamburo: il risultato diventa definitivo. Un giocatore che ha imbrogliato, o che tiene per sé la sua chiave, perde la partita.",
+      "hidden": "Ogni camera è cifrata con le chiavi dei due giocatori: uno sparo dice solo quanti proiettili conteneva la camera, mai di chi fossero. Nemmeno il server conosce il tamburo.",
+      "title": "Gioco leale"
+    },
+    "summary": "Regole del gioco",
+    "title": "Regole",
+    "turn": {
+      "away": "Mentre un giocatore è assente, la mossa ottiene 30 secondi in più, una volta: il giocatore ancora assente perde la partita.",
+      "clock": "Ogni mossa dura al massimo 45 secondi: poi la pagina passa per il giocatore, o spara se non può pagare, e carica 3 camere a caso per un giocatore che non ha caricato.",
+      "death": "Spara a un proiettile, o a due: una morte. Chi spara dà 50 fiche e le fiche del tavolo all'altro giocatore, indebitandosi se serve.",
+      "empty": "Spara a una camera vuota: prendi le fiche del tavolo.",
+      "pass": "Passa: metti fiche sul tavolo, 1 fiche, raddoppiata a ogni passo di fila (1, 2, 4, 8, 16). Un giocatore che non può pagare deve sparare.",
+      "reveal": "Dopo 5 passi di fila, il banco prende le 31 fiche del tavolo e la camera successiva viene svelata: i suoi proiettili vanno persi, senza morte. Passare non evita mai un proiettile.",
+      "title": "A ogni turno"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Carica ({count}/{bullets})",
+      "pass": "Passa ({price})",
+      "rematch": "Gioca ancora",
+      "shoot": "Spara"
+    },
+    "bank": "Banco: {chips}",
+    "bullets": "{count, plural, one {Resta # proiettile} other {Restano # proiettili}}",
+    "game": "Partita {number}:",
+    "history": "Mosse della partita",
+    "move": {
+      "death": "{name} spara alla camera {chamber}: un proiettile, una morte.",
+      "deathDouble": "{name} spara alla camera {chamber}: due proiettili, una morte.",
+      "draw": "{name} passa, {chips} fiche: il 5° passo di fila, il banco prende il tavolo.",
+      "empty": "{name} spara alla camera {chamber}: vuota, e prende {chips, plural, one {# fiche} other {# fiche}}.",
+      "emptyTable": "{name} spara alla camera {chamber}: vuota.",
+      "pass": "{name} passa: {chips, plural, one {# fiche} other {# fiche}} sul tavolo.",
+      "revealBullet": "Il 5° passo di {name} svela la camera {chamber}: un proiettile, perso.",
+      "revealDouble": "Il 5° passo di {name} svela la camera {chamber}: due proiettili, persi.",
+      "revealEmpty": "Il 5° passo di {name} svela la camera {chamber}: vuota."
+    },
+    "pastGames": "Partite giocate",
+    "provisional": "Risultato provvisorio: il tamburo viene verificato quando sono mostrate le due chiavi.",
+    "result": {
+      "bothCheated": "Entrambi i giocatori hanno imbrogliato sul tamburo: nessun vincitore.",
+      "cheated": "{loser} ha imbrogliato sul tamburo: {winner} vince la partita.",
+      "draw": "Patta: i due giocatori finiscono con tante morti e fiche.",
+      "forfeit": "Il tempo di {loser} è scaduto: {winner} vince la partita.",
+      "stopped": "Interrotta: il tamburo è stato manomesso.",
+      "win": "{winner} vince la partita: {deaths} contro {otherDeaths, plural, one {# morte} other {# morti}}, con {chips, plural, one {# fiche} other {# fiche}}.",
+      "withheld": "{loser} non ha mostrato la sua chiave: {winner} vince la partita."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# fiche} other {# fiche}}",
+      "clock": "{seconds} s",
+      "deaths": "{count, plural, one {# morte} other {# morti}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "play": "Siediti",
+      "release": "Libera il posto"
+    },
+    "spectators": "Spettatori: {count}",
+    "status": {
+      "away": "In attesa del ritorno di {name}…",
+      "broken": "Il tamburo è stato manomesso: la partita è interrotta.",
+      "disclosing": "I giocatori mostrano le loro chiavi per verificare il tamburo…",
+      "firing": "Sparo alla camera {chamber}…",
+      "hurry": "Tocca a te: il tempo sta per scadere.",
+      "loading": "Caricamento dei proiettili: {name}…",
+      "lost": "Questa pagina ha perso le tue chiavi: non puoi più giocare questa partita.",
+      "myTurn": "Tocca a te: spara o passa.",
+      "place": "Scegli le camere dei tuoi {count} proiettili, poi caricali.",
+      "placeOther": "In attesa che {name} carichi…",
+      "placing": "I giocatori scelgono le camere dei loro proiettili.",
+      "revealing": "Si svela la camera {chamber}…",
+      "seats": "In attesa che si siedano due giocatori.",
+      "spinning": "Rotazione del tamburo: {name}…",
+      "theirTurn": "{name} spara o passa…"
+    },
+    "table": "Tavolo: {chips, plural, one {# fiche} other {# fiche}}",
+    "verification": {
+      "cheated": "Il tamburo è stato manomesso.",
+      "fair": "Il tamburo era leale."
+    }
+  }
+}

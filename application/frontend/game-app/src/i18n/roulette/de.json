@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Kammer {number}: eine Kugel",
+    "chamber": "Kammer {number}",
+    "double": "Kammer {number}: zwei Kugeln",
+    "empty": "Kammer {number}: leer",
+    "hidden": "Kammer {number}",
+    "label": "Trommel",
+    "loaded": "Kammer {number}: deine Kugel"
+  },
+  "presentation": {
+    "intro": "Jeder Spieler lädt 3 Kugeln in Kammern seiner Wahl, dann wird die Trommel gedreht. Abwechselnd drückst du ab, um die Chips auf dem Tisch zu nehmen, oder du passt gegen Bezahlung, wobei sich der Preis bei jedem Passen in Folge verdoppelt. Eine Kugel ist ein Tod, der 50 Chips kostet: Sind alle 6 Kugeln abgefeuert, gewinnt, wer weniger Tode hat.",
+    "points": {
+      "checked": "Ist die Partie vorbei, werden alle Schlüssel gezeigt: Jeder Teilnehmer prüft, dass niemand betrogen hat.",
+      "hidden": "Beide Spieler drehen die Trommel nacheinander: Niemand, nicht einmal der Server, weiß, welche Kammer als Nächstes kommt oder wessen Kugel feuert.",
+      "placed": "Nur du weißt, wo deine Kugeln sind: Sie werden verschlüsselt, bevor der andere Spieler sie sieht."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem offenen bei: Die Teilnehmer ohne Platz schauen der Partie zu.",
+    "tagline": "Ein Duell für zwei Spieler, mit einem Revolver mit 24 Kammern.",
+    "title": "Russisches Roulette"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Jeder Spieler lädt geheim 3 Kugeln in Kammern seiner Wahl: Eine Kammer kann eine Kugel jedes Spielers enthalten.",
+      "spin": "Dann dreht jeder Spieler nacheinander die Trommel: Niemand weiß, welche Kammer als Nächstes kommt, aber die Kugeln jedes Spielers behalten ihren Abstand. Eine Auslosung bestimmt, wer anfängt.",
+      "title": "Die Trommel"
+    },
+    "end": {
+      "title": "Ende der Partie",
+      "winner": "Die Partie endet, sobald die 6 Kugeln abgefeuert sind. Es gewinnt, wer weniger Tode hat, dann wer mehr Chips hat; sonst ist es ein Remis."
+    },
+    "fair": {
+      "checked": "Ist die Partie vorbei, werden beide Schlüssel gezeigt und jeder Teilnehmer prüft das Drehen der Trommel: Dann ist das Ergebnis endgültig. Wer betrogen hat oder seinen Schlüssel zurückhält, verliert die Partie.",
+      "hidden": "Jede Kammer ist mit den Schlüsseln beider Spieler verschlüsselt: Ein Schuss verrät nur, wie viele Kugeln die Kammer enthielt, nie wessen. Nicht einmal der Server kennt die Trommel.",
+      "title": "Faires Spiel"
+    },
+    "summary": "Spielregeln",
+    "title": "Regeln",
+    "turn": {
+      "away": "Solange ein Spieler weg ist, bekommt der Zug einmalig 30 Sekunden mehr: Wer dann noch weg ist, verliert die Partie.",
+      "clock": "Jeder Zug dauert höchstens 45 Sekunden: Danach passt die Seite für den Spieler oder drückt ab, wenn er nicht zahlen kann, und lädt für einen Spieler, der nicht geladen hat, 3 zufällige Kammern.",
+      "death": "Auf eine Kugel abdrücken, oder auf zwei: ein Tod. Der Schütze gibt dem anderen Spieler 50 Chips und die Chips vom Tisch, notfalls auf Schulden.",
+      "empty": "Auf eine leere Kammer abdrücken: die Chips vom Tisch nehmen.",
+      "pass": "Passen: Chips auf den Tisch legen, 1 Chip, der sich bei jedem Passen in Folge verdoppelt (1, 2, 4, 8, 16). Wer nicht zahlen kann, muss abdrücken.",
+      "reveal": "Nach 5 Mal Passen in Folge nimmt die Bank die 31 Chips vom Tisch, und die nächste Kammer wird aufgedeckt: Ihre Kugeln sind verbraucht, ohne Tod. Passen weicht nie einer Kugel aus.",
+      "title": "In jeder Runde"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Laden ({count}/{bullets})",
+      "pass": "Passen ({price})",
+      "rematch": "Nochmal spielen",
+      "shoot": "Abdrücken"
+    },
+    "bank": "Bank: {chips}",
+    "bullets": "{count, plural, one {# Kugel übrig} other {# Kugeln übrig}}",
+    "game": "Partie {number}:",
+    "history": "Züge der Partie",
+    "move": {
+      "death": "{name} drückt auf Kammer {chamber} ab: eine Kugel, ein Tod.",
+      "deathDouble": "{name} drückt auf Kammer {chamber} ab: zwei Kugeln, ein Tod.",
+      "draw": "{name} passt, {chips} Chips: das 5. Passen in Folge, die Bank nimmt den Tisch.",
+      "empty": "{name} drückt auf Kammer {chamber} ab: leer, und nimmt {chips, plural, one {# Chip} other {# Chips}}.",
+      "emptyTable": "{name} drückt auf Kammer {chamber} ab: leer.",
+      "pass": "{name} passt: {chips, plural, one {# Chip} other {# Chips}} auf dem Tisch.",
+      "revealBullet": "Das 5. Passen von {name} deckt Kammer {chamber} auf: eine Kugel, verbraucht.",
+      "revealDouble": "Das 5. Passen von {name} deckt Kammer {chamber} auf: zwei Kugeln, verbraucht.",
+      "revealEmpty": "Das 5. Passen von {name} deckt Kammer {chamber} auf: leer."
+    },
+    "pastGames": "Gespielte Partien",
+    "provisional": "Vorläufiges Ergebnis: Die Trommel wird geprüft, sobald beide Schlüssel gezeigt sind.",
+    "result": {
+      "bothCheated": "Beide Spieler haben bei der Trommel betrogen: kein Sieger.",
+      "cheated": "{loser} hat bei der Trommel betrogen: {winner} gewinnt die Partie.",
+      "draw": "Remis: Beide Spieler haben gleich viele Tode und Chips.",
+      "forfeit": "Die Zeit von {loser} ist abgelaufen: {winner} gewinnt die Partie.",
+      "stopped": "Abgebrochen: Bei der Trommel wurde betrogen.",
+      "win": "{winner} gewinnt die Partie: {deaths} gegen {otherDeaths, plural, one {# Tod} other {# Tode}}, mit {chips, plural, one {# Chip} other {# Chips}}.",
+      "withheld": "{loser} hat den Schlüssel nicht gezeigt: {winner} gewinnt die Partie."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# Chip} other {# Chips}}",
+      "clock": "{seconds} s",
+      "deaths": "{count, plural, one {# Tod} other {# Tode}}",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "play": "Hinsetzen",
+      "release": "Platz freigeben"
+    },
+    "spectators": "Zuschauer: {count}",
+    "status": {
+      "away": "Warte, bis {name} zurückkommt…",
+      "broken": "Bei der Trommel wurde betrogen: Die Partie ist abgebrochen.",
+      "disclosing": "Die Spieler zeigen ihre Schlüssel, um die Trommel zu prüfen…",
+      "firing": "Kammer {chamber} wird abgefeuert…",
+      "hurry": "Du bist dran: Die Zeit läuft ab.",
+      "loading": "Kugeln werden geladen: {name}…",
+      "lost": "Diese Seite hat deine Schlüssel verloren: Du kannst diese Partie nicht mehr spielen.",
+      "myTurn": "Du bist dran: abdrücken oder passen.",
+      "place": "Wähle die Kammern deiner {count} Kugeln und lade sie dann.",
+      "placeOther": "Warte, bis {name} geladen hat…",
+      "placing": "Die Spieler wählen die Kammern ihrer Kugeln.",
+      "revealing": "Kammer {chamber} wird aufgedeckt…",
+      "seats": "Warte, bis sich zwei Spieler setzen.",
+      "spinning": "Trommel wird gedreht: {name}…",
+      "theirTurn": "{name} drückt ab oder passt…"
+    },
+    "table": "Tisch: {chips, plural, one {# Chip} other {# Chips}}",
+    "verification": {
+      "cheated": "Bei der Trommel wurde betrogen.",
+      "fair": "Die Trommel war fair."
+    }
+  }
+}

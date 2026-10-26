@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Kamar {number}: satu peluru",
+    "chamber": "Kamar {number}",
+    "double": "Kamar {number}: dua peluru",
+    "empty": "Kamar {number}: kosong",
+    "hidden": "Kamar {number}",
+    "label": "Silinder",
+    "loaded": "Kamar {number}: peluru Anda"
+  },
+  "presentation": {
+    "intro": "Setiap pemain mengisi 3 peluru ke kamar pilihannya, lalu silinder diputar. Secara bergiliran, tembak untuk mengambil chip di meja, atau lewati dengan membayar, harganya berlipat dua setiap kali melewati berturut-turut. Satu peluru adalah satu kematian, yang berharga 50 chip: setelah 6 peluru ditembakkan, yang paling sedikit mati menang.",
+    "points": {
+      "checked": "Setelah permainan selesai, semua kunci ditampilkan: setiap peserta memeriksa bahwa tidak ada yang curang.",
+      "hidden": "Kedua pemain memutar silinder secara bergiliran: tidak ada yang tahu, bahkan server pun tidak, kamar mana yang berikutnya atau milik siapa peluru yang meletus.",
+      "placed": "Hanya Anda yang tahu letak peluru Anda: peluru dienkripsi sebelum pemain lain melihatnya."
+    },
+    "rooms": "Buat ruang atau gabung ke ruang terbuka: peserta tanpa kursi menonton permainan.",
+    "tagline": "Duel untuk dua pemain, dengan revolver 24 kamar.",
+    "title": "Rulet Rusia"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Setiap pemain diam-diam mengisi 3 peluru ke kamar pilihannya: satu kamar bisa berisi satu peluru dari tiap pemain.",
+      "spin": "Lalu setiap pemain memutar silinder secara bergiliran: tidak ada yang tahu kamar mana yang berikutnya, tetapi peluru tiap pemain tetap menjaga jaraknya. Undian menentukan siapa yang bermain pertama.",
+      "title": "Silinder"
+    },
+    "end": {
+      "title": "Akhir permainan",
+      "winner": "Permainan berakhir setelah 6 peluru ditembakkan. Pemain dengan kematian paling sedikit menang, lalu yang chipnya paling banyak; jika tidak, remis."
+    },
+    "fair": {
+      "checked": "Setelah permainan selesai, kedua kunci ditampilkan dan setiap peserta memeriksa putaran silinder: hasilnya pun final. Pemain yang curang, atau menyimpan kuncinya, kalah.",
+      "hidden": "Setiap kamar dienkripsi dengan kunci kedua pemain: tembakan hanya memberi tahu berapa peluru di kamar itu, tidak pernah milik siapa. Bahkan server tidak mengetahui silinder.",
+      "title": "Permainan jujur"
+    },
+    "summary": "Aturan permainan",
+    "title": "Aturan",
+    "turn": {
+      "away": "Selama seorang pemain pergi, langkah mendapat 30 detik tambahan, sekali: pemain yang masih pergi kalah.",
+      "clock": "Setiap langkah berlangsung paling lama 45 detik: setelah itu, halaman melewati untuk pemain, atau menembak jika ia tidak bisa membayar, dan mengisi 3 kamar acak untuk pemain yang belum mengisi.",
+      "death": "Menembak satu peluru, atau dua: satu kematian. Penembak memberi 50 chip dan chip di meja kepada pemain lain, berutang bila perlu.",
+      "empty": "Menembak kamar kosong: ambil chip di meja.",
+      "pass": "Lewati: taruh chip di meja, 1 chip, berlipat dua setiap kali melewati berturut-turut (1, 2, 4, 8, 16). Pemain yang tidak bisa membayar harus menembak.",
+      "reveal": "Setelah 5 kali melewati berturut-turut, bank mengambil 31 chip di meja, dan kamar berikutnya dibuka: pelurunya hangus, tanpa kematian. Melewati tidak pernah menghindarkan peluru.",
+      "title": "Setiap giliran"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Isi ({count}/{bullets})",
+      "pass": "Lewati ({price})",
+      "rematch": "Main lagi",
+      "shoot": "Tembak"
+    },
+    "bank": "Bank: {chips}",
+    "bullets": "{count, plural, other {Sisa # peluru}}",
+    "game": "Permainan {number}:",
+    "history": "Langkah permainan",
+    "move": {
+      "death": "{name} menembak kamar {chamber}: satu peluru, satu kematian.",
+      "deathDouble": "{name} menembak kamar {chamber}: dua peluru, satu kematian.",
+      "draw": "{name} melewati, {chips} chip: lewat ke-5 berturut-turut, bank mengambil meja.",
+      "empty": "{name} menembak kamar {chamber}: kosong, dan mengambil {chips, plural, other {# chip}}.",
+      "emptyTable": "{name} menembak kamar {chamber}: kosong.",
+      "pass": "{name} melewati: {chips, plural, other {# chip}} di meja.",
+      "revealBullet": "Lewat ke-5 dari {name} membuka kamar {chamber}: satu peluru, hangus.",
+      "revealDouble": "Lewat ke-5 dari {name} membuka kamar {chamber}: dua peluru, hangus.",
+      "revealEmpty": "Lewat ke-5 dari {name} membuka kamar {chamber}: kosong."
+    },
+    "pastGames": "Permainan yang dimainkan",
+    "provisional": "Hasil sementara: silinder diperiksa setelah kedua kunci ditampilkan.",
+    "result": {
+      "bothCheated": "Kedua pemain curang pada silinder: tidak ada pemenang.",
+      "cheated": "{loser} curang pada silinder: {winner} memenangkan permainan.",
+      "draw": "Remis: kedua pemain memiliki kematian dan chip yang sama.",
+      "forfeit": "Waktu {loser} habis: {winner} memenangkan permainan.",
+      "stopped": "Dihentikan: silinder dicurangi.",
+      "win": "{winner} memenangkan permainan: {deaths} lawan {otherDeaths, plural, other {# kematian}}, dengan {chips, plural, other {# chip}}.",
+      "withheld": "{loser} tidak menampilkan kuncinya: {winner} memenangkan permainan."
+    },
+    "seat": {
+      "chips": "{count, plural, other {# chip}}",
+      "clock": "{seconds} dtk",
+      "deaths": "{count, plural, other {# kematian}}",
+      "free": "Kursi kosong",
+      "leave": "Tinggalkan kursi",
+      "play": "Duduk",
+      "release": "Kosongkan kursi"
+    },
+    "spectators": "Penonton: {count}",
+    "status": {
+      "away": "Menunggu {name} kembali…",
+      "broken": "Silinder dicurangi: permainan dihentikan.",
+      "disclosing": "Para pemain menampilkan kunci untuk memeriksa silinder…",
+      "firing": "Kamar {chamber} ditembakkan…",
+      "hurry": "Giliran Anda: waktu hampir habis.",
+      "loading": "Mengisi peluru: {name}…",
+      "lost": "Halaman ini kehilangan kunci Anda: Anda tidak bisa lagi memainkan permainan ini.",
+      "myTurn": "Giliran Anda: tembak, atau lewati.",
+      "place": "Pilih kamar untuk {count} peluru Anda, lalu isi.",
+      "placeOther": "Menunggu {name} mengisi…",
+      "placing": "Para pemain memilih kamar peluru mereka.",
+      "revealing": "Kamar {chamber} dibuka…",
+      "seats": "Menunggu dua pemain duduk.",
+      "spinning": "Memutar silinder: {name}…",
+      "theirTurn": "{name} menembak atau melewati…"
+    },
+    "table": "Meja: {chips, plural, other {# chip}}",
+    "verification": {
+      "cheated": "Silinder dicurangi.",
+      "fair": "Silinder jujur."
+    }
+  }
+}

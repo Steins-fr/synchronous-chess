@@ -134,8 +134,8 @@ run by the CI.
 
 ### Testing a chess game
 
-- The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`:
-  the home page only links to them.
+- The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
+  the Russian roulette page `/russian-roulette`: the home page only links to them.
 - Each participant, the host included, takes a seat with the `Play white` / `Play black`
   buttons: two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
@@ -160,6 +160,20 @@ run by the CI.
   the texts. The chips moved fly over the table (`.chip-flight`) until their animation ends.
 - A card thrown away keeps its element while it leaves the hand (`li.card-discarded`): read the cards
   without it, as `e2e/seventeen-poker.e2e.ts` does.
+
+### Testing a Russian roulette game
+
+- Each participant takes a seat with `Sit here` (`#seat-bottom` / `#seat-top` of `app-roulette-table`), then each
+  player picks the chambers of its bullets, buttons named `Chamber 1` to `Chamber 24` (`aria-pressed` once picked), and
+  clicks `Load (3/3)`. The pages load and spin the cylinder by themselves, then the player drawn plays first. See
+  `documentation/russian-roulette-session.md`.
+- The moves are buttons named by their text (`Shoot`, `Pass (1)`, `Play again`, `Free the seat`), the `status` role
+  (`<output>`) tells what the table waits for, `#last-move` the latest move, `#bank` and `#table-chips` the chips.
+- The chambers of the cylinder are images named by their state once fired (`Chamber 3: empty`, `Chamber 3: a bullet`,
+  `Chamber 3: two bullets`), `Chamber 3` while hidden. The result shows in `.badge`, provisional until the cylinder is
+  checked (`The cylinder was fair.`).
+- A shot plays about 5 seconds: the revolver holds 3.5 seconds in front of the player, then fires. Until then, the table
+  shows the state before the shot (`#last-move`, the chambers, the stacks), and no button of the next move.
 
 ### Cleanup after every browser test
 

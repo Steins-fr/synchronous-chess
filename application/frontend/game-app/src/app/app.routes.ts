@@ -6,10 +6,11 @@ export const homePath: string = '';
 export const chessPath: string = 'synchronous-chess';
 export const chatPath: string = 'simple-chat';
 export const pokerPath: string = 'seventeen-poker';
+export const roulettePath: string = 'russian-roulette';
 
 // The pages are loaded on their first visit, each in a chunk of its own: the initial bundle only holds the shell of the
 // app (the navigation, the theme). The pages of the games show once their translations are loaded (TranslationScope):
-// the chess and poker pages hold the chat, the poker page the names of the cards. The scopes are written as literals,
+// the chess, poker and roulette pages hold the chat, the poker page the names of the cards. The scopes are written as literals,
 // for the keys manager to find them. None waits for the APIs: a page reaches them once a visitor acts on it
 // (VisitorPresenceService), a bot rendering it never wakes the paused database
 export const routes: Routes = [
@@ -36,5 +37,12 @@ export const routes: Routes = [
         providers: [provideTranslocoScope('poker', 'cards', 'chat')],
         loadComponent: () => import('@app/modules/seventeen-poker/pages/seventeen-poker/seventeen-poker')
             .then((page) => page.SeventeenPoker),
+    },
+    {
+        path: roulettePath,
+        canActivate: [translationScopesGuard],
+        providers: [provideTranslocoScope('roulette', 'chat')],
+        loadComponent: () => import('@app/modules/russian-roulette/pages/russian-roulette/russian-roulette')
+            .then((page) => page.RussianRoulette),
     },
 ];

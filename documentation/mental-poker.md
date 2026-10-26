@@ -19,6 +19,7 @@ The code lives in `application/frontend/game-app/src/app/modules/mental-poker`.
 - [Reloading the page](#reloading-the-page)
 - [Checking the deck](#checking-the-deck)
 - [Trust model and limits](#trust-model-and-limits)
+- [The exponential ElGamal](#the-exponential-elgamal)
 
 | Class | File | Role |
 |---|---|---|
@@ -27,7 +28,9 @@ The code lives in `application/frontend/game-app/src/app/modules/mental-poker`.
 | `MentalDeckTable` | `classes/mental-deck-table.ts` | The decks of a game: receives their messages from the start of the session, keeps the ones of a deck not created yet |
 | `MentalDeck` | `classes/mental-deck.ts` | A deck of a game: applies its messages, makes and sends the steps and the keys of the local player, reads its cards |
 | `verifyDeck` | `classes/deck-verification.ts` | Checks a deck once every player disclosed its keys |
-| `DeckKeyStore` | `classes/deck-key-store.ts` | Keeps the secrets of the player across the reloads of the page |
+| `SecretStore` | `classes/secret-store.ts` | Keeps the secrets of the player across the reloads of the page, for a deck or a cylinder |
+| `ExponentialElGamal` | `classes/exponential-elgamal.ts` | Another cipher of the same group, a count hidden in each cipher text (see [The exponential ElGamal](#the-exponential-elgamal)) |
+| `zk-proofs` | `classes/zk-proofs.ts` | The proofs of the exponential ElGamal: equal logarithms (Schnorr, Chaum-Pedersen), a bit |
 
 ## The cipher
 
@@ -42,8 +45,9 @@ commutes, `(m^e₁)^e₂ = (m^e₂)^e₁`: a card encrypted by several players i
 any order, or with the product of the keys at once. The numbers travel in hexadecimal.
 
 With 17 cards and 2 players, a player computes 34 exponentiations of 2048 bits per deck, about 10 ms
-each on a computer. The deck yields to the browser every 40 milliseconds of computation, so the page stays
-fluid: yielding after each one would cost 4 milliseconds more each, the browsers delaying nested timers.
+each on a computer. The deck yields to the browser every 40 milliseconds of computation (`timeSlices`), so the page
+stays fluid: it posts a message to the page and awaits it, which a hidden page runs at once, where a timer would wait
+a second at least (a minute in Chrome after 5 minutes hidden), and the other players with it.
 
 ## The protocol
 
@@ -122,7 +126,7 @@ game asked for them yet or not. The keys and the disclosures are taken once the 
 
 ## Reloading the page
 
-`DeckKeyStore` keeps the secrets of the player for each deck (shuffle key, permutation, card keys) in
+`SecretStore` keeps the secrets of the player for each deck (shuffle key, permutation, card keys) in
 the session storage of the tab, under `synchronous-chess:deck-keys:<room>:<player>:<deck>`. They are
 stored **before** anything made with them is sent, and never drawn again. They are removed once the
 deck is checked, disclosed, or broken.
@@ -177,3 +181,31 @@ wrong, and the disclosure tells it.
 - **A player never disclosing its keys** leaves the deck unchecked: `verification` stays `pending`.
 - **The cards are hidden for the length of a game**: the keys are disclosed at its end. A discrete
   logarithm of 2048 bits keeps them hidden far longer.
+
+## The exponential ElGamal
+
+The 24-shot Russian roulette (see [Russian roulette session](russian-roulette-session.md#the-cylinder)) hides no card
+but a count in each chamber of a cylinder: whether it holds a bullet of a player, or of both. A chamber fired tells its
+count only, not whose bullets they are, which the SRA cipher can not do: a card decrypted is the card itself, and its
+owner would recognize it. `ExponentialElGamal` works in the same group, the squares modulo the safe prime, with
+g = 4, a square whatever the prime:
+
+- A count m under the key h is `(g^r, g^m × h^r)`, r random: the product of two cipher texts hides the sum of their
+  counts, and multiplying a cipher text by an encryption of 0 re-randomizes it, the same count under another
+  randomness. Without the key, no one tells a cipher text re-randomized from a new one (decisional Diffie-Hellman), nor
+  follows it through a list turned and re-randomized.
+- The players each hold a share x of the key `h = g^(x₁ + x₂) = h₁ × h₂`: a cipher text is decrypted with the share
+  `c1^x` of each one, the count found by comparing `c2 / (c1^x₁ × c1^x₂)` with the first powers of g.
+
+The proofs (`zk-proofs`) are non interactive (Fiat-Shamir): the challenge is the SHA-256 of the group, of the context
+of the proof (the id of the game, the step, the seat, the chamber) and of every value it binds, modulo q. A proof
+travels as its challenges and its responses, the verifier rebuilding the commitments from them.
+
+| Proof | Proves | Against |
+|---|---|---|
+| `proveEqualLogs`, one base | the player knows x of its share of the key h = g^x (Schnorr) | a share of the key made from the other one, which would decrypt alone |
+| `proveEqualLogs`, two bases | a share of a decryption is `c1^x`, x of its share of the key (Chaum-Pedersen) | a share chosen to give another count |
+| `proveBit` | a cipher text hides 0 or 1, without telling which (Cramer, Damgård and Schoenmakers) | a chamber loaded with a count of its choice |
+
+The roulette also proves the bullets of a load with `proveEqualLogs`: the product of its cipher texts, divided by g³,
+is an encryption of 0, a player loading neither more nor fewer bullets than the rules.

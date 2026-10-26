@@ -18,6 +18,22 @@ try {
 globalThis.matchMedia ??= (query: string): MediaQueryList =>
     Object.assign(new EventTarget(), { matches: false, media: query }) as unknown as MediaQueryList;
 
+// jsdom has no ResizeObserver, which the roulette table observes to place its revolver again: nothing is resized. Its
+// spec replaces it to resize the table
+globalThis.ResizeObserver ??= class {
+    public observe(): void {
+        // Nothing is resized
+    }
+
+    public unobserve(): void {
+        // Nothing is resized
+    }
+
+    public disconnect(): void {
+        // Nothing is resized
+    }
+};
+
 // Fails a spec file leaving an interval running: it would keep firing, and logging, during the next spec files of the
 // worker, and a log still pending when the worker closes fails the run (EnvironmentTeardownError) on another spec.
 // The native functions are kept on the global object: the setup runs again for each spec file of the worker

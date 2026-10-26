@@ -1,0 +1,30 @@
+<div *transloco="let t; prefix: 'roulette.cylinder'" class="cylinder" [class.spinning]="spinning()" role="group" [attr.aria-label]="t('label')">
+    <span class="hammer" aria-hidden="true"></span>
+    <div class="cylinder-body" [style.--turn.deg]="turn()">
+        @for (chamber of views(); track chamber.index) {
+        @if (selectable()) {
+        <button
+            type="button"
+            class="chamber"
+            [class]="'chamber-' + chamber.state"
+            [style.--angle.deg]="chamber.angle"
+            [attr.aria-pressed]="chamber.state === state.LOADED"
+            [disabled]="chamber.state !== state.LOADED && full()"
+            [attr.aria-label]="t('chamber', { number: chamber.index + 1 })"
+            (click)="toggle(chamber.index)"></button>
+        } @else {
+        <span
+            class="chamber"
+            role="img"
+            [class]="'chamber-' + chamber.state"
+            [style.--angle.deg]="chamber.angle"
+            [attr.aria-label]="chamber.label | transloco: { number: chamber.index + 1 }">
+            @if (chamber.state === state.DOUBLE) {
+            <span class="double-count m-auto text-xs font-bold text-app-card-ink" aria-hidden="true">2</span>
+            }
+        </span>
+        }
+        }
+        <span class="cylinder-axis" aria-hidden="true"></span>
+    </div>
+</div>

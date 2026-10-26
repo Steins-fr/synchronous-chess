@@ -1,0 +1,291 @@
+// The revolver and its parts: the steel of the cylinder of the table, a grip of wood
+:host {
+    display: block;
+    width: 9rem;
+    pointer-events: none;
+    // The shot lasts a little without motion too: its end brings the result of the chamber
+    --shot: max(var(--app-motion-slow), 20ms);
+}
+
+.steel-highlight {
+    stop-color: var(--app-steel-light);
+}
+
+.steel-base {
+    stop-color: var(--app-steel);
+}
+
+.steel-shadow {
+    stop-color: var(--app-steel-edge);
+}
+
+.wood-light {
+    stop-color: var(--app-grip);
+}
+
+.wood-dark {
+    stop-color: var(--app-grip-edge);
+}
+
+.steel,
+.cylinder {
+    fill: url(#revolver-steel);
+    stroke: var(--app-steel-edge);
+    stroke-width: 1.2;
+}
+
+.steel-edge-fill,
+.muzzle {
+    fill: var(--app-steel-edge);
+}
+
+.flute {
+    fill: var(--app-steel-edge);
+    opacity: 0.75;
+}
+
+.cylinder-edges,
+.guard,
+.checkering,
+.click {
+    fill: none;
+    stroke-linecap: round;
+}
+
+.cylinder-edges {
+    stroke: var(--app-steel-edge);
+    stroke-width: 1.5;
+}
+
+.guard {
+    stroke: var(--app-steel-edge);
+    stroke-width: 3.5;
+}
+
+.screw {
+    fill: var(--app-steel-light);
+    stroke: var(--app-steel-edge);
+}
+
+.grip {
+    fill: url(#revolver-wood);
+    stroke: var(--app-grip-edge);
+    stroke-width: 1.2;
+}
+
+.checkering {
+    stroke: var(--app-grip-edge);
+    stroke-width: 0.8;
+    opacity: 0.8;
+}
+
+.revolver-body {
+    transform-box: view-box;
+    // The hand holds the grip: the recoil turns the revolver around it
+    transform-origin: 158px 74px;
+}
+
+.hammer {
+    transform-box: view-box;
+    transform-origin: 156px 31px;
+    transition: transform var(--app-motion-fast) ease-out;
+}
+
+.cylinder-turn {
+    transform-box: view-box;
+}
+
+// Hidden until the shot
+.flash,
+.flash-core,
+.blast,
+.smoke,
+.click {
+    opacity: 0;
+    transform-box: view-box;
+    transform-origin: 9px 34px;
+}
+
+.flash {
+    fill: var(--app-flash);
+}
+
+.flash-core {
+    fill: var(--app-flash-core);
+}
+
+.blast-core {
+    stop-color: var(--app-flash-core);
+}
+
+.blast-glow {
+    stop-color: var(--app-flash);
+    stop-opacity: 0.7;
+}
+
+.blast-edge {
+    stop-color: var(--app-flash);
+    stop-opacity: 0;
+}
+
+.smoke {
+    fill: var(--app-smoke);
+}
+
+.click {
+    stroke: var(--app-text);
+    stroke-width: 2.5;
+    transform-origin: 172px 2px;
+}
+
+// Held to the head of the player: the hammer cocked turns the cylinder one chamber, the hand trembles the same way
+// whatever the chamber holds
+:host(.aiming) .hammer {
+    transform: rotate(-32deg);
+}
+
+:host(.aiming) .cylinder-turn {
+    animation: cylinder-turn var(--app-motion-fast) ease-in-out both;
+}
+
+// One flute up: the next chamber in front of the barrel, the flutes as before
+@keyframes cylinder-turn {
+    to {
+        transform: translateY(-11px);
+    }
+}
+
+:host(.aiming) .revolver-body {
+    animation: tremble 140ms ease-in-out infinite alternate;
+}
+
+@keyframes tremble {
+    to {
+        transform: rotate(-1.5deg) translateY(0.5px);
+    }
+}
+
+// The shot: the hammer falls. The animation of the body ends the shot
+:host(.fire-empty) .hammer,
+:host(.fire-bullet) .hammer {
+    transform: rotate(0deg);
+    transition-duration: 60ms;
+}
+
+:host(.fire-empty) .revolver-body {
+    animation: dry-fire var(--shot) ease-out;
+}
+
+@keyframes dry-fire {
+    8% {
+        transform: rotate(-3deg);
+    }
+
+    20%,
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+:host(.fire-empty) .click {
+    animation: click calc(var(--shot) / 2) ease-out;
+}
+
+@keyframes click {
+    from {
+        opacity: 1;
+        transform: scale(0.6);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.3);
+    }
+}
+
+// A bullet: the recoil raises the muzzle and throws the revolver back, the blast and the smoke at the muzzle
+:host(.fire-bullet) .revolver-body {
+    animation: recoil calc(var(--shot) * 1.4) cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes recoil {
+    6% {
+        transform: translateX(10px) rotate(26deg);
+    }
+
+    35% {
+        transform: translateX(-2px) rotate(-4deg);
+    }
+
+    60%,
+    to {
+        transform: translateX(0) rotate(0deg);
+    }
+}
+
+:host(.fire-bullet) .flash,
+:host(.fire-bullet) .flash-core {
+    animation: flash calc(var(--shot) / 3) ease-out;
+}
+
+@keyframes flash {
+    from {
+        opacity: 1;
+        transform: scale(0.3);
+    }
+
+    25% {
+        opacity: 1;
+        transform: scale(1.35);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.6);
+    }
+}
+
+:host(.fire-bullet) .blast {
+    animation: blast calc(var(--shot) / 2) ease-out;
+}
+
+@keyframes blast {
+    from {
+        opacity: 0.9;
+        transform: scale(0.2);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(2.4);
+    }
+}
+
+:host(.fire-bullet) .smoke {
+    animation: smoke calc(var(--shot) * 1.4) ease-out 60ms both;
+}
+
+@keyframes smoke {
+    from {
+        opacity: 0.8;
+        transform: scale(0.4);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-16px, -20px) scale(2.2);
+    }
+}
+
+// No motion asked: the revolver waits and fires without trembling, turning nor recoiling. The shot keeps its animation,
+// of the shortest time, which ends it
+@media (prefers-reduced-motion: reduce) {
+    :host(.aiming:not(.fire-empty, .fire-bullet)) .revolver-body,
+    :host(.aiming) .cylinder-turn {
+        animation: none;
+    }
+
+    .hammer {
+        transition: none;
+    }
+}

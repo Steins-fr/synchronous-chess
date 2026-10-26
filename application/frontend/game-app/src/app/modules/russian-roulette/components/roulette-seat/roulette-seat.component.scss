@@ -1,0 +1,163 @@
+// The ring around the seat of the player to act, widening as it fades out
+.acting::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid var(--app-accent-text);
+    border-radius: 1rem;
+    animation: turn-ring 2.4s ease-out infinite;
+}
+
+@keyframes turn-ring {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+}
+
+// The turn reaches the seat: it lights up, a glow sweeping it, before its ring pulses
+.acting {
+    animation: turn-start var(--app-motion-slow) ease-out;
+}
+
+@keyframes turn-start {
+    from {
+        box-shadow: 0 0 0 0.375rem color-mix(in srgb, var(--app-accent-text) 45%, transparent);
+        transform: scale(1.02);
+    }
+
+    to {
+        box-shadow: 0 0 0 0 transparent;
+        transform: scale(1);
+    }
+}
+
+// The pass stamped on the seat: it lands, turned, then fades out as the turn goes on
+.pass-stamp {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    right: 1rem;
+    padding: 0.125rem 0.625rem;
+    border: 0.1875rem solid var(--app-accent-text);
+    border-radius: 0.375rem;
+    color: var(--app-accent-text);
+    background: var(--app-surface-raised);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    pointer-events: none;
+    animation: pass-stamp 1.4s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes pass-stamp {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) rotate(-14deg) scale(2.2);
+    }
+
+    18% {
+        opacity: 1;
+        transform: translateY(-50%) rotate(-8deg) scale(1);
+    }
+
+    75% {
+        opacity: 1;
+        transform: translateY(-50%) rotate(-8deg) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-80%) rotate(-8deg) scale(0.9);
+    }
+}
+
+// The revolver fires next to the player: its seat shakes and turns red on a death, glows on an empty chamber
+.shot-death {
+    animation: shot-death var(--app-motion-slow) ease-out both;
+}
+
+@keyframes shot-death {
+    from {
+        border-color: var(--app-death);
+        box-shadow: 0 0 0 0.5rem color-mix(in srgb, var(--app-death) 55%, transparent);
+        transform: translateX(-0.5rem);
+    }
+
+    15% {
+        transform: translateX(0.4rem);
+    }
+
+    30% {
+        transform: translateX(-0.25rem);
+    }
+
+    45% {
+        transform: translateX(0.125rem);
+    }
+
+    60%,
+    to {
+        border-color: var(--app-death);
+        box-shadow: 0 0 0 0 transparent;
+        transform: translateX(0);
+    }
+}
+
+.shot-empty {
+    animation: shot-empty var(--app-motion-slow) ease-out;
+}
+
+@keyframes shot-empty {
+    from {
+        box-shadow: 0 0 0 0.375rem color-mix(in srgb, var(--app-survive) 50%, transparent);
+    }
+
+    to {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+// The clock of the move empties smoothly from a second to the next one: following the seconds left, it fills again for a
+// new move of the same seat, and shows the time left at once on a page shown again
+.turn-clock {
+    transition: width 1s linear;
+}
+
+// No motion asked: the ring stays still around the seat, rather than an endless animation lasting no time, and the
+// clock empties second by second
+@media (prefers-reduced-motion: reduce) {
+    .acting,
+    .acting::after,
+    .shot-death,
+    .shot-empty {
+        animation: none;
+    }
+
+    // The stamp shows, still, then fades out
+    .pass-stamp {
+        animation-name: pass-stamp-still;
+    }
+
+    @keyframes pass-stamp-still {
+        from,
+        75% {
+            opacity: 1;
+            transform: translateY(-50%) rotate(-8deg);
+        }
+
+        to {
+            opacity: 0;
+            transform: translateY(-50%) rotate(-8deg);
+        }
+    }
+
+    .turn-clock {
+        transition: none;
+    }
+}

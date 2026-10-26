@@ -7,6 +7,7 @@ describe('RoomGame', () => {
         [RoomGame.CHESS, true],
         [RoomGame.CHAT, true],
         [RoomGame.SEVENTEEN_POKER, true],
+        [RoomGame.RUSSIAN_ROULETTE, true],
         ['go', false],
         [undefined, false],
     ])('should tell whether %s is a game', (value: unknown, isGame: boolean) => {

@@ -1,0 +1,117 @@
+// The cylinder, a disc of steel, its chambers on a circle around its axis. The chambers place themselves by their angle
+// (--angle), the disc turns by --turn: the chamber to fire comes under the hammer, at the top
+.cylinder {
+    position: relative;
+    width: min(18rem, 80vw);
+    aspect-ratio: 1;
+    margin-inline: auto;
+}
+
+// Beside the revolver once spun: twice its height, smaller on a narrow phone, the cloth holding the revolver (9rem), the
+// gap between them and the gutters of the table and of the cloth beside it
+:host(.compact) .cylinder {
+    width: min(9rem, calc(100vw - 13.75rem));
+}
+
+// The count of a chamber of two bullets fits its smaller hole
+:host(.compact) .double-count {
+    font-size: 0.5rem;
+    line-height: 1;
+}
+
+.cylinder-body {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--app-steel-light), var(--app-steel));
+    box-shadow: inset 0 0 0 0.25rem var(--app-steel-edge);
+    transform: rotate(var(--turn));
+    transition: transform var(--app-motion-slow) cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.chamber {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: 11%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0.125rem solid var(--app-steel-edge);
+    border-radius: 50%;
+    background: var(--app-chamber);
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-360%) rotate(calc(-1 * var(--angle)));
+    transition: background-color var(--app-motion-fast);
+}
+
+button.chamber {
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 0.1875rem solid var(--app-accent-text);
+        outline-offset: 0.125rem;
+    }
+
+    &:disabled {
+        cursor: default;
+    }
+}
+
+// A bullet seen from the back of the cylinder: its brass case and its primer
+.chamber-loaded,
+.chamber-bullet,
+.chamber-double {
+    background: radial-gradient(circle, var(--app-bullet-primer) 28%, var(--app-bullet) 32%);
+}
+
+// A chamber fired with a bullet: a death, ringed in red
+.chamber-bullet,
+.chamber-double {
+    border-color: var(--app-death);
+    box-shadow: 0 0 0 0.125rem var(--app-death);
+}
+
+// A chamber fired empty, lighter than the hidden ones
+.chamber-empty {
+    background: var(--app-steel-light);
+    border-style: dashed;
+}
+
+.cylinder-axis {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--app-chamber);
+    transform: translate(-50%, -50%);
+}
+
+// The hammer, above the chamber to fire
+.hammer {
+    position: absolute;
+    z-index: 1;
+    top: -0.75rem;
+    left: 50%;
+    border-inline: 0.5rem solid transparent;
+    border-top: 0.75rem solid var(--app-text);
+    transform: translateX(-50%);
+}
+
+// The players load and spin the cylinder: it turns on itself until they are done
+.spinning .cylinder-body {
+    animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(calc(var(--turn) + 360deg));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinning .cylinder-body {
+        animation: none;
+    }
+}

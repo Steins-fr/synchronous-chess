@@ -53,6 +53,17 @@ import trPokerTranslation from './i18n/poker/tr.json';
 import idPokerTranslation from './i18n/poker/id.json';
 import plPokerTranslation from './i18n/poker/pl.json';
 import itPokerTranslation from './i18n/poker/it.json';
+import enRouletteTranslation from './i18n/roulette/en.json';
+import frRouletteTranslation from './i18n/roulette/fr.json';
+import esRouletteTranslation from './i18n/roulette/es.json';
+import ptBRRouletteTranslation from './i18n/roulette/pt-BR.json';
+import ptPTRouletteTranslation from './i18n/roulette/pt-PT.json';
+import deRouletteTranslation from './i18n/roulette/de.json';
+import ruRouletteTranslation from './i18n/roulette/ru.json';
+import trRouletteTranslation from './i18n/roulette/tr.json';
+import idRouletteTranslation from './i18n/roulette/id.json';
+import plRouletteTranslation from './i18n/roulette/pl.json';
+import itRouletteTranslation from './i18n/roulette/it.json';
 import enCardsTranslation from './i18n/cards/en.json';
 import frCardsTranslation from './i18n/cards/fr.json';
 import esCardsTranslation from './i18n/cards/es.json';
@@ -111,6 +122,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'poker/id': idPokerTranslation,
     'poker/pl': plPokerTranslation,
     'poker/it': itPokerTranslation,
+    'roulette/en': enRouletteTranslation,
+    'roulette/fr': frRouletteTranslation,
+    'roulette/es': esRouletteTranslation,
+    'roulette/pt-BR': ptBRRouletteTranslation,
+    'roulette/pt-PT': ptPTRouletteTranslation,
+    'roulette/de': deRouletteTranslation,
+    'roulette/ru': ruRouletteTranslation,
+    'roulette/tr': trRouletteTranslation,
+    'roulette/id': idRouletteTranslation,
+    'roulette/pl': plRouletteTranslation,
+    'roulette/it': itRouletteTranslation,
     'cards/en': enCardsTranslation,
     'cards/fr': frCardsTranslation,
     'cards/es': esCardsTranslation,

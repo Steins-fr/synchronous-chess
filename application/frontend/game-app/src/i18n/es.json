@@ -8,7 +8,8 @@
       "chat": "Chat",
       "chess": "Ajedrez",
       "home": "Inicio",
-      "poker": "Póquer"
+      "poker": "Póquer",
+      "roulette": "Ruleta"
     },
     "theme": {
       "toDark": "Cambiar al tema oscuro",
@@ -17,8 +18,8 @@
     "title": "Ajedrez sincrónico"
   },
   "cheat": {
-    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} other {}}) de {author} ha sido señalado como trampa por {reporters}",
-    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
+    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} other {}}) de {author} ha sido señalado como trampa por {reporters}",
+    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -43,6 +44,11 @@
       "action": "Jugar",
       "description": "Póquer para dos con una baraja de 17 cartas que nadie reparte: los jugadores la barajan juntos, cifrada.",
       "title": "Póquer de diecisiete cartas"
+    },
+    "roulette": {
+      "action": "Jugar",
+      "description": "Un duelo con un revólver de 24 recámaras, donde cada jugador carga sus propias balas: disparar, o pagar para pasar.",
+      "title": "Ruleta rusa"
     },
     "title": "Elige un juego"
   },

@@ -8,7 +8,8 @@
       "chat": "Chat",
       "chess": "Scacchi",
       "home": "Home",
-      "poker": "Poker"
+      "poker": "Poker",
+      "roulette": "Roulette"
     },
     "theme": {
       "toDark": "Passa al tema scuro",
@@ -17,8 +18,8 @@
     "title": "Scacchi sincroni"
   },
   "cheat": {
-    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
-    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
   },
   "dialog": {
     "cancel": "Annulla",
@@ -43,6 +44,11 @@
       "action": "Gioca",
       "description": "Poker in due con un mazzo di 17 carte che nessuno distribuisce: i giocatori lo mescolano insieme, cifrato.",
       "title": "Poker a diciassette carte"
+    },
+    "roulette": {
+      "action": "Gioca",
+      "description": "Un duello con un revolver da 24 camere, dove ogni giocatore carica i propri proiettili: spara, o paga per passare.",
+      "title": "Roulette russa"
     },
     "title": "Scegli un gioco"
   },

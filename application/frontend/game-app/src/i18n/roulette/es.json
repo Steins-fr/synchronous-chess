@@ -1,0 +1,115 @@
+{
+  "cylinder": {
+    "bullet": "Recámara {number}: una bala",
+    "chamber": "Recámara {number}",
+    "double": "Recámara {number}: dos balas",
+    "empty": "Recámara {number}: vacía",
+    "hidden": "Recámara {number}",
+    "label": "Tambor",
+    "loaded": "Recámara {number}: tu bala"
+  },
+  "presentation": {
+    "intro": "Cada jugador carga 3 balas en las recámaras que elige y luego se gira el tambor. Por turnos, dispara para llevarte las fichas de la mesa, o pasa pagando, con un precio que se duplica a cada pase seguido. Una bala es una muerte, que cuesta 50 fichas: cuando se disparan las 6 balas, gana quien tenga menos muertes.",
+    "points": {
+      "checked": "Cuando termina la partida, se muestran todas las claves: cada participante comprueba que nadie hizo trampa.",
+      "hidden": "Los dos jugadores giran el tambor por turnos: nadie, ni siquiera el servidor, sabe qué recámara viene después ni de quién es la bala disparada.",
+      "placed": "Solo tú sabes dónde están tus balas: se cifran antes de que el otro jugador las vea."
+    },
+    "rooms": "Crea una sala o únete a una abierta: los participantes sin puesto miran la partida.",
+    "tagline": "Un duelo para dos jugadores, con un revólver de 24 recámaras.",
+    "title": "Ruleta rusa"
+  },
+  "rules": {
+    "cylinder": {
+      "load": "Cada jugador carga 3 balas en las recámaras que elige, en secreto: una recámara puede tener una bala de cada jugador.",
+      "spin": "Luego cada jugador gira el tambor por turnos: nadie sabe qué recámara viene después, pero las balas de cada jugador mantienen su separación. Un sorteo decide quién juega primero.",
+      "title": "El tambor"
+    },
+    "end": {
+      "title": "Fin de la partida",
+      "winner": "La partida termina cuando se disparan las 6 balas. Gana el jugador con menos muertes, luego el que tiene más fichas; si no, son tablas."
+    },
+    "fair": {
+      "checked": "Cuando termina la partida, se muestran las dos claves y cada participante comprueba los giros del tambor: entonces el resultado es definitivo. Un jugador que hizo trampa, o que se guarda su clave, pierde la partida.",
+      "hidden": "Cada recámara se cifra con las claves de los dos jugadores: un disparo solo dice cuántas balas tenía la recámara, nunca de quién eran. Ni siquiera el servidor conoce el tambor.",
+      "title": "Juego limpio"
+    },
+    "summary": "Reglas del juego",
+    "title": "Reglas",
+    "turn": {
+      "away": "Mientras un jugador está ausente, la jugada tiene 30 segundos más, una vez: el jugador que sigue ausente pierde la partida.",
+      "clock": "Cada jugada dura 45 segundos como máximo: después, la página pasa por el jugador, o dispara si no puede pagar, y carga 3 recámaras al azar a un jugador que no cargó.",
+      "death": "Disparar una bala, o dos: una muerte. El tirador da 50 fichas y las fichas de la mesa al otro jugador, endeudándose si hace falta.",
+      "empty": "Disparar una recámara vacía: llevarse las fichas de la mesa.",
+      "pass": "Pasar: poner fichas en la mesa, 1 ficha, duplicada a cada pase seguido (1, 2, 4, 8, 16). Un jugador que no puede pagar debe disparar.",
+      "reveal": "Tras 5 pases seguidos, la banca se lleva las 31 fichas de la mesa y se revela la siguiente recámara: sus balas se pierden, sin muerte. Pasar nunca esquiva una bala.",
+      "title": "Cada turno"
+    }
+  },
+  "table": {
+    "action": {
+      "load": "Cargar ({count}/{bullets})",
+      "pass": "Pasar ({price})",
+      "rematch": "Jugar otra vez",
+      "shoot": "Disparar"
+    },
+    "bank": "Banca: {chips}",
+    "bullets": "{count, plural, one {Queda # bala} other {Quedan # balas}}",
+    "game": "Partida {number}:",
+    "history": "Jugadas de la partida",
+    "move": {
+      "death": "{name} dispara la recámara {chamber}: una bala, una muerte.",
+      "deathDouble": "{name} dispara la recámara {chamber}: dos balas, una muerte.",
+      "draw": "{name} pasa, {chips} fichas: el 5.º pase seguido, la banca se lleva la mesa.",
+      "empty": "{name} dispara la recámara {chamber}: vacía, y se lleva {chips, plural, one {# ficha} other {# fichas}}.",
+      "emptyTable": "{name} dispara la recámara {chamber}: vacía.",
+      "pass": "{name} pasa: {chips, plural, one {# ficha} other {# fichas}} en la mesa.",
+      "revealBullet": "El 5.º pase de {name} revela la recámara {chamber}: una bala, perdida.",
+      "revealDouble": "El 5.º pase de {name} revela la recámara {chamber}: dos balas, perdidas.",
+      "revealEmpty": "El 5.º pase de {name} revela la recámara {chamber}: vacía."
+    },
+    "pastGames": "Partidas jugadas",
+    "provisional": "Resultado provisional: el tambor se comprueba cuando se muestran las dos claves.",
+    "result": {
+      "bothCheated": "Los dos jugadores hicieron trampa con el tambor: no hay ganador.",
+      "cheated": "{loser} hizo trampa con el tambor: {winner} gana la partida.",
+      "draw": "Tablas: los dos jugadores terminan con tantas muertes y fichas.",
+      "forfeit": "Se acabó el tiempo de {loser}: {winner} gana la partida.",
+      "stopped": "Detenida: hubo trampa con el tambor.",
+      "win": "{winner} gana la partida: {deaths} contra {otherDeaths, plural, one {# muerte} other {# muertes}}, con {chips, plural, one {# ficha} other {# fichas}}.",
+      "withheld": "{loser} no mostró su clave: {winner} gana la partida."
+    },
+    "seat": {
+      "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "clock": "{seconds} s",
+      "deaths": "{count, plural, one {# muerte} other {# muertes}}",
+      "free": "Puesto libre",
+      "leave": "Dejar el puesto",
+      "play": "Sentarse",
+      "release": "Liberar el puesto"
+    },
+    "spectators": "Espectadores: {count}",
+    "status": {
+      "away": "Esperando a que {name} vuelva…",
+      "broken": "Hubo trampa con el tambor: la partida se detuvo.",
+      "disclosing": "Los jugadores muestran sus claves para comprobar el tambor…",
+      "firing": "Se dispara la recámara {chamber}…",
+      "hurry": "Tu turno: se acaba el tiempo.",
+      "loading": "Cargando las balas: {name}…",
+      "lost": "Esta página perdió tus claves: ya no puedes jugar esta partida.",
+      "myTurn": "Tu turno: dispara o pasa.",
+      "place": "Elige las recámaras de tus {count} balas y luego cárgalas.",
+      "placeOther": "Esperando a que {name} cargue…",
+      "placing": "Los jugadores eligen las recámaras de sus balas.",
+      "revealing": "Se revela la recámara {chamber}…",
+      "seats": "Esperando a que se sienten dos jugadores.",
+      "spinning": "Girando el tambor: {name}…",
+      "theirTurn": "{name} dispara o pasa…"
+    },
+    "table": "Mesa: {chips, plural, one {# ficha} other {# fichas}}",
+    "verification": {
+      "cheated": "Hubo trampa con el tambor.",
+      "fair": "El tambor fue limpio."
+    }
+  }
+}

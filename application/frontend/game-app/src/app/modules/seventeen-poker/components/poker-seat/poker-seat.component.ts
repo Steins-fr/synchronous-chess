@@ -1,10 +1,8 @@
 import { Component, computed, ElementRef, inject, input, output, Signal, viewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { CLOCK_LOW } from '@app/helpers/turn-clock.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { TranslocoDirective } from '@jsverse/transloco';
-
-/** The seconds left from which the clock of a move tells it runs out */
-export const CLOCK_LOW: number = 5;
 
 /**
  * A seat of the table: its player and its chips, a ring around it and the clock of its move while its player acts, and

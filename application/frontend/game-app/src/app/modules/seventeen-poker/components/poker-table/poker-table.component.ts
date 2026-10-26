@@ -1,8 +1,9 @@
 import {
-    afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
+    afterRenderEffect, Component, computed, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { DeckVerification, MentalDeck } from '@app/modules/mental-poker/classes/mental-deck';
 import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
 import { CardDeckComponent } from '@app/modules/playing-cards/components/card-deck/card-deck.component';
@@ -22,7 +23,7 @@ import { BetAction, BetLimits } from '../../classes/rules/betting-round';
 import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
 import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand, PokerMatch } from '../../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../../classes/rules/poker-seat';
-import { CLOCK_LOW, PokerSeatComponent } from '../poker-seat/poker-seat.component';
+import { PokerSeatComponent } from '../poker-seat/poker-seat.component';
 
 /** The options of the session of the table: the cipher and the rules of the app, lighter ones for the specs */
 export const POKER_SESSION_OPTIONS = new InjectionToken<PokerSessionOptions>('POKER_SESSION_OPTIONS', { factory: (): PokerSessionOptions => ({}) });
@@ -30,11 +31,6 @@ export const POKER_SESSION_OPTIONS = new InjectionToken<PokerSessionOptions>('PO
 /** The chips a click on more or less adds to the amount of a bet */
 const BET_STEP: number = 5;
 
-/** The clock of a move ticks every second */
-const CLOCK_TICK: number = 1000;
-const MS_PER_SECOND: number = 1000;
-/** A tick may come a bit before the end of a move, which is over once less than half a tick is left */
-const LAST_TICK: number = CLOCK_TICK / MS_PER_SECOND / 2;
 /** The bank, off the table: the chips going to it fly to the right side of the cloth, this far inside it */
 const BANK_INSET: number = 16;
 
@@ -158,41 +154,14 @@ export class PokerTableComponent implements OnDestroy {
 
     /** A seated player is away: the table waits for it, the clock of the move running */
     private readonly waiting: Signal<boolean> = computed((): boolean => this.session().awayPlayers().length > 0);
-    private readonly _timeLeft = signal<number | null>(null);
+    // Each move has its time, from when the page sees it, a new one at each action (a seat acting twice in a row too):
+    // once over, the page of its player plays for it, or the page of the other player ends the match while it is away
     /** The seconds left to the player to act for its move */
-    protected readonly timeLeft: Signal<number | null> = this._timeLeft.asReadonly();
-    // Each move has its time, from when the page sees it, a new one at each action: once over, the page of its player
-    // plays for it, or the page of the other player ends the match while it is away
-    private readonly turnClock = effect((onCleanup: (cleanup: () => void) => void): void => {
-        // Each action changes the hand: the clock starts again, for a seat acting twice in a row too
-        if (this.hand() === null || this.toAct() === null) {
-            this._timeLeft.set(null);
-            return;
-        }
-
-        const { turnTime, awayTime } = this.session().match().rules;
-        // The time of the page, which the clock of the system does not set back or forward
-        let deadline: number = performance.now() + turnTime * MS_PER_SECOND;
-        let extended: boolean = false;
-        this._timeLeft.set(turnTime);
-        const clock: ReturnType<typeof setInterval> = setInterval(() => {
-            // A seated player away gives the move more time, once: a player leaving and coming back gets no more
-            if (!extended && this.waiting()) {
-                extended = true;
-                deadline += awayTime * MS_PER_SECOND;
-            }
-
-            const left: number = (deadline - performance.now()) / MS_PER_SECOND;
-
-            if (left < LAST_TICK) {
-                this._timeLeft.set(0);
-                clearInterval(clock);
-                this.timeOut();
-            } else {
-                this._timeLeft.set(Math.ceil(left));
-            }
-        }, CLOCK_TICK);
-        onCleanup(() => clearInterval(clock));
+    protected readonly timeLeft: Signal<number | null> = turnClock({
+        running: () => this.hand() !== null && this.toAct() !== null,
+        times: () => this.session().match().rules,
+        away: this.waiting,
+        timeOut: () => this.timeOut(),
     });
     /** The time of the move runs out: the status of the local player tells it, once, for a screen reader too */
     private readonly hurry: Signal<boolean> = computed((): boolean => {

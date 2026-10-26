@@ -114,7 +114,7 @@ This is an Angular TypeScript project with the following characteristics:
 
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
-  `poker` (the Seventeen Poker) and `chat`. The rest is global, `home` included: it presents every game
+  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -260,6 +260,15 @@ Claude writes the translations of every new or changed key, into every language:
 | three of a kind | brelan | trío | trinca | trio | Drilling | сет | üçlü | three of a kind | trójka | tris |
 | two pair | double paire | doble pareja | dois pares | dois pares | zwei Paare | две пары | döper | two pair | dwie pary | doppia coppia |
 | one pair | paire | pareja | um par | par | ein Paar | пара | per | one pair | para | coppia |
+| revolver | revolver | revólver | revólver | revólver | Revolver | револьвер | altıpatlar | revolver | rewolwer | revolver |
+| chamber | chambre | recámara | câmara | câmara | Kammer | гнездо | hazne | kamar | komora | camera |
+| bullet | balle | bala | bala | bala | Kugel | пуля | mermi | peluru | kula | proiettile |
+| cylinder | barillet | tambor | tambor | tambor | Trommel | барабан | tambur | silinder | bęben | tamburo |
+| shoot | tirer | disparar | atirar | disparar | abdrücken | выстрелить | ateş etmek | tembak | strzelić | sparare |
+| death | mort | muerte | morte | morte | Tod | смерть | ölüm | kematian | śmierć | morte |
+| spin (the cylinder) | faire tourner | girar | girar | rodar | drehen | крутить | çevirmek | memutar | zakręcić | far girare |
+| load (the bullets) | charger | cargar | carregar | carregar | laden | зарядить | doldurmak | mengisi | załadować | caricare |
+| bank | banque | banca | banca | banca | Bank | казна | banka | bank | bank | banco |
 
 ## APIs
 

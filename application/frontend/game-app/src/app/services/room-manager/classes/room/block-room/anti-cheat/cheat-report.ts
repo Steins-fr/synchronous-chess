@@ -23,6 +23,12 @@ export enum CheatReason {
     INVALID_SHUFFLE = 'invalidShuffle',
     /** Detected by the application: a key not decrypting the card it is given for */
     INVALID_CARD_KEY = 'invalidCardKey',
+    /** Detected by the application: bullets loaded without their proofs, or a key of a cylinder without its own */
+    INVALID_LOAD = 'invalidLoad',
+    /** Detected by the application: a cylinder not turned from the previous one, its chambers fired unfairly */
+    INVALID_SPIN = 'invalidSpin',
+    /** Detected by the application: a share of a chamber, or of the key of a cylinder, not made with the key of its player */
+    INVALID_SHARE = 'invalidShare',
 }
 
 /** The cheats only the sequencer can commit: enough participants reporting them hand the ordering over */
