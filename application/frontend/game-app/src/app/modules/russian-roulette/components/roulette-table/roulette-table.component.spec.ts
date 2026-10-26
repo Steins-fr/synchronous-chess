@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { By } from '@angular/platform-browser';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
@@ -45,7 +46,8 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
     /** The table of the local participant */
     async function table(name: string, rules: RouletteRules = LIGHT, tamper?: Tamper): Promise<void> {
         // The revolver fires at once: the specs end its animations themselves
-        TestBed.configureTestingModule({ providers: [{ provide: ROULETTE_SESSION_OPTIONS, useValue: { cipher, rules } }, { provide: REVOLVER_HOLD, useValue: 0 }] });
+        // The warning before leaving a match is provided by the page
+        TestBed.configureTestingModule({ providers: [{ provide: ROULETTE_SESSION_OPTIONS, useValue: { cipher, rules } }, { provide: REVOLVER_HOLD, useValue: 0 }, MatchLeaveWarning] });
         fixture = TestBed.createComponent(RouletteTableComponent);
         const room: Room<RoulettePayloads> = hub.room(name, tamper);
         rooms.set(name, room);
@@ -267,6 +269,9 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         const bob: RussianRouletteSession = await started(SHORT);
         await aliceToAct(bob);
 
+        // Then leaving the page asks to confirm
+        expect(TestBed.inject(MatchLeaveWarning).inMatch()).toBe(true);
+
         // Then the cylinder spun lies beside the revolver, smaller, the chips of the table below them
         expect(element().querySelector('app-roulette-cylinder')?.parentElement?.querySelector('div')?.classList).toContain('w-36');
         expect(element().querySelector('app-roulette-cylinder')?.classList).not.toContain('large');
@@ -487,6 +492,23 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then
         await until(() => text('#last-move') === 'bob fires chamber 1: empty, and takes 1 chip.');
         expect(text('#seat-top')).toContain('151 chips');
+    });
+
+    test('should tell the shot of an empty chamber without chips on the table', async () => {
+        // Given the first chambers empty, Alice playing first
+        fixedCylinder();
+        const bob: RussianRouletteSession = await seated(SHORT);
+        bob.load([3]);
+        chamber(2).click();
+        await fixture.whenStable();
+        await click(/^Load/);
+        await until(() => status() === 'Your turn: shoot, or pass.');
+
+        // When
+        await click('Shoot');
+
+        // Then
+        await until(() => text('#last-move') === 'alice fires chamber 1: empty.');
     });
 
     test('should tell a chamber of two bullets revealed', async () => {

@@ -1,30 +1,66 @@
-import { DestroyRef, inject, Provider, Signal, signal } from '@angular/core';
+import { DestroyRef, effect, inject, Provider, Signal, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { Router } from '@angular/router';
+import { isTemporaryJoinError } from '@app/services/room-api/join-room';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
+import { RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService, { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { notifyCheatFlags } from './cheat-notifications';
+import { MatchLeaveWarning } from './match-leave-warning';
+import { showRoomInUrl } from './room-url';
 
 /** The services of the room of a page, for roomFromSetup(): provided by the page, cleared with it */
 export function provideRooms(): Provider[] {
-    return [RoomSetupService, RoomManagerService, RoomSocketApi];
+    return [RoomSetupService, RoomManagerService, RoomSocketApi, MatchLeaveWarning];
 }
 
 /**
  * The room of a page, built from the room setup form and cleared with the page, its cheats notified:
- * to call in an injection context, the page providing provideRooms()
+ * to call in an injection context, the page providing provideRooms(). The room built, the page shows its id in its URL
+ * and keeps its session in the tab, for a reload to resume it, and holds its lock among the tabs; the room given up, it
+ * removes them
  * @param maxPlayer the most players the room accepts
  * @param routing the block chain of each message type of the room
  */
 export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonEmptyBlockChainRouting<M>): Signal<BlockRoom<M> | undefined> {
     const roomSetupService: RoomSetupService = inject(RoomSetupService);
     const roomManagerService: RoomManagerService = inject(RoomManagerService);
+    const roomSessions: RoomSessionStore = inject(RoomSessionStore);
+    const router: Router = inject(Router);
     const room = signal<BlockRoom<M> | undefined>(undefined);
     // Aborted once the page left: stops the join asked again for a while
     const destroyed: AbortController = new AbortController();
+    // The room being built: left meanwhile, the player gave it up too
+    let building: string | undefined;
+    // The room the URL holds: the one built, none once given up, as it was until then (undefined)
+    const urlRoom = signal<string | null | undefined>(undefined);
+
+    // Shown once the app navigates no more, and again after a navigation: a link to the page itself drops its query
+    effect((): void => {
+        const roomId: string | null | undefined = urlRoom();
+        if (roomId !== undefined && router.currentNavigation() === null) {
+            untracked(() => showRoomInUrl(router, roomId));
+        }
+    });
+
+    // The room left: a reload shows the list, or the join dialog of a room still in the URL
+    const forget = (roomId: string | undefined): void => {
+        if (roomId !== undefined) {
+            roomSessions.remove(roomId);
+        }
+        roomSetupService.releaseLock();
+    };
+    // The room given up, already notified: the form is available again, to try again or join another room
+    const giveUp = (roomId: string): void => {
+        roomSetupService.roomIsSetup(false);
+        forget(roomId);
+        urlRoom.set(null);
+    };
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
+        building = setup.roomName;
         try {
             const built: BlockRoom<M> = await roomManagerService.buildBlockRoom<M>(setup, maxPlayer, routing, destroyed.signal);
             if (destroyed.signal.aborted) {
@@ -34,22 +70,39 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             }
             room.set(built);
             roomSetupService.roomIsSetup(true);
-            // Already notified: the form is available again, to try again or join another room
+            // Under its id, the one the API drew for a room created
+            roomSessions.save(built.roomName, { playerName: setup.playerName, token: setup.token });
+            urlRoom.set(built.roomName);
+            void roomSetupService.holdLock(built.roomName, setup.playerName);
             built.roomConnection.joinFailed$.subscribe(() => {
                 built.clear();
                 room.set(undefined);
-                roomSetupService.roomIsSetup(false);
+                giveUp(built.roomName);
             });
-        } catch {
-            // Already notified: the form is available again, to try another room or name
-            roomSetupService.roomIsSetup(false);
+        } catch (e) {
+            if (destroyed.signal.aborted) {
+                return;
+            }
+            // A room resumed refused for a while only (its name still in it, the API not answering): its session and URL
+            // kept, a reload resumes it
+            if (setup.type === 'resume' && !(e instanceof RoomApiError && !isTemporaryJoinError(e))) {
+                roomSetupService.roomIsSetup(false);
+                roomSetupService.releaseLock();
+                return;
+            }
+            giveUp(setup.roomName);
+        } finally {
+            building = undefined;
         }
     };
 
     roomSetupService.setup$.pipe(takeUntilDestroyed()).subscribe((setup: RoomSetupInterface) => void buildRoom(setup));
     inject(DestroyRef).onDestroy(() => {
         destroyed.abort();
-        room()?.clear();
+        // Left through the app: the player left its room, or the one it was joining
+        const left: BlockRoom<M> | undefined = room();
+        left?.clear();
+        forget(left?.roomName ?? building);
     });
     notifyCheatFlags(() => room()?.cheatFlags());
 

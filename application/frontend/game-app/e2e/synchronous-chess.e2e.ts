@@ -66,4 +66,44 @@ test.describe('Synchronous chess', () => {
             expect(await movedElements(participant.page), participant.name).toEqual([]);
         }
     });
+
+    test('gives back its seat and its move to a player reloading the page, and asks the players to confirm leaving the game', async ({ chess }) => {
+        const participants: RoomParticipant[] = await chess.connect('alice', 'bob', 'carol');
+        const [alice, bob, carol] = participants;
+        await Promise.all(participants.map(({ page }) => page.setViewportSize({ width: 700, height: 1100 })));
+        await game(alice).locator('#seat-bottom').getByRole('button', { name: 'Play white' }).click();
+        await expect(game(bob).locator('#seat-top')).toHaveText('White player: alice');
+        await game(bob).locator('#seat-bottom').getByRole('button', { name: 'Play black' }).click();
+        await expect(game(alice).locator('#seat-top')).toHaveText('Black player: bob');
+
+        // White plays f3 and Black reloads its page, the game started: the browser asks to confirm
+        await drag(alice.page, 53, 45);
+        // The seats fixed once the game started: no player leaves its seat anymore
+        await expect(game(bob).getByRole('button', { name: 'Leave the seat' })).toHaveCount(0);
+        await bob.reload();
+        bob.expectUnloadPrompts(1);
+        await expect(game(bob).locator('#seat-bottom')).toHaveText('Black player: bob', { timeout: 60_000 });
+        // Black may play once the page caught up with the game: its pawn shows its moves
+        await expect(async () => {
+            await bob.page.locator('#board-grid mat-grid-tile').nth(51).click();
+            await expect(bob.page.locator('.valid-move')).toHaveCount(2, { timeout: 1000 });
+        }).toPass();
+        await drag(bob.page, 51, 35);
+        await expect(game(carol).locator('.player-information.top-player')).toContainText('E7 -> E5');
+
+        // The spectator leaves through the app at once
+        await carol.page.getByRole('link', { name: 'Home' }).click();
+        await expect(carol.page).toHaveURL(/\/$/);
+
+        // A player is asked, staying on the page once it cancels
+        await alice.page.getByRole('link', { name: 'Home' }).click();
+        // The dialogs of the app lie in an overlay of their own
+        const dialog: Locator = alice.page.locator('.dialog-overlay');
+        await expect(dialog).toContainText('Leave the game?');
+        await dialog.getByRole('button', { name: 'Cancel' }).click();
+        await expect(alice.page).toHaveURL(/\/synchronous-chess\?room=/);
+        await alice.page.getByRole('link', { name: 'Home' }).click();
+        await dialog.getByRole('button', { name: 'Confirm' }).click();
+        await expect(alice.page).toHaveURL(/\/$/);
+    });
 });

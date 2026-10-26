@@ -1,4 +1,5 @@
 import { gameState } from '@testing/chess-state.helper';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SyncChessGameComponent } from './sync-chess-game.component';
@@ -121,6 +122,8 @@ describe('SyncChessGameComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [SyncChessGameComponent],
+            // Provided by the page
+            providers: [MatchLeaveWarning],
         }).compileComponents();
 
         fixture = TestBed.createComponent(SyncChessGameComponent);
@@ -242,10 +245,11 @@ describe('SyncChessGameComponent', () => {
         await vi.waitFor(() => expect(session().seatsOpen()).toEqual(false));
         await refresh();
 
-        // Then
+        // Then: leaving the page asks to confirm
         expect(seatButtons('white')).toEqual([]);
         expect(seatButtons('black')).toEqual([]);
         expect(text('.white-seat')).toEqual('White player: local');
+        expect(TestBed.inject(MatchLeaveWarning).inMatch()).toBe(true);
     });
 
     test('should highlight the possible plays of a clicked piece', async () => {

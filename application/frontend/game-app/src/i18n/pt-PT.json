@@ -100,12 +100,17 @@
       "submit": "Entrar",
       "title": "Entrar na sala"
     },
+    "leave": {
+      "message": "O outro jogador está à sua espera: se não voltar em breve, o seu lugar será libertado.",
+      "title": "Sair da partida?"
+    },
     "notifications": {
       "hostReconnecting": "O anfitrião da sala está a ligar-se novamente…",
       "hostUnreachable": "A ligação ao anfitrião da sala falhou.",
       "joiningAgain": "A ligação ao anfitrião da sala falhou, nova tentativa…",
       "nameStillInRoom": "Este nome ainda está na sala, a ligar novamente…",
       "roomFull": "A sala está cheia.",
+      "roomGone": "Esta sala terminou ou não existe.",
       "roomLost": "A sala perdeu a ligação ao servidor: já ninguém pode entrar nela."
     },
     "open": {

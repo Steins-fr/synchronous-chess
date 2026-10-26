@@ -155,6 +155,8 @@ export class OpenRoomsComponent {
 
     /** The rooms shown, with their search: the list of a former search kept until the new one is answered, none once the list failed */
     protected readonly rooms: Resource<RoomsList | undefined> = withPreviousValue({ snapshot: this.listSnapshot });
+    // Completed once the list is destroyed
+    private readonly listSnapshot$: Observable<ResourceSnapshot<RoomsList | undefined>> = toObservable(this.listSnapshot);
 
     public constructor() {
         effect((onCleanup: (cleanup: () => void) => void) => {
@@ -191,6 +193,29 @@ export class OpenRoomsComponent {
      */
     public whenServerReady(): Promise<boolean> {
         return firstValueFrom(this.serverReady$.pipe(filter(Boolean)), { defaultValue: false });
+    }
+
+    /**
+     * Searches the room of an id, the list showing it. Not before a person is on the page
+     * @returns the room listed under that id, whatever its case, as the search of the API: undefined once the API lists
+     * none, an id ended or unknown
+     * @throws {Error} once the list of the search failed, the person typed another search, or the list was removed:
+     * nothing is known of the room
+     */
+    public async findRoom(roomId: string): Promise<Readonly<OpenRoom> | undefined> {
+        this.search.set({ text: roomId });
+        // The answer of the search of the id, not the list shown before it (failed included), nor a search typed since
+        const answer: ResourceSnapshot<RoomsList | undefined> = await firstValueFrom(this.listSnapshot$.pipe(
+            filter((snapshot: ResourceSnapshot<RoomsList | undefined>) => untracked(this.search).text !== roomId
+                || (untracked(this.query) === roomId && (snapshot.status === 'error' || snapshot.status === 'resolved'))),
+        ));
+
+        if (answer.status !== 'resolved' || untracked(this.search).text !== roomId) {
+            throw new Error(`The room ${ roomId } could not be searched`);
+        }
+
+        const key: string = roomId.toLocaleLowerCase();
+        return answer.value?.rooms.find((room: Readonly<OpenRoom>) => room.roomName.toLocaleLowerCase() === key);
     }
 
     /** Not again while a list is awaited: the resource reloads once loaded only */

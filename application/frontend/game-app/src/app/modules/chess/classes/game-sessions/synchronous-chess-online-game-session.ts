@@ -77,6 +77,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     protected destroyRef = new Subject<void>();
     private readonly started = signal<boolean>(false);
     public readonly seatsOpen: Signal<boolean> = computed<boolean>(() => !this.started());
+    public readonly inMatch: Signal<boolean> = computed<boolean>(() => this.myColor !== PieceColor.NONE && this.started() && !this.game.isGameOver());
     /** The connected participants without a seat */
     public readonly spectatorNumber: Signal<number> = computed<number>(() => {
         const { whitePlayer, blackPlayer } = this.configuration();

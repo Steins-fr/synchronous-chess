@@ -100,12 +100,17 @@
       "submit": "Entra",
       "title": "Entra nella stanza"
     },
+    "leave": {
+      "message": "L'altro giocatore ti aspetta: se non torni presto, il tuo posto verrà liberato.",
+      "title": "Lasciare la partita?"
+    },
     "notifications": {
       "hostReconnecting": "L'host della stanza si sta riconnettendo…",
       "hostUnreachable": "La connessione all'host della stanza non è riuscita.",
       "joiningAgain": "La connessione all'host della stanza non è riuscita, nuovo tentativo…",
       "nameStillInRoom": "Questo nome è ancora nella stanza, riconnessione in corso…",
       "roomFull": "La stanza è piena.",
+      "roomGone": "Questa stanza è terminata o non esiste.",
       "roomLost": "La stanza ha perso la connessione al server: nessuno può più entrarci."
     },
     "open": {

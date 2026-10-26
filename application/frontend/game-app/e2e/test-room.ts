@@ -79,6 +79,13 @@ export class TestRoom {
         return player;
     }
 
+    /** A player opening a link of the app in its browser: the URL of a room another player sent */
+    public async visitUrl(playerName: string, url: string): Promise<RoomParticipant> {
+        const player: RoomParticipant = await this.open(playerName);
+        await player.visit(url);
+        return player;
+    }
+
     public async close(): Promise<void> {
         await Promise.all(this.participants.map((participant: RoomParticipant) => participant.close()));
     }

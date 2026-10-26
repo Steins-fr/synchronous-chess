@@ -236,7 +236,7 @@ test.describe('Room participants', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When
-        await Promise.all([bob.reloadAndJoin(room.id), carol.reloadAndJoin(room.id)]);
+        await Promise.all([bob.reload(), carol.reload()]);
 
         // Then
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'], RECONNECTION_TIMEOUT)));
@@ -250,8 +250,8 @@ test.describe('Room participants', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When the player reloads its page while it joins the room again
-        await bob.reloadAndJoin(room.id);
-        await bob.reloadAndJoin(room.id);
+        await bob.reload();
+        await bob.reload();
 
         // Then
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'], RECONNECTION_TIMEOUT)));
@@ -265,7 +265,7 @@ test.describe('Room participants', () => {
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
         // When
-        const [, dave]: [void, RoomParticipant] = await Promise.all([carol.reloadAndJoin(room.id), room.join('dave')]);
+        const [, dave]: [void, RoomParticipant] = await Promise.all([carol.reload(), room.join('dave')]);
 
         // Then
         const names: string[] = ['alice', 'bob', 'carol', 'dave'];

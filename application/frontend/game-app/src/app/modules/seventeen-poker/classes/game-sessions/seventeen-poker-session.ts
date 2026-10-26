@@ -163,6 +163,8 @@ export class SeventeenPokerSession {
     });
     /** The seats are open before the first hand of a match, and once it is over */
     public readonly seatsOpen: Signal<boolean> = computed((): boolean => this.match().hand() === null || this.over());
+    /** The local player plays the match in progress: its first hand dealt, and not over. Leaving it asks to confirm */
+    public readonly inMatch: Signal<boolean> = computed((): boolean => !this.seatsOpen() && this.players().includes(this.room.localPlayer.name));
     /** The connected participants without a seat */
     public readonly spectatorNumber: Signal<number> = this.tableSeats.spectatorNumber;
     public readonly mySeat: Signal<PokerSeat | null> = this.tableSeats.mySeat;

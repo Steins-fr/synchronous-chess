@@ -100,12 +100,17 @@
       "submit": "Katıl",
       "title": "Odaya katıl"
     },
+    "leave": {
+      "message": "Diğer oyuncu sizi bekliyor: yakında dönmezseniz yeriniz boşaltılacak.",
+      "title": "Oyundan çıkılsın mı?"
+    },
     "notifications": {
       "hostReconnecting": "Odanın ev sahibi yeniden bağlanıyor…",
       "hostUnreachable": "Odanın ev sahibine bağlanılamadı.",
       "joiningAgain": "Odanın ev sahibine bağlanılamadı, yeniden deneniyor…",
       "nameStillInRoom": "Bu ad hâlâ odada, yeniden bağlanılıyor…",
       "roomFull": "Oda dolu.",
+      "roomGone": "Bu oda kapandı veya mevcut değil.",
       "roomLost": "Odanın sunucuyla bağlantısı koptu: artık kimse odaya katılamaz."
     },
     "open": {

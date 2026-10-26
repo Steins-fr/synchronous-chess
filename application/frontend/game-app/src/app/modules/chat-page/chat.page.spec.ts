@@ -52,12 +52,12 @@ describe('ChatPage', () => {
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
         // When
-        roomSetupService.setup({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
+        roomSetupService.setup({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' });
         await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal));
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal));
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 
@@ -75,7 +75,7 @@ describe('ChatPage', () => {
         let build: (built: Room<object>) => void = () => undefined;
         vi.mocked(roomManagerService.buildBlockRoom).mockReturnValue(TestHelper.cast(new Promise<Room<object>>((resolve) => build = resolve)));
         const clearSpy = vi.spyOn(room, 'clear');
-        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' });
         await vi.waitFor(() => expect(roomManagerService.buildBlockRoom).toHaveBeenCalled());
 
         // When: the page leaves, then the room is built
@@ -96,7 +96,7 @@ describe('ChatPage', () => {
         roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
 
         // When
-        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' });
 
         // Then
         await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
@@ -106,7 +106,7 @@ describe('ChatPage', () => {
     test('should give the room up and make the setup form available again once the join failed', async () => {
         // Given
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
-        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local' });
+        roomSetupService.setup({ type: 'join', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' });
         await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
         const clearSpy = vi.spyOn(room, 'clear');
 

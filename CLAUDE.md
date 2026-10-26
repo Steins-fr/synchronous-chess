@@ -124,6 +124,11 @@ run by the CI.
 - `e2e/test-room.ts` gives each test a room of its own (`room` fixture, a chat room; `new TestRoom(browser, path)` for
   the page of another game), listed under its `id` once created (its `name` and the tag the API drew, `room-1#004512`), `e2e/room-participant.ts` drives a player: join, reload, messages, the participants it
   sees, and `cutConnections()` to close its WebRTC connections as a network failure would.
+- The page of a room holds its id in its URL (`?room=room-1%23004512`), and its tab the name and the token of its join
+  (session storage): `reload()` reloads the page, which joins its room again by itself, without dialog; the URL opened
+  in another browser opens the join dialog of the room (`visitUrl()`). A player leaving a match in progress is asked to
+  confirm: `RoomParticipant` accepts the dialog of the browser (`beforeunload`, counted by `expectUnloadPrompts()`),
+  the dialog of the app is clicked by the scenario.
 - A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`, without the snapshots of
   the DOM in `bots.e2e.ts` (they run in the page with a user gesture, which activates it). The servers' logs are not
   shown: start the servers apart to read them.

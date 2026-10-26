@@ -18,10 +18,10 @@ export default class RoomPasswordService {
 
     /**
      * Before a player joins a private room: a public room ignores the password, and so does a private one for a player
-     * of the room, its token proving its page gave the password before (joining again after losing its connections; a
-     * page reloaded has a new token, and gives the password again). A client gives
-     * MAX_PASSWORD_ATTEMPTS passwords in a row at most, each one counted before being checked, then the room refuses its
-     * passwords without checking them, for this client only, until ROOM_PASSWORD_LOCK_DELAY after the last one counted:
+     * of the room, its token proving its page gave the password before (joining again after losing its connections, or
+     * reloaded: its tab keeps its token). A client gives MAX_PASSWORD_ATTEMPTS passwords in a row at most, each one
+     * counted before being checked, then the room refuses its passwords without checking them, for this client only,
+     * until ROOM_PASSWORD_LOCK_DELAY after the last one counted:
      * a password is not guessed by trying them all, even all at once, and the other clients still join the room. The
      * right password is not counted once checked, nor a missing or invalid one, never the right one: a player joining a
      * room listed as public before it became private does not lose an attempt

@@ -14,6 +14,16 @@ export function storedValue<T extends string>(window: Window, key: string, value
     }
 }
 
+/** The text stored under the key, undefined when none (or empty) */
+export function storedText(window: Window, key: string): string | undefined {
+    try {
+        const stored: string | null = window.localStorage.getItem(key);
+        return stored === null || stored === '' ? undefined : stored;
+    } catch {
+        return undefined;
+    }
+}
+
 export function storeValue(window: Window, key: string, value: string): void {
     try {
         window.localStorage.setItem(key, value);

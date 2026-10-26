@@ -1,14 +1,22 @@
+import { HttpTestingController, TestRequest } from '@angular/common/http/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { DialogService } from '@app/services/dialog/dialog.service';
+import { NotificationService } from '@app/services/notification/notification.service';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomLocks } from '@app/services/room-session/room-lock';
+import { RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
+import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
 import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomGame } from '@protocol/room-game.enum';
 import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { TestHelper } from '@testing/test.helper';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { VisitorPresenceMock } from '@testing/visitor-presence.mock';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { RoomCreate, RoomCreateDialog } from './room-create/room-create.dialog';
 import { RoomJoin, RoomJoinDialog } from './room-join/room-join.dialog';
 import { RoomSetupComponent } from './room-setup.component';
@@ -20,24 +28,41 @@ describe('RoomSetupComponent', () => {
     let fixture: ComponentFixture<RoomSetupComponent>;
     let roomSetupService: RoomSetupService;
     let dialogService: DialogService;
+    let notificationService: NotificationService;
     // A request of the socket of the page awaits the API
     let socketWaiting: WritableSignal<boolean>;
 
-    /** @param answered whether the lists of the open rooms are answered, the database they wake awake */
-    async function createComponent(answered: boolean = true): Promise<void> {
+    beforeEach(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+        // The token of a room created or joined
+        vi.spyOn(CryptoHelper, 'randomHex').mockReturnValue('token');
+    });
+
+    /**
+     * @param answered whether the lists of the open rooms are answered, the database they wake awake
+     * @param url the URL of the page, the room it holds
+     * @param present whether a person is on the page
+     */
+    async function createComponent(answered: boolean = true, url: string = '/', present: boolean = true): Promise<void> {
         dialogService = TestHelper.cast<DialogService>({ open: vi.fn() });
+        notificationService = TestHelper.cast<NotificationService>({ error: vi.fn() });
         socketWaiting = signal(false);
         await TestBed.configureTestingModule({
             imports: [RoomSetupComponent],
             providers: [
+                provideRouter([]),
                 RoomSetupService,
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 { provide: DialogService, useValue: dialogService },
+                { provide: NotificationService, useValue: notificationService },
+                { provide: VisitorPresenceService, useValue: new VisitorPresenceMock(present) },
                 // Provided by the page
                 { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: socketWaiting }) },
             ],
         }).compileComponents();
 
+        await TestBed.inject(Router).navigateByUrl(url);
         roomSetupService = TestBed.inject(RoomSetupService);
         vi.spyOn(roomSetupService, 'setup');
         fixture = TestBed.createComponent(RoomSetupComponent);
@@ -79,6 +104,8 @@ describe('RoomSetupComponent', () => {
     afterEach(() => {
         vi.useRealTimers();
         vi.restoreAllMocks();
+        localStorage.clear();
+        sessionStorage.clear();
     });
 
     test.each<[string, RoomCreate]>([
@@ -93,7 +120,7 @@ describe('RoomSetupComponent', () => {
 
         // Then
         expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomCreateDialog, { title: 'rooms.create.title', inputs: { roomName: '', playerName: '' } });
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: room.password });
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: room.password, token: 'token' });
     });
 
     test('should create the room given once the list woke the database, its button disabled meanwhile', async () => {
@@ -117,7 +144,7 @@ describe('RoomSetupComponent', () => {
         fixture.detectChanges();
 
         // Then
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: undefined });
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: undefined, token: 'token' });
     });
 
     test('should create the room given once a list shown asked again answered, telling the server boots meanwhile', async () => {
@@ -142,7 +169,7 @@ describe('RoomSetupComponent', () => {
         fixture.detectChanges();
 
         // Then
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: undefined });
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', password: undefined, token: 'token' });
         expect(fixture.nativeElement.textContent).not.toContain('Starting the server…');
     });
 
@@ -187,7 +214,7 @@ describe('RoomSetupComponent', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         // Then: the room given last only
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: 'public', playerName: 'bob', password: undefined });
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: 'public', playerName: 'bob', password: undefined, token: 'token' });
     });
 
     test('should give the dialogs the names given last, to try again once the room failed', async () => {
@@ -227,7 +254,7 @@ describe('RoomSetupComponent', () => {
             title: 'rooms.join.title',
             inputs: { roomName: room.roomName, isPrivate: room.isPrivate, playerName: '' },
         });
-        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: room.roomName, playerName: 'bob', password: join.password });
+        expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: room.roomName, playerName: 'bob', password: join.password, token: 'token' });
     });
 
     test('should set no room up once a dialog is closed', async () => {
@@ -249,7 +276,7 @@ describe('RoomSetupComponent', () => {
         expect(fixture.nativeElement.querySelector('app-open-rooms #room-create')).toBe(createButton());
 
         // When
-        roomSetupService.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' });
+        roomSetupService.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', token: 'token' });
         await fixture.whenStable();
 
         // Then
@@ -270,7 +297,7 @@ describe('RoomSetupComponent', () => {
         // Given
         vi.useFakeTimers();
         await createComponent();
-        roomSetupService.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player' });
+        roomSetupService.setup({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'player', token: 'token' });
         fixture.detectChanges();
 
         // When
@@ -289,5 +316,214 @@ describe('RoomSetupComponent', () => {
         // Then
         expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
         expect(fixture.nativeElement.textContent).not.toContain('Starting the server…');
+    });
+
+    test('should give the dialogs the name typed last in any room, kept in the local storage', async () => {
+        // Given
+        localStorage.setItem(RoomSetupComponent.PLAYER_NAME_KEY, 'alice');
+        await createComponent();
+
+        // When
+        await joinOpenRoom('public', { playerName: 'bob' });
+
+        // Then
+        expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomJoinDialog, {
+            title: 'rooms.join.title',
+            inputs: { roomName: 'public', isPrivate: false, playerName: 'alice' },
+        });
+        expect(localStorage.getItem(RoomSetupComponent.PLAYER_NAME_KEY)).toBe('bob');
+    });
+
+    describe('with a room in the URL', () => {
+        const listedRoom: OpenRoom = { ...privateRoom, roomName: 'room#000001' };
+        const url: string = '/?room=room%23000001';
+
+        beforeEach(() => {
+            vi.spyOn(RoomSetupService.prototype, 'holdLock').mockResolvedValue(true);
+        });
+
+        /** The session of the room the tab kept, before the page loads */
+        function keepSession(): void {
+            sessionStorage.setItem('synchronous-chess:room-session:room#000001', JSON.stringify({ playerName: 'alice', token: 'kept' }));
+        }
+
+        /** The search of the room of the URL, answered with the rooms given */
+        async function answerSearch(rooms: OpenRoom[]): Promise<void> {
+            const request: TestRequest = await vi.waitFor(() => {
+                const [search]: TestRequest[] = TestBed.inject(HttpTestingController)
+                    .match((asked: { urlWithParams: string }) => asked.urlWithParams.endsWith('&search=room%23000001'));
+                expect(search).toBeDefined();
+                return search;
+            });
+            request.flush({ rooms, hasMore: false });
+            await fixture.whenStable();
+        }
+
+        test('should resume at once the room of the session of the tab, its name and token kept', async () => {
+            // Given
+            keepSession();
+
+            // When
+            await createComponent(true, url);
+
+            // Then
+            await vi.waitFor(() => expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({
+                type: 'resume', game: RoomGame.CHESS, roomName: 'room#000001', playerName: 'alice', password: undefined, token: 'kept',
+            }));
+            expect(roomSetupService.holdLock).toHaveBeenCalledExactlyOnceWith('room#000001', 'alice', RoomSetupComponent.LOCK_WAIT);
+            expect(dialogService.open).not.toHaveBeenCalled();
+        });
+
+        test('should open the join dialog of the room of a link, once found in the list', async () => {
+            // Given
+            await createComponent(true, url);
+
+            // When
+            await answerSearch([listedRoom]);
+
+            // Then
+            await vi.waitFor(() => expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomJoinDialog, {
+                title: 'rooms.join.title',
+                inputs: { roomName: 'room#000001', isPrivate: true, playerName: '' },
+            }));
+            expect(roomSetupService.holdLock).not.toHaveBeenCalled();
+        });
+
+        test('should open the join dialog of the room another tab holds under the name of the session, asking another name', async () => {
+            // Given a duplicated tab, its session and the name typed last copied
+            keepSession();
+            localStorage.setItem(RoomSetupComponent.PLAYER_NAME_KEY, 'alice');
+            vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
+            const isHeld = vi.spyOn(RoomLocks, 'isHeld').mockResolvedValue(true);
+            await createComponent(true, url);
+
+            // When
+            await answerSearch([listedRoom]);
+
+            // Then
+            await vi.waitFor(() => expect(dialogService.open).toHaveBeenCalledExactlyOnceWith(RoomJoinDialog, {
+                title: 'rooms.join.title',
+                inputs: { roomName: 'room#000001', isPrivate: true, playerName: '' },
+            }));
+            expect(roomSetupService.setup).not.toHaveBeenCalled();
+            expect(isHeld).toHaveBeenCalledExactlyOnceWith('room#000001', 'alice');
+        });
+
+        test('should give up resuming the room of the URL once the person gave another room while its lock was awaited', async () => {
+            // Given
+            keepSession();
+            let held: (holds: boolean) => void = () => undefined;
+            vi.mocked(RoomSetupService.prototype.holdLock).mockReturnValue(new Promise<boolean>((resolve) => held = resolve));
+            const releaseLock = vi.spyOn(RoomSetupService.prototype, 'releaseLock');
+            await createComponent(true, url);
+            await vi.waitFor(() => expect(roomSetupService.holdLock).toHaveBeenCalled());
+
+            // When
+            await joinOpenRoom('public', { playerName: 'bob' });
+            held(true);
+            await fixture.whenStable();
+
+            // Then: the room given only
+            expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ type: 'join', roomName: 'public' }));
+            expect(releaseLock).toHaveBeenCalledOnce();
+        });
+
+        test.each<[string, string]>([
+            ['alice', 'kept'],
+            ['bob', 'token'],
+        ])('should join under %s with the token %s, the token of the session of the tab under its name only', async (playerName: string, token: string) => {
+            // Given the lock of the reloaded page not released in time
+            keepSession();
+            vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
+            await createComponent(true, url);
+            vi.mocked(dialogService.open).mockResolvedValueOnce({ playerName });
+
+            // When
+            await answerSearch([listedRoom]);
+
+            // Then
+            await vi.waitFor(() => expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ type: 'join', playerName, token })));
+        });
+
+        test('should resume the room of a URL copied with blanks', async () => {
+            // Given
+            keepSession();
+
+            // When
+            await createComponent(true, '/?room=room%23000001%20');
+
+            // Then
+            await vi.waitFor(() => expect(roomSetupService.setup).toHaveBeenCalledWith(expect.objectContaining({ type: 'resume', roomName: 'room#000001' })));
+        });
+
+        test('should tell nothing of the room of a link once its search failed, kept in the URL', async () => {
+            // Given
+            await createComponent(true, url);
+            const request: TestRequest = await vi.waitFor(() => {
+                const [search]: TestRequest[] = TestBed.inject(HttpTestingController)
+                    .match((asked: { urlWithParams: string }) => asked.urlWithParams.endsWith('&search=room%23000001'));
+                expect(search).toBeDefined();
+                return search;
+            });
+
+            // When
+            request.flush({ message: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
+            await fixture.whenStable();
+
+            // Then
+            expect(notificationService.error).not.toHaveBeenCalled();
+            expect(dialogService.open).not.toHaveBeenCalled();
+            expect(TestBed.inject(Router).url).toBe(url);
+        });
+
+        test('should tell a room ended or unknown, removed from the URL and the session of the tab', async () => {
+            // Given
+            keepSession();
+            vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
+            await createComponent(true, url);
+
+            // When
+            await answerSearch([]);
+
+            // Then
+            await vi.waitFor(() => expect(TestBed.inject(Router).url).toBe('/'));
+            expect(notificationService.error).toHaveBeenCalledExactlyOnceWith({ key: 'rooms.notifications.roomGone' });
+            expect(TestBed.inject(RoomSessionStore).get('room#000001')).toBeUndefined();
+            expect(dialogService.open).not.toHaveBeenCalled();
+        });
+
+        test('should tell an id too long for a room unknown, without searching it', async () => {
+            // When
+            await createComponent(true, `/?room=${ 'a'.repeat(64) }`);
+
+            // Then
+            await vi.waitFor(() => expect(notificationService.error).toHaveBeenCalledExactlyOnceWith({ key: 'rooms.notifications.roomGone' }));
+            expect(TestBed.inject(HttpTestingController).match(() => true)).toEqual([]);
+        });
+
+        test('should not tell the room once the list was removed while it was searched', async () => {
+            // Given
+            await createComponent(true, url);
+            await vi.waitFor(() => expect(TestBed.inject(HttpTestingController).match((asked: { urlWithParams: string }) => asked.urlWithParams.endsWith('&search=room%23000001'))).toHaveLength(1));
+
+            // When: a room of the list joined meanwhile
+            roomSetupService.setup({ type: 'join', game: RoomGame.CHESS, roomName: 'public', playerName: 'bob', token: 'token' });
+            await fixture.whenStable();
+
+            // Then
+            expect(notificationService.error).not.toHaveBeenCalled();
+            expect(dialogService.open).not.toHaveBeenCalled();
+        });
+
+        test('should wait for a person on the page before searching the room of a link', async () => {
+            // When
+            await createComponent(false, url, false);
+            fixture.destroy();
+            await new Promise((resolve) => setTimeout(resolve));
+
+            // Then
+            expect(TestBed.inject(HttpTestingController).match(() => true)).toEqual([]);
+            expect(notificationService.error).not.toHaveBeenCalled();
+        });
     });
 });

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { DeckVerification, MentalDeck } from '@app/modules/mental-poker/classes/mental-deck';
 import { SraCipher } from '@app/modules/mental-poker/classes/sra-cipher';
@@ -27,7 +28,8 @@ describe('PokerTableComponent', () => {
 
     /** The table of the local participant */
     async function table(name: string, rules: PokerMatchRules = SEVENTEEN_POKER_RULES): Promise<void> {
-        TestBed.configureTestingModule({ providers: [{ provide: POKER_SESSION_OPTIONS, useValue: { cipher, rules } }] });
+        // The warning before leaving a match is provided by the page
+        TestBed.configureTestingModule({ providers: [{ provide: POKER_SESSION_OPTIONS, useValue: { cipher, rules } }, MatchLeaveWarning] });
         fixture = TestBed.createComponent(PokerTableComponent);
         fixture.componentRef.setInput('room', hub.room(name));
         await fixture.whenStable();
@@ -158,7 +160,8 @@ describe('PokerTableComponent', () => {
         // When
         await dealt();
 
-        // Then
+        // Then: leaving the page asks to confirm
+        expect(TestBed.inject(MatchLeaveWarning).inMatch()).toBe(true);
         expect(cards(1)).not.toContain('Face-down card');
         expect(cards(0)).toEqual(FACE_DOWN);
         expect(text('app-card-deck span')).toEqual('7');

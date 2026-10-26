@@ -7,6 +7,7 @@ import { HomePage } from '@app/modules/home-page/home.page';
 import { RussianRoulette } from '@app/modules/russian-roulette/pages/russian-roulette/russian-roulette';
 import { SeventeenPoker } from '@app/modules/seventeen-poker/pages/seventeen-poker/seventeen-poker';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { leaveMatchGuard } from '@app/modules/room-layout/leave-match.guard';
 import { translationScopesGuard } from '@app/services/language/translation-scopes.guard';
 import { describe, expect, test } from 'vitest';
 import { chatPath, chessPath, homePath, pokerPath, roulettePath, routes } from './app.routes';
@@ -25,6 +26,16 @@ describe('routes', () => {
         [roulettePath, [translationScopesGuard]],
     ])('the route \'%s\' should show once the translations of its games are loaded, without waiting for the APIs', (path: string, guards: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.canActivate).toEqual(guards);
+    });
+
+    test.each<[string, unknown]>([
+        [homePath, undefined],
+        [chessPath, [leaveMatchGuard]],
+        [chatPath, undefined],
+        [pokerPath, [leaveMatchGuard]],
+        [roulettePath, [leaveMatchGuard]],
+    ])('the route \'%s\' should ask to confirm leaving a match its player plays', (path: string, guards: unknown) => {
+        expect(routes.find((candidate: Route) => candidate.path === path)?.canDeactivate).toEqual(guards);
     });
 
     test.each<[string, unknown]>([

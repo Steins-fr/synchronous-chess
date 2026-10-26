@@ -24,6 +24,8 @@ export default abstract class SynchronousChessGameSession {
     public abstract readonly spectatorNumber: Signal<number>;
     /** Whether the participants can still take or leave a seat */
     public abstract readonly seatsOpen: Signal<boolean>;
+    /** The local player plays the game in progress: seated, the game started and not over. Leaving it asks to confirm */
+    public abstract readonly inMatch: Signal<boolean>;
 
     /** The number of turns run, the same for every participant applying the same moves */
     protected turnCount: number = 0;

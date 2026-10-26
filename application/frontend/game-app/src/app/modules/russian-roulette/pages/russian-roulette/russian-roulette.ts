@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
+import { MatchPage } from '@app/modules/room-layout/leave-match.guard';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
 import { mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomGame } from '@protocol/room-game.enum';
@@ -21,9 +23,10 @@ import { RouletteTableComponent } from '../../components/roulette-table/roulette
     ],
     providers: [provideRooms()],
 })
-export class RussianRoulette {
+export class RussianRoulette implements MatchPage {
     protected readonly game: RoomGame = RoomGame.RUSSIAN_ROULETTE;
     // The 2 players and their spectators
     protected readonly maxPlayer: number = 6;
     public readonly room = roomFromSetup<ChatPayloads & RoulettePayloads>(this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, rouletteBlockChains));
+    public readonly leaveWarning: MatchLeaveWarning = inject(MatchLeaveWarning);
 }

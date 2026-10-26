@@ -33,6 +33,7 @@ describe('SynchronousChessLocalGameSession', () => {
         expect(session.configuration()).toEqual({ whitePlayer: 'a' });
         expect(session.spectatorNumber()).toEqual(0);
         expect(session.seatsOpen()).toEqual(false);
+        expect(session.inMatch()).toEqual(false);
         expect(board).toBe(session.game.fenBoard());
     });
 

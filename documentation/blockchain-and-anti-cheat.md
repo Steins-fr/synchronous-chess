@@ -279,7 +279,7 @@ host leaves them), then lets the players join and relays their signals. The host
 the room of the API once the room agrees it left, not when only its connection is lost: it may still
 take the room over. The other participants
 connect to the joining players through it. The former host, back on a reloaded page, joins the room
-like any player.
+again like any player, at once from the URL of its page and the session of its tab.
 
 ## Hidden moves: commit then reveal
 

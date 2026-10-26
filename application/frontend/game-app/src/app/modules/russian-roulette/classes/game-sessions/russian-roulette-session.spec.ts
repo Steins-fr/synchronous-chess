@@ -148,6 +148,7 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             expect(sessions[2].mySeat()).toBeNull();
             expect(alice.spectatorNumber()).toEqual(1);
             expect(alice.seatsOpen()).toBe(true);
+            expect(alice.inMatch()).toBe(false);
             expect(alice.players()).toEqual(['bob', 'alice']);
         });
 
@@ -205,6 +206,7 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             expect(carol.seats()).toEqual(['alice', 'bob']);
             expect(carol.players()).toEqual(['alice', 'bob']);
             expect(carol.seatsOpen()).toBe(false);
+            expect([alice, bob, carol].map((session: RussianRouletteSession) => session.inMatch())).toEqual([true, true, false]);
             expect(alice.canLoad()).toBe(false);
             expect(bob.canLoad()).toBe(true);
             // The second player is awaited, to load its bullets itself
@@ -264,6 +266,7 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             expect(carol.played().result()).toEqual(carol.game().result());
             expect(carol.awaited()).toEqual([]);
             expect(carol.seatsOpen()).toBe(true);
+            expect(sessions.some((session: RussianRouletteSession) => session.inMatch())).toBe(false);
             expect(hub.reports).toEqual([]);
         });
 
@@ -623,8 +626,9 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             alice.leaveSeat();
             await flush();
 
-            // Then
+            // Then: Bob still plays it, its key awaited
             expect(carol.seatsOpen()).toBe(false);
+            expect(bob.inMatch()).toBe(true);
             expect(carol.seats()).toEqual(['alice', 'bob']);
             expect(carol.pastGames()).toEqual([]);
 

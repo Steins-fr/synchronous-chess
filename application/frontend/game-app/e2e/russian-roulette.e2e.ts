@@ -246,8 +246,9 @@ test.describe('Russian roulette', () => {
         await play('Shoot', alice, bob, carol);
         const fired: string[] = await chambers(carol);
 
-        await bob.reloadAndJoin(roulette.id);
+        await bob.reload();
 
+        bob.expectUnloadPrompts(1);
         await expect.poll(() => chambers(bob)).toEqual(fired);
         await expect(table(bob).locator('#seat-bottom')).toContainText('bob');
         await play('Shoot', alice, bob, carol);
