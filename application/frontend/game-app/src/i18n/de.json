@@ -100,12 +100,17 @@
       "submit": "Beitreten",
       "title": "Raum beitreten"
     },
+    "leave": {
+      "message": "Der andere Spieler wartet auf dich: Kommst du nicht bald zurück, wird dein Platz frei.",
+      "title": "Partie verlassen?"
+    },
     "notifications": {
       "hostReconnecting": "Der Gastgeber des Raums verbindet sich neu…",
       "hostUnreachable": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen.",
       "joiningAgain": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen, neuer Versuch…",
       "nameStillInRoom": "Dieser Name ist noch im Raum, Verbindung wird wiederhergestellt…",
       "roomFull": "Der Raum ist voll.",
+      "roomGone": "Dieser Raum ist beendet oder existiert nicht.",
       "roomLost": "Der Raum hat seine Verbindung zum Server verloren: Niemand kann ihm mehr beitreten."
     },
     "open": {

@@ -100,12 +100,17 @@
       "submit": "Rejoindre",
       "title": "Rejoindre la salle"
     },
+    "leave": {
+      "message": "L'autre joueur vous attend : si vous ne revenez pas bientôt, votre place sera libérée.",
+      "title": "Quitter la partie ?"
+    },
     "notifications": {
       "hostReconnecting": "L'hôte de la salle se reconnecte…",
       "hostUnreachable": "La connexion à l'hôte de la salle a échoué.",
       "joiningAgain": "La connexion à l'hôte de la salle a échoué, nouvelle tentative…",
       "nameStillInRoom": "Ce nom est encore dans la salle, reconnexion en cours…",
       "roomFull": "La salle est pleine.",
+      "roomGone": "Cette salle est terminée ou n'existe pas.",
       "roomLost": "La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre."
     },
     "open": {

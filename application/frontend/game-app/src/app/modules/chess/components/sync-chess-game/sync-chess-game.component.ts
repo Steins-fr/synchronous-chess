@@ -1,5 +1,5 @@
 
-import { Component, OnDestroy, Signal, computed, input, signal, untracked } from '@angular/core';
+import { Component, OnDestroy, Signal, computed, inject, input, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
@@ -20,6 +20,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { ChessPromotionComponent } from '../chess/chess-promotion/chess-promotion.component';
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
@@ -42,6 +43,8 @@ export class SyncChessGameComponent implements OnDestroy {
         // The session state is made of signals, it must not become a dependency: only a new room recreates the session
         return untracked(() => room ? SynchronousChessGameSessionBuilder.buildOnline(room) : new SynchronousChessLocalGameSession());
     });
+    /** The local player plays the game: leaving the page asks to confirm */
+    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.gameSession().inMatch()));
 
     private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
     protected readonly validPlayBoard = signal<ValidPlayBoard>(ChessBoardHelper.createFilledBoard(false));

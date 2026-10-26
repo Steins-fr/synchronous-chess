@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { storageChanges, storedValue, storeValue } from './stored-preference.helper';
+import { storageChanges, storedText, storedValue, storeValue } from './stored-preference.helper';
 
 describe('stored preference', () => {
     enum Color {
@@ -40,6 +40,18 @@ describe('stored preference', () => {
         expect(storedValue(window, key, Color)).toBeUndefined();
     });
 
+    test('should read the text stored, nothing when none or empty', () => {
+        // Given
+        const textKey: string = 'name';
+
+        // When, Then
+        expect(storedText(window, textKey)).toBeUndefined();
+        storeValue(window, textKey, '');
+        expect(storedText(window, textKey)).toBeUndefined();
+        storeValue(window, textKey, 'alice');
+        expect(storedText(window, textKey)).toBe('alice');
+    });
+
     test('should neither read nor store, without failing, when the storage is blocked', () => {
         // Given
         vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
@@ -55,6 +67,7 @@ describe('stored preference', () => {
         // Then
         expect(setItem).toHaveBeenCalledOnce();
         expect(storedValue(window, key, Color)).toBeUndefined();
+        expect(storedText(window, key)).toBeUndefined();
     });
 
     test('should tell the changes another tab made to the value, or to the whole storage', () => {

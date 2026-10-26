@@ -59,13 +59,13 @@ describe('RussianRoulette', () => {
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
         // When
-        roomSetupService.setup({ type: 'create', game: RoomGame.RUSSIAN_ROULETTE, roomName: 'room', playerName: 'local' });
+        roomSetupService.setup({ type: 'create', game: RoomGame.RUSSIAN_ROULETTE, roomName: 'room', playerName: 'local', token: 'token' });
         await vi.waitFor(() => expect(fixture.componentInstance.room()).toBe(room));
         await fixture.whenStable();
 
         // Then
         expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith(
-            { type: 'create', game: RoomGame.RUSSIAN_ROULETTE, roomName: 'room', playerName: 'local' }, 6,
+            { type: 'create', game: RoomGame.RUSSIAN_ROULETTE, roomName: 'room', playerName: 'local', token: 'token' }, 6,
             { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, ...rouletteBlockChains }, expect.any(AbortSignal),
         );
         expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();

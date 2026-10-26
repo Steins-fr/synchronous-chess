@@ -676,6 +676,53 @@ describe('OpenRoomsComponent', () => {
         expect(rows()).toHaveLength(1);
     });
 
+    test('should find the room of an id in the list of its search', async () => {
+        // Given
+        const listed: OpenRoom = { ...publicRoom, roomName: 'room#000001' };
+        await createComponent();
+        await answer({ rooms: [], hasMore: false });
+
+        // When
+        const found: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000001');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [{ ...publicRoom, roomName: 'room#0000011' }, listed], hasMore: false }, 'room%23000001');
+
+        // Then
+        await expect(found).resolves.toEqual(listed);
+        expect(textFieldInput(fixture.nativeElement, 'Search for a room').value).toBe('room#000001');
+    });
+
+    test('should find no room of an id the API does not list, nor once the list failed', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [], hasMore: false });
+
+        // When
+        const unknown: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000001');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await answer({ rooms: [publicRoom], hasMore: false }, 'room%23000001');
+        const failed: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000002');
+        await render(OpenRoomsComponent.SEARCH_DELAY + 1);
+        await fail('room%23000002');
+
+        // Then
+        await expect(unknown).resolves.toBeUndefined();
+        await expect(failed).resolves.toBeUndefined();
+    });
+
+    test('should find no room once the list is removed', async () => {
+        // Given
+        await createComponent();
+        await answer({ rooms: [], hasMore: false });
+        const found: Promise<Readonly<OpenRoom> | undefined> = fixture.componentInstance.findRoom('room#000001');
+
+        // When
+        fixture.destroy();
+
+        // Then
+        await expect(found).resolves.toBeUndefined();
+    });
+
     test('should not ask the list failed by the server again while the page is hidden, until it is visible again', async () => {
         // Given
         await createComponent();

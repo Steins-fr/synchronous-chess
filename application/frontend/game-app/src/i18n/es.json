@@ -100,12 +100,17 @@
       "submit": "Unirse",
       "title": "Unirse a la sala"
     },
+    "leave": {
+      "message": "El otro jugador te espera: si no vuelves pronto, tu puesto quedará libre.",
+      "title": "¿Salir de la partida?"
+    },
     "notifications": {
       "hostReconnecting": "El anfitrión de la sala se está reconectando…",
       "hostUnreachable": "La conexión con el anfitrión de la sala ha fallado.",
       "joiningAgain": "La conexión con el anfitrión de la sala ha fallado, nuevo intento…",
       "nameStillInRoom": "Este nombre sigue en la sala, reconectando…",
       "roomFull": "La sala está llena.",
+      "roomGone": "Esta sala ha terminado o no existe.",
       "roomLost": "La sala ha perdido su conexión con el servidor: ya nadie puede unirse a ella."
     },
     "open": {

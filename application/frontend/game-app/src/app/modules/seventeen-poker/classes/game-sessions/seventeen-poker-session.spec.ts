@@ -124,6 +124,7 @@ describe('SeventeenPokerSession', () => {
             expect(sessions[2].mySeat()).toBeNull();
             expect(alice.spectatorNumber()).toEqual(1);
             expect(alice.seatsOpen()).toBe(true);
+            expect(alice.inMatch()).toBe(false);
         });
 
         test('should free the seat a participant leaves', async () => {
@@ -198,9 +199,10 @@ describe('SeventeenPokerSession', () => {
             bob.deal();
             await flush();
 
-            // Then
+            // Then: the players play the match, the spectator does not
             expect(carol.seatsOpen()).toBe(false);
             expect(carol.seats()).toEqual(['alice', 'bob']);
+            expect([alice, bob, carol].map((session: SeventeenPokerSession) => session.inMatch())).toEqual([true, true, false]);
         });
     });
 
@@ -601,6 +603,7 @@ describe('SeventeenPokerSession', () => {
             expect(alice.mySeat()).toBeNull();
             expect(carol.players()).toEqual(['alice', 'bob']);
             expect(carol.seatsOpen()).toBe(true);
+            expect(bob.inMatch()).toBe(false);
         });
 
         test('should ignore a timeout before the first hand, once the move is played, of the player to act or of a spectator', async () => {

@@ -100,12 +100,17 @@
       "submit": "Gabung",
       "title": "Gabung ke ruang"
     },
+    "leave": {
+      "message": "Pemain lain sedang menunggu Anda: jika Anda tidak segera kembali, kursi Anda akan dikosongkan.",
+      "title": "Tinggalkan permainan?"
+    },
     "notifications": {
       "hostReconnecting": "Tuan rumah ruang sedang menyambung ulang…",
       "hostUnreachable": "Koneksi ke tuan rumah ruang gagal.",
       "joiningAgain": "Koneksi ke tuan rumah ruang gagal, mencoba lagi…",
       "nameStillInRoom": "Nama ini masih ada di ruang, menyambung ulang…",
       "roomFull": "Ruang ini penuh.",
+      "roomGone": "Ruang ini sudah berakhir atau tidak ada.",
       "roomLost": "Ruang kehilangan koneksi ke server: tidak ada lagi yang bisa bergabung."
     },
     "open": {

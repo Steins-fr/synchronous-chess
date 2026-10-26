@@ -19,6 +19,8 @@ export const appConfig: ApplicationConfig = {
             withComponentInputBinding(),
             withRouterConfig({
                 paramsInheritanceStrategy: 'always',
+                // A navigation refused (back, leaving a match) keeps the history as it was
+                canceledNavigationResolution: 'computed',
             }),
         ),
         { provide: WEB_SOCKET_SERVER, useValue: environment.webSocketServer },

@@ -155,6 +155,11 @@ export class RussianRouletteSession {
     public readonly mySeat: Signal<RouletteSeat | null> = this.tableSeats.mySeat;
     /** The seat of the local player in the game: once over, it may have lost or left it, and still claims a key withheld */
     public readonly myPlayerSeat: Signal<RouletteSeat | null> = computed((): RouletteSeat | null => this.playerSeatOf(this.room.localPlayer.name));
+    /**
+     * The local player plays the game in progress: started, and not settled, its key still awaited once the game is over.
+     * Leaving it asks to confirm
+     */
+    public readonly inMatch: Signal<boolean> = computed((): boolean => this.myPlayerSeat() !== null && this.started() && !this.settled());
     /** The players of both seats, the ones not connected */
     public readonly awayPlayers: Signal<ReadonlyArray<string>> = this.tableSeats.awayPlayers;
 

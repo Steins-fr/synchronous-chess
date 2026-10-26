@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
@@ -127,6 +128,8 @@ export class RouletteTableComponent implements OnDestroy {
         // The session state is made of signals, it must not become a dependency: only a new room recreates the session
         return untracked(() => new RussianRouletteSession(room, this.options));
     });
+    /** The local player plays the match: leaving the page asks to confirm */
+    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
 
     protected readonly game: Signal<RouletteGame> = computed((): RouletteGame => this.session().game());
 

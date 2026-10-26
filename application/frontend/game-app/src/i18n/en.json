@@ -100,12 +100,17 @@
       "submit": "Join",
       "title": "Join the room"
     },
+    "leave": {
+      "message": "The other player is waiting for you: if you do not come back soon, your seat will be freed.",
+      "title": "Leave the game?"
+    },
     "notifications": {
       "hostReconnecting": "The host of the room is reconnecting…",
       "hostUnreachable": "The connection to the host of the room failed.",
       "joiningAgain": "The connection to the host of the room failed, trying again…",
       "nameStillInRoom": "This name is still in the room, reconnecting…",
       "roomFull": "The room is full.",
+      "roomGone": "This room has ended or does not exist.",
       "roomLost": "The room lost its connection to the server: nobody can join it anymore."
     },
     "open": {

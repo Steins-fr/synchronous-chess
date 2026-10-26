@@ -9,6 +9,7 @@ import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
 import { CardDeckComponent } from '@app/modules/playing-cards/components/card-deck/card-deck.component';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
@@ -64,6 +65,8 @@ export class PokerTableComponent implements OnDestroy {
         // The session state is made of signals, it must not become a dependency: only a new room recreates the session
         return untracked(() => new SeventeenPokerSession(room, this.options));
     });
+    /** The local player plays the match: leaving the page asks to confirm */
+    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
 
     protected readonly betAction: typeof BetAction = BetAction;
     protected readonly seatOne: PokerSeat = PokerSeat.ONE;

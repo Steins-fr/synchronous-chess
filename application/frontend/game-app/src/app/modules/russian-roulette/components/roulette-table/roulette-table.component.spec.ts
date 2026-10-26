@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { By } from '@angular/platform-browser';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
@@ -45,7 +46,8 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
     /** The table of the local participant */
     async function table(name: string, rules: RouletteRules = LIGHT, tamper?: Tamper): Promise<void> {
         // The revolver fires at once: the specs end its animations themselves
-        TestBed.configureTestingModule({ providers: [{ provide: ROULETTE_SESSION_OPTIONS, useValue: { cipher, rules } }, { provide: REVOLVER_HOLD, useValue: 0 }] });
+        // The warning before leaving a match is provided by the page
+        TestBed.configureTestingModule({ providers: [{ provide: ROULETTE_SESSION_OPTIONS, useValue: { cipher, rules } }, { provide: REVOLVER_HOLD, useValue: 0 }, MatchLeaveWarning] });
         fixture = TestBed.createComponent(RouletteTableComponent);
         const room: Room<RoulettePayloads> = hub.room(name, tamper);
         rooms.set(name, room);
@@ -266,6 +268,9 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Given
         const bob: RussianRouletteSession = await started(SHORT);
         await aliceToAct(bob);
+
+        // Then leaving the page asks to confirm
+        expect(TestBed.inject(MatchLeaveWarning).inMatch()).toBe(true);
 
         // Then the cylinder spun lies beside the revolver, smaller, the chips of the table below them
         expect(element().querySelector('app-roulette-cylinder')?.parentElement?.querySelector('div')?.classList).toContain('w-36');

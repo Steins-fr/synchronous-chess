@@ -155,6 +155,8 @@ export class OpenRoomsComponent {
 
     /** The rooms shown, with their search: the list of a former search kept until the new one is answered, none once the list failed */
     protected readonly rooms: Resource<RoomsList | undefined> = withPreviousValue({ snapshot: this.listSnapshot });
+    // Completed once the list is destroyed
+    private readonly listSnapshot$: Observable<ResourceSnapshot<RoomsList | undefined>> = toObservable(this.listSnapshot);
 
     public constructor() {
         effect((onCleanup: (cleanup: () => void) => void) => {
@@ -191,6 +193,19 @@ export class OpenRoomsComponent {
      */
     public whenServerReady(): Promise<boolean> {
         return firstValueFrom(this.serverReady$.pipe(filter(Boolean)), { defaultValue: false });
+    }
+
+    /**
+     * Searches the room of an id, the list showing it: the room listed under that id, undefined once the API lists none
+     * (an id ended or unknown), the list failed or removed meanwhile. Not before a person is on the page
+     */
+    public async findRoom(roomId: string): Promise<Readonly<OpenRoom> | undefined> {
+        this.search.set({ text: roomId });
+        const answer: ResourceSnapshot<RoomsList | undefined> | undefined = await firstValueFrom(this.listSnapshot$.pipe(
+            filter((snapshot: ResourceSnapshot<RoomsList | undefined>) => snapshot.status === 'error' || (snapshot.status === 'resolved' && snapshot.value?.search === roomId)),
+        ), { defaultValue: undefined });
+
+        return answer?.status === 'resolved' ? answer.value?.rooms.find((room: Readonly<OpenRoom>) => room.roomName === roomId) : undefined;
     }
 
     /** Not again while a list is awaited: the resource reloads once loaded only */

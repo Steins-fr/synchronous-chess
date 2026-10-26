@@ -100,12 +100,17 @@
       "submit": "Dołącz",
       "title": "Dołącz do pokoju"
     },
+    "leave": {
+      "message": "Drugi gracz na ciebie czeka: jeśli wkrótce nie wrócisz, twoje miejsce zostanie zwolnione.",
+      "title": "Opuścić partię?"
+    },
     "notifications": {
       "hostReconnecting": "Gospodarz pokoju łączy się ponownie…",
       "hostUnreachable": "Nie udało się połączyć z gospodarzem pokoju.",
       "joiningAgain": "Nie udało się połączyć z gospodarzem pokoju, ponowna próba…",
       "nameStillInRoom": "Ta nazwa jest wciąż w pokoju, ponowne łączenie…",
       "roomFull": "Pokój jest pełny.",
+      "roomGone": "Ten pokój został zamknięty lub nie istnieje.",
       "roomLost": "Pokój stracił połączenie z serwerem: nikt nie może już do niego dołączyć."
     },
     "open": {

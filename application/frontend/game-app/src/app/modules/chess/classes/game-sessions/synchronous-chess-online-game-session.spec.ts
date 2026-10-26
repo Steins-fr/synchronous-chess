@@ -14,14 +14,14 @@ import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import Move, { FenColumn, FenRow } from '../../interfaces/move';
 import ChessBoardHelper from '../../helpers/chess-board-helper';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { gameState, sessionState } from '@testing/chess-state.helper';
-import { GameEndReason } from '../games/game-result';
+import { GameEndReason, GameResult } from '../games/game-result';
 import { TestHelper } from '@testing/test.helper';
 import { filter, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -425,6 +425,7 @@ describe('SynchronousChessOnlineGameSession seats', () => {
         expect(configurations()).toEqual([{}, {}, {}]);
         expect(sessions.map((session) => session.spectatorNumber())).toEqual([3, 3, 3]);
         expect(sessions.every((session) => session.seatsOpen())).toEqual(true);
+        expect(sessions.some((session) => session.inMatch())).toEqual(false);
         expect(host.playingColor).toEqual(PieceColor.NONE);
     });
 
@@ -504,6 +505,28 @@ describe('SynchronousChessOnlineGameSession seats', () => {
 
         // Then
         expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'a', blackPlayer: 'b' }));
+    });
+
+    test('should tell the players, not the spectators, they play the game once started, until over', async () => {
+        // Given
+        host.takeSeat(PieceColor.WHITE);
+        joining.takeSeat(PieceColor.BLACK);
+
+        // Then: not started yet
+        expect(sessions.map((session) => session.inMatch())).toEqual([false, false, false]);
+
+        // When
+        host.move(e2e4);
+        await vi.waitFor(() => expect(sessions.every((session) => !session.seatsOpen())).toEqual(true));
+
+        // Then
+        expect(sessions.map((session) => session.inMatch())).toEqual([true, true, false]);
+
+        // When
+        TestHelper.cast<{ _result: WritableSignal<GameResult | null> }>(host.game)._result.set({ winner: PieceColor.WHITE, reason: GameEndReason.CHECKMATE });
+
+        // Then
+        expect(host.inMatch()).toEqual(false);
     });
 
     test('should ignore a malformed seat request', () => {

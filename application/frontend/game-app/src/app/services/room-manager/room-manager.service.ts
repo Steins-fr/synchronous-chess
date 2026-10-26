@@ -1,9 +1,8 @@
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { joinRoom } from '@app/services/room-api/join-room';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { TranslatableText } from '@app/types/translatable-text.type';
@@ -34,8 +33,8 @@ export default class RoomManagerService {
     ): Promise<BlockRoom<M>> {
         try {
             const keys = await BlockRoom.createKeys(setup.playerName);
-            // Proves to the API the player of this page: the host reconnects its room with it
-            const token: string = CryptoHelper.randomHex(32);
+            // Proves to the API the player of this tab: the host reconnects its room with it
+            const token: string = setup.token;
             const access: RoomAccess = { game: setup.game, password: setup.password, token };
             let roomConnection: RoomNetwork;
 
@@ -55,11 +54,11 @@ export default class RoomManagerService {
 
                 roomConnection = new PeerRoomNetwork(this.roomSocketApi, response.roomName, setup.playerName, setup.playerName, maxPlayer, access);
             } else {
-                const response: RoomJoinResponse = await this.join(setup, access, signal);
+                const hostName: string = await this.joinOrReconnect(setup, access, signal);
                 // The page left while the join was sent: no negotiation with the host
                 signal?.throwIfAborted();
 
-                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, response.playerName, maxPlayer, access);
+                roomConnection = new PeerRoomNetwork(this.roomSocketApi, setup.roomName, setup.playerName, hostName, maxPlayer, access);
             }
 
             // The participant taking the room over from a host which left hosts it too
@@ -91,6 +90,26 @@ export default class RoomManagerService {
             }
 
             throw e;
+        }
+    }
+
+    /**
+     * Joins the room. A room resumed still waiting for its host once the join gave up: nobody took it over, the player
+     * of the tab reconnects it as its host, the API checking its token. Not at once: the participant taking the room over
+     * from a host which reloaded its page would ask the API to reconnect it meanwhile, refused for 10 minutes
+     * @returns the name of the host
+     */
+    private async joinOrReconnect(setup: RoomSetupInterface, access: RoomAccess, signal: AbortSignal | undefined): Promise<string> {
+        try {
+            return (await this.join(setup, access, signal)).playerName;
+        } catch (e) {
+            if (setup.type !== 'resume' || !(e instanceof RoomApiError) || e.message !== RoomApiErrorMessage.HOST_DISCONNECTED) {
+                throw e;
+            }
+
+            signal?.throwIfAborted();
+            await this.roomSocketApi.reconnect({ roomName: setup.roomName, playerName: setup.playerName, token: setup.token });
+            return setup.playerName;
         }
     }
 
