@@ -206,7 +206,9 @@ shares missing, a player claiming the time of the other one would claim against 
 
 ## Reloading the page
 
-The chain replays every message to a reloaded page: the session plays the games again, creates the cylinders again,
+The page joins its room again by itself, from its URL and the session of its tab, as the chess does (see
+[Reloading the page](chess-game-session.md#reloading-the-page)), and leaving a game in progress, seated, asks to
+confirm until its key is disclosed. The chain replays every message to a reloaded page: the session plays the games again, creates the cylinders again,
 and the `SecretStore` gives back the secrets of the player (its share of the key, its random part of the draw, its
 chambers), stored in the session storage of the tab before its key is sent, under
 `synchronous-chess:cylinder-keys:<room>:<player>:<cylinder>`. Its page loads, gives its shares and discloses its key

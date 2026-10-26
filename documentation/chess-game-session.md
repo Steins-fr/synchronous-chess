@@ -181,14 +181,36 @@ conventional chess.
 
 ## Reloading the page
 
-The player joins the room again under its name. The host notices at once that its former page left,
-since the data channels close with it, but the websocket API refuses the name (`Already in game`) until
-the host removed the former connection: the page asks to join again every 2 seconds, for 20 seconds
-at most (`joinRoom`), then tells the name is taken.
+The page of a room holds its id in its URL, `/synchronous-chess?room=room-1%23004512` (the `#` of the tag
+encoded), set once the room is created or joined and removed once the room is given up (`roomFromSetup`).
+The tab keeps the name of the player and the token of its join in its session storage, by room id
+(`RoomSessionStore`): apart in each tab, so two tabs play two rooms, each one reloaded on its own.
+
+A page loading with a room in its URL and a session for it joins the room again at once, as `resume`,
+without dialog (`RoomSetupComponent`): the name keeps the key pair, the seat and the stored secrets of the
+player, the token lets the API take it without the password of a private room. The host notices at once
+that its former page left, since the data channels close with it, but the websocket API refuses the name
+(`Already in game`) until the host removed the former connection: the page asks to join again every 2
+seconds, for 20 seconds at most (`joinRoom`), then tells the name is taken.
 
 The host reloading its page is no exception: once the others agree it left, the sequencer takes the
 room over (see [Taking the room over](blockchain-and-anti-cheat.md#changing-the-sequencer)), and the
-former host joins it from the list of the open rooms, its seat kept.
+former host joins it again, its seat kept. Alone in its room, nobody takes it over: the API keeps it
+waiting for its host (`Host disconnected`) until the join gives up, then the page reconnects it as its
+host with the token kept (`reconnect`). Not at once: the participant taking the room over would be
+refused meanwhile.
+
+Without a session for the room of its URL (a link sent by another player, a new tab), the page opens the
+join dialog of that room once a person is on it and the list found it: the URL of a room is an
+invitation. A room ended or unknown is removed from the URL, and told. A duplicated tab copies the session
+storage of its tab: the page holding the room holds a lock of its name in the room among the tabs
+(`RoomLocks`, the Web Locks of the browser), and a tab finding it held opens the join dialog, to ask
+another name. The dialogs give the name typed last, kept in the local storage.
+
+Leaving a game in progress, seated, asks to confirm (`MatchLeaveWarning`): the browser asks before the
+page unloads (a close, a reload, a link out of the app), with a text of its own, and a navigation of the
+app asks through a dialog (`leaveMatchGuard`). A spectator, or a game over, is not asked. A player leaving
+through the app gives its room up: its seat follows the one of a closed tab.
 
 A reloaded page builds a new session, and the chain delivers again all its messages:
 
@@ -250,5 +272,8 @@ each player seeing the board from its side, and checks that the seats, the board
   `RoomHub`, which delivers the messages to all of them in a single order, as the chain does, and can
   replay them to a session, as after a reload.
 - `sync-chess-game.component.spec.ts` drives the component over a `Room` and a `RoomNetworkMock`.
+- End to end: `e2e/synchronous-chess.e2e.ts`, a game to its checkmate, and a player reloading the page
+  during a game, then the players asked to confirm leaving it; `e2e/room-session.e2e.ts`, the URL of a
+  room and the session of its tab.
 - In the browser, two tabs are enough: the host and a participant, each taking a seat (see
   [CLAUDE.md](../CLAUDE.md#browser-testing)).

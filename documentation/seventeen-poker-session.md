@@ -202,7 +202,9 @@ over the whole move, started late on a hidden page and never restarted on the sa
 
 ## Reloading the page
 
-The chain replays every message to a reloaded page: the session plays the match again, creates the
+The page joins its room again by itself, from its URL and the session of its tab, as the chess does (see
+[Reloading the page](chess-game-session.md#reloading-the-page)), and leaving a match in progress, seated, asks to
+confirm. The chain replays every message to a reloaded page: the session plays the match again, creates the
 decks again, and the `SecretStore` gives back the secrets of the player (through `KeptSecrets`, shared with the cylinders
 of the Russian roulette), so it reads its cards and
 gives its keys again: the ids of the decks are the same, the salts being read back from the chain. A player leaving the room keeps its seat: the hand waits for it to come back.
