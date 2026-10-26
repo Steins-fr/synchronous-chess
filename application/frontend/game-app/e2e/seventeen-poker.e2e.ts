@@ -25,8 +25,8 @@ const FACE_DOWN: string[] = Array.from({ length: 5 }, () => 'Face-down card');
 async function seated(room: TestRoom): Promise<RoomParticipant[]> {
     const [alice, bob, carol] = await room.connect('alice', 'bob', 'carol');
     await table(alice).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
-    await expect(table(bob).locator('#seat-bottom')).toContainText('alice');
-    await table(bob).getByRole('button', { name: 'Sit here' }).click();
+    await expect(table(bob).locator('#seat-top')).toContainText('alice');
+    await table(bob).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
     await expect(table(carol).locator('#seat-top')).toContainText('bob');
     return [alice, bob, carol];
 }
@@ -137,7 +137,7 @@ test.describe('Seventeen poker', () => {
         await expect(table(carol).locator('details li')).toHaveText('Hand 1: bob folds, alice takes the pot of 10.');
 
         // Bob lost his seat: Carol takes it, Alice starts a new match, the decks of the first one waiting for his keys
-        await table(carol).locator('#seat-top').getByRole('button', { name: 'Sit here' }).click();
+        await table(carol).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
         await table(alice).getByRole('button', { name: 'Play again' }).click();
         await expect(table(alice).getByRole('status')).toHaveText('carol to deal.');
         await table(alice).getByText('Matches played').click();

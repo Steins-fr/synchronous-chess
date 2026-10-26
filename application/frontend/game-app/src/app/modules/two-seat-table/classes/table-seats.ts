@@ -69,8 +69,14 @@ export class TableSeats<Seat extends string, Unseat extends string> {
         return this.seats().filter((name: string | null): name is string => name !== null && !connected.has(name));
     });
 
-    /** The seat at the bottom of the table: the one of the local player, the first one for a spectator */
-    public readonly bottomSeat: Signal<TableSeat> = computed((): TableSeat => this.mySeat() ?? TableSeat.ONE);
+    /**
+     * The seat at the bottom of the table: the one of the local player. A spectator sees the table from the free seat it
+     * may take, where it shows once seated, else from the first one
+     */
+    public readonly bottomSeat: Signal<TableSeat> = computed((): TableSeat => {
+        const [one, two] = this.seats();
+        return this.mySeat() ?? (this.options.open() && one !== null && two === null ? TableSeat.TWO : TableSeat.ONE);
+    });
     public readonly topSeat: Signal<TableSeat> = computed((): TableSeat => otherSeat(this.bottomSeat()));
 
     // The room, as it sends each message of the seats

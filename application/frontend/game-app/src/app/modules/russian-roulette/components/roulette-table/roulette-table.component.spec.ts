@@ -182,9 +182,10 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await table('alice', RUSSIAN_ROULETTE_RULES);
         const bob: RussianRouletteSession = participant('bob', RUSSIAN_ROULETTE_RULES);
 
-        // Then
+        // Then: a single seat to take, at the bottom of the table
         expect(status()).toEqual('Waiting for two players to sit.');
-        expect(text('#seat-top')).toEqual('Free seatSit here');
+        expect(text('#seat-top')).toEqual('Free seat');
+        expect(text('#seat-bottom')).toEqual('Free seatSit here');
         expect(text('#bank')).toEqual('Bank: 0');
         expect(text('#table-chips')).toEqual('Table: 0 chips');
 
@@ -825,11 +826,12 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await fixture.whenStable();
         carol.unseat(RouletteSeat.TWO);
 
-        // Then
-        await until(() => text('#seat-top') === 'Free seatSit here');
+        // Then Alice sees the table from the seat freed
+        await until(() => text('#seat-bottom') === 'Free seatSit here');
+        expect(text('#seat-top')).toMatch(/^carol/);
 
         // When Alice takes it, then frees the seat of Carol gone
-        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => text('#seat-bottom').startsWith('alice'));
         hub.leave(rooms.get('carol') as Room<RoulettePayloads>);
         await until(() => button('Free the seat') === undefined && element().querySelector('#seat-top button')?.textContent?.trim() === 'Free the seat');

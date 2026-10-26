@@ -116,19 +116,26 @@ describe('PokerTableComponent', () => {
         vi.restoreAllMocks();
     });
 
-    test('should seat the participants on the free seats', async () => {
+    test('should seat the participants on the free seats, a spectator seeing the table from the seat it may take', async () => {
         // Given
         await table('alice');
         const bob: SeventeenPokerSession = participant('bob');
 
-        // Then
+        // Then: a single seat to take, at the bottom of the table
         expect(status()).toEqual('Waiting for two players to sit.');
-        expect(text('#seat-top')).toEqual('Free seatSit here');
+        expect(text('#seat-top')).toEqual('Free seat');
         expect(text('#seat-bottom')).toEqual('Free seatSit here');
 
-        // When: Alice sits on the second seat, at the top of the table, then at its bottom
-        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        // When: Bob sits on the first seat
         bob.takeSeat(PokerSeat.ONE);
+        await fixture.whenStable();
+
+        // Then: the second seat comes at the bottom
+        expect(text('#seat-top')).toEqual('bob150 chips');
+        expect(text('#seat-bottom')).toEqual('Free seatSit here');
+
+        // When: Alice sits there
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => status() === 'Your turn to deal.');
 
         // Then
@@ -142,9 +149,9 @@ describe('PokerTableComponent', () => {
         await click('Leave the seat');
         await until(() => status() === 'Waiting for two players to sit.');
 
-        // Then: Bob sits at the bottom of the table of a spectator
-        expect(text('#seat-bottom')).toEqual('bob150 chips');
-        expect(text('#seat-top')).toEqual('Free seatSit here');
+        // Then: the free seat comes back at the bottom
+        expect(text('#seat-bottom')).toEqual('Free seatSit here');
+        expect(text('#seat-top')).toEqual('bob150 chips');
     });
 
     test('should deal the hand, the cards of the player only face up', async () => {
@@ -627,7 +634,8 @@ describe('PokerTableComponent', () => {
         // Given: Alice deals the first hand, on the second seat
         await table('alice');
         participant('bob').takeSeat(PokerSeat.ONE);
-        (element().querySelector('#seat-top button') as HTMLButtonElement).click();
+        await fixture.whenStable();
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
         await until(() => button('Deal') !== undefined);
 
         // When

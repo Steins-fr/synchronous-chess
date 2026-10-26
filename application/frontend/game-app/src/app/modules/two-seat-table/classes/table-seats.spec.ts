@@ -95,9 +95,19 @@ describe('TableSeats', () => {
         // When
         alice.takeSeat(ONE);
 
-        // Then
+        // Then: Bob sees the table from the free seat
         expect([alice.canTake(TWO), bob.canTake(ONE), bob.canTake(TWO)]).toEqual([false, false, true]);
         expect([alice.canLeave(), bob.canLeave()]).toEqual([true, false]);
+        expect([bob.bottomSeat(), bob.topSeat()]).toEqual([TWO, ONE]);
+
+        // When the seats close, then Alice leaves hers as they open again
+        open.set(false);
+        const closed = bob.bottomSeat();
+        open.set(true);
+        alice.leaveSeat();
+
+        // Then
+        expect([closed, bob.bottomSeat()]).toEqual([ONE, ONE]);
     });
 
     test('should let a seated player free the seat of the other one, away, while the seats are open', () => {

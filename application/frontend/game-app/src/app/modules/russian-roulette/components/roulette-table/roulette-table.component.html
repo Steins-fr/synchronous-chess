@@ -16,9 +16,7 @@
         [acting]="shownAwaited().includes(top)"
         [timeLeft]="shownAwaited().includes(top) ? timeLeft() : null"
         [turnTime]="game().rules.turnTime"
-        [canTake]="seats.canTake(top)"
         [canRelease]="seats.canRelease(top)"
-        (take)="takeSeat(top)"
         (release)="release(top)" />
 
     <!-- The cloth: once the cylinder is spun, the revolver lies in its middle, the cylinder at its right -->

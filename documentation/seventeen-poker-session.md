@@ -124,7 +124,8 @@ show cards the other player knows. The index of the match gives each deck of a n
 players keep their seats and their salts: the table of the decks holds a single deck by id, and the secrets of a deck
 disclosed are dropped.
 
-The table shows the local player at its bottom, a spectator the first seat.
+The table shows the local player at its bottom. A spectator sees it from the free seat it may take, the only one
+showing `Sit here`: it clicks where it then sits. Once both seats are taken, it sees the first seat at the bottom.
 
 ## A hand
 

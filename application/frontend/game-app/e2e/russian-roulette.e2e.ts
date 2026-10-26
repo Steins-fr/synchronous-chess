@@ -24,8 +24,8 @@ async function chambers(participant: RoomParticipant): Promise<string[]> {
 async function seated(room: TestRoom): Promise<RoomParticipant[]> {
     const [alice, bob, carol] = await room.connect('alice', 'bob', 'carol');
     await table(alice).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
-    await expect(table(bob).locator('#seat-bottom')).toContainText('alice');
-    await table(bob).getByRole('button', { name: 'Sit here' }).click();
+    await expect(table(bob).locator('#seat-top')).toContainText('alice');
+    await table(bob).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
     await expect(table(carol).locator('#seat-top')).toContainText('bob');
     return [alice, bob, carol];
 }
@@ -153,6 +153,7 @@ test.describe('Russian roulette', () => {
 
         await expect(table(carol).getByRole('status')).toHaveText('Waiting for bob to come back…');
         await expect(table(carol).locator('.badge-win')).toHaveText('bob ran out of time: alice wins the game.', { timeout: 90_000 });
+        // The seats stay closed while the key of Bob is awaited: Carol sees the first seat at the bottom
         await expect(table(carol).locator('#seat-top')).toContainText('Free seat');
     });
 });

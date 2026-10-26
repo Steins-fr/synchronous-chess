@@ -11,9 +11,7 @@
         [acting]="toAct() === top"
         [timeLeft]="toAct() === top ? timeLeft() : null"
         [turnTime]="session().match().rules.turnTime"
-        [canTake]="seats.canTake(top)"
         [canRelease]="seats.canRelease(top)"
-        (take)="takeSeat(top)"
         (release)="release(top)" />
     <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
     @if (categories()[top]; as current) {

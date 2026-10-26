@@ -148,9 +148,10 @@ run by the CI.
 
 ### Testing a poker game
 
-- Each participant takes a seat with `Sit here` (`#seat-bottom` / `#seat-top` of `app-poker-table`), then the
-  dealer clicks `Deal`: the second seat deals the first hand, then the players deal by turns. The table shows
-  the local player at its bottom. See `documentation/seventeen-poker-session.md`.
+- Each participant takes a seat with `Sit here`, on the free seat at the bottom of the table only (`#seat-bottom`
+  of `app-poker-table`, `#seat-top` the other one), then the dealer clicks `Deal`: the second seat deals the first
+  hand, then the players deal by turns. The table shows the local player at its bottom, a spectator the free seat it
+  may take, else the first seat. See `documentation/seventeen-poker-session.md`.
 - The actions are buttons named by their text (`Check`, `Bet 6`, `Call 6`, `Raise to 13`, `Fold`, `Bet more`,
   `Min`, `Max`, `Keep my hand`, `Exchange 2 cards`, `Play again` once the match is over, `Free the seat` of a player away); the cards of the player are buttons during the exchange,
   `aria-pressed` once selected. A card is an image named by its card (`Ace of spades`, `Face-down card`), and
@@ -163,9 +164,9 @@ run by the CI.
 
 ### Testing a Russian roulette game
 
-- Each participant takes a seat with `Sit here` (`#seat-bottom` / `#seat-top` of `app-roulette-table`), then each
-  player picks the chambers of its bullets, buttons named `Chamber 1` to `Chamber 24` (`aria-pressed` once picked), and
-  clicks `Load (3/3)`. The pages load and spin the cylinder by themselves, then the player drawn plays first. See
+- Each participant takes a seat with `Sit here`, on the free seat at the bottom of the table only (`#seat-bottom` of
+  `app-roulette-table`, as for the poker), then each player picks the chambers of its bullets, buttons named
+  `Chamber 1` to `Chamber 24` (`aria-pressed` once picked), and clicks `Load (3/3)`. The pages load and spin the cylinder by themselves, then the player drawn plays first. See
   `documentation/russian-roulette-session.md`.
 - The moves are buttons named by their text (`Shoot`, `Pass (1)`, `Play again`, `Free the seat`), the `status` role
   (`<output>`) tells what the table waits for, `#last-move` the latest move, `#bank` and `#table-chips` the chips.

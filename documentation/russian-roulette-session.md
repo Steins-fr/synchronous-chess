@@ -154,7 +154,8 @@ A player losing on time loses its seat too. While the seats are open, a seated p
 away from the room, with `Free the seat` (`RR_unseat`): no page can tell when the other one was away, so the chain
 applies the request whatever the presence of the player. A spectator frees no seat.
 
-The table shows the local player at its bottom, a spectator the first seat.
+The table shows the local player at its bottom. A spectator sees it from the free seat it may take, the only one
+showing `Sit here`: it clicks where it then sits. Once both seats are taken, it sees the first seat at the bottom.
 
 ## A game
 
