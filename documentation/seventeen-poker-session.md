@@ -252,8 +252,8 @@ The animations (the deal, the turn over of the cards, the riffle, the chips, the
 shows a change of its chips, `chipTransfers` tells the chips it moved: a bet from a stack to the cloth,
 the antes and the bets of a round over to the pot, the pot to its winner, half to each player when it is
 split, to the bank on a no contest; a player taking the pot alone takes the bets of the cloth with it (a
-fold). The chips of each move fly between the places as the page shows them, measured once rendered,
-then the stack there shows them dropping on it, the gains and the outcome with them. A stack paying out
+fold). The chips of each move fly between the places as the page shows them, measured once rendered
+(`ChipFlightsComponent` of `modules/two-seat-table`, shared with the Russian roulette), then the stack there shows them dropping on it, the gains and the outcome with them. A stack paying out
 shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights,
 as does the history of the room a reloaded page or a participant joining late catches up with: the
 session counts the steps of the history it applies (`historySteps`: the start and the end of each of its

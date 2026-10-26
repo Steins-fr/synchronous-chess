@@ -9,6 +9,8 @@ import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
 import { CardDeckComponent } from '@app/modules/playing-cards/components/card-deck/card-deck.component';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
+import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
+import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { scopedKey } from '@app/services/language/scoped-key';
@@ -34,12 +36,6 @@ const BET_STEP: number = 5;
 /** The bank, off the table: the chips going to it fly to the right side of the cloth, this far inside it */
 const BANK_INSET: number = 16;
 
-/** A place of the table, from its top left corner */
-interface TablePoint {
-    readonly x: number;
-    readonly y: number;
-}
-
 /** The result of a match over before the one in progress */
 interface PastResult {
     /** Its number in the room, from 1 */
@@ -49,20 +45,12 @@ interface PastResult {
     readonly verification: TranslatableText | null;
 }
 
-/** Chips flying from a place of the table to another one */
-interface ChipFlight {
-    readonly id: number;
-    readonly amount: number;
-    readonly from: TablePoint;
-    readonly to: TablePoint;
-}
-
 /** The table of the Seventeen Poker: the seats, the hands, the deck and the pot, and the actions of the local player */
 @Component({
     selector: 'app-poker-table',
     templateUrl: './poker-table.component.html',
     styleUrl: './poker-table.component.scss',
-    imports: [CardDeckComponent, CardHandComponent, ChipStackComponent, MatButtonModule, PokerSeatComponent, TranslocoDirective, TranslocoPipe],
+    imports: [CardDeckComponent, CardHandComponent, ChipFlightsComponent, ChipStackComponent, MatButtonModule, PokerSeatComponent, TranslocoDirective, TranslocoPipe],
     host: { class: 'block max-w-[720px] mx-auto px-4' },
 })
 export class PokerTableComponent implements OnDestroy {
@@ -197,11 +185,6 @@ export class PokerTableComponent implements OnDestroy {
         return [of(PokerSeat.ONE), of(PokerSeat.TWO)];
     });
 
-    private readonly _flights = signal<ReadonlyArray<Readonly<ChipFlight>>>([]);
-    /** The chips moved by the latest change of the table, flying over it */
-    protected readonly flights: Signal<ReadonlyArray<Readonly<ChipFlight>>> = this._flights.asReadonly();
-    private nextFlight: number = 0;
-
     /** The deck is being shuffled and locked */
     protected readonly shuffling: Signal<boolean> = computed((): boolean => {
         const phase: DeckPhase | undefined = this.session().deck()?.phase();
@@ -288,6 +271,8 @@ export class PokerTableComponent implements OnDestroy {
     private readonly bottomBetView: Signal<ChipStackComponent> = viewChild.required('bottomBet');
     private readonly topSeatView: Signal<PokerSeatComponent> = viewChild.required('topSeatView');
     private readonly bottomSeatView: Signal<PokerSeatComponent> = viewChild.required('bottomSeatView');
+    /** The chips moved by the latest change of the table, flying over it */
+    private readonly chipFlights: Signal<ChipFlightsComponent> = viewChild.required('chipFlights');
 
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
 
@@ -310,12 +295,7 @@ export class PokerTableComponent implements OnDestroy {
             return this.flightsOf(transfers);
         },
         write: (flights: Signal<ReadonlyArray<Readonly<ChipFlight>>>): void => {
-            const flying: ReadonlyArray<Readonly<ChipFlight>> = flights();
-
-            // The chips still flying land, the new ones take off
-            if (flying.length > 0) {
-                this._flights.update((flown: ReadonlyArray<Readonly<ChipFlight>>) => [...flown, ...flying]);
-            }
+            this.chipFlights().launch(flights());
         },
     });
 
@@ -331,13 +311,6 @@ export class PokerTableComponent implements OnDestroy {
     /** Whether the hand of a seat lost at the showdown */
     protected losing(seat: PokerSeat): boolean {
         return this.winner() === otherSeat(seat);
-    }
-
-    /** Chips flown to their place, or whose flight was cancelled: the animation of a chip inside them ends earlier */
-    protected land(id: number, event: Event): void {
-        if (event.target === event.currentTarget) {
-            this._flights.update((flights: ReadonlyArray<Readonly<ChipFlight>>) => flights.filter((flight: Readonly<ChipFlight>) => flight.id !== id));
-        }
     }
 
     /** The cards of the seat winning the pot */
@@ -511,14 +484,14 @@ export class PokerTableComponent implements OnDestroy {
         }
 
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
-        return transfers.map(({ from, to, amount }): ChipFlight => ({ id: this.nextFlight++, amount, from: this.point(from, origin), to: this.point(to, origin) }));
+        return transfers.map(({ from, to, amount }): ChipFlight => ({ amount, from: this.point(from, origin), to: this.point(to, origin) }));
     }
 
     /** The middle of a place of the table, the right side of the cloth for the bank */
     private point(place: ChipPlace, origin: DOMRect): TablePoint {
         const rect: DOMRect = this.element(place).getBoundingClientRect();
-        const x: number = place.kind === ChipPlaceKind.BANK ? rect.right - BANK_INSET : rect.left + rect.width / 2;
-        return { x: x - origin.left, y: rect.top + rect.height / 2 - origin.top };
+        const center: TablePoint = middle(rect, origin);
+        return place.kind === ChipPlaceKind.BANK ? { ...center, x: rect.right - BANK_INSET - origin.left } : center;
     }
 
     private element(place: ChipPlace): HTMLElement {

@@ -258,7 +258,8 @@ it, without trembling nor recoil.
 ### A pass on the table
 
 The pass is stamped on the seat of its player (`Pass (2)`), landing turned then fading out, and its chips fly from its
-stack to the table; the 5th one in a row takes the chips of the table to the bank. The seat getting the turn lights up,
+stack to the table; the 5th one in a row takes the chips of the table to the bank. The chips fly over the table as in
+the Seventeen Poker (`ChipFlightsComponent` of `modules/two-seat-table`). The seat getting the turn lights up,
 a glow around it, before its ring pulses.
 
 ### A shot on the table

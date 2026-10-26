@@ -9,25 +9,6 @@
     transition-timing-function: cubic-bezier(0.3, 0.8, 0.3, 1);
 }
 
-// Chips moved from a place of the table to another one fly from the first one (left and top, the middle of the chips)
-// to the other one (--flight-x and --flight-y), once their delay is over, and fade out as the stack there shows them
-.chip-flight {
-    z-index: 1;
-    transform: translate(-50%, -50%);
-    animation: chip-flight var(--app-motion-slow) cubic-bezier(0.3, 0.7, 0.3, 1) var(--flight-delay) both;
-}
-
-@keyframes chip-flight {
-    90% {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-        transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y)));
-    }
-}
-
 // A bullet fired shakes the table
 .table-shake {
     animation: table-shake var(--app-motion-medium) ease-out;

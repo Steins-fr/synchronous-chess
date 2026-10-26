@@ -417,7 +417,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then the chips of the 5 passes fly to the bank
         await eventually(async () => {
             await fixture.whenStable();
-            expect(fixture.componentInstance['flights']().map(({ amount }) => amount)).toEqual([1, 2, 4, 8, 16, 31]);
+            expect(fixture.componentInstance['chipFlights']()['flights']().map(({ amount }) => amount)).toEqual([1, 2, 4, 8, 16, 31]);
         });
     });
 
