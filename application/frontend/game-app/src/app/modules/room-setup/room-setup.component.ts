@@ -145,7 +145,10 @@ export class RoomSetupComponent {
         });
 
         if (join) {
-            await this.setUpOnceReady(openRooms, 'join', room.roomName, join.playerName, join.password);
+            // The name the tab kept for the room, its lock not released in time: its token spares the password
+            const session: Readonly<RoomSession> | undefined = this.roomSessions.get(room.roomName);
+            const token: string | undefined = session?.playerName === join.playerName ? session.token : undefined;
+            await this.setUpOnceReady(openRooms, 'join', room.roomName, join.playerName, join.password, token);
         }
     }
 

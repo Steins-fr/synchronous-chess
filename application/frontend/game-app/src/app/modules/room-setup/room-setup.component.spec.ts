@@ -428,6 +428,23 @@ describe('RoomSetupComponent', () => {
             expect(releaseLock).toHaveBeenCalledOnce();
         });
 
+        test.each<[string, string]>([
+            ['alice', 'kept'],
+            ['bob', 'token'],
+        ])('should join under %s with the token %s, the token of the session of the tab under its name only', async (playerName: string, token: string) => {
+            // Given the lock of the reloaded page not released in time
+            keepSession();
+            vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
+            await createComponent(true, url);
+            vi.mocked(dialogService.open).mockResolvedValueOnce({ playerName });
+
+            // When
+            await answerSearch([listedRoom]);
+
+            // Then
+            await vi.waitFor(() => expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ type: 'join', playerName, token })));
+        });
+
         test('should resume the room of a URL copied with blanks', async () => {
             // Given
             keepSession();

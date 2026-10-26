@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { chatBlockChains, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
 import { JoinFailure } from '@app/services/room-manager/classes/room-network/room-network';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -10,6 +10,7 @@ import RoomManagerService from '@app/services/room-manager/room-manager.service'
 import { RoomLock, RoomLocks } from '@app/services/room-session/room-lock';
 import { RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService, { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
@@ -109,7 +110,7 @@ describe('roomFromSetup', () => {
         // Given a room resumed from the URL
         sessions.save('room#000001', { playerName: 'alice', token: 'a1' });
         await router.navigateByUrl('/?room=room%23000001');
-        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(new Error('gone'));
+        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(new RoomApiError('Room \'room#000001\' does not exist'));
 
         // When
         roomSetupService.setup({ ...setup, type: 'resume' });
@@ -179,5 +180,40 @@ describe('roomFromSetup', () => {
         // Then
         expect(navigateByUrl).not.toHaveBeenCalled();
         expect(router.url).toBe('/?tab=1');
+    });
+
+    test.each<[string, Error]>([
+        ['its name still in the room', new RoomApiError(RoomApiErrorMessage.ALREADY_IN_GAME)],
+        ['the API not answering', new Error('Timeout')],
+    ])('should keep the session and the URL of a room resumed refused for a while only: %s', async (_case: string, error: Error) => {
+        // Given
+        sessions.save('room#000001', { playerName: 'alice', token: 'a1' });
+        await router.navigateByUrl('/?room=room%23000001');
+        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(error);
+        const releaseLock = vi.spyOn(roomSetupService, 'releaseLock');
+        const loading: boolean[] = [];
+        roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
+
+        // When
+        roomSetupService.setup({ ...setup, type: 'resume' });
+        await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
+        await fixture.whenStable();
+
+        // Then: a reload resumes it
+        expect(sessions.get('room#000001')).toEqual({ playerName: 'alice', token: 'a1' });
+        expect(router.url).toBe('/?room=room%23000001');
+        expect(releaseLock).toHaveBeenCalledOnce();
+    });
+
+    test('should show the room in the URL again once a link to the page itself dropped it', async () => {
+        // Given
+        await built();
+
+        // When
+        await router.navigateByUrl('/?tab=1');
+        await fixture.whenStable();
+
+        // Then
+        await vi.waitFor(() => expect(router.url).toBe('/?tab=1&room=room%23000001'));
     });
 });

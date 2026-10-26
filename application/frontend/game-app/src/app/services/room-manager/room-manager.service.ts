@@ -113,7 +113,8 @@ export default class RoomManagerService {
     }
 
     /**
-     * Reconnects the room resumed as its host. Another participant took it over meanwhile: the player joins it
+     * Reconnects the room resumed as its host. Refused, another participant took it over meanwhile, or the player is not
+     * in the room for the API: the player joins it, a room ended refusing the join too
      * @returns the name of the host
      */
     private async reconnectOrJoin(setup: RoomSetupInterface, access: RoomAccess, signal: AbortSignal | undefined): Promise<string> {
@@ -121,7 +122,7 @@ export default class RoomManagerService {
             await this.roomSocketApi.reconnect({ roomName: setup.roomName, playerName: setup.playerName, token: setup.token });
             return setup.playerName;
         } catch (e) {
-            if (!(e instanceof RoomApiError) || e.message !== RoomApiErrorMessage.HOST_CONNECTED) {
+            if (!(e instanceof RoomApiError)) {
                 throw e;
             }
 

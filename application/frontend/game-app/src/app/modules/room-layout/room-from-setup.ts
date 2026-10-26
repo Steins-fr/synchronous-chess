@@ -1,7 +1,8 @@
-import { DestroyRef, inject, Provider, Signal, signal } from '@angular/core';
+import { DestroyRef, effect, inject, Provider, Signal, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { isTemporaryJoinError } from '@app/services/room-api/join-room';
+import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import { RoomSessionStore } from '@app/services/room-session/room-session.store';
@@ -33,6 +34,16 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     const destroyed: AbortController = new AbortController();
     // The room being built: left meanwhile, the player gave it up too
     let building: string | undefined;
+    // The room the URL holds: the one built, none once given up, as it was until then (undefined)
+    const urlRoom = signal<string | null | undefined>(undefined);
+
+    // Shown once the app navigates no more, and again after a navigation: a link to the page itself drops its query
+    effect((): void => {
+        const roomId: string | null | undefined = urlRoom();
+        if (roomId !== undefined && router.currentNavigation() === null) {
+            untracked(() => showRoomInUrl(router, roomId));
+        }
+    });
 
     // The room left: a reload shows the list, or the join dialog of a room still in the URL
     const forget = (roomId: string | undefined): void => {
@@ -45,7 +56,7 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     const giveUp = (roomId: string): void => {
         roomSetupService.roomIsSetup(false);
         forget(roomId);
-        showRoomInUrl(router, null);
+        urlRoom.set(null);
     };
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
@@ -61,17 +72,25 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             roomSetupService.roomIsSetup(true);
             // Under its id, the one the API drew for a room created
             roomSessions.save(built.roomName, { playerName: setup.playerName, token: setup.token });
-            showRoomInUrl(router, built.roomName);
+            urlRoom.set(built.roomName);
             void roomSetupService.holdLock(built.roomName, setup.playerName);
             built.roomConnection.joinFailed$.subscribe(() => {
                 built.clear();
                 room.set(undefined);
                 giveUp(built.roomName);
             });
-        } catch {
-            if (!destroyed.signal.aborted) {
-                giveUp(setup.roomName);
+        } catch (e) {
+            if (destroyed.signal.aborted) {
+                return;
             }
+            // A room resumed refused for a while only (its name still in it, the API not answering): its session and URL
+            // kept, a reload resumes it
+            if (setup.type === 'resume' && !(e instanceof RoomApiError && !isTemporaryJoinError(e))) {
+                roomSetupService.roomIsSetup(false);
+                roomSetupService.releaseLock();
+                return;
+            }
+            giveUp(setup.roomName);
         } finally {
             building = undefined;
         }

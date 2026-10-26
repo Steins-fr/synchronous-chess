@@ -191,7 +191,8 @@ without dialog (`RoomSetupComponent`): the name keeps the key pair, the seat and
 player, the token lets the API take it without the password of a private room. The host notices at once
 that its former page left, since the data channels close with it, but the websocket API refuses the name
 (`Already in game`) until the host removed the former connection: the page asks to join again every 2
-seconds, for 20 seconds at most (`joinRoom`), then tells the name is taken.
+seconds, for 20 seconds at most (`joinRoom`), then tells the name is taken. A resume refused for a while only
+(the name still in the room, the API not answering) keeps the session and the URL: a reload tries again.
 
 The host reloading its page is no exception: once the others agree it left, the sequencer takes the
 room over (see [Taking the room over](blockchain-and-anti-cheat.md#changing-the-sequencer)), and the
