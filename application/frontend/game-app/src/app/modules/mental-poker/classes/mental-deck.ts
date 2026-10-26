@@ -2,14 +2,15 @@ import { Signal, signal } from '@angular/core';
 import { wait } from '@app/helpers/wait.helper';
 import { timeSlices } from '@app/helpers/time-slices.helper';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
-import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { MentalDeckMessage, MentalDeckMessageType, MentalDeckPayloads } from '../mental-deck-messages';
 import { verifyDeck } from './deck-verification';
 import { DeckCheat, DeckPhase, DeckStep, MentalDeckState, PublishedKey } from './mental-deck-state';
+import { KeptSecrets } from './kept-secrets';
 import { SecretStore } from './secret-store';
 import { SraCipher } from './sra-cipher';
+import { StepRunner } from './step-runner';
 
 export enum DeckVerification {
     /** The players did not disclose their keys yet */
@@ -75,6 +76,8 @@ export class MentalDeck {
     private readonly state: MentalDeckState;
     private readonly cipher: SraCipher;
     private readonly store: SecretStore<DeckSecrets>;
+    /** The secrets of the local player, stored before anything made with them is sent */
+    private readonly secrets: KeptSecrets<DeckSecrets, Secrets>;
     private readonly localName: string;
 
     private readonly _phase = signal<DeckPhase>(DeckPhase.SHUFFLING);
@@ -90,7 +93,6 @@ export class MentalDeck {
     private readonly _verification = signal<DeckVerification>(DeckVerification.PENDING);
     public readonly verification: Signal<DeckVerification> = this._verification.asReadonly();
 
-    private secrets?: Secrets;
     /** The cards the local participant decrypted, undefined for a key not giving any card */
     private readonly decrypted = new Map<number, number | undefined>();
     /** The decks the local player made in this page, sent unless the chain had its step already */
@@ -102,14 +104,12 @@ export class MentalDeck {
     /** Resolves once every player disclosed its keys, and the deck is checked */
     private readonly verified: Promise<DeckVerification>;
     private resolveVerified!: (verification: DeckVerification) => void;
-    private secretsLost: boolean = false;
     /** The card of each value, once decrypted */
     private readonly cardOfValue: ReadonlyMap<bigint, number>;
     /** The computations yield to the browser once a slice of time is spent */
     private readonly pause: () => Promise<void> = timeSlices();
-    private acting: boolean = false;
-    private actAgain: boolean = false;
-    private destroyed: boolean = false;
+    /** What the deck waits for from the local participant, one thing at a time, again when the chain changed meanwhile */
+    private readonly steps = new StepRunner(() => this.actOnce(), () => `The deck ${ this.id } failed`);
 
     /**
      * @param received the messages of the deck received before the game created it, in the order of the chain: they apply
@@ -120,6 +120,12 @@ export class MentalDeck {
         this.cipher = options.cipher ?? new SraCipher();
         this.localName = room.localPlayer.name;
         this.store = options.store ?? new SecretStore<DeckSecrets>('deck', room.roomName, this.localName);
+        this.secrets = new KeptSecrets<DeckSecrets, Secrets>({
+            store: this.store,
+            id: this.id,
+            parse: (stored: Readonly<DeckSecrets>) => this.parseSecrets(stored),
+            lostWarning: `The keys of the deck ${ this.id } are lost, its cards can not be read`,
+        });
         this.state = new MentalDeckState(options.size, options.players, this.cipher);
         this.verified = new Promise<DeckVerification>((resolve) => this.resolveVerified = resolve);
         this.cardOfValue = new Map(this.state.plainDeck.map((value: bigint, card: number) => [value, card]));
@@ -164,7 +170,7 @@ export class MentalDeck {
     }
 
     public destroy(): void {
-        this.destroyed = true;
+        this.steps.stop();
     }
 
     private waitFor(positions: ReadonlyArray<number>): Promise<void> {
@@ -175,7 +181,7 @@ export class MentalDeck {
 
     /** The messages of the deck from every participant, the local one included, in the order of the chain */
     public receive(message: MentalDeckMessage): void {
-        if (!this.destroyed) {
+        if (!this.steps.stopped) {
             this.apply(message);
             this.changed();
         }
@@ -195,36 +201,14 @@ export class MentalDeck {
 
     /** Tells the state of the chain, then acts on it */
     private changed(): void {
-        if (this.destroyed) {
+        if (this.steps.stopped) {
             return;
         }
 
         this._phase.set(this.state.phase);
         this._waitingFor.set(this.state.waitingFor);
         this.settleWaiters();
-        void this.act();
-    }
-
-    /** What the deck waits for from the local participant, one thing at a time, again when the chain changed meanwhile */
-    private async act(): Promise<void> {
-        if (this.acting) {
-            this.actAgain = true;
-            return;
-        }
-
-        this.acting = true;
-
-        try {
-            do {
-                this.actAgain = false;
-                // eslint-disable-next-line no-await-in-loop -- one thing at a time
-                await this.actOnce();
-            } while (this.actAgain && !this.destroyed);
-        } catch (error: unknown) {
-            TimedLogger.error(`The deck ${ this.id } failed`, error);
-        } finally {
-            this.acting = false;
-        }
+        void this.steps.run();
     }
 
     private async actOnce(): Promise<void> {
@@ -244,7 +228,8 @@ export class MentalDeck {
             return;
         }
 
-        const secrets: Secrets | undefined = this.loadSecrets(phase === DeckPhase.SHUFFLING);
+        // Drawn before the player shuffled the deck only: other secrets would not match its deck in the chain
+        const secrets: Secrets | undefined = this.secrets.load(phase === DeckPhase.SHUFFLING ? () => this.drawSecrets() : undefined);
 
         if (!secrets) {
             return;
@@ -255,7 +240,7 @@ export class MentalDeck {
             .map((card: bigint) => SraCipher.toHex(card));
         this.madeSteps.set(phase, cards);
 
-        if (this.destroyed) {
+        if (this.steps.stopped) {
             return;
         }
 
@@ -277,18 +262,10 @@ export class MentalDeck {
                 .find(({ message }) => message.from === this.localName);
 
             if (step?.cards.some((card: bigint, position: number) => SraCipher.toHex(card) !== cards[position])) {
-                this.secrets = undefined;
                 this.madeSteps.clear();
-                this.store.remove(this.id);
-                this.loseSecrets();
+                this.secrets.drop();
             }
         }
-    }
-
-    /** Once: lost, the secrets are not looked for again */
-    private loseSecrets(): void {
-        this.secretsLost = true;
-        TimedLogger.warn(`The keys of the deck ${ this.id } are lost, its cards can not be read`);
     }
 
     private async computeShuffle(input: ReadonlyArray<bigint>, secrets: Secrets): Promise<ReadonlyArray<bigint>> {
@@ -315,42 +292,15 @@ export class MentalDeck {
         return locked;
     }
 
-    /**
-     * The secrets of the local player, stored before anything made with them is sent
-     * @param draw draws them when none is stored: only before the player shuffled the deck, other secrets would not
-     * match its deck in the chain
-     */
-    private loadSecrets(draw: boolean = false): Secrets | undefined {
-        if (this.secrets || this.secretsLost) {
-            return this.secrets;
-        }
-
-        let stored: Readonly<DeckSecrets> | undefined = this.store.get(this.id);
-
-        if (!stored && draw) {
-            stored = this.drawSecrets();
-            this.store.save(this.id, stored);
-        }
-
-        if (!stored) {
-            this.loseSecrets();
-            return undefined;
-        }
-
-        try {
-            const cardKeys: ReadonlyArray<bigint> = stored.cardKeys.map((key: string) => BigInt(`0x${ key }`));
-            this.secrets = {
-                shuffleKey: BigInt(`0x${ stored.shuffleKey }`),
-                permutation: stored.permutation,
-                cardKeys,
-                cardUnlockKeys: cardKeys.map((key: bigint) => this.cipher.inverse(key)),
-            };
-        } catch {
-            // The storage of the tab is not the one of this deck
-            this.loseSecrets();
-        }
-
-        return this.secrets;
+    /** The secrets stored, as numbers: a storage that is not the one of this deck throws */
+    private parseSecrets(stored: Readonly<DeckSecrets>): Secrets {
+        const cardKeys: ReadonlyArray<bigint> = stored.cardKeys.map((key: string) => BigInt(`0x${ key }`));
+        return {
+            shuffleKey: BigInt(`0x${ stored.shuffleKey }`),
+            permutation: stored.permutation,
+            cardKeys,
+            cardUnlockKeys: cardKeys.map((key: bigint) => this.cipher.inverse(key)),
+        };
     }
 
     private drawSecrets(): DeckSecrets {
@@ -382,9 +332,9 @@ export class MentalDeck {
         // The keys asked by the messages of the same block go together, a reloaded page may find the ones of its former page
         await wait(0);
         const positions: ReadonlyArray<number> = this.unsentKeys();
-        const secrets: Secrets | undefined = this.loadSecrets();
+        const secrets: Secrets | undefined = this.secrets.load();
 
-        if (this.destroyed || positions.length === 0 || !secrets) {
+        if (this.steps.stopped || positions.length === 0 || !secrets) {
             return;
         }
 
@@ -400,12 +350,12 @@ export class MentalDeck {
     }
 
     private giveDisclosure(): void {
-        if (this.destroyed || this.sentDisclosure || !this.isPlayer || !this.state.isDisclosureRequested || this.state.disclosures.has(this.localName)
+        if (this.steps.stopped || this.sentDisclosure || !this.isPlayer || !this.state.isDisclosureRequested || this.state.disclosures.has(this.localName)
             || this.state.phase !== DeckPhase.READY) {
             return;
         }
 
-        const secrets: Secrets | undefined = this.loadSecrets();
+        const secrets: Secrets | undefined = this.secrets.load();
 
         if (secrets) {
             this.sentDisclosure = true;
@@ -445,7 +395,7 @@ export class MentalDeck {
 
         // The secrets of the local player are looked for once the other keys are there only
         if (own !== -1 && keys[own] === undefined && keys.every((key: bigint | undefined, index: number) => key !== undefined || index === own)) {
-            keys[own] = this.loadSecrets()?.cardUnlockKeys[position];
+            keys[own] = this.secrets.load()?.cardUnlockKeys[position];
         }
 
         return keys.includes(undefined) ? undefined : keys as ReadonlyArray<bigint>;

@@ -1,9 +1,10 @@
 import { Signal, signal } from '@angular/core';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { timeSlices } from '@app/helpers/time-slices.helper';
-import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { ElGamalCipherText, ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
+import { KeptSecrets } from '@app/modules/mental-poker/classes/kept-secrets';
 import { SecretStore } from '@app/modules/mental-poker/classes/secret-store';
+import { StepRunner } from '@app/modules/mental-poker/classes/step-runner';
 import { BitProof, proveBit, proveEqualLogs } from '@app/modules/mental-poker/classes/zk-proofs';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CylinderMessage, CylinderMessageType, CylinderPayloads } from './cylinder-messages';
@@ -64,6 +65,8 @@ export class Cylinder {
     public readonly id: string;
     private readonly state: CylinderState;
     private readonly store: SecretStore<CylinderSecrets>;
+    /** The secrets of the local player, stored before its key was sent */
+    private readonly secrets: KeptSecrets<CylinderSecrets, Secrets>;
     private readonly localName: string;
     private readonly cipher: ExponentialElGamal;
 
@@ -88,26 +91,30 @@ export class Cylinder {
     private readonly _progress = signal<number>(0);
     /** The steps of the players in the chain */
     public readonly progress: Signal<number> = this._progress.asReadonly();
-    private readonly _secretsLost = signal<boolean>(false);
     /** The page lost the secrets of the local player: it can not load nor fire the cylinder anymore */
-    public readonly secretsLost: Signal<boolean> = this._secretsLost.asReadonly();
+    public readonly secretsLost: Signal<boolean>;
 
-    private secrets?: Secrets;
     /** The key of the local player in the chain was checked against its secrets */
     private ownKeyChecked: boolean = false;
     /** What the local player sent in this page: once in the chain, it is not sent again */
     private readonly sent = new Set<string>();
     /** The computations yield to the browser once a slice of time is spent */
     private readonly pause: () => Promise<void> = timeSlices();
-    private acting: boolean = false;
-    private actAgain: boolean = false;
-    private destroyed: boolean = false;
+    private readonly steps = new StepRunner(() => this.actOnce(), () => `The cylinder ${ this.id } failed`);
 
     public constructor(private readonly room: Room<CylinderPayloads>, options: Readonly<CylinderOptions>) {
         this.id = options.id;
         this.cipher = options.cipher ?? new ExponentialElGamal();
         this.localName = room.localPlayer.name;
         this.store = options.store ?? new SecretStore<CylinderSecrets>('cylinder', room.roomName, this.localName);
+        this.secrets = new KeptSecrets<CylinderSecrets, Secrets>({
+            store: this.store,
+            id: this.id,
+            parse: (stored: Readonly<CylinderSecrets>) => this.parseSecrets(stored),
+            lostWarning: `The keys of the cylinder ${ this.id } are lost, its chambers can not be fired`,
+            onLost: () => this._bullets.set([]),
+        });
+        this.secretsLost = this.secrets.lost;
         this.state = new CylinderState(options.id, options.players, this.cipher, options.chambers, options.bullets);
         this._bullets.set(this.store.get(this.id)?.bullets ?? []);
         this.changed();
@@ -140,10 +147,7 @@ export class Cylinder {
             nonce: CryptoHelper.randomHex(16),
             bullets: [...chambers].sort((one: number, other: number) => one - other),
         };
-        // Kept by the page too: a blocked storage loses them on a reload only
-        this.store.save(this.id, { secret: secrets.secret.toString(16), nonce: secrets.nonce, bullets: secrets.bullets });
-        this.secrets = secrets;
-        this._secretsLost.set(false);
+        this.secrets.keep({ secret: secrets.secret.toString(16), nonce: secrets.nonce, bullets: secrets.bullets }, secrets);
         this._bullets.set(secrets.bullets);
         this.sent.add(CylinderMessageType.KEY);
 
@@ -190,7 +194,7 @@ export class Cylinder {
     }
 
     public destroy(): void {
-        this.destroyed = true;
+        this.steps.stop();
     }
 
     private report(cheat: CylinderCheat): void {
@@ -210,29 +214,12 @@ export class Cylinder {
      * game calls it once the messages received are applied, so a reloaded page does not make the steps of its former page
      * again while the chain replays them
      */
-    public async act(): Promise<void> {
-        if (this.acting) {
-            this.actAgain = true;
-            return;
-        }
-
-        this.acting = true;
-
-        try {
-            do {
-                this.actAgain = false;
-                // eslint-disable-next-line no-await-in-loop -- one thing at a time
-                await this.actOnce();
-            } while (this.actAgain && !this.destroyed);
-        } catch (error: unknown) {
-            TimedLogger.error(`The cylinder ${ this.id } failed`, error);
-        } finally {
-            this.acting = false;
-        }
+    public act(): Promise<void> {
+        return this.steps.run();
     }
 
     private async actOnce(): Promise<void> {
-        if (this.destroyed) {
+        if (this.steps.stopped) {
             return;
         }
 
@@ -253,7 +240,7 @@ export class Cylinder {
             return;
         }
 
-        const secrets: Secrets | undefined = this.loadSecrets();
+        const secrets: Secrets | undefined = this.secrets.load();
         if (!secrets || key === undefined) {
             return;
         }
@@ -318,7 +305,7 @@ export class Cylinder {
 
         for (const chamber of this.state.missingShares(this.localName)) {
             const sentKey: string = `${ CylinderMessageType.SHARE }:${ chamber }`;
-            const secrets: Secrets | undefined = this.sent.has(sentKey) ? undefined : this.loadSecrets();
+            const secrets: Secrets | undefined = this.sent.has(sentKey) ? undefined : this.secrets.load();
 
             if (secrets) {
                 const cipherText: ElGamalCipherText = this.state.cylinder[chamber];
@@ -342,7 +329,7 @@ export class Cylinder {
             return;
         }
 
-        const secrets: Secrets | undefined = this.loadSecrets();
+        const secrets: Secrets | undefined = this.secrets.load();
         if (secrets) {
             this.sent.add(CylinderMessageType.DISCLOSE);
             this.room.transmitMessage(CylinderMessageType.DISCLOSE, { game: this.id, secret: secrets.secret.toString(16) });
@@ -367,22 +354,14 @@ export class Cylinder {
         this._verification.set(cheaters.length === 0 ? CylinderVerification.FAIR : CylinderVerification.CHEATED);
     }
 
-    /** The secrets of the local player, stored before its key was sent */
-    private loadSecrets(): Secrets | undefined {
-        if (this.secrets || this._secretsLost()) {
-            return this.secrets;
-        }
+    /** The secrets stored, as numbers, none for a storage that is not the one of this cylinder */
+    private parseSecrets(stored: Readonly<CylinderSecrets>): Secrets | undefined {
+        const secret: bigint | undefined = this.cipher.parseScalar(stored.secret);
 
-        const stored: Readonly<CylinderSecrets> | undefined = this.store.get(this.id);
-        const secret: bigint | undefined = this.cipher.parseScalar(stored?.secret);
-
-        if (!stored || secret === undefined || typeof stored.nonce !== 'string' || !Array.isArray(stored.bullets)) {
-            this.loseSecrets();
+        if (secret === undefined || typeof stored.nonce !== 'string' || !Array.isArray(stored.bullets)) {
             return undefined;
         }
-
-        this.secrets = { secret, nonce: stored.nonce, bullets: stored.bullets };
-        return this.secrets;
+        return { secret, nonce: stored.nonce, bullets: stored.bullets };
     }
 
     /**
@@ -398,18 +377,9 @@ export class Cylinder {
         }
 
         this.ownKeyChecked = true;
-        const secrets: Secrets | undefined = this.loadSecrets();
+        const secrets: Secrets | undefined = this.secrets.load();
         if (secrets && this.cipher.power(secrets.secret) !== key) {
-            this.secrets = undefined;
-            this.store.remove(this.id);
-            this.loseSecrets();
+            this.secrets.drop();
         }
-    }
-
-    /** Once: lost, the secrets are not looked for again */
-    private loseSecrets(): void {
-        this._secretsLost.set(true);
-        this._bullets.set([]);
-        TimedLogger.warn(`The keys of the cylinder ${ this.id } are lost, its chambers can not be fired`);
     }
 }

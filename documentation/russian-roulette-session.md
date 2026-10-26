@@ -36,6 +36,7 @@ The code lives in `application/frontend/game-app/src/app/modules/russian-roulett
 | `Cylinder` | `classes/cylinder/cylinder.ts` | Applies the messages of a cylinder, makes the steps of the local player (its load, its spin, its shares, its disclosure) |
 | `verifyCylinder` | `classes/cylinder/cylinder-verification.ts` | Checks the spins once both players disclosed their keys |
 | `SecretStore` | `modules/mental-poker/classes/secret-store.ts` | Keeps the secrets of the player across the reloads of the page, as for the decks of the poker |
+| `KeptSecrets`, `StepRunner` | `modules/mental-poker/classes` | The secrets of the player in the cylinder and its steps one at a time, shared with the decks of the poker |
 | `PlayedGame` | `classes/game-sessions/played-game.ts` | A game of the room: its rules, its cylinder, its check and its result, final once checked |
 | `RussianRouletteSession` | `classes/game-sessions/russian-roulette-session.ts` | The games of the room: seats, moves, timeouts, a new game once one is over |
 | `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |

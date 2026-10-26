@@ -29,6 +29,8 @@ The code lives in `application/frontend/game-app/src/app/modules/mental-poker`.
 | `MentalDeck` | `classes/mental-deck.ts` | A deck of a game: applies its messages, makes and sends the steps and the keys of the local player, reads its cards |
 | `verifyDeck` | `classes/deck-verification.ts` | Checks a deck once every player disclosed its keys |
 | `SecretStore` | `classes/secret-store.ts` | Keeps the secrets of the player across the reloads of the page, for a deck or a cylinder |
+| `KeptSecrets` | `classes/kept-secrets.ts` | The secrets of the player in a deck or a cylinder: read from the `SecretStore`, drawn and stored first, dropped once they are not the ones of the chain, lost once |
+| `StepRunner` | `classes/step-runner.ts` | Makes the steps of the player in a deck or a cylinder one at a time, again when the chain changed meanwhile, a step failing logged |
 | `ExponentialElGamal` | `classes/exponential-elgamal.ts` | Another cipher of the same group, a count hidden in each cipher text (see [The exponential ElGamal](#the-exponential-elgamal)) |
 | `zk-proofs` | `classes/zk-proofs.ts` | The proofs of the exponential ElGamal: equal logarithms (Schnorr, Chaum-Pedersen), a bit |
 
