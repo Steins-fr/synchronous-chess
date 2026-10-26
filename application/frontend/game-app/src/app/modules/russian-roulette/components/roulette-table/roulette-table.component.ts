@@ -137,8 +137,8 @@ export class RouletteTableComponent implements OnDestroy {
     protected readonly game: Signal<RouletteGame> = computed((): RouletteGame => this.session().game());
 
     /** The seat at the bottom of the table: the one of the local player, the first one for a spectator */
-    protected readonly bottomSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().mySeat() ?? RouletteSeat.ONE);
-    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => otherSeat(this.bottomSeat()));
+    protected readonly bottomSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.bottomSeat());
+    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.topSeat());
 
     /** Whether each seat holds the player of the game: once it is over, another participant may take it */
     private readonly gameSeats: Signal<SeatPair<boolean>> = computed((): SeatPair<boolean> => {
@@ -601,24 +601,6 @@ export class RouletteTableComponent implements OnDestroy {
         return { x: rect.left + rect.width / 2 - origin.left, y: rect.top + rect.height / 2 - origin.top };
     }
 
-    /** A participant without a seat takes a free one while the seats are open */
-    protected canTake(seat: RouletteSeat): boolean {
-        const session: RussianRouletteSession = this.session();
-        return session.seatsOpen() && session.seats()[seat] === null && session.mySeat() === null;
-    }
-
-    /** The local player leaves its seat, at the bottom of the table, while the seats are open */
-    protected canLeave(): boolean {
-        return this.session().seatsOpen() && this.session().mySeat() !== null;
-    }
-
-    /** The local player frees the seat of the other player, away, while the seats are open */
-    protected canRelease(seat: RouletteSeat): boolean {
-        const session: RussianRouletteSession = this.session();
-        const name: string | null = session.seats()[seat];
-        return session.seatsOpen() && session.mySeat() === otherSeat(seat) && name !== null && session.awayPlayers().includes(name) && !session.sending();
-    }
-
     protected takeSeat(seat: RouletteSeat): void {
         this.session().takeSeat(seat);
     }
@@ -628,7 +610,7 @@ export class RouletteTableComponent implements OnDestroy {
     }
 
     protected release(seat: RouletteSeat): void {
-        if (this.canRelease(seat)) {
+        if (this.session().tableSeats.canRelease(seat)) {
             this.session().unseat(seat);
         }
     }

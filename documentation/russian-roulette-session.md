@@ -38,6 +38,7 @@ The code lives in `application/frontend/game-app/src/app/modules/russian-roulett
 | `SecretStore` | `modules/mental-poker/classes/secret-store.ts` | Keeps the secrets of the player across the reloads of the page, as for the decks of the poker |
 | `PlayedGame` | `classes/game-sessions/played-game.ts` | A game of the room: its rules, its cylinder, its check and its result, final once checked |
 | `RussianRouletteSession` | `classes/game-sessions/russian-roulette-session.ts` | The games of the room: seats, moves, timeouts, a new game once one is over |
+| `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `RouletteTableComponent` | `components/roulette-table` | Shows the session, turns the clicks into seat requests and moves, and runs the clock of each move |
 | `RouletteCylinderComponent` | `components/roulette-cylinder` | The 24 chambers around the cylinder: buttons while the player places its bullets, then the chambers fired |
 | `RouletteSeatComponent` | `components/roulette-seat` | A seat: its player, its chips and its deaths, a ring and the clock of the move while the game waits for its player, the stamp of a pass, the shot of its player |
@@ -136,6 +137,9 @@ flowchart LR
   `PlayedGame` for each one (see [A new game](#a-new-game)).
 
 ## Seats
+
+The seats are a `TableSeats`, shared with the [Seventeen Poker](seventeen-poker-session.md#seats): the session
+applies its messages in the order of the chain, and tells when the seats are open.
 
 Each participant takes a seat with `Sit here` (`RR_seat`): the first request for a free seat gets it, a participant has
 a single seat, and `Leave the seat` frees it. Once both seats are taken, the session prepares the cylinder of their

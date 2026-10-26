@@ -1,7 +1,7 @@
 import { computed, Signal, signal } from '@angular/core';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
+import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/two-seat-table/classes/table-seats';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -13,7 +13,7 @@ import { CylinderMessage, CylinderMessageType, CylinderPayloads } from '../cylin
 import { CylinderPhase } from '../cylinder/cylinder-state';
 import { RouletteGame, RouletteRules } from '../rules/roulette-game';
 import { PlayedGame } from './played-game';
-import { otherSeat, RouletteSeat, SeatPair, withSeat } from '../rules/roulette-seat';
+import { otherSeat, RouletteSeat, SeatPair } from '../rules/roulette-seat';
 
 export enum RRGameSessionType {
     /** A participant takes a seat, or leaves its seat */
@@ -30,13 +30,6 @@ export enum RRGameSessionType {
     UNSEAT = 'RR_unseat',
 }
 
-export interface RouletteSeatMessage {
-    /** The seat taken, null to leave the seat */
-    seat: RouletteSeat | null;
-    /** The part of the player in the id of the cylinder of the game, drawn for each seat taken */
-    salt?: string;
-}
-
 export interface RouletteMoveMessage {
     /** The index of the game in the room */
     game: number;
@@ -49,20 +42,13 @@ export interface RouletteRematchMessage {
     game: number;
 }
 
-export interface RouletteUnseatMessage {
-    /** The seat freed */
-    seat: RouletteSeat;
-    /** The player of the seat, away: a request applied once another one took the seat frees nothing */
-    name: string;
-}
-
 export interface RouletteGamePayloads {
-    [RRGameSessionType.SEAT]: RouletteSeatMessage;
+    [RRGameSessionType.SEAT]: SeatMessage;
     [RRGameSessionType.PASS]: RouletteMoveMessage;
     [RRGameSessionType.SHOOT]: RouletteMoveMessage;
     [RRGameSessionType.TIMEOUT]: RouletteMoveMessage;
     [RRGameSessionType.REMATCH]: RouletteRematchMessage;
-    [RRGameSessionType.UNSEAT]: RouletteUnseatMessage;
+    [RRGameSessionType.UNSEAT]: UnseatMessage;
 }
 
 export type RoulettePayloads = RouletteGamePayloads & CylinderPayloads;
@@ -95,12 +81,6 @@ export interface RouletteSessionOptions {
     readonly rules?: RouletteRules;
 }
 
-/** A player on its seat, with its part in the id of the cylinder of the game */
-interface SeatedPlayer {
-    readonly name: string;
-    readonly salt: string;
-}
-
 /** A move the game waits for from a player */
 export interface AwaitedMove {
     readonly seat: RouletteSeat;
@@ -113,10 +93,6 @@ export interface AwaitedMove {
 
 /** The messages of a game in progress, which a broken cylinder stops */
 const GAME_MOVES: ReadonlySet<string> = new Set<string>([RRGameSessionType.PASS, RRGameSessionType.SHOOT]);
-
-/** The bytes of the salt of a player */
-const SALT_LENGTH: number = 16;
-const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
 
 /**
  * The 24-shot Russian roulette in a room. The participants take the seats themselves, final once a player loaded its
@@ -140,12 +116,18 @@ export class RussianRouletteSession {
     /** The games over before the one in progress, the first one first */
     public readonly pastGames: Signal<ReadonlyArray<Readonly<PlayedGame>>> = this._pastGames.asReadonly();
 
-    private readonly seated = signal<SeatPair<Readonly<SeatedPlayer> | null>>([null, null]);
-    /** The players of each seat */
-    public readonly seats: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
-        const [one, two] = this.seated();
-        return [one?.name ?? null, two?.name ?? null];
+    private readonly _sending = signal<boolean>(false);
+    /** A move of the local player waits for the chain: it acts once only, a second click sending nothing */
+    public readonly sending: Signal<boolean> = this._sending.asReadonly();
+
+    /** The seats of the table, open until a player loads its bullets, and once the game is settled */
+    public readonly tableSeats = new TableSeats(this.room, {
+        types: { seat: RRGameSessionType.SEAT, unseat: RRGameSessionType.UNSEAT },
+        open: (): boolean => this.seatsOpen(),
+        sending: this.sending,
     });
+    /** The players of each seat */
+    public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
 
     /** The cylinder of the game in progress, once both seats are taken */
     public readonly cylinder: Signal<Cylinder | null> = computed((): Cylinder | null => this._played().cylinder());
@@ -169,25 +151,16 @@ export class RussianRouletteSession {
      */
     public readonly seatsOpen: Signal<boolean> = computed((): boolean => !this.started() || this.settled());
     /** The connected participants without a seat */
-    public readonly spectatorNumber: Signal<number> = computed((): number => {
-        const seats: SeatPair<string | null> = this.seats();
-        return this.room.players().filter(({ name }) => !seats.includes(name)).length;
-    });
-    public readonly mySeat: Signal<RouletteSeat | null> = computed((): RouletteSeat | null => this.seatOf(this.room.localPlayer.name));
+    public readonly spectatorNumber: Signal<number> = this.tableSeats.spectatorNumber;
+    public readonly mySeat: Signal<RouletteSeat | null> = this.tableSeats.mySeat;
     /** The seat of the local player in the game: once over, it may have lost or left it, and still claims a key withheld */
     public readonly myPlayerSeat: Signal<RouletteSeat | null> = computed((): RouletteSeat | null => this.playerSeatOf(this.room.localPlayer.name));
     /** The players of both seats, the ones not connected */
-    public readonly awayPlayers: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const connected: ReadonlySet<string> = new Set<string>(this.room.players().map(({ name }) => name));
-        return this.seats().filter((name: string | null): name is string => name !== null && !connected.has(name));
-    });
+    public readonly awayPlayers: Signal<ReadonlyArray<string>> = this.tableSeats.awayPlayers;
 
     private readonly _step = signal<number>(0);
     /** The moves and the steps of the cylinder applied in the game: a timeout names it, a move made meanwhile voids it */
     public readonly step: Signal<number> = this._step.asReadonly();
-    private readonly _sending = signal<boolean>(false);
-    /** A move of the local player waits for the chain: it acts once only, a second click sending nothing */
-    public readonly sending: Signal<boolean> = this._sending.asReadonly();
     private readonly _historySteps = signal<number>(0);
     /**
      * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
@@ -260,11 +233,11 @@ export class RussianRouletteSession {
     }
 
     public takeSeat(seat: RouletteSeat): void {
-        this.room.transmitMessage(RRGameSessionType.SEAT, { seat, salt: CryptoHelper.randomHex(SALT_LENGTH) });
+        this.tableSeats.takeSeat(seat);
     }
 
     public leaveSeat(): void {
-        this.room.transmitMessage(RRGameSessionType.SEAT, { seat: null });
+        this.tableSeats.leaveSeat();
     }
 
     /** The local player loads its bullets in these chambers */
@@ -302,12 +275,11 @@ export class RussianRouletteSession {
     /** A seated player frees the seat of the other one, away */
     public unseat(seat: RouletteSeat): void {
         this._sending.set(true);
-        this.room.transmitMessage(RRGameSessionType.UNSEAT, { seat, name: this.seats()[seat] as string });
+        this.tableSeats.unseat(seat);
     }
 
     private seatOf(name: string): RouletteSeat | null {
-        const index: number = this.seats().indexOf(name);
-        return index === -1 ? null : index;
+        return this.tableSeats.seatOf(name);
     }
 
     /** The seat of a player of the game, whatever the seats once it is over */
@@ -346,7 +318,9 @@ export class RussianRouletteSession {
 
         switch (message.type) {
             case RRGameSessionType.SEAT:
-                this.onSeat(message);
+                if (this.tableSeats.onSeat(message)) {
+                    this.prepareCylinder();
+                }
                 break;
             case RRGameSessionType.PASS:
             case RRGameSessionType.SHOOT:
@@ -359,7 +333,9 @@ export class RussianRouletteSession {
                 this.onRematch(message);
                 break;
             case RRGameSessionType.UNSEAT:
-                this.onUnseat(message);
+                if (this.tableSeats.onUnseat(message)) {
+                    this.prepareCylinder();
+                }
                 break;
             default:
                 await this.onCylinder(message);
@@ -367,33 +343,11 @@ export class RussianRouletteSession {
     }
 
     /**
-     * A participant has a single seat: taking a seat leaves the other one. The first request for a free seat gets it,
-     * with the salt of its player
-     */
-    private onSeat(message: AppMessage<RRGameSessionType.SEAT, RouletteSeatMessage>): void {
-        const { seat, salt } = message.payload;
-
-        if (!this.seatsOpen() || (seat !== null && seat !== RouletteSeat.ONE && seat !== RouletteSeat.TWO)) {
-            return;
-        }
-
-        const [one, two] = this.seated();
-        const left: SeatPair<Readonly<SeatedPlayer> | null> = [one?.name === message.from ? null : one, two?.name === message.from ? null : two];
-
-        if (seat === null) {
-            this.seated.set(left);
-        } else if (left[seat] === null && typeof salt === 'string' && SALT_PATTERN.test(salt)) {
-            this.seated.set(withSeat(left, seat, { name: message.from, salt }));
-        }
-        this.prepareCylinder();
-    }
-
-    /**
      * Before the game started, the cylinder of the players of the seats, a new one when they change: the first key given
      * makes them final. Once the game is over, the next one gets its cylinder at its start
      */
     private prepareCylinder(): void {
-        const [one, two] = this.seated();
+        const [one, two] = this.tableSeats.seated();
 
         if (this.started() || this.over()) {
             return;
@@ -468,7 +422,7 @@ export class RussianRouletteSession {
         this._step.update((value: number) => value + 1);
         this._played().discloseOnceOver();
         // The player late loses its seat too: it may not come back, and a spectator may take it for the next game
-        this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, late, null));
+        this.tableSeats.free(late);
     }
 
     /**
@@ -483,22 +437,6 @@ export class RussianRouletteSession {
         this._pastGames.update((games: ReadonlyArray<Readonly<PlayedGame>>) => [...games, this._played()]);
         this._played.set(new PlayedGame(this.options.rules));
         this._step.set(0);
-        this.prepareCylinder();
-    }
-
-    /**
-     * A seated player frees the seat of the other one while the seats are open, its page seeing it away: no page can
-     * tell when it was, as for a timeout. A spectator frees none, it could take the seat at once
-     */
-    private onUnseat(message: AppMessage<RRGameSessionType.UNSEAT, RouletteUnseatMessage>): void {
-        const seat: RouletteSeat | null = this.seatOf(message.from);
-        const { seat: freed, name } = message.payload;
-
-        if (seat === null || !this.seatsOpen() || freed !== otherSeat(seat) || this.seats()[freed] !== name) {
-            return;
-        }
-
-        this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, freed, null));
         this.prepareCylinder();
     }
 

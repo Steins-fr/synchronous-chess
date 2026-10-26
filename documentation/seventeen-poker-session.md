@@ -34,6 +34,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
+| `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move |
 | `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock of the move while its player acts, what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
@@ -92,6 +93,9 @@ flowchart LR
   new `PokerMatch` for each one (see [A new match](#a-new-match)).
 
 ## Seats
+
+The seats are a `TableSeats`, shared with the [Russian roulette](russian-roulette-session.md#seats): the session
+applies its messages in the order of the chain, and tells when the seats are open.
 
 Each participant takes a seat with `Sit here`: the first request for a free seat gets it, a participant
 has a single seat, and `Leave the seat` frees it. The seats are final from the first hand of a match until it is

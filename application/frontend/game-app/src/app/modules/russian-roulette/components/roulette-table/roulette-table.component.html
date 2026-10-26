@@ -1,5 +1,6 @@
 <section *transloco="let t; prefix: 'roulette.table'" #tableSection class="relative flex flex-col gap-3 py-4"
     [class.table-shake]="shaking()">
+    @let seats = session().tableSeats;
     @let top = topSeat();
     @let bottom = bottomSeat();
     @let shown = view();
@@ -15,8 +16,8 @@
         [acting]="shownAwaited().includes(top)"
         [timeLeft]="shownAwaited().includes(top) ? timeLeft() : null"
         [turnTime]="game().rules.turnTime"
-        [canTake]="canTake(top)"
-        [canRelease]="canRelease(top)"
+        [canTake]="seats.canTake(top)"
+        [canRelease]="seats.canRelease(top)"
         (take)="takeSeat(top)"
         (release)="release(top)" />
 
@@ -86,8 +87,8 @@
         [acting]="shownAwaited().includes(bottom)"
         [timeLeft]="shownAwaited().includes(bottom) ? timeLeft() : null"
         [turnTime]="game().rules.turnTime"
-        [canTake]="canTake(bottom)"
-        [canLeave]="canLeave()"
+        [canTake]="seats.canTake(bottom)"
+        [canLeave]="seats.canLeave()"
         (take)="takeSeat(bottom)"
         (leave)="leaveSeat()" />
 

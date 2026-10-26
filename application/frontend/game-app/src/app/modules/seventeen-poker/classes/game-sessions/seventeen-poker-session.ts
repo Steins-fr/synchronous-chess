@@ -1,5 +1,4 @@
 import { computed, Signal, signal, WritableSignal } from '@angular/core';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { MentalDeck, DeckVerification } from '@app/modules/mental-poker/classes/mental-deck';
 import { MentalDeckTable } from '@app/modules/mental-poker/classes/mental-deck-table';
@@ -7,6 +6,7 @@ import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
 import { SraCipher } from '@app/modules/mental-poker/classes/sra-cipher';
 import { mentalDeckBlockChains, MentalDeckPayloads } from '@app/modules/mental-poker/mental-deck-messages';
 import { PlayingCard } from '@app/modules/playing-cards/types/playing-card';
+import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/two-seat-table/classes/table-seats';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainRouting, mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -34,13 +34,6 @@ export enum SPGameSessionType {
     REMATCH = 'SP_rematch',
     /** A player frees the seat of the other one, away while the seats are open */
     UNSEAT = 'SP_unseat',
-}
-
-export interface PokerSeatMessage {
-    /** The seat taken, null to leave the seat */
-    seat: PokerSeat | null;
-    /** The part of the player in the ids of the decks of the match, drawn for each seat taken */
-    salt?: string;
 }
 
 export interface PokerDealMessage {
@@ -72,21 +65,14 @@ export interface PokerRematchMessage {
     match: number;
 }
 
-export interface PokerUnseatMessage {
-    /** The seat freed */
-    seat: PokerSeat;
-    /** The player of the seat, away: a request applied once another one took the seat frees nothing */
-    name: string;
-}
-
 export interface PokerGamePayloads {
-    [SPGameSessionType.SEAT]: PokerSeatMessage;
+    [SPGameSessionType.SEAT]: SeatMessage;
     [SPGameSessionType.DEAL]: PokerDealMessage;
     [SPGameSessionType.BET]: PokerBetMessage;
     [SPGameSessionType.EXCHANGE]: PokerExchangeMessage;
     [SPGameSessionType.TIMEOUT]: PokerTimeoutMessage;
     [SPGameSessionType.REMATCH]: PokerRematchMessage;
-    [SPGameSessionType.UNSEAT]: PokerUnseatMessage;
+    [SPGameSessionType.UNSEAT]: UnseatMessage;
 }
 
 export type PokerPayloads = PokerGamePayloads & MentalDeckPayloads;
@@ -130,20 +116,10 @@ export interface PokerSessionOptions {
     readonly rules?: PokerMatchRules;
 }
 
-/** A player on its seat, with its part in the ids of the decks of the match */
-interface SeatedPlayer {
-    readonly name: string;
-    readonly salt: string;
-}
-
 /** The messages of a match in progress, which a broken deck stops */
 const MATCH_MOVES: ReadonlySet<SPGameSessionType> = new Set<SPGameSessionType>([
     SPGameSessionType.DEAL, SPGameSessionType.BET, SPGameSessionType.EXCHANGE, SPGameSessionType.TIMEOUT,
 ]);
-
-/** The bytes of the salt of a player */
-const SALT_LENGTH: number = 16;
-const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
 
 /**
  * The Seventeen Poker in a room. The participants take the seats themselves, final from the first hand of a match until
@@ -167,12 +143,18 @@ export class SeventeenPokerSession {
     /** The matches over before the one in progress, the first one first */
     public readonly pastMatches: Signal<ReadonlyArray<Readonly<PlayedMatch>>> = this._pastMatches.asReadonly();
 
-    private readonly seated = signal<SeatPair<Readonly<SeatedPlayer> | null>>([null, null]);
-    /** The players of each seat */
-    public readonly seats: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
-        const [one, two] = this.seated();
-        return [one?.name ?? null, two?.name ?? null];
+    private readonly _sending = signal<boolean>(false);
+    /** An action of the local player waits for the chain: it acts once only, a second click sending nothing */
+    public readonly sending: Signal<boolean> = this._sending.asReadonly();
+
+    /** The seats of the table, open before the first hand of a match, and once it is over */
+    public readonly tableSeats = new TableSeats(this.room, {
+        types: { seat: SPGameSessionType.SEAT, unseat: SPGameSessionType.UNSEAT },
+        open: (): boolean => this.seatsOpen(),
+        sending: this.sending,
     });
+    /** The players of each seat */
+    public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
     /** The players of the match, the ones of the seats until its first hand: the seats may change once it is over */
     public readonly players: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
         // A hand of the match has its deck, shuffled by both players
@@ -182,16 +164,10 @@ export class SeventeenPokerSession {
     /** The seats are open before the first hand of a match, and once it is over */
     public readonly seatsOpen: Signal<boolean> = computed((): boolean => this.match().hand() === null || this.over());
     /** The connected participants without a seat */
-    public readonly spectatorNumber: Signal<number> = computed((): number => {
-        const seats: SeatPair<string | null> = this.seats();
-        return this.room.players().filter(({ name }) => !seats.includes(name)).length;
-    });
-    public readonly mySeat: Signal<PokerSeat | null> = computed((): PokerSeat | null => this.seatOf(this.room.localPlayer.name));
+    public readonly spectatorNumber: Signal<number> = this.tableSeats.spectatorNumber;
+    public readonly mySeat: Signal<PokerSeat | null> = this.tableSeats.mySeat;
     /** The players of both seats, the ones not connected: a hand is dealt to connected players only */
-    public readonly awayPlayers: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const connected: ReadonlySet<string> = new Set<string>(this.room.players().map(({ name }) => name));
-        return this.seats().filter((name: string | null): name is string => name !== null && !connected.has(name));
-    });
+    public readonly awayPlayers: Signal<ReadonlyArray<string>> = this.tableSeats.awayPlayers;
 
     private readonly _deck = signal<MentalDeck | null>(null);
     /** The deck of the hand in progress, else of the latest */
@@ -199,9 +175,6 @@ export class SeventeenPokerSession {
     private readonly _positions = signal<SeatPair<ReadonlyArray<number>>>([[], []]);
     /** The positions in the deck of the cards of each player */
     public readonly positions: Signal<SeatPair<ReadonlyArray<number>>> = this._positions.asReadonly();
-    private readonly _sending = signal<boolean>(false);
-    /** An action of the local player waits for the chain: it acts once only, a second click sending nothing */
-    public readonly sending: Signal<boolean> = this._sending.asReadonly();
     private readonly _dealing = signal<boolean>(false);
     /** Cards are being dealt: the game waits for every player to read them */
     public readonly dealing: Signal<boolean> = this._dealing.asReadonly();
@@ -276,11 +249,11 @@ export class SeventeenPokerSession {
     }
 
     public takeSeat(seat: PokerSeat): void {
-        this.room.transmitMessage(SPGameSessionType.SEAT, { seat, salt: CryptoHelper.randomHex(SALT_LENGTH) });
+        this.tableSeats.takeSeat(seat);
     }
 
     public leaveSeat(): void {
-        this.room.transmitMessage(SPGameSessionType.SEAT, { seat: null });
+        this.tableSeats.leaveSeat();
     }
 
     /** The dealer starts the next hand */
@@ -316,12 +289,11 @@ export class SeventeenPokerSession {
     /** A seated player frees the seat of the other one, away */
     public unseat(seat: PokerSeat): void {
         this._sending.set(true);
-        this.room.transmitMessage(SPGameSessionType.UNSEAT, { seat, name: this.seats()[seat] as string });
+        this.tableSeats.unseat(seat);
     }
 
     private seatOf(name: string): PokerSeat | null {
-        const index: number = this.seats().indexOf(name);
-        return index === -1 ? null : index;
+        return this.tableSeats.seatOf(name);
     }
 
     private async handle(message: PokerGameMessage): Promise<void> {
@@ -354,7 +326,7 @@ export class SeventeenPokerSession {
 
         switch (message.type) {
             case SPGameSessionType.SEAT:
-                this.onSeat(message);
+                this.tableSeats.onSeat(message);
                 break;
             case SPGameSessionType.DEAL:
                 await this.onDeal(message);
@@ -372,34 +344,13 @@ export class SeventeenPokerSession {
                 this.onRematch(message);
                 break;
             case SPGameSessionType.UNSEAT:
-                this.onUnseat(message);
+                this.tableSeats.onUnseat(message);
                 break;
         }
     }
 
-    /**
-     * A participant has a single seat: taking a seat leaves the other one. The first request for a free seat gets it,
-     * with the salt of its player
-     */
-    private onSeat(message: AppMessage<SPGameSessionType.SEAT, PokerSeatMessage>): void {
-        const { seat, salt } = message.payload;
-
-        if (!this.seatsOpen() || (seat !== null && seat !== PokerSeat.ONE && seat !== PokerSeat.TWO)) {
-            return;
-        }
-
-        const [one, two] = this.seated();
-        const left: SeatPair<Readonly<SeatedPlayer> | null> = [one?.name === message.from ? null : one, two?.name === message.from ? null : two];
-
-        if (seat === null) {
-            this.seated.set(left);
-        } else if (left[seat] === null && typeof salt === 'string' && SALT_PATTERN.test(salt)) {
-            this.seated.set(withSeat(left, seat, { name: message.from, salt }));
-        }
-    }
-
     private async onDeal(message: AppMessage<SPGameSessionType.DEAL, PokerDealMessage>): Promise<void> {
-        const [one, two] = this.seated();
+        const [one, two] = this.tableSeats.seated();
         const { hand } = message.payload;
 
         if (one === null || two === null || this.seatOf(message.from) !== this.match().dealer() || hand !== this.match().nextHand() || !this.match().startHand()) {
@@ -484,7 +435,7 @@ export class SeventeenPokerSession {
         }
 
         // The player away loses its seat too: it may not come back, and a spectator may take it for the next match
-        this.freeSeat(otherSeat(seat));
+        this.tableSeats.free(otherSeat(seat));
         this.verifyOnceOver();
     }
 
@@ -506,25 +457,6 @@ export class SeventeenPokerSession {
         this._deck.set(null);
         this._positions.set([[], []]);
         this._verification.set(signal<DeckVerification>(DeckVerification.PENDING));
-    }
-
-    /**
-     * A seated player frees the seat of the other one while the seats are open, its page seeing it away: no page can
-     * tell when it was, as for a timeout. A spectator frees none, it could take the seat at once
-     */
-    private onUnseat(message: AppMessage<SPGameSessionType.UNSEAT, PokerUnseatMessage>): void {
-        const seat: PokerSeat | null = this.seatOf(message.from);
-        const { seat: freed, name } = message.payload;
-
-        if (seat === null || !this.seatsOpen() || freed !== otherSeat(seat) || this.seats()[freed] !== name) {
-            return;
-        }
-
-        this.freeSeat(freed);
-    }
-
-    private freeSeat(seat: PokerSeat): void {
-        this.seated.update((seats: SeatPair<Readonly<SeatedPlayer> | null>) => withSeat(seats, seat, null));
     }
 
     /**

@@ -81,8 +81,8 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly seatTwo: PokerSeat = PokerSeat.TWO;
 
     /** The seat at the bottom of the table: the one of the local player, the first one for a spectator */
-    protected readonly bottomSeat: Signal<PokerSeat> = computed((): PokerSeat => this.session().mySeat() ?? PokerSeat.ONE);
-    protected readonly topSeat: Signal<PokerSeat> = computed((): PokerSeat => otherSeat(this.bottomSeat()));
+    protected readonly bottomSeat: Signal<PokerSeat> = computed((): PokerSeat => this.session().tableSeats.bottomSeat());
+    protected readonly topSeat: Signal<PokerSeat> = computed((): PokerSeat => this.session().tableSeats.topSeat());
 
     /** Whether each seat holds the player of the match: once it is over, another participant may take it */
     private readonly matchSeats: Signal<SeatPair<boolean>> = computed((): SeatPair<boolean> => {
@@ -323,24 +323,6 @@ export class PokerTableComponent implements OnDestroy {
         this.session().destroy();
     }
 
-    /** A participant without a seat takes a free one while the seats are open */
-    protected canTake(seat: PokerSeat): boolean {
-        const session: SeventeenPokerSession = this.session();
-        return session.seatsOpen() && session.seats()[seat] === null && session.mySeat() === null;
-    }
-
-    /** The local player leaves its seat, at the bottom of the table, while the seats are open */
-    protected canLeave(): boolean {
-        return this.session().seatsOpen() && this.session().mySeat() !== null;
-    }
-
-    /** The local player frees the seat of the other player, away, while the seats are open */
-    protected canRelease(seat: PokerSeat): boolean {
-        const session: SeventeenPokerSession = this.session();
-        const name: string | null = session.seats()[seat];
-        return session.seatsOpen() && session.mySeat() === otherSeat(seat) && name !== null && session.awayPlayers().includes(name) && !session.sending();
-    }
-
     /** The chips the player of a seat won in the hand over, while it keeps the seat */
     protected gain(seat: PokerSeat): number {
         return this.matchSeats()[seat] ? this.outcome()?.gains[seat] ?? 0 : 0;
@@ -372,7 +354,7 @@ export class PokerTableComponent implements OnDestroy {
     }
 
     protected release(seat: PokerSeat): void {
-        if (this.canRelease(seat)) {
+        if (this.session().tableSeats.canRelease(seat)) {
             this.session().unseat(seat);
         }
     }
