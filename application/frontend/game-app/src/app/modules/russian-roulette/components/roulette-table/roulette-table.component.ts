@@ -1,4 +1,3 @@
-import { NgTemplateOutlet } from '@angular/common';
 import {
     afterNextRender, afterRenderEffect, Component, computed, DestroyRef, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
@@ -7,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
+import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
@@ -114,7 +114,7 @@ interface PastResult {
     selector: 'app-roulette-table',
     templateUrl: './roulette-table.component.html',
     styleUrl: './roulette-table.component.scss',
-    imports: [ChipFlightsComponent, ChipStackComponent, MatButtonModule, NgTemplateOutlet, RouletteCylinderComponent, RouletteRevolverComponent, RouletteSeatComponent, TranslocoDirective, TranslocoPipe],
+    imports: [ChipFlightsComponent, ChipStackComponent, MatButtonModule, RouletteCylinderComponent, RouletteRevolverComponent, RouletteSeatComponent, SteadyHeightDirective, TranslocoDirective, TranslocoPipe],
     host: { class: 'block max-w-[720px] mx-auto px-4' },
 })
 export class RouletteTableComponent implements OnDestroy {
@@ -233,8 +233,8 @@ export class RouletteTableComponent implements OnDestroy {
             ? cylinder.bullets()
             : [];
     });
-    /** The cylinder is loaded and spun, the first shooter drawn: it lies beside the revolver, in the middle of the cloth */
-    protected readonly cylinderSpun: Signal<boolean> = computed((): boolean => this.game().first() !== null);
+    /** The players load the cylinder, until it is spun and the first shooter drawn: it shows larger */
+    protected readonly loading: Signal<boolean> = computed((): boolean => this.game().first() === null);
     /** The players load and spin the cylinder, until the game is lost on time */
     protected readonly spinning: Signal<boolean> = computed((): boolean => {
         const phase: CylinderPhase | undefined = this.session().cylinder()?.phase();
@@ -425,8 +425,7 @@ export class RouletteTableComponent implements OnDestroy {
     });
 
     private readonly _resized = signal<number>(0);
-    // The table changes its size with the window, a move told or the cloth of the cylinder spun: the revolver finds its
-    // place again
+    // The table changes its size with the window, a move told or the cylinder loaded: the revolver finds its place again
     private readonly resizing = afterNextRender(() => {
         const observer = new ResizeObserver(() => this._resized.update((resizes: number) => resizes + 1));
         observer.observe(this.tableView().nativeElement);
@@ -437,7 +436,7 @@ export class RouletteTableComponent implements OnDestroy {
     private readonly revolverPlacing = afterRenderEffect({
         earlyRead: (): Readonly<RevolverPlace> => {
             this._resized();
-            this.cylinderSpun();
+            this.loading();
             return this.revolverPoint(this.target());
         },
         write: (place: Signal<Readonly<RevolverPlace>>): void => {

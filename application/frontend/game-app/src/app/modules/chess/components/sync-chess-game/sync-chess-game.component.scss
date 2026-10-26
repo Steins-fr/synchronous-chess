@@ -2,7 +2,13 @@
     display: flex;
     flex-direction: column;
 
+    // A seat keeps the height of its button, shown or not
     .player {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
         width: 100%;
         text-align: center;
 
@@ -11,12 +17,6 @@
         }
     }
 
-    .game-result {
-        margin: 8px 0;
-        text-align: center;
-        font-size: 20px;
-        font-weight: bold;
-    }
 
     #board-section {
         display: flex;
@@ -25,6 +25,23 @@
         #chess-board {
             flex: auto;
             position: relative;
+
+            .game-result {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                z-index: 1;
+                max-width: 90%;
+                padding: 8px 16px;
+                border-radius: 12px;
+                background-color: var(--app-surface-raised);
+                box-shadow: 0 4px 16px color-mix(in srgb, var(--app-shadow) 50%, transparent);
+                transform: translate(-50%, -50%);
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                pointer-events: none;
+            }
 
             #promotion-title {
                 position: absolute;

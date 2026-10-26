@@ -9,6 +9,7 @@ import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
 import { CardDeckComponent } from '@app/modules/playing-cards/components/card-deck/card-deck.component';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
+import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -50,7 +51,7 @@ interface PastResult {
     selector: 'app-poker-table',
     templateUrl: './poker-table.component.html',
     styleUrl: './poker-table.component.scss',
-    imports: [CardDeckComponent, CardHandComponent, ChipFlightsComponent, ChipStackComponent, MatButtonModule, PokerSeatComponent, TranslocoDirective, TranslocoPipe],
+    imports: [CardDeckComponent, CardHandComponent, ChipFlightsComponent, ChipStackComponent, MatButtonModule, PokerSeatComponent, SteadyHeightDirective, TranslocoDirective, TranslocoPipe],
     host: { class: 'block max-w-[720px] mx-auto px-4' },
 })
 export class PokerTableComponent implements OnDestroy {

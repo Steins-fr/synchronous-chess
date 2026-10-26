@@ -60,9 +60,9 @@
     @apply m-0 text-center font-medium;
 }
 
-/* A hand of the poker table, dimmed when it loses */
+/* A hand of the poker table, dimmed when it loses: its place is kept before the deal, a card (5/7) and the room of its fan */
 @utility table-hand {
-    @apply transition-opacity duration-(--app-motion-medium);
+    @apply min-h-[calc(var(--app-card-width)*7/5+3rem)] transition-opacity duration-(--app-motion-medium);
 }
 
 /* A game of the home page: the whole card links to its page */

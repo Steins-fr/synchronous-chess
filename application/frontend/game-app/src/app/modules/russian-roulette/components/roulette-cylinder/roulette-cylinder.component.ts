@@ -43,7 +43,7 @@ interface ChamberView {
     templateUrl: './roulette-cylinder.component.html',
     styleUrl: './roulette-cylinder.component.scss',
     imports: [TranslocoDirective, TranslocoPipe],
-    host: { 'class': 'block', '[class.compact]': 'compact()' },
+    host: { 'class': 'block', '[class.large]': 'large()' },
 })
 export class RouletteCylinderComponent {
     public readonly chambers = input.required<number>();
@@ -59,8 +59,8 @@ export class RouletteCylinderComponent {
     public readonly fired = input<ReadonlyArray<number>>([]);
     /** The players load and spin the cylinder */
     public readonly spinning = input<boolean>(false);
-    /** The cylinder spun lies beside the revolver, twice its height */
-    public readonly compact = input<boolean>(false);
+    /** The players load it: larger, its chambers buttons easy to touch */
+    public readonly large = input<boolean>(false);
 
     protected readonly state: typeof ChamberState = ChamberState;
 

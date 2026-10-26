@@ -20,6 +20,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { ChessPromotionComponent } from '../chess/chess-promotion/chess-promotion.component';
 import { ChessBoardComponent } from '../chess/chess-board/chess-board.component';
 import { ChessPieceComponent } from '../chess/chess-piece/chess-piece.component';
+import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
 import { TranslatableText } from '@app/types/translatable-text.type';
@@ -30,7 +31,7 @@ import { scopedKey } from '@app/services/language/scoped-key';
     selector: 'app-sync-chess-game',
     templateUrl: './sync-chess-game.component.html',
     styleUrls: ['./sync-chess-game.component.scss'],
-    imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent, TranslocoDirective, TranslocoPipe],
+    imports: [ChessBoardComponent, ChessPromotionComponent, MatButtonModule, ChessPieceComponent, SteadyHeightDirective, TranslocoDirective, TranslocoPipe],
 })
 export class SyncChessGameComponent implements OnDestroy {
     public readonly room = input.required<Room<ChessPayloads> | undefined>();

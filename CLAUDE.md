@@ -117,6 +117,8 @@ the scenarios of the rooms, with one browser context per player connected throug
 and the game app, or reuses the ones running on ports 3001 and 4200, and stops what it started. Local only, not
 run by the CI.
 
+- The pages of the games never jump: `e2e/page-steadiness.ts` records where elements lie at each frame
+  (`watchSteadiness()`), and a scenario of each game checks that none of them moved (`movedElements()`).
 - One-time setup: `npx playwright install chromium` in the game app (the browser of `@playwright/test`, apart
   from the one of the MCP).
 - `e2e/test-room.ts` gives each test a room of its own (`room` fixture, a chat room; `new TestRoom(browser, path)` for
@@ -144,6 +146,7 @@ run by the CI.
   `mouse.up()`. The cells are `#board-grid mat-grid-tile`, rank 8 and the A column first, flipped for the
   board seen from black (the black player, a spectator who may take black): rank 1 and the H column first.
 - `page.context().pages()` reaches every tab from one script, to compare the boards after a turn.
+- `e2e/synchronous-chess.e2e.ts` drives a game the same way, in a window holding the whole board (`drag()`).
 - The MCP only records the console of the selected tab: select each tab and call
   `mcp__playwright__browser_console_messages` to check it.
 

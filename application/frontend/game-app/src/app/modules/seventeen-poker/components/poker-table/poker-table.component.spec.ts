@@ -506,7 +506,8 @@ describe('PokerTableComponent', () => {
         expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#seat-bottom')).toEqual('alice142 chips');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
-        expect(element().querySelectorAll('p.table-line')).toHaveLength(0);
+        // A folded hand is not shown: no kind of hand
+        expect(Array.from(element().querySelectorAll('p.table-line'), (line: Element) => line.textContent?.trim())).toEqual(['', '']);
         // The pot flies to Bob, the bets with it
         expect(flights()).toEqual([['1', '1', '1'], ['1', '1', '1', '1'], ['5', '5']]);
     });
@@ -723,7 +724,7 @@ describe('PokerTableComponent', () => {
 
         // Then
         expect(status()).toEqual('A deck was cheated: the match stops.');
-        expect(element().querySelector('p.muted-note')).toBeNull();
+        expect(text('p.muted-note')).toEqual('');
 
         // When
         await click('Play again');
@@ -749,7 +750,7 @@ describe('PokerTableComponent', () => {
             // Then
             expect(text('.badge')).toEqual('alice wins the match with 155 chips.');
             expect(element().querySelector('.badge')?.classList).toContain('badge-win');
-            expect(element().querySelector('output')).toBeNull();
+            expect(status()).toEqual('');
             expect(button('Deal')).toBeUndefined();
             expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 11.');
             await until(() => text('p.muted-note') === 'Every deck was fair.');
@@ -793,7 +794,8 @@ describe('PokerTableComponent', () => {
             expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips. Every deck was fair.');
             expect(text('#seat-bottom')).toEqual('alice150 chipsLeave the seat');
             expect(text('#seat-top')).toEqual('bob150 chips');
-            expect(element().querySelectorAll('details')).toHaveLength(1);
+            // No hand played in the new match
+            expect(element().querySelectorAll('details:not(#past-matches) li')).toHaveLength(0);
             expect(cards(1)).toEqual([]);
             expect(flights()).toEqual([]);
 
@@ -882,7 +884,7 @@ describe('PokerTableComponent', () => {
 
             // Then
             await until(() => text('#past-matches li') === 'Match 1: alice wins the match with 155 chips. Every deck was fair.');
-            expect(element().querySelector('p.muted-note')).toBeNull();
+            expect(text('p.muted-note')).toEqual('');
         });
 
         test.each<{ verification: Promise<DeckVerification>; text: string }>([

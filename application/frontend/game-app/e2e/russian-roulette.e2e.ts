@@ -1,4 +1,5 @@
 import { expect, Locator } from '@playwright/test';
+import { movedElements, watchSteadiness } from './page-steadiness';
 import { RoomParticipant } from './room-participant';
 import { SLOW, test as roomTest, TestRoom } from './test-room';
 
@@ -51,6 +52,9 @@ async function loaded(alice: RoomParticipant, bob: RoomParticipant, carol: RoomP
 async function actor(alice: RoomParticipant, bob: RoomParticipant, carol: RoomParticipant): Promise<RoomParticipant> {
     return (await table(carol).getByRole('status').textContent())?.startsWith('alice') ? alice : bob;
 }
+
+/** What stays in place on the page of the roulette while the game is played: the seats, the status, the page below the table */
+const STEADY: ReadonlyArray<string> = ['#seat-top', '#seat-bottom', 'app-roulette-table output', '#past-games'];
 
 /** A shot shows once the revolver held 3.5 seconds in front of the player, then fired */
 const SHOT_TIME: number = 10_000;
@@ -114,6 +118,7 @@ test.describe('Russian roulette', () => {
         // Up to 24 shots of 5 seconds
         test.setTimeout(240_000);
         const [alice, bob, carol] = await seated(roulette);
+        await Promise.all([alice, bob, carol].map(({ page }) => watchSteadiness(page, STEADY)));
         await loaded(alice, bob, carol);
         expect((await chambers(carol)).every((label: string) => /^Chamber \d+$/.test(label))).toBe(true);
 
@@ -131,6 +136,26 @@ test.describe('Russian roulette', () => {
         expect(bullets).toEqual(6);
         expect(await chambers(alice)).toEqual(await chambers(carol));
         await expect(table(alice).getByRole('button', { name: 'Play again' })).toBeVisible();
+        // The cylinder spun, the buttons, the moves and the result moved nothing
+        for (const participant of [alice, bob, carol]) {
+            // eslint-disable-next-line no-await-in-loop -- the pages one after the other
+            expect(await movedElements(participant.page), participant.name).toEqual([]);
+        }
+    });
+
+    test('keeps the seats, the status and the page below the table in place while the moves are played', async ({ roulette }) => {
+        const [alice, bob, carol] = await seated(roulette);
+        await Promise.all([alice, bob, carol].map(({ page }) => watchSteadiness(page, STEADY)));
+
+        await loaded(alice, bob, carol);
+        await play(/^Pass \(1\)$/, alice, bob, carol);
+        await play('Shoot', alice, bob, carol);
+        await expect(table(await actor(alice, bob, carol)).getByRole('button', { name: /^Pass/ })).toBeVisible({ timeout: SHOT_TIME });
+
+        for (const participant of [alice, bob, carol]) {
+            // eslint-disable-next-line no-await-in-loop -- the pages one after the other
+            expect(await movedElements(participant.page), participant.name).toEqual([]);
+        }
     });
 
     test('gives the table to the bank after 5 passes in a row, and reveals the next chamber', async ({ roulette }) => {

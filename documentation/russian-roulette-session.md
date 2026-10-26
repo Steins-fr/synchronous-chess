@@ -244,15 +244,23 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
   chambers are buttons (`aria-pressed`, 3 at most); its bullets show until the spins; then the cylinder turns at each
   shot, the chamber to fire under the hammer, the chambers fired showing empty, a bullet, or two. It turns on itself
   while the players load and spin it.
-- The revolver, from its side, lying on the cloth (see [A shot on the table](#a-shot-on-the-table)). Once the cylinder
-  is spun, the revolver lies in the vertical middle of the cloth, the cylinder at its right, twice its height, both
-  centered together. The table observes its size (`ResizeObserver`): the revolver finds its place again once the window
+- The revolver, from its side, lying on the cloth (see [A shot on the table](#a-shot-on-the-table)), the cylinder at its
+  right, twice its height, both centered together. While the players load it, the cylinder is larger: each chamber, a
+  button, is a target of 24 pixels at least (WCAG 2.5.8), in the room of the chips of the table, hidden until the
+  cylinder is spun; on a phone, the revolver lies below it then. The table observes its size (`ResizeObserver`): the revolver finds its place again once the window
   is resized, or a move told.
 - A status line (`<output>`, of the role `status`): what the table waits for.
 - The moves of the player: `Load (n/3)`, `Shoot`, `Pass (price)`, disabled when the player can not pay.
 - The result, provisional until the cylinder is checked, then the check; the moves of the game, folded below the
   table; `Play again` for its players, `Free the seat` on the seat of the other player away; the results of the former
   games, folded below the table (`Games played`).
+
+The page never jumps: what comes and goes keeps its place. The status line and the row of the moves are always there,
+empty or not, as are the lines of the result and of its check, the place of the latest move on the cloth (two lines),
+and the moves of the game and the former games below the table. The cloth, the seats and the block of the status keep
+the tallest height they had (`SteadyHeightDirective` of `modules/room-layout`): a text on two lines in another language
+or on a phone moves nothing. On a phone, a seat keeps two
+rows, the status and the result two lines.
 
 The animations use CSS only, and stop under `prefers-reduced-motion`: the shot keeps its hold, the result waiting for
 it, without trembling nor recoil.

@@ -24,13 +24,13 @@ describe('RouletteCylinderComponent', () => {
         expect(buttons()).toEqual([]);
     });
 
-    test('should lie beside the revolver once spun', async () => {
+    test('should show larger while the players load it', async () => {
         // When
-        fixture.componentRef.setInput('compact', true);
+        fixture.componentRef.setInput('large', true);
         await fixture.whenStable();
 
         // Then
-        expect(element().classList).toContain('compact');
+        expect(element().classList).toContain('large');
     });
 
     test('should let the player pick the chambers of its bullets, no more than its bullets', async () => {

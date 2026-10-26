@@ -33,7 +33,8 @@ const CHIP_COLORS: Readonly<Record<ChipValue, string>> = {
     selector: 'app-chip-stack',
     templateUrl: './chip-stack.component.html',
     styleUrl: './chip-stack.component.scss',
-    host: { 'class': 'inline-grid items-end pt-[0.6rem]', 'aria-hidden': 'true', '[class.still]': '!placed() || !growing()' },
+    // An empty stack keeps the height of a chip: its chips coming move nothing around it
+    host: { 'class': 'inline-grid items-end min-h-[1.85rem] pt-[0.6rem]', 'aria-hidden': 'true', '[class.still]': '!placed() || !growing()' },
 })
 export class ChipStackComponent {
     public readonly amount = input.required<number>();

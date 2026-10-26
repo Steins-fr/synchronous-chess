@@ -1,22 +1,18 @@
 // The cylinder, a disc of steel, its chambers on a circle around its axis. The chambers place themselves by their angle
-// (--angle), the disc turns by --turn: the chamber to fire comes under the hammer, at the top
+// (--angle), the disc turns by --turn: the chamber to fire comes under the hammer, at the top. It lies beside the
+// revolver, twice its height, smaller on a narrow phone: the cloth holds the revolver (9rem), the gap between them and
+// the gutters of the table and of the cloth beside it
 .cylinder {
     position: relative;
-    width: min(18rem, 80vw);
+    width: min(9rem, calc(100vw - 13.75rem));
     aspect-ratio: 1;
     margin-inline: auto;
 }
 
-// Beside the revolver once spun: twice its height, smaller on a narrow phone, the cloth holding the revolver (9rem), the
-// gap between them and the gutters of the table and of the cloth beside it
-:host(.compact) .cylinder {
-    width: min(9rem, calc(100vw - 13.75rem));
-}
-
-// The count of a chamber of two bullets fits its smaller hole
-:host(.compact) .double-count {
-    font-size: 0.5rem;
-    line-height: 1;
+// While the players load it, larger: each chamber, a button, is a target of 24 pixels at least (11% of 15.5rem). It
+// fits the cloth of the narrowest phone, the gutters of the table and of the cloth beside it
+:host(.large) .cylinder {
+    width: min(15.5rem, calc(100vw - 4rem));
 }
 
 .cylinder-body {

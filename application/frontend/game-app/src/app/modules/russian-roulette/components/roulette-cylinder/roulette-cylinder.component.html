@@ -20,7 +20,7 @@
             [style.--angle.deg]="chamber.angle"
             [attr.aria-label]="chamber.label | transloco: { number: chamber.index + 1 }">
             @if (chamber.state === state.DOUBLE) {
-            <span class="double-count m-auto text-xs font-bold text-app-card-ink" aria-hidden="true">2</span>
+            <span class="double-count m-auto text-[0.5rem] leading-none font-bold text-app-card-ink" aria-hidden="true">2</span>
             }
         </span>
         }

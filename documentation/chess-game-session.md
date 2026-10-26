@@ -227,10 +227,14 @@ room, the game replaces the presentation, and the rules are folded below it.
   `Leave the seat`. Both seats taken, a spectator sees the board from white.
 - **Turn.** The type of the turn, whether each color has played, the last move of each color, the check
   and checkmate states.
-- **End of the game.** Above the board, the winner or the reason of the draw.
+- **End of the game.** Over the board, the winner or the reason of the draw: the board does not move.
 - **Actions.** The local player drags the pieces of `playingColor` only; `Pass` skips an intermediate
   turn; a promotion turn shows the pieces to choose from.
 - **Spectators.** `Spectators: n`.
+
+The page never jumps: a seat keeps the height of its button, shown or not, and the tallest height it had
+(`SteadyHeightDirective` of `modules/room-layout`). `e2e/synchronous-chess.e2e.ts` plays a game to its checkmate,
+each player seeing the board from its side, and checks that the seats, the board and the page below them never move.
 
 ## Limits
 

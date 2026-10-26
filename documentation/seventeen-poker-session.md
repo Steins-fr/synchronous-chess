@@ -249,6 +249,14 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 - The results of the former matches of the room, each one with the check of its decks, folded below the table
   (`Matches played`).
 
+The page never jumps: what comes and goes keeps its place. The hands keep the height of a card before the deal, the
+lines of the kinds of hands, the count of the hands and the outcome of a hand theirs on the cloth, and the status line,
+the row of the actions and the lines of the result and of the check of the decks are always there, empty or not, as
+are the hands played and the former matches below the table. The cloth, the seats and the block of the status keep the
+tallest height they had (`SteadyHeightDirective` of `modules/room-layout`): a text on two lines in another language or
+on a phone moves nothing. On a phone, a seat keeps two rows, the status, the outcome of a hand and the result two
+lines, and the actions two rows: the amount of a bet below them.
+
 The animations (the deal, the turn over of the cards, the riffle, the chips, the ring) use
 `animate.enter` / `animate.leave` and CSS only, and stop under `prefers-reduced-motion`. Once the table
 shows a change of its chips, `chipTransfers` tells the chips it moved: a bet from a stack to the cloth,

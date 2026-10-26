@@ -1,4 +1,5 @@
 import { expect, Locator } from '@playwright/test';
+import { movedElements, watchSteadiness } from './page-steadiness';
 import { RoomParticipant } from './room-participant';
 import { SLOW, test as roomTest, TestRoom } from './test-room';
 
@@ -20,6 +21,9 @@ function hand(participant: RoomParticipant, index: number): Locator {
 }
 
 const FACE_DOWN: string[] = Array.from({ length: 5 }, () => 'Face-down card');
+
+/** What stays in place on the page of the poker while the match is played: the seats, the status, the page below the table */
+const STEADY: ReadonlyArray<string> = ['#seat-top', '#seat-bottom', 'app-poker-table output', '#past-matches'];
 
 /** Alice sits on the first seat, at the bottom of her table, Bob on the second one, Carol watches */
 async function seated(room: TestRoom): Promise<RoomParticipant[]> {
@@ -66,6 +70,20 @@ async function cardsOf(participant: RoomParticipant, index: number): Promise<str
 }
 
 test.describe('Seventeen poker', () => {
+    test('keeps the seats, the status and the page below the table in place until the match is over', async ({ poker }) => {
+        const [alice, bob, carol] = await seated(poker);
+        await Promise.all([alice, bob, carol].map(({ page }) => watchSteadiness(page, STEADY)));
+
+        // The hands dealt, the bets, the exchange, the showdown and the result of the match
+        await allIn(alice, bob, carol);
+        await expect(table(carol).getByText('Every deck was fair.')).toBeVisible();
+
+        for (const participant of [alice, bob, carol]) {
+            // eslint-disable-next-line no-await-in-loop -- the pages one after the other
+            expect(await movedElements(participant.page), participant.name).toEqual([]);
+        }
+    });
+
     test('plays a hand to the showdown, the spectator seeing the hands then only', async ({ poker }) => {
         const [alice, bob, carol] = await seated(poker);
         await deal(alice, bob);
