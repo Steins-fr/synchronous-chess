@@ -12,13 +12,12 @@ import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning'
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
 import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
-import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-debug.component';
 
 @Component({
     selector: 'app-synchronous-chess',
     templateUrl: './synchronous-chess.html',
     imports: [
-        RoomLayoutComponent, SyncChessGameComponent, WebrtcDebugComponent, ChessPresentationComponent, ChessRulesComponent,
+        RoomLayoutComponent, SyncChessGameComponent, ChessPresentationComponent, ChessRulesComponent,
         TranslocoPipe,
     ],
     providers: [provideRooms()],

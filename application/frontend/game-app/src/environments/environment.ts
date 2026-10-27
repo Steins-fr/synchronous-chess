@@ -8,4 +8,5 @@ export const environment: EnvironmentInterface = {
     webSocketServer: 'wss://sc-ws-production.steins.fr',
     httpApiServer: 'https://sc-api-production.steins.fr',
     httpApiWithCredentials: false,
+    webrtcDebug: false,
 };

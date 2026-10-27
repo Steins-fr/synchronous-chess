@@ -35,7 +35,7 @@ describe('WebrtcDebugComponent', () => {
     });
 
     test('should display the states of the remote players and the negotiators', () => {
-        const titles: string[] = Array.from(fixture.nativeElement.querySelectorAll('h4')).map((title) => (title as HTMLElement).textContent ?? '');
+        const titles: string[] = Array.from(fixture.nativeElement.querySelectorAll('h3')).map((title) => (title as HTMLElement).textContent ?? '');
 
         expect(titles).toEqual([
             'Connection to the player: remote',

@@ -148,6 +148,12 @@ run by the CI.
   the bar of the room (`#room-bar`) stays on top, with the button of the chat (`#room-chat-toggle`, the unread messages
   on its badge) and the one leaving the room (`#room-leave`, `Leave`). The chat page (`/simple-chat`) shows its chat in the page, without button, once in a room: the chat
   of the next room starts empty.
+- With `webrtcDebug` of the environment on (local, so `serve:local` and the e2e, and staging; off in production and
+  the specs), a small floating button at the bottom right of the content (`#webrtc-debug-open`, `WebRTC debug`) opens
+  the debug panel of WebRTC once in a room, in a bottom sheet: the dialog `WebRTC debug`, the states of the connection
+  to each player and negotiator. Sticky while the page scrolls, in a band of its own at its end, it lies beside the
+  chat on a wide screen and under the chat over the game. `#webrtc-debug-close`, Escape, a click beside it or the end
+  of the room close the sheet.
 - From 1024 pixels wide, the chat (`#room-chat`) opens beside the game, open by default and as the user left it
   (`ChatPreferencesService`, the local storage); narrower, it opens over the game, closed when the page shows, and the
   back gesture closes it. A closed chat keeps receiving its messages.

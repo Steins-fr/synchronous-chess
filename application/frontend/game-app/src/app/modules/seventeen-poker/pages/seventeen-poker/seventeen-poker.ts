@@ -7,7 +7,6 @@ import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-
 import { mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
-import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-debug.component';
 import { pokerBlockChains, PokerPayloads } from '../../classes/game-sessions/seventeen-poker-session';
 import { PokerPresentationComponent } from '../../components/poker-presentation/poker-presentation.component';
 import { PokerRulesComponent } from '../../components/poker-rules/poker-rules.component';
@@ -18,7 +17,7 @@ import { PokerTableComponent } from '../../components/poker-table/poker-table.co
     selector: 'app-seventeen-poker',
     templateUrl: './seventeen-poker.html',
     imports: [
-        RoomLayoutComponent, WebrtcDebugComponent, PokerPresentationComponent, PokerRulesComponent, PokerTableComponent,
+        RoomLayoutComponent, PokerPresentationComponent, PokerRulesComponent, PokerTableComponent,
         TranslocoPipe,
     ],
     providers: [provideRooms()],

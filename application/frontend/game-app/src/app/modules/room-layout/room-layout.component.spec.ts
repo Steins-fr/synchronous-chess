@@ -1,10 +1,14 @@
+import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { RoomLayoutComponent } from './room-layout.component';
 import { ChatMessengerType, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
+import { WebrtcDebugButtonComponent } from '@app/modules/debug/webrtc-debug-button/webrtc-debug-button.component';
+import { WEBRTC_DEBUG } from '@app/modules/debug/webrtc-debug.token';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
@@ -15,6 +19,7 @@ import { RoomGame } from '@protocol/room-game.enum';
 import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
+import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MatchLeaveWarning } from './match-leave-warning';
 
@@ -174,6 +179,8 @@ describe('RoomLayoutComponent', () => {
             expect(sidenav().disableClose).toEqual(true);
             expect(query('#room-chat app-chat')).not.toBeNull();
             expect(query('#chat-close')).not.toBeNull();
+            // Developer tooling, off unless the environment turns it on
+            expect(query('app-debug-webrtc-button')).toBeNull();
         });
 
         test('should keep the chat closed on a wide screen once the user closed it', async () => {
@@ -434,5 +441,86 @@ describe('RoomLayoutComponent recompiled from its metadata', () => {
         // Then
         expect(fixture.nativeElement.classList).toContain('recompiled');
         expect(fixture.componentInstance['chatButton']()?.nativeElement.id).toEqual('room-chat-toggle');
+    });
+});
+
+describe('RoomLayoutComponent with the debug panel of WebRTC', () => {
+    let fixture: ComponentFixture<RoomLayoutComponent>;
+
+    function button(): HTMLElement | null {
+        return fixture.nativeElement.querySelector('app-debug-webrtc-button');
+    }
+
+    beforeEach(async () => {
+        TestBed.configureTestingModule({
+            imports: [RoomLayoutComponent],
+            providers: [
+                RoomSetupService,
+                { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
+                { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: signal(false) }) },
+                { provide: MatchLeaveWarning, useValue: TestHelper.cast<MatchLeaveWarning>({}) },
+                { provide: WEBRTC_DEBUG, useValue: true },
+                // A real bottom sheet: see webrtc-debug-button.component.spec.ts
+                { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
+                {
+                    provide: BreakpointObserver, useValue: TestHelper.cast<BreakpointObserver>({
+                        observe: () => of<BreakpointState>({ matches: false, breakpoints: {} }),
+                        isMatched: (): boolean => false,
+                    }),
+                },
+            ],
+        });
+        fixture = TestBed.createComponent(RoomLayoutComponent);
+        fixture.componentRef.setInput('game', RoomGame.CHESS);
+        answerOpenRooms();
+        await fixture.whenStable();
+    });
+
+    test('should offer the debug panel at the end of the page once the room is set up, until the room is given up', async () => {
+        // Then: none on the open rooms
+        expect(button()).toBeNull();
+
+        // When: the room built, not set up yet
+        const room: Room<ChatPayloads> = new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), new RoomNetworkMock().roomNetwork);
+        fixture.componentRef.setInput('room', room);
+        await fixture.whenStable();
+
+        // Then
+        expect(button()).toBeNull();
+
+        // When
+        TestBed.inject(RoomSetupService).roomIsSetup(true);
+        await fixture.whenStable();
+
+        // Then: the button of the room, in the content after the page, under the chat
+        const debugButton: WebrtcDebugButtonComponent<ChatPayloads> = fixture.debugElement.query(By.directive(WebrtcDebugButtonComponent)).componentInstance;
+        expect(debugButton.room()).toBe(room);
+        expect(button()?.querySelector('#webrtc-debug-open')).not.toBeNull();
+        expect(button()?.closest('mat-sidenav-content')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#room-content').compareDocumentPosition(button())).toEqual(Node.DOCUMENT_POSITION_FOLLOWING);
+
+        // When: the room given up
+        fixture.componentRef.setInput('room', undefined);
+        await fixture.whenStable();
+
+        // Then
+        expect(button()).toBeNull();
+    });
+
+    test('should close the debug panel open with the room given up', async () => {
+        // Given
+        fixture.componentRef.setInput('room', new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), new RoomNetworkMock().roomNetwork));
+        TestBed.inject(RoomSetupService).roomIsSetup(true);
+        await fixture.whenStable();
+        button()?.querySelector<HTMLButtonElement>('#webrtc-debug-open')?.click();
+        await fixture.whenStable();
+        expect(document.querySelector('mat-bottom-sheet-container')).not.toBeNull();
+
+        // When: the button removed by the change detection
+        fixture.componentRef.setInput('room', undefined);
+        await fixture.whenStable();
+
+        // Then
+        await vi.waitFor(() => expect(document.querySelector('mat-bottom-sheet-container')).toBeNull());
     });
 });

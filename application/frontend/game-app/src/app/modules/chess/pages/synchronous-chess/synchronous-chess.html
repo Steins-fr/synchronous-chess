@@ -1,7 +1,6 @@
 <app-room-layout [dimContent]="false" [game]="game" [room]="room()">
     <app-chess-presentation roomPresentation />
     @if (room(); as myRoom) {
-    <app-debug-webrtc [room]="myRoom"/>
     <app-sync-chess-game [room]="myRoom" />
     <details class="rules-details">
         <summary>{{ 'chess.rules.summary' | transloco }}</summary>

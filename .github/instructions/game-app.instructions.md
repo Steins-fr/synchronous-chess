@@ -83,7 +83,9 @@ This is an Angular TypeScript project with the following characteristics:
 - The app speaks the languages of `Language` (`services/language/enums/language.enum.ts`), English
   being the source: every text shown goes through a key of Transloco, translated in
   `src/i18n/<code>.json`, or in the files of its scope for a text of a game (see Scopes). The only
-  exception is the debug panel of WebRTC (`modules/debug`), developer tooling, in English out of the keys
+  exception is the debug panel of WebRTC (`modules/debug`), developer tooling, in English out of the keys: the
+  room layout offers it, a floating button opening it in a bottom sheet, when `webrtcDebug` of the environment is
+  on (`WEBRTC_DEBUG`: local and staging, not production)
 - `LanguageService` picks the language: the user's pick, kept in the local storage, else the first
   language of the browser the app speaks, else English. The menu next to the theme toggle switches it
   live: never reload the page to change it, a reload in a match reconnects the peers. The other tabs of
@@ -299,6 +301,10 @@ Claude writes the translations of every new or changed key, into every language:
   covered (report in `coverage/game-app/lcov.info`), so new or changed code ships with its specs
 - Enforced by `coverageThresholds` in `angular.json`: `npm run test:ci` fails below 100%
 - SonarCloud reports coverage on the PR's new code; it must stay at 100% there too
+- A spec opening a real Material bottom sheet provides `MATERIAL_ANIMATIONS` `{ animationsDisabled: true }`
+  (jsdom runs no animation: the sheet would never close; disabled, it closes on the next turn of the event loop,
+  awaited with `vi.waitFor`) and a stub of `BreakpointObserver` (the media queries of jsdom have no listener), as
+  `webrtc-debug-button.component.spec.ts`. Escape, Material's own, is checked by the e2e
 
 ## Project Structure
 

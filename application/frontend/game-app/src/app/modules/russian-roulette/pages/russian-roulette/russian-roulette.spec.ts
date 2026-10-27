@@ -71,14 +71,15 @@ describe('RussianRoulette', () => {
         // The chat beside the game, out of the page
         expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#page-content app-chat')).toBeNull();
-        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
+        // The debug panel of WebRTC out of the page: the room layout offers it
+        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-presentation')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-table')).not.toBeNull();
         // The rules are folded below the table, without their own title
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-roulette-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-rules h2')).toBeNull();
-        // The game first, then the debug panel
+        // The game first, then its rules
         const order: string[] = Array.from(fixture.nativeElement.querySelector('#page-content').children, (child: Element) => child.tagName.toLowerCase());
-        expect(order).toEqual(['app-roulette-table', 'details', 'app-debug-webrtc']);
+        expect(order).toEqual(['app-roulette-table', 'details']);
     });
 });

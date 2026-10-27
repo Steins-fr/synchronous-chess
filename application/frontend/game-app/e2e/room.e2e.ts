@@ -1,3 +1,4 @@
+import { expect, Locator } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 import { SLOW, test } from './test-room';
 
@@ -16,6 +17,33 @@ test.describe('Room', () => {
         // Then
         await alice.expectMessage('carol', 'hello');
         await bob.expectMessage('carol', 'hello');
+    });
+
+    test('shows the connections of a player in the debug panel of WebRTC, closed by Escape or its button', async ({ room }) => {
+        // Given: the local environment offers the debug panel
+        const [alice]: RoomParticipant[] = await room.connect('alice', 'bob');
+        const button: Locator = alice.page.getByRole('button', { name: 'WebRTC debug' });
+        const sheet: Locator = alice.page.getByRole('dialog', { name: 'WebRTC debug' });
+
+        // When
+        await button.click();
+
+        // Then
+        await expect(sheet).toContainText('Connection to the player: bob');
+
+        // When
+        await alice.page.keyboard.press('Escape');
+
+        // Then: the focus back on its button
+        await expect(sheet).toBeHidden();
+        await expect(button).toBeFocused();
+
+        // When
+        await button.click();
+        await sheet.getByRole('button', { name: 'Close the WebRTC debug' }).click();
+
+        // Then
+        await expect(sheet).toBeHidden();
     });
 
     test('lets the host reloading its page join its room again, taken over by another participant', async ({ room }) => {

@@ -6,4 +6,5 @@ export const environment: EnvironmentInterface = {
     webSocketServer: 'wss://no-socket.steins.fr',
     httpApiServer: 'https://no-api.steins.fr',
     httpApiWithCredentials: false,
+    webrtcDebug: false,
 };
