@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Zurück zu den neuesten Nachrichten.",
-  "history": "Du siehst ältere Nachrichten.",
+  "composer": {
+    "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}"
+  },
+  "log": {
+    "arrival": "{name} hat den Raum betreten",
+    "departure": "{name} hat den Raum verlassen",
+    "empty": "Noch keine Nachrichten. Sag Hallo!",
+    "failed": "Nicht gesendet",
+    "latest": "Neueste Nachrichten",
+    "retry": "Erneut senden",
+    "sending": "Wird gesendet…",
+    "unread": "Neue Nachrichten"
+  },
   "message": "Schreib deine Nachricht",
   "newMessages": "{count, plural, one {# neue Nachricht} other {# neue Nachrichten}}",
+  "options": {
+    "arrivals": "Kommen und Gehen anzeigen",
+    "enterSends": "Mit Enter senden",
+    "shownMessages": "Nachrichten anzeigen von",
+    "times": "Uhrzeiten anzeigen"
+  },
+  "panel": {
+    "close": "Chat schließen",
+    "options": "Chat-Optionen",
+    "title": "Chat"
+  },
   "participants": {
     "count": "{count, plural, one {# Teilnehmer} other {# Teilnehmer}} im Raum",
-    "title": "Teilnehmer"
+    "hidden": "Nachrichten ausgeblendet"
   },
   "ping": "Ping {ping}",
-  "room": "Raum ({roomName})",
-  "send": "Senden",
-  "showNewMessages": "Ansehen.",
-  "title": "WebRTC-Chat"
+  "send": "Senden"
 }

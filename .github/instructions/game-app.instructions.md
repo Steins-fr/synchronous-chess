@@ -220,6 +220,8 @@ Claude writes the translations of every new or changed key, into every language:
 | seat | place | puesto | lugar | lugar | Platz | место | yer | kursi | miejsce | posto |
 | password | mot de passe | contraseña | senha | palavra-passe | Passwort | пароль | şifre | kata sandi | hasło | password |
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
+| unread (message) | non lu | sin leer | não lida | não lida | ungelesen | непрочитанное | okunmamış | belum dibaca | nieprzeczytana | non letto |
+| hide (a player's messages) | masquer | ocultar | ocultar | ocultar | ausblenden | скрыть | gizlemek | sembunyikan | ukryć | nascondere |
 | server | serveur | servidor | servidor | servidor | Server | сервер | sunucu | server | serwer | server |
 | cheating | triche | trampa | trapaça | batota | Betrug | жульничество | hile | curang | oszustwo | imbroglio |
 | card | carte | carta | carta | carta | Karte | карта | kart | kartu | karta | carta |

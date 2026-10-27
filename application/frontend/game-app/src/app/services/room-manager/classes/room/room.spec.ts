@@ -45,10 +45,12 @@ describe('Room', () => {
         expect(room.queue()).toEqual(['pending']);
     });
 
-    test('should follow the players of the room', () => {
+    test('should follow the players of the room, a lost one having left it', () => {
         // Given
         const remote: Player = createRemotePlayer('remote');
         const reconnected: Player = createRemotePlayer('remote');
+        const departed: string[] = [];
+        room.departed$.subscribe((name: string) => departed.push(name));
 
         // When
         network.playerAdded$.next(remote);
@@ -62,6 +64,7 @@ describe('Room', () => {
 
         // Then
         expect(room.players()).toEqual([network.localPlayer]);
+        expect(departed).toEqual(['remote']);
     });
 
     test('should follow the negotiation queue', () => {

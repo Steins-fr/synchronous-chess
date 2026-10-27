@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Torna ai messaggi più recenti.",
-  "history": "Stai guardando messaggi meno recenti.",
+  "composer": {
+    "tooLong": "Massimo {maxLength, plural, one {# carattere} other {# caratteri}}"
+  },
+  "log": {
+    "arrival": "{name} entra nella stanza",
+    "departure": "{name} esce dalla stanza",
+    "empty": "Ancora nessun messaggio. Saluta!",
+    "failed": "Non inviato",
+    "latest": "Ultimi messaggi",
+    "retry": "Riprova",
+    "sending": "Invio…",
+    "unread": "Nuovi messaggi"
+  },
   "message": "Scrivi il tuo messaggio",
   "newMessages": "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}",
+  "options": {
+    "arrivals": "Mostra entrate e uscite",
+    "enterSends": "Invia con Invio",
+    "shownMessages": "Mostra i messaggi di",
+    "times": "Mostra gli orari"
+  },
+  "panel": {
+    "close": "Chiudi la chat",
+    "options": "Opzioni della chat",
+    "title": "Chat"
+  },
   "participants": {
     "count": "{count, plural, one {# partecipante} other {# partecipanti}} nella stanza",
-    "title": "Partecipanti"
+    "hidden": "Messaggi nascosti"
   },
   "ping": "ping {ping}",
-  "room": "Stanza ({roomName})",
-  "send": "Invia",
-  "showNewMessages": "Vedi.",
-  "title": "Chat WebRTC"
+  "send": "Invia"
 }

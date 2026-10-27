@@ -274,13 +274,23 @@ export class RoomParticipant {
         }), { timeout }).toEqual({ participants: sorted, connected: sorted });
     }
 
+    // Their texts rather than the ones shown: the chat of a game may be closed
     private async participantNames(selector: string): Promise<string[]> {
         const chips: Locator = this.page.locator(selector);
-        return (await chips.allInnerTexts()).map((text: string) => text.split(' - ')[0].trim()).sort(RoomParticipant.byName);
+        return (await chips.allTextContents()).map((text: string) => text.split(' - ')[0].trim()).sort(RoomParticipant.byName);
     }
 
     private static byName(a: string, b: string): number {
         return a.localeCompare(b);
+    }
+
+    /**
+     * The window narrowed under the width holding the chat beside the game, once the game took back the whole width: the
+     * chat closes over the game, the game widening for a moment
+     */
+    public async narrow(width: number, height: number): Promise<void> {
+        await this.page.setViewportSize({ width, height });
+        await expect(this.page.locator('mat-sidenav-content')).toHaveCSS('margin-right', '0px');
     }
 
     public async sendMessage(text: string): Promise<void> {

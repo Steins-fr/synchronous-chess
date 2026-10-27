@@ -1,3 +1,5 @@
+@use '@angular/material' as mat;
+
 #room-content {
     position: relative;
 
@@ -8,5 +10,20 @@
         width: 100%;
         top: 0;
         left: 0;
+    }
+}
+
+// The chat closed over the game lies beyond the right edge of the container, which Material hides only: a scroll into
+// view would slide the game aside. Clipped, the container never scrolls
+.mat-drawer-container {
+    overflow: clip;
+}
+
+// The chat beside the game on a wide screen, over the whole width of a narrower one
+#room-chat {
+    @include mat.sidenav-overrides((container-width: 340px));
+
+    @media (max-width: 1023.98px) {
+        @include mat.sidenav-overrides((container-width: 100%));
     }
 }

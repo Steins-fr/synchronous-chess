@@ -42,7 +42,7 @@ describe('ChatPage', () => {
     });
 
     test('should wait for the room setup', () => {
-        expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).not.toBeNull();
     });
@@ -58,6 +58,7 @@ describe('ChatPage', () => {
 
         // Then
         expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal));
+        expect(fixture.nativeElement.querySelector('#page-content app-chat')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
 
@@ -120,6 +121,8 @@ describe('ChatPage', () => {
         expect(clearSpy).toHaveBeenCalledTimes(1);
         expect(fixture.componentInstance.room()).toBeUndefined();
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).not.toBeNull();
+        // Its chat gone with it: the chat of the next room starts empty
+        expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
     });
 
     test('should be destroyed without room', () => {

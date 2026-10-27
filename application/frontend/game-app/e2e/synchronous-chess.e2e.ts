@@ -42,7 +42,7 @@ test.describe('Synchronous chess', () => {
         const participants: RoomParticipant[] = await chess.connect('alice', 'bob', 'carol');
         const [alice, bob, carol] = participants;
         // The whole board in the window, to drag its pieces
-        await Promise.all(participants.map(({ page }) => page.setViewportSize({ width: 700, height: 1100 })));
+        await Promise.all(participants.map((participant: RoomParticipant) => participant.narrow(700, 1100)));
         await Promise.all(participants.map(({ page }) => watchSteadiness(page, STEADY)));
 
         // A single seat to take, at the bottom: white, then black once white is taken
@@ -70,7 +70,7 @@ test.describe('Synchronous chess', () => {
     test('gives back its seat and its move to a player reloading the page, and asks the players to confirm leaving the game', async ({ chess }) => {
         const participants: RoomParticipant[] = await chess.connect('alice', 'bob', 'carol');
         const [alice, bob, carol] = participants;
-        await Promise.all(participants.map(({ page }) => page.setViewportSize({ width: 700, height: 1100 })));
+        await Promise.all(participants.map((participant: RoomParticipant) => participant.narrow(700, 1100)));
         await game(alice).locator('#seat-bottom').getByRole('button', { name: 'Play white' }).click();
         await expect(game(bob).locator('#seat-top')).toHaveText('White player: alice');
         await game(bob).locator('#seat-bottom').getByRole('button', { name: 'Play black' }).click();
@@ -83,7 +83,8 @@ test.describe('Synchronous chess', () => {
         await bob.reload();
         bob.expectUnloadPrompts(1);
         await expect(game(bob).locator('#seat-bottom')).toHaveText('Black player: bob', { timeout: 60_000 });
-        // Black may play once the page caught up with the game: its pawn shows its moves
+        // Black may play once the page caught up with the game, connected to everyone again: its pawn shows its moves
+        await bob.expectConnected(['alice', 'bob', 'carol']);
         await expect(async () => {
             await bob.page.locator('#board-grid mat-grid-tile').nth(51).click();
             await expect(bob.page.locator('.valid-move')).toHaveCount(2, { timeout: 1000 });

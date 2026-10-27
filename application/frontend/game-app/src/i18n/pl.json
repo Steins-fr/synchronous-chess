@@ -53,6 +53,11 @@
     "title": "Wybierz grę"
   },
   "rooms": {
+    "bar": {
+      "chat": "Czat",
+      "room": "Pokój {roomName}",
+      "unread": "{count, plural, one {# nieprzeczytana wiadomość} few {# nieprzeczytane wiadomości} many {# nieprzeczytanych wiadomości} other {# nieprzeczytanej wiadomości}}"
+    },
     "booting": {
       "delay": "Serwer i jego baza danych usypiają, gdy nikt nie gra: ich wybudzenie trwa do około trzydziestu sekund.",
       "title": "Uruchamianie serwera…"

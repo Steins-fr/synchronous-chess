@@ -1,16 +1,35 @@
 {
   "author": "{author} :",
-  "backToLatest": "Revenir aux messages les plus récents.",
-  "history": "Vous regardez d'anciens messages.",
+  "composer": {
+    "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum"
+  },
+  "log": {
+    "arrival": "{name} a rejoint la salle",
+    "departure": "{name} a quitté la salle",
+    "empty": "Aucun message pour l’instant. Dites bonjour !",
+    "failed": "Non envoyé",
+    "latest": "Derniers messages",
+    "retry": "Réessayer",
+    "sending": "Envoi…",
+    "unread": "Nouveaux messages"
+  },
   "message": "Tapez votre message",
   "newMessages": "{count, plural, one {# nouveau message} other {# nouveaux messages}}",
+  "options": {
+    "arrivals": "Afficher les arrivées et départs",
+    "enterSends": "Envoyer avec Entrée",
+    "shownMessages": "Afficher les messages de",
+    "times": "Afficher les heures"
+  },
+  "panel": {
+    "close": "Fermer le tchat",
+    "options": "Options du tchat",
+    "title": "Tchat"
+  },
   "participants": {
     "count": "{count, plural, one {# participant} other {# participants}} dans la salle",
-    "title": "Participants"
+    "hidden": "Messages masqués"
   },
   "ping": "ping {ping}",
-  "room": "Salle ({roomName})",
-  "send": "Envoyer",
-  "showNewMessages": "Voir.",
-  "title": "Tchat WebRTC"
+  "send": "Envoyer"
 }

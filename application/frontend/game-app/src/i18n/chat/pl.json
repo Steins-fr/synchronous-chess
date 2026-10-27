@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Wróć do najnowszych wiadomości.",
-  "history": "Przeglądasz starsze wiadomości.",
+  "composer": {
+    "tooLong": "Maksymalnie {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}"
+  },
+  "log": {
+    "arrival": "{name} dołącza do pokoju",
+    "departure": "{name} opuszcza pokój",
+    "empty": "Brak wiadomości. Przywitaj się!",
+    "failed": "Nie wysłano",
+    "latest": "Najnowsze wiadomości",
+    "retry": "Ponów",
+    "sending": "Wysyłanie…",
+    "unread": "Nowe wiadomości"
+  },
   "message": "Wpisz wiadomość",
   "newMessages": "{count, plural, one {# nowa wiadomość} few {# nowe wiadomości} many {# nowych wiadomości} other {# nowej wiadomości}}",
+  "options": {
+    "arrivals": "Pokazuj wejścia i wyjścia",
+    "enterSends": "Wysyłaj Enterem",
+    "shownMessages": "Pokazuj wiadomości od",
+    "times": "Pokazuj godziny"
+  },
+  "panel": {
+    "close": "Zamknij czat",
+    "options": "Opcje czatu",
+    "title": "Czat"
+  },
   "participants": {
     "count": "{count, plural, one {# uczestnik} few {# uczestników} many {# uczestników} other {# uczestnika}} w pokoju",
-    "title": "Uczestnicy"
+    "hidden": "Wiadomości ukryte"
   },
   "ping": "ping {ping}",
-  "room": "Pokój ({roomName})",
-  "send": "Wyślij",
-  "showNewMessages": "Pokaż.",
-  "title": "Czat WebRTC"
+  "send": "Wyślij"
 }

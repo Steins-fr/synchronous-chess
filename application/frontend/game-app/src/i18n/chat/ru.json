@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Вернуться к последним сообщениям.",
-  "history": "Вы просматриваете старые сообщения.",
+  "composer": {
+    "tooLong": "Не более {maxLength, plural, one {# символа} few {# символов} many {# символов} other {# символа}}"
+  },
+  "log": {
+    "arrival": "{name} заходит в комнату",
+    "departure": "{name} покидает комнату",
+    "empty": "Сообщений пока нет. Поздоровайтесь!",
+    "failed": "Не отправлено",
+    "latest": "Последние сообщения",
+    "retry": "Повторить",
+    "sending": "Отправка…",
+    "unread": "Новые сообщения"
+  },
   "message": "Введите сообщение",
   "newMessages": "{count, plural, one {# новое сообщение} few {# новых сообщения} many {# новых сообщений} other {# нового сообщения}}",
+  "options": {
+    "arrivals": "Показывать входы и выходы",
+    "enterSends": "Отправлять по Enter",
+    "shownMessages": "Показывать сообщения от",
+    "times": "Показывать время"
+  },
+  "panel": {
+    "close": "Закрыть чат",
+    "options": "Настройки чата",
+    "title": "Чат"
+  },
   "participants": {
     "count": "{count, plural, one {# участник} few {# участника} many {# участников} other {# участника}} в комнате",
-    "title": "Участники"
+    "hidden": "Сообщения скрыты"
   },
   "ping": "пинг {ping}",
-  "room": "Комната ({roomName})",
-  "send": "Отправить",
-  "showNewMessages": "Показать.",
-  "title": "Чат WebRTC"
+  "send": "Отправить"
 }

@@ -6,7 +6,7 @@ import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning'
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
 import { mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomGame } from '@protocol/room-game.enum';
-import { chatBlockChains, ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
+import { chatBlockChains, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { WebrtcDebugComponent } from '@app/modules/debug/webrtc-debug/webrtc-debug.component';
 import { rouletteBlockChains, RoulettePayloads } from '../../classes/game-sessions/russian-roulette-session';
 import { RoulettePresentationComponent } from '../../components/roulette-presentation/roulette-presentation.component';
@@ -18,7 +18,7 @@ import { RouletteTableComponent } from '../../components/roulette-table/roulette
     selector: 'app-russian-roulette',
     templateUrl: './russian-roulette.html',
     imports: [
-        RoomLayoutComponent, ChatComponent, WebrtcDebugComponent, RoulettePresentationComponent, RouletteRulesComponent, RouletteTableComponent,
+        RoomLayoutComponent, WebrtcDebugComponent, RoulettePresentationComponent, RouletteRulesComponent, RouletteTableComponent,
         TranslocoPipe,
     ],
     providers: [provideRooms()],

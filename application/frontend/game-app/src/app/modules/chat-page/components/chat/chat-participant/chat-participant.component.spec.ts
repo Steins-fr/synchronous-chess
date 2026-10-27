@@ -61,4 +61,17 @@ describe('ChatParticipantComponent', () => {
         expect(remotePlayer.ping.observed).toEqual(false);
         expect(fixture.nativeElement.textContent.trim()).toEqual('local');
     });
+
+    test('should mark a player whose messages are hidden', async () => {
+        // When
+        fixture.componentRef.setInput('player', remotePlayer);
+        fixture.componentRef.setInput('hidden', true);
+        await fixture.whenStable();
+
+        // Then
+        const icon: HTMLElement = fixture.nativeElement.querySelector('mat-icon');
+        expect(icon.getAttribute('fontIcon')).toEqual('visibility_off');
+        expect(fixture.nativeElement.querySelector('mat-chip').textContent.trim()).toEqual('remote');
+        expect(icon.title).toEqual('Messages hidden');
+    });
 });

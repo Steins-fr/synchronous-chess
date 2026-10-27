@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Kembali ke pesan terbaru.",
-  "history": "Anda sedang melihat pesan lama.",
+  "composer": {
+    "tooLong": "Maksimal {maxLength, plural, other {# karakter}}"
+  },
+  "log": {
+    "arrival": "{name} bergabung ke ruang",
+    "departure": "{name} meninggalkan ruang",
+    "empty": "Belum ada pesan. Sapa yang lain!",
+    "failed": "Tidak terkirim",
+    "latest": "Pesan terbaru",
+    "retry": "Coba lagi",
+    "sending": "Mengirim…",
+    "unread": "Pesan baru"
+  },
   "message": "Ketik pesan Anda",
   "newMessages": "{count, plural, other {# pesan baru}}",
+  "options": {
+    "arrivals": "Tampilkan yang masuk dan keluar",
+    "enterSends": "Kirim dengan Enter",
+    "shownMessages": "Tampilkan pesan dari",
+    "times": "Tampilkan waktu"
+  },
+  "panel": {
+    "close": "Tutup obrolan",
+    "options": "Opsi obrolan",
+    "title": "Obrolan"
+  },
   "participants": {
     "count": "{count, plural, other {# peserta}} di ruang ini",
-    "title": "Peserta"
+    "hidden": "Pesan disembunyikan"
   },
   "ping": "ping {ping}",
-  "room": "Ruang ({roomName})",
-  "send": "Kirim",
-  "showNewMessages": "Lihat.",
-  "title": "Obrolan WebRTC"
+  "send": "Kirim"
 }

@@ -1,49 +1,90 @@
-<div *transloco="let t; prefix: 'chat'" id="chat-app">
-    <h3 class="mat-title-large">{{ t('title') }}</h3>
-    @if (room()) {
-    <h4 class="mat-title-medium">{{ t('room', { roomName }) }}</h4>
-    }
-    <div id="chat-container">
-        <div id="chat">
-            <cdk-virtual-scroll-viewport itemSize="20" class="example-viewport" id="virtual-chat">
-                <app-chat-message *cdkVirtualFor="let chatMessage of chatMessages()" [message]="chatMessage" />
-            </cdk-virtual-scroll-viewport>
-            @if (newMessage() > 0) {
-            <div id="new-message-notification" class="chat-notification">
-                <button mat-flat-button (click)="scrollDown(true)">
-                    <span>{{ t('newMessages', { count: newMessage() }) }}</span>
-                    <span>{{ t('showNewMessages') }}</span>
-                </button>
-            </div>
+<section *transloco="let t; prefix: 'chat'" class="flex min-h-0 flex-1 flex-col" id="chat">
+    <header class="flex items-center gap-1 border-b border-app-border py-1 pl-4 pr-1">
+        <h2 class="m-0 flex-1 mat-title-medium">{{ t('panel.title') }}</h2>
+        <button [attr.aria-label]="t('panel.options')" [matMenuTriggerFor]="options" [title]="t('panel.options')" id="chat-options" mat-icon-button type="button">
+            <mat-icon>tune</mat-icon>
+        </button>
+        @if (closable()) {
+        <button (click)="closed.emit()" [attr.aria-label]="t('panel.close')" [title]="t('panel.close')" id="chat-close" mat-icon-button type="button">
+            <mat-icon>close</mat-icon>
+        </button>
+        }
+    </header>
+
+    <div class="border-b border-app-border px-3 py-2" id="player-list">
+        <p class="muted-note mb-1 text-xs">{{ t('participants.count', { count: players().length }) }}</p>
+        <mat-chip-set>
+            @for (participant of players(); track participant.name) {
+            <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" />
             }
-            @if (viewingHistory()) {
-            <div id="history-notification" class="chat-notification">
-                <button mat-flat-button (click)="scrollDown(true)">
-                    <span>{{ t('history') }}</span>
-                    <span>{{ t('backToLatest') }}</span>
-                </button>
-            </div>
+            @for (playerName of queuingPlayers(); track playerName) {
+            <mat-chip>{{ playerName }}</mat-chip>
             }
-        </div>
-        <div id="player-list">
-            <h4 class="list-title mat-title-medium">{{ t('participants.title') }}</h4>
-            {{ t('participants.count', { count: players().length }) }}
-            <mat-chip-set class="mat-chip-list-stacked">
-                @for (participant of players(); track participant.name) {
-                <app-chat-participant [player]="participant" />
-                }
-                @for (playerName of queuingPlayers(); track playerName) {
-                <mat-chip>{{ playerName }}</mat-chip>
-                }
-            </mat-chip-set>
-        </div>
+        </mat-chip-set>
     </div>
 
-    <div id="send-form">
-        <app-text-field [field]="messageForm" [label]="t('message')" class="flex-auto" />
-        <button
-            mat-raised-button id="send" (click)="sendMessage()"
-            [disabled]="!room() || isSending()">{{ t('send') }}
+    <div class="relative flex min-h-0 flex-1 flex-col">
+        <div #log (scroll)="onScroll()" [attr.aria-label]="t('panel.title')" class="relative flex flex-1 flex-col overflow-y-auto px-3 pb-3"
+            id="chat-log" role="log">
+            @for (line of lines(); track line.entry.id) {
+            @if (line.firstUnread) {
+            <p class="m-0 mt-3 flex items-center gap-2 text-xs font-medium text-app-accent-text before:h-px before:flex-1 before:bg-app-accent-text after:h-px after:flex-1 after:bg-app-accent-text"
+                id="unread-divider">{{ t('log.unread') }}</p>
+            }
+            @if (line.entry.kind === kinds.MESSAGE) {
+            <app-chat-message [message]="line.entry" [startsGroup]="line.startsGroup" (retry)="retry(line.entry)" [time]="line.time" />
+            } @else if (line.entry.kind === kinds.ARRIVAL) {
+            <p class="chat-notice">{{ t('log.arrival', { name: line.entry.name }) }}</p>
+            } @else {
+            <p class="chat-notice">{{ t('log.departure', { name: line.entry.name }) }}</p>
+            }
+            } @empty {
+            <p class="muted-note m-auto text-center text-sm">{{ t('log.empty') }}</p>
+            }
+        </div>
+        @if (!atBottom()) {
+        <button (click)="scrollToLatest()" class="absolute! bottom-2 left-1/2 -translate-x-1/2" id="jump-to-latest" mat-flat-button type="button">
+            <mat-icon>arrow_downward</mat-icon>
+            @if (unread() > 0) {
+            {{ t('newMessages', { count: unread() }) }}
+            } @else {
+            {{ t('log.latest') }}
+            }
+        </button>
+        }
+    </div>
+
+    <div class="flex items-center gap-1 border-t border-app-border p-2" id="send-form">
+        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [label]="t('message')" class="flex-1" />
+        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank()" [title]="t('send')" id="send" mat-icon-button type="button">
+            <mat-icon>send</mat-icon>
         </button>
     </div>
-</div>
+
+    <mat-menu #options="matMenu" xPosition="before">
+        <button (click)="preferences.arrivals.set(!preferences.arrivals.on())" [attr.aria-checked]="preferences.arrivals.on()" mat-menu-item role="menuitemcheckbox">
+            <mat-icon>{{ preferences.arrivals.on() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+            <span>{{ t('options.arrivals') }}</span>
+        </button>
+        <button (click)="preferences.times.set(!preferences.times.on())" [attr.aria-checked]="preferences.times.on()" mat-menu-item role="menuitemcheckbox">
+            <mat-icon>{{ preferences.times.on() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+            <span>{{ t('options.times') }}</span>
+        </button>
+        <button (click)="preferences.enterSends.set(!preferences.enterSends.on())" [attr.aria-checked]="preferences.enterSends.on()" mat-menu-item role="menuitemcheckbox">
+            <mat-icon>{{ preferences.enterSends.on() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+            <span>{{ t('options.enterSends') }}</span>
+        </button>
+        @if (otherPlayers().length > 0) {
+        <mat-divider />
+        <div [attr.aria-label]="t('options.shownMessages')" role="group">
+            <p aria-hidden="true" class="muted-note px-4 pt-2 text-xs">{{ t('options.shownMessages') }}</p>
+            @for (player of otherPlayers(); track player.name) {
+            <button (click)="toggleAuthor(player.name)" [attr.aria-checked]="!hiddenAuthors().has(player.name)" mat-menu-item role="menuitemcheckbox">
+                <mat-icon>{{ hiddenAuthors().has(player.name) ? 'check_box_outline_blank' : 'check_box' }}</mat-icon>
+                <span>{{ player.name }}</span>
+            </button>
+            }
+        </div>
+        }
+    </mat-menu>
+</section>

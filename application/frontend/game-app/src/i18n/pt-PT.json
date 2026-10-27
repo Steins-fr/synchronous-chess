@@ -53,6 +53,11 @@
     "title": "Escolha um jogo"
   },
   "rooms": {
+    "bar": {
+      "chat": "Chat",
+      "room": "Sala {roomName}",
+      "unread": "{count, plural, one {# mensagem não lida} other {# mensagens não lidas}}"
+    },
     "booting": {
       "delay": "O servidor e a respetiva base de dados entram em repouso quando ninguém joga: acordá-los demora até cerca de trinta segundos.",
       "title": "A iniciar o servidor…"

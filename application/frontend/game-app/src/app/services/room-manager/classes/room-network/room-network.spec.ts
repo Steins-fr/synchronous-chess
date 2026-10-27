@@ -137,9 +137,10 @@ describe('RoomNetwork', () => {
         expect(network.isPlayerNameAlreadyInRoom('remote')).toEqual(true);
     });
 
-    test('should turn a connected negotiator into a player', () => {
+    test('should turn a connected negotiator into a player, which arrived after the local one once it initiated', () => {
         // Given
         const { negotiator, connectionState$ } = createNegotiator('remote');
+        negotiator.isInitiator = true;
         const addedPlayers: Player[] = [];
         const queueRemoved: string[] = [];
         network.playerAdded$.subscribe((player: Player) => addedPlayers.push(player));
@@ -153,6 +154,7 @@ describe('RoomNetwork', () => {
         expect(addedPlayers).toHaveLength(1);
         expect(addedPlayers[0]).toBeInstanceOf(WebRtcPlayer);
         expect(addedPlayers[0].name).toEqual('remote');
+        expect((addedPlayers[0] as WebRtcPlayer).initiated).toEqual(true);
         expect(queueRemoved).toEqual(['remote']);
         expect(negotiator.clear).toHaveBeenCalledTimes(1);
         expect(network.getNegotiator('remote')).toBeUndefined();
