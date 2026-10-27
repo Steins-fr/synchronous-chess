@@ -27,6 +27,16 @@ test.describe('Chat of a game', () => {
 
         // Open beside the game on a wide screen
         await expect(chatPanel(bob)).toBeVisible();
+        // The debug button of the local environment lies beside the chat, never under it: once the game narrowed for the
+        // chat, which opens with the room
+        await expect(async () => {
+            const debugButton = await bob.page.locator('#webrtc-debug-open').boundingBox();
+            const chat = await chatPanel(bob).boundingBox();
+            if (debugButton === null || chat === null) {
+                throw new Error('The debug button or the chat is not shown');
+            }
+            expect(debugButton.x + debugButton.width).toBeLessThanOrEqual(chat.x);
+        }).toPass();
         await expect(chatToggle(bob)).toHaveAttribute('aria-expanded', 'true');
         await chatToggle(bob).click();
         await expect(chatPanel(bob)).toBeHidden();

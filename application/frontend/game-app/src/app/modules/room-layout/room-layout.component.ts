@@ -8,6 +8,8 @@ import { MatSidenav, MatSidenavContainer, MatSidenavContent } from '@angular/mat
 import { Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
+import { WebrtcDebugButtonComponent } from '@app/modules/debug/webrtc-debug-button/webrtc-debug-button.component';
+import { WEBRTC_DEBUG } from '@app/modules/debug/webrtc-debug.token';
 import { RoomSetupComponent } from '@app/modules/room-setup/room-setup.component';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -23,7 +25,10 @@ const CHAT_HISTORY_STATE: string = 'roomChat';
     selector: 'app-room-layout',
     templateUrl: './room-layout.component.html',
     styleUrls: ['./room-layout.component.scss'],
-    imports: [RoomSetupComponent, ChatComponent, MatSidenavContainer, MatSidenavContent, MatSidenav, MatButton, MatIcon, MatBadge, TranslocoPipe],
+    imports: [
+        RoomSetupComponent, ChatComponent, WebrtcDebugButtonComponent, MatSidenavContainer, MatSidenavContent, MatSidenav, MatButton, MatIcon,
+        MatBadge, TranslocoPipe,
+    ],
     host: {
         class: 'block h-full',
     },
@@ -49,6 +54,8 @@ export class RoomLayoutComponent {
     private readonly window: Window = inject(DOCUMENT).defaultView as Window;
     private readonly wideScreen: MediaQueryList = this.window.matchMedia(RoomLayoutComponent.wideQuery);
 
+    /** Whether the page offers the debug panel of WebRTC (webrtcDebug of the environment): developer tooling */
+    protected readonly webrtcDebug: boolean = inject(WEBRTC_DEBUG);
     protected readonly isSetup = toSignal(this.roomSetupService.roomIsSetup$);
     protected readonly wide = signal<boolean>(this.wideScreen.matches);
     // Over the game, the chat is closed when the page shows: a wide screen opens it as the user left it

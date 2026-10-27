@@ -1,37 +1,47 @@
 <mat-sidenav-container class="h-full">
     <mat-sidenav-content>
-        @if (isSetup() && room(); as room) {
-        <!-- The bar of the room, kept on top while the page scrolls -->
-        <div class="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-app-border bg-app-surface pl-4 pr-2" id="room-bar">
-            <mat-icon aria-hidden="true" class="shrink-0 text-app-text-muted">meeting_room</mat-icon>
-            <span class="min-w-0 flex-1 truncate font-medium">{{ 'rooms.bar.room' | transloco: { roomName: room.roomName } }}</span>
-            @if (sideChat()) {
-            <button
-                #chatButton (click)="toggleChat(!chatOpen())" [attr.aria-expanded]="chatOpen()" [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: unread() }"
-                [matBadgeHidden]="unread() === 0" [matBadge]="unread()" aria-controls="room-chat" id="room-chat-toggle" mat-button type="button">
-                <mat-icon>forum</mat-icon>
-                <span class="max-sm:sr-only">{{ 'rooms.bar.chat' | transloco }}</span>
-            </button>
-            }
-            <button (click)="leaveRoom()" id="room-leave" mat-button type="button">
-                <mat-icon>logout</mat-icon>
-                <span class="max-sm:sr-only">{{ 'rooms.bar.leave' | transloco }}</span>
-            </button>
-        </div>
-        }
-        <!-- The open rooms first, on top of the page -->
-        <div class="container">
-            <app-room-setup [game]="game()"/>
-        </div>
-        @if (!isSetup()) {
-        <ng-content select="[roomPresentation]"/>
-        }
-        <div id="room-content">
-            <div id="page-content" class="container">
-                <ng-content/>
+        <!-- At least the height of the window, the button of the WebRTC debug last: on a short page, at the bottom of it -->
+        <div class="flex min-h-full flex-col">
+            <!-- The page, laid out as a block: the margins of its parts collapse as they did, the bar stays on top -->
+            <div class="grow">
+                @if (isSetup() && room(); as room) {
+                <!-- The bar of the room, kept on top while the page scrolls -->
+                <div class="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-app-border bg-app-surface pl-4 pr-2" id="room-bar">
+                    <mat-icon aria-hidden="true" class="shrink-0 text-app-text-muted">meeting_room</mat-icon>
+                    <span class="min-w-0 flex-1 truncate font-medium">{{ 'rooms.bar.room' | transloco: { roomName: room.roomName } }}</span>
+                    @if (sideChat()) {
+                    <button
+                        #chatButton (click)="toggleChat(!chatOpen())" [attr.aria-expanded]="chatOpen()" [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: unread() }"
+                        [matBadgeHidden]="unread() === 0" [matBadge]="unread()" aria-controls="room-chat" id="room-chat-toggle" mat-button type="button">
+                        <mat-icon>forum</mat-icon>
+                        <span class="max-sm:sr-only">{{ 'rooms.bar.chat' | transloco }}</span>
+                    </button>
+                    }
+                    <button (click)="leaveRoom()" id="room-leave" mat-button type="button">
+                        <mat-icon>logout</mat-icon>
+                        <span class="max-sm:sr-only">{{ 'rooms.bar.leave' | transloco }}</span>
+                    </button>
+                </div>
+                }
+                <!-- The open rooms first, on top of the page -->
+                <div class="container">
+                    <app-room-setup [game]="game()"/>
+                </div>
+                @if (!isSetup()) {
+                <ng-content select="[roomPresentation]"/>
+                }
+                <div id="room-content">
+                    <div id="page-content" class="container">
+                        <ng-content/>
+                    </div>
+                    @if (!isSetup() && dimContent()) {
+                    <div id="room-content-overlay"></div>
+                    }
+                </div>
             </div>
-            @if (!isSetup() && dimContent()) {
-            <div id="room-content-overlay"></div>
+            @if (webrtcDebug && isSetup() && room(); as room) {
+            <!-- Developer tooling (webrtcDebug of the environment), in English. At the bottom right while the page scrolls, in a band of its own at its end (16 + 40 + 16 pixels): beside the chat on a wide screen, under the chat over the game on a phone -->
+            <app-debug-webrtc-button [room]="room" class="sticky bottom-4 z-10 my-4 mr-4 flex self-end" />
             }
         </div>
     </mat-sidenav-content>

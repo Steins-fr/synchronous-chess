@@ -7,4 +7,6 @@ export const environment: EnvironmentInterface = {
     httpApiServer: 'https://sc-api-staging.steins.fr',
     // Restricted to its owner: the HTTP API refuses the requests without the access cookies of the login
     httpApiWithCredentials: true,
+    // The debug panel of WebRTC, to look into the connections of the stage
+    webrtcDebug: true,
 };

@@ -4,12 +4,11 @@ import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.compon
 import { provideRooms, roomFromSetup } from '../room-layout/room-from-setup';
 import { RoomGame } from '@protocol/room-game.enum';
 import { chatBlockChains, ChatComponent, ChatPayloads } from './components/chat/chat.component';
-import { WebrtcDebugComponent } from '../debug/webrtc-debug/webrtc-debug.component';
 
 @Component({
     selector: 'app-chat-page',
     templateUrl: './chat.page.html',
-    imports: [RoomLayoutComponent, ChatComponent, WebrtcDebugComponent],
+    imports: [RoomLayoutComponent, ChatComponent],
     providers: [provideRooms()],
 })
 export class ChatPage {

@@ -1,6 +1,7 @@
 import { ApplicationInitStatus } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
+import { WEBRTC_DEBUG } from '@app/modules/debug/webrtc-debug.token';
 import { Language } from '@app/services/language/enums/language.enum';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
@@ -25,11 +26,15 @@ describe('appConfig', () => {
         const webSocketServer: string = TestBed.inject(WEB_SOCKET_SERVER);
         const httpApiServer: string = TestBed.inject(HTTP_API_SERVER);
         const httpApiWithCredentials: boolean = TestBed.inject(HTTP_API_WITH_CREDENTIALS);
+        const webrtcDebug: boolean = TestBed.inject(WEBRTC_DEBUG);
 
         // Then
         expect(webSocketServer).toEqual(environment.webSocketServer);
         expect(httpApiServer).toEqual(environment.httpApiServer);
         expect(httpApiWithCredentials).toEqual(environment.httpApiWithCredentials);
+        expect(webrtcDebug).toEqual(environment.webrtcDebug);
+        // Off in the specs, as its default: provided by the config all the same
+        expect(appConfig.providers).toContainEqual({ provide: WEBRTC_DEBUG, useValue: environment.webrtcDebug });
     });
 
     test('should listen for a person on the page as soon as the app starts', () => {

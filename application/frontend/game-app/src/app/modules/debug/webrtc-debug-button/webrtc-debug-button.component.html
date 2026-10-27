@@ -1,0 +1,17 @@
+<!-- Developer tooling, in English: out of the translations -->
+<!-- An icon button raised as a small floating button: the FAB of Material would weigh on the initial bundle, which holds the other buttons. Important: Material colors its buttons out of any layer, so above the utilities -->
+<button
+    (click)="open(panel)" aria-haspopup="dialog" aria-label="WebRTC debug" class="bg-app-surface-raised! text-app-accent-text! shadow-md" id="webrtc-debug-open"
+    mat-icon-button title="WebRTC debug" type="button">
+    <mat-icon>bug_report</mat-icon>
+</button>
+<!-- The content of the sheet: its title and the button closing it kept on top while it scrolls, on its background, over the padding of the sheet too (8 pixels). On a phone the sheet takes the whole width, over the button opening it -->
+<ng-template #panel>
+    <div class="sticky -top-2 -mt-2 flex items-center gap-1 bg-inherit pt-2">
+        <h2 class="m-0 flex-1 mat-title-large">WebRTC debug</h2>
+        <button (click)="close()" aria-label="Close the WebRTC debug" id="webrtc-debug-close" mat-icon-button title="Close the WebRTC debug" type="button">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <app-debug-webrtc [room]="room()" />
+</ng-template>

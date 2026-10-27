@@ -48,7 +48,6 @@ describe('SynchronousChess', () => {
         expect(fixture.nativeElement.querySelector('#room-content-overlay')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-sync-chess-game')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
-        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
     });
 
     test('should build the room once setup', async () => {
@@ -67,7 +66,7 @@ describe('SynchronousChess', () => {
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
         }, expect.any(AbortSignal));
-        await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull());
+        await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull());
 
         // Then the game replaces the presentation, the rules are folded below it, without their own title
         roomSetupService.roomIsSetup(true);
@@ -79,6 +78,8 @@ describe('SynchronousChess', () => {
         expect(fixture.nativeElement.querySelector('#page-content app-chat')).toBeNull();
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-chess-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-chess-rules .title')).toBeNull();
+        // The debug panel of WebRTC out of the page: the room layout offers it
+        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
 
         // When
         const clearSpy = vi.spyOn(room, 'clear');
@@ -101,7 +102,7 @@ describe('SynchronousChess', () => {
         // Then
         await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
         await fixture.whenStable();
-        expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-sync-chess-game')).toBeNull();
     });
 
     test('should be destroyed without room', () => {

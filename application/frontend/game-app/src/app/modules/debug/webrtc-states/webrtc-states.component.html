@@ -30,33 +30,36 @@
         Receive channel: <span id="state-receive-channel">{{ currentStates.receiveChannel }}</span>
     </span>
 </div>
-<table id="candidates">
-    <caption>List of candidates of {{ playerName() }}</caption>
-    <thead id="candidatesHead">
-        <tr>
-            <th scope="col">Time</th>
-            <th scope="col">Component</th>
-            <th scope="col">Type</th>
-            <th scope="col">Foundation</th>
-            <th scope="col">Protocol</th>
-            <th scope="col">Address</th>
-            <th scope="col">Port</th>
-            <th scope="col">Priorities</th>
-        </tr>
-    </thead>
-    <tbody id="candidatesBody">
-        @for (candidate of currentStates.candidates; track candidate) {
-        <tr>
-            <td>{{ candidate.elapsed }}</td>
-            <td>{{ candidate.component }}</td>
-            <td>{{ candidate.type }}</td>
-            <td>{{ candidate.foundation }}</td>
-            <td>{{ candidate.protocol }}</td>
-            <td>{{ candidate.address }}</td>
-            <td>{{ candidate.port }}</td>
-            <td>{{ candidate.priorities }}</td>
-        </tr>
-        }
-    </tbody>
-</table>
+<!-- Wider than a phone: the table scrolls, rather than the whole sheet -->
+<div class="overflow-x-auto">
+    <table id="candidates">
+        <caption>List of candidates of {{ playerName() }}</caption>
+        <thead id="candidatesHead">
+            <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Component</th>
+                <th scope="col">Type</th>
+                <th scope="col">Foundation</th>
+                <th scope="col">Protocol</th>
+                <th scope="col">Address</th>
+                <th scope="col">Port</th>
+                <th scope="col">Priorities</th>
+            </tr>
+        </thead>
+        <tbody id="candidatesBody">
+            @for (candidate of currentStates.candidates; track candidate) {
+            <tr>
+                <td>{{ candidate.elapsed }}</td>
+                <td>{{ candidate.component }}</td>
+                <td>{{ candidate.type }}</td>
+                <td>{{ candidate.foundation }}</td>
+                <td>{{ candidate.protocol }}</td>
+                <td>{{ candidate.address }}</td>
+                <td>{{ candidate.port }}</td>
+                <td>{{ candidate.priorities }}</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
 }
