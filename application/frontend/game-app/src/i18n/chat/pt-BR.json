@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Voltar às mensagens mais recentes.",
-  "history": "Você está vendo mensagens antigas.",
+  "composer": {
+    "tooLong": "{maxLength, plural, one {# caractere} other {# caracteres}} no máximo"
+  },
+  "log": {
+    "arrival": "{name} entrou na sala",
+    "departure": "{name} saiu da sala",
+    "empty": "Nenhuma mensagem ainda. Diga olá!",
+    "failed": "Não enviada",
+    "latest": "Últimas mensagens",
+    "retry": "Tentar de novo",
+    "sending": "Enviando…",
+    "unread": "Novas mensagens"
+  },
   "message": "Digite sua mensagem",
   "newMessages": "{count, plural, one {# nova mensagem} other {# novas mensagens}}",
+  "options": {
+    "arrivals": "Mostrar entradas e saídas",
+    "enterSends": "Enviar com Enter",
+    "shownMessages": "Mostrar as mensagens de",
+    "times": "Mostrar os horários"
+  },
+  "panel": {
+    "close": "Fechar o bate-papo",
+    "options": "Opções do bate-papo",
+    "title": "Bate-papo"
+  },
   "participants": {
     "count": "{count, plural, one {# participante} other {# participantes}} na sala",
-    "title": "Participantes"
+    "hidden": "Mensagens ocultas"
   },
   "ping": "ping {ping}",
-  "room": "Sala ({roomName})",
-  "send": "Enviar",
-  "showNewMessages": "Ver.",
-  "title": "Bate-papo WebRTC"
+  "send": "Enviar"
 }

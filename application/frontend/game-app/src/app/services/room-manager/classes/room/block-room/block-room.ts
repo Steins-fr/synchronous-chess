@@ -7,7 +7,7 @@ import {
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
-import { interval, map, Observable, takeUntil } from 'rxjs';
+import { interval, map, Observable, Subject, takeUntil } from 'rxjs';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Block } from './block-chain/block';
 import { Signal } from '@angular/core';
@@ -55,6 +55,8 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private readonly antiCheat: AntiCheat;
     /** The blocks and entries reported as cheated, by the local participant or the others */
     public readonly cheatFlags: Signal<ReadonlyArray<Readonly<CheatFlag>>>;
+    /** The participants who left the room, once every other participant lost them too */
+    private readonly departedSubject = new Subject<string>();
     /** The block chain of each message type, to transmit the messages */
     private readonly blockChainOf: ReadonlyMap<string, SequencedBlockChain>;
     /** The block chains by name, to dispatch the received messages */
@@ -119,6 +121,11 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         this.participants.left$.pipe(takeUntil(this.destroyRef)).subscribe((name: string) => this.onParticipantLeft(name));
         this.antiCheat.reported$.pipe(takeUntil(this.destroyRef)).subscribe(() => this.checkSequencerTrust());
         ticks$.pipe(takeUntil(this.destroyRef)).subscribe((now: number) => this.tick(now));
+    }
+
+    /** A participant losing its connection to another one may connect to it again: it left once all the others lost it */
+    public override get departed$(): Observable<string> {
+        return this.departedSubject.asObservable();
     }
 
     private tick(now: number): void {
@@ -240,7 +247,10 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
             this.roomConnection.changeHost(this.sequencer);
         }
 
-        names.forEach((name: string) => this.roomConnection.removeFromRoom(name));
+        names.forEach((name: string) => {
+            this.roomConnection.removeFromRoom(name);
+            this.departedSubject.next(name);
+        });
     }
 
     /** Most of the other participants reporting the sequencer as cheating take the ordering away from it */
@@ -329,6 +339,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     public override clear(): void {
         this.cleared = true;
         super.clear();
+        this.departedSubject.complete();
         this.participants.clear();
         this.antiCheat.clear();
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.clear());

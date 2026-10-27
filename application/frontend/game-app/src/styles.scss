@@ -59,7 +59,10 @@ html {
     --app-shadow: var(--mat-sys-shadow);
     --app-link-active: light-dark(green, #69f0ae);
     --app-chat-author: light-dark(blue, #82b1ff);
-    --app-chat-my-author: light-dark(green, #69f0ae);
+    --app-chat-bubble: var(--mat-sys-surface-container-high);
+    --app-chat-bubble-self: var(--mat-sys-primary-container);
+    --app-chat-bubble-self-text: var(--mat-sys-on-primary-container);
+    --app-chat-failed: var(--mat-sys-error);
     // The playing cards: a light face, dimmed in the dark theme as the board is, its inks staying dark. The back is the
     // blue of the board, its pattern drawn with transparency
     --app-card-face: light-dark(#fffdf7, #dcd8cc);
@@ -151,12 +154,6 @@ body {
             supporting-text-color: var(--app-on-color),
         ));
     }
-}
-
-// The CDK sizes the content wrapper of a virtual scroll to its widest item: held to the chat width, so that a long
-// message is cut with an ellipsis (ChatMessageComponent) instead of overflowing the chat
-#virtual-chat .cdk-virtual-scroll-content-wrapper {
-    width: 100%;
 }
 
 // The pieces of the board are sized for the board of the game: smaller in the preview of the presentation page

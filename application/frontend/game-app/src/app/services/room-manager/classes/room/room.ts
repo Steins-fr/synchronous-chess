@@ -5,7 +5,7 @@ import { AppMessage, AppMessagesOf, RoomServiceMessage } from '@app/services/roo
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { CheatReason } from './block-room/anti-cheat/cheat-report';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
-import { Observable, Subject, filter, takeUntil } from 'rxjs';
+import { Observable, Subject, filter, map, takeUntil } from 'rxjs';
 import { RoomNetwork } from '../room-network/room-network';
 import { LocalPlayer } from '../player/local-player';
 import { Player } from '../player/player';
@@ -66,6 +66,11 @@ export class Room<M extends object> {
 
     public get playerRemoved$(): Observable<Player> {
         return this._roomConnection.playerRemoved$;
+    }
+
+    /** The players who left the room: a room without block chain counts a lost connection as a departure */
+    public get departed$(): Observable<string> {
+        return this.playerRemoved$.pipe(map((player: Player) => player.name));
     }
 
     public get initiator(): boolean {

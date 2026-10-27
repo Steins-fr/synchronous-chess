@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "En yeni mesajlara dönün.",
-  "history": "Eski mesajlara bakıyorsunuz.",
+  "composer": {
+    "tooLong": "En fazla {maxLength, plural, one {# karakter} other {# karakter}}"
+  },
+  "log": {
+    "arrival": "{name} odaya katıldı",
+    "departure": "{name} odadan ayrıldı",
+    "empty": "Henüz mesaj yok. Merhaba deyin!",
+    "failed": "Gönderilemedi",
+    "latest": "Son mesajlar",
+    "retry": "Tekrar dene",
+    "sending": "Gönderiliyor…",
+    "unread": "Yeni mesajlar"
+  },
   "message": "Mesajınızı yazın",
   "newMessages": "{count, plural, one {# yeni mesaj} other {# yeni mesaj}}",
+  "options": {
+    "arrivals": "Giriş ve çıkışları göster",
+    "enterSends": "Enter ile gönder",
+    "shownMessages": "Mesajlarını göster",
+    "times": "Saatleri göster"
+  },
+  "panel": {
+    "close": "Sohbeti kapat",
+    "options": "Sohbet seçenekleri",
+    "title": "Sohbet"
+  },
   "participants": {
     "count": "Odada {count, plural, one {# katılımcı} other {# katılımcı}}",
-    "title": "Katılımcılar"
+    "hidden": "Mesajlar gizlendi"
   },
   "ping": "ping {ping}",
-  "room": "Oda ({roomName})",
-  "send": "Gönder",
-  "showNewMessages": "Gör.",
-  "title": "WebRTC sohbeti"
+  "send": "Gönder"
 }

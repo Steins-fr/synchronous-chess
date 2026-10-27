@@ -74,7 +74,9 @@ describe('SynchronousChess', () => {
         await fixture.whenStable();
         expect(fixture.nativeElement.querySelector('app-chess-presentation')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull();
-        expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
+        // The chat beside the game, out of the page
+        expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#page-content app-chat')).toBeNull();
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-chess-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-chess-rules .title')).toBeNull();
 

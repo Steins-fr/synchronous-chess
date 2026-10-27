@@ -132,12 +132,27 @@ run by the CI.
 - A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`, without the snapshots of
   the DOM in `bots.e2e.ts` (they run in the page with a user gesture, which activates it). The servers' logs are not
   shown: start the servers apart to read them.
+- A scenario narrowing the window under 1024 pixels calls `narrow()`: the chat of the game closes over it, and the game
+  widens for a moment, which would move what a drag aims at or `watchSteadiness()` records.
 - Run one scenario with `npx playwright test -g "<part of its name>"`.
 - Two suites: `npm run e2e:fast` runs the quick scenarios, `npm run e2e:slow` the ones tagged `SLOW` (`@slow`,
   `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing
   out after 15 seconds, the room handed over, the moves of a poker hand timing out after 45 seconds, 30 more for a player away. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
+
+### Testing the chat of a game
+
+- The pages of a room scroll under the navigation, in the content of a `mat-sidenav-container` (`RoomLayoutComponent`):
+  the bar of the room (`#room-bar`) stays on top, with the button of the chat (`#room-chat-toggle`, the unread messages
+  on its badge). The chat page (`/simple-chat`) shows its chat in the page, without button, once in a room: the chat
+  of the next room starts empty.
+- From 1024 pixels wide, the chat (`#room-chat`) opens beside the game, open by default and as the user left it
+  (`ChatPreferencesService`, the local storage); narrower, it opens over the game, closed when the page shows, and the
+  back gesture closes it. A closed chat keeps receiving its messages.
+- A message is a bubble of `#chat-log` (`.chat-bubble`), its author in a hidden text first (`alice: hello`). Enter
+  sends it, Shift+Enter starts a new line; the options of the chat (`#chat-options`) hide the arrivals and departures,
+  the times, a player's messages, or turn Enter into a new line.
 
 ### Testing a chess game
 

@@ -53,6 +53,11 @@
     "title": "Wähle ein Spiel"
   },
   "rooms": {
+    "bar": {
+      "chat": "Chat",
+      "room": "Raum {roomName}",
+      "unread": "{count, plural, one {# ungelesene Nachricht} other {# ungelesene Nachrichten}}"
+    },
     "booting": {
       "delay": "Der Server und seine Datenbank schlafen, wenn niemand spielt: Das Aufwecken dauert bis zu etwa dreißig Sekunden.",
       "title": "Server wird gestartet…"

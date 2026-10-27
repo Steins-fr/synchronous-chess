@@ -23,6 +23,9 @@ type ThemeButton = {
         TranslocoPipe,
     ],
     templateUrl: './app.component.html',
+    host: {
+        class: 'flex h-dvh flex-col',
+    },
 })
 export class AppComponent {
     // The button tells what a click does, by the theme shown: it shows the other one

@@ -53,6 +53,11 @@
     "title": "Choose a game"
   },
   "rooms": {
+    "bar": {
+      "chat": "Chat",
+      "room": "Room {roomName}",
+      "unread": "{count, plural, one {# unread message} other {# unread messages}}"
+    },
     "booting": {
       "delay": "The server and its database sleep when nobody plays: waking them up takes up to about thirty seconds.",
       "title": "Starting the server…"

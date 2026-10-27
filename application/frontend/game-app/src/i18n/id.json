@@ -53,6 +53,11 @@
     "title": "Pilih permainan"
   },
   "rooms": {
+    "bar": {
+      "chat": "Obrolan",
+      "room": "Ruang {roomName}",
+      "unread": "{count, plural, other {# pesan belum dibaca}}"
+    },
     "booting": {
       "delay": "Server dan basis datanya tidur saat tidak ada yang bermain: membangunkannya butuh waktu hingga sekitar tiga puluh detik.",
       "title": "Menyalakan server…"

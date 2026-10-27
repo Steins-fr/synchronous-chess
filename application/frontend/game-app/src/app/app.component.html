@@ -1,4 +1,4 @@
-<nav *transloco="let t; prefix: 'app'" class="flex items-center">
+<nav *transloco="let t; prefix: 'app'" class="flex shrink-0 items-center">
     <!-- The links of the games hold on a phone of 360 pixels, but in the longest languages: then they scroll, not the page -->
     <div class="flex min-w-0 overflow-x-auto">
         <a [routerLink]="[ homePath ]" [routerLinkActiveOptions]="{ exact:true }" class="nav-link"
@@ -26,7 +26,8 @@
         </button>
     </div>
 </nav>
-<div id="layout">
+<!-- The page scrolls under the navigation, which stays: the pages of a room hold their chat beside the game -->
+<div class="min-h-0 flex-1 overflow-y-auto" id="layout">
     <router-outlet></router-outlet>
 </div>
 <app-page-loader />

@@ -528,7 +528,8 @@ describe('BlockRoom', () => {
 
             test('should decide the only participant it lost left: alone too, it joins the room again', () => {
                 // Given
-                createRoom();
+                const departed: string[] = [];
+                createRoom().departed$.subscribe((name: string) => departed.push(name));
                 const b: Player = createRemote('b');
                 network.playerAdded$.next(b);
 
@@ -538,12 +539,14 @@ describe('BlockRoom', () => {
                 // Then
                 expect(network.rejoin).not.toHaveBeenCalled();
                 expect(network.removeFromRoom.mock.calls).toEqual([['b']]);
+                expect(departed).toEqual(['b']);
             });
 
             test('should let the participants it lost take the room over, joining it again', () => {
                 // Given
                 network.rejoin.mockReturnValue(new Promise<RejoinResult>(() => undefined));
-                createRoom();
+                const departed: string[] = [];
+                createRoom().departed$.subscribe((name: string) => departed.push(name));
                 const b: Player = createRemote('b');
                 const c: Player = createRemote('c');
                 [b, c].forEach((player: Player) => network.playerAdded$.next(player));
@@ -555,6 +558,7 @@ describe('BlockRoom', () => {
                 // Then without deciding they left
                 expect(network.rejoin).toHaveBeenCalledTimes(1);
                 expect(network.removeFromRoom).not.toHaveBeenCalled();
+                expect(departed).toEqual([]);
             });
 
             test('should take its room back once nobody took it over', async () => {
@@ -573,6 +577,19 @@ describe('BlockRoom', () => {
                 await vi.waitFor(() => expect(network.changeHost.mock.calls).toEqual([['local']]));
                 expect(network.removeFromRoom.mock.calls).toEqual([['b'], ['c']]);
             });
+        });
+
+        test('should complete its departures once cleared', () => {
+            // Given
+            const completed = vi.fn();
+            const room: BlockRoom<TestPayloads> = createRoom();
+            room.departed$.subscribe({ complete: completed });
+
+            // When
+            room.clear();
+
+            // Then
+            expect(completed).toHaveBeenCalledTimes(1);
         });
 
         test('should not decide anything once cleared while joining again', async () => {

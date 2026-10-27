@@ -3,4 +3,8 @@
     @if (ping(); as pingValue) {
     <span> - {{ 'chat.ping' | transloco: { ping: pingValue } }}</span>
     }
+    @if (hidden()) {
+    <!-- Named by its attribute: the text of the chip holds the name of the player only -->
+    <mat-icon [title]="'chat.participants.hidden' | transloco" fontIcon="visibility_off" matChipTrailingIcon />
+    }
 </mat-chip>

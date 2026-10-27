@@ -1,15 +1,42 @@
-<!-- The open rooms first, on top of the page -->
-<div class="container">
-    <app-room-setup [game]="game()"/>
-</div>
-@if (!isSetup()) {
-<ng-content select="[roomPresentation]"/>
-}
-<div id="room-content">
-    <div id="page-content" class="container">
-        <ng-content/>
-    </div>
-    @if (!isSetup() && dimContent()) {
-    <div id="room-content-overlay"></div>
+<mat-sidenav-container class="h-full">
+    <mat-sidenav-content>
+        @if (isSetup() && room(); as room) {
+        <!-- The bar of the room, kept on top while the page scrolls -->
+        <div class="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-app-border bg-app-surface pl-4 pr-2" id="room-bar">
+            <mat-icon aria-hidden="true" class="shrink-0 text-app-text-muted">meeting_room</mat-icon>
+            <span class="min-w-0 flex-1 truncate font-medium">{{ 'rooms.bar.room' | transloco: { roomName: room.roomName } }}</span>
+            @if (sideChat()) {
+            <button
+                #chatButton (click)="toggleChat(!chatOpen())" [attr.aria-expanded]="chatOpen()" [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: unread() }"
+                [matBadgeHidden]="unread() === 0" [matBadge]="unread()" aria-controls="room-chat" id="room-chat-toggle" mat-button type="button">
+                <mat-icon>forum</mat-icon>
+                <span class="max-sm:sr-only">{{ 'rooms.bar.chat' | transloco }}</span>
+            </button>
+            }
+        </div>
+        }
+        <!-- The open rooms first, on top of the page -->
+        <div class="container">
+            <app-room-setup [game]="game()"/>
+        </div>
+        @if (!isSetup()) {
+        <ng-content select="[roomPresentation]"/>
+        }
+        <div id="room-content">
+            <div id="page-content" class="container">
+                <ng-content/>
+            </div>
+            @if (!isSetup() && dimContent()) {
+            <div id="room-content-overlay"></div>
+            }
+        </div>
+    </mat-sidenav-content>
+    @if (sideChat() && room(); as room) {
+    <!-- Beside the game, Escape typed in the chat does not close it: over the game, it does -->
+    <mat-sidenav
+        (openedChange)="onChatOpenedChange($event)" [disableClose]="wide()" [mode]="wide() ? 'side' : 'over'" [opened]="chatOpen()"
+        id="room-chat" position="end">
+        <app-chat (closed)="toggleChat(false)" [closable]="true" [open]="chatOpen()" [room]="room" class="h-full" />
+    </mat-sidenav>
     }
-</div>
+</mat-sidenav-container>

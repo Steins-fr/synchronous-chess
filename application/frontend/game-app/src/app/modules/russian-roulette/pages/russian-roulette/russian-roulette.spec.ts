@@ -68,15 +68,17 @@ describe('RussianRoulette', () => {
             { type: 'create', game: RoomGame.RUSSIAN_ROULETTE, roomName: 'room', playerName: 'local', token: 'token' }, 6,
             { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, ...rouletteBlockChains }, expect.any(AbortSignal),
         );
-        expect(fixture.nativeElement.querySelector('app-chat')).not.toBeNull();
+        // The chat beside the game, out of the page
+        expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#page-content app-chat')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-presentation')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-table')).not.toBeNull();
         // The rules are folded below the table, without their own title
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-roulette-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-rules h2')).toBeNull();
-        // The game first, then the chat, then the debug panel
+        // The game first, then the debug panel
         const order: string[] = Array.from(fixture.nativeElement.querySelector('#page-content').children, (child: Element) => child.tagName.toLowerCase());
-        expect(order).toEqual(['app-roulette-table', 'details', 'app-chat', 'app-debug-webrtc']);
+        expect(order).toEqual(['app-roulette-table', 'details', 'app-debug-webrtc']);
     });
 });

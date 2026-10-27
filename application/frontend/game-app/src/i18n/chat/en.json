@@ -1,16 +1,35 @@
 {
   "author": "{author}:",
-  "backToLatest": "Back to the latest messages.",
-  "history": "You are looking at older messages.",
+  "composer": {
+    "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most"
+  },
+  "log": {
+    "arrival": "{name} joined the room",
+    "departure": "{name} left the room",
+    "empty": "No messages yet. Say hello!",
+    "failed": "Not sent",
+    "latest": "Latest messages",
+    "retry": "Retry",
+    "sending": "Sending…",
+    "unread": "New messages"
+  },
   "message": "Type your message",
   "newMessages": "{count, plural, one {# new message} other {# new messages}}",
+  "options": {
+    "arrivals": "Show arrivals and departures",
+    "enterSends": "Send with Enter",
+    "shownMessages": "Show the messages of",
+    "times": "Show the times"
+  },
+  "panel": {
+    "close": "Close the chat",
+    "options": "Chat options",
+    "title": "Chat"
+  },
   "participants": {
     "count": "{count, plural, one {# participant} other {# participants}} in the room",
-    "title": "Participants"
+    "hidden": "Messages hidden"
   },
   "ping": "ping {ping}",
-  "room": "Room ({roomName})",
-  "send": "Send",
-  "showNewMessages": "Show.",
-  "title": "WebRTC chat"
+  "send": "Send"
 }

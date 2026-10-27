@@ -29,6 +29,8 @@ export enum CheatReason {
     INVALID_SPIN = 'invalidSpin',
     /** Detected by the application: a share of a chamber, or of the key of a cylinder, not made with the key of its player */
     INVALID_SHARE = 'invalidShare',
+    /** Detected by the application: a message not of the form the application sends (a message of the chat) */
+    INVALID_MESSAGE = 'invalidMessage',
 }
 
 /** The cheats only the sequencer can commit: enough participants reporting them hand the ordering over */

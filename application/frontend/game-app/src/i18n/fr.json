@@ -53,6 +53,11 @@
     "title": "Choisissez un jeu"
   },
   "rooms": {
+    "bar": {
+      "chat": "Tchat",
+      "room": "Salle {roomName}",
+      "unread": "{count, plural, one {# message non lu} other {# messages non lus}}"
+    },
     "booting": {
       "delay": "Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une trentaine de secondes.",
       "title": "Démarrage du serveur…"

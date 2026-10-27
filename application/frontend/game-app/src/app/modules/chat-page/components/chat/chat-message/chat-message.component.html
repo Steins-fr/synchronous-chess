@@ -1,4 +1,22 @@
-<div class="chat-message" [title]="message().message">
-    <span class="author" [class.my-message]="message().isSelf">{{ 'chat.author' | transloco: { author: message().author } }}</span>
-    {{ message().message }}
+@if (startsGroup() && (!message().isSelf || time())) {
+<div class="flex gap-2 px-1 text-xs">
+    @if (!message().isSelf) {
+    <span class="font-medium text-app-chat-author">{{ message().author }}</span>
+    }
+    @if (time(); as time) {
+    <time class="text-app-text-muted">{{ time }}</time>
+    }
 </div>
+}
+<p [class.chat-bubble-other]="!message().isSelf" [class.chat-bubble-self]="message().isSelf" [class.opacity-60]="message().state !== states.SENT"
+    class="chat-bubble">
+    <!-- The author of each message, for a screen reader: the group shows it once -->
+    <span class="sr-only">{{ 'chat.author' | transloco: { author: message().author } }} </span>{{ message().text }}</p>
+@if (message().state === states.SENDING) {
+<span class="px-1 text-xs text-app-text-muted">{{ 'chat.log.sending' | transloco }}</span>
+} @else if (message().state === states.FAILED) {
+<span class="flex items-center gap-1 px-1 text-xs text-app-chat-failed">
+    {{ 'chat.log.failed' | transloco }}
+    <button (click)="retry.emit()" mat-button type="button">{{ 'chat.log.retry' | transloco }}</button>
+</span>
+}

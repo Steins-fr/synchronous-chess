@@ -278,7 +278,7 @@ export abstract class RoomNetwork {
             return;
         }
 
-        const player = new WebRtcPlayer(negotiator.playerName, negotiator.webRTC);
+        const player = new WebRtcPlayer(negotiator.playerName, negotiator.webRTC, negotiator.isInitiator);
         this.removeNegotiator(negotiator);
         this.addPlayer(player);
         this.onPlayerConnected(player);

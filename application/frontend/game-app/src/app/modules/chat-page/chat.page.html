@@ -1,5 +1,8 @@
-<app-room-layout [game]="game">
-    <app-chat [room]="room()" />
+<app-room-layout [game]="game" [room]="room()" [sideChat]="false">
+    @if (room(); as myRoom) {
+    <!-- The chat is the game of the page: in its flow, rather than beside it. A chat for each room, the next one starting empty -->
+    <app-chat [room]="myRoom" class="mx-auto my-4 h-[70dvh] min-h-96 max-w-3xl overflow-hidden rounded-xl border border-app-border" />
+    }
 </app-room-layout>
 @if (room(); as myRoom) {
 <app-debug-webrtc [room]="myRoom"/>

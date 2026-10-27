@@ -29,7 +29,11 @@ export class WebRtcPlayer extends Player {
     private readonly pingTimerId: ReturnType<typeof setInterval>;
     public ping: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
-    public constructor(name: string, private readonly webRTC: Webrtc) {
+    /**
+     * @param initiated whether the local player opened the connection: the participants of a room connect to a player
+     * joining it, so this player arrived after the local one
+     */
+    public constructor(name: string, private readonly webRTC: Webrtc, public readonly initiated: boolean = false) {
         super(name);
 
         this.states = this.webRTC.states;

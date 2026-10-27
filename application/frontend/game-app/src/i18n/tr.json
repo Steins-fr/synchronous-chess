@@ -53,6 +53,11 @@
     "title": "Bir oyun seçin"
   },
   "rooms": {
+    "bar": {
+      "chat": "Sohbet",
+      "room": "Oda {roomName}",
+      "unread": "{count, plural, one {# okunmamış mesaj} other {# okunmamış mesaj}}"
+    },
     "booting": {
       "delay": "Kimse oynamadığında sunucu ve veritabanı uyku moduna geçer: uyanmaları otuz saniyeye kadar sürebilir.",
       "title": "Sunucu başlatılıyor…"
