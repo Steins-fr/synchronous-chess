@@ -13,6 +13,10 @@
                 <span class="max-sm:sr-only">{{ 'rooms.bar.chat' | transloco }}</span>
             </button>
             }
+            <button (click)="leaveRoom()" id="room-leave" mat-button type="button">
+                <mat-icon>logout</mat-icon>
+                <span class="max-sm:sr-only">{{ 'rooms.bar.leave' | transloco }}</span>
+            </button>
         </div>
         }
         <!-- The open rooms first, on top of the page -->

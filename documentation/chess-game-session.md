@@ -213,6 +213,12 @@ page unloads (a close, a reload, a link out of the app), with a text of its own,
 app asks through a dialog (`leaveMatchGuard`). A spectator, or a game over, is not asked. A player leaving
 through the app gives its room up: its seat follows the one of a closed tab.
 
+The **Leave** button of the bar of the room (`#room-leave`, `RoomLayoutComponent`) gives the room up while
+staying on the page: seated in a game in progress, the player confirms first, with the same dialog
+(`confirmMatchLeave()`). `roomFromSetup()` clears the room as the page leaving it does (the others see the
+player leave, a host is taken over), removes its session, its lock and `?room=` from the URL, then shows
+the list of the open rooms again: a reload shows the list.
+
 A reloaded page builds a new session, and the chain delivers again all its messages:
 
 - the `SC_GS_seat` requests seat the same players again;

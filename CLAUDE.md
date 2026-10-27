@@ -126,9 +126,10 @@ run by the CI.
   sees, and `cutConnections()` to close its WebRTC connections as a network failure would.
 - The page of a room holds its id in its URL (`?room=room-1%23004512`), and its tab the name and the token of its join
   (session storage): `reload()` reloads the page, which joins its room again by itself, without dialog; the URL opened
-  in another browser opens the join dialog of the room (`visitUrl()`). A player leaving a match in progress is asked to
-  confirm: `RoomParticipant` accepts the dialog of the browser (`beforeunload`, counted by `expectUnloadPrompts()`),
-  the dialog of the app is clicked by the scenario.
+  in another browser opens the join dialog of the room (`visitUrl()`). `leaveRoom()` clicks the button of the bar leaving
+  the room (`#room-leave`): the list shows again, the room removed from the URL and the session. A player leaving a
+  match in progress is asked to confirm: `RoomParticipant` accepts the dialog of the browser (`beforeunload`, counted
+  by `expectUnloadPrompts()`), the dialog of the app is clicked by the scenario.
 - A failed test keeps its trace: `npx playwright show-trace test-results/<test>/trace.zip`, without the snapshots of
   the DOM in `bots.e2e.ts` (they run in the page with a user gesture, which activates it). The servers' logs are not
   shown: start the servers apart to read them.
@@ -145,7 +146,7 @@ run by the CI.
 
 - The pages of a room scroll under the navigation, in the content of a `mat-sidenav-container` (`RoomLayoutComponent`):
   the bar of the room (`#room-bar`) stays on top, with the button of the chat (`#room-chat-toggle`, the unread messages
-  on its badge). The chat page (`/simple-chat`) shows its chat in the page, without button, once in a room: the chat
+  on its badge) and the one leaving the room (`#room-leave`, `Leave`). The chat page (`/simple-chat`) shows its chat in the page, without button, once in a room: the chat
   of the next room starts empty.
 - From 1024 pixels wide, the chat (`#room-chat`) opens beside the game, open by default and as the user left it
   (`ChatPreferencesService`, the local storage); narrower, it opens over the game, closed when the page shows, and the

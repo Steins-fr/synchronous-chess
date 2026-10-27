@@ -55,6 +55,7 @@
   "rooms": {
     "bar": {
       "chat": "Chat",
+      "leave": "Leave",
       "room": "Room {roomName}",
       "unread": "{count, plural, one {# unread message} other {# unread messages}}"
     },

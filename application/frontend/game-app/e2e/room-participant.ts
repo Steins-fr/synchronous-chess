@@ -178,6 +178,11 @@ export class RoomParticipant {
         return this.page.url();
     }
 
+    /** Leaves the room from its bar, staying on the page: the app asks to confirm leaving a match */
+    public async leaveRoom(): Promise<void> {
+        await this.page.locator('#room-leave').click();
+    }
+
     /** The page holds no room in its URL */
     public async expectNoRoomUrl(): Promise<void> {
         await expect(this.page).toHaveURL((url: URL) => !url.searchParams.has('room'));

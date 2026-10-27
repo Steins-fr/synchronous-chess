@@ -96,9 +96,20 @@ test.describe('Synchronous chess', () => {
         await carol.page.getByRole('link', { name: 'Home' }).click();
         await expect(carol.page).toHaveURL(/\/$/);
 
+        // A player leaving the room from its bar is asked, keeping its seat once it cancels, the open rooms shown once it
+        // confirms. The dialogs of the app lie in an overlay of their own
+        await bob.leaveRoom();
+        const bobDialog: Locator = bob.page.locator('.dialog-overlay');
+        await expect(bobDialog).toContainText('Leave the game?');
+        await bobDialog.getByRole('button', { name: 'Cancel' }).click();
+        await expect(game(bob).locator('#seat-bottom')).toHaveText('Black player: bob');
+        await bob.leaveRoom();
+        await bobDialog.getByRole('button', { name: 'Confirm' }).click();
+        await bob.expectSetupForm();
+        await bob.expectNoRoomUrl();
+
         // A player is asked, staying on the page once it cancels
         await alice.page.getByRole('link', { name: 'Home' }).click();
-        // The dialogs of the app lie in an overlay of their own
         const dialog: Locator = alice.page.locator('.dialog-overlay');
         await expect(dialog).toContainText('Leave the game?');
         await dialog.getByRole('button', { name: 'Cancel' }).click();

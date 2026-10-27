@@ -24,6 +24,40 @@ test.describe('Room session', () => {
         await alice.expectMessage('bob', 'back');
     });
 
+    test('leaves its room from its bar, the list shown once reloaded', async ({ room }) => {
+        // Given
+        const [alice, bob]: RoomParticipant[] = await room.connect('alice', 'bob');
+        await bob.roomUrl(room.id);
+
+        // When
+        await bob.leaveRoom();
+
+        // Then: no prompt out of a match
+        await alice.expectParticipants(['alice']);
+        await bob.expectSetupForm();
+        await bob.expectNoRoomUrl();
+        await bob.reload();
+        await bob.expectSetupForm();
+        await bob.expectNoRoomUrl();
+        bob.expectUnloadPrompts(0);
+    });
+
+    test('hands the room over once its host left it from its bar', async ({ room }) => {
+        // Given
+        const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
+
+        // When
+        await alice.leaveRoom();
+
+        // Then
+        await alice.expectSetupForm();
+        await Promise.all([bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['bob', 'carol'], RECONNECTION_TIMEOUT)));
+        await carol.sendMessage('still here');
+        await bob.expectMessage('carol', 'still here');
+        const dave: RoomParticipant = await room.join('dave');
+        await Promise.all([bob, carol, dave].map((participant: RoomParticipant) => participant.expectConnected(['bob', 'carol', 'dave'], RECONNECTION_TIMEOUT)));
+    });
+
     test('lets the host alone in its room reconnect it once reloaded', SLOW, async ({ room }) => {
         // Given
         const alice: RoomParticipant = await room.create('alice');
