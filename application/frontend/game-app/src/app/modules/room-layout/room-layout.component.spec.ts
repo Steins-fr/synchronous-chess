@@ -16,6 +16,7 @@ import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http'
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { MatchLeaveWarning } from './match-leave-warning';
 
 type FakeMediaQueryList = EventTarget & { matches: boolean };
 
@@ -23,12 +24,15 @@ describe('RoomLayoutComponent', () => {
     let fixture: ComponentFixture<RoomLayoutComponent>;
     let roomSetupService: RoomSetupService;
     let wideScreen: FakeMediaQueryList;
+    let leaveWarning: MatchLeaveWarning;
 
     beforeEach(async () => {
         localStorage.clear();
         wideScreen = Object.assign(new EventTarget(), { matches: true });
         vi.spyOn(globalThis, 'matchMedia').mockImplementation((query: string) =>
             (query === RoomLayoutComponent.wideQuery ? wideScreen : { matches: false, media: query }) as unknown as MediaQueryList);
+
+        leaveWarning = TestHelper.cast<MatchLeaveWarning>({ confirmLeave: vi.fn().mockResolvedValue(true) });
 
         await TestBed.configureTestingModule({
             imports: [RoomLayoutComponent],
@@ -37,6 +41,7 @@ describe('RoomLayoutComponent', () => {
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 // Provided by the page
                 { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: signal(false) }) },
+                { provide: MatchLeaveWarning, useValue: leaveWarning },
             ],
         }).compileComponents();
 
@@ -342,6 +347,45 @@ describe('RoomLayoutComponent', () => {
             expect(animate).toHaveBeenCalledTimes(2);
         });
 
+        test('should leave the room once its player confirms, the focus moved to the creation of a room', async () => {
+            // Given: the chat closed, no animation of the sidenav left running (its inert state updated 50 ms later)
+            preferences.panelOpen.set(false);
+            await showRoom();
+            // The room given up by the page, the list shown again
+            const leave = vi.spyOn(roomSetupService, 'leave').mockImplementation(() => roomSetupService.roomIsSetup(false));
+            const button: HTMLButtonElement = query('#room-leave') as HTMLButtonElement;
+            button.focus();
+
+            // When
+            button.click();
+            // The list asked again once shown
+            await vi.waitFor(() => expect(leave).toHaveBeenCalledOnce());
+            answerOpenRooms();
+            await fixture.whenStable();
+
+            // Then
+            expect(button.textContent).toContain('Leave');
+            expect(leaveWarning.confirmLeave).toHaveBeenCalledOnce();
+            expect(query('#room-bar')).toBeNull();
+            expect(document.activeElement).toBe(query('#room-create'));
+        });
+
+        test('should stay in the room once its player cancels leaving its match', async () => {
+            // Given
+            preferences.panelOpen.set(false);
+            await showRoom();
+            vi.mocked(leaveWarning.confirmLeave).mockResolvedValue(false);
+            const leave = vi.spyOn(roomSetupService, 'leave');
+
+            // When
+            (query('#room-leave') as HTMLButtonElement).click();
+            await fixture.whenStable();
+
+            // Then
+            expect(leave).not.toHaveBeenCalled();
+            expect(query('#room-bar')).not.toBeNull();
+        });
+
         test('should leave the chat to the page holding it itself', async () => {
             // Given
             fixture.componentRef.setInput('sideChat', false);
@@ -351,6 +395,7 @@ describe('RoomLayoutComponent', () => {
 
             // Then
             expect(query('#room-bar')).not.toBeNull();
+            expect(query('#room-leave')).not.toBeNull();
             expect(toggle()).toBeNull();
             expect(query('mat-sidenav')).toBeNull();
 
@@ -373,6 +418,7 @@ describe('RoomLayoutComponent recompiled from its metadata', () => {
                 RoomSetupService,
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: signal(false) }) },
+                { provide: MatchLeaveWarning, useValue: TestHelper.cast<MatchLeaveWarning>({}) },
             ],
         });
         TestBed.overrideComponent(RoomLayoutComponent, { add: { host: { class: 'recompiled' } } });

@@ -1,13 +1,16 @@
 import { computed, DestroyRef, DOCUMENT, effect, inject, Injectable, Signal, signal } from '@angular/core';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
+import { DialogService } from '@app/services/dialog/dialog.service';
 
 /**
  * Warns the player of a page before it leaves the match it plays, the other player waiting for it: the browser asks to
  * confirm the unload of the page (a close, a reload, a link out of the app), with a text of its own, and a navigation of
- * the app asks through a dialog (leaveMatchGuard). A spectator, or a match over, is not warned. Provided by the page,
- * given its match by the component of the game (watch())
+ * the app, or the button of the room leaving it, asks through a dialog (confirmLeave()). A spectator, or a match over, is
+ * not warned. Provided by the page, given its match by the component of the game (watch())
  */
 @Injectable()
 export class MatchLeaveWarning {
+    private readonly dialogService = inject(DialogService);
     private readonly match = signal<Signal<boolean> | undefined>(undefined);
     /** The local player plays the match of the page */
     public readonly inMatch: Signal<boolean> = computed((): boolean => this.match()?.() ?? false);
@@ -24,6 +27,15 @@ export class MatchLeaveWarning {
             window.addEventListener('beforeunload', MatchLeaveWarning.warn);
             onCleanup(() => window.removeEventListener('beforeunload', MatchLeaveWarning.warn));
         });
+    }
+
+    /**
+     * Leaving the match the local player plays asks it to confirm: its seat then follows the one of a closed tab, freed once
+     * the player is away. Out of a match, nothing to confirm
+     * @returns whether the player leaves
+     */
+    public confirmLeave(): boolean | Promise<boolean> {
+        return !this.inMatch() || this.dialogService.confirm(marker('rooms.leave.title'), marker('rooms.leave.message'), 'confirm-cancel');
     }
 
     /** The browser asks to confirm the unload of the page */

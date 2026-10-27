@@ -55,6 +55,7 @@
   "rooms": {
     "bar": {
       "chat": "Sohbet",
+      "leave": "Ayrıl",
       "room": "Oda {roomName}",
       "unread": "{count, plural, one {# okunmamış mesaj} other {# okunmamış mesaj}}"
     },

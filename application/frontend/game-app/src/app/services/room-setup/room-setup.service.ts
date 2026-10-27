@@ -29,9 +29,17 @@ export default class RoomSetupService {
     private readonly loadingSubject = new BehaviorSubject<boolean>(false);
     public readonly loading$ = this.loadingSubject.asObservable();
 
+    private readonly leaveSubject = new Subject<void>();
+    /** The player leaves the room of the page, staying on it */
+    public readonly leave$ = this.leaveSubject.asObservable();
+
     public setup(setup: RoomSetupInterface): void {
         this.loadingSubject.next(true);
         this.setupSubject.next(setup);
+    }
+
+    public leave(): void {
+        this.leaveSubject.next();
     }
 
     // The lock of the player in the room the page holds, held or asked, and its name: a page holds one room at a time

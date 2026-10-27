@@ -106,6 +106,42 @@ describe('roomFromSetup', () => {
         expect(lock.release).toHaveBeenCalledOnce();
     });
 
+    test('should clear the room the player leaves, and remove it from the URL, its session and its lock', async () => {
+        // Given
+        await built();
+        const clear = vi.spyOn(room, 'clear');
+        const roomIsSetups: boolean[] = [];
+        roomSetupService.roomIsSetup$.subscribe((roomIsSetup: boolean) => roomIsSetups.push(roomIsSetup));
+
+        // When
+        roomSetupService.leave();
+        await fixture.whenStable();
+
+        // Then
+        expect(clear).toHaveBeenCalledOnce();
+        expect(fixture.componentInstance.room()).toBeUndefined();
+        expect(roomIsSetups).toEqual([true, false]);
+        expect(router.url).toBe('/?tab=1');
+        expect(sessions.get('room#000001')).toBeUndefined();
+        expect(lock.release).toHaveBeenCalledOnce();
+    });
+
+    test('should leave no room while the room is built', async () => {
+        // Given
+        vi.mocked(roomManagerService.buildBlockRoom).mockReturnValue(new Promise(() => undefined));
+        roomSetupService.setup(setup);
+        const roomIsSetup = vi.fn();
+        roomSetupService.roomIsSetup$.subscribe(roomIsSetup);
+
+        // When
+        roomSetupService.leave();
+        await fixture.whenStable();
+
+        // Then
+        expect(roomIsSetup).toHaveBeenCalledExactlyOnceWith(false);
+        expect(RoomLocks.hold).not.toHaveBeenCalled();
+    });
+
     test('should remove the room from the URL, and its session, once the room could not be built', async () => {
         // Given a room resumed from the URL
         sessions.save('room#000001', { playerName: 'alice', token: 'a1' });

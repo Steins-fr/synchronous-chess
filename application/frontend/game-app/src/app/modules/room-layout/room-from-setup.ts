@@ -58,6 +58,12 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
         forget(roomId);
         urlRoom.set(null);
     };
+    // The room left by the player, or by a join failed: the others see the player leave
+    const leave = (left: BlockRoom<M>): void => {
+        left.clear();
+        room.set(undefined);
+        giveUp(left.roomName);
+    };
 
     const buildRoom = async (setup: RoomSetupInterface): Promise<void> => {
         building = setup.roomName;
@@ -74,11 +80,7 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             roomSessions.save(built.roomName, { playerName: setup.playerName, token: setup.token });
             urlRoom.set(built.roomName);
             void roomSetupService.holdLock(built.roomName, setup.playerName);
-            built.roomConnection.joinFailed$.subscribe(() => {
-                built.clear();
-                room.set(undefined);
-                giveUp(built.roomName);
-            });
+            built.roomConnection.joinFailed$.subscribe(() => leave(built));
         } catch (e) {
             if (destroyed.signal.aborted) {
                 return;
@@ -97,6 +99,13 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     };
 
     roomSetupService.setup$.pipe(takeUntilDestroyed()).subscribe((setup: RoomSetupInterface) => void buildRoom(setup));
+    // Not while the room is built: the button leaving it shows once the room is set up
+    roomSetupService.leave$.pipe(takeUntilDestroyed()).subscribe(() => {
+        const left: BlockRoom<M> | undefined = room();
+        if (left !== undefined) {
+            leave(left);
+        }
+    });
     inject(DestroyRef).onDestroy(() => {
         destroyed.abort();
         // Left through the app: the player left its room, or the one it was joining

@@ -43,6 +43,19 @@ describe('RoomSetupService', () => {
         expect(loadings).toEqual([false, true, false]);
     });
 
+    test('leave should emit the leave of the room', () => {
+        // Given
+        const service: RoomSetupService = new RoomSetupService();
+        const leave = vi.fn();
+        service.leave$.subscribe(leave);
+
+        // When
+        service.leave();
+
+        // Then
+        expect(leave).toHaveBeenCalledOnce();
+    });
+
     describe('lock', () => {
         afterEach(() => {
             vi.restoreAllMocks();
