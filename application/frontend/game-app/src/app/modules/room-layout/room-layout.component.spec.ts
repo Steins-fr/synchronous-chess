@@ -1,4 +1,4 @@
-import { Component, signal, WritableSignal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSidenav } from '@angular/material/sidenav';
 import { By } from '@angular/platform-browser';
@@ -6,7 +6,6 @@ import { Router } from '@angular/router';
 import { RoomLayoutComponent } from './room-layout.component';
 import { ChatMessengerType, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
-import { DialogService } from '@app/services/dialog/dialog.service';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -25,8 +24,7 @@ describe('RoomLayoutComponent', () => {
     let fixture: ComponentFixture<RoomLayoutComponent>;
     let roomSetupService: RoomSetupService;
     let wideScreen: FakeMediaQueryList;
-    let inMatch: WritableSignal<boolean>;
-    let dialogService: DialogService;
+    let leaveWarning: MatchLeaveWarning;
 
     beforeEach(async () => {
         localStorage.clear();
@@ -34,18 +32,16 @@ describe('RoomLayoutComponent', () => {
         vi.spyOn(globalThis, 'matchMedia').mockImplementation((query: string) =>
             (query === RoomLayoutComponent.wideQuery ? wideScreen : { matches: false, media: query }) as unknown as MediaQueryList);
 
-        inMatch = signal(false);
-        dialogService = TestHelper.cast<DialogService>({ confirm: vi.fn() });
+        leaveWarning = TestHelper.cast<MatchLeaveWarning>({ confirmLeave: vi.fn().mockResolvedValue(true) });
 
         await TestBed.configureTestingModule({
             imports: [RoomLayoutComponent],
             providers: [
                 RoomSetupService,
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
-                { provide: DialogService, useValue: dialogService },
                 // Provided by the page
                 { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: signal(false) }) },
-                { provide: MatchLeaveWarning, useValue: TestHelper.cast<MatchLeaveWarning>({ inMatch }) },
+                { provide: MatchLeaveWarning, useValue: leaveWarning },
             ],
         }).compileComponents();
 
@@ -351,29 +347,34 @@ describe('RoomLayoutComponent', () => {
             expect(animate).toHaveBeenCalledTimes(2);
         });
 
-        test('should leave the room at once out of a match', async () => {
+        test('should leave the room once its player confirms, the focus moved to the creation of a room', async () => {
             // Given: the chat closed, no animation of the sidenav left running (its inert state updated 50 ms later)
             preferences.panelOpen.set(false);
             await showRoom();
-            const leave = vi.spyOn(roomSetupService, 'leave');
+            // The room given up by the page, the list shown again
+            const leave = vi.spyOn(roomSetupService, 'leave').mockImplementation(() => roomSetupService.roomIsSetup(false));
             const button: HTMLButtonElement = query('#room-leave') as HTMLButtonElement;
+            button.focus();
 
             // When
             button.click();
+            // The list asked again once shown
+            await vi.waitFor(() => expect(leave).toHaveBeenCalledOnce());
+            answerOpenRooms();
             await fixture.whenStable();
 
             // Then
             expect(button.textContent).toContain('Leave');
-            expect(leave).toHaveBeenCalledOnce();
-            expect(dialogService.confirm).not.toHaveBeenCalled();
+            expect(leaveWarning.confirmLeave).toHaveBeenCalledOnce();
+            expect(query('#room-bar')).toBeNull();
+            expect(document.activeElement).toBe(query('#room-create'));
         });
 
-        test.each([true, false])('should ask to confirm leaving the match the player plays: %s', async (confirmed: boolean) => {
+        test('should stay in the room once its player cancels leaving its match', async () => {
             // Given
             preferences.panelOpen.set(false);
             await showRoom();
-            inMatch.set(true);
-            vi.mocked(dialogService.confirm).mockResolvedValue(confirmed);
+            vi.mocked(leaveWarning.confirmLeave).mockResolvedValue(false);
             const leave = vi.spyOn(roomSetupService, 'leave');
 
             // When
@@ -381,8 +382,8 @@ describe('RoomLayoutComponent', () => {
             await fixture.whenStable();
 
             // Then
-            expect(dialogService.confirm).toHaveBeenCalledExactlyOnceWith('rooms.leave.title', 'rooms.leave.message', 'confirm-cancel');
-            expect(leave).toHaveBeenCalledTimes(confirmed ? 1 : 0);
+            expect(leave).not.toHaveBeenCalled();
+            expect(query('#room-bar')).not.toBeNull();
         });
 
         test('should leave the chat to the page holding it itself', async () => {
@@ -417,7 +418,7 @@ describe('RoomLayoutComponent recompiled from its metadata', () => {
                 RoomSetupService,
                 { provide: HTTP_API_SERVER, useValue: TEST_HTTP_API_SERVER },
                 { provide: RoomSocketApi, useValue: TestHelper.cast<RoomSocketApi>({ waiting: signal(false) }) },
-                { provide: MatchLeaveWarning, useValue: TestHelper.cast<MatchLeaveWarning>({ inMatch: signal(false) }) },
+                { provide: MatchLeaveWarning, useValue: TestHelper.cast<MatchLeaveWarning>({}) },
             ],
         });
         TestBed.overrideComponent(RoomLayoutComponent, { add: { host: { class: 'recompiled' } } });

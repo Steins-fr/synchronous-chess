@@ -1,5 +1,5 @@
 
-import { Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, input, signal, untracked, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, DOCUMENT, effect, ElementRef, inject, Injector, input, signal, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatBadge } from '@angular/material/badge';
 import { MatButton } from '@angular/material/button';
@@ -10,12 +10,10 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { RoomSetupComponent } from '@app/modules/room-setup/room-setup.component';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
-import { DialogService } from '@app/services/dialog/dialog.service';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { RoomGame } from '@protocol/room-game.enum';
 import { fromEvent } from 'rxjs';
-import { confirmMatchLeave } from './leave-match.guard';
 import { MatchLeaveWarning } from './match-leave-warning';
 
 /** The history entry of the chat opened over the game: the back gesture closes it */
@@ -46,7 +44,8 @@ export class RoomLayoutComponent {
     private readonly roomSetupService = inject(RoomSetupService);
     private readonly preferences = inject(ChatPreferencesService);
     private readonly leaveWarning = inject(MatchLeaveWarning);
-    private readonly dialogService = inject(DialogService);
+    private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+    private readonly injector = inject(Injector);
     private readonly window: Window = inject(DOCUMENT).defaultView as Window;
     private readonly wideScreen: MediaQueryList = this.window.matchMedia(RoomLayoutComponent.wideQuery);
 
@@ -122,8 +121,10 @@ export class RoomLayoutComponent {
 
     /** The player leaves the room, staying on the page: the open rooms show again */
     protected async leaveRoom(): Promise<void> {
-        if (await confirmMatchLeave(this.leaveWarning, this.dialogService)) {
+        if (await this.leaveWarning.confirmLeave()) {
             this.roomSetupService.leave();
+            // The bar gone with the button focused: the focus moves to the creation of a room, rather than to the page
+            afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>('#room-create')?.focus(), { injector: this.injector });
         }
     }
 

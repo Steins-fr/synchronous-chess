@@ -1,6 +1,8 @@
 import { Component, signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { DialogService } from '@app/services/dialog/dialog.service';
+import { TestHelper } from '@testing/test.helper';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MatchLeaveWarning } from './match-leave-warning';
 
 @Component({ template: '' })
@@ -14,9 +16,11 @@ class GameComponent {
 
 describe('MatchLeaveWarning', () => {
     let warning: MatchLeaveWarning;
+    let dialogService: DialogService;
 
     beforeEach(() => {
-        TestBed.configureTestingModule({ providers: [MatchLeaveWarning] });
+        dialogService = TestHelper.cast<DialogService>({ confirm: vi.fn() });
+        TestBed.configureTestingModule({ providers: [MatchLeaveWarning, { provide: DialogService, useValue: dialogService }] });
         warning = TestBed.inject(MatchLeaveWarning);
     });
 
@@ -27,6 +31,27 @@ describe('MatchLeaveWarning', () => {
         window.dispatchEvent(event);
         return event.defaultPrevented;
     }
+
+    test('should let the player leave at once out of a match', () => {
+        // Given
+        const game = TestBed.createComponent(GameComponent);
+        game.componentInstance.inMatch.set(false);
+
+        // When, Then
+        expect(warning.confirmLeave()).toBe(true);
+        expect(dialogService.confirm).not.toHaveBeenCalled();
+    });
+
+    test.each([true, false])('should ask to confirm leaving the match the player plays: %s', async (confirmed: boolean) => {
+        // Given
+        const game = TestBed.createComponent(GameComponent);
+        game.componentInstance.inMatch.set(true);
+        vi.mocked(dialogService.confirm).mockResolvedValue(confirmed);
+
+        // When, Then
+        await expect(warning.confirmLeave()).resolves.toBe(confirmed);
+        expect(dialogService.confirm).toHaveBeenCalledExactlyOnceWith('rooms.leave.title', 'rooms.leave.message', 'confirm-cancel');
+    });
 
     test('should not warn without a match', () => {
         expect(warning.inMatch()).toBe(false);

@@ -1,3 +1,4 @@
+import { expect } from '@playwright/test';
 import { RoomParticipant } from './room-participant';
 import { SLOW, test, TestRoom } from './test-room';
 
@@ -24,22 +25,26 @@ test.describe('Room session', () => {
         await alice.expectMessage('bob', 'back');
     });
 
-    test('leaves its room from its bar, the list shown once reloaded', async ({ room }) => {
+    test('leaves its room from its bar, the list shown once reloaded and the session of the room forgotten', async ({ room }) => {
         // Given
         const [alice, bob]: RoomParticipant[] = await room.connect('alice', 'bob');
-        await bob.roomUrl(room.id);
+        const url: string = await bob.roomUrl(room.id);
 
         // When
         await bob.leaveRoom();
 
-        // Then: no prompt out of a match
+        // Then: no prompt out of a match, the focus on the list
         await alice.expectParticipants(['alice']);
         await bob.expectSetupForm();
+        await expect(bob.page.locator('#room-create')).toBeFocused();
         await bob.expectNoRoomUrl();
         await bob.reload();
         await bob.expectSetupForm();
         await bob.expectNoRoomUrl();
         bob.expectUnloadPrompts(0);
+        // The URL of the room opened again in the tab: its join dialog, under the name typed last, rather than a resume
+        await bob.visit(url);
+        await bob.expectJoinDialog(room.id, 'bob');
     });
 
     test('hands the room over once its host left it from its bar', async ({ room }) => {
