@@ -2,6 +2,12 @@
   "game": {
     "check": "Шах",
     "checkmate": "Мат",
+    "history": {
+      "move": "Ход {turn}{kind, select, intermediate { (промежуточный)} other {}} · {color, select, w {Белые} other {Чёрные}}: {from} → {to}",
+      "pass": "Ход {turn}{kind, select, intermediate { (промежуточный)} other {}} · {color, select, w {Белые пропускают ход} other {Чёрные пропускают ход}}",
+      "promotion": "Ход {turn}{kind, select, intermediate { (промежуточный)} other {}} · {color, select, w {Белые} other {Чёрные}}: превращение на {square} в {piece, select, q {ферзя} r {ладью} b {слона} other {коня}}",
+      "title": "Ходы партии"
+    },
     "lastMove": {
       "label": "Последний ход:",
       "move": "{from} -> {to}",

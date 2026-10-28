@@ -146,17 +146,25 @@ run by the CI.
 
 - The pages of a room scroll under the navigation, in the content of a `mat-sidenav-container` (`RoomLayoutComponent`):
   the bar of the room (`#room-bar`) stays on top, with the button of the chat (`#room-chat-toggle`, the unread messages
-  on its badge) and the one leaving the room (`#room-leave`, `Leave`). The chat page (`/simple-chat`) shows its chat in the page, without button, once in a room: the chat
+  on its badge), the one of the history of a game (`#room-history-toggle`, `History`) and the one leaving the room
+  (`#room-leave`, `Leave`). The chat page (`/simple-chat`) shows its chat in the page, without button, once in a room: the chat
   of the next room starts empty.
 - With `webrtcDebug` of the environment on (local, so `serve:local` and the e2e, and staging; off in production and
   the specs), a small floating button at the bottom right of the content (`#webrtc-debug-open`, `WebRTC debug`) opens
   the debug panel of WebRTC once in a room, in a bottom sheet: the dialog `WebRTC debug`, the states of the connection
   to each player and negotiator. Sticky while the page scrolls, in a band of its own at its end, it lies beside the
-  chat on a wide screen and under the chat over the game. `#webrtc-debug-close`, Escape, a click beside it or the end
+  panel of the room on a wide screen and under the panel over the game. `#webrtc-debug-close`, Escape, a click beside it or the end
   of the room close the sheet.
-- From 1024 pixels wide, the chat (`#room-chat`) opens beside the game, open by default and as the user left it
-  (`ChatPreferencesService`, the local storage); narrower, it opens over the game, closed when the page shows, and the
-  back gesture closes it. A closed chat keeps receiving its messages.
+- The chat (`#room-chat`) and the history of the game (`#room-history`) share the panel of the room, a sidenav
+  (`#room-panel`): its button shows each one, the other one given way to. Assert the panel open or closed on
+  `#room-panel`, the content it shows on `#room-chat` / `#room-history` (hidden while the other one shows).
+- From 1024 pixels wide, the panel opens beside the game: the chat open by default and as the user left it
+  (`ChatPreferencesService`, the local storage), the history closed until opened, never remembered; narrower, the panel
+  opens over the game, closed when the page shows, and the back gesture closes it. A hidden chat keeps receiving its
+  messages, its unread ones on its button.
+- The history of a game lists the moves of the game in progress (`#history-current li`, the latest first) and, for the
+  poker and the roulette, the past matches or games of the room (`#history-past li`): `openHistory()`,
+  `historyLines()` and `pastLines()` of `e2e/room-participant.ts`. `#history-close` closes it.
 - A message is a bubble of `#chat-log` (`.chat-bubble`), its author in a hidden text first (`alice: hello`). Enter
   sends it, Shift+Enter starts a new line; the options of the chat (`#chat-options`) hide the arrivals and departures,
   the times, a player's messages, or turn Enter into a new line.
@@ -176,6 +184,8 @@ run by the CI.
 - `e2e/synchronous-chess.e2e.ts` drives a game the same way, in a window holding the whole board (`drag()`).
 - The MCP only records the console of the selected tab: select each tab and call
   `mcp__playwright__browser_console_messages` to check it.
+- The history of the room lists the moves of each turn (`Turn 1 · White: F2 → F3`), the latest turn first, white
+  first in a turn.
 
 ### Testing a poker game
 
@@ -192,6 +202,8 @@ run by the CI.
   the texts. The chips moved fly over the table (`.chip-flight`) until their animation ends.
 - A card thrown away keeps its element while it leaves the hand (`li.card-discarded`): read the cards
   without it, as `e2e/seventeen-poker.e2e.ts` does.
+- The hands played (`Hand 1: …`) and the matches played (`Match 1: …`) are in the history of the room, out of the
+  table.
 
 ### Testing a Russian roulette game
 
@@ -206,6 +218,8 @@ run by the CI.
   checked (`The cylinder was fair.`).
 - A shot plays about 5 seconds: the revolver holds 3.5 seconds in front of the player, then fires. Until then, the table
   shows the state before the shot (`#last-move`, the chambers, the stacks), and no button of the next move.
+- The moves of the game and the games played (`Game 1: …`) are in the history of the room, out of the table: a move
+  joins it once its shot is over.
 
 ### Cleanup after every browser test
 

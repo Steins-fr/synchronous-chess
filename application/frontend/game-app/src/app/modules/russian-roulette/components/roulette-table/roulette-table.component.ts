@@ -26,6 +26,7 @@ import { otherSeat, RouletteSeat, SeatPair, withSeat } from '../../classes/rules
 import { RouletteCylinderComponent } from '../roulette-cylinder/roulette-cylinder.component';
 import { RevolverFire, RevolverShot, RouletteRevolverComponent } from '../roulette-revolver/roulette-revolver.component';
 import { RouletteSeatComponent, SeatShot } from '../roulette-seat/roulette-seat.component';
+import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 
 /** The options of the session of the table: the cipher and the rules of the app, lighter ones for the specs */
 export const ROULETTE_SESSION_OPTIONS = new InjectionToken<RouletteSessionOptions>('ROULETTE_SESSION_OPTIONS', { factory: (): RouletteSessionOptions => ({}) });
@@ -99,15 +100,6 @@ interface MovePlay {
     readonly flights: ReadonlyArray<Readonly<ChipFlight>>;
     readonly stamp: Readonly<PassStamp> | null;
     readonly firing: Readonly<Firing> | null;
-}
-
-/** The result of a game over before the one in progress */
-interface PastResult {
-    /** Its number in the room, from 1 */
-    readonly number: number;
-    readonly text: TranslatableText;
-    /** The check of its cylinder, which may end once the next game started */
-    readonly verification: TranslatableText | null;
 }
 
 /** The table of the 24-shot Russian roulette: the seats, the cylinder, the chips of the table, and the moves of the local player */
@@ -331,7 +323,7 @@ export class RouletteTableComponent implements OnDestroy {
     protected readonly lastMove: Signal<TranslatableText | null> = computed((): TranslatableText | null => this.shownMoves().at(-1) ?? null);
 
     /** The moves of the game, the latest first */
-    protected readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => [...this.shownMoves()].reverse());
+    public readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => [...this.shownMoves()].reverse());
 
     /** The moves of the game the table shows: not the shot the revolver fires */
     private readonly shownMoves: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => this.moves().slice(0, this.view().moves));
@@ -375,9 +367,10 @@ export class RouletteTableComponent implements OnDestroy {
     });
 
     /** The result of each game over before the one in progress, by its number in the room, then the check of its cylinder, the latest first */
-    protected readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> => {
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> => {
         return this.session().pastGames().map((played: Readonly<PlayedGame>, index: number): PastResult => ({
             number: index + 1,
+            label: { key: this.key(marker('table.game', undefined, 'roulette')), params: { number: index + 1 } },
             text: this.resultText(played) as TranslatableText,
             verification: this.verificationText(played.verification()),
         })).reverse();

@@ -2,6 +2,12 @@
   "game": {
     "check": "Schach",
     "checkmate": "Schachmatt",
+    "history": {
+      "move": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß} other {Schwarz}}: {from} → {to}",
+      "pass": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß passt} other {Schwarz passt}}",
+      "promotion": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß} other {Schwarz}} wandelt auf {square} in {piece, select, q {eine Dame} r {einen Turm} b {einen Läufer} other {einen Springer}} um",
+      "title": "Züge der Partie"
+    },
     "lastMove": {
       "label": "Letzter Zug:",
       "move": "{from} -> {to}",

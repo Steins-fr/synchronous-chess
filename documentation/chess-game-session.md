@@ -141,6 +141,12 @@ sequenceDiagram
    action the game refuses as `illegalMove`; both are ignored by every session alike.
 6. **Next turn.** The game runs the turn once every color playing it has played. The session counts
    the turns run (`turnCount`), the same for every participant.
+7. **History.** `runTurn()` records each turn run in `playedTurns` (`PlayedTurn` of `played-turn.ts`), the
+   squares copied: its number counts the synchronous turns (an intermediate or a promotion turn keeps the
+   number of its synchronous turn), and each color its action, a move, a pass or a promotion, or `null`
+   when it did not play the turn (no capture to make, no pawn to promote). A turn after the end of the
+   game is not run, and a promotion to another piece than a queen, a rook, a bishop or a knight is
+   refused (`illegalMove`).
 
 **The turns.** The game decides which colors play a turn:
 
@@ -223,7 +229,8 @@ list.
 A reloaded page builds a new session, and the chain delivers again all its messages:
 
 - the `SC_GS_seat` requests seat the same players again;
-- the reveals replay the turns already played, the actions of the local player included;
+- the reveals replay the turns already played, the actions of the local player included: `playedTurns`
+  is rebuilt the same, so the history of the page holds the turns played before its reload;
 - the commitment of the local player whose reveal is not in the chain yet is matched with the action
   kept in `SealedTurnStore` (session storage of the tab), played once the game reaches its turn, then
   revealed. A reveal sent twice is ignored by the others.
@@ -261,6 +268,11 @@ room, the game replaces the presentation, and the rules are folded below it.
 - **Actions.** The local player drags the pieces of `playingColor` only; `Pass` skips an intermediate
   turn; a promotion turn shows the pieces to choose from.
 - **Spectators.** `Spectators: n`.
+- **History.** In the panel of the room, beside the game or over it (`RoomHistoryComponent` of
+  `modules/room-layout`, opened by the `History` button of the bar): `Moves of the game`, a line per color
+  playing a turn, the latest turn first, white first (`Turn 1 · White: F2 → F3`, `Turn 1 (intermediate) ·
+  Black passes`, `Turn 2 · White promotes on A8 to a queen`), from `playedTurnLines()` of
+  `helpers/played-turn-text.helper.ts`. One game per room: no past games.
 
 The page never jumps: a seat keeps the height of its button, shown or not, and the tallest height it had
 (`SteadyHeightDirective` of `modules/room-layout`). `e2e/synchronous-chess.e2e.ts` plays a game to its checkmate,

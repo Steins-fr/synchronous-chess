@@ -2,6 +2,12 @@
   "game": {
     "check": "Xeque",
     "checkmate": "Xeque-mate",
+    "history": {
+      "move": "Turno {turn}{kind, select, intermediate { (intermédio)} other {}} · {color, select, w {Brancas} other {Pretas}}: {from} → {to}",
+      "pass": "Turno {turn}{kind, select, intermediate { (intermédio)} other {}} · {color, select, w {As brancas passam} other {As pretas passam}}",
+      "promotion": "Turno {turn}{kind, select, intermediate { (intermédio)} other {}} · {color, select, w {As brancas promovem} other {As pretas promovem}} em {square}: {piece, select, q {dama} r {torre} b {bispo} other {cavalo}}",
+      "title": "Jogadas da partida"
+    },
     "lastMove": {
       "label": "Última jogada:",
       "move": "{from} -> {to}",

@@ -5,7 +5,7 @@ import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { RoomLayoutComponent } from './room-layout.component';
+import { RoomLayoutComponent, RoomPanel } from './room-layout.component';
 import { ChatMessengerType, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { WebrtcDebugButtonComponent } from '@app/modules/debug/webrtc-debug-button/webrtc-debug-button.component';
 import { WEBRTC_DEBUG } from '@app/modules/debug/webrtc-debug.token';
@@ -22,8 +22,23 @@ import { TestHelper } from '@testing/test.helper';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MatchLeaveWarning } from './match-leave-warning';
+import { RoomHistoryComponent } from './room-history/room-history.component';
 
 type FakeMediaQueryList = EventTarget & { matches: boolean };
+
+/** A page giving its history to the layout, beside its game */
+@Component({
+    imports: [RoomLayoutComponent, RoomHistoryComponent],
+    template: `
+<app-room-layout [game]="game" [room]="room()" [sideChat]="sideChat()">
+    <app-room-history roomHistory currentTitle="Hands" [current]="[]" />
+</app-room-layout>`,
+})
+class HistoryHostComponent {
+    public readonly room = signal<Room<ChatPayloads> | undefined>(undefined);
+    public readonly sideChat = signal<boolean>(true);
+    protected readonly game: RoomGame = RoomGame.SEVENTEEN_POKER;
+}
 
 describe('RoomLayoutComponent', () => {
     let fixture: ComponentFixture<RoomLayoutComponent>;
@@ -108,11 +123,11 @@ describe('RoomLayoutComponent', () => {
         expect(host.nativeElement.querySelector('#page-content .content')).not.toBeNull();
     });
 
-    test('should step back from the entry of the history its chat pushed, come back to with the chat closed', () => {
-        // Given: the page left, then come back to on the entry of its chat
+    test('should step back from the entry of the history its panel pushed, come back to with the panel closed', () => {
+        // Given: the page left, then come back to on the entry of its panel
         const back = vi.spyOn(history, 'back').mockImplementation(() => undefined);
         TestBed.inject(Router).navigated = true;
-        history.replaceState({ roomChat: true }, '');
+        history.replaceState({ roomPanel: true }, '');
 
         // When
         TestBed.createComponent(RoomLayoutComponent);
@@ -122,10 +137,10 @@ describe('RoomLayoutComponent', () => {
         expect(back).toHaveBeenCalledTimes(1);
     });
 
-    test('should stay on the entry of the history its chat pushed, reloaded on it', () => {
+    test('should stay on the entry of the history its panel pushed, reloaded on it', () => {
         // Given: the page under it another document, which a step back would load again
         const back = vi.spyOn(history, 'back').mockImplementation(() => undefined);
-        history.replaceState({ roomChat: true }, '');
+        history.replaceState({ roomPanel: true }, '');
 
         // When
         TestBed.createComponent(RoomLayoutComponent);
@@ -138,9 +153,11 @@ describe('RoomLayoutComponent', () => {
     describe('with a room', () => {
         let network: RoomNetworkMock;
         let preferences: ChatPreferencesService;
+        // The fixture shown: the layout alone, or a page holding it
+        let root: ComponentFixture<unknown>;
 
         function query<E extends Element = HTMLElement>(selector: string): E | null {
-            return fixture.nativeElement.querySelector(selector);
+            return root.nativeElement.querySelector(selector);
         }
 
         function toggle(): HTMLButtonElement {
@@ -148,7 +165,7 @@ describe('RoomLayoutComponent', () => {
         }
 
         function sidenav(): MatSidenav {
-            return fixture.debugElement.query(By.directive(MatSidenav)).componentInstance;
+            return root.debugElement.query(By.directive(MatSidenav)).componentInstance;
         }
 
         function receive(from: string, text: string): void {
@@ -164,6 +181,7 @@ describe('RoomLayoutComponent', () => {
 
         beforeEach(() => {
             preferences = TestBed.inject(ChatPreferencesService);
+            root = fixture;
         });
 
         test('should show the bar of the room and its chat beside the game, open on a wide screen', async () => {
@@ -179,6 +197,9 @@ describe('RoomLayoutComponent', () => {
             expect(sidenav().disableClose).toEqual(true);
             expect(query('#room-chat app-chat')).not.toBeNull();
             expect(query('#chat-close')).not.toBeNull();
+            // No history without one given by the page
+            expect(query('#room-history-toggle')).toBeNull();
+            expect(query('#room-history')).toBeNull();
             // Developer tooling, off unless the environment turns it on
             expect(query('app-debug-webrtc-button')).toBeNull();
         });
@@ -225,10 +246,10 @@ describe('RoomLayoutComponent', () => {
 
             // Then
             expect(sidenav().opened).toEqual(true);
-            expect(pushState).toHaveBeenCalledWith(expect.objectContaining({ roomChat: true }), '');
+            expect(pushState).toHaveBeenCalledWith(expect.objectContaining({ roomPanel: true }), '');
 
             // When: opened again, its history entry is kept
-            fixture.componentInstance['toggleChat'](true);
+            fixture.componentInstance['togglePanel'](RoomPanel.CHAT, true);
             dispatchEvent(new PopStateEvent('popstate'));
             await fixture.whenStable();
 
@@ -412,6 +433,274 @@ describe('RoomLayoutComponent', () => {
             // Then: nothing unread without a chat
             expect(toggle()).toBeNull();
             expect(fixture.componentInstance['unread']()).toEqual(0);
+        });
+
+        describe('with a history', () => {
+            let host: ComponentFixture<HistoryHostComponent>;
+
+            function historyToggle(): HTMLButtonElement {
+                return query('#room-history-toggle') as HTMLButtonElement;
+            }
+
+            function chatPanel(): HTMLElement {
+                return query('#room-chat') as HTMLElement;
+            }
+
+            function historyPanel(): HTMLElement {
+                return query('#room-history') as HTMLElement;
+            }
+
+            function layout(): RoomLayoutComponent {
+                return host.debugElement.query(By.directive(RoomLayoutComponent)).componentInstance;
+            }
+
+            async function showHostRoom(): Promise<void> {
+                network = new RoomNetworkMock();
+                host.componentInstance.room.set(new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+                roomSetupService.roomIsSetup(true);
+                await host.whenStable();
+            }
+
+            async function click(button: HTMLButtonElement): Promise<void> {
+                button.click();
+                await host.whenStable();
+            }
+
+            // Without its animation, the drawer closed tells it on the next turn of the event loop: past it, before it opens again
+            async function settle(): Promise<void> {
+                await new Promise<void>((resolve: () => void) => setTimeout(resolve));
+                await host.whenStable();
+            }
+
+            beforeEach(async () => {
+                host = TestBed.createComponent(HistoryHostComponent);
+                root = host;
+                answerOpenRooms();
+                await host.whenStable();
+            });
+
+            test('should keep the history beside the game while another tab opens or closes its chat', async () => {
+                // Given
+                await showHostRoom();
+                await click(historyToggle());
+
+                // When: another tab closes its chat, then opens it
+                for (const value of ['off', 'on']) {
+                    localStorage.setItem(ChatPreferencesService.panelKey, value);
+                    dispatchEvent(new StorageEvent('storage', { key: ChatPreferencesService.panelKey, storageArea: localStorage }));
+                    await host.whenStable();
+
+                    // Then
+                    expect(historyPanel().hidden).toEqual(false);
+                    expect(sidenav().opened).toEqual(true);
+                }
+
+                // When: the history closed, another tab closing its chat
+                await click(historyToggle());
+                localStorage.setItem(ChatPreferencesService.panelKey, 'off');
+                dispatchEvent(new StorageEvent('storage', { key: ChatPreferencesService.panelKey, storageArea: localStorage }));
+                await host.whenStable();
+
+                // Then: the chat follows it
+                expect(sidenav().opened).toEqual(false);
+            });
+
+            test('should open the history beside the game on a wide screen in place of the chat, never remembered', async () => {
+                // When
+                await showHostRoom();
+
+                // Then: the chat as the user left it, the history of the page closed
+                expect(historyToggle().textContent).toContain('History');
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(historyToggle().getAttribute('aria-controls')).toEqual('room-history');
+                expect(sidenav().opened).toEqual(true);
+                expect(chatPanel().hidden).toEqual(false);
+                expect(historyPanel().hidden).toEqual(true);
+                expect(historyPanel().querySelector('h2')?.textContent).toEqual('History');
+                expect(historyPanel().querySelector('app-room-history #history-current h3')?.textContent).toEqual('Hands');
+
+                // When
+                await click(historyToggle());
+
+                // Then: in the same panel
+                expect(sidenav().opened).toEqual(true);
+                expect(historyPanel().hidden).toEqual(false);
+                expect(chatPanel().hidden).toEqual(true);
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('true');
+                expect(toggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(preferences.panelOpen.on()).toEqual(true);
+
+                // When: the chat again
+                await click(toggle());
+
+                // Then
+                expect(sidenav().opened).toEqual(true);
+                expect(chatPanel().hidden).toEqual(false);
+                expect(historyPanel().hidden).toEqual(true);
+                expect(toggle().getAttribute('aria-expanded')).toEqual('true');
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('false');
+
+                // When: the history closed by the button of the bar
+                await click(historyToggle());
+                await click(historyToggle());
+
+                // Then: the panel closed, the chat still open for the user, the history sliding away with the drawer
+                expect(sidenav().opened).toEqual(false);
+                expect(preferences.panelOpen.on()).toEqual(true);
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(toggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(historyPanel().hidden).toEqual(false);
+                expect(chatPanel().hidden).toEqual(true);
+            });
+
+            test('should close the history by its own button', async () => {
+                // Given
+                await showHostRoom();
+                await click(historyToggle());
+                const close: HTMLButtonElement = query('#history-close') as HTMLButtonElement;
+
+                // When
+                await click(close);
+
+                // Then
+                expect(close.getAttribute('aria-label')).toEqual('Close the history');
+                expect(sidenav().opened).toEqual(false);
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(preferences.panelOpen.on()).toEqual(true);
+            });
+
+            test('should keep the chat shown while the drawer closes beside the game', async () => {
+                // Given
+                await showHostRoom();
+
+                // When
+                await click(toggle());
+
+                // Then: its content slides away with it
+                expect(sidenav().opened).toEqual(false);
+                expect(chatPanel().hidden).toEqual(false);
+                expect(historyPanel().hidden).toEqual(true);
+            });
+
+            test('should count the unread messages on the button of the chat while the history shows', async () => {
+                // Given
+                await showHostRoom();
+                await click(historyToggle());
+                toggle().animate = vi.fn();
+
+                // When
+                receive('remote', 'hello');
+                await host.whenStable();
+
+                // Then
+                expect(query('.mat-badge-content')?.textContent).toEqual('1');
+                expect(historyToggle().querySelector('.mat-badge-content')).toBeNull();
+
+                // When
+                await click(toggle());
+
+                // Then
+                expect(query('.mat-badge-hidden')).not.toBeNull();
+            });
+
+            test('should start the next room with its history closed, the chat as the user left it', async () => {
+                // Given
+                await showHostRoom();
+                await click(historyToggle());
+
+                // When: the room given up, then another one
+                host.componentInstance.room.set(undefined);
+                await host.whenStable();
+                await showHostRoom();
+
+                // Then
+                expect(sidenav().opened).toEqual(true);
+                expect(chatPanel().hidden).toEqual(false);
+                expect(historyPanel().hidden).toEqual(true);
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(toggle().getAttribute('aria-expanded')).toEqual('true');
+            });
+
+            test('should offer the history alone to a page holding its chat itself', async () => {
+                // Given: the chat left open beside the game on another page
+                host.componentInstance.sideChat.set(false);
+
+                // When
+                await showHostRoom();
+
+                // Then: no chat beside the game, the panel closed rather than empty
+                expect(preferences.panelOpen.on()).toEqual(true);
+                expect(toggle()).toBeNull();
+                expect(chatPanel()).toBeNull();
+                expect(sidenav().opened).toEqual(false);
+
+                // When
+                await click(historyToggle());
+
+                // Then
+                expect(sidenav().opened).toEqual(true);
+                expect(historyPanel().hidden).toEqual(false);
+            });
+
+            test('should open the history over the game on a narrow screen, on a single entry of the browser history', async () => {
+                // Given
+                wideScreen.matches = false;
+                wideScreen.dispatchEvent(new Event('change'));
+                const pushState = vi.spyOn(history, 'pushState');
+                const back = vi.spyOn(history, 'back').mockImplementation(() => undefined);
+                await showHostRoom();
+                expect(sidenav().opened).toEqual(false);
+
+                // When
+                await click(historyToggle());
+
+                // Then
+                expect(sidenav().opened).toEqual(true);
+                expect(historyPanel().hidden).toEqual(false);
+                expect(pushState).toHaveBeenCalledOnce();
+                expect(pushState).toHaveBeenCalledWith(expect.objectContaining({ roomPanel: true }), '');
+
+                // When: the chat in its place, in the code only: the backdrop covers the bar
+                layout()['togglePanel'](RoomPanel.CHAT, true);
+                await host.whenStable();
+
+                // Then: on the same entry
+                expect(sidenav().opened).toEqual(true);
+                expect(chatPanel().hidden).toEqual(false);
+                expect(historyPanel().hidden).toEqual(true);
+                expect(pushState).toHaveBeenCalledOnce();
+
+                // When: the history again, closed by its button
+                layout()['togglePanel'](RoomPanel.HISTORY, true);
+                await host.whenStable();
+                await click(query('#history-close') as HTMLButtonElement);
+                await settle();
+
+                // Then: its entry left, the chat of the user untouched
+                expect(back).toHaveBeenCalledOnce();
+                expect(sidenav().opened).toEqual(false);
+                expect(preferences.panelOpen.on()).toEqual(true);
+
+                // When: opened again, then the back gesture
+                await click(historyToggle());
+                dispatchEvent(new PopStateEvent('popstate'));
+                await settle();
+
+                // Then
+                expect(pushState).toHaveBeenCalledTimes(2);
+                expect(sidenav().opened).toEqual(false);
+                expect(back).toHaveBeenCalledOnce();
+
+                // When: opened again, closed by itself: Escape, or a click beside it
+                await click(historyToggle());
+                sidenav().openedChange.emit(false);
+                await host.whenStable();
+
+                // Then
+                expect(back).toHaveBeenCalledTimes(2);
+                expect(sidenav().opened).toEqual(false);
+                expect(historyToggle().getAttribute('aria-expanded')).toEqual('false');
+            });
         });
     });
 });

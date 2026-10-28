@@ -9,6 +9,7 @@ import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/r
 import { RoomHub } from '@testing/room-hub';
 import { TEST_GROUP } from '@testing/sra-test-group';
 import { TestHelper } from '@testing/test.helper';
+import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CylinderMessageType, CylinderSpinMessage } from '../../classes/cylinder/cylinder-messages';
 import { RoulettePayloads, RRGameSessionType, RussianRouletteSession } from '../../classes/game-sessions/russian-roulette-session';
@@ -71,6 +72,10 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         .find((candidate: HTMLButtonElement) => typeof label === 'string' ? candidate.textContent?.trim() === label : label.test(candidate.textContent?.trim() ?? ''));
     const revolver = (): RouletteRevolverComponent => fixture.debugElement.query(By.directive(RouletteRevolverComponent)).componentInstance;
     const chamber = (index: number): HTMLButtonElement => element().querySelectorAll<HTMLButtonElement>('app-roulette-cylinder button')[index];
+    /** The moves of the game, as the history of the room shows them: the latest first */
+    const history = (): ReadonlyArray<string> => fixture.componentInstance.history().map(translated);
+    /** The former games, as the history of the room shows them: the latest first */
+    const pastGames = (): ReadonlyArray<string> => fixture.componentInstance.pastResults().map(pastLine);
 
     /** The animations of the table end, as the browser runs them: the shot of the revolver, the chips flying, the stamp of a pass */
     function animationsEnd(): void {
@@ -301,7 +306,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then
         await until(() => text('p.muted-note') === 'The cylinder was fair.');
         expect(text('.badge')).toMatch(/^(alice|bob) wins the game: [01] against [12] deaths?, with \d+ chips\.$|^Draw/);
-        expect(element().querySelectorAll('details li').length).toBeGreaterThan(2);
+        expect(history().length).toBeGreaterThan(2);
         expect(button('Play again')).toBeDefined();
 
         // When
@@ -309,7 +314,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await until(() => status().startsWith('Pick the chambers'));
 
         // Then
-        expect(text('#past-games li')).toMatch(/^Game 1: .+ The cylinder was fair\.$/);
+        expect(pastGames()).toEqual([expect.stringMatching(/^Game 1: .+ The cylinder was fair\.$/)]);
         expect(text('.badge')).toEqual('');
     });
 
@@ -372,7 +377,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then
         expect(text('#bank')).toEqual('Bank: 31');
         expect(text('#last-move')).toEqual('The 5th pass of alice reveals chamber 1: empty.');
-        expect(Array.from(element().querySelectorAll('details li'), (move: Element) => move.textContent?.trim())[1]).toEqual('alice passes, 16 chips: the 5th pass in a row, the bank takes the table.');
+        expect(history()[1]).toEqual('alice passes, 16 chips: the 5th pass in a row, the bank takes the table.');
 
         // When
         await passUntilRevealed(bob);
@@ -702,8 +707,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
 
         // Then
         await until(() => text('.badge') !== '');
-        expect(Array.from(element().querySelectorAll('details li'), (move: Element) => move.textContent?.trim()).join(' '))
-            .toMatch(/fires chamber \d: two bullets, one death\./);
+        expect(history().join(' ')).toMatch(/fires chamber \d: two bullets, one death\./);
     });
 
     test('should tell a former game on its line, with the check of its cylinder', async () => {
@@ -721,10 +725,10 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         carol.takeSeat(RouletteSeat.TWO);
         await until(() => button('Play again') !== undefined);
         await click('Play again');
-        await until(() => text('#past-games li') !== '');
+        await until(() => pastGames().length > 0);
 
         // Then
-        expect(text('#past-games li')).toEqual('Game 1: bob ran out of time: alice wins the game. The cylinder was fair.');
+        expect(pastGames()).toEqual(['Game 1: bob ran out of time: alice wins the game. The cylinder was fair.']);
     });
 
     test('should tell a former game over before its cylinder was spun, without check', async () => {
@@ -741,8 +745,8 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await click('Play again');
 
         // Then
-        await until(() => text('#past-games li') !== '');
-        expect(text('#past-games li')).toEqual('Game 1: alice ran out of time: bob wins the game.');
+        await until(() => pastGames().length > 0);
+        expect(pastGames()).toEqual(['Game 1: alice ran out of time: bob wins the game.']);
     });
 
     describe('results', () => {

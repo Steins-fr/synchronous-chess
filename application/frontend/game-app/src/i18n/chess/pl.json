@@ -2,6 +2,12 @@
   "game": {
     "check": "Szach",
     "checkmate": "Szach-mat",
+    "history": {
+      "move": "Tura {turn}{kind, select, intermediate { (pośrednia)} other {}} · {color, select, w {Białe} other {Czarne}}: {from} → {to}",
+      "pass": "Tura {turn}{kind, select, intermediate { (pośrednia)} other {}} · {color, select, w {Białe pasują} other {Czarne pasują}}",
+      "promotion": "Tura {turn}{kind, select, intermediate { (pośrednia)} other {}} · {color, select, w {Białe} other {Czarne}}: promocja na polu {square} na {piece, select, q {hetmana} r {wieżę} b {gońca} other {skoczka}}",
+      "title": "Ruchy partii"
+    },
     "lastMove": {
       "label": "Ostatni ruch:",
       "move": "{from} -> {to}",

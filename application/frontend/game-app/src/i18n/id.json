@@ -55,6 +55,7 @@
   "rooms": {
     "bar": {
       "chat": "Obrolan",
+      "history": "Riwayat",
       "leave": "Keluar",
       "room": "Ruang {roomName}",
       "unread": "{count, plural, other {# pesan belum dibaca}}"
@@ -99,6 +100,11 @@
         "required": "Nama ruang wajib diisi",
         "tagSeparator": "Nama ruang tidak boleh berisi “#”"
       }
+    },
+    "history": {
+      "close": "Tutup riwayat",
+      "empty": "Belum ada.",
+      "title": "Riwayat"
     },
     "join": {
       "intro": "Masukkan nama Anda untuk bergabung ke ruang “{roomName}”.",

@@ -2,6 +2,12 @@
   "game": {
     "check": "Şah",
     "checkmate": "Şah mat",
+    "history": {
+      "move": "Tur {turn}{kind, select, intermediate { (ara tur)} other {}} · {color, select, w {Beyaz} other {Siyah}}: {from} → {to}",
+      "pass": "Tur {turn}{kind, select, intermediate { (ara tur)} other {}} · {color, select, w {Beyaz pas geçti} other {Siyah pas geçti}}",
+      "promotion": "Tur {turn}{kind, select, intermediate { (ara tur)} other {}} · {color, select, w {Beyaz} other {Siyah}}: {square} karesinde {piece, select, q {vezire} r {kaleye} b {file} other {ata}} terfi",
+      "title": "Oyunun hamleleri"
+    },
     "lastMove": {
       "label": "Son hamle:",
       "move": "{from} -> {to}",

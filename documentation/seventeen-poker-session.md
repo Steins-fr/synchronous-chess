@@ -171,7 +171,7 @@ ignored, as a request of a spectator, or before the end of the match, or with a 
 
 The new match starts over: a new `PokerMatch`, 150 chips each, the hands counted from 1, the second seat dealing the
 first hand, no deck, and the check of its decks pending. The result of the former match, with its players and the
-check of its decks, joins `pastMatches`, one line each in `Matches played` below the table: a match stopped has no
+check of its decks, joins `pastMatches`, one line each in `Matches played` in the history of the room: a match stopped has no
 result nor check, its line tells it was stopped (`Stopped: a deck was cheated.`). The seats stay open until
 its first hand. The decks of the new match have ids of their own, so the decks of the former one may be checked later,
 or never: a cheat found then is reported to the room, and told on the line of its match.
@@ -245,16 +245,17 @@ All the messages go through the `poker` chain, with the messages of the decks (`
   without a count (a screen reader announces it before the page plays for the player).
 - The actions of the player: `Check`, `Call`, `Bet` or `Raise` with the amount set by steps of 5 chips,
   `Min` and `Max`, and `Fold` against a bet only (with nothing to call, a player checks for free).
-- The history of the hands of the match, folded below the table, then the result of the match, and `Play again` for
-  its players.
+- The result of the match, and `Play again` for its players.
 - `Free the seat` on the seat of the other player, away, while the seats are open.
-- The results of the former matches of the room, each one with the check of its decks, folded below the table
-  (`Matches played`).
+- Out of the table, in the panel of the room beside the game or over it (`RoomHistoryComponent` of
+  `modules/room-layout`, opened by the `History` button of the bar): the hands of the match (`Hands played`), the
+  latest first, then the results of the former matches of the room, each one with the check of its decks
+  (`Matches played`). The table computes them (`history`, `pastResults`), the page gives them to the panel.
 
 The page never jumps: what comes and goes keeps its place. The hands keep the height of a card before the deal, the
 lines of the kinds of hands, the count of the hands and the outcome of a hand theirs on the cloth, and the status line,
-the row of the actions and the lines of the result and of the check of the decks are always there, empty or not, as
-are the hands played and the former matches below the table. The cloth, the seats and the block of the status keep the
+the row of the actions and the lines of the result and of the check of the decks are always there, empty or not: the
+histories, in the panel of the room, move nothing below the table. The cloth, the seats and the block of the status keep the
 tallest height they had (`SteadyHeightDirective` of `modules/room-layout`): a text on two lines in another language or
 on a phone moves nothing. On a phone, a seat keeps two rows, the status, the outcome of a hand and the result two
 lines, and the actions two rows: the amount of a bet below them.

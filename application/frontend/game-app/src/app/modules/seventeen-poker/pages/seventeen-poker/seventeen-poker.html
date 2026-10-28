@@ -1,12 +1,18 @@
 <app-room-layout [dimContent]="false" [game]="game" [room]="room()">
     <app-poker-presentation roomPresentation />
     @if (room(); as myRoom) {
-    <app-poker-table [room]="myRoom" />
+    <app-poker-table #pokerTable [room]="myRoom" />
     <details class="rules-details">
         <summary>{{ 'poker.rules.summary' | transloco }}</summary>
         <app-poker-rules [withTitle]="false" />
     </details>
     } @else {
     <app-poker-rules />
+    }
+    <!-- The history of the table, in the panel of the room -->
+    @if (table(); as table) {
+    <app-room-history
+        [currentTitle]="'poker.table.history' | transloco" [current]="table.history()" [pastTitle]="'poker.table.pastMatches' | transloco"
+        [past]="table.pastResults()" roomHistory />
     }
 </app-room-layout>

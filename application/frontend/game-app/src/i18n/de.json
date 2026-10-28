@@ -55,6 +55,7 @@
   "rooms": {
     "bar": {
       "chat": "Chat",
+      "history": "Verlauf",
       "leave": "Verlassen",
       "room": "Raum {roomName}",
       "unread": "{count, plural, one {# ungelesene Nachricht} other {# ungelesene Nachrichten}}"
@@ -99,6 +100,11 @@
         "required": "Der Raumname ist erforderlich",
         "tagSeparator": "Der Raumname darf kein „#“ enthalten"
       }
+    },
+    "history": {
+      "close": "Verlauf schließen",
+      "empty": "Noch nichts.",
+      "title": "Verlauf"
     },
     "join": {
       "intro": "Gib deinen Namen ein, um dem Raum „{roomName}“ beizutreten.",

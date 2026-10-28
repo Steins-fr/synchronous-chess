@@ -186,7 +186,7 @@ Once the game is settled (`settled`: over or stopped, and waiting for no key), a
 (`RR_rematch`), both seats taken: the request names the index of the new game in the room, the first one counts. Until
 then, the seats stay closed and no new game starts: a key of the former game would be left without a clock to claim it,
 its result provisional for good. The new game starts over: a new `RouletteGame`, a new cylinder of a new id, the step at
-0. The former game joins `pastGames`, one line each in `Games played` below the table, its check going on.
+0. The former game joins `pastGames`, one line each in `Games played` in the history of the room, its check going on.
 
 ## The clock of a move
 
@@ -253,13 +253,16 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
   is resized, or a move told.
 - A status line (`<output>`, of the role `status`): what the table waits for.
 - The moves of the player: `Load (n/3)`, `Shoot`, `Pass (price)`, disabled when the player can not pay.
-- The result, provisional until the cylinder is checked, then the check; the moves of the game, folded below the
-  table; `Play again` for its players, `Free the seat` on the seat of the other player away; the results of the former
-  games, folded below the table (`Games played`).
+- The result, provisional until the cylinder is checked, then the check; `Play again` for its players, `Free the
+  seat` on the seat of the other player away.
+- Out of the table, in the panel of the room beside the game or over it (`RoomHistoryComponent` of
+  `modules/room-layout`, opened by the `History` button of the bar): the moves of the game (`Moves of the game`), the
+  latest first, a shot once over, then the results of the former games (`Games played`). The table computes them
+  (`history`, `pastResults`), the page gives them to the panel.
 
 The page never jumps: what comes and goes keeps its place. The status line and the row of the moves are always there,
-empty or not, as are the lines of the result and of its check, the place of the latest move on the cloth (two lines),
-and the moves of the game and the former games below the table. The cloth, the seats and the block of the status keep
+empty or not, as are the lines of the result and of its check and the place of the latest move on the cloth (two
+lines): the histories, in the panel of the room, move nothing below the table. The cloth, the seats and the block of the status keep
 the tallest height they had (`SteadyHeightDirective` of `modules/room-layout`): a text on two lines in another language
 or on a phone moves nothing. On a phone, a seat keeps two
 rows, the status and the result two lines.

@@ -54,7 +54,7 @@ async function actor(alice: RoomParticipant, bob: RoomParticipant, carol: RoomPa
 }
 
 /** What stays in place on the page of the roulette while the game is played: the seats, the status, the page below the table */
-const STEADY: ReadonlyArray<string> = ['#seat-top', '#seat-bottom', 'app-roulette-table output', '#past-games'];
+const STEADY: ReadonlyArray<string> = ['#seat-top', '#seat-bottom', 'app-roulette-table output', '.rules-details'];
 
 /** A shot shows once the revolver held 3.5 seconds in front of the player, then fired */
 const SHOT_TIME: number = 10_000;
@@ -185,8 +185,8 @@ test.describe('Russian roulette', () => {
         await expect(table(carol).locator('#bank')).toHaveText('Bank: 31');
         await expect(table(carol).locator('#table-chips')).toHaveText('Table: 0 chips');
         await expect(table(carol).locator('#last-move')).toHaveText(/The 5th pass of (alice|bob) reveals chamber 1: (empty|a bullet, spent|two bullets, spent)\./, { timeout: SHOT_TIME });
-        await table(carol).getByText('Moves of the game').click();
-        await expect(table(carol).locator('details li').nth(1)).toHaveText(/(alice|bob) passes, 16 chips: the 5th pass in a row, the bank takes the table\./);
+        await carol.openHistory();
+        await expect(carol.historyLines().nth(1)).toHaveText(/(alice|bob) passes, 16 chips: the 5th pass in a row, the bank takes the table\./);
         expect((await chambers(carol))[0]).toMatch(/^Chamber 1: /);
         await expect(table(await actor(alice, bob, carol)).getByRole('button', { name: 'Pass (1)' })).toBeVisible();
     });

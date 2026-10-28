@@ -1,0 +1,33 @@
+<!-- Each section shares the height of the panel, and scrolls -->
+<section class="history-section" id="history-current">
+    <h3 class="m-0 mb-2 mat-title-small">{{ currentTitle() }}</h3>
+    @if (current().length === 0) {
+    <p class="muted-note">{{ 'rooms.history.empty' | transloco }}</p>
+    } @else {
+    <ul class="history-list">
+        <!-- Added first: a line keeps its place from the oldest one -->
+        @for (move of current(); track current().length - $index) {
+        <li>{{ move.key | transloco: move.params }}</li>
+        }
+    </ul>
+    }
+</section>
+@if (pastTitle(); as title) {
+<section class="history-section" id="history-past">
+    <h3 class="m-0 mb-2 mat-title-small">{{ title }}</h3>
+    @if (past().length === 0) {
+    <p class="muted-note">{{ 'rooms.history.empty' | transloco }}</p>
+    } @else {
+    <ul class="history-list">
+        @for (result of past(); track result.number) {
+        <li>
+            {{ result.label.key | transloco: result.label.params }} {{ result.text.key | transloco: result.text.params }}
+            @if (result.verification; as verification) {
+            <span class="muted-note">{{ verification.key | transloco }}</span>
+            }
+        </li>
+        }
+    </ul>
+    }
+</section>
+}

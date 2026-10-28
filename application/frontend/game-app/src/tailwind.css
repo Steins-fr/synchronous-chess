@@ -199,3 +199,18 @@
 @utility chat-notice {
     @apply muted-note mt-3 text-center text-xs;
 }
+
+/* The header of a content of the panel of the room, the chat or the history: its title, then its buttons */
+@utility panel-header {
+    @apply flex items-center gap-1 border-b border-app-border py-1 pl-4 pr-1;
+}
+
+/* A section of the history of the room, sharing the height of the panel with the other one */
+@utility history-section {
+    @apply flex min-h-0 flex-1 basis-0 flex-col;
+}
+
+/* The lines of a section of the history, scrolling within it */
+@utility history-list {
+    @apply m-0 min-h-0 flex-1 list-none space-y-1 overflow-y-auto pl-0;
+}

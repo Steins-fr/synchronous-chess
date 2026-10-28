@@ -55,6 +55,7 @@
   "rooms": {
     "bar": {
       "chat": "Czat",
+      "history": "Historia",
       "leave": "Wyjdź",
       "room": "Pokój {roomName}",
       "unread": "{count, plural, one {# nieprzeczytana wiadomość} few {# nieprzeczytane wiadomości} many {# nieprzeczytanych wiadomości} other {# nieprzeczytanej wiadomości}}"
@@ -99,6 +100,11 @@
         "required": "Nazwa pokoju jest wymagana",
         "tagSeparator": "Nazwa pokoju nie może zawierać „#”"
       }
+    },
+    "history": {
+      "close": "Zamknij historię",
+      "empty": "Jeszcze nic.",
+      "title": "Historia"
     },
     "join": {
       "intro": "Wpisz swoją nazwę, aby dołączyć do pokoju „{roomName}”.",

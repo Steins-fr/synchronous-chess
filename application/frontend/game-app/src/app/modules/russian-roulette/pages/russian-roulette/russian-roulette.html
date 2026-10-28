@@ -1,12 +1,18 @@
 <app-room-layout [dimContent]="false" [game]="game" [room]="room()">
     <app-roulette-presentation roomPresentation />
     @if (room(); as myRoom) {
-    <app-roulette-table [room]="myRoom" />
+    <app-roulette-table #rouletteTable [room]="myRoom" />
     <details class="rules-details">
         <summary>{{ 'roulette.rules.summary' | transloco }}</summary>
         <app-roulette-rules [withTitle]="false" />
     </details>
     } @else {
     <app-roulette-rules />
+    }
+    <!-- The history of the table, in the panel of the room -->
+    @if (table(); as table) {
+    <app-room-history
+        [currentTitle]="'roulette.table.history' | transloco" [current]="table.history()" [pastTitle]="'roulette.table.pastGames' | transloco"
+        [past]="table.pastResults()" roomHistory />
     }
 </app-room-layout>
