@@ -110,28 +110,6 @@
         <p class="m-0 min-h-lh text-center muted-note">{{ currentVerification ? (currentVerification.key | transloco) : '' }}</p>
     </div>
 
-    <!-- Shown before the first move: it appearing would move the page below -->
-    <details>
-        <summary class="cursor-pointer">{{ t('history') }}</summary>
-        <ul class="m-0 mt-2 pl-0 list-none space-y-1">
-            @for (move of history(); track $index) {
-            <li>{{ move.key | transloco: move.params }}</li>
-            }
-        </ul>
-    </details>
-    <details id="past-games">
-        <summary class="cursor-pointer">{{ t('pastGames') }}</summary>
-        <ul class="m-0 mt-2 pl-0 list-none space-y-1">
-            @for (past of pastResults(); track past.number) {
-            <li>
-                {{ t('game', { number: past.number }) }} {{ past.text.key | transloco: past.text.params }}
-                @if (past.verification; as verification) {
-                <span class="muted-note">{{ verification.key | transloco }}</span>
-                }
-            </li>
-            }
-        </ul>
-    </details>
 
     <!-- The revolver, from its side: on the cloth, then held next to the player shooting, firing -->
     @let place = revolverPlace();

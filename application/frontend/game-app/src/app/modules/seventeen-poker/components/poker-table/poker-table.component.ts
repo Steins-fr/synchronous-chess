@@ -28,6 +28,7 @@ import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
 import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand, PokerMatch } from '../../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../../classes/rules/poker-seat';
 import { PokerSeatComponent } from '../poker-seat/poker-seat.component';
+import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 
 /** The options of the session of the table: the cipher and the rules of the app, lighter ones for the specs */
 export const POKER_SESSION_OPTIONS = new InjectionToken<PokerSessionOptions>('POKER_SESSION_OPTIONS', { factory: (): PokerSessionOptions => ({}) });
@@ -37,15 +38,6 @@ const BET_STEP: number = 5;
 
 /** The bank, off the table: the chips going to it fly to the right side of the cloth, this far inside it */
 const BANK_INSET: number = 16;
-
-/** The result of a match over before the one in progress */
-interface PastResult {
-    /** Its number in the room, from 1 */
-    readonly number: number;
-    readonly text: TranslatableText;
-    /** The check of its decks, which may end once the next match started, none for a match stopped by a broken deck */
-    readonly verification: TranslatableText | null;
-}
 
 /** The table of the Seventeen Poker: the seats, the hands, the deck and the pot, and the actions of the local player */
 @Component({
@@ -230,15 +222,16 @@ export class PokerTableComponent implements OnDestroy {
     });
 
     /** The outcome of each hand played in the match, the latest first */
-    protected readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => {
+    public readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => {
         const players: SeatPair<string | null> = this.session().players();
         return this.session().match().outcomes().map((outcome: Readonly<HandOutcome>, index: number) => handOutcomeText(outcome, index, players)).reverse();
     });
 
     /** The result of each match over before the one in progress, by its number in the room, then the check of its decks, the latest first */
-    protected readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> => {
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> => {
         return this.session().pastMatches().map((played: Readonly<PlayedMatch>, index: number): PastResult => ({
             number: index + 1,
+            label: { key: this.key(marker('table.match', undefined, 'poker')), params: { number: index + 1 } },
             text: this.resultText(played),
             verification: this.verificationText(played.verification()),
         })).reverse();

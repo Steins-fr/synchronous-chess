@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
+import { RoomHistoryComponent } from '@app/modules/room-layout/room-history/room-history.component';
 import { MatchPage } from '@app/modules/room-layout/leave-match.guard';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
@@ -17,7 +18,7 @@ import { RouletteTableComponent } from '../../components/roulette-table/roulette
     selector: 'app-russian-roulette',
     templateUrl: './russian-roulette.html',
     imports: [
-        RoomLayoutComponent, RoulettePresentationComponent, RouletteRulesComponent, RouletteTableComponent,
+        RoomLayoutComponent, RoomHistoryComponent, RoulettePresentationComponent, RouletteRulesComponent, RouletteTableComponent,
         TranslocoPipe,
     ],
     providers: [provideRooms()],
@@ -28,4 +29,6 @@ export class RussianRoulette implements MatchPage {
     protected readonly maxPlayer: number = 6;
     public readonly room = roomFromSetup<ChatPayloads & RoulettePayloads>(this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, rouletteBlockChains));
     public readonly leaveWarning: MatchLeaveWarning = inject(MatchLeaveWarning);
+    // By its reference: its history given to the panel of the room
+    protected readonly table = viewChild<RouletteTableComponent>('rouletteTable');
 }

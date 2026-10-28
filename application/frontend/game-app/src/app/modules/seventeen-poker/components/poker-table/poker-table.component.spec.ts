@@ -8,6 +8,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { RoomHub } from '@testing/room-hub';
 import { TEST_GROUP } from '@testing/sra-test-group';
+import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PokerPayloads, SeventeenPokerSession, SPGameSessionType } from '../../classes/game-sessions/seventeen-poker-session';
 import { BetAction } from '../../classes/rules/betting-round';
@@ -66,6 +67,11 @@ describe('PokerTableComponent', () => {
         element().querySelectorAll('.chip-flight').forEach((flight: Element) => flight.dispatchEvent(new Event('animationend')));
         await fixture.whenStable();
     }
+
+    /** The outcome of the latest hand of the match, as the history of the room shows it */
+    const latestHand = (): string => translated(fixture.componentInstance.history()[0]);
+    /** The result of the latest match over, as the history of the room shows it */
+    const latestMatch = (): string => pastLine(fixture.componentInstance.pastResults()[0]);
 
     /** The values of the chips of a stack */
     const chipValues = (selector: string): string[] => Array.from(
@@ -304,7 +310,7 @@ describe('PokerTableComponent', () => {
         const outcome = bob.match().hand()?.outcome;
         const categories: string[] = Array.from(element().querySelectorAll('p.table-line'), (line: Element) => line.textContent?.trim() as string);
         expect(categories).toHaveLength(2);
-        expect(text('#hand-outcome')).toEqual(text('details li'));
+        expect(text('#hand-outcome')).toEqual(latestHand());
         expect(chipValues('.pot')).toEqual([]);
         const hands: Element[] = Array.from(element().querySelectorAll('app-card-hand'));
         expect(hands[1].classList.contains('opacity-50')).toEqual(outcome?.winner === PokerSeat.TWO);
@@ -313,7 +319,7 @@ describe('PokerTableComponent', () => {
         expect(cards(0)).not.toContain('Face-down card');
         expect(cards(1).slice(2)).toEqual(kept);
         expect(element().textContent).toContain('Pot 0');
-        expect(text('details li')).toMatch(/^Hand 1: /);
+        expect(latestHand()).toMatch(/^Hand 1: /);
         const outlined = (index: number): boolean => Array.from(element().querySelectorAll('app-card-hand')[index].querySelectorAll('[role="img"]'))
             .every((image: Element) => image.classList.contains('outline-3'));
         expect(outlined(1)).toEqual(outcome?.winner === PokerSeat.ONE);
@@ -369,7 +375,7 @@ describe('PokerTableComponent', () => {
             await until(() => status() === 'Your turn to deal.');
 
             // Then
-            expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 15.');
+            expect(latestHand()).toEqual('Hand 1: alice folds, bob takes the pot of 15.');
         });
 
         test('should keep the hand of the player once the time of its exchange is over', async () => {
@@ -449,7 +455,7 @@ describe('PokerTableComponent', () => {
 
             // Then
             expect(text('.badge')).toEqual('bob was away when the time ran out: alice wins the match.');
-            expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 10.');
+            expect(latestHand()).toEqual('Hand 1: bob folds, alice takes the pot of 10.');
             expect(hub.types().filter((type: string) => type === SPGameSessionType.TIMEOUT)).toHaveLength(1);
             // Bob loses his seat, Alice may start a new match once another participant takes it
             expect(text('#seat-top')).toEqual('Free seat');
@@ -505,7 +511,7 @@ describe('PokerTableComponent', () => {
         await until(() => status() === 'Your turn to deal.');
 
         // Then: the pot goes to Bob, at the top of the table
-        expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
+        expect(latestHand()).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#seat-bottom')).toEqual('alice142 chips');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
@@ -734,7 +740,7 @@ describe('PokerTableComponent', () => {
         await until(() => status() === 'bob to deal.');
 
         // Then
-        expect(text('#past-matches li')).toEqual('Match 1: Stopped: a deck was cheated.');
+        expect(latestMatch()).toEqual('Match 1: Stopped: a deck was cheated.');
     });
 
     describe('end of the match', () => {
@@ -755,7 +761,7 @@ describe('PokerTableComponent', () => {
             expect(element().querySelector('.badge')?.classList).toContain('badge-win');
             expect(status()).toEqual('');
             expect(button('Deal')).toBeUndefined();
-            expect(text('details li')).toEqual('Hand 1: bob folds, alice takes the pot of 11.');
+            expect(latestHand()).toEqual('Hand 1: bob folds, alice takes the pot of 11.');
             await until(() => text('p.muted-note') === 'Every deck was fair.');
         });
 
@@ -794,11 +800,11 @@ describe('PokerTableComponent', () => {
             // Then: the new match starts from its own chips, without flights
             expect(hub.delivered.filter((message: AppMessage) => message.type === 'SP_rematch')).toHaveLength(1);
             expect(text('.badge')).toEqual('');
-            expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips. Every deck was fair.');
+            expect(latestMatch()).toEqual('Match 1: alice wins the match with 155 chips. Every deck was fair.');
             expect(text('#seat-bottom')).toEqual('alice150 chipsLeave the seat');
             expect(text('#seat-top')).toEqual('bob150 chips');
             // No hand played in the new match
-            expect(element().querySelectorAll('details:not(#past-matches) li')).toHaveLength(0);
+            expect(fixture.componentInstance.history()).toHaveLength(0);
             expect(cards(1)).toEqual([]);
             expect(flights()).toEqual([]);
 
@@ -829,7 +835,7 @@ describe('PokerTableComponent', () => {
 
             // Then
             expect(text('.badge')).toEqual('bob wins the match with 155 chips.');
-            expect(text('details li')).toEqual('Hand 1: alice folds, bob takes the pot of 11.');
+            expect(latestHand()).toEqual('Hand 1: alice folds, bob takes the pot of 11.');
             expect(text('#seat-bottom')).toEqual('Free seatSit here');
             expect(text('#seat-top')).toEqual('bob155 chips +11');
             expect(cards(1)).toEqual([]);
@@ -880,13 +886,13 @@ describe('PokerTableComponent', () => {
             await until(() => status() === 'bob to deal.');
 
             // Then
-            expect(text('#past-matches li')).toEqual('Match 1: alice wins the match with 155 chips. Checking every deck…');
+            expect(latestMatch()).toEqual('Match 1: alice wins the match with 155 chips. Checking every deck…');
 
             // When
             check(DeckVerification.FAIR);
 
             // Then
-            await until(() => text('#past-matches li') === 'Match 1: alice wins the match with 155 chips. Every deck was fair.');
+            await until(() => latestMatch() === 'Match 1: alice wins the match with 155 chips. Every deck was fair.');
             expect(text('p.muted-note')).toEqual('');
         });
 

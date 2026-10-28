@@ -71,6 +71,9 @@ describe('RussianRoulette', () => {
         // The chat beside the game, out of the page
         expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('#page-content app-chat')).toBeNull();
+        // The history of the table beside the game too, out of the page
+        expect(fixture.nativeElement.querySelector('#room-history app-room-history')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#page-content app-room-history')).toBeNull();
         // The debug panel of WebRTC out of the page: the room layout offers it
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-roulette-presentation')).toBeNull();

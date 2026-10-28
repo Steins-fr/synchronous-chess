@@ -11,10 +11,18 @@
                     <span class="min-w-0 flex-1 truncate font-medium">{{ 'rooms.bar.room' | transloco: { roomName: room.roomName } }}</span>
                     @if (sideChat()) {
                     <button
-                        #chatButton (click)="toggleChat(!chatOpen())" [attr.aria-expanded]="chatOpen()" [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: unread() }"
+                        #chatButton (click)="togglePanel(panels.CHAT, !chatOpen())" [attr.aria-expanded]="chatOpen()" [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: unread() }"
                         [matBadgeHidden]="unread() === 0" [matBadge]="unread()" aria-controls="room-chat" id="room-chat-toggle" mat-button type="button">
                         <mat-icon>forum</mat-icon>
                         <span class="max-sm:sr-only">{{ 'rooms.bar.chat' | transloco }}</span>
+                    </button>
+                    }
+                    @if (history()) {
+                    <button
+                        (click)="togglePanel(panels.HISTORY, !historyOpen())" [attr.aria-expanded]="historyOpen()" aria-controls="room-history" id="room-history-toggle"
+                        mat-button type="button">
+                        <mat-icon>history</mat-icon>
+                        <span class="max-sm:sr-only">{{ 'rooms.bar.history' | transloco }}</span>
                     </button>
                     }
                     <button (click)="leaveRoom()" id="room-leave" mat-button type="button">
@@ -40,17 +48,33 @@
                 </div>
             </div>
             @if (webrtcDebug && isSetup() && room(); as room) {
-            <!-- Developer tooling (webrtcDebug of the environment), in English. At the bottom right while the page scrolls, in a band of its own at its end (16 + 40 + 16 pixels): beside the chat on a wide screen, under the chat over the game on a phone -->
+            <!-- Developer tooling (webrtcDebug of the environment), in English. At the bottom right while the page scrolls, in a band of its own at its end (16 + 40 + 16 pixels): beside the panel on a wide screen, under the panel over the game on a phone -->
             <app-debug-webrtc-button [room]="room" class="sticky bottom-4 z-10 my-4 mr-4 flex self-end" />
             }
         </div>
     </mat-sidenav-content>
-    @if (sideChat() && room(); as room) {
-    <!-- Beside the game, Escape typed in the chat does not close it: over the game, it does -->
+    @if ((sideChat() || history()) && room(); as room) {
+    <!-- Beside the game, Escape typed in the panel does not close it: over the game, it does. Its contents stay while hidden: the chat counts its messages, the history follows the match -->
     <mat-sidenav
-        (openedChange)="onChatOpenedChange($event)" [disableClose]="wide()" [mode]="wide() ? 'side' : 'over'" [opened]="chatOpen()"
-        id="room-chat" position="end">
-        <app-chat (closed)="toggleChat(false)" [closable]="true" [open]="chatOpen()" [room]="room" class="h-full" />
+        (openedChange)="onPanelOpenedChange($event)" [disableClose]="wide()" [mode]="wide() ? 'side' : 'over'" [opened]="panel() !== null"
+        id="room-panel" position="end">
+        @if (sideChat()) {
+        <div [hidden]="shownPanel() !== panels.CHAT" class="h-full" id="room-chat">
+            <app-chat (closed)="togglePanel(panels.CHAT, false)" [closable]="true" [open]="chatOpen()" [room]="room" class="h-full" />
+        </div>
+        }
+        @if (history()) {
+        <section [hidden]="shownPanel() !== panels.HISTORY" class="flex h-full flex-col bg-app-surface-raised text-app-text"
+            id="room-history">
+            <header class="flex items-center gap-1 border-b border-app-border py-1 pl-4 pr-1">
+                <h2 class="m-0 flex-1 mat-title-medium">{{ 'rooms.history.title' | transloco }}</h2>
+                <button (click)="togglePanel(panels.HISTORY, false)" [attr.aria-label]="'rooms.history.close' | transloco" [title]="'rooms.history.close' | transloco" id="history-close" mat-icon-button type="button">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </header>
+            <ng-content select="[roomHistory]"/>
+        </section>
+        }
     </mat-sidenav>
     }
 </mat-sidenav-container>
