@@ -66,7 +66,7 @@
         @if (history()) {
         <section [hidden]="shownPanel() !== panels.HISTORY" class="flex h-full flex-col bg-app-surface-raised text-app-text"
             id="room-history">
-            <header class="flex items-center gap-1 border-b border-app-border py-1 pl-4 pr-1">
+            <header class="panel-header">
                 <h2 class="m-0 flex-1 mat-title-medium">{{ 'rooms.history.title' | transloco }}</h2>
                 <button (click)="togglePanel(panels.HISTORY, false)" [attr.aria-label]="'rooms.history.close' | transloco" [title]="'rooms.history.close' | transloco" id="history-close" mat-icon-button type="button">
                     <mat-icon>close</mat-icon>

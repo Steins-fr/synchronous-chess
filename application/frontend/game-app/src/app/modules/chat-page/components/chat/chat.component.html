@@ -1,5 +1,5 @@
 <section *transloco="let t; prefix: 'chat'" class="flex min-h-0 flex-1 flex-col" id="chat">
-    <header class="flex items-center gap-1 border-b border-app-border py-1 pl-4 pr-1">
+    <header class="panel-header">
         <h2 class="m-0 flex-1 mat-title-medium">{{ t('panel.title') }}</h2>
         <button [attr.aria-label]="t('panel.options')" [matMenuTriggerFor]="options" [title]="t('panel.options')" id="chat-options" mat-icon-button type="button">
             <mat-icon>tune</mat-icon>

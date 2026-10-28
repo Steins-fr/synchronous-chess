@@ -27,7 +27,7 @@ import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
-import { playedTurnLines } from '@app/modules/chess/helpers/played-turn-text.helper';
+import { playedTurnLines, squareName } from '@app/modules/chess/helpers/played-turn-text.helper';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -226,9 +226,6 @@ export class SyncChessGameComponent implements OnDestroy {
         if (move === null) {
             return { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.passed', undefined, 'chess')) };
         }
-        const from: string = `${ move.from[0].toUpperCase() }${ move.from[1] }`;
-        const to: string = `${ move.to[0].toUpperCase() }${ move.to[1] }`;
-
-        return { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.move', undefined, 'chess')), params: { from, to } };
+        return { key: scopedKey(TranslationScope.CHESS, marker('game.lastMove.move', undefined, 'chess')), params: { from: squareName(move.from), to: squareName(move.to) } };
     }
 }

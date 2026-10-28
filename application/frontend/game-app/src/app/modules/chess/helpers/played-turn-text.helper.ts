@@ -7,7 +7,7 @@ import { PieceColor } from '../enums/piece-color.enum';
 import { FenCoordinate } from '../interfaces/move';
 
 /** A square as the board names it, e.g. E7 */
-function squareName(square: FenCoordinate): string {
+export function squareName(square: FenCoordinate): string {
     return `${ square[0].toUpperCase() }${ square[1] }`;
 }
 
