@@ -229,6 +229,9 @@ describe('SynchronousChessOnlineGameSession', () => {
         // Then
         await vi.waitFor(() => expect(turnCount(reloaded)).toEqual(1));
         expect(reloaded.board()).toEqual(black.board());
+        // The history of the game rebuilt by the replay of the chain
+        expect(reloaded.game.playedTurns()).toHaveLength(1);
+        expect(reloaded.game.playedTurns()).toEqual(black.game.playedTurns());
         expect(hub.reports).toEqual([]);
 
         // When it plays the next turn
@@ -285,6 +288,9 @@ describe('SynchronousChessOnlineGameSession', () => {
         // Then
         await vi.waitFor(() => expect([reloaded, black, spectator].map(turnCount)).toEqual([2, 2, 2]));
         expect(black.board()).toEqual(reloaded.board());
+        expect(reloaded.game.playedTurns()).toHaveLength(2);
+        expect(reloaded.game.playedTurns()).toEqual(black.game.playedTurns());
+        expect(spectator.game.playedTurns()).toEqual(black.game.playedTurns());
         expect(hub.reports).toEqual([]);
     });
 
@@ -387,6 +393,22 @@ describe('SynchronousChessOnlineGameSession', () => {
             ['b', CheatReason.ILLEGAL_MOVE],
             ['c', CheatReason.ILLEGAL_MOVE],
         ]));
+    });
+
+    test('should report a revealed promotion to a piece a pawn can not become', async () => {
+        // Given a promotion of white only
+        sessions.forEach(promotionOfWhite);
+
+        // When
+        await sealed('a', PieceColor.WHITE, { kind: SealedActionKind.PROMOTION, pieceType: PieceType.KING });
+
+        // Then
+        await vi.waitFor(() => expect(hub.reports.map(([reporter, , reason]) => [reporter, reason]).sort()).toEqual([
+            ['a', CheatReason.ILLEGAL_MOVE],
+            ['b', CheatReason.ILLEGAL_MOVE],
+            ['c', CheatReason.ILLEGAL_MOVE],
+        ]));
+        expect(spectator.game.playedTurns()).toEqual([]);
     });
 
     test('should ignore the commitments and reveals of the spectators', async () => {

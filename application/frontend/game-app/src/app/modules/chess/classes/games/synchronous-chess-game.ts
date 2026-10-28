@@ -23,6 +23,13 @@ import { PieceType } from '../../enums/piece-type.enum';
 import { switchExhaustivenessGuard } from '@app/helpers/switch-exhaustiveness-guard.helper';
 import { DrawRules } from './draw-rules';
 import { GameEndReason, GameResult } from './game-result';
+import { PlayedAction, PlayedActionKind, PlayedTurn } from './played-turn';
+
+/** The pieces a pawn may become */
+const PROMOTION_PIECES: ReadonlySet<PieceType> = new Set([PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT]);
+
+/** The actions of both colors in a turn */
+type PlayedActions = Pick<PlayedTurn, 'white' | 'black'>;
 
 export default class SynchronousChessGame {
     private readonly _fenBoard = signal<FenBoard>(ChessBoardHelper.createFenBoard());
@@ -44,6 +51,10 @@ export default class SynchronousChessGame {
     /** The end of the game, decided at the start of a synchronous turn */
     private readonly _result = signal<GameResult | null>(null);
     public readonly result = this._result.asReadonly();
+
+    /** The turns run, in their order: the history of the game */
+    private readonly _playedTurns = signal<ReadonlyArray<Readonly<PlayedTurn>>>([]);
+    public readonly playedTurns = this._playedTurns.asReadonly();
 
     private _oldFenBoard: FenBoard = this._fenBoard();
     public readonly whiteRules: SynchronousChessRules = new SynchronousChessRules(PieceColor.WHITE);
@@ -164,7 +175,7 @@ export default class SynchronousChessGame {
     }
 
     public promote(pieceType: PieceType, color: PieceColor): boolean {
-        if (this.turn().type !== TurnType.CHOICE_PROMOTION) {
+        if (this.turn().type !== TurnType.CHOICE_PROMOTION || !PROMOTION_PIECES.has(pieceType)) {
             return false;
         }
         const promotionTurn: PromotionTurn = this.turn() as PromotionTurn;
@@ -209,26 +220,31 @@ export default class SynchronousChessGame {
     }
 
     public runTurn(): boolean {
-        if (!this.turn().canBeExecuted()) {
+        // A turn revealed once the game is over, a pass after a king captured for one, changes nothing
+        if (this.isGameOver() || !this.turn().canBeExecuted()) {
             return false;
         }
 
         this._oldFenBoard = ChessBoardHelper.cloneBoard(this._fenBoard());
 
         const turnType: TurnType = this.turn().type;
+        let played: PlayedActions;
 
         switch (turnType) {
             case TurnType.MOVE_INTERMEDIATE:
                 this.runIntermediateTurn();
+                played = SynchronousChessGame.playedIntermediateTurn(this.turn().action as IntermediateTurnAction);
                 break;
             case TurnType.MOVE_SYNC:
                 this.runSyncTurn();
+                played = SynchronousChessGame.playedSyncTurn(this.turn().action as MoveTurnAction);
                 break;
             case TurnType.CHOICE_PROMOTION:
                 this.runPromotionTurn();
+                played = SynchronousChessGame.playedPromotionTurn(this.turn().action as PromotionTurnAction);
                 break;
             default:
-                switchExhaustivenessGuard(turnType);
+                return switchExhaustivenessGuard(turnType);
         }
 
         if (turnType !== TurnType.CHOICE_PROMOTION) {
@@ -236,6 +252,7 @@ export default class SynchronousChessGame {
             this.drawRules.recordMoves(this._oldFenBoard, this._fenBoard(), [whiteMove, blackMove].filter((move: Move | null) => move !== null));
         }
 
+        this.recordTurn(turnType, played);
         this.turn().isDone = true;
         this.nextTurn();
         this.checkPromotionTurn();
@@ -243,6 +260,41 @@ export default class SynchronousChessGame {
         this.verifyEnd();
 
         return true;
+    }
+
+    /** In the history: an intermediate or a promotion turn keeps the number of its synchronous turn */
+    private recordTurn(type: TurnType, played: PlayedActions): void {
+        const playedTurns: ReadonlyArray<Readonly<PlayedTurn>> = this._playedTurns();
+        const number: number = (playedTurns.at(-1)?.number ?? 0) + (type === TurnType.MOVE_SYNC ? 1 : 0);
+
+        this._playedTurns.set([...playedTurns, { number, type, ...played }]);
+    }
+
+    // The moves are copied: a turn is mutated in place
+    private static playedMove(move: Move | null): PlayedAction {
+        return move === null
+            ? { kind: PlayedActionKind.PASS }
+            : { kind: PlayedActionKind.MOVE, from: [...move.from], to: [...move.to] };
+    }
+
+    private static playedSyncTurn({ whiteMove, blackMove }: MoveTurnAction): PlayedActions {
+        return { white: SynchronousChessGame.playedMove(whiteMove), black: SynchronousChessGame.playedMove(blackMove) };
+    }
+
+    // A color without a target is not involved, a color with one may pass
+    private static playedIntermediateTurn({ whiteTarget, whiteMove, blackTarget, blackMove }: IntermediateTurnAction): PlayedActions {
+        return {
+            white: whiteTarget === null ? null : SynchronousChessGame.playedMove(whiteMove),
+            black: blackTarget === null ? null : SynchronousChessGame.playedMove(blackMove),
+        };
+    }
+
+    // A color without a pawn to promote is not involved; the turn is run once every pawn has its piece
+    private static playedPromotionTurn({ whiteFenCoordinate, whitePiece, blackFenCoordinate, blackPiece }: PromotionTurnAction): PlayedActions {
+        return {
+            white: whiteFenCoordinate === null ? null : { kind: PlayedActionKind.PROMOTION, square: [...whiteFenCoordinate], piece: whitePiece as PieceType },
+            black: blackFenCoordinate === null ? null : { kind: PlayedActionKind.PROMOTION, square: [...blackFenCoordinate], piece: blackPiece as PieceType },
+        };
     }
 
     /**

@@ -2,6 +2,12 @@
   "game": {
     "check": "Jaque",
     "checkmate": "Jaque mate",
+    "history": {
+      "move": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Blancas} other {Negras}}: {from} → {to}",
+      "pass": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Las blancas pasan} other {Las negras pasan}}",
+      "promotion": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Las blancas coronan} other {Las negras coronan}} en {square}: {piece, select, q {dama} r {torre} b {alfil} other {caballo}}",
+      "title": "Jugadas de la partida"
+    },
     "lastMove": {
       "label": "Última jugada:",
       "move": "{from} -> {to}",

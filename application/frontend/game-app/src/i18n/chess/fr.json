@@ -2,6 +2,12 @@
   "game": {
     "check": "Échec",
     "checkmate": "Échec et mat",
+    "history": {
+      "move": "Tour {turn}{kind, select, intermediate { (intermédiaire)} other {}} · {color, select, w {Blancs} other {Noirs}} : {from} → {to}",
+      "pass": "Tour {turn}{kind, select, intermediate { (intermédiaire)} other {}} · {color, select, w {Les blancs passent} other {Les noirs passent}}",
+      "promotion": "Tour {turn}{kind, select, intermediate { (intermédiaire)} other {}} · {color, select, w {Blancs} other {Noirs}} : promotion en {piece, select, q {dame} r {tour} b {fou} other {cavalier}} sur {square}",
+      "title": "Coups de la partie"
+    },
     "lastMove": {
       "label": "Dernier coup :",
       "move": "{from} -> {to}",

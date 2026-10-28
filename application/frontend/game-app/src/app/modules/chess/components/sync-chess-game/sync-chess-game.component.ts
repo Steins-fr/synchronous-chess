@@ -27,6 +27,7 @@ import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
+import { playedTurnLines } from '@app/modules/chess/helpers/played-turn-text.helper';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -65,6 +66,9 @@ export class SyncChessGameComponent implements OnDestroy {
         return session.seatsOpen() && whitePlayer !== undefined && blackPlayer === undefined ? PieceColor.BLACK : PieceColor.WHITE;
     });
     protected readonly topColor: Signal<PieceColor> = computed((): PieceColor => this.bottomColor() === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
+
+    /** The moves of the game, the latest first: its history, shown by the page in the panel of the room */
+    public readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => playedTurnLines(this.gameSession().game.playedTurns()));
 
     public ngOnDestroy(): void {
         this.gameSession().destroy();

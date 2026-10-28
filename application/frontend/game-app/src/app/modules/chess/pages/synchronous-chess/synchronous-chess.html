@@ -1,12 +1,16 @@
 <app-room-layout [dimContent]="false" [game]="game" [room]="room()">
     <app-chess-presentation roomPresentation />
     @if (room(); as myRoom) {
-    <app-sync-chess-game [room]="myRoom" />
+    <app-sync-chess-game #chessGame [room]="myRoom" />
     <details class="rules-details">
         <summary>{{ 'chess.rules.summary' | transloco }}</summary>
         <app-chess-rules [withTitle]="false" />
     </details>
     } @else {
     <app-chess-rules />
+    }
+    <!-- The moves of the game, in the panel of the room: one game per room, no past games -->
+    @if (chessGame(); as chessGame) {
+    <app-room-history [currentTitle]="'chess.game.history.title' | transloco" [current]="chessGame.history()" roomHistory />
     }
 </app-room-layout>

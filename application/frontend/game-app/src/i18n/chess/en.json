@@ -2,6 +2,12 @@
   "game": {
     "check": "Check",
     "checkmate": "Checkmate",
+    "history": {
+      "move": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White} other {Black}}: {from} → {to}",
+      "pass": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White passes} other {Black passes}}",
+      "promotion": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White} other {Black}} promotes on {square} to {piece, select, q {a queen} r {a rook} b {a bishop} other {a knight}}",
+      "title": "Moves of the game"
+    },
     "lastMove": {
       "label": "Last move:",
       "move": "{from} -> {to}",

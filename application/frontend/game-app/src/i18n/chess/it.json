@@ -2,6 +2,12 @@
   "game": {
     "check": "Scacco",
     "checkmate": "Scacco matto",
+    "history": {
+      "move": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Bianco} other {Nero}}: {from} → {to}",
+      "pass": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Il Bianco passa} other {Il Nero passa}}",
+      "promotion": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Bianco} other {Nero}}: promozione in {square} a {piece, select, q {donna} r {torre} b {alfiere} other {cavallo}}",
+      "title": "Mosse della partita"
+    },
     "lastMove": {
       "label": "Ultima mossa:",
       "move": "{from} -> {to}",

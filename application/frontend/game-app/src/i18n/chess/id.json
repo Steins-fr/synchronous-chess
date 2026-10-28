@@ -2,6 +2,12 @@
   "game": {
     "check": "Skak",
     "checkmate": "Skakmat",
+    "history": {
+      "move": "Giliran {turn}{kind, select, intermediate { (antara)} other {}} · {color, select, w {Putih} other {Hitam}}: {from} → {to}",
+      "pass": "Giliran {turn}{kind, select, intermediate { (antara)} other {}} · {color, select, w {Putih melewati giliran} other {Hitam melewati giliran}}",
+      "promotion": "Giliran {turn}{kind, select, intermediate { (antara)} other {}} · {color, select, w {Putih} other {Hitam}}: promosi di {square} menjadi {piece, select, q {menteri} r {benteng} b {gajah} other {kuda}}",
+      "title": "Langkah permainan"
+    },
     "lastMove": {
       "label": "Langkah terakhir:",
       "move": "{from} -> {to}",

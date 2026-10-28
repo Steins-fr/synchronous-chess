@@ -205,6 +205,7 @@ Claude writes the translations of every new or changed key, into every language:
 | piece | pièce | pieza | peça | peça | Figur | фигура | taş | buah | bierka | pezzo |
 | pawn | pion | peón | peão | peão | Bauer | пешка | piyon | pion | pionek | pedone |
 | king | roi | rey | rei | rei | König | король | şah | raja | król | re |
+| queen (chess) | dame | dama | dama | dama | Dame | ферзь | vezir | menteri | hetman | donna |
 | rook | tour | torre | torre | torre | Turm | ладья | kale | benteng | wieża | torre |
 | bishop | fou | alfil | bispo | bispo | Läufer | слон | fil | gajah | goniec | alfiere |
 | knight | cavalier | caballo | cavalo | cavalo | Springer | конь | at | kuda | skoczek | cavallo |
@@ -224,6 +225,7 @@ Claude writes the translations of every new or changed key, into every language:
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
 | unread (message) | non lu | sin leer | não lida | não lida | ungelesen | непрочитанное | okunmamış | belum dibaca | nieprzeczytana | non letto |
 | hide (a player's messages) | masquer | ocultar | ocultar | ocultar | ausblenden | скрыть | gizlemek | sembunyikan | ukryć | nascondere |
+| history | historique | historial | histórico | histórico | Verlauf | история | geçmiş | riwayat | historia | cronologia |
 | server | serveur | servidor | servidor | servidor | Server | сервер | sunucu | server | serwer | server |
 | cheating | triche | trampa | trapaça | batota | Betrug | жульничество | hile | curang | oszustwo | imbroglio |
 | card | carte | carta | carta | carta | Karte | карта | kart | kartu | karta | carta |

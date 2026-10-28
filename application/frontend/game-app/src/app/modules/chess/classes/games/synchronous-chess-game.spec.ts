@@ -24,6 +24,7 @@ import { FenBoard } from '@app/modules/chess/types/fen-board';
 import { TestHelper } from '@testing/test.helper';
 import { boardWith } from '@testing/fen-board.helper';
 import { GameEndReason, GameResult } from '@app/modules/chess/classes/games/game-result';
+import { PlayedActionKind } from '@app/modules/chess/classes/games/played-turn';
 
 class ProtectedTest extends SynchronousChessGame {
     public override runSyncTurn(): void {
@@ -568,7 +569,7 @@ describe('SynchronousChessGame', () => {
             canBeExecuted: vi.fn(),
             type: TurnType.CHOICE_PROMOTION,
             isDone: false,
-            action: {},
+            action: { whiteFenCoordinate: null, blackFenCoordinate: null, whitePiece: null, blackPiece: null },
             category: TurnCategory.CHOICE,
         });
         gameState(game)._turn.set(choiceTurnSpy);
@@ -3112,6 +3113,150 @@ describe('SynchronousChessGame', () => {
             // Then
             expect(game.result()).toEqual({ winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION });
             expect(game.registerMove(g1f3, PieceColor.WHITE)).toEqual(false);
+        });
+    });
+
+    describe('history of the turns', () => {
+        const kings: Record<string, FenPiece> = { e3: FenPiece.WHITE_KING, e6: FenPiece.BLACK_KING };
+        const a7a8: Move = { from: [FenColumn.A, FenRow._7], to: [FenColumn.A, FenRow._8] };
+        const a6a7: Move = { from: [FenColumn.A, FenRow._6], to: [FenColumn.A, FenRow._7] };
+        const h2h1: Move = { from: [FenColumn.H, FenRow._2], to: [FenColumn.H, FenRow._1] };
+        const h3h2: Move = { from: [FenColumn.H, FenRow._3], to: [FenColumn.H, FenRow._2] };
+
+        function played(game: SynchronousChessGame, whiteMove: Move | null, blackMove: Move | null): void {
+            game.registerMove(whiteMove, PieceColor.WHITE);
+            game.registerMove(blackMove, PieceColor.BLACK);
+            game.runTurn();
+        }
+
+        test('should record a synchronous turn, its moves copied', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            const e2e4: Move = { from: [FenColumn.E, FenRow._2], to: [FenColumn.E, FenRow._4] };
+            const e7e5: Move = { from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] };
+
+            // When
+            played(game, e2e4, e7e5);
+
+            // Then
+            expect(game.playedTurns()).toEqual([{
+                number: 1,
+                type: TurnType.MOVE_SYNC,
+                white: { kind: PlayedActionKind.MOVE, from: [FenColumn.E, FenRow._2], to: [FenColumn.E, FenRow._4] },
+                black: { kind: PlayedActionKind.MOVE, from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] },
+            }]);
+            expect(game.playedTurns()[0].white).toEqual(expect.objectContaining({ from: e2e4.from }));
+            expect((game.playedTurns()[0].white as { from: FenCoordinate }).from).not.toBe(e2e4.from);
+        });
+
+        test('should record the intermediate turns under the number of their synchronous turn, a pass and a color not involved', () => {
+            // Given the white knight going to d5, while the black rook, attacking d5, moves along the d file
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ h1: FenPiece.WHITE_KING, d1: FenPiece.WHITE_ROOK, c3: FenPiece.WHITE_KNIGHT, h8: FenPiece.BLACK_KING, d8: FenPiece.BLACK_ROOK }));
+            game.verifyCheck();
+
+            // When the black rook captures the knight in the intermediate turn, then white passes instead of recapturing
+            played(game, { from: [FenColumn.C, FenRow._3], to: [FenColumn.D, FenRow._5] }, { from: [FenColumn.D, FenRow._8], to: [FenColumn.D, FenRow._7] });
+            game.registerMove({ from: [FenColumn.D, FenRow._7], to: [FenColumn.D, FenRow._5] }, PieceColor.BLACK);
+            game.runTurn();
+            game.registerMove(null, PieceColor.WHITE);
+            game.runTurn();
+
+            // Then
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_SYNC);
+            expect(game.playedTurns()).toEqual([
+                {
+                    number: 1,
+                    type: TurnType.MOVE_SYNC,
+                    white: { kind: PlayedActionKind.MOVE, from: [FenColumn.C, FenRow._3], to: [FenColumn.D, FenRow._5] },
+                    black: { kind: PlayedActionKind.MOVE, from: [FenColumn.D, FenRow._8], to: [FenColumn.D, FenRow._7] },
+                },
+                {
+                    number: 1,
+                    type: TurnType.MOVE_INTERMEDIATE,
+                    white: null,
+                    black: { kind: PlayedActionKind.MOVE, from: [FenColumn.D, FenRow._7], to: [FenColumn.D, FenRow._5] },
+                },
+                { number: 1, type: TurnType.MOVE_INTERMEDIATE, white: { kind: PlayedActionKind.PASS }, black: null },
+            ]);
+
+            // When the next synchronous turn is played
+            played(game, { from: [FenColumn.H, FenRow._1], to: [FenColumn.G, FenRow._1] }, { from: [FenColumn.H, FenRow._8], to: [FenColumn.G, FenRow._8] });
+
+            // Then
+            expect(game.playedTurns().at(-1)).toEqual(expect.objectContaining({ number: 2, type: TurnType.MOVE_SYNC }));
+        });
+
+        test('should record a promotion, the color without a pawn to promote not involved', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ ...kings, a7: FenPiece.WHITE_PAWN, h3: FenPiece.BLACK_PAWN }));
+            played(game, a7a8, h3h2);
+
+            // When
+            const promoted: boolean = game.promote(PieceType.QUEEN, PieceColor.WHITE);
+            game.runTurn();
+
+            // Then
+            expect(promoted).toEqual(true);
+            expect(game.playedTurns().at(-1)).toEqual({
+                number: 1,
+                type: TurnType.CHOICE_PROMOTION,
+                white: { kind: PlayedActionKind.PROMOTION, square: [FenColumn.A, FenRow._8], piece: PieceType.QUEEN },
+                black: null,
+            });
+        });
+
+        test('should refuse a promotion to a piece a pawn can not become', () => {
+            // Given
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            game.load(boardWith({ ...kings, a6: FenPiece.WHITE_PAWN, h2: FenPiece.BLACK_PAWN }));
+            played(game, a6a7, h2h1);
+
+            // When
+            const promotedToKing: boolean = game.promote(PieceType.KING, PieceColor.BLACK);
+            const promotedToPawn: boolean = game.promote(PieceType.PAWN, PieceColor.BLACK);
+
+            // Then
+            expect(promotedToKing).toEqual(false);
+            expect(promotedToPawn).toEqual(false);
+            expect(game.colorHasPlayed(PieceColor.BLACK)).toEqual(false);
+            expect(game.runTurn()).toEqual(false);
+
+            // When
+            game.promote(PieceType.KNIGHT, PieceColor.BLACK);
+            game.runTurn();
+
+            // Then
+            expect(game.fenBoard()).toEqual(boardWith({ ...kings, a7: FenPiece.WHITE_PAWN, h1: FenPiece.BLACK_KNIGHT }));
+            expect(game.playedTurns().at(-1)).toEqual({
+                number: 1,
+                type: TurnType.CHOICE_PROMOTION,
+                white: null,
+                black: { kind: PlayedActionKind.PROMOTION, square: [FenColumn.H, FenRow._1], piece: PieceType.KNIGHT },
+            });
+        });
+
+        test('should run no turn once the game is over', () => {
+            // Given an intermediate turn both players passed, the game being over
+            const game: SynchronousChessGame = new SynchronousChessGame();
+            gameState(game)._turn.set(new IntermediateTurn({
+                whiteTarget: [FenColumn.E, FenRow._5],
+                blackTarget: [FenColumn.E, FenRow._4],
+                whiteMove: null,
+                blackMove: null,
+            }));
+            game.registerMove(null, PieceColor.WHITE);
+            game.registerMove(null, PieceColor.BLACK);
+            gameState(game)._result.set({ winner: PieceColor.WHITE, reason: GameEndReason.KING_CAPTURED });
+
+            // When
+            const executed: boolean = game.runTurn();
+
+            // Then
+            expect(executed).toEqual(false);
+            expect(game.getTurnType()).toEqual(TurnType.MOVE_INTERMEDIATE);
+            expect(game.playedTurns()).toEqual([]);
         });
     });
 });

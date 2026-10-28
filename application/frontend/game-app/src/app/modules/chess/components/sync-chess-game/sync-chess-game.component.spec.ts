@@ -27,6 +27,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
+import { translated } from '@testing/translatable-text.helper';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 describe('SyncChessGameComponent', () => {
@@ -146,6 +147,7 @@ describe('SyncChessGameComponent', () => {
         expect(skipButton('white')).toBeNull();
         expect(skipButton('black')).toBeNull();
         expect(component.moveColor()).toEqual(PieceColor.NONE);
+        expect(component.history()).toEqual([]);
     });
 
     test('should display the players of an online game', async () => {
@@ -299,6 +301,8 @@ describe('SyncChessGameComponent', () => {
         expect(component.lastMove(PieceColor.WHITE)).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E2', to: 'E4' } });
         expect(component.lastMove(PieceColor.BLACK)).toEqual({ key: 'chess.game.lastMove.move', params: { from: 'E7', to: 'E5' } });
         expect(text('.player-information.black-player')).toContain('E7 -> E5');
+        // The turn in the history of the game, read by the page
+        expect(component.history().map(translated)).toEqual(['Turn 1 · White: E2 → E4', 'Turn 1 · Black: E7 → E5']);
     });
 
     test('should skip an intermediate turn', async () => {
