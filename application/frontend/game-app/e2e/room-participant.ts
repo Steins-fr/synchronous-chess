@@ -298,6 +298,25 @@ export class RoomParticipant {
         await expect(this.page.locator('mat-sidenav-content')).toHaveCSS('margin-right', '0px');
     }
 
+    /** Opens the history of the game in the panel of the room, unless it shows already */
+    public async openHistory(): Promise<void> {
+        const toggle: Locator = this.page.locator('#room-history-toggle');
+        if (await toggle.getAttribute('aria-expanded') !== 'true') {
+            await toggle.click();
+        }
+        await expect(this.page.locator('#room-history')).toBeVisible();
+    }
+
+    /** The lines of the history of the game in progress, the latest first */
+    public historyLines(): Locator {
+        return this.page.locator('#history-current li');
+    }
+
+    /** The lines of the history of the past matches or games, the latest first */
+    public pastLines(): Locator {
+        return this.page.locator('#history-past li');
+    }
+
     public async sendMessage(text: string): Promise<void> {
         await this.page.getByRole('textbox', { name: 'Type your message' }).fill(text);
         await this.page.getByRole('button', { name: 'Send' }).click();

@@ -65,6 +65,15 @@ test.describe('Synchronous chess', () => {
             // eslint-disable-next-line no-await-in-loop -- the pages one after the other
             expect(await movedElements(participant.page), participant.name).toEqual([]);
         }
+
+        // The history of the spectator, over the game: the latest turn first, white first in a turn
+        await carol.openHistory();
+        await expect(carol.historyLines()).toHaveText([
+            'Turn 2 · White: G2 → G4',
+            'Turn 2 · Black: D8 → H4',
+            'Turn 1 · White: F2 → F3',
+            'Turn 1 · Black: E7 → E5',
+        ]);
     });
 
     test('gives back its seat and its move to a player reloading the page, and asks the players to confirm leaving the game', async ({ chess }) => {
@@ -91,6 +100,12 @@ test.describe('Synchronous chess', () => {
         }).toPass();
         await drag(bob.page, 51, 35);
         await expect(game(carol).locator('.player-information.top-player')).toContainText('E7 -> E5');
+        // The history of Black holds the turn its page played again once reloaded, then closes: over the game, it covers
+        // the bar of the room
+        await bob.openHistory();
+        await expect(bob.historyLines()).toHaveText(['Turn 1 · White: F2 → F3', 'Turn 1 · Black: E7 → E5']);
+        await bob.page.locator('#history-close').click();
+        await expect(bob.page.locator('#room-panel')).toBeHidden();
 
         // The spectator leaves through the app at once
         await carol.page.getByRole('link', { name: 'Home' }).click();
