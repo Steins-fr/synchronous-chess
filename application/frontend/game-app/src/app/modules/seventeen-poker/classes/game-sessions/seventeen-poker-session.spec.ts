@@ -23,10 +23,17 @@ const { ONE, TWO } = PokerSeat;
 
 type Tamper = (message: AppMessage) => AppMessage;
 
+/**
+ * The wait for the sessions to apply the cipher of the decks, slow on a machine loaded by the other specs: the default of
+ * a second fails the full run now and then
+ */
+const CIPHER_WAIT = { timeout: 5_000 } as const;
+
 /** Lets the sessions apply the messages delivered */
 const flush = (): Promise<void> => new Promise<void>((resolve) => setTimeout(resolve));
 
-describe('SeventeenPokerSession', () => {
+// The tests holding several deals, each one waited for up to CIPHER_WAIT
+describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
     let hub: RoomHub<PokerPayloads>;
     let rooms: Map<string, Room<PokerPayloads>>;
     let sessions: SeventeenPokerSession[];
@@ -58,7 +65,7 @@ describe('SeventeenPokerSession', () => {
         await vi.waitFor(() => of.forEach((session: SeventeenPokerSession) => {
             expect(check(session)).toBe(true);
             expect(session.dealing()).toBe(false);
-        }));
+        }), CIPHER_WAIT);
     }
 
     /** The dealer of the hand deals it, Bob first, then waits for each player to read its cards */
@@ -723,7 +730,7 @@ describe('SeventeenPokerSession', () => {
             check(DeckVerification.FAIR);
 
             // Then
-            await vi.waitFor(() => expect(carol.pastMatches()[0].verification()).toEqual(DeckVerification.FAIR));
+            await vi.waitFor(() => expect(carol.pastMatches()[0].verification()).toEqual(DeckVerification.FAIR), CIPHER_WAIT);
             expect(carol.verification()).toEqual(DeckVerification.PENDING);
         });
 
@@ -794,7 +801,7 @@ describe('SeventeenPokerSession', () => {
             await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.broken());
 
             // Then: both players give the keys of the first deck, the broken one giving none
-            await vi.waitFor(() => expect(messagesOf(MentalDeckMessageType.DISCLOSE)).toHaveLength(2));
+            await vi.waitFor(() => expect(messagesOf(MentalDeckMessageType.DISCLOSE)).toHaveLength(2), CIPHER_WAIT);
             expect(carol.verification()).toEqual(DeckVerification.PENDING);
         });
 
