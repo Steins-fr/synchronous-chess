@@ -914,6 +914,40 @@ describe('ChatComponent', () => {
             expect(nextReportSpy).toHaveBeenCalledTimes(1);
         });
 
+        test('should count a message sent twice against the rate of its author, shown once', async () => {
+            // Given
+            await setRoom();
+            receive('remote', 'once', 0, 'twice');
+            receive('remote', 'once', 0, 'twice');
+
+            // When: 7 more
+            Array.from({ length: 7 }, (_, index: number) => receive('remote', `spam ${ index + 1 }`));
+            await fixture.whenStable();
+
+            // Then: the 9th on the chain hidden
+            expect(logLines().filter((line: string) => line.startsWith('remote: '))).toHaveLength(7);
+            expect(logLines()).toContain('remote sends too many messages: they are hidden for a moment');
+        });
+
+        test('should read a message on the room it comes from, the input changed before the next one is listened to', async () => {
+            // Given: remote reaching the rate in the first room
+            await setRoom();
+            const formerNetwork: RoomNetworkMock = network;
+            Array.from({ length: 8 }, () => receive('remote', 'spam'));
+            network = new RoomNetworkMock();
+
+            // When: one more from the first room, the next room set and not listened to yet
+            fixture.componentRef.setInput('room', new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+            formerNetwork.onMessage$.next({
+                type: ChatMessengerType.CHAT_MESSAGE, payload: { id: 'late', text: 'late spam', at: 0 }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote',
+            });
+            await fixture.whenStable();
+
+            // Then: hidden on the times of the first room
+            expect(logLines()).not.toContain('remote: late spam');
+            expect(logLines()).toContain('remote sends too many messages: they are hidden for a moment');
+        });
+
         test('should leave out its own message hidden for flooding, telling it apart', async () => {
             // Given: its messages before a reload
             await setRoom();

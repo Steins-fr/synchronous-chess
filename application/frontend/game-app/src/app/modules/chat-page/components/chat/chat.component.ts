@@ -36,7 +36,7 @@ import { scopedKey } from '@app/services/language/scoped-key';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
-import { Subscription, switchMap, timer } from 'rxjs';
+import { map, Subscription, switchMap, timer } from 'rxjs';
 import { admitChatMessage, CHAT_UNSENT_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
@@ -261,10 +261,11 @@ export class ChatComponent {
                 this.invalidAuthors.clear();
                 const unsent = new Set<Readonly<ChatEntry>>(this.unsentMessages());
                 this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => !unsent.has(entry)));
-                return room.messenger(ChatMessengerType.CHAT_MESSAGE);
+                // Read on the room it comes from: the input may change before the next one is listened to
+                return room.messenger(ChatMessengerType.CHAT_MESSAGE).pipe(map((message: ChatRoomMessage) => ({ room, message })));
             }),
             takeUntilDestroyed(),
-        ).subscribe((message: ChatRoomMessage) => this.onChatMessage(message));
+        ).subscribe(({ room, message }: { room: Room<ChatPayloads>; message: ChatRoomMessage }) => this.onChatMessage(room, message));
 
         // A player the room agrees left: a participant losing its link to it may connect to it again meanwhile
         toObservable(this.room).pipe(
@@ -378,8 +379,7 @@ export class ChatComponent {
     /** Shows the message at once, waiting until the room sends it back: failed after a while */
     private transmit(text: string, messageId: string = crypto.randomUUID()): void {
         const room: Room<ChatPayloads> = this.room();
-        // The time of the composer too: the message counts at once against the rate of the local player
-        this.now.set(Date.now());
+        // At the time of the composer, set by send() or retry(): the message counts at once against the rate of the local player
         const message: ChatMessage = {
             kind: ChatEntryKind.MESSAGE, id: this.ids.next().value, messageId, author: room.localPlayer.name, text, isSelf: true, at: this.now(),
             state: ChatMessageState.SENDING,
@@ -395,8 +395,7 @@ export class ChatComponent {
             entries.map((entry: Readonly<ChatEntry>) => (entry === message ? { ...message, state: ChatMessageState.FAILED } : entry))));
     }
 
-    private onChatMessage(message: ChatRoomMessage): void {
-        const room: Room<ChatPayloads> = this.room();
+    private onChatMessage(room: Room<ChatPayloads>, message: ChatRoomMessage): void {
         // Checked where it enters: a peer cheating would break the log of everyone, its history included
         if (!isChatText(message.payload)) {
             if (!this.invalidAuthors.has(message.from)) {
@@ -409,11 +408,13 @@ export class ChatComponent {
         const isSelf: boolean = message.from === room.localPlayer.name;
         const shown: Readonly<ChatEntry> | undefined = this.entries().find((entry: Readonly<ChatEntry>) =>
             entry.kind === ChatEntryKind.MESSAGE && entry.author === message.from && entry.messageId === messageId);
+        // Counted first, sent twice included: the rate of its author is read on the chain alone, whatever this page shows
+        const admitted: boolean = this.isAdmitted(room, message);
         // Sent twice, the room delivering the first one late: shown once
         if (shown?.kind === ChatEntryKind.MESSAGE && shown.state === ChatMessageState.SENT) {
             return;
         }
-        if (!this.isAdmitted(message)) {
+        if (!admitted) {
             // Its own message, waiting or failed: hidden from every page, sending it again would be too
             this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((other: Readonly<ChatEntry>) => other !== shown));
             return;
@@ -441,8 +442,8 @@ export class ChatComponent {
      * Whether a message shows, by the rate of its author on the chain: every page hides the same ones, the history
      * included. The first one hidden is told once. A room without chain times nothing: its messages show
      */
-    private isAdmitted(message: ChatRoomMessage): boolean {
-        const time: number | undefined = this.room().sequencedAt(message);
+    private isAdmitted(room: Room<ChatPayloads>, message: ChatRoomMessage): boolean {
+        const time: number | undefined = room.sequencedAt(message);
         if (time === undefined) {
             return true;
         }

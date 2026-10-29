@@ -144,7 +144,12 @@ in the chain. The watch starts again when the clock of the system of the partici
 its monotonic clock (set, or the page asleep), when the sequencer changes, and when the key of the
 sequencer is received again: its page may have reloaded on a clock set meanwhile, or it may order again
 after a sequencer whose clock was ahead, taking on its time. A sequencer connecting again starts a new
-warm-up, at the risk of losing the ordering meanwhile. A clock ahead from the first blocks on, or running late,
+warm-up, at the risk of losing the ordering meanwhile. The warm-up checks no jump: a block received
+sooner than the previous ones is not told apart from previous ones received late, so a sequencer may run
+its clock ahead over each warm-up, up to a day per block, and spread a flood over it. Its first blocks all
+received late, by a network jammed or a page frozen over the whole warm-up, the next one received at
+its time makes the participant report an honest sequencer: lowering the shortest delay after the warm-up
+would let a sequencer run ahead 5 seconds at a time. A clock ahead from the first blocks on, or running late,
 is not told apart from a slow network: a sequencer could pack the messages of an honest author, as it
 could already hold them for less than 10 seconds, or spread its own messages back over an idle time of
 the chain. Freezing its clock, giving every block the time of the previous one, it would hide an honest
@@ -441,7 +446,7 @@ messages through the `roulette` chain, the chat `chatMessage` through the `chat`
 **The flood of the chat.** The sequencer orders every message of the chat: refusing the messages of an
 author over the rate, it would be reported for censoring them by the participants watching them. Each
 page filters them instead, on the times of the chain alone (`chat-flood.ts`): an author with 8 messages
-already within the last 10 seconds of the chain is hidden, its hidden messages counted, until its rate
+already within the last 10 seconds of the chain is hidden, its hidden messages and the ones sent twice counted, until its rate
 falls back; the log tells it once. Every page hides the same messages, a page reloaded and a participant
 joining late included. The composer sends 3 messages in 10 seconds at most, and waits while 5 of its
 messages are not sent back: held while the room has no sequencer, they are ordered at once when it has
