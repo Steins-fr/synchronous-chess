@@ -250,7 +250,12 @@ export class ChatComponent {
     public constructor() {
         // Handled in the subscription, a signal would only keep the last of several messages received in a row
         toObservable(this.room).pipe(
-            switchMap((room: Room<ChatPayloads>) => room.messenger(ChatMessengerType.CHAT_MESSAGE)),
+            switchMap((room: Room<ChatPayloads>) => {
+                // Another room, another chain: the rates of its authors and its cheaters start again
+                this.flood = NO_FLOOD;
+                this.invalidAuthors.clear();
+                return room.messenger(ChatMessengerType.CHAT_MESSAGE);
+            }),
             takeUntilDestroyed(),
         ).subscribe((message: ChatRoomMessage) => this.onChatMessage(message));
 
@@ -318,6 +323,11 @@ export class ChatComponent {
 
     /** Sends again a message the room did not send back in time, under the same id */
     protected retry(failed: Readonly<ChatMessage>): void {
+        this.now.set(Date.now());
+        // Its button disabled while the composer waits, the retry of another message clicked before the page renders
+        if (this.isWaiting()) {
+            return;
+        }
         this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => entry !== failed));
         this.transmit(failed.text, failed.messageId);
     }

@@ -10,7 +10,7 @@ export const CHAT_SEND_LIMIT: number = 3;
 /**
  * The messages of the composer the room did not send back yet, whatever their age: the next one waits. Held while the
  * room has no sequencer, they are ordered at once when it has one again: with the ones sent within the window, they
- * never pass the limit
+ * do not pass the limit. A page reloaded meanwhile forgets the ones it sent, which the others may still order
  */
 export const CHAT_UNSENT_LIMIT: number = CHAT_RATE_LIMIT - CHAT_SEND_LIMIT;
 

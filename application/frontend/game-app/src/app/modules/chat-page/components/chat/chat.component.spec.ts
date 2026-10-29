@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChatComponent, ChatMessengerType, ChatPayloads, ChatText, isChatText } from './chat.component';
+import { ChatComponent, ChatEntry, ChatMessengerType, ChatPayloads, ChatText, isChatText } from './chat.component';
+import { ChatEntryKind, ChatMessageState } from './chat-message/chat-message.component';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
@@ -396,6 +397,13 @@ describe('ChatComponent', () => {
         expect(sendButton().disabled).toEqual(true);
         expect(retry().disabled).toEqual(true);
         expect(query('mat-hint')?.textContent).toEqual('Wait 7 seconds before sending another message');
+
+        // When: the retry of a failed message, activated before the page renders its button disabled
+        const failed = TestHelper.cast<{ entries(): ChatEntry[] }>(component).entries().find((entry: ChatEntry) => entry.kind === ChatEntryKind.MESSAGE && entry.state === ChatMessageState.FAILED);
+        TestHelper.cast<{ retry(message: ChatEntry | undefined): void }>(component).retry(failed);
+
+        // Then
+        expect(transmitSpy).toHaveBeenCalledTimes(4);
 
         // When: a second after another, each one rendered
         for (let second = 0; second < 6; second++) {
@@ -880,6 +888,30 @@ describe('ChatComponent', () => {
 
             // Then
             expect(logLines()).toEqual(['carol: stop it']);
+        });
+
+        test('should start again the rates and the reports of a room replacing another one', async () => {
+            // Given: remote flooding the first room, and reported for an invalid message
+            await setRoom();
+            const reportSpy = vi.spyOn(room, 'reportCheat');
+            Array.from({ length: 9 }, () => receive('remote', 'spam'));
+            deliver('remote', { id: 'blank', text: '', at: 0 });
+            network = new RoomNetworkMock();
+            const nextRoom = new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
+            vi.spyOn(nextRoom, 'sequencedAt').mockImplementation(() => chainTime);
+            const nextReportSpy = vi.spyOn(nextRoom, 'reportCheat');
+
+            // When: the same in the next room
+            fixture.componentRef.setInput('room', nextRoom);
+            await fixture.whenStable();
+            Array.from({ length: 9 }, () => receive('remote', 'spam'));
+            deliver('remote', { id: 'blank', text: '', at: 0 });
+            await fixture.whenStable();
+
+            // Then: told and reported again
+            expect(logLines().filter((line: string) => line === 'remote sends too many messages: they are hidden for a moment')).toHaveLength(2);
+            expect(reportSpy).toHaveBeenCalledTimes(1);
+            expect(nextReportSpy).toHaveBeenCalledTimes(1);
         });
 
         test('should leave out its own message hidden for flooding, telling it apart', async () => {
