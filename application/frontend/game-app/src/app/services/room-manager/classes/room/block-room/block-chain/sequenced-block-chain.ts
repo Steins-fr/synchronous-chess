@@ -582,6 +582,8 @@ export class SequencedBlockChain {
             this.sendHead(name);
 
             if (name === this.sequencer && !this.isSequencer) {
+                // Its page may have reloaded, on a clock of the system set meanwhile: its clock is watched again
+                this.sequencerClock.clear();
                 // Catches up with the sequencer, and submits the entries it may not have received
                 this.requestBlocks(name);
                 this.submitPendingEntries();
@@ -605,6 +607,8 @@ export class SequencedBlockChain {
         void this.serially(async () => {
             const former: string = this.sequencer;
             this.sequencer = name;
+            // Its clock is watched from its next blocks, the ones it ordered before included: it may take on a later time
+            this.sequencerClock.clear();
 
             // The new sequencer gets as much time as the former one to order the watched entries
             this.watchedEntries.forEach((watched: WatchedEntry) => {

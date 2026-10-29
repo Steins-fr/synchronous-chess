@@ -454,6 +454,34 @@ describe('SequencedBlockChain', () => {
             expect(delivered(node)).toHaveLength(warmUp.length + 3);
         });
 
+        test.each([
+            ['its page reloaded, its key received again', (node: Node): void => node.chain.onParticipantReady('b')],
+            ['it orders the blocks again after another sequencer', (node: Node): void => {
+                node.chain.changeSequencer('c');
+                node.chain.changeSequencer('b');
+            }],
+        ])('should watch the clock of its sequencer again once %s', async (_case: string, restart: (node: Node) => void) => {
+            // Given: its first blocks over the warm-up, received at their time
+            vi.useFakeTimers({ toFake: ['Date'] });
+            const node: Node = createNode('b');
+            const warmUp: Block[] = await warmUpBlocks(node);
+            for (const block of warmUp) {
+                vi.setSystemTime(block.time);
+                await handled(node, received(BlockChainMessageType.NEW_BLOCK, block));
+            }
+            const time: number = (warmUp.at(-1) as Block).time;
+            const later: Block = await createBlock((warmUp.at(-1) as Block), await createEntry('b', remoteKeys, 'later'), 'b', remoteKeys, time + 60_000);
+            restart(node);
+            await node.internals.queue;
+
+            // When: its next block a minute ahead of its first ones, its clock set meanwhile
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, later));
+
+            // Then
+            expect(node.report).not.toHaveBeenCalled();
+            expect(node.internals.blockChain.getLatestBlock()).toBe(later);
+        });
+
         test('should time the blocks of its sequencer when received, not once the previous messages are handled', async () => {
             // Given: its first blocks received at their time, but handled after the tolerance
             const node: Node = createNode('b');

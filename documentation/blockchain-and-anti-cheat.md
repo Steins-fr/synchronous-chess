@@ -141,7 +141,10 @@ longer. The first live blocks of a sequencer, at least 5 over at least 30 second
 delay, some of them late not mattering; a later block received more than 5 seconds sooner tells a clock
 jumping ahead: the participant reports it once (`clockAhead`), and the block is kept, its time already
 in the chain. The watch starts again when the clock of the system of the participant moves apart from
-its monotonic clock (set, or the page asleep). A clock ahead from the first blocks on, or running late,
+its monotonic clock (set, or the page asleep), when the sequencer changes, and when the key of the
+sequencer is received again: its page may have reloaded on a clock set meanwhile, or it may order again
+after a sequencer whose clock was ahead, taking on its time. A sequencer connecting again starts a new
+warm-up, at the risk of losing the ordering meanwhile. A clock ahead from the first blocks on, or running late,
 is not told apart from a slow network: a sequencer could pack the messages of an honest author, as it
 could already hold them for less than 10 seconds, or spread its own messages back over an idle time of
 the chain. Freezing its clock, giving every block the time of the previous one, it would hide an honest
