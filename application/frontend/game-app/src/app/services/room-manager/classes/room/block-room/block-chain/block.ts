@@ -19,6 +19,8 @@ export class Block {
         public readonly entry: ChainEntry,
         /** The participant who ordered the block, signing its hash */
         public readonly sequencer: string,
+        /** When the sequencer ordered the block, in milliseconds since 1970, never before the previous block */
+        public readonly time: number,
         public readonly hash: string,
         public readonly sequencerSignature: string,
     ) {}

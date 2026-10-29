@@ -1,13 +1,17 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most"
+    "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most",
+    "unsent": "Wait until your messages are sent before sending more",
+    "wait": "Wait {seconds, plural, one {# second} other {# seconds}} before sending another message"
   },
   "log": {
     "arrival": "{name} joined the room",
     "departure": "{name} left the room",
     "empty": "No messages yet. Say hello!",
     "failed": "Not sent",
+    "flooding": "{name} sends too many messages: they are hidden for a moment",
+    "floodingSelf": "You sent too many messages: they are hidden for a moment",
     "latest": "Latest messages",
     "retry": "Retry",
     "sending": "Sending…",

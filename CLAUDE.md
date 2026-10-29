@@ -168,6 +168,13 @@ run by the CI.
 - A message is a bubble of `#chat-log` (`.chat-bubble`), its author in a hidden text first (`alice: hello`). Enter
   sends it, Shift+Enter starts a new line; the options of the chat (`#chat-options`) hide the arrivals and departures,
   the times, a player's messages, or turn Enter into a new line.
+- The composer sends 3 messages in 10 seconds at most: then `#send` and the Retry of a failed message are disabled,
+  and a hint of the field counts down (`Wait 7 seconds before sending another message`). It waits too while 5 of its
+  messages are not sent back (`Wait until your messages are sent before sending more`), Retry enabled. Each page hides the messages
+  of an author over 8 in 10 seconds of the chain, until its rate falls back, and a notice of the log tells it once
+  (`bob sends too many messages: they are hidden for a moment`): a scenario sending more than 3 messages in a row
+  waits between them. `transmitAroundComposer()` of `e2e/room-participant.ts` sends a flood as a script in the page
+  would, through the debugging utilities of Angular (`ng`, the development build of `serve:local` only).
 
 ### Testing a chess game
 

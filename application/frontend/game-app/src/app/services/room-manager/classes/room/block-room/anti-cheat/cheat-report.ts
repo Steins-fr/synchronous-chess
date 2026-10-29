@@ -15,6 +15,8 @@ export enum CheatReason {
     INVALID_BLOCK = 'invalidBlock',
     /** The sequencer orders other entries, but not this one */
     CENSORED_ENTRY = 'censoredEntry',
+    /** A live block of the sequencer received much sooner, from its time, than its first ones: its clock jumped ahead */
+    CLOCK_AHEAD = 'clockAhead',
     /** Detected by the application: a move against the rules of the game */
     ILLEGAL_MOVE = 'illegalMove',
     /** Detected by the application: a revealed move not matching the commitment of its player */
@@ -42,6 +44,7 @@ export const sequencerCheats: ReadonlySet<CheatReason> = new Set([
     CheatReason.CONFLICTING_BLOCK,
     CheatReason.INVALID_BLOCK,
     CheatReason.CENSORED_ENTRY,
+    CheatReason.CLOCK_AHEAD,
 ]);
 
 /** A cheat a participant detected */

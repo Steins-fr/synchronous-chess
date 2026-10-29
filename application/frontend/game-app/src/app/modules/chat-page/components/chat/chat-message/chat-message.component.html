@@ -17,6 +17,6 @@
 } @else if (message().state === states.FAILED) {
 <span class="flex items-center gap-1 px-1 text-xs text-app-chat-failed">
     {{ 'chat.log.failed' | transloco }}
-    <button (click)="retry.emit()" mat-button type="button">{{ 'chat.log.retry' | transloco }}</button>
+    <button (click)="retry.emit()" [disabled]="retryDisabled()" mat-button type="button">{{ 'chat.log.retry' | transloco }}</button>
 </span>
 }

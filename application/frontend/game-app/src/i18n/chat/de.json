@@ -1,13 +1,17 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}"
+    "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
+    "unsent": "Warte, bis deine Nachrichten gesendet sind, bevor du weitere sendest",
+    "wait": "Warte {seconds, plural, one {# Sekunde} other {# Sekunden}}, bevor du eine weitere Nachricht sendest"
   },
   "log": {
     "arrival": "{name} hat den Raum betreten",
     "departure": "{name} hat den Raum verlassen",
     "empty": "Noch keine Nachrichten. Sag Hallo!",
     "failed": "Nicht gesendet",
+    "flooding": "{name} sendet zu viele Nachrichten: sie werden kurz ausgeblendet",
+    "floodingSelf": "Du hast zu viele Nachrichten gesendet: sie werden kurz ausgeblendet",
     "latest": "Neueste Nachrichten",
     "retry": "Erneut senden",
     "sending": "Wird gesendet…",

@@ -1,13 +1,17 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "Maksymalnie {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}"
+    "tooLong": "Maksymalnie {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "unsent": "Poczekaj, aż twoje wiadomości zostaną wysłane, zanim wyślesz kolejne",
+    "wait": "Poczekaj {seconds, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}} przed wysłaniem kolejnej wiadomości"
   },
   "log": {
     "arrival": "{name} dołącza do pokoju",
     "departure": "{name} opuszcza pokój",
     "empty": "Brak wiadomości. Przywitaj się!",
     "failed": "Nie wysłano",
+    "flooding": "{name} wysyła za dużo wiadomości: są na chwilę ukryte",
+    "floodingSelf": "Wysyłasz za dużo wiadomości: są na chwilę ukryte",
     "latest": "Najnowsze wiadomości",
     "retry": "Ponów",
     "sending": "Wysyłanie…",

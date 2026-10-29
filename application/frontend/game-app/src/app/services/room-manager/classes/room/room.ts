@@ -92,6 +92,15 @@ export class Room<M extends object> {
         return false;
     }
 
+    /**
+     * When the sequencer of a room keeping a block chain ordered a message it delivered: the same time on every page,
+     * which a rule of the application reads alike. A room without block chain orders none
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the message of a block room, which times its blocks
+    public sequencedAt(_message: AppMessage): number | undefined {
+        return undefined;
+    }
+
     public transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {
         const roomServiceMessage: RoomServiceMessage = {
             type,

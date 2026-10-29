@@ -1,13 +1,17 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "Massimo {maxLength, plural, one {# carattere} other {# caratteri}}"
+    "tooLong": "Massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
+    "unsent": "Aspetta che i tuoi messaggi siano inviati prima di inviarne altri",
+    "wait": "Aspetta {seconds, plural, one {# secondo} other {# secondi}} prima di inviare un altro messaggio"
   },
   "log": {
     "arrival": "{name} entra nella stanza",
     "departure": "{name} esce dalla stanza",
     "empty": "Ancora nessun messaggio. Saluta!",
     "failed": "Non inviato",
+    "flooding": "{name} invia troppi messaggi: sono nascosti per un momento",
+    "floodingSelf": "Hai inviato troppi messaggi: sono nascosti per un momento",
     "latest": "Ultimi messaggi",
     "retry": "Riprova",
     "sending": "Invio…",

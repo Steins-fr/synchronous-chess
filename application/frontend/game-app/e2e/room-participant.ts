@@ -4,6 +4,8 @@ declare global {
     interface Window {
         /** The WebRTC connections the page opened, to cut them */
         peerConnections: RTCPeerConnection[];
+        /** The debugging utilities of Angular, in the development build only (serve:local) */
+        ng: { getComponent(element: Element): { room(): { transmitMessage(type: string, payload: unknown): void } } };
     }
 }
 
@@ -320,6 +322,27 @@ export class RoomParticipant {
     public async sendMessage(text: string): Promise<void> {
         await this.page.getByRole('textbox', { name: 'Type your message' }).fill(text);
         await this.page.getByRole('button', { name: 'Send' }).click();
+    }
+
+    /**
+     * Sends messages of the chat around its composer, at once, as a script in the page would: through the room of the
+     * chat, reached by the debugging utilities of Angular
+     */
+    public async transmitAroundComposer(texts: ReadonlyArray<string>): Promise<void> {
+        await this.page.evaluate((messages: ReadonlyArray<string>) => {
+            const chat = window.ng.getComponent(document.querySelector('app-chat') as Element);
+            messages.forEach((text: string) => chat.room().transmitMessage('chatMessage', { id: crypto.randomUUID(), text, at: Date.now() }));
+        }, texts);
+    }
+
+    /** The messages of the log of the chat, with their author */
+    public chatBubbles(): Locator {
+        return this.page.locator('#chat-log .chat-bubble');
+    }
+
+    /** The notices of the log of the chat telling a text: a player arriving, leaving, or sending too many messages */
+    public chatNotices(text: string): Locator {
+        return this.page.locator('#chat-log .chat-notice', { hasText: text });
     }
 
     public async expectMessage(from: string, text: string): Promise<void> {

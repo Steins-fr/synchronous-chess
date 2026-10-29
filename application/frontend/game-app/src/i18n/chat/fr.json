@@ -1,13 +1,17 @@
 {
   "author": "{author} :",
   "composer": {
-    "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum"
+    "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum",
+    "unsent": "Attendez que vos messages soient envoyés avant d’en envoyer d’autres",
+    "wait": "Attendez {seconds, plural, one {# seconde} other {# secondes}} avant d’envoyer un autre message"
   },
   "log": {
     "arrival": "{name} a rejoint la salle",
     "departure": "{name} a quitté la salle",
     "empty": "Aucun message pour l’instant. Dites bonjour !",
     "failed": "Non envoyé",
+    "flooding": "{name} envoie trop de messages : ils sont masqués un moment",
+    "floodingSelf": "Vous avez envoyé trop de messages : ils sont masqués un moment",
     "latest": "Derniers messages",
     "retry": "Réessayer",
     "sending": "Envoi…",

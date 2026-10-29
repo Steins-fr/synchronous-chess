@@ -1,13 +1,17 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "En fazla {maxLength, plural, one {# karakter} other {# karakter}}"
+    "tooLong": "En fazla {maxLength, plural, one {# karakter} other {# karakter}}",
+    "unsent": "Daha fazla göndermeden önce mesajlarınızın gönderilmesini bekleyin",
+    "wait": "Başka bir mesaj göndermeden önce {seconds, plural, one {# saniye} other {# saniye}} bekleyin"
   },
   "log": {
     "arrival": "{name} odaya katıldı",
     "departure": "{name} odadan ayrıldı",
     "empty": "Henüz mesaj yok. Merhaba deyin!",
     "failed": "Gönderilemedi",
+    "flooding": "{name} çok fazla mesaj gönderiyor: mesajları bir süreliğine gizleniyor",
+    "floodingSelf": "Çok fazla mesaj gönderdiniz: mesajlarınız bir süreliğine gizleniyor",
     "latest": "Son mesajlar",
     "retry": "Tekrar dene",
     "sending": "Gönderiliyor…",

@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ChatComponent, ChatMessengerType, ChatPayloads, ChatText, isChatText } from './chat.component';
+import { ChatComponent, ChatEntry, ChatMessengerType, ChatPayloads, ChatText, isChatText } from './chat.component';
+import { ChatEntryKind, ChatMessageState } from './chat-message/chat-message.component';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
@@ -110,6 +111,7 @@ describe('ChatComponent', () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         webRtcPlayers.forEach((player: WebRtcPlayer) => player.clear());
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
@@ -368,6 +370,98 @@ describe('ChatComponent', () => {
         // Then
         expect(log().textContent).not.toContain('Not sent');
         vi.useRealTimers();
+    });
+
+    test('should wait before sending a 4th message within 10 seconds, counting down', async () => {
+        // Given: a message not sent back, failed, then three sent a second apart
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        await type('lost');
+        sendButton().click();
+        vi.advanceTimersByTime(15_000);
+        for (const text of ['one', 'two', 'three']) {
+            await type(text);
+            sendButton().click();
+            vi.advanceTimersByTime(1000);
+        }
+
+        // When
+        await type('four');
+        press({});
+        await fixture.whenStable();
+
+        // Then: the oldest of the three leaves the window in 7 seconds
+        const retry = (): HTMLButtonElement => [...log().querySelectorAll('button')].find((button: HTMLButtonElement) => button.textContent.includes('Retry')) as HTMLButtonElement;
+        expect(transmitSpy).toHaveBeenCalledTimes(4);
+        expect(sendButton().disabled).toEqual(true);
+        expect(retry().disabled).toEqual(true);
+        expect(query('mat-hint')?.textContent).toEqual('Wait 7 seconds before sending another message');
+
+        // When: the retry of a failed message, activated before the page renders its button disabled
+        const failed = TestHelper.cast<{ entries(): ChatEntry[] }>(component).entries().find((entry: ChatEntry) => entry.kind === ChatEntryKind.MESSAGE && entry.state === ChatMessageState.FAILED);
+        TestHelper.cast<{ retry(message: ChatEntry | undefined): void }>(component).retry(failed);
+
+        // Then
+        expect(transmitSpy).toHaveBeenCalledTimes(4);
+
+        // When: a second after another, each one rendered
+        for (let second = 0; second < 6; second++) {
+            vi.advanceTimersByTime(1000);
+            await fixture.whenStable();
+        }
+
+        // Then
+        expect(query('mat-hint')?.textContent).toEqual('Wait 1 second before sending another message');
+
+        // When
+        vi.advanceTimersByTime(1000);
+        await fixture.whenStable();
+
+        // Then
+        expect(query('mat-hint')).toBeNull();
+        expect(retry().disabled).toEqual(false);
+
+        // When
+        sendButton().click();
+        await fixture.whenStable();
+
+        // Then
+        expect(transmitSpy).toHaveBeenCalledTimes(5);
+        expect(transmitSpy).toHaveBeenLastCalledWith(ChatMessengerType.CHAT_MESSAGE, { id: expect.any(String), text: 'four', at: Date.now() });
+        vi.useRealTimers();
+    });
+
+    test('should wait until the room sends back its messages, 5 of them not sent back', async () => {
+        // Given: 5 messages the room does not send back, 2 at most within 10 seconds
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        for (const text of ['one', 'two', 'three', 'four', 'five']) {
+            await type(text);
+            sendButton().click();
+            vi.advanceTimersByTime(5000);
+        }
+
+        // When
+        vi.advanceTimersByTime(15_000);
+        await type('six');
+        press({});
+        await fixture.whenStable();
+
+        // Then: the failed ones may be sent again
+        expect(transmitSpy).toHaveBeenCalledTimes(5);
+        expect(sendButton().disabled).toEqual(true);
+        expect(query('mat-hint')?.textContent).toEqual('Wait until your messages are sent before sending more');
+        expect([...log().querySelectorAll('button')].filter((button: HTMLButtonElement) => button.textContent.includes('Retry') && !button.disabled)).toHaveLength(5);
+
+        // When: one sent back
+        echo(transmitSpy, 0);
+        await fixture.whenStable();
+
+        // Then
+        expect(query('mat-hint')).toBeNull();
+        expect(sendButton().disabled).toEqual(false);
     });
 
     test('should show once a message another player sent twice', async () => {
@@ -735,6 +829,145 @@ describe('ChatComponent', () => {
         expect(logLines()).toEqual(['No messages yet. Say hello!']);
     });
 
+    test('should report the first invalid message of each author only', async () => {
+        // Given
+        await setRoom();
+        const reportSpy = vi.spyOn(room, 'reportCheat');
+
+        // When
+        deliver('remote', { id: 'x', text: ' ', at: 0 });
+        deliver('remote', { id: 'y', text: 'a'.repeat(1001), at: 0 });
+        deliver('other', { id: 'z', text: '', at: 0 });
+        await fixture.whenStable();
+
+        // Then
+        expect(reportSpy.mock.calls.map(([message]) => message.payload)).toEqual([{ id: 'x', text: ' ', at: 0 }, { id: 'z', text: '', at: 0 }]);
+        expect(logLines()).toEqual(['No messages yet. Say hello!']);
+    });
+
+    describe('with the times of the chain', () => {
+        let chainTime: number;
+
+        beforeEach(() => {
+            chainTime = 0;
+            vi.spyOn(room, 'sequencedAt').mockImplementation(() => chainTime);
+        });
+
+        test('should hide the messages of an author over the rate of the chain, telling it once, until its rate falls back', async () => {
+            // Given
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+            fixture.componentRef.setInput('open', false);
+            await setRoom();
+            const messages: string[] = Array.from({ length: 10 }, (_, index: number) => `spam ${ index + 1 }`);
+
+            // When
+            messages.forEach((text: string) => receive('remote', text));
+            receive('carol', 'stop it');
+            await fixture.whenStable();
+
+            // Then: neither shown, nor unread
+            const flooding: string = 'remote sends too many messages: they are hidden for a moment';
+            expect(logLines()).toEqual([...messages.slice(0, 8).map((text: string) => `remote: ${ text }`), flooding, 'carol: stop it']);
+            expect(component.unread()).toEqual(9);
+            expect(component.unreadReceived()).toEqual(9);
+
+            // When: its rate fell back
+            chainTime = 10_000;
+            receive('remote', 'sorry');
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines().slice(-2)).toEqual(['carol: stop it', 'remote: sorry']);
+
+            // When: the arrivals hidden, then its author
+            preferences.arrivals.set(false);
+            await fixture.whenStable();
+            expect(logLines()).toContain(flooding);
+            (await openOptions()).find((item: HTMLButtonElement) => item.textContent.includes('remote'))?.click();
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['carol: stop it']);
+        });
+
+        test('should start again the rates and the reports of a room replacing another one', async () => {
+            // Given: remote flooding the first room, and reported for an invalid message
+            await setRoom();
+            const reportSpy = vi.spyOn(room, 'reportCheat');
+            Array.from({ length: 9 }, () => receive('remote', 'spam'));
+            deliver('remote', { id: 'blank', text: '', at: 0 });
+            network = new RoomNetworkMock();
+            const nextRoom = new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
+            vi.spyOn(nextRoom, 'sequencedAt').mockImplementation(() => chainTime);
+            const nextReportSpy = vi.spyOn(nextRoom, 'reportCheat');
+
+            // When: the same in the next room
+            fixture.componentRef.setInput('room', nextRoom);
+            await fixture.whenStable();
+            Array.from({ length: 9 }, () => receive('remote', 'spam'));
+            deliver('remote', { id: 'blank', text: '', at: 0 });
+            await fixture.whenStable();
+
+            // Then: told and reported again
+            expect(logLines().filter((line: string) => line === 'remote sends too many messages: they are hidden for a moment')).toHaveLength(2);
+            expect(reportSpy).toHaveBeenCalledTimes(1);
+            expect(nextReportSpy).toHaveBeenCalledTimes(1);
+        });
+
+        test('should count a message sent twice against the rate of its author, shown once', async () => {
+            // Given
+            await setRoom();
+            receive('remote', 'once', 0, 'twice');
+            receive('remote', 'once', 0, 'twice');
+
+            // When: 7 more
+            Array.from({ length: 7 }, (_, index: number) => receive('remote', `spam ${ index + 1 }`));
+            await fixture.whenStable();
+
+            // Then: the 9th on the chain hidden
+            expect(logLines().filter((line: string) => line.startsWith('remote: '))).toHaveLength(7);
+            expect(logLines()).toContain('remote sends too many messages: they are hidden for a moment');
+        });
+
+        test('should read a message on the room it comes from, the input changed before the next one is listened to', async () => {
+            // Given: remote reaching the rate in the first room
+            await setRoom();
+            const formerNetwork: RoomNetworkMock = network;
+            Array.from({ length: 8 }, () => receive('remote', 'spam'));
+            network = new RoomNetworkMock();
+
+            // When: one more from the first room, the next room set and not listened to yet
+            fixture.componentRef.setInput('room', new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+            formerNetwork.onMessage$.next({
+                type: ChatMessengerType.CHAT_MESSAGE, payload: { id: 'late', text: 'late spam', at: 0 }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote',
+            });
+            await fixture.whenStable();
+
+            // Then: hidden on the times of the first room
+            expect(logLines()).not.toContain('remote: late spam');
+            expect(logLines()).toContain('remote sends too many messages: they are hidden for a moment');
+        });
+
+        test('should leave out its own message hidden for flooding, telling it apart', async () => {
+            // Given: its messages before a reload
+            await setRoom();
+            const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+            const earlier: string[] = Array.from({ length: 8 }, (_, index: number) => `earlier ${ index + 1 }`);
+            earlier.forEach((text: string) => receive('local', text, 0));
+            await type('hello');
+            sendButton().click();
+            await fixture.whenStable();
+
+            // When
+            echo(transmitSpy);
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual([...earlier.map((text: string) => `local: ${ text }`), 'You sent too many messages: they are hidden for a moment']);
+            expect(log().querySelector('.opacity-60')).toBeNull();
+        });
+    });
+
     test('should hide the messages of a player picked in its options', async () => {
         // Given
         network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
@@ -812,6 +1045,26 @@ describe('ChatComponent', () => {
         // Then
         expect(logLines()).toEqual(['remote: hi']);
     });
+
+    test('should drop the messages a room replaced by another one did not send back', async () => {
+        // Given: one message sent back, the other one not
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        for (const text of ['one', 'two']) {
+            await type(text);
+            sendButton().click();
+        }
+        echo(transmitSpy, 0);
+        await fixture.whenStable();
+
+        // When
+        network = new RoomNetworkMock();
+        fixture.componentRef.setInput('room', new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+        await fixture.whenStable();
+
+        // Then
+        expect(logLines()).toEqual(['local: one']);
+    });
 });
 
 describe('ChatComponent recompiled from its metadata', () => {
@@ -844,6 +1097,8 @@ describe('isChatText', () => {
         expect(isChatText({ text: 'hi', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 1, at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'a'.repeat(1001), at: 0 })).toEqual(false);
+        expect(isChatText({ id: 'x', text: '', at: 0 })).toEqual(false);
+        expect(isChatText({ id: 'x', text: ' \n\t', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: '0' })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.NaN })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.POSITIVE_INFINITY })).toEqual(false);

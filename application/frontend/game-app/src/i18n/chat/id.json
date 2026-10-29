@@ -1,13 +1,17 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "Maksimal {maxLength, plural, other {# karakter}}"
+    "tooLong": "Maksimal {maxLength, plural, other {# karakter}}",
+    "unsent": "Tunggu hingga pesan Anda terkirim sebelum mengirim lagi",
+    "wait": "Tunggu {seconds, plural, other {# detik}} sebelum mengirim pesan lain"
   },
   "log": {
     "arrival": "{name} bergabung ke ruang",
     "departure": "{name} meninggalkan ruang",
     "empty": "Belum ada pesan. Sapa yang lain!",
     "failed": "Tidak terkirim",
+    "flooding": "{name} mengirim terlalu banyak pesan: pesannya disembunyikan sementara",
+    "floodingSelf": "Anda mengirim terlalu banyak pesan: pesan Anda disembunyikan sementara",
     "latest": "Pesan terbaru",
     "retry": "Coba lagi",
     "sending": "Mengirim…",

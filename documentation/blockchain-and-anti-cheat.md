@@ -106,6 +106,7 @@ class Block {
     previousHash: string;
     entry: ChainEntry;
     sequencer: string;          // the participant who ordered the block
+    time: number;               // when the sequencer ordered it, in milliseconds since 1970
     hash: string;
     sequencerSignature: string; // by the sequencer, over the hash
 }
@@ -114,13 +115,46 @@ class Block {
 | What | Signed or hashed content | By |
 |---|---|---|
 | Entry signature | `chain id JSON(data)` | the author (`data.from`) |
-| Block hash (SHA-256) | `chain index previousHash sequencer entry.id entry.signature JSON(entry.data)` | |
+| Block hash (SHA-256) | `chain index previousHash sequencer time entry.id entry.signature JSON(entry.data)` | |
 | Sequencer signature | the block hash | the sequencer |
 
 The **chain name** is part of both the entry signature and the block hash: an entry or a block of one
 chain is not valid on another chain of the room.
 
-The genesis block (index 0) is the same for every chain, with a fixed hash.
+The genesis block (index 0) is the same for every chain, with a fixed hash and the time 0.
+
+**The time of a block** is set by its sequencer, on the time of its system when its page started, then
+a monotonic clock: a clock of the system set, by the network or after a sleep, does not make it jump. It
+never goes back from the previous block, nor goes more than a day after it, the first block of a chain
+being before 2100: a block out of these bounds is invalid. So far ahead, adding seconds would not change
+a time, and the next sequencers would give it to all their blocks; an honest chain never meets them, a
+chain idle for more than a day going on from the latest time it may give. The time is the same on every
+page, the history included, so a rule of the application reads it alike everywhere
+(`Room.sequencedAt()`; the chat counts the messages of an author over the last seconds of the chain on
+it). A new sequencer whose clock is late takes on the time of the chain: it adds the gap to its clock,
+rather than giving the time of the latest block to the next ones.
+
+The sequencer could forge the times, spreading a flood of its own over seconds that never passed. Each
+participant watches its clock on the blocks it receives live (`SequencerClock`): the delay of a block,
+from its time to its reception, is the gap between the two clocks plus the network, which only makes it
+longer. The first live blocks of a sequencer, at least 5 over at least 30 seconds, set the shortest
+delay, some of them late not mattering; a later block received more than 5 seconds sooner tells a clock
+jumping ahead: the participant reports it once (`clockAhead`), and the block is kept, its time already
+in the chain. The watch starts again when the clock of the system of the participant moves apart from
+its monotonic clock (set, or the page asleep), when the sequencer changes, and when the key of the
+sequencer is received again: its page may have reloaded on a clock set meanwhile, or it may order again
+after a sequencer whose clock was ahead, taking on its time. A sequencer connecting again starts a new
+warm-up, at the risk of losing the ordering meanwhile. The warm-up checks no jump: a block received
+sooner than the previous ones is not told apart from previous ones received late, so a sequencer may run
+its clock ahead over each warm-up, up to a day per block, and spread a flood over it. Its first blocks all
+received late, by a network jammed or a page frozen over the whole warm-up, the next one received at
+its time makes the participant report an honest sequencer: lowering the shortest delay after the warm-up
+would let a sequencer run ahead 5 seconds at a time. A clock ahead from the first blocks on, or running late,
+is not told apart from a slow network: a sequencer could pack the messages of an honest author, as it
+could already hold them for less than 10 seconds, or spread its own messages back over an idle time of
+the chain. Freezing its clock, giving every block the time of the previous one, it would hide an honest
+author after 8 messages as long as it orders: telling a clock late from a page suspended or a slow
+network would make the participants report honest sequencers.
 
 ## Ordering the blocks
 
@@ -348,9 +382,10 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `replayedEntry` | The entry id is already in the chain | the sequencer | yes |
 | `wrongChain` | The message type belongs to another chain | the sequencer | yes |
 | `forgedSequencing` | The block is not signed by its sequencer | the sequencer | yes |
-| `invalidBlock` | The hash of a block of the sequencer does not match its content | the sequencer | not added |
+| `invalidBlock` | The hash of a block of the sequencer does not match its content, or its time goes back from the previous block, or more than a day after it | the sequencer | not added |
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
+| `clockAhead` | A live block of the sequencer is received more than 5 seconds sooner, from its time, than the shortest delay of its first ones (5 over 30 seconds at least): its clock jumped ahead | the sequencer | no |
 | `illegalMove` | A revealed move, an action of the poker (a bet, an exchange) or a move of the roulette (a pass, a shot) is against the rules | the player | yes |
 | `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of the draw of the roulette its commitment | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
@@ -358,6 +393,7 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
 | `invalidSpin` | A spin of a cylinder is not one (a chamber missing or out of the group), or, once the keys are disclosed, not the cylinder received turned | the player | a spin that is not a cylinder breaks the cylinder |
 | `invalidShare` | A share of a chamber without its proof, or a key disclosed that is not the one of its player | the player | yes |
+| `invalidMessage` | A message of the chat not of the form the composer sends: over 1000 characters, or blank. The first one of each author only, the same block on every page | the player | yes |
 
 The reasons **against the sequencer** count to take the ordering away from it: only reports from
 connected participants other than the sequencer count, and more than half of them must have reported
@@ -407,6 +443,15 @@ The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
 messages through the `roulette` chain, the chat `chatMessage` through the `chat` chain.
 
+**The flood of the chat.** The sequencer orders every message of the chat: refusing the messages of an
+author over the rate, it would be reported for censoring them by the participants watching them. Each
+page filters them instead, on the times of the chain alone (`chat-flood.ts`): an author with 8 messages
+already within the last 10 seconds of the chain is hidden, its hidden messages and the ones sent twice counted, until its rate
+falls back; the log tells it once. Every page hides the same messages, a page reloaded and a participant
+joining late included. The composer sends 3 messages in 10 seconds at most, and waits while 5 of its
+messages are not sent back: held while the room has no sequencer, they are ordered at once when it has
+one again. The network packing the messages of an honest player on the chain never makes it pass 8.
+
 ## Trust model and limits
 
 - **The sequencer decides the order**, and can not change the entries, which are signed by their
@@ -423,6 +468,10 @@ messages through the `roulette` chain, the chat `chatMessage` through the `chat`
   the sequencer can not forge them. A player giving different keys to the participants makes them
   leave its own entries out differently: their games then differ. It can not make them report the
   sequencer.
+- **The time of the blocks** is the clock of the sequencer, watched by the others on the live blocks
+  only: a page reloaded or joining late trusts the times of the history. A page suspended, or a slow
+  network, through the first 30 seconds of a sequencer makes its receiver report an honest sequencer:
+  with two participants, that single report takes the ordering away.
 - **History of departed players.** A participant who joins after a player left for good can not check
   the signatures of its blocks: they are trusted on the hash chain of the sequencer.
 - **Reloading during a game** replays the moves from the chain, and the hidden move committed and not

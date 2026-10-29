@@ -1,7 +1,7 @@
 import { Block, ChainEntry } from './block';
 import { BlockChainName } from '../block-chain-name.enum';
 import { BlockToHash, Chain } from './chain';
-import { genesisHash, keyPairAlgorithm } from './block-chain.constants';
+import { firstTimeLimit, genesisHash, keyPairAlgorithm, maxTimeGap } from './block-chain.constants';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { TestHelper } from '@testing/test.helper';
 import { describe, test, expect } from 'vitest';
@@ -13,9 +13,9 @@ function createEntry(blockData: AppMessage = data, id: string = 'entry'): ChainE
     return { id, data: blockData, signature: 'signature' };
 }
 
-async function createNextBlock(previous: Block, entry: ChainEntry = createEntry(), blockChainName: BlockChainName = chainName): Promise<Block> {
-    const blockToHash: BlockToHash = { index: previous.index + 1, previousHash: previous.hash, entry, sequencer: 'host' };
-    return new Block(blockToHash.index, previous.hash, entry, 'host', await Chain.calculateHash(blockChainName, blockToHash), '');
+async function createNextBlock(previous: Block, entry: ChainEntry = createEntry(), blockChainName: BlockChainName = chainName, time: number = previous.time + 1000): Promise<Block> {
+    const blockToHash: BlockToHash = { index: previous.index + 1, previousHash: previous.hash, entry, sequencer: 'host', time };
+    return new Block(blockToHash.index, previous.hash, entry, 'host', time, await Chain.calculateHash(blockChainName, blockToHash), '');
 }
 
 describe('Chain', () => {
@@ -32,6 +32,7 @@ describe('Chain', () => {
 
         // Then
         expect(genesis.index).toEqual(0);
+        expect(genesis.time).toEqual(0);
         expect(genesis.hash).toEqual(genesisHash);
         expect(chain.getBlock(0)).toBe(genesis);
     });
@@ -84,14 +85,45 @@ describe('Chain', () => {
         const sameIndex: Block = { ...valid, index: 0 };
         const wrongPrevious: Block = { ...valid, previousHash: 'wrong' };
         const wrongHash: Block = { ...valid, hash: 'wrong' };
+        const otherTime: Block = { ...valid, time: valid.time + 1 };
 
         // When / Then
         expect(chain.canAppend(tooFar)).toEqual(false);
         expect(chain.canAppend(sameIndex)).toEqual(false);
         expect(chain.canAppend(wrongPrevious)).toEqual(false);
         expect(await chain.hasValidHash(wrongHash)).toEqual(false);
+        expect(await chain.hasValidHash(otherTime)).toEqual(false);
         expect(() => chain.append(wrongPrevious)).toThrow('Block not valid');
         expect(chain.getLatestBlock()).toBe(genesis);
+    });
+
+    test('isOnTime should time the first block before 2100', async () => {
+        // Given
+        const chain: Chain = new Chain(chainName);
+        const first: Block = await createNextBlock(chain.getLatestBlock());
+
+        // When / Then
+        expect(chain.isOnTime({ ...first, time: firstTimeLimit })).toEqual(true);
+        expect(chain.isOnTime({ ...first, time: firstTimeLimit + 1 })).toEqual(false);
+        expect(Chain.latestTimeAfter(chain.getLatestBlock())).toEqual(firstTimeLimit);
+    });
+
+    test('isOnTime should refuse a time going back from the latest block, more than a day after it, or not a number', async () => {
+        // Given
+        const chain: Chain = new Chain(chainName);
+        chain.append(await createNextBlock(chain.getLatestBlock(), createEntry(), chainName, 5000));
+        const next: Block = await createNextBlock(chain.getLatestBlock(), createEntry(data, 'next'));
+
+        // When / Then
+        expect(chain.isOnTime(next)).toEqual(true);
+        expect(chain.isOnTime({ ...next, time: 5000 })).toEqual(true);
+        expect(chain.isOnTime({ ...next, time: 4999 })).toEqual(false);
+        expect(chain.isOnTime({ ...next, time: Number.NaN })).toEqual(false);
+        expect(chain.isOnTime({ ...next, time: Number.POSITIVE_INFINITY })).toEqual(false);
+        expect(chain.isOnTime({ ...next, time: 5000 + maxTimeGap })).toEqual(true);
+        expect(chain.isOnTime({ ...next, time: 5000 + maxTimeGap + 1 })).toEqual(false);
+        expect(chain.isOnTime({ ...next, time: 1e300 })).toEqual(false);
+        expect(chain.isOnTime({ ...next, time: TestHelper.cast<number>('6000') })).toEqual(false);
     });
 
     test('contains should only find the blocks of the chain', async () => {

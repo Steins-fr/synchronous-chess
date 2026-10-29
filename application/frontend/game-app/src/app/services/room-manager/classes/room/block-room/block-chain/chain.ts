@@ -1,7 +1,7 @@
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Block, ChainEntry } from './block';
-import { genesisHash, signatureAlgorithm } from './block-chain.constants';
+import { firstTimeLimit, genesisHash, maxTimeGap, signatureAlgorithm } from './block-chain.constants';
 import { BlockChainName } from '../block-chain-name.enum';
 
 export type BlockToHash = Omit<Block, 'hash' | 'sequencerSignature'>;
@@ -16,7 +16,7 @@ export class Chain {
 
     private static createGenesisBlock(): Block {
         const entry: ChainEntry = { id: '', data: { from: '', type: '', payload: null }, signature: '' };
-        return new Block(0, '', entry, '', genesisHash, '');
+        return new Block(0, '', entry, '', 0, genesisHash, '');
     }
 
     private static encodeMessage(message: string): Uint8Array<ArrayBuffer> {
@@ -41,7 +41,7 @@ export class Chain {
     public static async calculateHash(chainName: BlockChainName, block: BlockToHash): Promise<string> {
         const { entry } = block;
         return await CryptoHelper.sha256(
-            `${ chainName } ${ block.index } ${ block.previousHash } ${ block.sequencer } ${ entry.id } ${ entry.signature } ${ JSON.stringify(entry.data) }`
+            `${ chainName } ${ block.index } ${ block.previousHash } ${ block.sequencer } ${ block.time } ${ entry.id } ${ entry.signature } ${ JSON.stringify(entry.data) }`
         );
     }
 
@@ -88,6 +88,17 @@ export class Chain {
     public canAppend(block: Block): boolean {
         const latestBlock: Block = this.getLatestBlock();
         return latestBlock.index === block.index - 1 && latestBlock.hash === block.previousHash;
+    }
+
+    /** The latest time of the block following another one: a sequencer stamping a later one is cheating */
+    public static latestTimeAfter(previous: Block): number {
+        return previous.index === 0 ? firstTimeLimit : previous.time + maxTimeGap;
+    }
+
+    /** Whether the time of the block, a number from a peer, does not go back from the latest one, nor too far ahead of it */
+    public isOnTime(block: Block): boolean {
+        const latestBlock: Block = this.getLatestBlock();
+        return Number.isFinite(block.time) && block.time >= latestBlock.time && block.time <= Chain.latestTimeAfter(latestBlock);
     }
 
     public append(block: Block): void {
