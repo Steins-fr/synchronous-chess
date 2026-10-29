@@ -3,6 +3,7 @@ import { Block, ChainEntry, ChainHead } from './block';
 import { BlockToHash, Chain } from './chain';
 import { ParticipantKeys, ParticipantRegistry } from './participant-registry';
 import { SequencerClock } from './sequencer-clock';
+import { maxTimeGap } from './block-chain.constants';
 import { Participant } from './participant';
 import { AntiCheat } from '../anti-cheat/anti-cheat';
 import { CheatReason } from '../anti-cheat/cheat-report';
@@ -138,6 +139,18 @@ async function createBlocks(node: Node, count: number, author: string, keys: Par
     return blocks;
 }
 
+/** The first blocks of the sequencer 'b', spread over the warm-up of its clock */
+async function warmUpBlocks(node: Node): Promise<Block[]> {
+    const blocks: Block[] = [];
+    const step: number = SequencerClock.WARM_UP_MS / (SequencerClock.WARM_UP_BLOCKS - 1);
+    let previous: Block = node.internals.blockChain.getLatestBlock();
+    for (let index = 0; index < SequencerClock.WARM_UP_BLOCKS; index++) {
+        previous = await createBlock(previous, await createEntry('b', remoteKeys, index), 'b', remoteKeys, 10_000 + step * index);
+        blocks.push(previous);
+    }
+    return blocks;
+}
+
 function headOf(block: Block): ChainHead {
     const { index, hash, sequencer, sequencerSignature } = block;
     return { index, hash, sequencer, sequencerSignature };
@@ -156,6 +169,8 @@ describe('SequencedBlockChain', () => {
     });
 
     beforeEach(() => {
+        // The clock of the blocks follows the time faked by the specs
+        vi.spyOn(SequencerClock, 'now').mockImplementation(() => Date.now());
         vi.spyOn(TimedLogger, 'log').mockImplementation(() => undefined);
         vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
         vi.spyOn(TimedLogger, 'error').mockImplementation(() => undefined);
@@ -200,6 +215,20 @@ describe('SequencedBlockChain', () => {
             // Then: a late clock takes on the time of the chain, then goes on from it
             expect(node.internals.blockChain.getBlock(2).time).toEqual(60_000);
             expect(node.internals.blockChain.getBlock(3).time).toEqual(62_000);
+        });
+
+        test('should time a block a day after the latest one at most, the chain idle for longer', async () => {
+            // Given
+            vi.useFakeTimers({ now: 3 * maxTimeGap, toFake: ['Date'] });
+            const node: Node = createNode();
+            const block1: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys), 'b', remoteKeys, maxTimeGap);
+            node.internals.blockChain.append(block1);
+
+            // When
+            await node.chain.transmitMessage('move', 'e4');
+
+            // Then
+            expect(node.internals.blockChain.getBlock(2).time).toEqual(2 * maxTimeGap);
         });
 
         test('should order the entries submitted by the participants, once', async () => {
@@ -400,10 +429,10 @@ describe('SequencedBlockChain', () => {
         });
 
         test('should report a sequencer whose clock runs ahead of its own, once, and keep its blocks', async () => {
-            // Given: its first blocks received at their time
+            // Given: its first blocks over the warm-up, received at their time
             vi.useFakeTimers({ toFake: ['Date'] });
             const node: Node = createNode('b');
-            const warmUp: Block[] = await createBlocks(node, SequencerClock.WARM_UP_BLOCKS, 'b', remoteKeys);
+            const warmUp: Block[] = await warmUpBlocks(node);
             for (const block of warmUp) {
                 vi.setSystemTime(block.time);
                 await handled(node, received(BlockChainMessageType.NEW_BLOCK, block));
@@ -422,18 +451,21 @@ describe('SequencedBlockChain', () => {
             // Then
             expect(reasons(node)).toEqual([[ahead.index, CheatReason.CLOCK_AHEAD]]);
             expect(node.internals.blockChain.getLatestBlock()).toBe(furtherAhead);
-            expect(delivered(node)).toHaveLength(SequencerClock.WARM_UP_BLOCKS + 3);
+            expect(delivered(node)).toHaveLength(warmUp.length + 3);
         });
 
         test('should time the blocks of its sequencer when received, not once the previous messages are handled', async () => {
             // Given: its first blocks received at their time, but handled after the tolerance
             const node: Node = createNode('b');
-            const warmUp: Block[] = await createBlocks(node, SequencerClock.WARM_UP_BLOCKS, 'b', remoteKeys);
+            const warmUp: Block[] = await warmUpBlocks(node);
             const time: number = (warmUp.at(-1) as Block).time;
             const later: number = time + 2 * SequencerClock.TOLERANCE_MS;
             const next: Block = await createBlock((warmUp.at(-1) as Block), await createEntry('b', remoteKeys, 'next'), 'b', remoteKeys, later);
-            vi.useFakeTimers({ now: time, toFake: ['Date'] });
-            warmUp.forEach((block: Block) => node.chain.handle(received(BlockChainMessageType.NEW_BLOCK, block)));
+            vi.useFakeTimers({ toFake: ['Date'] });
+            for (const block of warmUp) {
+                vi.setSystemTime(block.time);
+                node.chain.handle(received(BlockChainMessageType.NEW_BLOCK, block));
+            }
             vi.setSystemTime(later);
             await node.internals.queue;
 

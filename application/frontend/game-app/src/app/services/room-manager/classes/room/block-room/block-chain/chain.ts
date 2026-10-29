@@ -1,7 +1,7 @@
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Block, ChainEntry } from './block';
-import { genesisHash, latestTime, signatureAlgorithm } from './block-chain.constants';
+import { firstTimeLimit, genesisHash, maxTimeGap, signatureAlgorithm } from './block-chain.constants';
 import { BlockChainName } from '../block-chain-name.enum';
 
 export type BlockToHash = Omit<Block, 'hash' | 'sequencerSignature'>;
@@ -90,12 +90,15 @@ export class Chain {
         return latestBlock.index === block.index - 1 && latestBlock.hash === block.previousHash;
     }
 
-    /**
-     * Whether the time of the block, a number from a peer, does not go back from the latest one, nor goes past the dates:
-     * so far, adding seconds would not change it, and the next sequencers would give it to all their blocks
-     */
+    /** The latest time of the block following another one: a sequencer stamping a later one is cheating */
+    public static latestTimeAfter(previous: Block): number {
+        return previous.index === 0 ? firstTimeLimit : previous.time + maxTimeGap;
+    }
+
+    /** Whether the time of the block, a number from a peer, does not go back from the latest one, nor too far ahead of it */
     public isOnTime(block: Block): boolean {
-        return Number.isFinite(block.time) && block.time >= this.getLatestBlock().time && block.time <= latestTime;
+        const latestBlock: Block = this.getLatestBlock();
+        return Number.isFinite(block.time) && block.time >= latestBlock.time && block.time <= Chain.latestTimeAfter(latestBlock);
     }
 
     public append(block: Block): void {

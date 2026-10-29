@@ -16,11 +16,11 @@ import { Block, ChainEntry, ChainHead } from './block';
 import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
 import { ParticipantRegistry } from './participant-registry';
-import { SequencerClock } from './sequencer-clock';
+import { Reception, SequencerClock } from './sequencer-clock';
 
-/** `receivedAt` is when the message was received, before it waited for the previous ones */
+/** `reception` is when the message was received, before it waited for the previous ones */
 type MessageHandlers = {
-    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>, receivedAt: number) => Promise<void> | void;
+    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>, reception: Reception) => Promise<void> | void;
 };
 
 enum Signature {
@@ -106,7 +106,7 @@ export class SequencedBlockChain {
 
     private readonly messageHandler: MessageHandlers = {
         [BlockChainMessageType.SUBMIT_ENTRY]: (message) => this.onSubmitEntry(message),
-        [BlockChainMessageType.NEW_BLOCK]: (message, receivedAt) => this.onNewBlock(message, receivedAt),
+        [BlockChainMessageType.NEW_BLOCK]: (message, reception) => this.onNewBlock(message, reception),
         [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message) => this.onGetBlocksRequest(message),
         [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message) => this.onGetBlocksResponse(message),
         [BlockChainMessageType.CHAIN_HEAD]: (message) => this.onChainHead(message),
@@ -146,8 +146,9 @@ export class SequencedBlockChain {
 
     public handle<K extends BlockChainMessageType>(message: ReceivedBlockChainMessage<K>): void {
         const handler: MessageHandlers[K] = this.messageHandler[message.type];
-        const receivedAt: number = Date.now();
-        void logHandlingFailure(message, this.serially(() => handler(message, receivedAt)));
+        const at: number = SequencerClock.now();
+        const reception: Reception = { at, systemGap: Date.now() - at };
+        void logHandlingFailure(message, this.serially(() => handler(message, reception)));
     }
 
     // Submission
@@ -219,14 +220,15 @@ export class SequencedBlockChain {
         }
 
         const latestBlock: Block = this.blockChain.getLatestBlock();
-        const now: number = Date.now();
+        const now: number = SequencerClock.now();
         this.clockOffset = Math.max(this.clockOffset, latestBlock.time - now);
         const blockToHash: BlockToHash = {
             index: latestBlock.index + 1,
             previousHash: latestBlock.hash,
             entry,
             sequencer: this.participants.local.name,
-            time: now + this.clockOffset,
+            // A chain idle for more than a day goes on from the latest time it may give
+            time: Math.min(now + this.clockOffset, Chain.latestTimeAfter(latestBlock)),
         };
         const hash: string = await Chain.calculateHash(this.name, blockToHash);
         const block: Block = new Block(
@@ -258,7 +260,7 @@ export class SequencedBlockChain {
 
     // Reception
 
-    private async onNewBlock(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK>, receivedAt: number): Promise<void> {
+    private async onNewBlock(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK>, reception: Reception): Promise<void> {
         const block: Block = message.payload;
         const latestBlock: Block = this.blockChain.getLatestBlock();
 
@@ -281,7 +283,7 @@ export class SequencedBlockChain {
             await this.acceptBlock(block, true);
 
             // Added anyway: its time can not be undone, and every participant keeps the same chain
-            if (this.sequencerClock.isAhead(block, receivedAt)) {
+            if (this.sequencerClock.isAhead(block, reception)) {
                 this.report(block, CheatReason.CLOCK_AHEAD);
             }
         }

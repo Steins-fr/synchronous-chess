@@ -1,7 +1,7 @@
 import { Block, ChainEntry } from './block';
 import { BlockChainName } from '../block-chain-name.enum';
 import { BlockToHash, Chain } from './chain';
-import { genesisHash, keyPairAlgorithm, latestTime } from './block-chain.constants';
+import { firstTimeLimit, genesisHash, keyPairAlgorithm, maxTimeGap } from './block-chain.constants';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { TestHelper } from '@testing/test.helper';
 import { describe, test, expect } from 'vitest';
@@ -97,7 +97,18 @@ describe('Chain', () => {
         expect(chain.getLatestBlock()).toBe(genesis);
     });
 
-    test('isOnTime should refuse a time going back from the latest block, past the dates, or not a number', async () => {
+    test('isOnTime should time the first block before 2100', async () => {
+        // Given
+        const chain: Chain = new Chain(chainName);
+        const first: Block = await createNextBlock(chain.getLatestBlock());
+
+        // When / Then
+        expect(chain.isOnTime({ ...first, time: firstTimeLimit })).toEqual(true);
+        expect(chain.isOnTime({ ...first, time: firstTimeLimit + 1 })).toEqual(false);
+        expect(Chain.latestTimeAfter(chain.getLatestBlock())).toEqual(firstTimeLimit);
+    });
+
+    test('isOnTime should refuse a time going back from the latest block, more than a day after it, or not a number', async () => {
         // Given
         const chain: Chain = new Chain(chainName);
         chain.append(await createNextBlock(chain.getLatestBlock(), createEntry(), chainName, 5000));
@@ -109,8 +120,8 @@ describe('Chain', () => {
         expect(chain.isOnTime({ ...next, time: 4999 })).toEqual(false);
         expect(chain.isOnTime({ ...next, time: Number.NaN })).toEqual(false);
         expect(chain.isOnTime({ ...next, time: Number.POSITIVE_INFINITY })).toEqual(false);
-        expect(chain.isOnTime({ ...next, time: latestTime })).toEqual(true);
-        expect(chain.isOnTime({ ...next, time: latestTime + 1 })).toEqual(false);
+        expect(chain.isOnTime({ ...next, time: 5000 + maxTimeGap })).toEqual(true);
+        expect(chain.isOnTime({ ...next, time: 5000 + maxTimeGap + 1 })).toEqual(false);
         expect(chain.isOnTime({ ...next, time: 1e300 })).toEqual(false);
         expect(chain.isOnTime({ ...next, time: TestHelper.cast<number>('6000') })).toEqual(false);
     });
