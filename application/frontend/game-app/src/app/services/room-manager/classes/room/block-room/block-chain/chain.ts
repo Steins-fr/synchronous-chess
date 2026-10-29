@@ -16,7 +16,7 @@ export class Chain {
 
     private static createGenesisBlock(): Block {
         const entry: ChainEntry = { id: '', data: { from: '', type: '', payload: null }, signature: '' };
-        return new Block(0, '', entry, '', genesisHash, '');
+        return new Block(0, '', entry, '', 0, genesisHash, '');
     }
 
     private static encodeMessage(message: string): Uint8Array<ArrayBuffer> {
@@ -41,7 +41,7 @@ export class Chain {
     public static async calculateHash(chainName: BlockChainName, block: BlockToHash): Promise<string> {
         const { entry } = block;
         return await CryptoHelper.sha256(
-            `${ chainName } ${ block.index } ${ block.previousHash } ${ block.sequencer } ${ entry.id } ${ entry.signature } ${ JSON.stringify(entry.data) }`
+            `${ chainName } ${ block.index } ${ block.previousHash } ${ block.sequencer } ${ block.time } ${ entry.id } ${ entry.signature } ${ JSON.stringify(entry.data) }`
         );
     }
 
@@ -88,6 +88,11 @@ export class Chain {
     public canAppend(block: Block): boolean {
         const latestBlock: Block = this.getLatestBlock();
         return latestBlock.index === block.index - 1 && latestBlock.hash === block.previousHash;
+    }
+
+    /** Whether the time of the block, a number from a peer, does not go back from the latest one */
+    public isOnTime(block: Block): boolean {
+        return Number.isFinite(block.time) && block.time >= this.getLatestBlock().time;
     }
 
     public append(block: Block): void {

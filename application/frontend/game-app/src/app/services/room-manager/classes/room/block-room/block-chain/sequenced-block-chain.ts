@@ -92,6 +92,11 @@ export class SequencedBlockChain {
      * history of the chain, which a page reloaded or a participant joining late receives at once. Unknown while catching up
      */
     private liveFrom?: number;
+    /**
+     * Added to the clock of this participant to time the blocks it orders: a new sequencer whose clock is late takes on
+     * the time of the chain, rather than giving the time of the latest block to the next ones
+     */
+    private clockOffset: number = 0;
     /** The chain changes one message at a time, so that the blocks are added in order */
     private queue: Promise<void> = Promise.resolve();
 
@@ -209,11 +214,14 @@ export class SequencedBlockChain {
         }
 
         const latestBlock: Block = this.blockChain.getLatestBlock();
+        const now: number = Date.now();
+        this.clockOffset = Math.max(this.clockOffset, latestBlock.time - now);
         const blockToHash: BlockToHash = {
             index: latestBlock.index + 1,
             previousHash: latestBlock.hash,
             entry,
             sequencer: this.participants.local.name,
+            time: now + this.clockOffset,
         };
         const hash: string = await Chain.calculateHash(this.name, blockToHash);
         const block: Block = new Block(
@@ -221,6 +229,7 @@ export class SequencedBlockChain {
             blockToHash.previousHash,
             entry,
             blockToHash.sequencer,
+            blockToHash.time,
             hash,
             await Chain.sign(hash, this.participants.keys.keyPair.privateKey),
         );
@@ -259,6 +268,8 @@ export class SequencedBlockChain {
             this.report(block, CheatReason.INVALID_BLOCK);
         } else if (!this.blockChain.canAppend(block)) {
             this.report(block, CheatReason.CONFLICTING_BLOCK);
+        } else if (!this.blockChain.isOnTime(block)) {
+            this.report(block, CheatReason.INVALID_BLOCK);
         } else {
             // The block follows the latest one: the chain is caught up with the sequencer
             this.catchUp();
@@ -427,7 +438,7 @@ export class SequencedBlockChain {
             }
 
             // eslint-disable-next-line no-await-in-loop -- each block follows the previous one, up to the first refused
-            if (!await this.blockChain.hasValidHash(block) || !this.blockChain.canAppend(block) || !await this.acceptBlock(block, fromSequencer)) {
+            if (!await this.blockChain.hasValidHash(block) || !this.blockChain.canAppend(block) || !this.blockChain.isOnTime(block) || !await this.acceptBlock(block, fromSequencer)) {
                 // Asking again would bring the same refused block
                 TimedLogger.error(`Block ${ block.index } from ${ message.from } refused, stop catching up with it`);
                 // eslint-disable-next-line no-await-in-loop -- once, the loop stops here
@@ -678,6 +689,7 @@ export class SequencedBlockChain {
         this.watchedEntries.clear();
         this.leftOut.clear();
         this.deliveredIndex = 0;
+        this.clockOffset = 0;
         this.syncing = false;
         this.liveFrom = undefined;
     }

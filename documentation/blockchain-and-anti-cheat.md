@@ -106,6 +106,7 @@ class Block {
     previousHash: string;
     entry: ChainEntry;
     sequencer: string;          // the participant who ordered the block
+    time: number;               // when the sequencer ordered it, in milliseconds since 1970
     hash: string;
     sequencerSignature: string; // by the sequencer, over the hash
 }
@@ -114,13 +115,19 @@ class Block {
 | What | Signed or hashed content | By |
 |---|---|---|
 | Entry signature | `chain id JSON(data)` | the author (`data.from`) |
-| Block hash (SHA-256) | `chain index previousHash sequencer entry.id entry.signature JSON(entry.data)` | |
+| Block hash (SHA-256) | `chain index previousHash sequencer time entry.id entry.signature JSON(entry.data)` | |
 | Sequencer signature | the block hash | the sequencer |
 
 The **chain name** is part of both the entry signature and the block hash: an entry or a block of one
 chain is not valid on another chain of the room.
 
-The genesis block (index 0) is the same for every chain, with a fixed hash.
+The genesis block (index 0) is the same for every chain, with a fixed hash and the time 0.
+
+**The time of a block** is set by its sequencer, and never goes back from the previous block: a block
+going back is invalid. It is the same on every page, the history included, so a rule of the application
+reads it alike everywhere (`Room.sequencedAt()`; the chat counts the messages of an author over the
+last seconds of the chain on it). A new sequencer whose clock is late takes on the time of the chain:
+it adds the gap to its clock, rather than giving the time of the latest block to the next ones.
 
 ## Ordering the blocks
 
@@ -348,7 +355,7 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `replayedEntry` | The entry id is already in the chain | the sequencer | yes |
 | `wrongChain` | The message type belongs to another chain | the sequencer | yes |
 | `forgedSequencing` | The block is not signed by its sequencer | the sequencer | yes |
-| `invalidBlock` | The hash of a block of the sequencer does not match its content | the sequencer | not added |
+| `invalidBlock` | The hash of a block of the sequencer does not match its content, or its time goes back from the previous block | the sequencer | not added |
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
 | `illegalMove` | A revealed move, an action of the poker (a bet, an exchange) or a move of the roulette (a pass, a shot) is against the rules | the player | yes |

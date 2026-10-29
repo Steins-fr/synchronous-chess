@@ -372,6 +372,10 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         return this.deliveredBlocks.get(message)?.history ?? false;
     }
 
+    public override sequencedAt(message: AppMessage): number | undefined {
+        return this.deliveredBlocks.get(message)?.block.time;
+    }
+
     protected override onMessage(message: ReceivedMessage): void {
         if (message.origin === MessageOriginType.BLOCK_ROOM_PARTICIPANT) {
             this.participants.handle(message);
