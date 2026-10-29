@@ -1,4 +1,4 @@
-import { admitChatMessage, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW, ChatAdmission, ChatFlood, NO_FLOOD } from './chat-flood';
+import { admitChatMessage, CHAT_RATE_LIMIT, CHAT_RATE_WINDOW, CHAT_SEND_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
 import { describe, expect, test } from 'vitest';
 
 /** The messages of the chain in their order, by author and time: whether each one shows, and is noticed */
@@ -66,5 +66,23 @@ describe('admitChatMessage', () => {
 
         // Then
         expect(flood.times.get('bob')).toHaveLength(CHAT_RATE_LIMIT);
+    });
+});
+
+describe('sendWaitUntil', () => {
+    test('should let the composer send under the limit', () => {
+        expect(CHAT_SEND_LIMIT).toBeLessThan(CHAT_RATE_LIMIT);
+        expect(sendWaitUntil([], 0)).toBeUndefined();
+        expect(sendWaitUntil([1000, 2000], 2000)).toBeUndefined();
+    });
+
+    test('should wait until the oldest of the latest messages leaves the window', () => {
+        expect(sendWaitUntil([3000, 1000, 2000], 3000)).toEqual(1000 + CHAT_RATE_WINDOW);
+        expect(sendWaitUntil([0, 1000, 2000, 3000], 3000)).toEqual(1000 + CHAT_RATE_WINDOW);
+        expect(sendWaitUntil([1000, 2000, 3000], 1000 + CHAT_RATE_WINDOW)).toBeUndefined();
+    });
+
+    test('should not count the messages sent after now, the clock set back', () => {
+        expect(sendWaitUntil([1000, 2000, 60_000], 3000)).toBeUndefined();
     });
 });

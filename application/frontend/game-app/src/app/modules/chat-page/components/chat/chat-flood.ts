@@ -5,6 +5,8 @@ export const CHAT_RATE_WINDOW: number = 10_000;
  * the composer sends, as the network may pack the messages of an honest player on the chain
  */
 export const CHAT_RATE_LIMIT: number = 8;
+/** The messages the composer sends within the window: the next one waits */
+export const CHAT_SEND_LIMIT: number = 3;
 
 /** The rate of the authors of the chat, read on the chain alone: the same on every page, the history included */
 export interface ChatFlood {
@@ -22,6 +24,15 @@ export interface ChatAdmission {
 }
 
 export const NO_FLOOD: ChatFlood = { times: new Map(), flooding: new Set() };
+
+/**
+ * When the composer may send another message, the times its messages were sent given: none while it may
+ * @param sentTimes when the local player sent its messages, by its own clock
+ */
+export function sendWaitUntil(sentTimes: ReadonlyArray<number>, now: number): number | undefined {
+    const recent: ReadonlyArray<number> = sentTimes.filter((sent: number) => sent <= now && now - sent < CHAT_RATE_WINDOW).sort((a: number, b: number) => a - b);
+    return recent.length < CHAT_SEND_LIMIT ? undefined : (recent.at(-CHAT_SEND_LIMIT) as number) + CHAT_RATE_WINDOW;
+}
 
 /**
  * Whether a message of the chain shows: its author over the rate is hidden, its hidden messages counted, so that a

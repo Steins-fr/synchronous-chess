@@ -36,8 +36,8 @@ import { scopedKey } from '@app/services/language/scoped-key';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
-import { switchMap, timer } from 'rxjs';
-import { admitChatMessage, ChatAdmission, ChatFlood, NO_FLOOD } from './chat-flood';
+import { Subscription, switchMap, timer } from 'rxjs';
+import { admitChatMessage, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
 
@@ -169,6 +169,18 @@ export class ChatComponent {
     protected readonly isBlank = computed<boolean>(() => this.message().trim() === '');
 
     private readonly entries = signal<ReadonlyArray<Readonly<ChatEntry>>>([]);
+    // The time of the composer: set at each message sent, and at each second left to wait
+    private readonly now = signal<number>(Date.now());
+    // When the composer may send another message, the local player having sent too many: they would be hidden
+    private readonly waitUntil = computed<number | undefined>(() => sendWaitUntil(this.entries()
+        .filter((entry: Readonly<ChatEntry>) => entry.kind === ChatEntryKind.MESSAGE && entry.isSelf)
+        .map((entry: Readonly<ChatEntry>) => entry.at), this.now()));
+    // The seconds left to wait, none when the composer may send
+    protected readonly waitSeconds = computed<number>(() => {
+        const waitUntil: number | undefined = this.waitUntil();
+        return waitUntil === undefined ? 0 : Math.ceil((waitUntil - this.now()) / 1000);
+    });
+    protected readonly isWaiting = computed<boolean>(() => this.waitSeconds() > 0);
     /** The players whose messages the local player hides */
     protected readonly hiddenAuthors = signal<ReadonlySet<string>>(new Set());
     // The messages of the others received while the chat was closed, or scrolled up
@@ -263,6 +275,16 @@ export class ChatComponent {
             });
         });
 
+        // The countdown of the composer waiting: its time ticks at each second left to wait, until it may send
+        effect((onCleanup: (cleanup: () => void) => void) => {
+            const waitUntil: number | undefined = this.waitUntil();
+            if (waitUntil !== undefined) {
+                const tick: Subscription = timer((waitUntil - this.now()) % 1000 || 1000).pipe(takeUntilDestroyed(this.destroyRef))
+                    .subscribe(() => this.now.set(Date.now()));
+                onCleanup(() => tick.unsubscribe());
+            }
+        });
+
         afterEveryRender({
             write: () => this.scroll(),
         });
@@ -276,7 +298,8 @@ export class ChatComponent {
     }
 
     protected send(): void {
-        if (this.isBlank()) {
+        this.now.set(Date.now());
+        if (this.isBlank() || this.isWaiting()) {
             return;
         }
 
@@ -335,8 +358,10 @@ export class ChatComponent {
     /** Shows the message at once, waiting until the room sends it back: failed after a while */
     private transmit(text: string, messageId: string = crypto.randomUUID()): void {
         const room: Room<ChatPayloads> = this.room();
+        // The time of the composer too: the message counts at once against the rate of the local player
+        this.now.set(Date.now());
         const message: ChatMessage = {
-            kind: ChatEntryKind.MESSAGE, id: this.ids.next().value, messageId, author: room.localPlayer.name, text, isSelf: true, at: Date.now(),
+            kind: ChatEntryKind.MESSAGE, id: this.ids.next().value, messageId, author: room.localPlayer.name, text, isSelf: true, at: this.now(),
             state: ChatMessageState.SENDING,
         };
         this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.concat(message));

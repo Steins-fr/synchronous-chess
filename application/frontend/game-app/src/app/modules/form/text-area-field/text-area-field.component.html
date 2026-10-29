@@ -3,6 +3,9 @@
     <textarea
         [cdkAutosizeMaxRows]="maxRows()" [formField]="field()" autocomplete="off" cdkAutosizeMinRows="1"
         cdkTextareaAutosize matInput></textarea>
+    @if (hint(); as hint) {
+    <mat-hint>{{ hint }}</mat-hint>
+    }
     <!-- Shown by Material once the field is touched and invalid: the message given by the rule of the schema -->
     @if (error(); as error) {
     <mat-error>{{ error.key | transloco: error.params }}</mat-error>

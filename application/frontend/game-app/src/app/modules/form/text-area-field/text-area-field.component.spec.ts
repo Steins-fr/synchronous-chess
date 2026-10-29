@@ -7,9 +7,10 @@ import { TextAreaFieldComponent } from './text-area-field.component';
 
 @Component({
     imports: [TextAreaFieldComponent],
-    template: '<app-text-area-field [field]="noteForm" [maxRows]="3" label="Note" />',
+    template: '<app-text-area-field [field]="noteForm" [hint]="hint()" [maxRows]="3" label="Note" />',
 })
 class HostComponent {
+    public readonly hint = signal<string | undefined>(undefined);
     public readonly note = signal<string>('Hello');
     public readonly noteForm = form(this.note, (path) => {
         maxLength(path, 8, { message: 'note.maxLength' });
@@ -60,5 +61,28 @@ describe('TextAreaFieldComponent', () => {
 
         // Then
         expect(fixture.nativeElement.querySelector('mat-error').textContent).toContain('The note is 8 letters at most');
+    });
+
+    test('should show its hint under the text area, read with it, until an error replaces it', async () => {
+        // Given
+        expect(fixture.nativeElement.querySelector('mat-hint')).toBeNull();
+
+        // When
+        fixture.componentInstance.hint.set('Keep it short');
+        await fixture.whenStable();
+
+        // Then
+        const hint: HTMLElement = fixture.nativeElement.querySelector('mat-hint');
+        expect(hint.textContent).toEqual('Keep it short');
+        expect(textArea().getAttribute('aria-describedby')).toContain(hint.id);
+
+        // When
+        await type('A too long note');
+        textArea().dispatchEvent(new Event('blur'));
+        await fixture.whenStable();
+
+        // Then
+        expect(fixture.nativeElement.querySelector('mat-hint')).toBeNull();
+        expect(fixture.nativeElement.querySelector('mat-error')).not.toBeNull();
     });
 });

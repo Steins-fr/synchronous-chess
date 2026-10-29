@@ -1,7 +1,8 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "Не более {maxLength, plural, one {# символа} few {# символов} many {# символов} other {# символа}}"
+    "tooLong": "Не более {maxLength, plural, one {# символа} few {# символов} many {# символов} other {# символа}}",
+    "wait": "Подождите {seconds, plural, one {# секунду} few {# секунды} many {# секунд} other {# секунды}} перед отправкой следующего сообщения"
   },
   "log": {
     "arrival": "{name} заходит в комнату",

@@ -86,4 +86,16 @@ describe('ChatMessageComponent', () => {
         expect(bubble().classList).toContain('opacity-60');
         expect(retry).toHaveBeenCalledTimes(1);
     });
+
+    test('should disable its retry while the composer waits', async () => {
+        // Given
+        fixture.componentRef.setInput('message', message({ author: 'local', isSelf: true, state: ChatMessageState.FAILED }));
+
+        // When
+        fixture.componentRef.setInput('retryDisabled', true);
+        await fixture.whenStable();
+
+        // Then
+        expect((fixture.nativeElement.querySelector('button') as HTMLButtonElement).disabled).toEqual(true);
+    });
 });

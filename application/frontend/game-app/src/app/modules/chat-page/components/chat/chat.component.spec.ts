@@ -370,6 +370,59 @@ describe('ChatComponent', () => {
         vi.useRealTimers();
     });
 
+    test('should wait before sending a 4th message within 10 seconds, counting down', async () => {
+        // Given: a message not sent back, failed, then three sent a second apart
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        await type('lost');
+        sendButton().click();
+        vi.advanceTimersByTime(15_000);
+        for (const text of ['one', 'two', 'three']) {
+            await type(text);
+            sendButton().click();
+            vi.advanceTimersByTime(1000);
+        }
+
+        // When
+        await type('four');
+        press({});
+        await fixture.whenStable();
+
+        // Then: the oldest of the three leaves the window in 7 seconds
+        const retry = (): HTMLButtonElement => [...log().querySelectorAll('button')].find((button: HTMLButtonElement) => button.textContent.includes('Retry')) as HTMLButtonElement;
+        expect(transmitSpy).toHaveBeenCalledTimes(4);
+        expect(sendButton().disabled).toEqual(true);
+        expect(retry().disabled).toEqual(true);
+        expect(query('mat-hint')?.textContent).toEqual('Wait 7 seconds before sending another message');
+
+        // When: a second after another, each one rendered
+        for (let second = 0; second < 6; second++) {
+            vi.advanceTimersByTime(1000);
+            await fixture.whenStable();
+        }
+
+        // Then
+        expect(query('mat-hint')?.textContent).toEqual('Wait 1 second before sending another message');
+
+        // When
+        vi.advanceTimersByTime(1000);
+        await fixture.whenStable();
+
+        // Then
+        expect(query('mat-hint')).toBeNull();
+        expect(retry().disabled).toEqual(false);
+
+        // When
+        sendButton().click();
+        await fixture.whenStable();
+
+        // Then
+        expect(transmitSpy).toHaveBeenCalledTimes(5);
+        expect(transmitSpy).toHaveBeenLastCalledWith(ChatMessengerType.CHAT_MESSAGE, { id: expect.any(String), text: 'four', at: Date.now() });
+        vi.useRealTimers();
+    });
+
     test('should show once a message another player sent twice', async () => {
         // Given
         await setRoom();

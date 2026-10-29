@@ -1,7 +1,8 @@
 {
   "author": "{author}:",
   "composer": {
-    "tooLong": "Maksimal {maxLength, plural, other {# karakter}}"
+    "tooLong": "Maksimal {maxLength, plural, other {# karakter}}",
+    "wait": "Tunggu {seconds, plural, other {# detik}} sebelum mengirim pesan lain"
   },
   "log": {
     "arrival": "{name} bergabung ke ruang",

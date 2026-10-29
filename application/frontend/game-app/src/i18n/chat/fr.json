@@ -1,7 +1,8 @@
 {
   "author": "{author} :",
   "composer": {
-    "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum"
+    "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum",
+    "wait": "Attendez {seconds, plural, one {# seconde} other {# secondes}} avant d’envoyer un autre message"
   },
   "log": {
     "arrival": "{name} a rejoint la salle",
