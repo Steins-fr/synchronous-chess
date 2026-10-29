@@ -16,9 +16,11 @@ import { Block, ChainEntry, ChainHead } from './block';
 import { BlockToHash, Chain } from './chain';
 import { Participant } from './participant';
 import { ParticipantRegistry } from './participant-registry';
+import { SequencerClock } from './sequencer-clock';
 
+/** `receivedAt` is when the message was received, before it waited for the previous ones */
 type MessageHandlers = {
-    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>) => Promise<void> | void;
+    [K in BlockChainMessageType]: (message: ReceivedBlockChainMessage<K>, receivedAt: number) => Promise<void> | void;
 };
 
 enum Signature {
@@ -97,12 +99,14 @@ export class SequencedBlockChain {
      * the time of the chain, rather than giving the time of the latest block to the next ones
      */
     private clockOffset: number = 0;
+    /** Watches the clock of the sequencer on its live blocks */
+    private readonly sequencerClock: SequencerClock = new SequencerClock();
     /** The chain changes one message at a time, so that the blocks are added in order */
     private queue: Promise<void> = Promise.resolve();
 
     private readonly messageHandler: MessageHandlers = {
         [BlockChainMessageType.SUBMIT_ENTRY]: (message) => this.onSubmitEntry(message),
-        [BlockChainMessageType.NEW_BLOCK]: (message) => this.onNewBlock(message),
+        [BlockChainMessageType.NEW_BLOCK]: (message, receivedAt) => this.onNewBlock(message, receivedAt),
         [BlockChainMessageType.GET_BLOCKS_REQUEST]: (message) => this.onGetBlocksRequest(message),
         [BlockChainMessageType.GET_BLOCKS_RESPONSE]: (message) => this.onGetBlocksResponse(message),
         [BlockChainMessageType.CHAIN_HEAD]: (message) => this.onChainHead(message),
@@ -142,7 +146,8 @@ export class SequencedBlockChain {
 
     public handle<K extends BlockChainMessageType>(message: ReceivedBlockChainMessage<K>): void {
         const handler: MessageHandlers[K] = this.messageHandler[message.type];
-        void logHandlingFailure(message, this.serially(() => handler(message)));
+        const receivedAt: number = Date.now();
+        void logHandlingFailure(message, this.serially(() => handler(message, receivedAt)));
     }
 
     // Submission
@@ -253,7 +258,7 @@ export class SequencedBlockChain {
 
     // Reception
 
-    private async onNewBlock(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK>): Promise<void> {
+    private async onNewBlock(message: ReceivedBlockChainMessage<BlockChainMessageType.NEW_BLOCK>, receivedAt: number): Promise<void> {
         const block: Block = message.payload;
         const latestBlock: Block = this.blockChain.getLatestBlock();
 
@@ -274,6 +279,11 @@ export class SequencedBlockChain {
             // The block follows the latest one: the chain is caught up with the sequencer
             this.catchUp();
             await this.acceptBlock(block, true);
+
+            // Added anyway: its time can not be undone, and every participant keeps the same chain
+            if (this.sequencerClock.isAhead(block, receivedAt)) {
+                this.report(block, CheatReason.CLOCK_AHEAD);
+            }
         }
     }
 
@@ -690,6 +700,7 @@ export class SequencedBlockChain {
         this.leftOut.clear();
         this.deliveredIndex = 0;
         this.clockOffset = 0;
+        this.sequencerClock.clear();
         this.syncing = false;
         this.liveFrom = undefined;
     }

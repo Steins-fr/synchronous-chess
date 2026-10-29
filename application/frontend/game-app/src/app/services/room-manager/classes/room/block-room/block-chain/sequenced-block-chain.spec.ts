@@ -2,6 +2,7 @@ import { SequencedBlockChain } from './sequenced-block-chain';
 import { Block, ChainEntry, ChainHead } from './block';
 import { BlockToHash, Chain } from './chain';
 import { ParticipantKeys, ParticipantRegistry } from './participant-registry';
+import { SequencerClock } from './sequencer-clock';
 import { Participant } from './participant';
 import { AntiCheat } from '../anti-cheat/anti-cheat';
 import { CheatReason } from '../anti-cheat/cheat-report';
@@ -396,6 +397,46 @@ describe('SequencedBlockChain', () => {
                 [2, CheatReason.INVALID_BLOCK],
             ]);
             expect(node.internals.blockChain.getLatestBlock()).toBe(block1);
+        });
+
+        test('should report a sequencer whose clock runs ahead of its own, once, and keep its blocks', async () => {
+            // Given: the first block is received at its time
+            vi.useFakeTimers({ now: 10_000, toFake: ['Date'] });
+            const node: Node = createNode('b');
+            const block1: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys, 1), 'b', remoteKeys, 10_000);
+            const block2: Block = await createBlock(block1, await createEntry('b', remoteKeys, 2), 'b', remoteKeys, 10_000 + SequencerClock.TOLERANCE_MS);
+            const block3: Block = await createBlock(block2, await createEntry('b', remoteKeys, 3), 'b', remoteKeys, 10_000 + SequencerClock.TOLERANCE_MS + 1);
+            const block4: Block = await createBlock(block3, await createEntry('b', remoteKeys, 4), 'b', remoteKeys, 20_000);
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block1));
+
+            // When: the next blocks are received at once
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block2));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block3));
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block4));
+
+            // Then
+            expect(reasons(node)).toEqual([[3, CheatReason.CLOCK_AHEAD]]);
+            expect(node.internals.blockChain.getLatestBlock()).toBe(block4);
+            expect(delivered(node)).toHaveLength(4);
+        });
+
+        test('should time the blocks of its sequencer when received, not once the previous messages are handled', async () => {
+            // Given
+            vi.useFakeTimers({ now: 10_000, toFake: ['Date'] });
+            const node: Node = createNode('b');
+            const later: number = 10_000 + 2 * SequencerClock.TOLERANCE_MS;
+            const block1: Block = await createBlock(node.internals.blockChain.getLatestBlock(), await createEntry('b', remoteKeys, 1), 'b', remoteKeys, 10_000);
+            const block2: Block = await createBlock(block1, await createEntry('b', remoteKeys, 2), 'b', remoteKeys, later);
+
+            // When: the first one waits longer than the tolerance before it is handled, the next one is received at its time
+            node.chain.handle(received(BlockChainMessageType.NEW_BLOCK, block1));
+            vi.setSystemTime(later);
+            await node.internals.queue;
+            await handled(node, received(BlockChainMessageType.NEW_BLOCK, block2));
+
+            // Then
+            expect(node.report).not.toHaveBeenCalled();
+            expect(node.internals.blockChain.getLatestBlock()).toBe(block2);
         });
 
         test('should add the blocks of its sequencer not signed by it, and leave them out of the application', async () => {
@@ -1000,6 +1041,7 @@ describe('SequencedBlockChain', () => {
         node.internals.watchedEntries.set('id', { entry: await createEntry('a', localKeys), latestIndex: 0 });
         node.internals.leftOut.add(1);
         node.internals.clockOffset = 1000;
+        const clear = vi.spyOn(SequencerClock.prototype, 'clear');
 
         // When
         node.chain.clear();
@@ -1016,6 +1058,7 @@ describe('SequencedBlockChain', () => {
         expect(node.internals.leftOut.size).toEqual(0);
         expect(node.internals.deliveredIndex).toEqual(0);
         expect(node.internals.clockOffset).toEqual(0);
+        expect(clear).toHaveBeenCalledOnce();
         expect(node.internals.liveFrom).toBeUndefined();
     });
 });

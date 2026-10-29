@@ -129,6 +129,14 @@ reads it alike everywhere (`Room.sequencedAt()`; the chat counts the messages of
 last seconds of the chain on it). A new sequencer whose clock is late takes on the time of the chain:
 it adds the gap to its clock, rather than giving the time of the latest block to the next ones.
 
+The sequencer could forge the times, spreading a flood of its own over seconds that never passed. Each
+participant watches its clock on the blocks it receives live (`SequencerClock`): the delay of a block,
+from its time to its reception, is the gap between the two clocks plus the network, which only makes it
+longer. A block received more than 5 seconds sooner than the delay of the first block of the sequencer
+tells a clock running ahead: the participant reports it once (`clockAhead`), and the block is kept, its
+time already in the chain. A sequencer whose clock runs late is not told apart from a slow network: it
+could pack the messages of an honest author, as it could already hold them for less than 10 seconds.
+
 ## Ordering the blocks
 
 ```mermaid
@@ -358,6 +366,7 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `invalidBlock` | The hash of a block of the sequencer does not match its content, or its time goes back from the previous block | the sequencer | not added |
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
+| `clockAhead` | The times of the live blocks of the sequencer run more than 5 seconds ahead of the clock of the participant | the sequencer | no |
 | `illegalMove` | A revealed move, an action of the poker (a bet, an exchange) or a move of the roulette (a pass, a shot) is against the rules | the player | yes |
 | `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of the draw of the roulette its commitment | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
@@ -430,6 +439,9 @@ messages through the `roulette` chain, the chat `chatMessage` through the `chat`
   the sequencer can not forge them. A player giving different keys to the participants makes them
   leave its own entries out differently: their games then differ. It can not make them report the
   sequencer.
+- **The time of the blocks** is the clock of the sequencer, watched by the others on the live blocks
+  only: a page reloaded or joining late trusts the times of the history. A first block slow on the
+  network makes its receiver report an honest sequencer, which a majority is needed to distrust.
 - **History of departed players.** A participant who joins after a player left for good can not check
   the signatures of its blocks: they are trusted on the hash chain of the sequencer.
 - **Reloading during a game** replays the moves from the chain, and the hidden move committed and not
