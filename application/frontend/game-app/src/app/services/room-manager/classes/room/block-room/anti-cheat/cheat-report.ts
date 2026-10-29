@@ -15,7 +15,7 @@ export enum CheatReason {
     INVALID_BLOCK = 'invalidBlock',
     /** The sequencer orders other entries, but not this one */
     CENSORED_ENTRY = 'censoredEntry',
-    /** The times of the blocks of the sequencer run ahead of the clock of the participant */
+    /** A live block of the sequencer received much sooner, from its time, than its first ones: its clock jumped ahead */
     CLOCK_AHEAD = 'clockAhead',
     /** Detected by the application: a move against the rules of the game */
     ILLEGAL_MOVE = 'illegalMove',

@@ -1,7 +1,7 @@
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Block, ChainEntry } from './block';
-import { genesisHash, signatureAlgorithm } from './block-chain.constants';
+import { genesisHash, latestTime, signatureAlgorithm } from './block-chain.constants';
 import { BlockChainName } from '../block-chain-name.enum';
 
 export type BlockToHash = Omit<Block, 'hash' | 'sequencerSignature'>;
@@ -90,9 +90,12 @@ export class Chain {
         return latestBlock.index === block.index - 1 && latestBlock.hash === block.previousHash;
     }
 
-    /** Whether the time of the block, a number from a peer, does not go back from the latest one */
+    /**
+     * Whether the time of the block, a number from a peer, does not go back from the latest one, nor goes past the dates:
+     * so far, adding seconds would not change it, and the next sequencers would give it to all their blocks
+     */
     public isOnTime(block: Block): boolean {
-        return Number.isFinite(block.time) && block.time >= this.getLatestBlock().time;
+        return Number.isFinite(block.time) && block.time >= this.getLatestBlock().time && block.time <= latestTime;
     }
 
     public append(block: Block): void {
