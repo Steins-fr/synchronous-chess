@@ -2,6 +2,7 @@
   "author": "{author}:",
   "composer": {
     "tooLong": "En fazla {maxLength, plural, one {# karakter} other {# karakter}}",
+    "unsent": "Daha fazla göndermeden önce mesajlarınızın gönderilmesini bekleyin",
     "wait": "Başka bir mesaj göndermeden önce {seconds, plural, one {# saniye} other {# saniye}} bekleyin"
   },
   "log": {

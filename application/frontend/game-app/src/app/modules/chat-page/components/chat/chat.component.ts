@@ -37,7 +37,7 @@ import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { Subscription, switchMap, timer } from 'rxjs';
-import { admitChatMessage, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
+import { admitChatMessage, CHAT_UNSENT_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
 
@@ -181,6 +181,9 @@ export class ChatComponent {
         return waitUntil === undefined ? 0 : Math.ceil((waitUntil - this.now()) / 1000);
     });
     protected readonly isWaiting = computed<boolean>(() => this.waitSeconds() > 0);
+    // Too many messages of the local player the room did not send back yet: the composer waits until it does
+    protected readonly isHeldBack = computed<boolean>(() => this.entries().filter((entry: Readonly<ChatEntry>) =>
+        entry.kind === ChatEntryKind.MESSAGE && entry.isSelf && entry.state !== ChatMessageState.SENT).length >= CHAT_UNSENT_LIMIT);
     /** The players whose messages the local player hides */
     protected readonly hiddenAuthors = signal<ReadonlySet<string>>(new Set());
     // The messages of the others received while the chat was closed, or scrolled up
@@ -299,7 +302,7 @@ export class ChatComponent {
 
     protected send(): void {
         this.now.set(Date.now());
-        if (this.isBlank() || this.isWaiting()) {
+        if (this.isBlank() || this.isWaiting() || this.isHeldBack()) {
             return;
         }
 

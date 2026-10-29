@@ -110,6 +110,7 @@ describe('ChatComponent', () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         webRtcPlayers.forEach((player: WebRtcPlayer) => player.clear());
         vi.restoreAllMocks();
         vi.unstubAllGlobals();
@@ -421,6 +422,38 @@ describe('ChatComponent', () => {
         expect(transmitSpy).toHaveBeenCalledTimes(5);
         expect(transmitSpy).toHaveBeenLastCalledWith(ChatMessengerType.CHAT_MESSAGE, { id: expect.any(String), text: 'four', at: Date.now() });
         vi.useRealTimers();
+    });
+
+    test('should wait until the room sends back its messages, 5 of them not sent back', async () => {
+        // Given: 5 messages the room does not send back, 2 at most within 10 seconds
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        for (const text of ['one', 'two', 'three', 'four', 'five']) {
+            await type(text);
+            sendButton().click();
+            vi.advanceTimersByTime(5000);
+        }
+
+        // When
+        vi.advanceTimersByTime(15_000);
+        await type('six');
+        press({});
+        await fixture.whenStable();
+
+        // Then: the failed ones may be sent again
+        expect(transmitSpy).toHaveBeenCalledTimes(5);
+        expect(sendButton().disabled).toEqual(true);
+        expect(query('mat-hint')?.textContent).toEqual('Wait until your messages are sent before sending more');
+        expect([...log().querySelectorAll('button')].filter((button: HTMLButtonElement) => button.textContent.includes('Retry') && !button.disabled)).toHaveLength(5);
+
+        // When: one sent back
+        echo(transmitSpy, 0);
+        await fixture.whenStable();
+
+        // Then
+        expect(query('mat-hint')).toBeNull();
+        expect(sendButton().disabled).toEqual(false);
     });
 
     test('should show once a message another player sent twice', async () => {

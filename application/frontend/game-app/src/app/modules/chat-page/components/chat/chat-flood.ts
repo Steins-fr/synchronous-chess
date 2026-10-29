@@ -7,6 +7,12 @@ export const CHAT_RATE_WINDOW: number = 10_000;
 export const CHAT_RATE_LIMIT: number = 8;
 /** The messages the composer sends within the window: the next one waits */
 export const CHAT_SEND_LIMIT: number = 3;
+/**
+ * The messages of the composer the room did not send back yet, whatever their age: the next one waits. Held while the
+ * room has no sequencer, they are ordered at once when it has one again: with the ones sent within the window, they
+ * never pass the limit
+ */
+export const CHAT_UNSENT_LIMIT: number = CHAT_RATE_LIMIT - CHAT_SEND_LIMIT;
 
 /** The rate of the authors of the chat, read on the chain alone: the same on every page, the history included */
 export interface ChatFlood {

@@ -56,10 +56,11 @@
         }
     </div>
 
-    <div class="flex items-center gap-1 border-t border-app-border p-2" id="send-form">
-        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="isWaiting() ? t('composer.wait', { seconds: waitSeconds() }) : undefined"
+    <!-- Aligned at their top: the hint or the error of the field showing, Send stays in place -->
+    <div class="flex items-start gap-1 border-t border-app-border p-2" id="send-form">
+        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="isWaiting() ? t('composer.wait', { seconds: waitSeconds() }) : isHeldBack() ? t('composer.unsent') : undefined"
             [label]="t('message')" class="flex-1" />
-        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting()" [title]="t('send')" id="send" mat-icon-button type="button">
+        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting() || isHeldBack()" [title]="t('send')" class="mt-2" id="send" mat-icon-button type="button">
             <mat-icon>send</mat-icon>
         </button>
     </div>
