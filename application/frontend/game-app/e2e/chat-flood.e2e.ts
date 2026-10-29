@@ -23,7 +23,7 @@ test.describe('Flood of the chat', () => {
         await expect(bob.chatNotices('You sent too many messages: they are hidden for a moment')).toHaveCount(1);
 
         // When: the rate of bob fell back, 10 seconds of the chain later
-        await bob.page.waitForTimeout(11_000);
+        await bob.page.waitForTimeout(12_000);
         await bob.sendMessage('sorry');
 
         // Then

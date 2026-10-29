@@ -171,10 +171,15 @@ export class ChatComponent {
     private readonly entries = signal<ReadonlyArray<Readonly<ChatEntry>>>([]);
     // The time of the composer: set at each message sent, and at each second left to wait
     private readonly now = signal<number>(Date.now());
+    // The messages of the local player, the ones the room did not send back yet included
+    private readonly ownMessages = computed<ReadonlyArray<Readonly<ChatMessage>>>(() => this.entries()
+        .filter((entry: Readonly<ChatEntry>): entry is Readonly<ChatMessage> => entry.kind === ChatEntryKind.MESSAGE && entry.isSelf));
+    // The messages of the local player the room did not send back yet, waiting or failed
+    private readonly unsentMessages = computed<ReadonlyArray<Readonly<ChatMessage>>>(() => this.ownMessages()
+        .filter((message: Readonly<ChatMessage>) => message.state !== ChatMessageState.SENT));
     // When the composer may send another message, the local player having sent too many: they would be hidden
-    private readonly waitUntil = computed<number | undefined>(() => sendWaitUntil(this.entries()
-        .filter((entry: Readonly<ChatEntry>) => entry.kind === ChatEntryKind.MESSAGE && entry.isSelf)
-        .map((entry: Readonly<ChatEntry>) => entry.at), this.now()));
+    private readonly waitUntil = computed<number | undefined>(() => sendWaitUntil(this.ownMessages()
+        .map((message: Readonly<ChatMessage>) => message.at), this.now()));
     // The seconds left to wait, none when the composer may send
     protected readonly waitSeconds = computed<number>(() => {
         const waitUntil: number | undefined = this.waitUntil();
@@ -182,8 +187,7 @@ export class ChatComponent {
     });
     protected readonly isWaiting = computed<boolean>(() => this.waitSeconds() > 0);
     // Too many messages of the local player the room did not send back yet: the composer waits until it does
-    protected readonly isHeldBack = computed<boolean>(() => this.entries().filter((entry: Readonly<ChatEntry>) =>
-        entry.kind === ChatEntryKind.MESSAGE && entry.isSelf && entry.state !== ChatMessageState.SENT).length >= CHAT_UNSENT_LIMIT);
+    protected readonly isHeldBack = computed<boolean>(() => this.unsentMessages().length >= CHAT_UNSENT_LIMIT);
     /** The players whose messages the local player hides */
     protected readonly hiddenAuthors = signal<ReadonlySet<string>>(new Set());
     // The messages of the others received while the chat was closed, or scrolled up
@@ -251,9 +255,12 @@ export class ChatComponent {
         // Handled in the subscription, a signal would only keep the last of several messages received in a row
         toObservable(this.room).pipe(
             switchMap((room: Room<ChatPayloads>) => {
-                // Another room, another chain: the rates of its authors and its cheaters start again
+                // Another room, another chain: the rates of its authors and its cheaters start again. The messages the former
+                // one did not send back are dropped: sent again, they would go to the new one
                 this.flood = NO_FLOOD;
                 this.invalidAuthors.clear();
+                const unsent = new Set<Readonly<ChatEntry>>(this.unsentMessages());
+                this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => !unsent.has(entry)));
                 return room.messenger(ChatMessengerType.CHAT_MESSAGE);
             }),
             takeUntilDestroyed(),

@@ -1011,6 +1011,26 @@ describe('ChatComponent', () => {
         // Then
         expect(logLines()).toEqual(['remote: hi']);
     });
+
+    test('should drop the messages a room replaced by another one did not send back', async () => {
+        // Given: one message sent back, the other one not
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        for (const text of ['one', 'two']) {
+            await type(text);
+            sendButton().click();
+        }
+        echo(transmitSpy, 0);
+        await fixture.whenStable();
+
+        // When
+        network = new RoomNetworkMock();
+        fixture.componentRef.setInput('room', new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+        await fixture.whenStable();
+
+        // Then
+        expect(logLines()).toEqual(['local: one']);
+    });
 });
 
 describe('ChatComponent recompiled from its metadata', () => {
