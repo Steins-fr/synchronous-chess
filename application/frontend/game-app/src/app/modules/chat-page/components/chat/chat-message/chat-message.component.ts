@@ -6,6 +6,8 @@ export enum ChatEntryKind {
     MESSAGE = 'message',
     ARRIVAL = 'arrival',
     DEPARTURE = 'departure',
+    /** An author sending too many messages: they are hidden until its rate falls back */
+    FLOOD = 'flood',
 }
 
 export enum ChatMessageState {

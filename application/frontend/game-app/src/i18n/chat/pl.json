@@ -8,6 +8,8 @@
     "departure": "{name} opuszcza pokój",
     "empty": "Brak wiadomości. Przywitaj się!",
     "failed": "Nie wysłano",
+    "flooding": "{name} wysyła za dużo wiadomości: są na chwilę ukryte",
+    "floodingSelf": "Wysyłasz za dużo wiadomości: są na chwilę ukryte",
     "latest": "Najnowsze wiadomości",
     "retry": "Ponów",
     "sending": "Wysyłanie…",

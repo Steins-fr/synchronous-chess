@@ -8,6 +8,8 @@
     "departure": "{name} odadan ayrıldı",
     "empty": "Henüz mesaj yok. Merhaba deyin!",
     "failed": "Gönderilemedi",
+    "flooding": "{name} çok fazla mesaj gönderiyor: mesajları bir süreliğine gizleniyor",
+    "floodingSelf": "Çok fazla mesaj gönderdiniz: mesajlarınız bir süreliğine gizleniyor",
     "latest": "Son mesajlar",
     "retry": "Tekrar dene",
     "sending": "Gönderiliyor…",

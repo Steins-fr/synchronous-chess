@@ -37,6 +37,7 @@ import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { switchMap, timer } from 'rxjs';
+import { admitChatMessage, ChatAdmission, ChatFlood, NO_FLOOD } from './chat-flood';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
 
@@ -54,10 +55,10 @@ export interface ChatText {
     readonly at: number;
 }
 
-/** A message of the chat from a peer, of the form the application sends: a time it formats, a text it holds */
+/** A message of the chat from a peer, of the form the application sends: a time it formats, a text it holds, never blank */
 export function isChatText(payload: unknown): payload is ChatText {
     const text: Partial<Record<keyof ChatText, unknown>> = (typeof payload === 'object' && payload !== null ? payload : {});
-    return typeof text.id === 'string' && typeof text.text === 'string' && text.text.length <= CHAT_MESSAGE_MAX_LENGTH
+    return typeof text.id === 'string' && typeof text.text === 'string' && text.text.trim() !== '' && text.text.length <= CHAT_MESSAGE_MAX_LENGTH
         && typeof text.at === 'number' && Math.abs(text.at) <= LATEST_TIME;
 }
 
@@ -72,10 +73,10 @@ export const chatBlockChains: BlockChainRouting<ChatPayloads> = {
 
 type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, ChatText>;
 
-/** A player arriving in the room, or leaving it */
+/** A player arriving in the room, leaving it, or sending too many messages */
 export interface ChatNotice {
     readonly id: number;
-    readonly kind: ChatEntryKind.ARRIVAL | ChatEntryKind.DEPARTURE;
+    readonly kind: ChatEntryKind.ARRIVAL | ChatEntryKind.DEPARTURE | ChatEntryKind.FLOOD;
     readonly name: string;
     readonly at: number;
 }
@@ -100,6 +101,18 @@ const LATEST_TIME: number = 8.64e15;
 /** A message: a too long one is refused, its error shown */
 function chatMessageRules(path: SchemaPath<string>): void {
     maxLength(path, CHAT_MESSAGE_MAX_LENGTH, { message: scopedKey(TranslationScope.CHAT, marker('composer.tooLong', undefined, 'chat')) });
+}
+
+/** Whether the log leaves an entry out: the messages of the authors the local player hides, and their floods, the arrivals and departures by the setting */
+function isLeftOut(entry: Readonly<ChatEntry>, hiddenAuthors: ReadonlySet<string>, showArrivals: boolean): boolean {
+    switch (entry.kind) {
+        case ChatEntryKind.MESSAGE:
+            return hiddenAuthors.has(entry.author);
+        case ChatEntryKind.FLOOD:
+            return hiddenAuthors.has(entry.name);
+        default:
+            return !showArrivals;
+    }
 }
 
 // A pause longer than this starts a new group of messages, its time shown again
@@ -180,7 +193,7 @@ export class ChatComponent {
 
     protected readonly lines = computed<ReadonlyArray<Readonly<ChatLine>>>(() => {
         const hidden: ReadonlySet<string> = this.hiddenAuthors();
-        const showNotices: boolean = this.preferences.arrivals.on();
+        const showArrivals: boolean = this.preferences.arrivals.on();
         const timeFormat: Intl.DateTimeFormat | undefined = this.preferences.times.on() ? this.timeFormat() : undefined;
         const firstUnreadId: number | undefined = this.firstUnreadId();
         const lines: ChatLine[] = [];
@@ -189,7 +202,7 @@ export class ChatComponent {
         let dividerShown: boolean = firstUnreadId === undefined;
 
         for (const entry of this.entries()) {
-            if (entry.kind === ChatEntryKind.MESSAGE ? hidden.has(entry.author) : !showNotices) {
+            if (isLeftOut(entry, hidden, showArrivals)) {
                 continue;
             }
             const firstUnread: boolean = !dividerShown && entry.kind === ChatEntryKind.MESSAGE && entry.id >= (firstUnreadId as number);
@@ -203,7 +216,14 @@ export class ChatComponent {
         return lines;
     });
 
+    /** The local player, whose own messages hidden for flooding are told apart */
+    protected readonly localName = computed<string>(() => this.room().localPlayer.name);
+
     private readonly ids: Generator<number, never> = idGenerator();
+    /** The rate of the authors on the chain */
+    private flood: ChatFlood = NO_FLOOD;
+    /** The authors reported for an invalid message: their first one only, the same on every page, rather than a report per message */
+    private readonly invalidAuthors = new Set<string>();
     private compositionEndedAt: number = Number.NEGATIVE_INFINITY;
     // Where the log scrolls once rendered: to its bottom, or to the divider of the new messages
     private scrollTarget: 'bottom' | 'unread' | undefined;
@@ -334,7 +354,10 @@ export class ChatComponent {
         const room: Room<ChatPayloads> = this.room();
         // Checked where it enters: a peer cheating would break the log of everyone, its history included
         if (!isChatText(message.payload)) {
-            room.reportCheat(message, CheatReason.INVALID_MESSAGE);
+            if (!this.invalidAuthors.has(message.from)) {
+                this.invalidAuthors.add(message.from);
+                room.reportCheat(message, CheatReason.INVALID_MESSAGE);
+            }
             return;
         }
         const { id: messageId, text, at } = message.payload;
@@ -343,6 +366,11 @@ export class ChatComponent {
             entry.kind === ChatEntryKind.MESSAGE && entry.author === message.from && entry.messageId === messageId);
         // Sent twice, the room delivering the first one late: shown once
         if (shown?.kind === ChatEntryKind.MESSAGE && shown.state === ChatMessageState.SENT) {
+            return;
+        }
+        if (!this.isAdmitted(message)) {
+            // Its own message, waiting or failed: hidden from every page, sending it again would be too
+            this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((other: Readonly<ChatEntry>) => other !== shown));
             return;
         }
 
@@ -362,6 +390,24 @@ export class ChatComponent {
         // Its own message back from the room, still waiting or failed already: sent, moved where the room put it among the others
         this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) =>
             entries.filter((other: Readonly<ChatEntry>) => other !== shown).concat(entry));
+    }
+
+    /**
+     * Whether a message shows, by the rate of its author on the chain: every page hides the same ones, the history
+     * included. The first one hidden is told once. A room without chain times nothing: its messages show
+     */
+    private isAdmitted(message: ChatRoomMessage): boolean {
+        const time: number | undefined = this.room().sequencedAt(message);
+        if (time === undefined) {
+            return true;
+        }
+
+        const admission: ChatAdmission = admitChatMessage(this.flood, message.from, time);
+        this.flood = admission.flood;
+        if (admission.notice) {
+            this.notice([{ id: this.ids.next().value, kind: ChatEntryKind.FLOOD, name: message.from, at: message.payload.at }]);
+        }
+        return admission.shown;
     }
 
     /**

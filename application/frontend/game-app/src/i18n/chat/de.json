@@ -8,6 +8,8 @@
     "departure": "{name} hat den Raum verlassen",
     "empty": "Noch keine Nachrichten. Sag Hallo!",
     "failed": "Nicht gesendet",
+    "flooding": "{name} sendet zu viele Nachrichten: sie werden kurz ausgeblendet",
+    "floodingSelf": "Du hast zu viele Nachrichten gesendet: sie werden kurz ausgeblendet",
     "latest": "Neueste Nachrichten",
     "retry": "Erneut senden",
     "sending": "Wird gesendet…",

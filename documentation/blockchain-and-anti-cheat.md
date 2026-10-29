@@ -374,6 +374,7 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
 | `invalidSpin` | A spin of a cylinder is not one (a chamber missing or out of the group), or, once the keys are disclosed, not the cylinder received turned | the player | a spin that is not a cylinder breaks the cylinder |
 | `invalidShare` | A share of a chamber without its proof, or a key disclosed that is not the one of its player | the player | yes |
+| `invalidMessage` | A message of the chat not of the form the composer sends: over 1000 characters, or blank. The first one of each author only, the same block on every page | the player | yes |
 
 The reasons **against the sequencer** count to take the ordering away from it: only reports from
 connected participants other than the sequencer count, and more than half of them must have reported
@@ -422,6 +423,14 @@ their payload is trusted, and a payload making a handler throw is logged.
 The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
 messages through the `roulette` chain, the chat `chatMessage` through the `chat` chain.
+
+**The flood of the chat.** The sequencer orders every message of the chat: refusing the messages of an
+author over the rate, it would be reported for censoring them by the participants watching them. Each
+page filters them instead, on the times of the chain alone (`chat-flood.ts`): an author with 8 messages
+already within the last 10 seconds of the chain is hidden, its hidden messages counted, until its rate
+falls back; the log tells it once. Every page hides the same messages, a page reloaded and a participant
+joining late included. The composer sends 3 messages in 10 seconds at most: the network packing the
+messages of an honest player on the chain never makes it reach 8.
 
 ## Trust model and limits
 

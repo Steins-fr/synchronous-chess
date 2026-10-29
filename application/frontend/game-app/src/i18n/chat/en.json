@@ -8,6 +8,8 @@
     "departure": "{name} left the room",
     "empty": "No messages yet. Say hello!",
     "failed": "Not sent",
+    "flooding": "{name} sends too many messages: they are hidden for a moment",
+    "floodingSelf": "You sent too many messages: they are hidden for a moment",
     "latest": "Latest messages",
     "retry": "Retry",
     "sending": "Sending…",

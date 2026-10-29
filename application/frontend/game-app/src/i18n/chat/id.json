@@ -8,6 +8,8 @@
     "departure": "{name} meninggalkan ruang",
     "empty": "Belum ada pesan. Sapa yang lain!",
     "failed": "Tidak terkirim",
+    "flooding": "{name} mengirim terlalu banyak pesan: pesannya disembunyikan sementara",
+    "floodingSelf": "Anda mengirim terlalu banyak pesan: pesan Anda disembunyikan sementara",
     "latest": "Pesan terbaru",
     "retry": "Coba lagi",
     "sending": "Mengirim…",

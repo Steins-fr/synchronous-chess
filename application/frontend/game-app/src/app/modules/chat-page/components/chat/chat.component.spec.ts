@@ -735,6 +735,87 @@ describe('ChatComponent', () => {
         expect(logLines()).toEqual(['No messages yet. Say hello!']);
     });
 
+    test('should report the first invalid message of each author only', async () => {
+        // Given
+        await setRoom();
+        const reportSpy = vi.spyOn(room, 'reportCheat');
+
+        // When
+        deliver('remote', { id: 'x', text: ' ', at: 0 });
+        deliver('remote', { id: 'y', text: 'a'.repeat(1001), at: 0 });
+        deliver('other', { id: 'z', text: '', at: 0 });
+        await fixture.whenStable();
+
+        // Then
+        expect(reportSpy.mock.calls.map(([message]) => message.payload)).toEqual([{ id: 'x', text: ' ', at: 0 }, { id: 'z', text: '', at: 0 }]);
+        expect(logLines()).toEqual(['No messages yet. Say hello!']);
+    });
+
+    describe('with the times of the chain', () => {
+        let chainTime: number;
+
+        beforeEach(() => {
+            chainTime = 0;
+            vi.spyOn(room, 'sequencedAt').mockImplementation(() => chainTime);
+        });
+
+        test('should hide the messages of an author over the rate of the chain, telling it once, until its rate falls back', async () => {
+            // Given
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+            fixture.componentRef.setInput('open', false);
+            await setRoom();
+            const messages: string[] = Array.from({ length: 10 }, (_, index: number) => `spam ${ index + 1 }`);
+
+            // When
+            messages.forEach((text: string) => receive('remote', text));
+            receive('carol', 'stop it');
+            await fixture.whenStable();
+
+            // Then: neither shown, nor unread
+            const flooding: string = 'remote sends too many messages: they are hidden for a moment';
+            expect(logLines()).toEqual([...messages.slice(0, 8).map((text: string) => `remote: ${ text }`), flooding, 'carol: stop it']);
+            expect(component.unread()).toEqual(9);
+            expect(component.unreadReceived()).toEqual(9);
+
+            // When: its rate fell back
+            chainTime = 10_000;
+            receive('remote', 'sorry');
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines().slice(-2)).toEqual(['carol: stop it', 'remote: sorry']);
+
+            // When: the arrivals hidden, then its author
+            preferences.arrivals.set(false);
+            await fixture.whenStable();
+            expect(logLines()).toContain(flooding);
+            (await openOptions()).find((item: HTMLButtonElement) => item.textContent.includes('remote'))?.click();
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['carol: stop it']);
+        });
+
+        test('should leave out its own message hidden for flooding, telling it apart', async () => {
+            // Given: its messages before a reload
+            await setRoom();
+            const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+            const earlier: string[] = Array.from({ length: 8 }, (_, index: number) => `earlier ${ index + 1 }`);
+            earlier.forEach((text: string) => receive('local', text, 0));
+            await type('hello');
+            sendButton().click();
+            await fixture.whenStable();
+
+            // When
+            echo(transmitSpy);
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual([...earlier.map((text: string) => `local: ${ text }`), 'You sent too many messages: they are hidden for a moment']);
+            expect(log().querySelector('.opacity-60')).toBeNull();
+        });
+    });
+
     test('should hide the messages of a player picked in its options', async () => {
         // Given
         network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
@@ -844,6 +925,8 @@ describe('isChatText', () => {
         expect(isChatText({ text: 'hi', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 1, at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'a'.repeat(1001), at: 0 })).toEqual(false);
+        expect(isChatText({ id: 'x', text: '', at: 0 })).toEqual(false);
+        expect(isChatText({ id: 'x', text: ' \n\t', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: '0' })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.NaN })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.POSITIVE_INFINITY })).toEqual(false);

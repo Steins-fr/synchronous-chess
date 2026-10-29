@@ -8,6 +8,8 @@
     "departure": "{name} a quitté la salle",
     "empty": "Aucun message pour l’instant. Dites bonjour !",
     "failed": "Non envoyé",
+    "flooding": "{name} envoie trop de messages : ils sont masqués un moment",
+    "floodingSelf": "Vous avez envoyé trop de messages : ils sont masqués un moment",
     "latest": "Derniers messages",
     "retry": "Réessayer",
     "sending": "Envoi…",
