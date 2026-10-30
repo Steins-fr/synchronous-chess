@@ -15,14 +15,18 @@
         <p class="muted-note mb-1 text-xs">{{ t('participants.count', { count: players().length }) }}</p>
         <mat-chip-set>
             @for (participant of players(); track participant.name) {
-            <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" />
-            <!-- Beside the chip, out of it: the text of the chip holds the name of the player only -->
             @if (moderates() && participant.name !== localName()) {
-            <button [attr.aria-label]="t('moderation.menu', { name: participant.name })" [disabled]="pendingTargets().has(participant.name)"
-                [matMenuTriggerData]="{ name: participant.name }" [matMenuTriggerFor]="moderation" [title]="t('moderation.menu', { name: participant.name })"
-                class="self-center" mat-icon-button type="button">
-                <mat-icon fontIcon="more_vert" />
-            </button>
+            <!-- Beside the chip, out of it: the text of the chip holds the name of the player only. On the same line, the chip of a long name shortened -->
+            <span class="flex min-w-0 max-w-full items-center">
+                <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" class="min-w-0" />
+                <button [attr.aria-label]="t('moderation.menu', { name: participant.name })" [disabled]="pendingTargets().has(participant.name)"
+                    [matMenuTriggerData]="{ name: participant.name }" [matMenuTriggerFor]="moderation" [title]="t('moderation.menu', { name: participant.name })"
+                    class="shrink-0" mat-icon-button type="button">
+                    <mat-icon fontIcon="more_vert" />
+                </button>
+            </span>
+            } @else {
+            <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" />
             }
             }
             @for (playerName of queuingPlayers(); track playerName) {
