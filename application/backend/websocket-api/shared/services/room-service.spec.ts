@@ -6,7 +6,7 @@ import { OpenRoom } from '@protocol/responses/rooms-response';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { RoomGame } from '@protocol/room-game.enum';
 import RoomRepository from '@repositories/room-repository';
-import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
+import { aRoom, browserOf, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readBrowserHashes, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import RoomService from './room-service';
@@ -18,7 +18,7 @@ describe('RoomService', () => {
 
     // In epoch seconds
     const now: number = 1_800_000_000;
-    const createRequest: RoomCreateRequest = { roomName: 'room', playerName: 'host', maxPlayer: 4, game: RoomGame.CHAT, token: HOST_TOKEN };
+    const createRequest: RoomCreateRequest = { roomName: 'room', playerName: 'host', maxPlayer: 4, game: RoomGame.CHAT, token: HOST_TOKEN, browserId: browserOf('host') };
 
     /** One more room than listed, `room-0` the most recent */
     function storeMoreRoomsThanListed(): Promise<void[]> {
@@ -229,16 +229,16 @@ describe('RoomService', () => {
         await storeRoom(room);
 
         // When / Then
-        await expect(service.addPlayerToQueue('guest', 'other-connection', 'other-token', aRoom({ queue: [] }))).rejects.toThrow(RoomApiErrorMessage.ALREADY_IN_QUEUE);
+        await expect(service.addPlayerToQueue('guest', 'other-connection', 'other-token', 'other-browser', aRoom({ queue: [] }))).rejects.toThrow(RoomApiErrorMessage.ALREADY_IN_QUEUE);
         expect(await readRoom('room')).toStrictEqual(room);
     });
 
-    test('should queue a player with its connection, and the hash of its token', async () => {
+    test('should queue a player with its connection, and the hashes of its token and its browser', async () => {
         // Given
         await storeRoom(room);
 
         // When
-        await service.addPlayerToQueue('other', 'other-connection', 'other-token', room);
+        await service.addPlayerToQueue('other', 'other-connection', 'other-token', 'other-browser', room);
 
         // Then
         expect(await readRoom('room')).toStrictEqual({
@@ -246,9 +246,10 @@ describe('RoomService', () => {
             queue: [...room.queue, { playerName: 'other', connectionId: 'other-connection' }],
             tokenHashes: { ...room.tokenHashes, other: hashToken('other-token') },
         });
+        expect(await readBrowserHashes('room')).toMatchObject({ other: hashToken('other-browser') });
     });
 
-    test('should create a room under its id with its host as only player, keeping the hash of its token', async () => {
+    test('should create a room under its id with its host as only player, keeping the hashes of its token and its browser', async () => {
         // Given: a room of the same id expired now, another one waiting for its host a second more
         await storeRoom(aRoom({ id: 'room#000042', connectionId: 'former-connection', expiresAt: now }));
         const waiting: Room = aRoom({ id: 'waiting', nameKey: 'waiting', expiresAt: now + 1 });
@@ -274,6 +275,7 @@ describe('RoomService', () => {
             isPrivate: false,
             leaseUntil: now + RoomService.LEASE,
         });
+        expect(await readBrowserHashes('Room#000042')).toEqual({ host: hashToken(browserOf('host')) });
     });
 
     test('should not create a room whose id is taken', async () => {

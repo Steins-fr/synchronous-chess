@@ -16,10 +16,10 @@ import { RoomHosting } from './room-hosting';
 import { JoinFailure, RejoinResult, RoomNetwork } from './room-network';
 
 /**
- * What the player joins the room with, beside its name: the game of the page, the password of a private room, and the
- * token the player created or joined the room with, to reconnect it or take it over
+ * What the player joins the room with, beside its name: the game of the page, the password of a private room, the
+ * token the player created or joined the room with, to reconnect it or take it over, and the id of its browser
  */
-export type RoomAccess = Pick<RoomJoinRequest, 'game' | 'password' | 'token'>;
+export type RoomAccess = Pick<RoomJoinRequest, 'game' | 'password' | 'token' | 'browserId'>;
 
 /** How a negotiation with the host ended: connected, or failed, the host refusing the player when its room is full */
 interface HostNegotiation {

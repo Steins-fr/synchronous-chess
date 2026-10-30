@@ -13,11 +13,13 @@ import {
     aRequest,
     aRoom,
     AwsMocks,
+    browserOf,
     errorReply,
     HOST_CONNECTION,
     HOST_TOKEN,
     mockAws,
     postedPackets,
+    readBrowserHashes,
     readConnections,
     readRoom,
     storeConnection,
@@ -37,7 +39,7 @@ const NOW: number = 1_800_000_000;
 
 describe('CreateHandler', () => {
     const { apiGateway }: AwsMocks = mockAws();
-    const request: RoomCreateRequest = { roomName: 'room', playerName: 'host', maxPlayer: 4, game: RoomGame.CHESS, token: HOST_TOKEN };
+    const request: RoomCreateRequest = { roomName: 'room', playerName: 'host', maxPlayer: 4, game: RoomGame.CHESS, token: HOST_TOKEN, browserId: browserOf('host') };
 
     function create(data: RoomCreateRequest): Promise<void> {
         return new CreateHandler(anApiGatewayClient(), HOST_CONNECTION, aRequest(RoomApiRequestTypeEnum.CREATE, data)).execute();
@@ -51,7 +53,7 @@ describe('CreateHandler', () => {
         vi.useRealTimers();
     });
 
-    test('should create the room of its host under its name and a tag drawn, keeping the hash of its token and its creation date', async () => {
+    test('should create the room of its host under its name and a tag drawn, keeping the hashes of its token and its browser, and its creation date', async () => {
         // Given
         vi.useFakeTimers({ now: new Date('2026-10-11T12:00:00.000Z'), toFake: ['Date'] });
 
@@ -77,6 +79,7 @@ describe('CreateHandler', () => {
             isPrivate: false,
             leaseUntil: Date.parse('2026-10-11T12:00:00.000Z') / 1000 + RoomService.LEASE,
         });
+        expect(await readBrowserHashes('room#000042')).toEqual({ host: hashToken(browserOf('host')) });
     });
 
     test('should disconnect its host, as $disconnect does, once its connection closed before its answer', async () => {
@@ -151,6 +154,8 @@ describe('CreateHandler', () => {
         ['token', { ...request, token: '' }],
         ['token of a reasonable length', { ...request, token: 't'.repeat(129) }],
         ['token as a string', { ...request, token: 42 as unknown as string }],
+        ['browser id', { ...request, browserId: '' }],
+        ['browser id of a reasonable length', { ...request, browserId: 'b'.repeat(129) }],
         ['known game', { ...request, game: 'go' as RoomGame }],
         ['password not empty', { ...request, password: '' }],
         ['password long enough', { ...request, password: 'p'.repeat(5) }],

@@ -202,9 +202,10 @@ export default class RoomRepository extends BaseRepository {
      * Creates the room with its players and their tokens, replacing an expired room of the same id: a room waiting for its
      * host keeps its id. Deletes the rooms expired at `now` with their rows, the one of that id included: no scheduled
      * cleanup wakes the paused cluster
+     * @param browserHash the hash of the browser id of its host, the tokens of a room created being its host's
      * @returns false when a room of that id exists at `now`, whatever its case: nothing created
      */
-    public async create(room: Room, now: number): Promise<boolean> {
+    public async create(room: Room, browserHash: string, now: number): Promise<boolean> {
         return this.run(DatabaseOperationEnum.PUT, (): Promise<boolean> => this.db.transaction(async (tx: DatabaseTransaction): Promise<boolean> => {
             await tx.delete(rooms).where(lte(ROOM_EXPIRY, now));
 
@@ -226,7 +227,7 @@ export default class RoomRepository extends BaseRepository {
 
             await tx.insert(roomPlayers).values(room.players.map(({ playerName }: Player): typeof roomPlayers.$inferInsert => ({ roomId: room.id, playerName })));
             await tx.insert(roomTokens).values(Object.entries(room.tokenHashes)
-                .map(([playerName, tokenHash]: [string, string]): typeof roomTokens.$inferInsert => ({ roomId: room.id, playerName, tokenHash })));
+                .map(([playerName, tokenHash]: [string, string]): typeof roomTokens.$inferInsert => ({ roomId: room.id, playerName, tokenHash, browserHash })));
             return true;
         }));
     }
@@ -290,11 +291,11 @@ export default class RoomRepository extends BaseRepository {
     }
 
     /**
-     * Queues the player, keeping the hash of its token: a single statement, the token written only for the player it
-     * queued
+     * Queues the player, keeping the hash of its token and of its browser id: a single statement, the token written only
+     * for the player it queued
      * @returns false when a player of that name is queued already, joining at the same time: nothing written
      */
-    public async addPlayerToQueue(player: Required<Player>, tokenHash: string, room: Room): Promise<boolean> {
+    public async addPlayerToQueue(player: Required<Player>, tokenHash: string, browserHash: string, room: Room): Promise<boolean> {
         const queued = this.db.$with('queued').as(this.db.insert(roomQueue)
             .values({ roomId: room.id, playerName: player.playerName, connectionId: player.connectionId })
             .onConflictDoNothing()
@@ -302,8 +303,13 @@ export default class RoomRepository extends BaseRepository {
 
         const tokens: { playerName: string }[] = await this.run(DatabaseOperationEnum.UPDATE, (): Promise<{ playerName: string }[]> => this.db.with(queued)
             .insert(roomTokens)
-            .select(this.db.select({ roomId: queued.roomId, playerName: queued.playerName, tokenHash: sql<string>`${ tokenHash }::text`.as('token_hash') }).from(queued))
-            .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash } })
+            .select(this.db.select({
+                roomId: queued.roomId,
+                playerName: queued.playerName,
+                tokenHash: sql<string>`${ tokenHash }::text`.as('token_hash'),
+                browserHash: sql<string>`${ browserHash }::text`.as('browser_hash'),
+            }).from(queued))
+            .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash, browserHash } })
             .returning({ playerName: roomTokens.playerName }));
 
         return RoomRepository.written(tokens);

@@ -57,7 +57,7 @@ function createRoom(db: DataApiDatabase, id: string, passwordHash?: string): Pro
         }
 
         await tx.insert(roomPlayers).values({ roomId: id, playerName: 'host' });
-        await tx.insert(roomTokens).values({ roomId: id, playerName: 'host', tokenHash: 'host-token' });
+        await tx.insert(roomTokens).values({ roomId: id, playerName: 'host', tokenHash: 'host-token', browserHash: 'host-browser' });
         return true;
     });
 }
@@ -104,8 +104,9 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
 
     // RoomRepository.addPlayerToQueue, in one statement, then addPlayerToRoom
     const queued = db.$with('queued').as(db.insert(roomQueue).values({ roomId: 'Room', playerName: 'guest', connectionId: 'guest-connection' }).onConflictDoNothing());
-    await timed('queue a player', (): Promise<unknown> => db.with(queued).insert(roomTokens).values({ roomId: 'Room', playerName: 'guest', tokenHash: 'guest-token' })
-        .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash: 'guest-token' } }).execute());
+    await timed('queue a player', (): Promise<unknown> => db.with(queued).insert(roomTokens)
+        .values({ roomId: 'Room', playerName: 'guest', tokenHash: 'guest-token', browserHash: 'guest-browser' })
+        .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash: 'guest-token', browserHash: 'guest-browser' } }).execute());
     await db.insert(roomPlayers).values({ roomId: 'Room', playerName: 'guest' }).onConflictDoNothing();
 
     // RoomRepository.getByName: what each signal relayed reads

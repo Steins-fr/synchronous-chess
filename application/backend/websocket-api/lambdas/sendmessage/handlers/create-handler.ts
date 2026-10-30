@@ -19,7 +19,7 @@ export default class CreateHandler extends MessageHandler {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.CREATE);
 
         if (!isName(data.roomName, ROOM_NAME_MAX_LENGTH) || !CreateHandler.isRoomName(data.roomName) || !CreateHandler.isMaxPlayer(data.maxPlayer)
-            || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isRoomGame(data.game)
+            || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isToken(data.browserId) || !isRoomGame(data.game)
             || (data.password !== undefined && !isPassword(data.password))) {
             throw new BadRequestException(CreateHandler.ERROR_PARSING);
         }

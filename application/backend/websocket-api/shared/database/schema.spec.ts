@@ -73,7 +73,7 @@ describe('schema', () => {
         await Promise.all(['room', 'other'].flatMap((roomId: string) => [
             database.db.insert(roomPlayers).values({ roomId, playerName: 'host' }),
             database.db.insert(roomQueue).values({ roomId, playerName: 'guest', connectionId: 'guest-connection' }),
-            database.db.insert(roomTokens).values({ roomId, playerName: 'host', tokenHash: 'hash' }),
+            database.db.insert(roomTokens).values({ roomId, playerName: 'host', tokenHash: 'hash', browserHash: 'browser-hash' }),
             database.db.insert(roomPasswordAttempts).values({ roomId, sourceHash: 'source', attempts: 1, expiresAt: 60 }),
         ]));
         await database.db.insert(connections).values({ connectionId: 'host-connection', roomName: 'room' });

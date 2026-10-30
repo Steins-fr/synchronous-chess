@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { joinRoom } from '@app/services/room-api/join-room';
 import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
+import { BrowserIdStore } from '@app/services/room-session/browser-id.store';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
 import { TranslatableText } from '@app/types/translatable-text.type';
@@ -19,6 +20,7 @@ import { NotificationService } from '../notification/notification.service';
 export default class RoomManagerService {
     private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);
+    private readonly browserIds = inject(BrowserIdStore);
     private readonly destroyRef = inject(DestroyRef);
 
     /**
@@ -35,7 +37,8 @@ export default class RoomManagerService {
             const keys = await BlockRoom.createKeys(setup.playerName);
             // Proves to the API the player of this tab: the host reconnects its room with it
             const token: string = setup.token;
-            const access: RoomAccess = { game: setup.game, password: setup.password, token };
+            // The API refuses the joins of a browser removed from the room, whatever the name
+            const access: RoomAccess = { game: setup.game, password: setup.password, token, browserId: this.browserIds.id() };
             let roomConnection: RoomNetwork;
 
             if (setup.type === 'create') {
@@ -46,6 +49,7 @@ export default class RoomManagerService {
                     password: setup.password,
                     playerName: setup.playerName,
                     token,
+                    browserId: access.browserId,
                 });
 
                 if (response.playerName !== setup.playerName || !RoomManagerService.isRoomId(response.roomName, setup.roomName) || response.maxPlayer !== maxPlayer) {

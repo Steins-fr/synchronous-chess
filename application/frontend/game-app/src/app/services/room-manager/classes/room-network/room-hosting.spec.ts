@@ -40,7 +40,7 @@ describe('RoomHosting', () => {
     let network: TestHostRoomNetwork;
 
     function createNetwork(maxPlayer: number = 2): TestHostRoomNetwork {
-        network = new TestHostRoomNetwork(roomSocketApi, 'room', 'host', 'host', maxPlayer, { game: RoomGame.CHESS, token: 'token' });
+        network = new TestHostRoomNetwork(roomSocketApi, 'room', 'host', 'host', maxPlayer, { game: RoomGame.CHESS, token: 'token', browserId: 'browser' });
         return network;
     }
 

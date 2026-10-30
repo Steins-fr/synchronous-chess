@@ -19,6 +19,7 @@ import {
     HOST_CONNECTION,
     mockAws,
     postedPackets,
+    readBrowserHashes,
     readConnections,
     readRoom,
     storeRoom,
@@ -40,7 +41,7 @@ describe('JoinHandler', () => {
         await storeRoom(room);
 
         // When
-        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' });
 
         // Then
         expect(await readConnections()).toEqual([{ connectionId: connection, roomName: 'room' }]);
@@ -49,6 +50,7 @@ describe('JoinHandler', () => {
             queue: [...room.queue, { playerName: 'other', connectionId: connection }],
             tokenHashes: { ...room.tokenHashes, other: hashToken('other-token') },
         });
+        expect(await readBrowserHashes('room')).toMatchObject({ other: hashToken('other-browser') });
         expect(postedPackets(apiGateway)).toEqual([
             { to: HOST_CONNECTION, packet: { type: 'joinRequest', data: { playerName: 'other' } } },
             { to: connection, packet: { id: 7, type: 'joiningRoom', data: { playerName: 'host' } } },
@@ -61,7 +63,7 @@ describe('JoinHandler', () => {
         await storeRoom(aRoom({ id: roomId }));
 
         // When
-        await join({ roomName: roomId, game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+        await join({ roomName: roomId, game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' });
 
         // Then
         expect(await readConnections()).toEqual([{ connectionId: connection, roomName: roomId }]);
@@ -75,7 +77,7 @@ describe('JoinHandler', () => {
         apiGateway.on(PostToConnectionCommand, { ConnectionId: connection }).rejects(new GoneException({ $metadata: {}, message: 'Gone' }));
 
         // When
-        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' });
 
         // Then: as $disconnect does
         expect(await readConnections()).toEqual([]);
@@ -98,7 +100,7 @@ describe('JoinHandler', () => {
         });
 
         // When
-        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' });
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' });
 
         // Then: the name free again
         expect((await readRoom('room'))?.queue).toEqual(room.queue);
@@ -106,16 +108,17 @@ describe('JoinHandler', () => {
     });
 
     test.each([
-        ['room name', { roomName: '', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
-        ['room id of a reasonable length', { roomName: `${ 'r'.repeat(33) }#000042`, game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
-        ['player name of a reasonable length', { roomName: 'room', game: RoomGame.CHESS, playerName: 'p'.repeat(33), token: 'other-token' }, 'Payload not valid'],
-        ['player name', { roomName: 'room', game: RoomGame.CHESS, playerName: '', token: 'other-token' }, 'Payload not valid'],
-        ['token', { roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: '' }, 'Payload not valid'],
-        ['player in the game', { roomName: 'room', game: RoomGame.CHESS, playerName: 'host', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_GAME],
-        ['player in the queue', { roomName: 'room', game: RoomGame.CHESS, playerName: 'guest', token: 'other-token' }, RoomApiErrorMessage.ALREADY_IN_QUEUE],
-        ['game', { roomName: 'room', game: 'go' as RoomGame, playerName: 'other', token: 'other-token' }, 'Payload not valid'],
-        ['room of another game', { roomName: 'room', game: RoomGame.CHAT, playerName: 'other', token: 'other-token' }, RoomApiErrorMessage.OTHER_GAME],
-        ['room missing', { roomName: 'missing', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' }, 'Room \'missing\' does not exist'],
+        ['room name', { roomName: '', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' }, 'Payload not valid'],
+        ['room id of a reasonable length', { roomName: `${ 'r'.repeat(33) }#000042`, game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' }, 'Payload not valid'],
+        ['player name of a reasonable length', { roomName: 'room', game: RoomGame.CHESS, playerName: 'p'.repeat(33), token: 'other-token', browserId: 'other-browser' }, 'Payload not valid'],
+        ['player name', { roomName: 'room', game: RoomGame.CHESS, playerName: '', token: 'other-token', browserId: 'other-browser' }, 'Payload not valid'],
+        ['token', { roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: '', browserId: 'other-browser' }, 'Payload not valid'],
+        ['browser id', { roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: '' }, 'Payload not valid'],
+        ['player in the game', { roomName: 'room', game: RoomGame.CHESS, playerName: 'host', token: 'other-token', browserId: 'other-browser' }, RoomApiErrorMessage.ALREADY_IN_GAME],
+        ['player in the queue', { roomName: 'room', game: RoomGame.CHESS, playerName: 'guest', token: 'other-token', browserId: 'other-browser' }, RoomApiErrorMessage.ALREADY_IN_QUEUE],
+        ['game', { roomName: 'room', game: 'go' as RoomGame, playerName: 'other', token: 'other-token', browserId: 'other-browser' }, 'Payload not valid'],
+        ['room of another game', { roomName: 'room', game: RoomGame.CHAT, playerName: 'other', token: 'other-token', browserId: 'other-browser' }, RoomApiErrorMessage.OTHER_GAME],
+        ['room missing', { roomName: 'missing', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' }, 'Room \'missing\' does not exist'],
     ])('should refuse a request with its %s', async (_case: string, data: RoomJoinRequest, message: string) => {
         // Given
         const room: Room = aRoom();
@@ -134,7 +137,7 @@ describe('JoinHandler', () => {
         await storeRoom(room);
 
         // When / Then
-        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
         expect(await readConnections()).toEqual([]);
         expect(await readRoom('room')).toStrictEqual(room);
         expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.HOST_DISCONNECTED, connection)]);
@@ -146,7 +149,7 @@ describe('JoinHandler', () => {
         await storeRoom(room);
 
         // When
-        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password: 'secret', token: 'other-token' });
+        await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password: 'secret', token: 'other-token', browserId: 'other-browser' });
 
         // Then
         expect((await readRoom('room'))?.queue).toEqual([...room.queue, { playerName: 'other', connectionId: connection }]);
@@ -165,7 +168,7 @@ describe('JoinHandler', () => {
         await storeRoom(room);
 
         // When / Then
-        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'host', password, token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'host', password, token: 'other-token', browserId: 'other-browser' })).rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
         expect(await readConnections()).toEqual([]);
         expect(await readRoom('room')).toStrictEqual(room);
         expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.WRONG_PASSWORD, connection)]);
@@ -176,7 +179,7 @@ describe('JoinHandler', () => {
         await storeRoom(aRoom({ passwordHash: hashPassword('secret'), expiresAt: epochSeconds() + 60 }));
 
         // When / Then
-        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password: 'secret', token: 'other-token' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', password: 'secret', token: 'other-token', browserId: 'other-browser' })).rejects.toThrow(RoomApiErrorMessage.HOST_DISCONNECTED);
         expect(await getDatabase().select().from(roomPasswordAttempts)).toEqual([]);
     });
 });

@@ -1,0 +1,1 @@
+ALTER TABLE "room_tokens" ADD COLUMN "browser_hash" text NOT NULL;

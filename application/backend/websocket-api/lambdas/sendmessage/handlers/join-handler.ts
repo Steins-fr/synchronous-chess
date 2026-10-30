@@ -20,7 +20,8 @@ export default class JoinHandler extends MessageHandler {
     protected override async handle(): Promise<void> {
         const data = this.getPayloadData(RoomApiRequestTypeEnum.JOIN);
 
-        if (!isName(data.roomName, ROOM_ID_MAX_LENGTH) || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isRoomGame(data.game)) {
+        if (!isName(data.roomName, ROOM_ID_MAX_LENGTH) || !isName(data.playerName, PLAYER_NAME_MAX_LENGTH) || !isToken(data.token) || !isToken(data.browserId)
+            || !isRoomGame(data.game)) {
             throw new BadRequestException(JoinHandler.ERROR_PARSING);
         }
 
@@ -40,7 +41,7 @@ export default class JoinHandler extends MessageHandler {
         }
 
         await this.createConnection(room.id);
-        await this.roomService.addPlayerToQueue(data.playerName, this.connectionId, data.token, room);
+        await this.roomService.addPlayerToQueue(data.playerName, this.connectionId, data.token, data.browserId, room);
 
         await this.notify(RoomSocketApiNotificationEnum.JOIN_REQUEST, room.connectionId, {
             playerName: data.playerName,

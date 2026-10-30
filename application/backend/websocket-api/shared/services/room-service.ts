@@ -136,9 +136,12 @@ export default class RoomService {
         await this.roomRepository.removePlayerFromQueue(connectionId, room);
     }
 
-    /** @throws {BadRequestException} when a player of that name joined at the same time, and is queued (ALREADY_IN_QUEUE) */
-    public async addPlayerToQueue(playerName: string, connectionId: string, token: string, room: Room): Promise<void> {
-        if (!await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), room)) {
+    /**
+     * Queues the player, keeping the hashes of its token and of its browser id
+     * @throws {BadRequestException} when a player of that name joined at the same time, and is queued (ALREADY_IN_QUEUE)
+     */
+    public async addPlayerToQueue(playerName: string, connectionId: string, token: string, browserId: string, room: Room): Promise<void> {
+        if (!await this.roomRepository.addPlayerToQueue({ playerName, connectionId }, hashToken(token), hashToken(browserId), room)) {
             throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_QUEUE);
         }
     }
@@ -161,7 +164,8 @@ export default class RoomService {
 
     /**
      * Creates the room of the request under the id given, its name tagged, hosted by the connection: private with a
-     * password, kept as a hash. The token of the host is kept as a hash too, to reconnect the room later
+     * password, kept as a hash. The token of the host is kept as a hash too, to reconnect the room later, with the hash of
+     * its browser id
      * @returns false when a room of that id exists, even waiting for its host: nothing created
      */
     public async create(request: RoomCreateRequest, roomId: string, connectionId: string): Promise<boolean> {
@@ -186,7 +190,8 @@ export default class RoomService {
             room.passwordHash = hashPassword(request.password);
         }
 
-        return this.roomRepository.create(room, now);
+        // A random id: SHA-256 is enough, as for a token
+        return this.roomRepository.create(room, hashToken(request.browserId), now);
     }
 
     /**
