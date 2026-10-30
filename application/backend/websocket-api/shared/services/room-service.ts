@@ -197,12 +197,17 @@ export default class RoomService {
     /**
      * Before a player reconnects the room: another player than the host must be in the room, and can only take over a
      * room waiting for its host
-     * @throws {BadRequestException} when the player is not in the room, or the host is connected (HOST_CONNECTED)
+     * @throws {BadRequestException} when the player is not in the room, the host removed it (REMOVED), or the host is
+     * connected (HOST_CONNECTED)
      */
-    public reconnectHostGuard(room: Room, playerName: string): void {
+    public async reconnectHostGuard(room: Room, playerName: string): Promise<void> {
         if (playerName === room.hostPlayer) {
             return;
         }
+
+        // The host is never removed: a removed participant still in the game until the host tells it left, or a former
+        // host removed by the participant which took the room over, retrying to reconnect it, never takes the room
+        await this.notBannedGuard(room, playerName);
 
         if (!RoomHelper.isInGame(room, playerName)) {
             throw new BadRequestException('You are not the host of the room');
@@ -210,6 +215,25 @@ export default class RoomService {
 
         if (room.expiresAt === undefined) {
             throw new BadRequestException(RoomApiErrorMessage.HOST_CONNECTED);
+        }
+    }
+
+    /**
+     * Refuses the player as long as the room lasts, by its name and by the browser it last joined the room from: its
+     * joins are refused (REMOVED)
+     */
+    public async banPlayer(playerName: string, room: Room): Promise<void> {
+        await this.roomRepository.banPlayer(playerName, room);
+    }
+
+    /**
+     * Before a player joins or takes over the room
+     * @param browserId the browser the player joins from, its name alone checked without it
+     * @throws {BadRequestException} when the host removed the player from the room, by its name or its browser (REMOVED)
+     */
+    public async notBannedGuard(room: Room, playerName: string, browserId?: string): Promise<void> {
+        if (await this.roomRepository.isBanned(room, playerName, browserId === undefined ? undefined : hashToken(browserId))) {
+            throw new BadRequestException(RoomApiErrorMessage.REMOVED);
         }
     }
 

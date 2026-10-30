@@ -77,6 +77,7 @@
       "notCreated": "Nie udało się utworzyć pokoju.",
       "otherGame": "Ten pokój należy do innej gry.",
       "private": "Ten pokój jest prywatny: dołącz do niego z listy, podając hasło.",
+      "removed": "Usunięto cię z tego pokoju: nie możesz do niego wrócić.",
       "tooManyPasswords": "Zbyt wiele błędnych haseł do tego pokoju: spróbuj ponownie za minutę.",
       "wrongPassword": "Hasło do pokoju jest błędne."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "Nie udało się połączyć z gospodarzem pokoju.",
       "joiningAgain": "Nie udało się połączyć z gospodarzem pokoju, ponowna próba…",
       "nameStillInRoom": "Ta nazwa jest wciąż w pokoju, ponowne łączenie…",
+      "removed": "Gospodarz usunął cię z pokoju.",
       "roomFull": "Pokój jest pełny.",
       "roomGone": "Ten pokój został zamknięty lub nie istnieje.",
       "roomLost": "Pokój stracił połączenie z serwerem: nikt nie może już do niego dołączyć."

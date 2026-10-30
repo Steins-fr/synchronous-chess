@@ -190,6 +190,16 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
     assert.equal(await createRoom(db, 'TAG#000000'), false, 'the id of another case');
     await db.delete(rooms).where(like(rooms.id, 'Tag#%'));
 
+    // RoomRepository.banPlayer, then isBanned: by the name, or by the browser
+    await timed('ban a player', (): Promise<unknown> => db.update(roomTokens).set({ banned: true })
+        .where(and(eq(roomTokens.roomId, 'Room'), eq(roomTokens.playerName, 'guest'))));
+    const isBanned = (playerName: string, browserHash: string): Promise<unknown[]> => db.select({ one: sql`1` }).from(roomTokens)
+        .where(and(eq(roomTokens.roomId, 'Room'), eq(roomTokens.banned, true), or(eq(roomTokens.playerName, playerName), eq(roomTokens.browserHash, browserHash))))
+        .limit(1);
+    assert.equal((await timed('tell a player banned', (): Promise<unknown[]> => isBanned('guest', 'other-browser'))).length, 1, 'banned by its name');
+    assert.equal((await isBanned('other', 'guest-browser')).length, 1, 'banned by its browser');
+    assert.equal((await isBanned('other', 'host-browser')).length, 0, 'not banned');
+
     // RoomRepository.reconnectHost
     assert.equal((await reconnectHost(db, 'host', 'wrong-token')).length, 0, 'a wrong token');
     assert.equal((await reconnectHost(db, 'guest', 'guest-token')).length, 0, 'a guest while the host is connected');

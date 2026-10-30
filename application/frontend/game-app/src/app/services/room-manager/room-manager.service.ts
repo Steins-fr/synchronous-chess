@@ -18,6 +18,13 @@ import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export default class RoomManagerService {
+    /** What the page tells the player giving the room up */
+    private static readonly JOIN_FAILURE_KEYS: Readonly<Record<JoinFailure, string>> = {
+        [JoinFailure.ROOM_FULL]: marker('rooms.notifications.roomFull'),
+        [JoinFailure.HOST_UNREACHABLE]: marker('rooms.notifications.hostUnreachable'),
+        [JoinFailure.REMOVED]: marker('rooms.notifications.removed'),
+    };
+
     private readonly roomSocketApi = inject(RoomSocketApi);
     private readonly notificationService = inject(NotificationService);
     private readonly browserIds = inject(BrowserIdStore);
@@ -77,9 +84,7 @@ export default class RoomManagerService {
             });
             // Before the page gives the room up
             roomConnection.joinFailed$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((failure: JoinFailure) => {
-                this.notificationService.error({
-                    key: failure === JoinFailure.ROOM_FULL ? marker('rooms.notifications.roomFull') : marker('rooms.notifications.hostUnreachable'),
-                });
+                this.notificationService.error({ key: RoomManagerService.JOIN_FAILURE_KEYS[failure] });
             });
 
             return new BlockRoom<M>(
@@ -181,6 +186,8 @@ export default class RoomManagerService {
                 return marker('rooms.errors.otherGame');
             case RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS:
                 return marker('rooms.errors.tooManyPasswords');
+            case RoomApiErrorMessage.REMOVED:
+                return marker('rooms.errors.removed');
             default:
                 return marker('rooms.errors.fullOrGone');
         }

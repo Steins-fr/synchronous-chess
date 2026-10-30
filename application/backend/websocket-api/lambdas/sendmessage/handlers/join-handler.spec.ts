@@ -15,6 +15,7 @@ import {
     aRequest,
     aRoom,
     AwsMocks,
+    browserOf,
     errorReply,
     HOST_CONNECTION,
     mockAws,
@@ -22,9 +23,10 @@ import {
     readBrowserHashes,
     readConnections,
     readRoom,
+    storeBan,
     storeRoom,
 } from '@testing/api-mocks';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import JoinHandler from './join-handler';
 
 describe('JoinHandler', () => {
@@ -172,6 +174,45 @@ describe('JoinHandler', () => {
         expect(await readConnections()).toEqual([]);
         expect(await readRoom('room')).toStrictEqual(room);
         expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.WRONG_PASSWORD, connection)]);
+    });
+
+    describe('a player the host removed', () => {
+        // In the game still: the host did not tell the API it left yet
+        const room: Room = aRoom({ players: [{ playerName: 'host' }, { playerName: 'bob' }], tokenHashes: { ...aRoom().tokenHashes, bob: 'bob-hash' } });
+
+        beforeEach(async () => {
+            await storeRoom(room);
+            await storeBan('room', 'bob');
+        });
+
+        test.each([
+            ['by its name, at once while in the game still', 'bob', 'other-browser'],
+            ['by its browser, under another name', 'bobby', browserOf('bob')],
+        ])('should refuse it %s', async (_case: string, playerName: string, browserId: string) => {
+            // When / Then
+            await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName, token: 'other-token', browserId })).rejects.toThrow(RoomApiErrorMessage.REMOVED);
+            expect(await readConnections()).toEqual([]);
+            expect(await readRoom('room')).toStrictEqual(room);
+            expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.REMOVED, connection)]);
+        });
+
+        test('should queue another player of another browser', async () => {
+            // When
+            await join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'other', token: 'other-token', browserId: 'other-browser' });
+
+            // Then
+            expect((await readRoom('room'))?.queue).toEqual([...room.queue, { playerName: 'other', connectionId: connection }]);
+        });
+    });
+
+    test('should refuse a player the host removed from a private room for its wrong password first', async () => {
+        // Given: a removal is told to the players of the room only
+        await storeRoom(aRoom({ passwordHash: hashPassword('secret') }));
+        await storeBan('room', 'guest');
+
+        // When / Then
+        await expect(join({ roomName: 'room', game: RoomGame.CHESS, playerName: 'guest', password: 'wrong', token: 'other-token', browserId: browserOf('guest') }))
+            .rejects.toThrow(RoomApiErrorMessage.WRONG_PASSWORD);
     });
 
     test('should tell the host of a private room is disconnected without counting the password', async () => {

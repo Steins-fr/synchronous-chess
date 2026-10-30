@@ -352,6 +352,22 @@ describe('PeerRoomNetwork', () => {
             expect(roomLost).toHaveBeenCalledTimes(1);
         });
 
+        test('should give the room up, told it was removed, when the API refuses the join for it', async () => {
+            // Given
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Removed'));
+            const roomLost = vi.fn();
+            network.roomLost$.subscribe(roomLost);
+            const joinFailed = vi.fn();
+            network.joinFailed$.subscribe(joinFailed);
+
+            // When / Then: asked once, not lost for the others
+            expect(await network.rejoin()).toEqual(RejoinResult.ROOM_LOST);
+            expect(joinFailed).toHaveBeenCalledExactlyOnceWith(JoinFailure.REMOVED);
+            expect(roomLost).not.toHaveBeenCalled();
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+        });
+
         test('should let the room it hosts go, then join it again', async () => {
             // Given
             vi.mocked(roomSocketApi.send).mockResolvedValue({ players: [] });
@@ -493,6 +509,19 @@ describe('PeerRoomNetwork', () => {
             // Then
             expect(joinFailed).toEqual([JoinFailure.HOST_UNREACHABLE]);
             expect(console.error).toHaveBeenCalledWith('PeerRoom: the room could not be joined again', error);
+        });
+
+        test('should give the room up, told it was removed, when the API refuses the join for it', async () => {
+            // Given
+            vi.spyOn(console, 'error').mockImplementation(() => undefined);
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Removed'));
+
+            // When
+            await vi.advanceTimersByTimeAsync(15_000);
+
+            // Then
+            expect(joinFailed).toEqual([JoinFailure.REMOVED]);
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
         });
 
         test('should not join again while joining the room', async () => {

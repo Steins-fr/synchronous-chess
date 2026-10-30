@@ -14,6 +14,7 @@ import {
     postedPackets,
     readConnections,
     readRoom,
+    storeBan,
     storeRoom,
 } from '@testing/api-mocks';
 import RoomService from '@services/room-service';
@@ -80,6 +81,19 @@ describe('ReconnectHandler', () => {
             expect(await readConnections()).toEqual([{ connectionId: connection, roomName: 'room' }]);
             expect(await readRoom('room')).toStrictEqual({ ...room, connectionId: connection, hostPlayer: 'player', leaseUntil: now + RoomService.LEASE });
             expect(postedPackets(apiGateway)).toEqual([{ to: connection, packet: { id: 7, type: 'reconnected', data: { roomName: 'room' } } }]);
+        });
+
+        test('should refuse a player the host removed, in the game still', async () => {
+            // Given: the host left before telling the API the player left
+            const room: Room = aRoom({ players, tokenHashes: { ...aRoom().tokenHashes, player: hashToken('player-token') }, expiresAt: now + 60 });
+            await storeRoom(room);
+            await storeBan('room', 'player');
+
+            // When / Then
+            await expect(reconnect({ roomName: 'room', playerName: 'player', token: 'player-token' })).rejects.toThrow(RoomApiErrorMessage.REMOVED);
+            expect(await readConnections()).toEqual([]);
+            expect(await readRoom('room')).toStrictEqual(room);
+            expect(postedPackets(apiGateway)).toEqual([errorReply(RoomApiErrorMessage.REMOVED, connection)]);
         });
 
         test.each([

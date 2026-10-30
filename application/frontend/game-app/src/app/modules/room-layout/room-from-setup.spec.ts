@@ -91,12 +91,12 @@ describe('roomFromSetup', () => {
         expect(RoomLocks.hold).toHaveBeenCalledExactlyOnceWith('room#000001', 'alice', 0);
     });
 
-    test('should remove the room from the URL, its session and its lock once the join failed', async () => {
+    test.each([JoinFailure.HOST_UNREACHABLE, JoinFailure.REMOVED])('should remove the room from the URL, its session and its lock once the join failed: %s', async (failure: JoinFailure) => {
         // Given
         await built();
 
         // When
-        network.joinFailed$.next(JoinFailure.HOST_UNREACHABLE);
+        network.joinFailed$.next(failure);
         await fixture.whenStable();
 
         // Then

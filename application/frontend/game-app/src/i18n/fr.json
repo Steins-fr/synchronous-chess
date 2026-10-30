@@ -77,6 +77,7 @@
       "notCreated": "La salle n'a pas pu être créée.",
       "otherGame": "Cette salle est celle d'un autre jeu.",
       "private": "Cette salle est privée : rejoignez-la depuis la liste, avec son mot de passe.",
+      "removed": "Vous avez été exclu de cette salle : vous ne pouvez plus la rejoindre.",
       "tooManyPasswords": "Trop de mots de passe incorrects pour cette salle : réessayez dans une minute.",
       "wrongPassword": "Le mot de passe de la salle est incorrect."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "La connexion à l'hôte de la salle a échoué.",
       "joiningAgain": "La connexion à l'hôte de la salle a échoué, nouvelle tentative…",
       "nameStillInRoom": "Ce nom est encore dans la salle, reconnexion en cours…",
+      "removed": "L'hôte vous a exclu de la salle.",
       "roomFull": "La salle est pleine.",
       "roomGone": "Cette salle est terminée ou n'existe pas.",
       "roomLost": "La salle a perdu sa connexion au serveur : plus personne ne peut la rejoindre."

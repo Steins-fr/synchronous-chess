@@ -315,6 +315,32 @@ export default class RoomRepository extends BaseRepository {
         return RoomRepository.written(tokens);
     }
 
+    /**
+     * Refuses the player as long as the room lasts: its name, and the browser it last joined the room from. Once: a ban
+     * sent again changes nothing, a name without token neither
+     */
+    public async banPlayer(playerName: string, room: Room): Promise<void> {
+        await this.run(DatabaseOperationEnum.UPDATE, (): Promise<unknown> => this.db.update(roomTokens).set({ banned: true })
+            .where(and(eq(roomTokens.roomId, room.id), eq(roomTokens.playerName, playerName))));
+    }
+
+    /**
+     * Whether the host removed the player from the room: by its name, or by the browser it joins from. A single row read
+     * at most, out of the room read by each signal relayed
+     * @param browserHash the hash of the browser id of the player, the name alone checked without it
+     */
+    public async isBanned(room: Room, playerName: string, browserHash?: string): Promise<boolean> {
+        const bans: unknown[] = await this.run(DatabaseOperationEnum.GET, (): Promise<unknown[]> => this.db.select({ one: sql`1` }).from(roomTokens)
+            .where(and(
+                eq(roomTokens.roomId, room.id),
+                eq(roomTokens.banned, true),
+                or(eq(roomTokens.playerName, playerName), browserHash === undefined ? undefined : eq(roomTokens.browserHash, browserHash)),
+            ))
+            .limit(1));
+
+        return bans.length > 0;
+    }
+
     public async removePlayerFromQueue(connectionId: string, room: Room): Promise<void> {
         if (!room.queue.some((player: Player): boolean => player.connectionId === connectionId)) {
             throw new BadRequestException('Player not in the queue');

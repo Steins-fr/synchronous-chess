@@ -3,7 +3,7 @@ import { roomPasswordAttempts } from '@database/schema';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
-import { aRoom, browserOf, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readBrowserHashes, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
+import { aRoom, browserOf, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readBanned, readBrowserHashes, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
 import { beforeEach, describe, expect, test } from 'vitest';
 import RoomRepository, { ListedRoom } from './room-repository';
@@ -476,6 +476,19 @@ describe('RoomRepository', () => {
             expect(await readBrowserHashes('room')).toMatchObject({ guest: 'new-guest-browser-hash' });
         });
 
+        test('should keep the ban of a player joining the room again', async () => {
+            // Given
+            const room: Room = aRoom({ queue: [] });
+            await storeRoom(room);
+            await repository.banPlayer('guest', room);
+
+            // When
+            await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'new-guest-connection' }, 'new-guest-hash', 'new-guest-browser-hash', room);
+
+            // Then
+            expect(await readBanned('room')).toEqual(['guest']);
+        });
+
         test('should remove a player from the queue by its connection', async () => {
             // Given
             const room: Room = aRoom();
@@ -490,6 +503,53 @@ describe('RoomRepository', () => {
 
         test('should not remove a connection out of the queue', async () => {
             await expect(repository.removePlayerFromQueue(HOST_CONNECTION, aRoom())).rejects.toThrow('Player not in the queue');
+        });
+    });
+
+    describe('bans', () => {
+        test('should ban a player of the room once, its token kept, a name without token changing nothing', async () => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
+            await storeRoom(aRoom({ id: 'other', nameKey: 'other' }));
+
+            // When
+            await repository.banPlayer('guest', room);
+            await repository.banPlayer('guest', room);
+            await repository.banPlayer('nobody', room);
+
+            // Then
+            expect(await readBanned('room')).toEqual(['guest']);
+            expect(await readBanned('other')).toEqual([]);
+            expect(await readRoom('room')).toStrictEqual(room);
+        });
+
+        test.each<[string, string, string | undefined, boolean]>([
+            ['its name', 'guest', undefined, true],
+            ['its name, from another browser', 'guest', 'other-browser-hash', true],
+            ['its browser, under another name', 'other', hashToken(browserOf('guest')), true],
+            ['neither its name nor its browser', 'other', 'other-browser-hash', false],
+            ['the browser of a player not banned', 'other', hashToken(browserOf('host')), false],
+            ['a name without its browser', 'other', undefined, false],
+        ])('should tell a player banned by %s', async (_case: string, playerName: string, browserHash: string | undefined, banned: boolean) => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
+            await repository.banPlayer('guest', room);
+
+            // When / Then
+            expect(await repository.isBanned(room, playerName, browserHash)).toBe(banned);
+        });
+
+        test('should tell no player banned by the bans of another room', async () => {
+            // Given
+            await storeRoom(aRoom());
+            const other: Room = aRoom({ id: 'other', nameKey: 'other' });
+            await storeRoom(other);
+            await repository.banPlayer('guest', aRoom());
+
+            // When / Then
+            expect(await repository.isBanned(other, 'guest', hashToken(browserOf('guest')))).toBe(false);
         });
     });
 });

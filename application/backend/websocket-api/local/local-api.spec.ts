@@ -361,6 +361,28 @@ describe('local API', () => {
                 .toMatchObject({ type: 'joiningRoom', data: { playerName: 'alice' } });
         });
 
+        test('should refuse a player the host banned, by its name and by its browser, while the host has not removed it yet', async () => {
+            // Given
+            const host = await connected();
+            const roomName = await createRoom(host, { roomName: 'banned', maxPlayer: 3, game: 'chess', playerName: 'alice', token: 'alice-token', browserId: 'alice-browser' });
+            const bob = await connected();
+            expect(await reply(bob, 'join', { roomName, game: 'chess', playerName: 'bob', token: 'bob-token', browserId: 'bob-browser' })).toMatchObject({ type: 'joiningRoom' });
+            expect(await reply(host, 'playerAdd', { roomName, playerName: 'bob' })).toMatchObject({ type: 'added' });
+            await disconnect(bob);
+
+            // When
+            const banned = await reply(host, 'ban', { roomName, playerName: 'bob' });
+
+            // Then
+            expect(banned).toEqual({ id: 1, type: 'banned', data: { playerName: 'bob' } });
+            expect(await reply(await connected(), 'join', { roomName, game: 'chess', playerName: 'bob', token: 'bob-token', browserId: 'bob-browser' }))
+                .toMatchObject({ type: 'error', data: { message: 'Removed' } });
+            expect(await reply(await connected(), 'join', { roomName, game: 'chess', playerName: 'bobby', token: 'bobby-token', browserId: 'bob-browser' }))
+                .toMatchObject({ type: 'error', data: { message: 'Removed' } });
+            expect(await reply(await connected(), 'join', { roomName, game: 'chess', playerName: 'carol', token: 'carol-token', browserId: 'carol-browser' }))
+                .toMatchObject({ type: 'joiningRoom' });
+        });
+
         test('should create a room of a name taken under another tag, the room waiting for its host keeping its id', async () => {
             // Given
             const { host, token, roomName } = await hostedRoom('taken');

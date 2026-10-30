@@ -105,15 +105,29 @@ describe('RoomService', () => {
         expect(() => service.canEditRoomGuard(room, GUEST_CONNECTION)).toThrow('You are not the host of the room');
     });
 
-    test('should let the host reconnect its room, and a player of the room take it over from a disconnected host', () => {
+    test('should let the host reconnect its room, and a player of the room take it over from a disconnected host', async () => {
         // Given
         const players = [{ playerName: 'host' }, { playerName: 'player' }];
 
         // When / Then
-        expect(() => service.reconnectHostGuard(room, 'host')).not.toThrow();
-        expect(() => service.reconnectHostGuard(aRoom({ players, expiresAt: now + 1 }), 'player')).not.toThrow();
-        expect(() => service.reconnectHostGuard(aRoom({ players }), 'player')).toThrow(RoomApiErrorMessage.HOST_CONNECTED);
-        expect(() => service.reconnectHostGuard(aRoom({ expiresAt: now + 1 }), 'guest')).toThrow('You are not the host of the room');
+        await expect(service.reconnectHostGuard(room, 'host')).resolves.toBeUndefined();
+        await expect(service.reconnectHostGuard(aRoom({ players, expiresAt: now + 1 }), 'player')).resolves.toBeUndefined();
+        await expect(service.reconnectHostGuard(aRoom({ players }), 'player')).rejects.toThrow(RoomApiErrorMessage.HOST_CONNECTED);
+        await expect(service.reconnectHostGuard(aRoom({ expiresAt: now + 1 }), 'guest')).rejects.toThrow('You are not the host of the room');
+    });
+
+    test('should refuse a player the host removed from the room, by its name or by its browser', async () => {
+        // Given
+        await storeRoom(room);
+        await service.banPlayer('guest', room);
+
+        // When / Then
+        await expect(service.notBannedGuard(room, 'guest')).rejects.toThrow(RoomApiErrorMessage.REMOVED);
+        await expect(service.notBannedGuard(room, 'other', browserOf('guest'))).rejects.toThrow(RoomApiErrorMessage.REMOVED);
+        await expect(service.notBannedGuard(room, 'other', 'other-browser')).resolves.toBeUndefined();
+        await expect(service.notBannedGuard(room, 'host', browserOf('host'))).resolves.toBeUndefined();
+        await expect(service.reconnectHostGuard(aRoom({ players: [{ playerName: 'host' }, { playerName: 'guest' }], expiresAt: now + 1 }), 'guest'))
+            .rejects.toThrow(RoomApiErrorMessage.REMOVED);
     });
 
     test('should only reach the host of a room while connected', () => {

@@ -85,7 +85,7 @@ export class PeerRoomNetwork extends RoomNetwork {
         } catch (e) {
             if (!this.cleared.signal.aborted) {
                 console.error('PeerRoom: the room could not be joined again', e);
-                this.joinFailedSubject.next(JoinFailure.HOST_UNREACHABLE);
+                this.joinFailedSubject.next(PeerRoomNetwork.isRemoval(e) ? JoinFailure.REMOVED : JoinFailure.HOST_UNREACHABLE);
             }
         } finally {
             this.joining = false;
@@ -253,6 +253,11 @@ export class PeerRoomNetwork extends RoomNetwork {
             return RejoinResult.HOST_LEFT;
         }
 
+        if (PeerRoomNetwork.isRemoval(error)) { // Its page gives the room up, told why
+            this.joinFailedSubject.next(JoinFailure.REMOVED);
+            return RejoinResult.ROOM_LOST;
+        }
+
         console.error('PeerRoom: the room could not be joined again', error);
 
         if (error instanceof RoomApiError && !isTemporaryJoinError(error)) { // The room expired
@@ -261,6 +266,11 @@ export class PeerRoomNetwork extends RoomNetwork {
         }
 
         return RejoinResult.NOT_JOINED;
+    }
+
+    /** The API refused the join: the host removed the player from the room */
+    private static isRemoval(error: unknown): boolean {
+        return error instanceof RoomApiError && error.message === RoomApiErrorMessage.REMOVED;
     }
 
     private async onNewPlayer(newPlayerPayload: NewPlayerPayload): Promise<void> {

@@ -13,4 +13,6 @@ export enum RoomApiErrorMessage {
     OTHER_GAME = 'Room of another game',
     /** Too many wrong passwords in a row: the private room refuses the passwords for a while */
     TOO_MANY_PASSWORD_ATTEMPTS = 'Too many password attempts',
+    /** The host removed the player from the room: its name and its browser are refused as long as the room lasts */
+    REMOVED = 'Removed',
 }

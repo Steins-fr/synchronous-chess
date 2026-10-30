@@ -159,6 +159,7 @@ describe('RoomManagerService', () => {
         { error: RoomApiErrorMessage.WRONG_PASSWORD, notification: { key: 'rooms.errors.wrongPassword' } },
         { error: RoomApiErrorMessage.OTHER_GAME, notification: { key: 'rooms.errors.otherGame' } },
         { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, notification: { key: 'rooms.errors.tooManyPasswords' } },
+        { error: RoomApiErrorMessage.REMOVED, notification: { key: 'rooms.errors.removed' } },
     ])('should notify a join refused for good at once, on $error', async ({ error, notification }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
@@ -225,6 +226,7 @@ describe('RoomManagerService', () => {
     test.each([
         { failure: JoinFailure.ROOM_FULL, message: { key: 'rooms.notifications.roomFull' } },
         { failure: JoinFailure.HOST_UNREACHABLE, message: { key: 'rooms.notifications.hostUnreachable' } },
+        { failure: JoinFailure.REMOVED, message: { key: 'rooms.notifications.removed' } },
     ])('should notify a peer giving the room up, $failure', async ({ failure, message }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });

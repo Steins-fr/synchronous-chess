@@ -77,6 +77,7 @@
       "notCreated": "Oda oluşturulamadı.",
       "otherGame": "Bu oda başka bir oyuna ait.",
       "private": "Bu oda özel: listeden, şifresiyle katılın.",
+      "removed": "Bu odadan çıkarıldınız: odaya tekrar katılamazsınız.",
       "tooManyPasswords": "Bu oda için çok fazla yanlış şifre girildi: bir dakika sonra yeniden deneyin.",
       "wrongPassword": "Odanın şifresi yanlış."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "Odanın ev sahibine bağlanılamadı.",
       "joiningAgain": "Odanın ev sahibine bağlanılamadı, yeniden deneniyor…",
       "nameStillInRoom": "Bu ad hâlâ odada, yeniden bağlanılıyor…",
+      "removed": "Ev sahibi sizi odadan çıkardı.",
       "roomFull": "Oda dolu.",
       "roomGone": "Bu oda kapandı veya mevcut değil.",
       "roomLost": "Odanın sunucuyla bağlantısı koptu: artık kimse odaya katılamaz."

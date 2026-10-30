@@ -2,7 +2,7 @@
   "type": "diff",
   "version": "9",
   "dialect": "postgres",
-  "id": "8c6c55a9-9d7c-4806-ade6-718c1e4f9ae7",
+  "id": "770faf0d-db09-466c-a55b-a09d6748fd57",
   "prevIds": [
     "4604d601-da73-41ce-beaa-d77ba7a2386b"
   ],
@@ -24,6 +24,24 @@
         "n|tbl|public.room_tokens",
         "n|sch|public"
       ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "room_tokens",
+        "banned"
+      ],
+      "writes": [
+        "s|col|public.room_tokens.banned",
+        "n|col|public.room_tokens.banned",
+        "e|col|public.room_tokens.banned"
+      ],
+      "reads": [
+        "n|tbl|public.room_tokens",
+        "n|sch|public"
+      ]
     }
   ],
   "deltas": [
@@ -38,6 +56,22 @@
         "notNull": true,
         "dimensions": 0,
         "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "banned",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
         "generated": null,
         "identity": null,
         "entityType": "columns"

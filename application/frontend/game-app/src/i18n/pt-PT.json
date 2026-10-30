@@ -77,6 +77,7 @@
       "notCreated": "Não foi possível criar a sala.",
       "otherGame": "Esta sala é de outro jogo.",
       "private": "Esta sala é privada: entre a partir da lista, com a respetiva palavra-passe.",
+      "removed": "Foi removido desta sala: já não pode voltar a entrar.",
       "tooManyPasswords": "Demasiadas palavras-passe incorretas para esta sala: tente novamente dentro de um minuto.",
       "wrongPassword": "A palavra-passe da sala está incorreta."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "A ligação ao anfitrião da sala falhou.",
       "joiningAgain": "A ligação ao anfitrião da sala falhou, nova tentativa…",
       "nameStillInRoom": "Este nome ainda está na sala, a ligar novamente…",
+      "removed": "O anfitrião removeu-o da sala.",
       "roomFull": "A sala está cheia.",
       "roomGone": "Esta sala terminou ou não existe.",
       "roomLost": "A sala perdeu a ligação ao servidor: já ninguém pode entrar nela."

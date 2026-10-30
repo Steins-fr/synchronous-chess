@@ -15,7 +15,7 @@ import {
 import RoomRepository from '@repositories/room-repository';
 import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayRequestAuthorizerEvent, APIGatewayRequestAuthorizerEventV2 } from 'aws-lambda';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { beforeEach, vi } from 'vitest';
 import { TestDatabase, useTestDatabase } from './database';
 
@@ -179,6 +179,19 @@ export async function storeRoom(room: Room): Promise<void> {
             browserHash: hashToken(browserOf(playerName)),
         })));
     }
+}
+
+/** Bans a player stored with the room, as the host does (BAN): its name and its browser */
+export async function storeBan(roomId: string, playerName: string): Promise<void> {
+    await getDatabase().update(roomTokens).set({ banned: true }).where(and(eq(roomTokens.roomId, roomId), eq(roomTokens.playerName, playerName)));
+}
+
+/** The players of the room the host removed, by name */
+export async function readBanned(roomId: string): Promise<string[]> {
+    const banned: { playerName: string }[] = await getDatabase().select({ playerName: roomTokens.playerName }).from(roomTokens)
+        .where(and(eq(roomTokens.roomId, roomId), eq(roomTokens.banned, true)))
+        .orderBy(roomTokens.playerName);
+    return banned.map(({ playerName }: { playerName: string }): string => playerName);
 }
 
 /** The hash of the browser id each player of the room joined from, by name: what the room model does not read */

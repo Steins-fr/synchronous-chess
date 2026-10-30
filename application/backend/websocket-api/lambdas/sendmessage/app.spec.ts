@@ -2,6 +2,7 @@ import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { aRequest, aRoom, AwsMocks, anEvent, GUEST_CONNECTION, mockAws, postedPackets, storeRoom } from '@testing/api-mocks';
 import { describe, expect, test, vi } from 'vitest';
 import { handler } from './app';
+import BanHandler from './handlers/ban-handler';
 import CreateHandler from './handlers/create-handler';
 import FullHandler from './handlers/full-handler';
 import JoinHandler from './handlers/join-handler';
@@ -40,6 +41,7 @@ describe('sendmessage lambda', () => {
         [RoomApiRequestTypeEnum.PLAYER_ADD, PlayerAddHandler],
         [RoomApiRequestTypeEnum.PLAYER_REMOVE, PlayerRemoveHandler],
         [RoomApiRequestTypeEnum.RECONNECT, ReconnectHandler],
+        [RoomApiRequestTypeEnum.BAN, BanHandler],
     ])('should hand a %s request to its handler', async (type: RoomApiRequestTypeEnum, messageHandler: typeof MessageHandler) => {
         // Given
         const execute = vi.spyOn(messageHandler.prototype, 'execute').mockResolvedValue();

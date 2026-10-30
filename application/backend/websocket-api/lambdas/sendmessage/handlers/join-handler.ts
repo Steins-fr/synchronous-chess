@@ -31,6 +31,9 @@ export default class JoinHandler extends MessageHandler {
         this.roomService.hostConnectedGuard(room);
         // Before the names of the room: they are told to the players giving its password only
         await this.roomPasswordService.passwordGuard(room, data, this.sourceIp);
+        // After the password: a removal is told to the players of the room only. Before the names of the room: the player
+        // removed is refused at once, while the host has not told the API it left yet (ALREADY_IN_GAME, asked again)
+        await this.roomService.notBannedGuard(room, data.playerName, data.browserId);
 
         if (RoomHelper.isInGame(room, data.playerName)) {
             throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_GAME);

@@ -27,12 +27,14 @@ export enum RejoinResult {
     ROOM_LOST = 'roomLost',
 }
 
-/** Why the player gave up joining the room: nobody connected it to the room */
+/** Why the player gave up joining the room: nobody connected it to the room, or the room removed it */
 export enum JoinFailure {
     /** The host refused the player, its room full */
     ROOM_FULL = 'roomFull',
     /** The connection to the host failed, the player joining the room again too */
     HOST_UNREACHABLE = 'hostUnreachable',
+    /** The room removed the player: refused joining it again as long as it lasts */
+    REMOVED = 'removed',
 }
 
 export abstract class RoomNetwork {
