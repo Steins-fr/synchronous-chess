@@ -91,12 +91,17 @@ export const roomQueue = snakeCase.table('room_queue', {
 
 /**
  * SHA-256 of the token of each player who joined a room, kept once it left: the host reconnects the room with its own,
- * the page of a player joins a private room again without its password
+ * the page of a player joins a private room again without its password. With the hash of the browser it joined from,
+ * and whether the host removed it: its name and its browser refused as long as the room lasts
  */
 export const roomTokens = snakeCase.table('room_tokens', {
     roomId: text().notNull().references(roomId, { onDelete: 'cascade' }),
     playerName: text().notNull(),
     tokenHash: text().notNull(),
+    /** SHA-256 of the browser id the player last joined the room from, or created it from (RoomJoinRequest.browserId) */
+    browserHash: text().notNull(),
+    /** The host removed the player from the room (BAN): a join under its name, or from its browser, is refused */
+    banned: boolean().notNull().default(false),
 }, (table: ConstrainedColumns<'roomId' | 'playerName'>): PgTableExtraConfigValue[] => [primaryKey({ columns: [table.roomId, table.playerName] })]);
 
 /**

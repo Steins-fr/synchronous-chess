@@ -16,10 +16,10 @@ import { RoomHosting } from './room-hosting';
 import { JoinFailure, RejoinResult, RoomNetwork } from './room-network';
 
 /**
- * What the player joins the room with, beside its name: the game of the page, the password of a private room, and the
- * token the player created or joined the room with, to reconnect it or take it over
+ * What the player joins the room with, beside its name: the game of the page, the password of a private room, the
+ * token the player created or joined the room with, to reconnect it or take it over, and the id of its browser
  */
-export type RoomAccess = Pick<RoomJoinRequest, 'game' | 'password' | 'token'>;
+export type RoomAccess = Pick<RoomJoinRequest, 'game' | 'password' | 'token' | 'browserId'>;
 
 /** How a negotiation with the host ended: connected, or failed, the host refusing the player when its room is full */
 interface HostNegotiation {
@@ -85,7 +85,7 @@ export class PeerRoomNetwork extends RoomNetwork {
         } catch (e) {
             if (!this.cleared.signal.aborted) {
                 console.error('PeerRoom: the room could not be joined again', e);
-                this.joinFailedSubject.next(JoinFailure.HOST_UNREACHABLE);
+                this.joinFailedSubject.next(PeerRoomNetwork.isRemoval(e) ? JoinFailure.REMOVED : JoinFailure.HOST_UNREACHABLE);
             }
         } finally {
             this.joining = false;
@@ -183,6 +183,15 @@ export class PeerRoomNetwork extends RoomNetwork {
         }
     }
 
+    /** The host bans the player removed on the API too: its joins refused, by its name and its browser */
+    public override exclude(playerName: string): void {
+        super.exclude(playerName);
+
+        if (playerName !== this.localPlayer.name) {
+            this.hosting?.ban(playerName);
+        }
+    }
+
     public removeFromRoom(playerName: string): void {
         this.hosting?.removePlayer(playerName);
     }
@@ -253,6 +262,11 @@ export class PeerRoomNetwork extends RoomNetwork {
             return RejoinResult.HOST_LEFT;
         }
 
+        if (PeerRoomNetwork.isRemoval(error)) { // Its page gives the room up, told why
+            this.joinFailedSubject.next(JoinFailure.REMOVED);
+            return RejoinResult.ROOM_LOST;
+        }
+
         console.error('PeerRoom: the room could not be joined again', error);
 
         if (error instanceof RoomApiError && !isTemporaryJoinError(error)) { // The room expired
@@ -261,6 +275,11 @@ export class PeerRoomNetwork extends RoomNetwork {
         }
 
         return RejoinResult.NOT_JOINED;
+    }
+
+    /** The API refused the join: the host removed the player from the room */
+    private static isRemoval(error: unknown): boolean {
+        return error instanceof RoomApiError && error.message === RoomApiErrorMessage.REMOVED;
     }
 
     private async onNewPlayer(newPlayerPayload: NewPlayerPayload): Promise<void> {
@@ -273,7 +292,7 @@ export class PeerRoomNetwork extends RoomNetwork {
             return;
         }
 
-        if (this.isPlayerNameAlreadyInRoom(newPlayerPayload.playerName)) {
+        if (this.isRefused(newPlayerPayload.playerName) || this.isPlayerNameAlreadyInRoom(newPlayerPayload.playerName)) {
             return;
         }
         const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, new Webrtc(), this.hostPlayer);

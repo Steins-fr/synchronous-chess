@@ -27,15 +27,23 @@ export enum RejoinResult {
     ROOM_LOST = 'roomLost',
 }
 
-/** Why the player gave up joining the room: nobody connected it to the room */
+/** Why the player gave up joining the room: nobody connected it to the room, or the room removed it */
 export enum JoinFailure {
     /** The host refused the player, its room full */
     ROOM_FULL = 'roomFull',
     /** The connection to the host failed, the player joining the room again too */
     HOST_UNREACHABLE = 'hostUnreachable',
+    /** The room removed the player: refused joining it again as long as it lasts */
+    REMOVED = 'removed',
 }
 
 export abstract class RoomNetwork {
+    /**
+     * How long the links to a removed player stay open: its page first receives the block removing it, and gives the
+     * room up by itself. Webrtc.close drops the packets not acknowledged yet, sent again 3 times 1 second apart
+     */
+    private static readonly REMOVAL_GRACE_MS: number = 5000;
+
     private readonly _localPlayer: LocalPlayer;
 
     public get localPlayer(): LocalPlayer {
@@ -45,6 +53,10 @@ export abstract class RoomNetwork {
     protected players: Map<string, Player> = new Map<string, Player>();
     private readonly _negotiators = signal<ReadonlyMap<string, Readonly<Negotiator>>>(new Map());
     public readonly negotiators = this._negotiators.asReadonly();
+    /** The players the room removed: never connected to again, nor let join the room through this participant */
+    private readonly refused = new Set<string>();
+    /** The links to the players removed, closing once their grace ends */
+    private readonly removalTimers = new Set<ReturnType<typeof setTimeout>>();
     public abstract readonly initiator: boolean;
     public abstract readonly hostName: string;
 
@@ -105,13 +117,51 @@ export abstract class RoomNetwork {
     public restoreLink(playerName: string, relayName: string): void {
         const relay: Player | undefined = this.players.get(relayName);
 
-        if (relay === undefined || this.isPlayerNameAlreadyInRoom(playerName)) {
+        if (relay === undefined || this.refused.has(playerName) || this.isPlayerNameAlreadyInRoom(playerName)) {
             return;
         }
 
         const negotiator: WebrtcNegotiator = new WebrtcNegotiator(playerName, new Webrtc(), relay);
         this.addNegotiator(negotiator);
         void negotiator.initiate();
+    }
+
+    /**
+     * The room removed the player, every page alike, its history included: this participant never connects to it again,
+     * nor lets it join the room. Connected, its link closes after REMOVAL_GRACE_MS as a lost connection's would: the room
+     * agrees it left (departed$), and its host removes it from the API. The local player removed gives the room up
+     * (joinFailed$)
+     */
+    public exclude(playerName: string): void {
+        if (playerName === this.localPlayer.name) {
+            // Not while the room delivers the block removing it: the page clears the room on it
+            queueMicrotask(() => this.joinFailedSubject.next(JoinFailure.REMOVED));
+            return;
+        }
+
+        if (this.refused.has(playerName)) {
+            return;
+        }
+
+        this.refused.add(playerName);
+        const negotiator: Readonly<Negotiator> | undefined = this._negotiators().get(playerName);
+
+        if (negotiator !== undefined) {
+            this.removeNegotiator(negotiator);
+        }
+
+        // A removal replayed, its player gone long ago, closes nothing
+        if (this.players.has(playerName)) {
+            const timer: ReturnType<typeof setTimeout> = setTimeout(() => {
+                this.removalTimers.delete(timer);
+                this.disconnect(playerName);
+            }, RoomNetwork.REMOVAL_GRACE_MS);
+            this.removalTimers.add(timer);
+        }
+    }
+
+    protected isRefused(playerName: string): boolean {
+        return this.refused.has(playerName);
     }
 
     /** What the hosting of the room reads and changes of this network */
@@ -124,6 +174,7 @@ export abstract class RoomNetwork {
             token,
             players: () => this.players,
             occupancy: (playerName: string) => this.occupancy(playerName),
+            refused: () => this.refused,
             addNegotiator: (negotiator: Negotiator) => this.addNegotiator(negotiator),
             transmitMessage: (message: NetworkMessage) => this.transmitMessage(message),
         };
@@ -226,6 +277,10 @@ export abstract class RoomNetwork {
             return;
         }
 
+        if (this.refused.has(payload.from)) { // Before any negotiator: the room removed its sender
+            return;
+        }
+
         let negotiator: Readonly<Negotiator> | undefined = this.getNegotiator(payload.from);
 
         if (!negotiator) {
@@ -249,6 +304,19 @@ export abstract class RoomNetwork {
 
     protected abstract onPlayerConnected(player: Player): void;
     protected abstract onPlayerDisconnected(player: Player): void;
+
+    /**
+     * Closes the link to the player as if lost, the departure path of the room: WebRtcPlayer.clear() alone emits nothing.
+     * Gone already, nothing to close
+     */
+    private disconnect(playerName: string): void {
+        const player: Player | undefined = this.players.get(playerName);
+
+        if (player !== undefined) {
+            this.onPlayerDisconnected(player);
+            this.removePlayer(player);
+        }
+    }
 
     private removePlayer(player: Player): void {
         this.playerRemovedSubject.next(player);
@@ -285,7 +353,7 @@ export abstract class RoomNetwork {
     }
 
     // A replaced negotiator is no longer registered, its events must not remove its successor
-    private removeNegotiator(negotiator: Negotiator): void {
+    private removeNegotiator(negotiator: Readonly<Negotiator>): void {
         const playerName = negotiator.playerName;
 
         if (this._negotiators().get(playerName) === negotiator) {
@@ -304,6 +372,8 @@ export abstract class RoomNetwork {
     }
 
     public clear(): void {
+        this.removalTimers.forEach((timer: ReturnType<typeof setTimeout>) => clearTimeout(timer));
+        this.removalTimers.clear();
         this.players.forEach((player: Player) => {
             player.clear();
         });

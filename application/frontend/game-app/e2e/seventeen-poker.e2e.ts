@@ -228,4 +228,25 @@ test.describe('Seventeen poker', () => {
         await bob.openHistory();
         await expect(bob.historyLines()).toHaveText('Hand 1: no contest, the antes go to the bank.');
     });
+
+    test('the host, a spectator, frees the seat of a lone player away', async ({ poker }) => {
+        const [alice, bob, carol] = await poker.connect('alice', 'bob', 'carol');
+        await table(bob).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
+        // The spectators see the free seat at the bottom of their table, bob on the other one
+        await expect(table(alice).locator('#seat-top')).toContainText('bob');
+        await expect(table(carol).locator('#seat-top')).toContainText('bob');
+        await watchSteadiness(alice.page, STEADY);
+
+        // Bob leaves, alone at the table: the host frees his seat
+        await bob.close();
+        await table(alice).locator('#seat-top').getByRole('button', { name: 'Free the seat' }).click();
+
+        // Free on every page: the spectators take the seats, the match may start
+        await expect(table(carol).locator('#seat-top')).not.toContainText('bob');
+        await table(carol).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
+        await expect(table(alice).locator('#seat-top')).toContainText('carol');
+        await table(alice).locator('#seat-bottom').getByRole('button', { name: 'Sit here' }).click();
+        await expect(table(carol).getByRole('status')).toHaveText('alice to deal.');
+        expect(await movedElements(alice.page)).toEqual([]);
+    });
 });

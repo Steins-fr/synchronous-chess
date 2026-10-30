@@ -77,6 +77,7 @@
       "notCreated": "Der Raum konnte nicht erstellt werden.",
       "otherGame": "Dieser Raum gehört zu einem anderen Spiel.",
       "private": "Dieser Raum ist privat: Tritt ihm über die Liste bei, mit seinem Passwort.",
+      "removed": "Du wurdest aus diesem Raum entfernt: Du kannst ihm nicht mehr beitreten.",
       "tooManyPasswords": "Zu viele falsche Passwörter für diesen Raum: Versuch es in einer Minute erneut.",
       "wrongPassword": "Das Passwort des Raums ist falsch."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen.",
       "joiningAgain": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen, neuer Versuch…",
       "nameStillInRoom": "Dieser Name ist noch im Raum, Verbindung wird wiederhergestellt…",
+      "removed": "Der Gastgeber hat dich aus dem Raum entfernt.",
       "roomFull": "Der Raum ist voll.",
       "roomGone": "Dieser Raum ist beendet oder existiert nicht.",
       "roomLost": "Der Raum hat seine Verbindung zum Server verloren: Niemand kann ihm mehr beitreten."

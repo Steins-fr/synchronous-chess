@@ -89,6 +89,11 @@ export default class SynchronousChessGame {
         return this._result() !== null;
     }
 
+    /** The player of a color, away, loses the game: the chain decided it, whatever the board */
+    public forfeit(loser: PieceColor): void {
+        this._result.set({ winner: loser === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE, reason: GameEndReason.AWAY });
+    }
+
     /** The castling rights of both players, part of a position */
     private castlingRights(): string {
         return [this.whiteRules, this.blackRules]

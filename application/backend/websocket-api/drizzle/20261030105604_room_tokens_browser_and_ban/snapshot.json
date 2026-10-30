@@ -1,0 +1,81 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "770faf0d-db09-466c-a55b-a09d6748fd57",
+  "prevIds": [
+    "4604d601-da73-41ce-beaa-d77ba7a2386b"
+  ],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "room_tokens",
+        "browser_hash"
+      ],
+      "writes": [
+        "s|col|public.room_tokens.browser_hash",
+        "n|col|public.room_tokens.browser_hash",
+        "e|col|public.room_tokens.browser_hash"
+      ],
+      "reads": [
+        "n|tbl|public.room_tokens",
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": [
+        "column",
+        "public",
+        "room_tokens",
+        "banned"
+      ],
+      "writes": [
+        "s|col|public.room_tokens.banned",
+        "n|col|public.room_tokens.banned",
+        "e|col|public.room_tokens.banned"
+      ],
+      "reads": [
+        "n|tbl|public.room_tokens",
+        "n|sch|public"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "browser_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "room_tokens",
+        "name": "banned",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

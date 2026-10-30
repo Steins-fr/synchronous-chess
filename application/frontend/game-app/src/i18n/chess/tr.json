@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "{name} kullanıcısının dönmesi bekleniyor…",
     "check": "Şah",
     "checkmate": "Şah mat",
+    "clock": "{seconds} sn",
     "history": {
+      "away": "{color, select, w {Beyaz yokken süre doldu} other {Siyah yokken süre doldu}}",
       "move": "Tur {turn}{kind, select, intermediate { (ara tur)} other {}} · {color, select, w {Beyaz} other {Siyah}}: {from} → {to}",
       "pass": "Tur {turn}{kind, select, intermediate { (ara tur)} other {}} · {color, select, w {Beyaz pas geçti} other {Siyah pas geçti}}",
       "promotion": "Tur {turn}{kind, select, intermediate { (ara tur)} other {}} · {color, select, w {Beyaz} other {Siyah}}: {square} karesinde {piece, select, q {vezire} r {kaleye} b {file} other {ata}} terfi",
@@ -18,6 +21,7 @@
     "played": "oynadı",
     "promotion": "Terfi",
     "result": {
+      "away": "{winner, select, w {Siyah yokken süre doldu: Beyaz kazandı} other {Beyaz yokken süre doldu: Siyah kazandı}}",
       "checkmate": "Şah mat: {winner, select, w {Beyaz kazandı} other {Siyah kazandı}}",
       "doubleCheckmate": "Berabere: iki oyuncu da mat oldu",
       "fiftyTurns": "Berabere: piyon hamlesi ve taş alma olmadan 50 tur",
@@ -33,6 +37,7 @@
       "leave": "Yeri bırak",
       "playBlack": "Siyahla oyna",
       "playWhite": "Beyazla oyna",
+      "release": "Yeri boşalt",
       "white": "Beyaz oyuncu:"
     },
     "spectators": "İzleyiciler: {count}",
@@ -74,6 +79,7 @@
       "title": "Hamle ve alma"
     },
     "end": {
+      "away": "Diğer oyuncu hamlesini beklerken 30 saniye boyunca burada olmayan bir oyuncu",
       "caption": "Oyunun sonları ve sonuçları",
       "checkmate": "Bir oyuncunun mat olması",
       "doubleCheckmate": "İki oyuncunun da mat olması",
@@ -106,7 +112,7 @@
       "trigger": "<strong>Başlangıç.</strong> Eşzamanlı bir turdan sonra, hareket eden bir taş turdan önce rakibin zaten saldırdığı (ya da koruduğu) bir kareye geldiyse ve bir rakip taş onu kurallara uygun şekilde alabiliyorsa ara tur oynanır."
     },
     "players": {
-      "seats": "İki oyuncu. Odadaki her katılımcı, ev sahibi de dahil, boş yerler arasından rengini seçer. Yerler ilk hamleyle sabitlenir; diğer katılımcılar izleyicidir.",
+      "seatsFreed": "İki oyuncu. Odadaki her katılımcı, ev sahibi de dahil, boş yerler arasından rengini seçer. Yerler ilk hamleyle sabitlenir; diğer katılımcılar izleyicidir. O zamana kadar diğer oyuncu ya da ev sahibi, burada olmayan bir oyuncunun yerini boşaltabilir.",
       "shortTitle": "Oyuncular",
       "simultaneousMoves": "İki oyuncu hamlesini aynı anda, diğerinin hamlesini bilmeden yapar. İkisi de seçimini yaptığında iki hamle açıklanır ve aşağıdaki kurallara göre uygulanır.",
       "title": "Oyuncular ve ilke"

@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "No link nor e-mail address in the chat",
+    "muted": "You are muted until {time}",
+    "mutedToEnd": "You are muted until the end of the room",
     "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most",
     "unsent": "Wait until your messages are sent before sending more",
     "wait": "Wait {seconds, plural, one {# second} other {# seconds}} before sending another message"
@@ -14,11 +16,37 @@
     "flooding": "{name} sends too many messages: they are hidden for a moment",
     "floodingSelf": "You sent too many messages: they are hidden for a moment",
     "latest": "Latest messages",
+    "mute": {
+      "byYou": "You muted {name} for {minutes, plural, one {# minute} other {# minutes}}",
+      "byYouToEnd": "You muted {name} until the end of the room",
+      "other": "{moderator} muted {name} for {minutes, plural, one {# minute} other {# minutes}}",
+      "otherToEnd": "{moderator} muted {name} until the end of the room",
+      "you": "{moderator} muted you for {minutes, plural, one {# minute} other {# minutes}}",
+      "youToEnd": "{moderator} muted you until the end of the room"
+    },
+    "removal": {
+      "byYou": "You removed {name} from the room",
+      "other": "{moderator} removed {name} from the room"
+    },
     "retry": "Retry",
     "sending": "Sending…",
+    "unmute": {
+      "byYou": "You unmuted {name}",
+      "other": "{moderator} unmuted {name}",
+      "you": "{moderator} unmuted you"
+    },
     "unread": "New messages"
   },
   "message": "Type your message",
+  "moderation": {
+    "menu": "Moderate {name}",
+    "mute": "Mute for {minutes, plural, one {# minute} other {# minutes}}",
+    "muteToEnd": "Mute until the end of the room",
+    "remove": "Remove from the room",
+    "removeMessage": "This participant leaves the room and can no longer join it while it lasts.",
+    "removeTitle": "Remove from the room?",
+    "unmute": "Unmute"
+  },
   "newMessages": "{count, plural, one {# new message} other {# new messages}}",
   "options": {
     "arrivals": "Show arrivals and departures",

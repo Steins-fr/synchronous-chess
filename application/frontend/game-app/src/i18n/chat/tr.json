@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "Sohbette bağlantı ve e-posta adresi kullanılamaz",
+    "muted": "{time} saatine kadar susturuldunuz",
+    "mutedToEnd": "Oda kapanana kadar susturuldunuz",
     "tooLong": "En fazla {maxLength, plural, one {# karakter} other {# karakter}}",
     "unsent": "Daha fazla göndermeden önce mesajlarınızın gönderilmesini bekleyin",
     "wait": "Başka bir mesaj göndermeden önce {seconds, plural, one {# saniye} other {# saniye}} bekleyin"
@@ -14,11 +16,37 @@
     "flooding": "{name} çok fazla mesaj gönderiyor: mesajları bir süreliğine gizleniyor",
     "floodingSelf": "Çok fazla mesaj gönderdiniz: mesajlarınız bir süreliğine gizleniyor",
     "latest": "Son mesajlar",
+    "mute": {
+      "byYou": "{name} adlı katılımcıyı {minutes, plural, one {# dakika} other {# dakika}} boyunca susturdunuz",
+      "byYouToEnd": "{name} adlı katılımcıyı oda kapanana kadar susturdunuz",
+      "other": "{moderator}, {name} adlı katılımcıyı {minutes, plural, one {# dakika} other {# dakika}} boyunca susturdu",
+      "otherToEnd": "{moderator}, {name} adlı katılımcıyı oda kapanana kadar susturdu",
+      "you": "{moderator} sizi {minutes, plural, one {# dakika} other {# dakika}} boyunca susturdu",
+      "youToEnd": "{moderator} sizi oda kapanana kadar susturdu"
+    },
+    "removal": {
+      "byYou": "{name} adlı katılımcıyı odadan çıkardınız",
+      "other": "{moderator}, {name} adlı katılımcıyı odadan çıkardı"
+    },
     "retry": "Tekrar dene",
     "sending": "Gönderiliyor…",
+    "unmute": {
+      "byYou": "{name} adlı katılımcının susturmasını kaldırdınız",
+      "other": "{moderator}, {name} adlı katılımcının susturmasını kaldırdı",
+      "you": "{moderator} susturmanızı kaldırdı"
+    },
     "unread": "Yeni mesajlar"
   },
   "message": "Mesajınızı yazın",
+  "moderation": {
+    "menu": "{name} için moderasyon",
+    "mute": "{minutes, plural, one {# dakika} other {# dakika}} sustur",
+    "muteToEnd": "Oda kapanana kadar sustur",
+    "remove": "Odadan çıkar",
+    "removeMessage": "Bu katılımcı odadan ayrılır ve oda açık kaldıkça tekrar katılamaz.",
+    "removeTitle": "Odadan çıkarılsın mı?",
+    "unmute": "Susturmayı kaldır"
+  },
   "newMessages": "{count, plural, one {# yeni mesaj} other {# yeni mesaj}}",
   "options": {
     "arrivals": "Giriş ve çıkışları göster",

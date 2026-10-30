@@ -77,6 +77,7 @@
       "notCreated": "Ruang tidak dapat dibuat.",
       "otherGame": "Ruang ini milik permainan lain.",
       "private": "Ruang ini privat: bergabunglah dari daftar, dengan kata sandinya.",
+      "removed": "Anda dikeluarkan dari ruang ini: Anda tidak dapat bergabung lagi.",
       "tooManyPasswords": "Terlalu banyak kata sandi salah untuk ruang ini: coba lagi dalam satu menit.",
       "wrongPassword": "Kata sandi ruang salah."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "Koneksi ke tuan rumah ruang gagal.",
       "joiningAgain": "Koneksi ke tuan rumah ruang gagal, mencoba lagi…",
       "nameStillInRoom": "Nama ini masih ada di ruang, menyambung ulang…",
+      "removed": "Tuan rumah mengeluarkan Anda dari ruang.",
       "roomFull": "Ruang ini penuh.",
       "roomGone": "Ruang ini sudah berakhir atau tidak ada.",
       "roomLost": "Ruang kehilangan koneksi ke server: tidak ada lagi yang bisa bergabung."

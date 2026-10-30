@@ -57,7 +57,7 @@ function createRoom(db: DataApiDatabase, id: string, passwordHash?: string): Pro
         }
 
         await tx.insert(roomPlayers).values({ roomId: id, playerName: 'host' });
-        await tx.insert(roomTokens).values({ roomId: id, playerName: 'host', tokenHash: 'host-token' });
+        await tx.insert(roomTokens).values({ roomId: id, playerName: 'host', tokenHash: 'host-token', browserHash: 'host-browser' });
         return true;
     });
 }
@@ -104,8 +104,9 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
 
     // RoomRepository.addPlayerToQueue, in one statement, then addPlayerToRoom
     const queued = db.$with('queued').as(db.insert(roomQueue).values({ roomId: 'Room', playerName: 'guest', connectionId: 'guest-connection' }).onConflictDoNothing());
-    await timed('queue a player', (): Promise<unknown> => db.with(queued).insert(roomTokens).values({ roomId: 'Room', playerName: 'guest', tokenHash: 'guest-token' })
-        .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash: 'guest-token' } }).execute());
+    await timed('queue a player', (): Promise<unknown> => db.with(queued).insert(roomTokens)
+        .values({ roomId: 'Room', playerName: 'guest', tokenHash: 'guest-token', browserHash: 'guest-browser' })
+        .onConflictDoUpdate({ target: [roomTokens.roomId, roomTokens.playerName], set: { tokenHash: 'guest-token', browserHash: 'guest-browser' } }).execute());
     await db.insert(roomPlayers).values({ roomId: 'Room', playerName: 'guest' }).onConflictDoNothing();
 
     // RoomRepository.getByName: what each signal relayed reads
@@ -188,6 +189,16 @@ async function runStatements(db: DataApiDatabase): Promise<void> {
     // RoomRepository.create: no room of the id of a room of another case (rooms_name_key)
     assert.equal(await createRoom(db, 'TAG#000000'), false, 'the id of another case');
     await db.delete(rooms).where(like(rooms.id, 'Tag#%'));
+
+    // RoomRepository.banPlayer, then isBanned: by the name, or by the browser
+    await timed('ban a player', (): Promise<unknown> => db.update(roomTokens).set({ banned: true })
+        .where(and(eq(roomTokens.roomId, 'Room'), eq(roomTokens.playerName, 'guest'))));
+    const isBanned = (playerName: string, browserHash: string): Promise<unknown[]> => db.select({ one: sql`1` }).from(roomTokens)
+        .where(and(eq(roomTokens.roomId, 'Room'), eq(roomTokens.banned, true), or(eq(roomTokens.playerName, playerName), eq(roomTokens.browserHash, browserHash))))
+        .limit(1);
+    assert.equal((await timed('tell a player banned', (): Promise<unknown[]> => isBanned('guest', 'other-browser'))).length, 1, 'banned by its name');
+    assert.equal((await isBanned('other', 'guest-browser')).length, 1, 'banned by its browser');
+    assert.equal((await isBanned('other', 'host-browser')).length, 0, 'not banned');
 
     // RoomRepository.reconnectHost
     assert.equal((await reconnectHost(db, 'host', 'wrong-token')).length, 0, 'a wrong token');

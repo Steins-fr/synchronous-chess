@@ -33,7 +33,7 @@
 
     <section #players class="rule-card">
         <h3 class="rule-heading">{{ t('players.title') }}</h3>
-        <p class="my-2">{{ t('players.seats') }}</p>
+        <p class="my-2">{{ t('players.seatsFreed') }}</p>
         <p class="my-2">{{ t('players.simultaneousMoves') }}</p>
     </section>
 
@@ -105,6 +105,10 @@
                 </tr>
                 <tr>
                     <td class="rule-cell">{{ t('end.checkmate') }}</td>
+                    <td class="rule-cell"><span class="badge badge-win">{{ t('end.win') }}</span> {{ t('end.opponent') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('end.away') }}</td>
                     <td class="rule-cell"><span class="badge badge-win">{{ t('end.win') }}</span> {{ t('end.opponent') }}</td>
                 </tr>
                 <tr>

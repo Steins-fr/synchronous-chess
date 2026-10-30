@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import RoomManagerService from './room-manager.service';
 import { NotificationService } from '../notification/notification.service';
 import { RoomApiError, RoomSocketApi } from '../room-api/room-socket.api';
+import { BrowserIdStore } from '../room-session/browser-id.store';
 import { BlockRoom } from './classes/room/block-room/block-room';
 import { BlockChainName } from './classes/room/block-room/block-chain-name.enum';
 import { PeerRoomNetwork } from './classes/room-network/peer-room-network';
@@ -38,6 +39,7 @@ describe('RoomManagerService', () => {
                 RoomManagerService,
                 { provide: RoomSocketApi, useValue: roomSocketApi },
                 { provide: NotificationService, useValue: notificationService },
+                { provide: BrowserIdStore, useValue: { id: () => 'browser-1' } },
             ],
         });
         service = TestBed.inject(RoomManagerService);
@@ -58,7 +60,7 @@ describe('RoomManagerService', () => {
         room = await service.buildBlockRoom({ type: 'create', game: RoomGame.CHESS, roomName: 'room', playerName: 'host', token: 'token' }, 2, { move: BlockChainName.CHESS });
 
         // Then
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.CREATE, { roomName: 'room', maxPlayer: 2, game: RoomGame.CHESS, playerName: 'host', token: 'token', browserId: 'browser-1' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
         expect(room.roomConnection.initiator).toEqual(true);
         expect(room.roomConnection.roomName).toEqual('room#000042');
@@ -129,7 +131,7 @@ describe('RoomManagerService', () => {
         room = await service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer', token: 'token' }, 2, { move: BlockChainName.CHESS });
 
         // Then
-        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHESS, token: 'token' });
+        expect(roomSocketApi.send).toHaveBeenCalledWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room', playerName: 'peer', game: RoomGame.CHESS, token: 'token', browserId: 'browser-1' });
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
         expect(room.queue()).toEqual(['host']);
     });
@@ -146,10 +148,10 @@ describe('RoomManagerService', () => {
 
         // Then
         expect(roomSocketApi.send).toHaveBeenNthCalledWith(1, RoomApiRequestTypeEnum.CREATE, {
-            roomName: 'room', maxPlayer: 6, game: RoomGame.CHAT, password: 'secret', playerName: 'host', token: 'token',
+            roomName: 'room', maxPlayer: 6, game: RoomGame.CHAT, password: 'secret', playerName: 'host', token: 'token', browserId: 'browser-1',
         });
         expect(roomSocketApi.send).toHaveBeenNthCalledWith(2, RoomApiRequestTypeEnum.JOIN, {
-            roomName: 'room#000042', playerName: 'peer', game: RoomGame.CHAT, password: 'secret', token: 'token',
+            roomName: 'room#000042', playerName: 'peer', game: RoomGame.CHAT, password: 'secret', token: 'token', browserId: 'browser-1',
         });
     });
 
@@ -157,6 +159,7 @@ describe('RoomManagerService', () => {
         { error: RoomApiErrorMessage.WRONG_PASSWORD, notification: { key: 'rooms.errors.wrongPassword' } },
         { error: RoomApiErrorMessage.OTHER_GAME, notification: { key: 'rooms.errors.otherGame' } },
         { error: RoomApiErrorMessage.TOO_MANY_PASSWORD_ATTEMPTS, notification: { key: 'rooms.errors.tooManyPasswords' } },
+        { error: RoomApiErrorMessage.REMOVED, notification: { key: 'rooms.errors.removed' } },
     ])('should notify a join refused for good at once, on $error', async ({ error, notification }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(error));
@@ -223,6 +226,7 @@ describe('RoomManagerService', () => {
     test.each([
         { failure: JoinFailure.ROOM_FULL, message: { key: 'rooms.notifications.roomFull' } },
         { failure: JoinFailure.HOST_UNREACHABLE, message: { key: 'rooms.notifications.hostUnreachable' } },
+        { failure: JoinFailure.REMOVED, message: { key: 'rooms.notifications.removed' } },
     ])('should notify a peer giving the room up, $failure', async ({ failure, message }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
@@ -275,7 +279,7 @@ describe('RoomManagerService', () => {
         room = await service.buildBlockRoom({ type: 'resume', game: RoomGame.CHESS, roomName: 'room#000042', playerName: 'peer', token: 'kept' }, 2, { move: BlockChainName.CHESS });
 
         // Then
-        expect(roomSocketApi.send).toHaveBeenCalledExactlyOnceWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room#000042', playerName: 'peer', game: RoomGame.CHESS, token: 'kept' });
+        expect(roomSocketApi.send).toHaveBeenCalledExactlyOnceWith(RoomApiRequestTypeEnum.JOIN, { roomName: 'room#000042', playerName: 'peer', game: RoomGame.CHESS, token: 'kept', browserId: 'browser-1' });
         expect(roomSocketApi.reconnect).not.toHaveBeenCalled();
         expect(room.hostName).toBe('host');
     });

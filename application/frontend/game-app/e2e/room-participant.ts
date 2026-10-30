@@ -335,6 +335,15 @@ export class RoomParticipant {
         }, texts);
     }
 
+    /**
+     * The moderator acts on a participant from the list of the chat: the button beside its chip opens the menu of its
+     * decisions (`Mute for 5 minutes`, `Unmute`, `Remove from the room`...)
+     */
+    public async moderate(name: string, item: string): Promise<void> {
+        await this.page.getByRole('button', { name: `Moderate ${ name }`, exact: true }).click();
+        await this.page.getByRole('menuitem', { name: item, exact: true }).click();
+    }
+
     /** The messages of the log of the chat, with their author */
     public chatBubbles(): Locator {
         return this.page.locator('#chat-log .chat-bubble');

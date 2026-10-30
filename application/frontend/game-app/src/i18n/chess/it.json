@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "In attesa del ritorno di {name}…",
     "check": "Scacco",
     "checkmate": "Scacco matto",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {Il tempo è scaduto durante l'assenza del Bianco} other {Il tempo è scaduto durante l'assenza del Nero}}",
       "move": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Bianco} other {Nero}}: {from} → {to}",
       "pass": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Il Bianco passa} other {Il Nero passa}}",
       "promotion": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Bianco} other {Nero}}: promozione in {square} a {piece, select, q {donna} r {torre} b {alfiere} other {cavallo}}",
@@ -18,6 +21,7 @@
     "played": "ha giocato",
     "promotion": "Promozione",
     "result": {
+      "away": "{winner, select, w {Il tempo è scaduto durante l'assenza del Nero: vince il Bianco} other {Il tempo è scaduto durante l'assenza del Bianco: vince il Nero}}",
       "checkmate": "Scacco matto: {winner, select, w {vince il Bianco} other {vince il Nero}}",
       "doubleCheckmate": "Patta: scacco matto a entrambi i giocatori",
       "fiftyTurns": "Patta: 50 turni senza mosse di pedone né catture",
@@ -33,6 +37,7 @@
       "leave": "Lascia il posto",
       "playBlack": "Gioca col Nero",
       "playWhite": "Gioca col Bianco",
+      "release": "Libera il posto",
       "white": "Giocatore Bianco:"
     },
     "spectators": "Spettatori: {count}",
@@ -74,6 +79,7 @@
       "title": "Movimento e cattura"
     },
     "end": {
+      "away": "Un giocatore assente per 30 secondi mentre l'altro attende la sua mossa",
       "caption": "Finali della partita e loro risultato",
       "checkmate": "Scacco matto a un giocatore",
       "doubleCheckmate": "Scacco matto a entrambi i giocatori",
@@ -106,7 +112,7 @@
       "trigger": "<strong>Avvio.</strong> Dopo un turno sincrono, si gioca un turno intermedio se un pezzo che si è mosso è arrivato su una casa già attaccata (o protetta) dall'avversario prima del turno, e un pezzo avversario può catturarlo regolarmente."
     },
     "players": {
-      "seats": "Due giocatori. Ogni partecipante della stanza, host compreso, sceglie il proprio colore tra i posti liberi. I posti sono fissati dalla prima mossa giocata; gli altri partecipanti sono spettatori.",
+      "seatsFreed": "Due giocatori. Ogni partecipante della stanza, host compreso, sceglie il proprio colore tra i posti liberi. I posti sono fissati dalla prima mossa giocata; gli altri partecipanti sono spettatori. Fino ad allora, l'altro giocatore o l'host può liberare il posto di un giocatore assente.",
       "shortTitle": "Giocatori",
       "simultaneousMoves": "I due giocatori giocano la loro mossa contemporaneamente, ciascuno senza conoscere quella dell'altro. Quando entrambi hanno scelto, le due mosse vengono rivelate e applicate secondo le regole qui sotto.",
       "title": "Giocatori e principio"

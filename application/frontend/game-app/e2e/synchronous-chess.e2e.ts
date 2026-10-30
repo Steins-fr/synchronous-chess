@@ -1,7 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test';
 import { movedElements, watchSteadiness } from './page-steadiness';
 import { RoomParticipant } from './room-participant';
-import { test as roomTest, TestRoom } from './test-room';
+import { SLOW, test as roomTest, TestRoom } from './test-room';
 
 /** A room of the chess of its own for a test */
 const test = roomTest.extend<{ chess: TestRoom }>({
@@ -16,7 +16,7 @@ const test = roomTest.extend<{ chess: TestRoom }>({
 const game = (participant: RoomParticipant): Locator => participant.page.locator('app-sync-chess-game');
 
 /** What stays in place on the page of the chess while the game is played: the seats, the board, the page below it */
-const STEADY: ReadonlyArray<string> = ['#seat-top', '#board-grid', '#seat-bottom', 'app-sync-chess-game .spectators'];
+const STEADY: ReadonlyArray<string> = ['#seat-top', '#board-grid', '#seat-bottom', '#game-status', 'app-sync-chess-game .spectators'];
 
 /**
  * A player drags a piece from a cell to another one, by their index in the board as it shows it: rank 8 first, rank 1
@@ -132,5 +132,54 @@ test.describe('Synchronous chess', () => {
         await alice.page.getByRole('link', { name: 'Home' }).click();
         await dialog.getByRole('button', { name: 'Confirm' }).click();
         await expect(alice.page).toHaveURL(/\/$/);
+    });
+
+    test('the host frees the seat of a player away before the game starts', async ({ chess }) => {
+        const [alice, bob, carol] = await chess.connect('alice', 'bob', 'carol');
+        await game(bob).locator('#seat-bottom').getByRole('button', { name: 'Play white' }).click();
+        await expect(game(carol).locator('#seat-top')).toHaveText('White player: bob');
+        await game(carol).locator('#seat-bottom').getByRole('button', { name: 'Play black' }).click();
+        await expect(game(alice).locator('#seat-top')).toHaveText('Black player: carol');
+        await watchSteadiness(alice.page, STEADY);
+
+        // White leaves before the first move: the host, a spectator, frees his seat
+        await bob.close();
+        await game(alice).locator('#seat-bottom').getByRole('button', { name: 'Free the seat' }).click();
+
+        // Free on every page: the host takes it, and the game may start
+        await expect(game(carol).locator('#seat-top')).toHaveText('White player: Waiting');
+        await game(alice).locator('#seat-bottom').getByRole('button', { name: 'Play white' }).click();
+        await expect(game(carol).locator('#seat-top')).toHaveText('White player: alice');
+        expect(await movedElements(alice.page)).toEqual([]);
+    });
+
+    test('ends the game of a player away 30 seconds after the other one played', SLOW, async ({ chess }) => {
+        const participants: RoomParticipant[] = await chess.connect('alice', 'bob', 'carol');
+        const [alice, bob, carol] = participants;
+        await Promise.all(participants.map((participant: RoomParticipant) => participant.narrow(700, 1100)));
+        await game(alice).locator('#seat-bottom').getByRole('button', { name: 'Play white' }).click();
+        await expect(game(bob).locator('#seat-top')).toHaveText('White player: alice');
+        await game(bob).locator('#seat-bottom').getByRole('button', { name: 'Play black' }).click();
+        await expect(game(carol).locator('#seat-top')).toHaveText('Black player: bob');
+        await Promise.all([alice, carol].map(({ page }) => watchSteadiness(page, STEADY)));
+
+        // White plays f3, Black leaves: every page waits for him, White's clock runs
+        await drag(alice.page, 53, 45);
+        await bob.close();
+        await expect(game(carol).locator('#game-status')).toHaveText('Waiting for bob to come back…');
+        await expect(game(alice).locator('#game-status')).toHaveText('Waiting for bob to come back…');
+        await expect(game(alice).locator('#away-clock')).toHaveText(/^\d+ s$/);
+
+        // White claims the game once the 30 seconds are over
+        await expect(game(carol).locator('.game-result')).toHaveText('Black was away when the time ran out: White wins', { timeout: 60_000 });
+        await expect(game(alice).locator('.game-result')).toHaveText('Black was away when the time ran out: White wins');
+        await expect(game(carol).locator('#game-status')).toHaveText('');
+        await expect(game(alice).locator('#away-clock')).toHaveCount(0);
+        for (const participant of [alice, carol]) {
+            // eslint-disable-next-line no-await-in-loop -- the pages one after the other
+            expect(await movedElements(participant.page), participant.name).toEqual([]);
+        }
+        await carol.openHistory();
+        await expect(carol.historyLines().first()).toHaveText('Black was away when the time ran out');
     });
 });

@@ -112,8 +112,11 @@ A player leaving the room keeps its seat, but loses it with a match lost on time
 [The clock of a move](#the-clock-of-a-move)). While the seats are open, a seated player also frees the seat of the
 other one, away from the room, with `Free the seat` (`SP_unseat`), shown on that seat: no page can tell when the other
 one was away, as for a timeout, so the chain applies the request whatever the presence of the player. The request names
-the player freed: applied once another participant took the seat, it frees nothing. A spectator frees no seat: it could
-take it at once.
+the player freed: applied once another participant took the seat, it frees nothing. The host frees the seat of a player
+away too, on either seat, even as a spectator: a player seated alone and gone keeps no seat for the life of the room. Its
+request holds when the host ordered the block of its message, as the sequencer of the chain: a page replaying the chain,
+or joining late, applies it alike, even once another participant orders the chain. Another spectator frees no seat: it
+could take it at once.
 
 A player draws a random **salt** for each seat it takes, given in its `SP_seat`: the id of each deck is made of the
 salts of both seats, the index of the match in the room and the index of the hand (`<salt 1>:<salt 2>:<match>:<hand>`).
@@ -224,7 +227,7 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
 | `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over; the player away loses its seat too | a player | the time of the move of the other player over, while it is away |
 | `SP_rematch` | `{ match }`: the index of the new match in the room | a player | once the match is over or stopped, both seats taken |
-| `SP_unseat` | `{ seat, name }`: the seat of the other player, and its player | a player | while the seats are open, the other player away |
+| `SP_unseat` | `{ seat, name }`: the seat freed, and its player | a player, or the host | while the seats are open, the player of the seat away |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |
 
 ## Interface
@@ -246,7 +249,7 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 - The actions of the player: `Check`, `Call`, `Bet` or `Raise` with the amount set by steps of 5 chips,
   `Min` and `Max`, and `Fold` against a bet only (with nothing to call, a player checks for free).
 - The result of the match, and `Play again` for its players.
-- `Free the seat` on the seat of the other player, away, while the seats are open.
+- `Free the seat` on the seat of a player away, while the seats are open: for the other player, and for the host.
 - Out of the table, in the panel of the room beside the game or over it (`RoomHistoryComponent` of
   `modules/room-layout`, opened by the `History` button of the bar): the hands of the match (`Hands played`), the
   latest first, then the results of the former matches of the room, each one with the check of its decks
@@ -276,7 +279,8 @@ grows does not fly.
 ## Limits
 
 - A player leaving for good while the deck waits for its keys (a deal, the cards drawn in the exchange) blocks the match:
-  no move is awaited, so no clock runs. On its move, the other player wins once its time is over.
+  no move is awaited, so no clock runs. On its move, the other player wins once its time is over. A player the host
+  removes from the room between two hands, or while the deck waits for its keys, stalls the match alike.
 - The clock runs on the page of each player, and no page can tell when the other one was away: a page changed not to
   play the move once its time is over keeps the other player waiting while connected, and a page changed to send
   `SP_timeout` early ends the match of the other player, and a page changed to send `SP_unseat` frees the seat of the
@@ -298,10 +302,12 @@ grows does not fly.
 - The session: `seventeen-poker-session.spec.ts`, with a `RoomHub` and a small prime
   (`@testing/sra-test-group`): seats, deals, bets, exchanges, showdowns, the end of the match, a new
   match (the seats open again, fresh deck ids, the check of the former decks ending later, a page reloaded during it),
-  the seat freed of a player away, a new match after a broken deck, a reloaded page and the cheats.
+  the seat freed of a player away, by the other player or the host, a new match after a broken deck, a reloaded page
+  and the cheats.
 - The table: `poker-table.component.spec.ts`, the session options given through `POKER_SESSION_OPTIONS`, the clock of
   the moves on fake timers (`setInterval` and `performance` only: the decks run on real ones).
 - End to end: `e2e/seventeen-poker.e2e.ts`, a hand to the showdown, a fold, a player reloading the
   page, a second match once the first one is over (all in until a hand takes every chip), a spectator taking the seat of
   a player, the moves played once their time is over (a check, then a fold against a bet, `SLOW`), and the match of a player
-  leaving the room ended once the time of its move is over, a spectator taking its seat for a new match (`SLOW`).
+  leaving the room ended once the time of its move is over, a spectator taking its seat for a new match (`SLOW`), and
+  the host, a spectator, freeing the seat of a lone player away.

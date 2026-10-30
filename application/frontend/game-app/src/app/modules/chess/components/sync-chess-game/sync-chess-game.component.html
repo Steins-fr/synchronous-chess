@@ -2,7 +2,10 @@
     @let top = topColor();
     @let bottom = bottomColor();
     <div appSteadyHeight class="player chess-seat" id="seat-top" [class.white-seat]="top === whiteColor" [class.black-seat]="top === blackColor">
-        {{ t(top === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(top) || t('seat.free') }}
+        <span class="chess-seat-label">{{ t(top === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(top) || t('seat.free') }}</span>
+        @if (canRelease(top)) {
+        <button (click)="release(top)" class="seat-button" mat-stroked-button>{{ t('seat.release') }}</button>
+        }
     </div>
     <div id="board-section">
         <div id="chess-board">
@@ -84,12 +87,24 @@
         </div>
     </div>
     <div appSteadyHeight class="player chess-seat" id="seat-bottom" [class.white-seat]="bottom === whiteColor" [class.black-seat]="bottom === blackColor">
-        {{ t(bottom === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(bottom) || t('seat.free') }}
+        <span class="chess-seat-label">{{ t(bottom === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(bottom) || t('seat.free') }}</span>
         @if (canTakeSeat()) {
         <button (click)="takeSeat(bottom)" class="seat-button" mat-stroked-button>{{ t(bottom === whiteColor ? 'seat.playWhite' : 'seat.playBlack') }}</button>
         }
         @if (canLeaveSeat()) {
         <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>{{ t('seat.leave') }}</button>
+        }
+        @if (canRelease(bottom)) {
+        <button (click)="release(bottom)" class="seat-button" mat-stroked-button>{{ t('seat.release') }}</button>
+        }
+    </div>
+    <!-- A seated player away, and the clock of the player waiting for it beside: the line keeps its place, two lines on a phone -->
+    <div class="flex items-start justify-center gap-2">
+        @let away = awayStatus();
+        <output id="game-status" class="table-status">{{ away ? (away.key | transloco: away.params) : '' }}</output>
+        @let awayLeft = awayTimeLeft();
+        @if (awayLeft !== null) {
+        <span id="away-clock" class="shrink-0 font-bold whitespace-nowrap tabular-nums" [class.text-app-clock-low]="awayLeft <= clockLow">{{ t('clock', { seconds: awayLeft }) }}</span>
         }
     </div>
     <div class="spectators">{{ t('spectators', { count: gameSession().spectatorNumber() }) }}</div>

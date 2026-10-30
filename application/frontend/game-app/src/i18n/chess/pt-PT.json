@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "A aguardar que {name} volte…",
     "check": "Xeque",
     "checkmate": "Xeque-mate",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {O tempo esgotou-se com as brancas ausentes} other {O tempo esgotou-se com as pretas ausentes}}",
       "move": "Turno {turn}{kind, select, intermediate { (intermédio)} other {}} · {color, select, w {Brancas} other {Pretas}}: {from} → {to}",
       "pass": "Turno {turn}{kind, select, intermediate { (intermédio)} other {}} · {color, select, w {As brancas passam} other {As pretas passam}}",
       "promotion": "Turno {turn}{kind, select, intermediate { (intermédio)} other {}} · {color, select, w {As brancas promovem} other {As pretas promovem}} em {square}: {piece, select, q {dama} r {torre} b {bispo} other {cavalo}}",
@@ -18,6 +21,7 @@
     "played": "jogou",
     "promotion": "Promoção",
     "result": {
+      "away": "{winner, select, w {O tempo esgotou-se com as pretas ausentes: vitória das brancas} other {O tempo esgotou-se com as brancas ausentes: vitória das pretas}}",
       "checkmate": "Xeque-mate: {winner, select, w {vitória das brancas} other {vitória das pretas}}",
       "doubleCheckmate": "Empate: xeque-mate aos dois jogadores",
       "fiftyTurns": "Empate: 50 turnos sem movimento de peão nem captura",
@@ -33,6 +37,7 @@
       "leave": "Deixar o lugar",
       "playBlack": "Jogar com as pretas",
       "playWhite": "Jogar com as brancas",
+      "release": "Libertar o lugar",
       "white": "Jogador das brancas:"
     },
     "spectators": "Espetadores: {count}",
@@ -74,6 +79,7 @@
       "title": "Movimento e captura"
     },
     "end": {
+      "away": "Um jogador ausente durante 30 segundos enquanto o outro aguarda a sua jogada",
       "caption": "Fins de partida e respetivo resultado",
       "checkmate": "Xeque-mate a um jogador",
       "doubleCheckmate": "Xeque-mate aos dois jogadores",
@@ -106,7 +112,7 @@
       "trigger": "<strong>Início.</strong> Após um turno sincronizado, há um turno intermédio se uma peça que se moveu chegou a uma casa já atacada (ou protegida) pelo adversário antes do turno, e se uma peça adversária a pode capturar legalmente."
     },
     "players": {
-      "seats": "Dois jogadores. Cada participante da sala, incluindo o anfitrião, escolhe a sua cor entre os lugares livres. Os lugares ficam fixos a partir da primeira jogada; os restantes participantes são espetadores.",
+      "seatsFreed": "Dois jogadores. Cada participante da sala, incluindo o anfitrião, escolhe a sua cor entre os lugares livres. Os lugares ficam fixos a partir da primeira jogada; os restantes participantes são espetadores. Até lá, o outro jogador ou o anfitrião pode libertar o lugar de um jogador ausente.",
       "shortTitle": "Jogadores",
       "simultaneousMoves": "Os dois jogadores jogam a sua jogada em simultâneo, cada um sem conhecer a do outro. Quando ambos tiverem escolhido, as duas jogadas são reveladas e aplicadas segundo as regras abaixo.",
       "title": "Jogadores e princípio"

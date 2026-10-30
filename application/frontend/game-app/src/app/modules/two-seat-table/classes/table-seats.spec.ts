@@ -136,6 +136,72 @@ describe('TableSeats', () => {
         expect(applied.filter(([name, type]) => name === 'carol' && type === 'unseat').map(([, , freed]) => freed)).toEqual([false, true]);
     });
 
+    test('should let the host, a spectator, free the seat of a lone player away while the seats are open', () => {
+        // Given: Carol hosts the room
+        hub.sequencer.set('carol');
+        const bob = page('bob');
+        const carol = page('carol');
+        const dave = page('dave');
+        bob.takeSeat(TWO);
+
+        // When
+        hub.leave(rooms.get('bob') as Room<Payloads>);
+
+        // Then
+        expect([carol.canRelease(TWO), carol.canRelease(ONE), dave.canRelease(TWO)]).toEqual([true, false, false]);
+        sending.set(true);
+        expect(carol.canRelease(TWO)).toBe(false);
+
+        // When
+        dave.unseat(TWO);
+        carol.unseat(TWO);
+
+        // Then
+        expect(dave.seats()).toEqual([null, null]);
+        expect(applied.filter(([name, type]) => name === 'dave' && type === 'unseat').map(([, , freed]) => freed)).toEqual([false, true]);
+    });
+
+    test('should apply a decision of the host alike on a page replaying the chain after a handover', () => {
+        // Given: Carol, the host, frees the seat of Bob
+        hub.sequencer.set('carol');
+        const bob = page('bob');
+        const carol = page('carol');
+        bob.takeSeat(TWO);
+        hub.leave(rooms.get('bob') as Room<Payloads>);
+        carol.unseat(TWO);
+
+        // When Alice orders the chain since, and Dave joins late
+        hub.sequencer.set('alice');
+        const dave = page('dave');
+        hub.replay(rooms.get('dave') as Room<Payloads>);
+
+        // Then
+        expect(dave.seats()).toEqual([null, null]);
+        expect(applied.filter(([name]) => name === 'dave')).toEqual([['dave', 'seat', true], ['dave', 'unseat', true]]);
+
+        // When Carol, no longer the host, frees the seat of Dave away
+        dave.takeSeat(ONE);
+        hub.leave(rooms.get('dave') as Room<Payloads>);
+        carol.unseat(ONE);
+
+        // Then
+        expect(carol.canRelease(ONE)).toBe(false);
+        expect(carol.seats()).toEqual(['dave', null]);
+    });
+
+    test('should refuse a seat out of the table freed by the host', () => {
+        // Given
+        hub.sequencer.set('carol');
+        const carol = page('carol');
+
+        // When
+        rooms.get('carol')?.transmitMessage('unseat', { seat: 5 as TableSeat, name: undefined as unknown as string });
+
+        // Then
+        expect(carol.seats()).toEqual([null, null]);
+        expect(applied).toEqual([['carol', 'unseat', false]]);
+    });
+
     test('should free no seat its player left meanwhile, nor while the seats are closed', () => {
         // Given
         const alice = page('alice');

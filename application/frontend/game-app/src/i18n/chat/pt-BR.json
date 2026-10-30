@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "Sem links nem endereços de e-mail no bate-papo",
+    "muted": "Você está silenciado até {time}",
+    "mutedToEnd": "Você está silenciado até o fim da sala",
     "tooLong": "{maxLength, plural, one {# caractere} other {# caracteres}} no máximo",
     "unsent": "Aguarde o envio das suas mensagens antes de enviar mais",
     "wait": "Aguarde {seconds, plural, one {# segundo} other {# segundos}} para enviar outra mensagem"
@@ -14,11 +16,37 @@
     "flooding": "{name} está enviando mensagens demais: elas ficam ocultas por um momento",
     "floodingSelf": "Você enviou mensagens demais: elas ficam ocultas por um momento",
     "latest": "Últimas mensagens",
+    "mute": {
+      "byYou": "Você silenciou {name} por {minutes, plural, one {# minuto} other {# minutos}}",
+      "byYouToEnd": "Você silenciou {name} até o fim da sala",
+      "other": "{moderator} silenciou {name} por {minutes, plural, one {# minuto} other {# minutos}}",
+      "otherToEnd": "{moderator} silenciou {name} até o fim da sala",
+      "you": "{moderator} silenciou você por {minutes, plural, one {# minuto} other {# minutos}}",
+      "youToEnd": "{moderator} silenciou você até o fim da sala"
+    },
+    "removal": {
+      "byYou": "Você removeu {name} da sala",
+      "other": "{moderator} removeu {name} da sala"
+    },
     "retry": "Tentar de novo",
     "sending": "Enviando…",
+    "unmute": {
+      "byYou": "Você tirou o silêncio de {name}",
+      "other": "{moderator} tirou o silêncio de {name}",
+      "you": "{moderator} tirou o seu silêncio"
+    },
     "unread": "Novas mensagens"
   },
   "message": "Digite sua mensagem",
+  "moderation": {
+    "menu": "Moderar {name}",
+    "mute": "Silenciar por {minutes, plural, one {# minuto} other {# minutos}}",
+    "muteToEnd": "Silenciar até o fim da sala",
+    "remove": "Remover da sala",
+    "removeMessage": "Este participante sai da sala e não pode mais entrar nela enquanto ela durar.",
+    "removeTitle": "Remover da sala?",
+    "unmute": "Tirar o silêncio"
+  },
   "newMessages": "{count, plural, one {# nova mensagem} other {# novas mensagens}}",
   "options": {
     "arrivals": "Mostrar entradas e saídas",

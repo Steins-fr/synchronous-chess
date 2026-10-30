@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Waiting for {name} to come back…",
     "check": "Check",
     "checkmate": "Checkmate",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {White was away when the time ran out} other {Black was away when the time ran out}}",
       "move": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White} other {Black}}: {from} → {to}",
       "pass": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White passes} other {Black passes}}",
       "promotion": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White} other {Black}} promotes on {square} to {piece, select, q {a queen} r {a rook} b {a bishop} other {a knight}}",
@@ -18,6 +21,7 @@
     "played": "played",
     "promotion": "Promotion",
     "result": {
+      "away": "{winner, select, w {Black was away when the time ran out: White wins} other {White was away when the time ran out: Black wins}}",
       "checkmate": "Checkmate: {winner, select, w {White wins} other {Black wins}}",
       "doubleCheckmate": "Draw: both players are checkmated",
       "fiftyTurns": "Draw: 50 turns without a pawn move or a capture",
@@ -33,6 +37,7 @@
       "leave": "Leave the seat",
       "playBlack": "Play black",
       "playWhite": "Play white",
+      "release": "Free the seat",
       "white": "White player:"
     },
     "spectators": "Spectators: {count}",
@@ -74,6 +79,7 @@
       "title": "Movement and capture"
     },
     "end": {
+      "away": "A player away for 30 seconds while the other one waits for its move",
       "caption": "Ends of the game and their result",
       "checkmate": "Checkmate of one player",
       "doubleCheckmate": "Checkmate of both players",
@@ -106,7 +112,7 @@
       "trigger": "<strong>Trigger.</strong> After a synchronous turn, an intermediate turn takes place if a piece that moved arrived on a square already attacked (or protected) by the opponent before the turn, and an opposing piece can legally capture it."
     },
     "players": {
-      "seats": "Two players. Each participant of the room, the host included, picks a color among the free seats. The seats are set from the first move played; the other participants are spectators.",
+      "seatsFreed": "Two players. Each participant of the room, the host included, picks a color among the free seats. The seats are set from the first move played; the other participants are spectators. Until then, the other player or the host may free the seat of a player away.",
       "shortTitle": "Players",
       "simultaneousMoves": "Both players play their move simultaneously, each without knowing the other's move. Once both players have chosen, the two moves are revealed and applied according to the rules below.",
       "title": "Players and principle"

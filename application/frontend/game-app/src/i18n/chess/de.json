@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Warte, bis {name} zurückkommt…",
     "check": "Schach",
     "checkmate": "Schachmatt",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {Die Zeit lief ab, während Weiß abwesend war} other {Die Zeit lief ab, während Schwarz abwesend war}}",
       "move": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß} other {Schwarz}}: {from} → {to}",
       "pass": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß passt} other {Schwarz passt}}",
       "promotion": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß} other {Schwarz}} wandelt auf {square} in {piece, select, q {eine Dame} r {einen Turm} b {einen Läufer} other {einen Springer}} um",
@@ -18,6 +21,7 @@
     "played": "hat gezogen",
     "promotion": "Umwandlung",
     "result": {
+      "away": "{winner, select, w {Die Zeit lief ab, während Schwarz abwesend war: Weiß gewinnt} other {Die Zeit lief ab, während Weiß abwesend war: Schwarz gewinnt}}",
       "checkmate": "Schachmatt: {winner, select, w {Weiß gewinnt} other {Schwarz gewinnt}}",
       "doubleCheckmate": "Remis: Beide Spieler sind schachmatt",
       "fiftyTurns": "Remis: 50 Runden ohne Bauernzug oder Schlagen",
@@ -33,6 +37,7 @@
       "leave": "Platz verlassen",
       "playBlack": "Schwarz spielen",
       "playWhite": "Weiß spielen",
+      "release": "Platz freigeben",
       "white": "Spieler Weiß:"
     },
     "spectators": "Zuschauer: {count}",
@@ -74,6 +79,7 @@
       "title": "Zug und Schlagen"
     },
     "end": {
+      "away": "Ein Spieler ist 30 Sekunden abwesend, während der andere auf seinen Zug wartet",
       "caption": "Enden der Partie und ihr Ergebnis",
       "checkmate": "Schachmatt eines Spielers",
       "doubleCheckmate": "Schachmatt beider Spieler",
@@ -106,7 +112,7 @@
       "trigger": "<strong>Auslöser.</strong> Nach einer synchronen Runde folgt eine Zwischenrunde, wenn eine gezogene Figur auf einem Feld angekommen ist, das der Gegner schon vor der Runde angegriffen (oder gedeckt) hat, und eine gegnerische Figur sie regelgerecht schlagen kann."
     },
     "players": {
-      "seats": "Zwei Spieler. Jeder Teilnehmer des Raums, auch der Gastgeber, wählt seine Farbe unter den freien Plätzen. Die Plätze stehen ab dem ersten Zug fest; die anderen Teilnehmer sind Zuschauer.",
+      "seatsFreed": "Zwei Spieler. Jeder Teilnehmer des Raums, auch der Gastgeber, wählt seine Farbe unter den freien Plätzen. Die Plätze stehen ab dem ersten Zug fest; die anderen Teilnehmer sind Zuschauer. Bis dahin kann der andere Spieler oder der Gastgeber den Platz eines abwesenden Spielers freigeben.",
       "shortTitle": "Spieler",
       "simultaneousMoves": "Beide Spieler ziehen gleichzeitig, jeder ohne den Zug des anderen zu kennen. Haben beide gewählt, werden die zwei Züge aufgedeckt und nach den folgenden Regeln ausgeführt.",
       "title": "Spieler und Prinzip"

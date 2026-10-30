@@ -77,6 +77,7 @@
       "notCreated": "The room could not be created.",
       "otherGame": "This room belongs to another game.",
       "private": "This room is private: join it from the list, with its password.",
+      "removed": "You were removed from this room: you cannot join it again.",
       "tooManyPasswords": "Too many wrong passwords for this room: try again in a minute.",
       "wrongPassword": "The password of the room is wrong."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "The connection to the host of the room failed.",
       "joiningAgain": "The connection to the host of the room failed, trying again…",
       "nameStillInRoom": "This name is still in the room, reconnecting…",
+      "removed": "The host removed you from the room.",
       "roomFull": "The room is full.",
       "roomGone": "This room has ended or does not exist.",
       "roomLost": "The room lost its connection to the server: nobody can join it anymore."

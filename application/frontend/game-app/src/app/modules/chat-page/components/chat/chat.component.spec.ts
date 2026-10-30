@@ -1,9 +1,12 @@
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ChatComponent, ChatEntry, ChatMessengerType, ChatPayloads, ChatText, isChatText } from './chat.component';
 import { ChatEntryKind, ChatMessageState } from './chat-message/chat-message.component';
+import { ChatDecision, ChatModerationAction, MuteMinutes } from './chat-moderation';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
+import { DialogService } from '@app/services/dialog/dialog.service';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -30,6 +33,11 @@ describe('ChatComponent', () => {
 
     function deliver(from: string, payload: ChatText): void {
         network.onMessage$.next({ type: ChatMessengerType.CHAT_MESSAGE, payload, origin: MessageOriginType.ROOM_SERVICE, from });
+    }
+
+    /** A decision of the moderator, from the participant ordering its block */
+    function decide(from: string, payload: ChatDecision): void {
+        network.onMessage$.next({ type: ChatMessengerType.MODERATION, payload, origin: MessageOriginType.ROOM_SERVICE, from });
     }
 
     /** The local player's message the room sends back: the one transmitted at this call */
@@ -705,7 +713,7 @@ describe('ChatComponent', () => {
         // Given
         fixture.componentRef.setInput('open', false);
         await setRoom();
-        vi.spyOn(room, 'isHistory').mockReturnValueOnce(true);
+        vi.spyOn(room, 'isHistory').mockReturnValue(true);
 
         // When
         receive('remote', 'before');
@@ -1014,6 +1022,525 @@ describe('ChatComponent', () => {
             // Then
             expect(logLines()).toEqual([...earlier.map((text: string) => `local: ${ text }`), 'You sent too many messages: they are hidden for a moment']);
             expect(log().querySelector('.opacity-60')).toBeNull();
+        });
+    });
+
+    describe('with the decisions of the moderator', () => {
+        const MINUTE: number = 60_000;
+        let chainTime: number;
+
+        beforeEach(() => {
+            chainTime = 0;
+            vi.spyOn(room, 'sequencedAt').mockImplementation(() => chainTime);
+        });
+
+        test('should hide the messages of an author muted ordered after its mute, until it ends', async () => {
+            // Given
+            await setRoom();
+            receive('bob', 'before');
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+            chainTime = 5 * MINUTE - 1;
+            receive('bob', 'muted');
+            chainTime = 5 * MINUTE;
+            receive('bob', 'after');
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['bob: before', 'host muted bob for 5 minutes', 'bob: after']);
+        });
+
+        test('should neither count nor tell the flood of an author muted, its messages shown again once unmuted', async () => {
+            // Given
+            await setRoom();
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+            Array.from({ length: 10 }, () => receive('bob', 'spam'));
+
+            // When
+            decide('host', { action: ChatModerationAction.UNMUTE, target: 'bob' });
+            receive('bob', 'sorry');
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['host muted bob until the end of the room', 'host unmuted bob', 'bob: sorry']);
+        });
+
+        test('should drop a decision not from the participant ordering it or on itself, and report one of another form', async () => {
+            // Given
+            await setRoom();
+            const reportSpy = vi.spyOn(room, 'reportCheat');
+
+            // When
+            decide('bob', { action: ChatModerationAction.MUTE, target: 'carol', minutes: MuteMinutes.SHORT });
+            decide('bob', { action: ChatModerationAction.REMOVE, target: 'carol' });
+            decide('host', { action: ChatModerationAction.REMOVE, target: 'host' });
+            decide('host', TestHelper.cast<ChatDecision>({ action: ChatModerationAction.MUTE, target: 'carol', minutes: 10 }));
+            await fixture.whenStable();
+
+            // Then
+            expect(reportSpy.mock.calls.map(([message, reason]) => [message.from, message.payload, reason])).toEqual([
+                ['host', { action: ChatModerationAction.MUTE, target: 'carol', minutes: 10 }, CheatReason.INVALID_MESSAGE],
+            ]);
+            expect(logLines()).toEqual(['No messages yet. Say hello!']);
+            expect(network.exclude).not.toHaveBeenCalled();
+        });
+
+        test('should accept the decision of a former host which ordered its block, whoever hosts the room now', async () => {
+            // Given
+            await setRoom();
+            vi.spyOn(room, 'sequencedBy').mockReturnValue('alice');
+
+            // When
+            decide('alice', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.LONG });
+            await fixture.whenStable();
+
+            // Then
+            expect(room.hostName).toEqual('host');
+            expect(logLines()).toEqual(['alice muted bob for 30 minutes']);
+        });
+
+        test('should always tell a decision, the arrivals or its moderator hidden, never unread', async () => {
+            // Given
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'host', isLocal: false }));
+            fixture.componentRef.setInput('open', false);
+            await setRoom();
+            preferences.arrivals.set(false);
+            (await openOptions()).find((item: HTMLButtonElement) => item.textContent.includes('host'))?.click();
+            await fixture.whenStable();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['host muted bob for 5 minutes']);
+            expect(component.unread()).toEqual(0);
+            expect(component.unreadReceived()).toEqual(0);
+        });
+
+        test('should word a decision for the local player, muted', async () => {
+            // Given
+            await setRoom();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: null });
+            decide('host', { action: ChatModerationAction.UNMUTE, target: 'local' });
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['host muted you until the end of the room', 'host unmuted you']);
+        });
+
+        test('should word a decision for the local player, ordering the chain', async () => {
+            // Given
+            network = new RoomNetworkMock('local', true, 'local');
+            room = new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
+            await setRoom();
+
+            // When
+            decide('local', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.LONG });
+            decide('local', { action: ChatModerationAction.REMOVE, target: 'bob' });
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['You muted bob for 30 minutes', 'You removed bob from the room']);
+        });
+
+        test('should exclude a participant removed, once, telling its removal rather than its departure', async () => {
+            // Given
+            const departed$ = new Subject<string>();
+            vi.spyOn(room, 'departed$', 'get').mockReturnValue(departed$);
+            await setRoom();
+            receive('bob', 'before');
+
+            // When
+            decide('host', { action: ChatModerationAction.REMOVE, target: 'bob' });
+            decide('host', { action: ChatModerationAction.REMOVE, target: 'bob' });
+            receive('bob', 'after');
+            departed$.next('bob');
+            departed$.next('carol');
+            await fixture.whenStable();
+
+            // Then
+            expect(network.exclude).toHaveBeenCalledExactlyOnceWith('bob');
+            expect(logLines()).toEqual(['bob: before', 'host removed bob from the room', 'carol left the room']);
+        });
+
+        test('should exclude the local player removed, which gives the room up', async () => {
+            // Given
+            await setRoom();
+
+            // When
+            decide('host', { action: ChatModerationAction.REMOVE, target: 'local' });
+            await fixture.whenStable();
+
+            // Then
+            expect(network.exclude).toHaveBeenCalledExactlyOnceWith('local');
+            expect(logLines()).toEqual(['host removed local from the room']);
+        });
+
+        test('should forget the decisions of a room replaced by another one', async () => {
+            // Given
+            await setRoom();
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+            decide('host', { action: ChatModerationAction.REMOVE, target: 'carol' });
+            network = new RoomNetworkMock();
+
+            // When
+            fixture.componentRef.setInput('room', new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+            await fixture.whenStable();
+            receive('bob', 'hello');
+            receive('carol', 'hi');
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines().slice(-2)).toEqual(['bob: hello', 'carol: hi']);
+        });
+
+        test('should hide the messages of an author muted in a room without chain, by the clock of the page', async () => {
+            // Given
+            vi.mocked(room.sequencedAt).mockReturnValue(undefined);
+            const now = vi.spyOn(Date, 'now').mockReturnValue(0);
+            await setRoom();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+            receive('bob', 'muted');
+            now.mockReturnValue(5 * MINUTE);
+            receive('bob', 'after');
+            await fixture.whenStable();
+
+            // Then
+            expect(logLines()).toEqual(['host muted bob for 5 minutes', 'bob: after']);
+        });
+    });
+
+    describe('with the composer of a participant muted', () => {
+        const MINUTE: number = 60_000;
+
+        /** The time a hint tells, rounded up to the minute */
+        function hintTime(time: number): string {
+            return new Intl.DateTimeFormat('en', { timeStyle: 'short' }).format(Math.ceil(time / MINUTE) * MINUTE);
+        }
+
+        function retryButton(): HTMLButtonElement {
+            return [...log().querySelectorAll('button')].find((button: HTMLButtonElement) => button.textContent.includes('Retry')) as HTMLButtonElement;
+        }
+
+        beforeEach(() => {
+            // The end of a mute runs on an interval of RxJS
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+            vi.setSystemTime(new Date(2026, 9, 30, 10, 41, 58));
+            // Created at the time set: the composer reads it
+            fixture.destroy();
+            fixture = TestBed.createComponent(ChatComponent);
+            component = fixture.componentInstance;
+        });
+
+        test('should send nothing until the mute ends, telling until when', async () => {
+            // Given: a message failed
+            await setRoom();
+            const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+            await type('lost');
+            sendButton().click();
+            vi.advanceTimersByTime(15_000);
+            const mutedAt: number = Date.now();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: MuteMinutes.SHORT });
+            await type('hello');
+            press({});
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).toHaveBeenCalledTimes(1);
+            expect(sendButton().disabled).toEqual(true);
+            expect(retryButton().disabled).toEqual(true);
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(mutedAt + 5 * MINUTE) }`);
+
+            // When: the retry of the failed message, activated before the page renders its button disabled
+            const failed = TestHelper.cast<{ entries(): ChatEntry[] }>(component).entries().find((entry: ChatEntry) => entry.kind === ChatEntryKind.MESSAGE && entry.state === ChatMessageState.FAILED);
+            TestHelper.cast<{ retry(message: ChatEntry | undefined): void }>(component).retry(failed);
+
+            // Then
+            expect(transmitSpy).toHaveBeenCalledTimes(1);
+
+            // When
+            vi.advanceTimersByTime(5 * MINUTE);
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')).toBeNull();
+            expect(sendButton().disabled).toEqual(false);
+            expect(retryButton().disabled).toEqual(false);
+            expect(vi.getTimerCount()).toEqual(0);
+
+            // When
+            sendButton().click();
+
+            // Then
+            expect(transmitSpy).toHaveBeenLastCalledWith(ChatMessengerType.CHAT_MESSAGE, { id: expect.any(String), text: 'hello', at: Date.now() });
+            vi.useRealTimers();
+        });
+
+        test('should send nothing until the end of the room, until unmuted, scheduling nothing', async () => {
+            // Given
+            await setRoom();
+            const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: null });
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+            await type('hello');
+            sendButton().click();
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).not.toHaveBeenCalled();
+            expect(sendButton().disabled).toEqual(true);
+            expect(query('mat-hint')?.textContent).toEqual('You are muted until the end of the room');
+            expect(vi.getTimerCount()).toEqual(0);
+
+            // When
+            decide('host', { action: ChatModerationAction.UNMUTE, target: 'local' });
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')).toBeNull();
+            expect(sendButton().disabled).toEqual(false);
+            vi.useRealTimers();
+        });
+
+        test('should end a mute by the clock of the page, estimated on the blocks received live, again for another sequencer', async () => {
+            // Given: a mute of 30 minutes ordered 10 minutes ago, replayed
+            const now: number = Date.now();
+            let chainTime: number = now - 10 * MINUTE;
+            vi.spyOn(room, 'sequencedAt').mockImplementation(() => chainTime);
+            const historySpy = vi.spyOn(room, 'isHistory').mockReturnValueOnce(true);
+            await setRoom();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: MuteMinutes.LONG });
+            await fixture.whenStable();
+
+            // Then: no block received live, its end on the chain give or take the tolerance
+            expect(historySpy).toHaveBeenCalled();
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(now + 20 * MINUTE + 5000) }`);
+
+            // When: a block received live a second after its time
+            chainTime = now - 1000;
+            receive('bob', 'hello');
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(now + 20 * MINUTE + 1000) }`);
+
+            // When: a block received 2 minutes after its time, sequenced by another participant
+            vi.spyOn(room, 'sequencedBy').mockReturnValueOnce('bob');
+            chainTime = now - 2 * MINUTE;
+            receive('bob', 'late');
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(now + 22 * MINUTE) }`);
+            vi.useRealTimers();
+        });
+    });
+
+    describe('with the menu of the moderator', () => {
+        let sequencer: WritableSignal<string>;
+        let transmitSpy: MockInstance<Room<ChatPayloads>['transmitMessage']>;
+
+        function moderateButton(name: string): HTMLButtonElement | null {
+            return query<HTMLButtonElement>(`#player-list button[aria-label="Moderate ${ name }"]`);
+        }
+
+        /** The items of the menu of a participant */
+        async function openModeration(name: string): Promise<HTMLButtonElement[]> {
+            (moderateButton(name) as HTMLButtonElement).click();
+            await fixture.whenStable();
+            return [...document.querySelectorAll<HTMLButtonElement>('.mat-mdc-menu-panel button[role="menuitem"]')];
+        }
+
+        function texts(items: ReadonlyArray<HTMLButtonElement>): string[] {
+            return items.map((item: HTMLButtonElement) => item.textContent.trim());
+        }
+
+        beforeEach(() => {
+            // Set before the first render, which reads it
+            sequencer = signal<string>('host');
+            Object.assign(room, { sequencer });
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'bob', isLocal: false }));
+            // The chain does not order the decisions until the spec delivers them
+            transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        });
+
+        test('should show the menu of each other participant to the participant ordering the chain only', async () => {
+            // When
+            await setRoom();
+
+            // Then
+            expect(moderateButton('bob')).toBeNull();
+
+            // When
+            sequencer.set('local');
+            await fixture.whenStable();
+
+            // Then
+            expect(moderateButton('bob')?.title).toEqual('Moderate bob');
+            expect(moderateButton('local')).toBeNull();
+            expect(fixture.nativeElement.querySelector('#player-list mat-chip').textContent.trim()).toEqual('local');
+        });
+
+        test('should never show the menu of the host of the room, to a participant ordering the chain in its place', async () => {
+            // Given
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'host', isLocal: false }));
+            sequencer.set('local');
+
+            // When
+            await setRoom();
+
+            // Then
+            expect(room.hostName).toEqual('host');
+            expect(moderateButton('host')).toBeNull();
+            expect(moderateButton('bob')?.title).toEqual('Moderate bob');
+        });
+
+        test('should mute a participant once until the chain orders it, then offer to unmute it', async () => {
+            // Given
+            sequencer.set('local');
+            await setRoom();
+
+            // When
+            const items: HTMLButtonElement[] = await openModeration('bob');
+
+            // Then
+            expect(texts(items)).toEqual(['Mute for 5 minutes', 'Mute for 30 minutes', 'Mute until the end of the room', 'Remove from the room']);
+
+            // When
+            items[0].click();
+            TestHelper.cast<{ mute(target: string, minutes: MuteMinutes): void }>(component).mute('bob', MuteMinutes.LONG);
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).toHaveBeenCalledExactlyOnceWith(ChatMessengerType.MODERATION, { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+            expect(moderateButton('bob')?.disabled).toEqual(true);
+
+            // When: the chain orders it
+            decide('local', transmitSpy.mock.calls[0][1] as ChatDecision);
+            await fixture.whenStable();
+
+            // Then
+            expect(moderateButton('bob')?.disabled).toEqual(false);
+            const mutedItems: HTMLButtonElement[] = await openModeration('bob');
+            expect(texts(mutedItems)).toEqual(['Unmute', 'Remove from the room']);
+
+            // When
+            mutedItems[0].click();
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).toHaveBeenLastCalledWith(ChatMessengerType.MODERATION, { action: ChatModerationAction.UNMUTE, target: 'bob' });
+        });
+
+        test('should mute a participant for long, or until the end of the room', async () => {
+            // Given
+            sequencer.set('local');
+            await setRoom();
+
+            // When
+            (await openModeration('bob'))[1].click();
+            decide('local', { action: ChatModerationAction.UNMUTE, target: 'bob' });
+            await fixture.whenStable();
+            (await openModeration('bob'))[2].click();
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy.mock.calls.map(([, decision]) => decision)).toEqual([
+                { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.LONG },
+                { action: ChatModerationAction.MUTE, target: 'bob', minutes: null },
+            ]);
+        });
+
+        test('should remove a participant once confirmed', async () => {
+            // Given
+            sequencer.set('local');
+            await setRoom();
+            const confirmSpy = vi.spyOn(TestBed.inject(DialogService), 'confirm').mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+
+            // When: cancelled, then confirmed
+            (await openModeration('bob'))[3].click();
+            await fixture.whenStable();
+            (await openModeration('bob'))[3].click();
+            await fixture.whenStable();
+
+            // Then
+            expect(confirmSpy).toHaveBeenCalledWith('chat.moderation.removeTitle', 'chat.moderation.removeMessage', 'confirm-cancel');
+            expect(transmitSpy).toHaveBeenCalledExactlyOnceWith(ChatMessengerType.MODERATION, { action: ChatModerationAction.REMOVE, target: 'bob' });
+        });
+
+        test('should send no removal once another participant orders the chain, or the room changed, while it is confirmed', async () => {
+            // Given
+            sequencer.set('local');
+            await setRoom();
+            let confirm: (confirmed: boolean) => void = () => undefined;
+            vi.spyOn(TestBed.inject(DialogService), 'confirm').mockImplementation(() => new Promise<boolean>((resolve) => confirm = resolve));
+
+            // When: the chain handed over
+            (await openModeration('bob'))[3].click();
+            sequencer.set('host');
+            confirm(true);
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).not.toHaveBeenCalled();
+
+            // When: another room, the local player ordering it too
+            sequencer.set('local');
+            await fixture.whenStable();
+            (await openModeration('bob'))[3].click();
+            network = new RoomNetworkMock('local', true, 'local');
+            const nextRoom = new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
+            const nextTransmitSpy = vi.spyOn(nextRoom, 'transmitMessage').mockImplementation(() => undefined);
+            fixture.componentRef.setInput('room', nextRoom);
+            await fixture.whenStable();
+            confirm(true);
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).not.toHaveBeenCalled();
+            expect(nextTransmitSpy).not.toHaveBeenCalled();
+        });
+
+        test('should enable again the menu of a participant once the chain refused the decision, or in another room', async () => {
+            // Given
+            sequencer.set('local');
+            await setRoom();
+            (await openModeration('bob'))[0].click();
+            await fixture.whenStable();
+
+            // When: ordered by another participant meanwhile, refused
+            const sequencedBySpy = vi.spyOn(room, 'sequencedBy').mockReturnValue('host');
+            decide('local', transmitSpy.mock.calls[0][1] as ChatDecision);
+            sequencedBySpy.mockRestore();
+            await fixture.whenStable();
+
+            // Then
+            expect(moderateButton('bob')?.disabled).toEqual(false);
+            expect(logLines()).toEqual(['No messages yet. Say hello!']);
+
+            // When: pending, then another room
+            (await openModeration('bob'))[0].click();
+            network = new RoomNetworkMock('local', true, 'local');
+            const nextRoom = new Room<ChatPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
+            fixture.componentRef.setInput('room', nextRoom);
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'bob', isLocal: false }));
+            await fixture.whenStable();
+
+            // Then
+            expect(moderateButton('bob')?.disabled).toEqual(false);
         });
     });
 

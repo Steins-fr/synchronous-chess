@@ -4,9 +4,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-chess-game';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
-import { ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
+import { CHESS_AWAY_TIME, ChessPayloads } from '@app/modules/chess/classes/game-sessions/synchronous-chess-online-game-session';
 import CoordinateMove from '@app/modules/chess/interfaces/CoordinateMove';
 import Move from '@app/modules/chess/interfaces/move';
 import { FenPiece } from '@app/modules/chess/enums/fen-piece.enum';
@@ -28,6 +29,8 @@ import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { playedTurnLines, squareName } from '@app/modules/chess/helpers/played-turn-text.helper';
+import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { LanguageService } from '@app/services/language/language.service';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -46,6 +49,7 @@ export class SyncChessGameComponent implements OnDestroy {
     });
     /** The local player plays the game: leaving the page asks to confirm */
     private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.gameSession().inMatch()));
+    private readonly languageService = inject(LanguageService);
 
     private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
     protected readonly validPlayBoard = signal<ValidPlayBoard>(ChessBoardHelper.createFilledBoard(false));
@@ -67,8 +71,40 @@ export class SyncChessGameComponent implements OnDestroy {
     });
     protected readonly topColor: Signal<PieceColor> = computed((): PieceColor => this.bottomColor() === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE);
 
-    /** The moves of the game, the latest first: its history, shown by the page in the panel of the room */
-    public readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => playedTurnLines(this.gameSession().game.playedTurns()));
+    /** The moves of the game, the latest first: its history, shown by the page in the panel of the room, after the end of a player away */
+    public readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => {
+        const game: SynchronousChessGame = this.gameSession().game;
+        const result: GameResult | null = game.result();
+        const lines: ReadonlyArray<TranslatableText> = playedTurnLines(game.playedTurns());
+        return result?.reason === GameEndReason.AWAY
+            ? [{ key: scopedKey(TranslationScope.CHESS, marker('game.history.away', undefined, 'chess')), params: { color: result.winner === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE } }, ...lines]
+            : lines;
+    });
+
+    protected readonly clockLow: number = CLOCK_LOW;
+    /** The clock of the other player, away, on the page of the player waiting for it: the game claimed once over */
+    protected readonly awayTimeLeft: Signal<number | null> = turnClock({
+        // A turn run starts the time again: the other player played meanwhile
+        running: (): boolean => {
+            const session: SynchronousChessGameSession = this.gameSession();
+            session.game.playedTurns();
+            return session.forfeitClaimable();
+        },
+        times: () => ({ turnTime: CHESS_AWAY_TIME, awayTime: 0 }),
+        // The time of the player away is its whole time
+        away: computed((): boolean => false),
+        timeOut: () => this.gameSession().claimForfeit(),
+    });
+    /** The names of the players away, listed in the language of the page */
+    private readonly listFormat = computed<Intl.ListFormat>(() => new Intl.ListFormat(this.languageService.language(), { type: 'conjunction' }));
+    /** A seated player away during the game: every page waits for it */
+    protected readonly awayStatus: Signal<TranslatableText | undefined> = computed((): TranslatableText | undefined => {
+        const session: SynchronousChessGameSession = this.gameSession();
+        const away: ReadonlyArray<string> = session.awayPlayers();
+        return away.length > 0 && !session.seatsOpen() && !session.game.isGameOver()
+            ? { key: scopedKey(TranslationScope.CHESS, marker('game.away', undefined, 'chess')), params: { name: this.listFormat().format(away) } }
+            : undefined;
+    });
 
     public ngOnDestroy(): void {
         this.gameSession().destroy();
@@ -186,6 +222,8 @@ export class SyncChessGameComponent implements OnDestroy {
                 return marker('game.result.fiftyTurns', undefined, 'chess');
             case GameEndReason.INSUFFICIENT_MATERIAL:
                 return marker('game.result.insufficientMaterial', undefined, 'chess');
+            case GameEndReason.AWAY:
+                return marker('game.result.away', undefined, 'chess');
             default:
                 return switchExhaustivenessGuard(result.reason);
         }
@@ -203,6 +241,18 @@ export class SyncChessGameComponent implements OnDestroy {
     /** The local player leaves its seat, at the bottom of the board, until the game starts */
     public canLeaveSeat(): boolean {
         return this.gameSession().seatsOpen() && this.gameSession().myColor !== PieceColor.NONE;
+    }
+
+    /** The local player frees the seat of a player away, until the game starts: the other seated player, or the host */
+    public canRelease(color: PieceColor): boolean {
+        return this.gameSession().canRelease(color);
+    }
+
+    public release(color: PieceColor): void {
+        // A second click, before the request is in the chain, sends nothing
+        if (this.canRelease(color)) {
+            this.gameSession().release(color);
+        }
     }
 
     public takeSeat(color: PieceColor): void {

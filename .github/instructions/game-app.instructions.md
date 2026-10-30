@@ -227,6 +227,9 @@ Claude writes the translations of every new or changed key, into every language:
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
 | unread (message) | non lu | sin leer | não lida | não lida | ungelesen | непрочитанное | okunmamış | belum dibaca | nieprzeczytana | non letto |
 | hide (a player's messages) | masquer | ocultar | ocultar | ocultar | ausblenden | скрыть | gizlemek | sembunyikan | ukryć | nascondere |
+| mute | rendre muet | silenciar | silenciar | silenciar | stummschalten | заглушить | sustur | bisukan | wycisz | silenzia |
+| unmute | rendre la parole | quitar el silencio | tirar o silêncio | tirar o silêncio | Stummschaltung aufheben | снять заглушение | susturmayı kaldır | batalkan bisu | cofnij wyciszenie | riattiva |
+| remove (from a room) | exclure | expulsar | remover | remover | entfernen | удалить | çıkarmak | mengeluarkan | usunąć | rimuovere |
 | history | historique | historial | histórico | histórico | Verlauf | история | geçmiş | riwayat | historia | cronologia |
 | server | serveur | servidor | servidor | servidor | Server | сервер | sunucu | server | serwer | server |
 | cheating | triche | trampa | trapaça | batota | Betrug | жульничество | hile | curang | oszustwo | imbroglio |

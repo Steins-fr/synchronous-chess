@@ -3,7 +3,9 @@
     flex-direction: column;
 
     .player {
+        // Whole beside the player of the seat, its name shortened rather than the button
         .seat-button {
+            flex-shrink: 0;
             margin: 4px 0 4px 8px;
         }
     }

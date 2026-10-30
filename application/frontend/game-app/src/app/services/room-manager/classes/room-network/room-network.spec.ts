@@ -1,4 +1,4 @@
-import { RoomNetwork } from './room-network';
+import { JoinFailure, RoomNetwork } from './room-network';
 import { WebrtcNegotiator } from '../negotiator/webrtc-negotiator';
 import { HostRoomMessageType } from '@app/services/room-manager/classes/webrtc/messages/host-room-message';
 import { NegotiatorMessageType } from '@app/services/room-manager/classes/webrtc/messages/negotiator-message';
@@ -52,6 +52,15 @@ class TestRoomNetwork extends RoomNetwork {
 
     public override getNegotiatorSize(): number {
         return super.getNegotiatorSize();
+    }
+
+    public override isRefused(playerName: string): boolean {
+        return super.isRefused(playerName);
+    }
+
+    /** The players the room removed, as its hosting reads them */
+    public refusedNames(): ReadonlySet<string> {
+        return this.hostingContext(2, 'token').refused();
     }
 
     protected onRoomMessage(message: ReceivedMessage): void {
@@ -305,6 +314,120 @@ describe('RoomNetwork', () => {
             expect(network.negotiators().get('lost')).toBeInstanceOf(WebrtcNegotiator);
             expect([...network.negotiators().keys()]).toEqual(['lost']);
             expect(Negotiator.prototype.initiate).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('exclude', () => {
+        const signal: RtcSignal = { sdp: { sdp: 'sdp', type: 'offer' }, ice: [] };
+
+        beforeEach(() => {
+            vi.spyOn(Negotiator.prototype, 'initiate').mockResolvedValue(undefined);
+            vi.spyOn(Negotiator.prototype, 'negotiationMessage').mockResolvedValue(undefined);
+        });
+
+        test('should never connect again to a player the room removed, absent, with no link to close', async () => {
+            // Given
+            const relay = createPlayer('relay');
+            network.addPlayer(relay.player);
+            const timers: number = vi.getTimerCount();
+
+            // When
+            network.exclude('gone');
+            network.restoreLink('gone', 'relay');
+            const remoteSignal: NetworkMessage = { type: HostRoomMessageType.REMOTE_SIGNAL, payload: { from: 'gone', signal }, origin: MessageOriginType.HOST_ROOM };
+            relay.webrtcMock.data.next(remoteSignal);
+            await Promise.resolve();
+
+            // Then
+            expect(network.negotiators().size).toEqual(0);
+            expect(Negotiator.prototype.negotiationMessage).not.toHaveBeenCalled();
+            expect(network.isRefused('gone')).toEqual(true);
+            expect([...network.refusedNames()]).toEqual(['gone']);
+            expect(vi.getTimerCount()).toEqual(timers);
+        });
+
+        test('should stop negotiating with a player the room removed', () => {
+            // Given
+            const { negotiator } = createNegotiator('pending');
+            network.addNegotiator(negotiator);
+            const queueRemoved: string[] = [];
+            network.queueRemoved$.subscribe((playerName: string) => queueRemoved.push(playerName));
+
+            // When
+            network.exclude('pending');
+
+            // Then
+            expect(network.negotiators().size).toEqual(0);
+            expect(negotiator.clear).toHaveBeenCalledTimes(1);
+            expect(queueRemoved).toEqual(['pending']);
+        });
+
+        test('should close the link to a player the room removed once its grace ended, as a lost connection, once', () => {
+            // Given
+            const { player, webrtcMock } = createPlayer('remote');
+            network.addPlayer(player);
+            const removedPlayers: Player[] = [];
+            network.playerRemoved$.subscribe((removed: Player) => removedPlayers.push(removed));
+            const timers: number = vi.getTimerCount();
+
+            // When
+            network.exclude('remote');
+            network.exclude('remote');
+            vi.advanceTimersByTime(4999);
+
+            // Then: its page receives the block removing it meanwhile
+            expect(vi.getTimerCount()).toEqual(timers + 1);
+            expect(removedPlayers).toEqual([]);
+
+            // When
+            vi.advanceTimersByTime(1);
+
+            // Then
+            expect(network.onPlayerDisconnectedSpy).toHaveBeenCalledExactlyOnceWith(player);
+            expect(removedPlayers).toEqual([player]);
+            expect(webrtcMock.close).toHaveBeenCalledTimes(1);
+            expect(network.isPlayerNameAlreadyInRoom('remote')).toEqual(false);
+        });
+
+        test('should close nothing once the player removed left by itself during its grace', () => {
+            // Given
+            const { player, webrtcMock } = createPlayer('remote');
+            network.addPlayer(player);
+            network.exclude('remote');
+
+            // When
+            webrtcMock.emitStates({ iceConnection: 'disconnected' });
+            vi.advanceTimersByTime(5000);
+
+            // Then
+            expect(network.onPlayerDisconnectedSpy).toHaveBeenCalledExactlyOnceWith(player);
+        });
+
+        test('should give the room up once the room delivered the block removing the local player', async () => {
+            // Given
+            const joinFailed: JoinFailure[] = [];
+            network.joinFailed$.subscribe((failure: JoinFailure) => joinFailed.push(failure));
+
+            // When
+            network.exclude('local');
+
+            // Then
+            expect(joinFailed).toEqual([]);
+            await Promise.resolve();
+            expect(joinFailed).toEqual([JoinFailure.REMOVED]);
+            expect(network.isRefused('local')).toEqual(false);
+        });
+
+        test('clear should cancel the closing of the links to the players removed', () => {
+            // Given
+            network.addPlayer(createPlayer('remote').player);
+            network.exclude('remote');
+
+            // When
+            network.clear();
+
+            // Then
+            expect(vi.getTimerCount()).toEqual(0);
         });
     });
 

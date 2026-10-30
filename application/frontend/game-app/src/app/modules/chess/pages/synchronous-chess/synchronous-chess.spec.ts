@@ -63,9 +63,12 @@ describe('SynchronousChess', () => {
         // Then
         expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'local', token: 'token' }, 4, {
             [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
+            [ChatMessengerType.MODERATION]: BlockChainName.CHAT,
             [SCGameSessionType.SEAT]: BlockChainName.CHESS,
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
+            [SCGameSessionType.UNSEAT]: BlockChainName.CHESS,
+            [SCGameSessionType.FORFEIT]: BlockChainName.CHESS,
         }, expect.any(AbortSignal));
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull());
 

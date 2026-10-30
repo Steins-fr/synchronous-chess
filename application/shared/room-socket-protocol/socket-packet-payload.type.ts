@@ -33,6 +33,8 @@ export enum RoomApiRequestTypeEnum {
     FULL = 'full',
     SIGNAL = 'signal',
     RECONNECT = 'reconnect',
+    /** The host tells the API the player the room removed: refused joining it again, by its name and its browser */
+    BAN = 'ban',
 }
 
 export type RoomSocketApiRequestTypedData = {
@@ -44,6 +46,7 @@ export type RoomSocketApiRequestTypedData = {
     'signal': RtcSignalRequest,
     'full': FullRequest,
     'reconnect': RoomReconnectRequest,
+    'ban': PlayerRequest,
 };
 
 export type SocketPacketRequestPayload<Type extends RoomApiRequestTypeEnum = RoomApiRequestTypeEnum> = SocketPacketPayload<Type, RoomSocketApiRequestTypedData[Type]>;
@@ -52,6 +55,7 @@ export type SocketPacketRequestPayload<Type extends RoomApiRequestTypeEnum = Roo
 // region ResponsePayload
 export enum RoomApiResponseTypeEnum {
     ADDED = 'added',
+    BANNED = 'banned',
     CREATED = 'created',
     ERROR = 'error',
     FULL_SENT = 'fullSent',
@@ -65,6 +69,7 @@ export enum RoomApiResponseTypeEnum {
 export type RoomSocketApiResponseType = `${ RoomApiResponseTypeEnum }`;
 export type RoomSocketApiResponseTypedData = {
     'added': PlayerResponse,
+    'banned': PlayerResponse,
     'created': RoomCreateResponse,
     'error': ErrorResponse,
     'fullSent': FullResponse,
@@ -88,6 +93,7 @@ export const requestToResponse = {
     [RoomApiRequestTypeEnum.SIGNAL]: RoomApiResponseTypeEnum.SIGNAL_SENT,
     [RoomApiRequestTypeEnum.FULL]: RoomApiResponseTypeEnum.FULL_SENT,
     [RoomApiRequestTypeEnum.RECONNECT]: RoomApiResponseTypeEnum.RECONNECTED,
+    [RoomApiRequestTypeEnum.BAN]: RoomApiResponseTypeEnum.BANNED,
 } as const satisfies Record<RoomApiRequestTypeEnum, RoomApiResponseTypeEnum>;
 
 export type RequestToResponseType<Type extends RoomApiRequestTypeEnum> = (typeof requestToResponse)[Type];

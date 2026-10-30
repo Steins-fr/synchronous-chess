@@ -35,8 +35,8 @@ The rules of the game (moves, turns, check, end of the game) belong to `Synchron
 turns and `DrawRules` (`classes/games`, `classes/turns`); the session only decides **who** plays and
 **when** an action is applied.
 
-Every participant runs the same online session: the host has no role in the game. It only creates the
-room, and orders the block chains until it leaves (see
+Every participant runs the same online session: the host has no role in the game, but freeing the seat
+of a player away before it starts. It creates the room, and orders the block chains until it leaves (see
 [Changing the sequencer](blockchain-and-anti-cheat.md#changing-the-sequencer)).
 
 ## Life cycle
@@ -46,7 +46,7 @@ flowchart LR
     Page[SynchronousChess page] -- room --> Component[SyncChessGameComponent]
     Component -- buildOnline / buildLocal --> Session[Game session]
     Session -- transmitMessage --> Room[BlockRoom]
-    Room -- messenger: SC_GS_seat, SC_GS_commit, SC_GS_reveal --> Session
+    Room -- messenger: SC_GS_seat, SC_GS_unseat, SC_GS_commit, SC_GS_reveal, SC_GS_forfeit --> Session
     Session -- reportCheat --> Room
     Session -- signals --> Component
 ```
@@ -95,6 +95,22 @@ expected.
 **The game starts** with the first commitment of a player in the chain. From then on, the seats are
 final (`seatsOpen()` is false): a player who leaves the room keeps its seat, and can come back to it by
 reloading the page.
+
+**A player away.** A seated player missing from the list of the players of the room is away
+(`awayPlayers()`). Until the game starts, the other seated player, or the host, frees its seat with
+`Free the seat` (`release()`), shown on that seat: an `SC_GS_unseat` message naming
+the color and its player. Every page applies it in the order of the chain, with the seats, a page
+replaying the chain included:
+
+| Request | Applied when | Effect |
+|---|---|---|
+| Free a seat | Sent by the player of the other color, or by the host as the sequencer of the block of its request, the seat still held by the player it names, before the game starts | The seat is freed |
+| Free a seat | Otherwise: the game started, the seat taken by another participant meanwhile, sent by a spectator who is not the sequencer | Refused |
+
+No page can tell when the player was away, as for a timeout at poker: the chain applies the request
+whatever the presence of the player. The host decides as the sequencer of the block of its request, so a
+page joining late, or replaying the chain, applies it alike, even once another participant orders the
+chain. Once the game started, a player away ends it instead (see [End of the game](#end-of-the-game)).
 
 **Spectators.** `spectatorNumber()` counts the connected participants of the room without a seat. Each
 participant counts them from its own list of players.
@@ -181,6 +197,19 @@ end is decided at the start of each synchronous turn. The first end found, in th
 moves of the conventional rules. A pawn move or a capture, in a synchronous or an intermediate turn,
 starts the history again, since no former position can come back.
 
+**A player away.** Once the game started, a seated player away keeps the other one waiting: every page
+tells it below the board (`Waiting for bob to come back…`, `#game-status`). The player who played the
+turn in progress, the other one away, sees a clock of 30 seconds beside it (`CHESS_AWAY_TIME`,
+`#away-clock`, started again by each turn run): once it is over, the page claims the game with an
+`SC_GS_forfeit` message (`claimForfeit()`), giving the turns the chain ran. The claim is checked in the
+order of the reveals, the ones before it first: it is void once the late player revealed its action of the
+turn, when it has no part in the turn, when the claimer did not commit to its own, or when the chain ran
+another turn meanwhile. Otherwise the late player loses the game:
+
+| Reason | When | Result |
+|---|---|---|
+| `away` | The other player claimed the game, 30 seconds after its move, the late player away | The claimer wins (`Black was away when the time ran out: White wins`), and the history of the game starts with `Black was away when the time ran out` |
+
 Once the game ends, no piece can move anymore. These draws come from the rules of
 [Synchronous Chess](http://www.hexenspiel.de/engl/synchronous-chess/), which keep the draws of the
 conventional chess.
@@ -243,8 +272,10 @@ participant, the sender included.
 | Type | Payload | Sent by | When |
 |---|---|---|---|
 | `SC_GS_seat` | `{ color: 'w' \| 'b' \| 'none' }` | Any participant | Taking or leaving a seat, before the game starts |
+| `SC_GS_unseat` | `{ color, name }`: the seat freed, and its player | The other seated player, or the host | Before the game starts, the player of the seat away |
 | `SC_GS_commit` | `{ turn, commitment }` | A seated player | Playing an action |
 | `SC_GS_reveal` | `{ turn, action, salt }` | A seated player | Once every player of the turn is committed |
+| `SC_GS_forfeit` | `{ turn }`: the turns the chain ran | A seated player | 30 seconds after its move, the other player away |
 
 `action` is `{ kind: 'move', move }` (`move` is `null` for a skipped turn) or
 `{ kind: 'promotion', pieceType }`.
@@ -261,7 +292,11 @@ room, the game replaces the presentation, and the rules are folded below it.
   player sits at the bottom, the board seen from its side (`flipped` for black). A spectator sees the
   board from the free seat it may take, white first: before the game starts, that seat alone shows
   `Play white` or `Play black`, where the spectator then sits, and the seat of the local player shows
-  `Leave the seat`. Both seats taken, a spectator sees the board from white.
+  `Leave the seat`. Both seats taken, a spectator sees the board from white. Before the game starts, the
+  seat of a player away shows `Free the seat` to the other player and to the host. A long name is
+  shortened beside the button: a seat keeps a single line.
+- **A player away.** Below the board, a status line (`<output>`, `#game-status`) tells a seated player away
+  once the game started, and the player waiting for it sees the seconds left beside it (`#away-clock`).
 - **Turn.** The type of the turn, whether each color has played, the last move of each color, the check
   and checkmate states.
 - **End of the game.** Over the board, the winner or the reason of the draw: the board does not move.
@@ -280,11 +315,16 @@ each player seeing the board from its side, and checks that the seats, the board
 
 ## Limits
 
-- **A seat taken before the game starts stays taken** when its player leaves the room: the participants
-  notice a departure at different times, so it can not free a seat the same way for all of them. The
-  player can come back to it by reloading the page.
+- **A seat taken before the game starts stays taken** when its player leaves the room, until the other
+  player or the host frees it: the participants notice a departure at different times, so it can not free
+  a seat the same way for all of them. The player can come back to it by reloading the page.
+- **No page can tell when a player was away**: a page changed to send `SC_GS_unseat` frees the seat of
+  the other player before the game starts, and a page changed to send `SC_GS_forfeit` early ends the game
+  of the other player while it is away, as `SP_timeout` at poker.
+- **Both players away**, or removed from the room by the host, stall the game: no one claims it, and the
+  seats are final.
 - **One game per room**: the seats stay final once the game ended.
-- **No resignation nor draw by agreement**: only the position ends a game.
+- **No resignation nor draw by agreement**: only the position, or a player away, ends a game.
 
 ## Testing
 
@@ -292,8 +332,9 @@ each player seeing the board from its side, and checks that the seats, the board
   `RoomHub`, which delivers the messages to all of them in a single order, as the chain does, and can
   replay them to a session, as after a reload.
 - `sync-chess-game.component.spec.ts` drives the component over a `Room` and a `RoomNetworkMock`.
-- End to end: `e2e/synchronous-chess.e2e.ts`, a game to its checkmate, and a player reloading the page
-  during a game, then the players asked to confirm leaving it; `e2e/room-session.e2e.ts`, the URL of a
+- End to end: `e2e/synchronous-chess.e2e.ts`, a game to its checkmate, a player reloading the page
+  during a game, then the players asked to confirm leaving it, the host freeing the seat of a player away
+  before the game starts, and a game won against a player away (`SLOW`); `e2e/room-session.e2e.ts`, the URL of a
   room and the session of its tab.
 - In the browser, two tabs are enough: the host and a participant, each taking a seat (see
   [CLAUDE.md](../CLAUDE.md#browser-testing)).

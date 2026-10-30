@@ -26,6 +26,10 @@ export default abstract class SynchronousChessGameSession {
     public abstract readonly seatsOpen: Signal<boolean>;
     /** The local player plays the game in progress: seated, the game started and not over. Leaving it asks to confirm */
     public abstract readonly inMatch: Signal<boolean>;
+    /** The seated players not connected to this page */
+    public abstract readonly awayPlayers: Signal<ReadonlyArray<string>>;
+    /** The local player waits for the other one, away, during the game: once its time is over, it claims the game */
+    public abstract readonly forfeitClaimable: Signal<boolean>;
 
     /** The number of turns run, the same for every participant applying the same moves */
     protected turnCount: number = 0;
@@ -59,6 +63,12 @@ export default abstract class SynchronousChessGameSession {
         return true;
     }
 
+    /** The game ends by the forfeit of a player away: the move the local player previewed shows no more */
+    protected endByForfeit(loser: PieceColor): void {
+        this.game.forfeit(loser);
+        this._movePreview.set(undefined);
+    }
+
     protected runPromotion(color: PieceColor, pieceType: PieceType): boolean {
 
         if (!this.game.promote(pieceType, color)) {
@@ -74,6 +84,10 @@ export default abstract class SynchronousChessGameSession {
 
     public abstract takeSeat(color: PieceColor): void;
     public abstract leaveSeat(): void;
+    /** Whether the local player may free the seat of a color, its player away */
+    public abstract canRelease(color: PieceColor): boolean;
+    public abstract release(color: PieceColor): void;
+    public abstract claimForfeit(): void;
     public abstract move(move: Move | null): void;
     public abstract promote(pieceType: PieceType): void;
     public abstract destroy(): void;

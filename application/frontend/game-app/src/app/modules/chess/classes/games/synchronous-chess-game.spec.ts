@@ -96,6 +96,21 @@ describe('SynchronousChessGame', () => {
         expect(blackRules).toBe(game.blackRules);
     });
 
+    test.each([
+        { loser: PieceColor.WHITE, winner: PieceColor.BLACK },
+        { loser: PieceColor.BLACK, winner: PieceColor.WHITE },
+    ])('should end the game of $loser, away, whatever the board', ({ loser, winner }) => {
+        // Given
+        const game: SynchronousChessGame = new SynchronousChessGame();
+
+        // When
+        game.forfeit(loser);
+
+        // Then
+        expect(game.result()).toEqual({ winner, reason: GameEndReason.AWAY });
+        expect(game.isGameOver()).toEqual(true);
+    });
+
     test('should get the last turn action of move category', () => {
         const gameUndefinedOldTurn: SynchronousChessGame = new SynchronousChessGame();
         gameState(gameUndefinedOldTurn)._oldTurn.set(null);

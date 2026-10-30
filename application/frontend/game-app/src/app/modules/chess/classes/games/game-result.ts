@@ -14,6 +14,8 @@ export enum GameEndReason {
     FIFTY_TURNS = 'fiftyTurns',
     /** No piece left can checkmate: a draw */
     INSUFFICIENT_MATERIAL = 'insufficientMaterial',
+    /** A player stayed away while the other one waited for its action: it loses the game */
+    AWAY = 'away',
 }
 
 export interface GameResult {

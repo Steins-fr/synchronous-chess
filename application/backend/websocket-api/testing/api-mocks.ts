@@ -15,6 +15,7 @@ import {
 import RoomRepository from '@repositories/room-repository';
 import { APIGatewayProxyEvent, APIGatewayProxyEventV2, APIGatewayRequestAuthorizerEvent, APIGatewayRequestAuthorizerEventV2 } from 'aws-lambda';
 import { AwsClientStub, mockClient } from 'aws-sdk-client-mock';
+import { and, eq } from 'drizzle-orm';
 import { beforeEach, vi } from 'vitest';
 import { TestDatabase, useTestDatabase } from './database';
 
@@ -35,6 +36,11 @@ export const GUEST_CONNECTION: string = 'guest-connection';
 /** The tokens the host of `aRoom()` created it with, and its guest joined it with */
 export const HOST_TOKEN: string = 'host-token';
 export const GUEST_TOKEN: string = 'guest-token';
+
+/** The browser id a player of the specs joined a room from, or created it from: `storeRoom()` keeps its hash */
+export function browserOf(playerName: string): string {
+    return `${ playerName }-browser`;
+}
 
 /** The lease of `aRoom()`, far ahead whatever the time of the spec */
 export const LEASED_UNTIL: number = 2_000_000_000;
@@ -137,7 +143,7 @@ export function mockAws(): AwsMocks {
     return mocks;
 }
 
-/** Stores the room, its players and its queue in their order, and the hashes of its tokens */
+/** Stores the room, its players and its queue in their order, and the hashes of its tokens, joined from `browserOf()` their player */
 export async function storeRoom(room: Room): Promise<void> {
     await getDatabase().insert(rooms).values({
         id: room.id,
@@ -166,8 +172,34 @@ export async function storeRoom(room: Room): Promise<void> {
 
     const tokenHashes: [string, string][] = Object.entries(room.tokenHashes);
     if (tokenHashes.length > 0) {
-        await getDatabase().insert(roomTokens).values(tokenHashes.map(([playerName, tokenHash]: [string, string]): typeof roomTokens.$inferInsert => ({ roomId: room.id, playerName, tokenHash })));
+        await getDatabase().insert(roomTokens).values(tokenHashes.map(([playerName, tokenHash]: [string, string]): typeof roomTokens.$inferInsert => ({
+            roomId: room.id,
+            playerName,
+            tokenHash,
+            browserHash: hashToken(browserOf(playerName)),
+        })));
     }
+}
+
+/** Bans a player stored with the room, as the host does (BAN): its name and its browser */
+export async function storeBan(roomId: string, playerName: string): Promise<void> {
+    await getDatabase().update(roomTokens).set({ banned: true }).where(and(eq(roomTokens.roomId, roomId), eq(roomTokens.playerName, playerName)));
+}
+
+/** The players of the room the host removed, by name */
+export async function readBanned(roomId: string): Promise<string[]> {
+    const banned: { playerName: string }[] = await getDatabase().select({ playerName: roomTokens.playerName }).from(roomTokens)
+        .where(and(eq(roomTokens.roomId, roomId), eq(roomTokens.banned, true)))
+        .orderBy(roomTokens.playerName);
+    return banned.map(({ playerName }: { playerName: string }): string => playerName);
+}
+
+/** The hash of the browser id each player of the room joined from, by name: what the room model does not read */
+export async function readBrowserHashes(roomId: string): Promise<Record<string, string>> {
+    const tokens: { playerName: string, browserHash: string }[] = await getDatabase()
+        .select({ playerName: roomTokens.playerName, browserHash: roomTokens.browserHash }).from(roomTokens)
+        .where(eq(roomTokens.roomId, roomId));
+    return Object.fromEntries(tokens.map(({ playerName, browserHash }: { playerName: string, browserHash: string }): [string, string] => [playerName, browserHash]));
 }
 
 /** The room as stored, null without it */

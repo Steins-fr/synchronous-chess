@@ -41,8 +41,17 @@ describe('Room', () => {
         expect(room.initiator).toEqual(true);
         expect(room.roomName).toEqual('room');
         expect(room.hostName).toEqual('host');
+        expect(room.sequencer()).toEqual('host');
         expect(room.players()).toEqual([network.localPlayer]);
         expect(room.queue()).toEqual(['pending']);
+    });
+
+    test('should tell the network the players the room removed', () => {
+        // When
+        room.exclude('remote');
+
+        // Then
+        expect(network.exclude).toHaveBeenCalledExactlyOnceWith('remote');
     });
 
     test('should follow the players of the room, a lost one having left it', () => {
@@ -91,6 +100,8 @@ describe('Room', () => {
         expect(moves).toEqual([{ type: 'move', payload: 'e4', origin: MessageOriginType.ROOM_SERVICE, from: 'remote' }]);
         expect(room.isHistory(moves[0])).toEqual(false);
         expect(room.sequencedAt(moves[0])).toBeUndefined();
+        // Without block chain, the host orders every message
+        expect(room.sequencedBy(moves[0])).toEqual('host');
     });
 
     test('reportCheat should only log, without anti-cheat', () => {

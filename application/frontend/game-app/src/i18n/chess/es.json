@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Esperando a que {name} vuelva…",
     "check": "Jaque",
     "checkmate": "Jaque mate",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {Se acabó el tiempo en ausencia de las blancas} other {Se acabó el tiempo en ausencia de las negras}}",
       "move": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Blancas} other {Negras}}: {from} → {to}",
       "pass": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Las blancas pasan} other {Las negras pasan}}",
       "promotion": "Turno {turn}{kind, select, intermediate { (intermedio)} other {}} · {color, select, w {Las blancas coronan} other {Las negras coronan}} en {square}: {piece, select, q {dama} r {torre} b {alfil} other {caballo}}",
@@ -18,6 +21,7 @@
     "played": "ha jugado",
     "promotion": "Coronación",
     "result": {
+      "away": "{winner, select, w {Se acabó el tiempo en ausencia de las negras: ganan las blancas} other {Se acabó el tiempo en ausencia de las blancas: ganan las negras}}",
       "checkmate": "Jaque mate: {winner, select, w {ganan las blancas} other {ganan las negras}}",
       "doubleCheckmate": "Tablas: ambos jugadores reciben jaque mate",
       "fiftyTurns": "Tablas: 50 turnos sin movimiento de peón ni captura",
@@ -33,6 +37,7 @@
       "leave": "Dejar el puesto",
       "playBlack": "Jugar con negras",
       "playWhite": "Jugar con blancas",
+      "release": "Liberar el puesto",
       "white": "Jugador blanco:"
     },
     "spectators": "Espectadores: {count}",
@@ -74,6 +79,7 @@
       "title": "Movimiento y captura"
     },
     "end": {
+      "away": "Un jugador ausente durante 30 segundos mientras el otro espera su jugada",
       "caption": "Finales de la partida y su resultado",
       "checkmate": "Jaque mate a un jugador",
       "doubleCheckmate": "Jaque mate a ambos jugadores",
@@ -106,7 +112,7 @@
       "trigger": "<strong>Inicio.</strong> Tras un turno sincronizado, hay un turno intermedio si una pieza que se ha movido ha llegado a una casilla ya atacada (o protegida) por el rival antes del turno, y una pieza rival puede capturarla legalmente."
     },
     "players": {
-      "seats": "Dos jugadores. Cada participante de la sala, incluido el anfitrión, elige su color entre los puestos libres. Los puestos quedan fijados desde la primera jugada; los demás participantes son espectadores.",
+      "seatsFreed": "Dos jugadores. Cada participante de la sala, incluido el anfitrión, elige su color entre los puestos libres. Los puestos quedan fijados desde la primera jugada; los demás participantes son espectadores. Hasta entonces, el otro jugador o el anfitrión puede liberar el puesto de un jugador ausente.",
       "shortTitle": "Jugadores",
       "simultaneousMoves": "Los dos jugadores juegan su jugada a la vez, cada uno sin conocer la del otro. Cuando ambos han elegido, las dos jugadas se revelan y se aplican según las reglas siguientes.",
       "title": "Jugadores y principio"

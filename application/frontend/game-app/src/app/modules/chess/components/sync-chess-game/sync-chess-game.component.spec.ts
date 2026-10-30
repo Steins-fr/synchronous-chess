@@ -1,5 +1,6 @@
 import { gameState } from '@testing/chess-state.helper';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SyncChessGameComponent } from './sync-chess-game.component';
@@ -28,7 +29,7 @@ import MessageOriginType from '@app/services/room-manager/classes/webrtc/message
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
 import { translated } from '@testing/translatable-text.helper';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 describe('SyncChessGameComponent', () => {
     let fixture: ComponentFixture<SyncChessGameComponent>;
@@ -39,8 +40,11 @@ describe('SyncChessGameComponent', () => {
         return TestHelper.cast<{ gameSession(): SynchronousChessGameSession }>(component).gameSession();
     }
 
+    // The texts of its children apart: the player of a seat, then its button
     function text(selector: string): string {
-        return (fixture.nativeElement.querySelector(selector)?.textContent ?? '').replace(/\s+/g, ' ').trim();
+        const element: Element | null = fixture.nativeElement.querySelector(selector);
+        return [...element?.childNodes ?? []].filter((node: ChildNode) => node.nodeType !== Node.COMMENT_NODE)
+            .map((node: ChildNode) => node.textContent).join(' ').replace(/\s+/g, ' ').trim();
     }
 
     function skipButton(color: 'black' | 'white'): HTMLButtonElement | null {
@@ -96,8 +100,8 @@ describe('SyncChessGameComponent', () => {
     }
 
     // A room with the local player and a remote one, no one seated yet
-    async function joinOnlineRoom(): Promise<void> {
-        network = new RoomNetworkMock('local', true);
+    async function joinOnlineRoom(hostName?: string): Promise<void> {
+        network = new RoomNetworkMock('local', true, hostName);
         const room: Room<ChessPayloads> = new Room<ChessPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
         fixture.componentRef.setInput('room', room);
         await fixture.whenStable();
@@ -143,7 +147,7 @@ describe('SyncChessGameComponent', () => {
         expect(seatButtons('white')).toEqual([]);
         expect(seatButtons('black')).toEqual([]);
         expect(fixture.nativeElement.textContent).toContain('Turn: Synchronous');
-        expect(text('.player-information.black-player')).toContain('nonewaiting');
+        expect(text('.player-information.black-player')).toContain('none waiting');
         expect(skipButton('white')).toBeNull();
         expect(skipButton('black')).toBeNull();
         expect(component.moveColor()).toEqual(PieceColor.NONE);
@@ -235,6 +239,67 @@ describe('SyncChessGameComponent', () => {
         // Then
         expect(text('.black-seat')).toEqual('Black player: remote');
         expect(text('.white-seat')).toEqual('White player: Waiting Play white');
+    });
+
+    test.each([PieceColor.WHITE, PieceColor.BLACK])('should let the player of %s free the seat of the other one, away, before the game starts', async (localColor: PieceColor) => {
+        // Given
+        await createOnlineGame(localColor);
+        const away: 'black' | 'white' = localColor === PieceColor.WHITE ? 'black' : 'white';
+        expect(seatButton(away, 'Free the seat')).toBeUndefined();
+
+        // When the other player leaves the room
+        network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+        await refresh();
+
+        // Then
+        expect(text('#seat-top')).toEqual(`${ away === 'black' ? 'Black' : 'White' } player: remote Free the seat`);
+
+        // When
+        const transmit = vi.spyOn(component.room() as Room<ChessPayloads>, 'transmitMessage');
+        const release: HTMLButtonElement = seatButton(away, 'Free the seat') as HTMLButtonElement;
+        release.click();
+        release.click();
+        await refresh();
+
+        // Then
+        expect(text('#seat-top')).toEqual(`${ away === 'black' ? 'Black' : 'White' } player: Waiting`);
+        expect(transmit).toHaveBeenCalledExactlyOnceWith(SCGameSessionType.UNSEAT, { color: localColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE, name: 'remote' });
+    });
+
+    test('should let the host, a spectator, free the seat of a player away at the bottom of the board, before the game starts', async () => {
+        // Given: the local participant hosts the room, two others are seated
+        await joinOnlineRoom('local');
+        network.playerAdded$.next(TestHelper.cast<Player>({ name: 'other', isLocal: false, sendData: vi.fn() }));
+        remoteSeat(PieceColor.WHITE);
+        network.onMessage$.next({ type: SCGameSessionType.SEAT, payload: { color: PieceColor.BLACK }, origin: MessageOriginType.ROOM_SERVICE, from: 'other' });
+        await refresh();
+
+        // When the player of white leaves the room
+        network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+        await refresh();
+
+        // Then
+        expect(text('#seat-bottom')).toEqual('White player: remote Free the seat');
+
+        // When
+        seatButton('white', 'Free the seat')?.click();
+        await refresh();
+
+        // Then: the seat is free, at the bottom of the board
+        expect(text('#seat-bottom')).toEqual('White player: Waiting Play white');
+    });
+
+    test('should wait for every player away, their names listed in the language of the page', async () => {
+        // Given: both seated players away during the game, set before the first render
+        network = new RoomNetworkMock('local', true);
+        fixture.componentRef.setInput('room', new Room<ChessPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+        Object.assign(session(), { awayPlayers: signal<ReadonlyArray<string>>(['alice', 'bob']), seatsOpen: signal<boolean>(false) });
+
+        // When
+        await refresh();
+
+        // Then
+        expect(text('#game-status')).toEqual('Waiting for alice and bob to come back…');
     });
 
     test('should fix the seats once the game started', async () => {
@@ -421,6 +486,8 @@ describe('SyncChessGameComponent', () => {
         { result: { winner: PieceColor.NONE, reason: GameEndReason.THREEFOLD_REPETITION }, message: 'Draw: the same position occurred three times' },
         { result: { winner: PieceColor.NONE, reason: GameEndReason.FIFTY_TURNS }, message: 'Draw: 50 turns without a pawn move or a capture' },
         { result: { winner: PieceColor.NONE, reason: GameEndReason.INSUFFICIENT_MATERIAL }, message: 'Draw: not enough pieces left to checkmate' },
+        { result: { winner: PieceColor.WHITE, reason: GameEndReason.AWAY }, message: 'Black was away when the time ran out: White wins' },
+        { result: { winner: PieceColor.BLACK, reason: GameEndReason.AWAY }, message: 'White was away when the time ran out: Black wins' },
     ])('should display the end of the game: $message', async ({ result, message }) => {
         // Given
         await createOnlineGame();
@@ -435,6 +502,97 @@ describe('SyncChessGameComponent', () => {
         expect(text('.game-result')).toEqual(message);
         expect(component.displayInteractions(PieceColor.WHITE)).toEqual(false);
         expect(text('.player-information.white-player')).not.toContain('Last move');
+    });
+
+    test('should tell first in the history the player away who lost the game', async () => {
+        // Given
+        await createOnlineGame();
+
+        // When
+        gameState(session().game)._result.set({ winner: PieceColor.BLACK, reason: GameEndReason.AWAY });
+
+        // Then
+        expect(component.history().map(translated)).toEqual(['White was away when the time ran out']);
+    });
+
+    describe('the clock of a player away', () => {
+        /** The clock runs on fake timers, the commitments on real ones */
+        beforeEach(() => {
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        async function elapse(seconds: number): Promise<void> {
+            vi.advanceTimersByTime(seconds * 1000);
+            await refresh();
+        }
+
+        /** The local player, white, plays a turn with the remote one, then its move of the next turn */
+        async function playedSecondTurn(): Promise<void> {
+            await createOnlineGame();
+            board().piecePicked.emit(new Vec2(4, 6));
+            board().pieceDropped.emit(new Vec2(4, 4));
+            await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
+            board().piecePicked.emit(new Vec2(3, 6));
+            board().pieceDropped.emit(new Vec2(3, 4));
+            await refresh();
+        }
+
+        test('should claim the game of the other player away 30 seconds after the local player played', async () => {
+            // Given
+            await playedSecondTurn();
+            expect(text('#game-status')).toEqual('');
+
+            // When the other player leaves the room
+            network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+            await refresh();
+
+            // Then
+            expect(text('#game-status')).toEqual('Waiting for remote to come back…');
+            expect(text('#away-clock')).toEqual('30 s');
+
+            // When
+            await elapse(25);
+
+            // Then: the clock runs out
+            expect(fixture.nativeElement.querySelector('#away-clock').classList).toContain('text-app-clock-low');
+
+            // When
+            await elapse(5);
+
+            // Then
+            await vi.waitFor(() => expect(text('.game-result')).toEqual('Black was away when the time ran out: White wins'));
+            await refresh();
+            expect(text('#game-status')).toEqual('');
+            expect(fixture.nativeElement.querySelector('#away-clock')).toBeNull();
+            expect(component.history().map(translated)).toEqual([
+                'Black was away when the time ran out',
+                'Turn 1 · White: E2 → E4',
+                'Turn 1 · Black: E7 → E5',
+            ]);
+        });
+
+        test('should stop the clock when the other player comes back', async () => {
+            // Given
+            await playedSecondTurn();
+            network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+            await refresh();
+            await elapse(10);
+            expect(text('#away-clock')).toEqual('20 s');
+
+            // When
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false, sendData: vi.fn() }));
+            await refresh();
+            await elapse(30);
+
+            // Then
+            expect(fixture.nativeElement.querySelector('#away-clock')).toBeNull();
+            expect(text('#game-status')).toEqual('');
+            expect(component.resultText()).toBeUndefined();
+        });
     });
 
     test('should reject an unknown end of the game', async () => {

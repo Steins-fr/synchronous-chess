@@ -2,6 +2,8 @@
   "author": "{author} :",
   "composer": {
     "link": "Pas de lien ni d’adresse e-mail dans le tchat",
+    "muted": "Vous êtes muet jusqu’à {time}",
+    "mutedToEnd": "Vous êtes muet jusqu’à la fin de la salle",
     "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum",
     "unsent": "Attendez que vos messages soient envoyés avant d’en envoyer d’autres",
     "wait": "Attendez {seconds, plural, one {# seconde} other {# secondes}} avant d’envoyer un autre message"
@@ -14,11 +16,37 @@
     "flooding": "{name} envoie trop de messages : ils sont masqués un moment",
     "floodingSelf": "Vous avez envoyé trop de messages : ils sont masqués un moment",
     "latest": "Derniers messages",
+    "mute": {
+      "byYou": "Vous avez rendu {name} muet pendant {minutes, plural, one {# minute} other {# minutes}}",
+      "byYouToEnd": "Vous avez rendu {name} muet jusqu’à la fin de la salle",
+      "other": "{moderator} a rendu {name} muet pendant {minutes, plural, one {# minute} other {# minutes}}",
+      "otherToEnd": "{moderator} a rendu {name} muet jusqu’à la fin de la salle",
+      "you": "{moderator} vous a rendu muet pendant {minutes, plural, one {# minute} other {# minutes}}",
+      "youToEnd": "{moderator} vous a rendu muet jusqu’à la fin de la salle"
+    },
+    "removal": {
+      "byYou": "Vous avez exclu {name} de la salle",
+      "other": "{moderator} a exclu {name} de la salle"
+    },
     "retry": "Réessayer",
     "sending": "Envoi…",
+    "unmute": {
+      "byYou": "Vous avez rendu la parole à {name}",
+      "other": "{moderator} a rendu la parole à {name}",
+      "you": "{moderator} vous a rendu la parole"
+    },
     "unread": "Nouveaux messages"
   },
   "message": "Tapez votre message",
+  "moderation": {
+    "menu": "Modérer {name}",
+    "mute": "Rendre muet {minutes, plural, one {# minute} other {# minutes}}",
+    "muteToEnd": "Rendre muet jusqu’à la fin de la salle",
+    "remove": "Exclure de la salle",
+    "removeMessage": "Ce participant quitte la salle et ne peut plus la rejoindre tant qu’elle dure.",
+    "removeTitle": "Exclure de la salle ?",
+    "unmute": "Rendre la parole"
+  },
   "newMessages": "{count, plural, one {# nouveau message} other {# nouveaux messages}}",
   "options": {
     "arrivals": "Afficher les arrivées et départs",

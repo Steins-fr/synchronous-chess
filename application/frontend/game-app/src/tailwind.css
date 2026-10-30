@@ -65,9 +65,10 @@
     @apply m-0 text-center font-medium;
 }
 
-/* A seat of a table of two players: its player, its chips and its buttons, on two rows kept on a phone */
+/* A seat of a table of two players: its player, its chips and its buttons, on two rows kept on a phone. The height of
+   a button kept, shown or not: a button (2.5rem) within the padding and the border */
 @utility table-seat {
-    @apply relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-14 max-sm:min-h-[5.75rem] max-sm:content-start px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised;
+    @apply relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-[calc(2.5rem+1rem+2px)] max-sm:min-h-[5.75rem] max-sm:content-start px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised;
 }
 
 /* What a table of two players waits for, always there: two lines kept on a phone */
@@ -80,9 +81,14 @@
     @apply m-0 min-h-lh max-sm:min-h-[2lh] text-center;
 }
 
-/* A seat of the chess board, above or below it: the height of its button kept, shown or not */
+/* A seat of the chess board, above or below it: the height of its button kept, shown or not, on a single line */
 @utility chess-seat {
-    @apply flex flex-wrap items-center justify-center w-full min-h-12 text-center;
+    @apply flex items-center justify-center w-full min-h-12 text-center;
+}
+
+/* The player of a chess seat: a long name shortened beside the button of the seat, rather than the button on a line of its own */
+@utility chess-seat-label {
+    @apply min-w-0 truncate;
 }
 
 /* A hand of the poker table, dimmed when it loses: its place is kept before the deal, a card (5/7) and the room of its fan */

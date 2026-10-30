@@ -15,7 +15,19 @@
         <p class="muted-note mb-1 text-xs">{{ t('participants.count', { count: players().length }) }}</p>
         <mat-chip-set>
             @for (participant of players(); track participant.name) {
+            @if (moderates() && !unmoderated().has(participant.name)) {
+            <!-- Beside the chip, out of it: the text of the chip holds the name of the player only. On the same line, the chip of a long name shortened -->
+            <span class="flex min-w-0 max-w-full items-center">
+                <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" class="min-w-0" />
+                <button [attr.aria-label]="t('moderation.menu', { name: participant.name })" [disabled]="pendingTargets().has(participant.name)"
+                    [matMenuTriggerData]="{ name: participant.name }" [matMenuTriggerFor]="moderation" [title]="t('moderation.menu', { name: participant.name })"
+                    class="shrink-0" mat-icon-button type="button">
+                    <mat-icon fontIcon="more_vert" />
+                </button>
+            </span>
+            } @else {
             <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" />
+            }
             }
             @for (playerName of queuingPlayers(); track playerName) {
             <mat-chip>{{ playerName }}</mat-chip>
@@ -32,11 +44,13 @@
                 id="unread-divider">{{ t('log.unread') }}</p>
             }
             @if (line.entry.kind === kinds.MESSAGE) {
-            <app-chat-message [message]="line.entry" [retryDisabled]="isWaiting()" [startsGroup]="line.startsGroup" (retry)="retry(line.entry)" [time]="line.time" />
+            <app-chat-message [message]="line.entry" [retryDisabled]="isWaiting() || isMuted()" [startsGroup]="line.startsGroup" (retry)="retry(line.entry)" [time]="line.time" />
             } @else if (line.entry.kind === kinds.ARRIVAL) {
             <p class="chat-notice">{{ t('log.arrival', { name: line.entry.name }) }}</p>
             } @else if (line.entry.kind === kinds.FLOOD) {
             <p class="chat-notice">{{ line.entry.name === localName() ? t('log.floodingSelf') : t('log.flooding', { name: line.entry.name }) }}</p>
+            } @else if (line.entry.kind === kinds.MODERATION) {
+            <p class="chat-notice">{{ line.entry.text.key | transloco: line.entry.text.params }}</p>
             } @else {
             <p class="chat-notice">{{ t('log.departure', { name: line.entry.name }) }}</p>
             }
@@ -57,10 +71,11 @@
     </div>
 
     <!-- Aligned at their top: the hint or the error of the field showing, Send stays in place -->
+    @let hint = composerHint();
     <div class="flex items-start gap-1 border-t border-app-border p-2" id="send-form">
-        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="isWaiting() ? t('composer.wait', { seconds: waitSeconds() }) : isHeldBack() ? t('composer.unsent') : undefined"
+        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="hint ? (hint.key | transloco: hint.params) : undefined"
             [label]="t('message')" class="flex-1" />
-        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting() || isHeldBack()" [title]="t('send')" class="mt-2" id="send" mat-icon-button type="button">
+        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting() || isHeldBack() || isMuted()" [title]="t('send')" class="mt-2" id="send" mat-icon-button type="button">
             <mat-icon>send</mat-icon>
         </button>
     </div>
@@ -94,5 +109,18 @@
             }
         </div>
         }
+    </mat-menu>
+
+    <mat-menu #moderation="matMenu" xPosition="before">
+        <ng-template let-name="name" matMenuContent>
+            @if (mutedNames().has(name)) {
+            <button (click)="unmute(name)" mat-menu-item>{{ t('moderation.unmute') }}</button>
+            } @else {
+            <button (click)="mute(name, muteMinutes.SHORT)" mat-menu-item>{{ t('moderation.mute', { minutes: muteMinutes.SHORT }) }}</button>
+            <button (click)="mute(name, muteMinutes.LONG)" mat-menu-item>{{ t('moderation.mute', { minutes: muteMinutes.LONG }) }}</button>
+            <button (click)="mute(name, null)" mat-menu-item>{{ t('moderation.muteToEnd') }}</button>
+            }
+            <button (click)="remove(name)" mat-menu-item>{{ t('moderation.remove') }}</button>
+        </ng-template>
     </mat-menu>
 </section>

@@ -13,4 +13,9 @@ export default interface RoomJoinRequest {
      * without its password, reloaded included
      */
     token: string;
+    /**
+     * A random id of the browser, kept in its local storage and shared by its tabs: the API keeps its hash, to refuse the
+     * joins of a browser the host removed from the room whatever its name. Never sent to the other players
+     */
+    browserId: string;
 }

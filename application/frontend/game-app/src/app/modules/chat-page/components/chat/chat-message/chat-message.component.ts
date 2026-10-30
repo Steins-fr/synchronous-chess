@@ -11,6 +11,8 @@ export enum ChatEntryKind {
     DEPARTURE = 'departure',
     /** An author sending too many messages: they are hidden until its rate falls back */
     FLOOD = 'flood',
+    /** A decision of the moderator of the room: a mute, its end, a removal */
+    MODERATION = 'moderation',
 }
 
 export enum ChatMessageState {
@@ -56,7 +58,7 @@ export class ChatMessageComponent {
     public readonly startsGroup = input<boolean>(true);
     /** The time shown above the group, none when the setting hides it */
     public readonly time = input<string>();
-    /** Retry is disabled while the composer waits before sending another message */
+    /** Retry is disabled while the composer waits before sending another message, or while the local player is muted */
     public readonly retryDisabled = input<boolean>(false);
     /** The local player sends a failed message again */
     public readonly retry = output<void>();

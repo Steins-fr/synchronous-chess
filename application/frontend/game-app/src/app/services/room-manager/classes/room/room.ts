@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { Signal, signal, WritableSignal } from '@angular/core';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { ReceivedMessage } from '@app/services/room-manager/classes/webrtc/messages/network-message';
 import { AppMessage, AppMessagesOf, RoomServiceMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
@@ -22,6 +22,9 @@ export class Room<M extends object> {
     public readonly players = this._players.asReadonly();
     private readonly _queue = signal<ReadonlyArray<string>>([]);
     public readonly queue = this._queue.asReadonly();
+    /** The participant ordering the messages of the room: its host, until a room keeping a block chain hands it over */
+    protected readonly _sequencer: WritableSignal<string>;
+    public readonly sequencer: Signal<string>;
 
     protected readonly publicMessenger$ = new Subject<AppMessage>();
     protected readonly destroyRef = new Subject<void>();
@@ -35,6 +38,8 @@ export class Room<M extends object> {
         private readonly _roomConnection: RoomNetwork
     ) {
         this._players.set([this.localPlayer]);
+        this._sequencer = signal<string>(this.hostName);
+        this.sequencer = this._sequencer.asReadonly();
         // Negotiators added before this room subscribed (e.g. the host, on a peer) have already been notified
         this._queue.set([...this._roomConnection.negotiators().keys()]);
 
@@ -99,6 +104,23 @@ export class Room<M extends object> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the message of a block room, which times its blocks
     public sequencedAt(_message: AppMessage): number | undefined {
         return undefined;
+    }
+
+    /**
+     * Which participant ordered a message the room delivered: the same on every page, which a rule of the application
+     * reads alike, the history included. A room without block chain has its host order every message
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the message of a block room, which signs who ordered its blocks
+    public sequencedBy(_message: AppMessage): string | undefined {
+        return this.sequencer();
+    }
+
+    /**
+     * The room removed the player, every page alike, its history included: called for each removal, the local player's
+     * included, which gives the room up. See RoomNetwork.exclude
+     */
+    public exclude(playerName: string): void {
+        this._roomConnection.exclude(playerName);
     }
 
     public transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {

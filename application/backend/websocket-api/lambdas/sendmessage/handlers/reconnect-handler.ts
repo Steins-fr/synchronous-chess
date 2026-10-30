@@ -19,7 +19,7 @@ export default class ReconnectHandler extends MessageHandler {
         }
 
         const room: Room = await this.roomService.getRoomByName(data.roomName);
-        this.roomService.reconnectHostGuard(room, data.playerName);
+        await this.roomService.reconnectHostGuard(room, data.playerName);
 
         // Before the room, like at its creation: the room must not move to a connection $disconnect would not find
         await this.createConnection(room.id);

@@ -1,5 +1,6 @@
 import { ApiGatewayManagementApiClient } from '@aws-sdk/client-apigatewaymanagementapi';
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import BanHandler from './handlers/ban-handler';
 import CreateHandler from './handlers/create-handler';
 import FullHandler from './handlers/full-handler';
 import JoinHandler from './handlers/join-handler';
@@ -26,6 +27,7 @@ interface MessageHandlers {
     playerAdd: typeof PlayerAddHandler;
     playerRemove: typeof PlayerRemoveHandler;
     reconnect: typeof ReconnectHandler;
+    ban: typeof BanHandler;
 }
 
 const messageHandlers: MessageHandlers = {
@@ -37,6 +39,7 @@ const messageHandlers: MessageHandlers = {
     playerAdd: PlayerAddHandler,
     playerRemove: PlayerRemoveHandler,
     reconnect: ReconnectHandler,
+    ban: BanHandler,
 };
 
 export const handler = async function (event: APIGatewayProxyEvent): Promise<Response> {

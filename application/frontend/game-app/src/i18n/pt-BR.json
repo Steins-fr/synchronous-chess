@@ -77,6 +77,7 @@
       "notCreated": "Não foi possível criar a sala.",
       "otherGame": "Esta sala é de outro jogo.",
       "private": "Esta sala é privada: entre nela pela lista, com a senha.",
+      "removed": "Você foi removido desta sala: não pode mais entrar nela.",
       "tooManyPasswords": "Senhas incorretas demais para esta sala: tente de novo daqui a um minuto.",
       "wrongPassword": "A senha da sala está incorreta."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "A conexão com o anfitrião da sala falhou.",
       "joiningAgain": "A conexão com o anfitrião da sala falhou, tentando de novo…",
       "nameStillInRoom": "Esse nome ainda está na sala, reconectando…",
+      "removed": "O anfitrião removeu você da sala.",
       "roomFull": "A sala está cheia.",
       "roomGone": "Esta sala terminou ou não existe.",
       "roomLost": "A sala perdeu a conexão com o servidor: ninguém mais pode entrar nela."

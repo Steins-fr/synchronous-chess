@@ -66,7 +66,7 @@ describe('SeventeenPoker', () => {
         // Then
         expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith(
             { type: 'create', game: RoomGame.SEVENTEEN_POKER, roomName: 'room', playerName: 'local', token: 'token' }, 6,
-            { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, ...pokerBlockChains }, expect.any(AbortSignal),
+            { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, [ChatMessengerType.MODERATION]: BlockChainName.CHAT, ...pokerBlockChains }, expect.any(AbortSignal),
         );
         // The chat beside the game, out of the page
         expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();

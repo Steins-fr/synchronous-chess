@@ -3,7 +3,7 @@ import { roomPasswordAttempts } from '@database/schema';
 import { hashToken } from '@helpers/token.helper';
 import Room from '@models/room';
 import { RoomGame } from '@protocol/room-game.enum';
-import { aRoom, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
+import { aRoom, browserOf, GUEST_CONNECTION, HOST_CONNECTION, HOST_TOKEN, readBanned, readBrowserHashes, readRoom, storeConnection, storeRoom } from '@testing/api-mocks';
 import { useTestDatabase } from '@testing/database';
 import { beforeEach, describe, expect, test } from 'vitest';
 import RoomRepository, { ListedRoom } from './room-repository';
@@ -237,15 +237,16 @@ describe('RoomRepository', () => {
     });
 
     describe('create', () => {
-        test('should create a room with its host and the hash of its token', async () => {
+        test('should create a room with its host and the hashes of its token and its browser', async () => {
             // Given
             const room: Room = aRoom({ queue: [], tokenHashes: { host: hashToken(HOST_TOKEN) }, passwordHash: 'password-hash' });
 
             // When
-            expect(await repository.create(room, NOW)).toEqual(true);
+            expect(await repository.create(room, 'host-browser-hash', NOW)).toEqual(true);
 
             // Then
             expect(await readRoom('room')).toStrictEqual(room);
+            expect(await readBrowserHashes('room')).toEqual({ host: 'host-browser-hash' });
         });
 
         test.each([
@@ -257,7 +258,7 @@ describe('RoomRepository', () => {
             await storeRoom(existing);
 
             // When
-            expect(await repository.create(aRoom({ queue: [] }), NOW)).toEqual(false);
+            expect(await repository.create(aRoom({ queue: [] }), 'host-browser-hash', NOW)).toEqual(false);
 
             // Then
             expect(await readRoom('room')).toStrictEqual(existing);
@@ -270,7 +271,7 @@ describe('RoomRepository', () => {
             const room: Room = aRoom({ queue: [], tokenHashes: { host: 'new-hash' } });
 
             // When
-            expect(await repository.create(room, NOW)).toEqual(true);
+            expect(await repository.create(room, 'host-browser-hash', NOW)).toEqual(true);
 
             // Then
             expect(await readRoom('room')).toStrictEqual(room);
@@ -283,7 +284,7 @@ describe('RoomRepository', () => {
             await storeRoom(existing);
 
             // When
-            const created: boolean = await repository.create(aRoom({ id: 'room#000042' }), NOW);
+            const created: boolean = await repository.create(aRoom({ id: 'room#000042' }), 'host-browser-hash', NOW);
 
             // Then
             expect(created).toBe(false);
@@ -298,7 +299,7 @@ describe('RoomRepository', () => {
             await storeRoom(aRoom({ id: 'waiting', nameKey: 'waiting', expiresAt: NOW + 1, leaseUntil: NOW }));
 
             // When
-            await repository.create(aRoom({ queue: [] }), NOW);
+            await repository.create(aRoom({ queue: [] }), 'host-browser-hash', NOW);
 
             // Then
             expect(await readRoom('expired')).toBeNull();
@@ -432,18 +433,19 @@ describe('RoomRepository', () => {
     });
 
     describe('queue', () => {
-        test('should queue a player after the others, with the hash of its token', async () => {
+        test('should queue a player after the others, with the hashes of its token and its browser', async () => {
             // Given
             const room: Room = aRoom();
             await storeRoom(room);
 
             // When / Then
-            expect(await repository.addPlayerToQueue({ playerName: 'zoe', connectionId: 'zoe-connection' }, 'zoe-hash', room)).toEqual(true);
+            expect(await repository.addPlayerToQueue({ playerName: 'zoe', connectionId: 'zoe-connection' }, 'zoe-hash', 'zoe-browser-hash', room)).toEqual(true);
             expect(await readRoom('room')).toStrictEqual({
                 ...room,
                 queue: [...room.queue, { playerName: 'zoe', connectionId: 'zoe-connection' }],
                 tokenHashes: { ...room.tokenHashes, zoe: 'zoe-hash' },
             });
+            expect(await readBrowserHashes('room')).toMatchObject({ zoe: 'zoe-browser-hash' });
         });
 
         test('should not queue a player of a name already queued, keeping the hash of its token', async () => {
@@ -452,17 +454,18 @@ describe('RoomRepository', () => {
             await storeRoom(room);
 
             // When / Then
-            expect(await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'other-connection' }, 'other-hash', aRoom({ queue: [] }))).toEqual(false);
+            expect(await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'other-connection' }, 'other-hash', 'other-browser-hash', aRoom({ queue: [] }))).toEqual(false);
             expect(await readRoom('room')).toStrictEqual(room);
+            expect(await readBrowserHashes('room')).toMatchObject({ guest: hashToken(browserOf('guest')) });
         });
 
-        test('should replace the hash of the token of a player joining the room again', async () => {
+        test('should replace the hashes of the token and the browser of a player joining the room again', async () => {
             // Given: the guest left the queue, its token kept
             const room: Room = aRoom({ queue: [] });
             await storeRoom(room);
 
             // When
-            await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'new-guest-connection' }, 'new-guest-hash', room);
+            await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'new-guest-connection' }, 'new-guest-hash', 'new-guest-browser-hash', room);
 
             // Then
             expect(await readRoom('room')).toStrictEqual({
@@ -470,6 +473,20 @@ describe('RoomRepository', () => {
                 queue: [{ playerName: 'guest', connectionId: 'new-guest-connection' }],
                 tokenHashes: { ...room.tokenHashes, guest: 'new-guest-hash' },
             });
+            expect(await readBrowserHashes('room')).toMatchObject({ guest: 'new-guest-browser-hash' });
+        });
+
+        test('should keep the ban of a player joining the room again', async () => {
+            // Given
+            const room: Room = aRoom({ queue: [] });
+            await storeRoom(room);
+            await repository.banPlayer('guest', room);
+
+            // When
+            await repository.addPlayerToQueue({ playerName: 'guest', connectionId: 'new-guest-connection' }, 'new-guest-hash', 'new-guest-browser-hash', room);
+
+            // Then
+            expect(await readBanned('room')).toEqual(['guest']);
         });
 
         test('should remove a player from the queue by its connection', async () => {
@@ -486,6 +503,53 @@ describe('RoomRepository', () => {
 
         test('should not remove a connection out of the queue', async () => {
             await expect(repository.removePlayerFromQueue(HOST_CONNECTION, aRoom())).rejects.toThrow('Player not in the queue');
+        });
+    });
+
+    describe('bans', () => {
+        test('should ban a player of the room once, its token kept, a name without token changing nothing', async () => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
+            await storeRoom(aRoom({ id: 'other', nameKey: 'other' }));
+
+            // When
+            await repository.banPlayer('guest', room);
+            await repository.banPlayer('guest', room);
+            await repository.banPlayer('nobody', room);
+
+            // Then
+            expect(await readBanned('room')).toEqual(['guest']);
+            expect(await readBanned('other')).toEqual([]);
+            expect(await readRoom('room')).toStrictEqual(room);
+        });
+
+        test.each<[string, string, string | undefined, boolean]>([
+            ['its name', 'guest', undefined, true],
+            ['its name, from another browser', 'guest', 'other-browser-hash', true],
+            ['its browser, under another name', 'other', hashToken(browserOf('guest')), true],
+            ['neither its name nor its browser', 'other', 'other-browser-hash', false],
+            ['the browser of a player not banned', 'other', hashToken(browserOf('host')), false],
+            ['a name without its browser', 'other', undefined, false],
+        ])('should tell a player banned by %s', async (_case: string, playerName: string, browserHash: string | undefined, banned: boolean) => {
+            // Given
+            const room: Room = aRoom();
+            await storeRoom(room);
+            await repository.banPlayer('guest', room);
+
+            // When / Then
+            expect(await repository.isBanned(room, playerName, browserHash)).toBe(banned);
+        });
+
+        test('should tell no player banned by the bans of another room', async () => {
+            // Given
+            await storeRoom(aRoom());
+            const other: Room = aRoom({ id: 'other', nameKey: 'other' });
+            await storeRoom(other);
+            await repository.banPlayer('guest', aRoom());
+
+            // When / Then
+            expect(await repository.isBanned(other, 'guest', hashToken(browserOf('guest')))).toBe(false);
         });
     });
 });

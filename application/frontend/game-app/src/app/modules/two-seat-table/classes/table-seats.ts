@@ -42,8 +42,8 @@ const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
 
 /**
  * The two seats of a table, taken by the participants themselves while the game lets them. A participant has a single
- * seat, and draws a salt for each seat it takes: its part in the ids of the secrets of the game. A seated player frees
- * the seat of the other one, away, while the seats are open.
+ * seat, and draws a salt for each seat it takes: its part in the ids of the secrets of the game. A seated player, or the
+ * host, frees the seat of a player away while the seats are open.
  *
  * The game applies the messages of the seats in the order of its chain, with its other messages: it calls `onSeat()`
  * and `onUnseat()` for them.
@@ -101,10 +101,11 @@ export class TableSeats<Seat extends string, Unseat extends string> {
         return this.options.open() && this.mySeat() !== null;
     }
 
-    /** The local player frees the seat of the other player, away, while the seats are open */
+    /** The local player frees the seat of a player away while the seats are open: the player of the other seat, or the host (the sequencer of the room) */
     public canRelease(seat: TableSeat): boolean {
         const name: string | null = this.seats()[seat];
-        return this.options.open() && this.mySeat() === otherSeat(seat) && name !== null && this.awayPlayers().includes(name) && !this.options.sending();
+        return this.options.open() && name !== null && this.awayPlayers().includes(name) && !this.options.sending()
+            && (this.mySeat() === otherSeat(seat) || this.room.sequencer() === this.room.localPlayer.name);
     }
 
     public takeSeat(seat: TableSeat): void {
@@ -115,7 +116,7 @@ export class TableSeats<Seat extends string, Unseat extends string> {
         this.seatRoom.transmitMessage(this.options.types.seat, { seat: null });
     }
 
-    /** A seated player frees the seat of the other one, away */
+    /** A seated player frees the seat of the other one, away, or the host the seat of a player away */
     public unseat(seat: TableSeat): void {
         this.unseatRoom.transmitMessage(this.options.types.unseat, { seat, name: this.seats()[seat] as string });
     }
@@ -146,15 +147,17 @@ export class TableSeats<Seat extends string, Unseat extends string> {
 
     /**
      * A seated player frees the seat of the other one while the seats are open, its page seeing it away: no page can
-     * tell when it was, as for a timeout. A spectator frees none, it could take the seat at once
+     * tell when it was, as for a timeout. The host frees one too, even a spectator: it may take the seat then
      *
      * @returns whether the seat was freed
      */
     public onUnseat(message: AppMessage<Unseat, UnseatMessage>): boolean {
         const seat: TableSeat | null = this.seatOf(message.from);
         const { seat: freed, name } = message.payload;
+        // The host decides as the sequencer of its block: a page replaying the chain, or joining late, applies it alike
+        const allowed: boolean = (seat !== null && freed === otherSeat(seat)) || this.room.sequencedBy(message) === message.from;
 
-        if (seat === null || !this.options.open() || freed !== otherSeat(seat) || this.seats()[freed] !== name) {
+        if (!this.options.open() || (freed !== TableSeat.ONE && freed !== TableSeat.TWO) || !allowed || this.seats()[freed] !== name) {
             return false;
         }
 

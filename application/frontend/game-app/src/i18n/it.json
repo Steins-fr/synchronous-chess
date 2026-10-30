@@ -77,6 +77,7 @@
       "notCreated": "Impossibile creare la stanza.",
       "otherGame": "Questa stanza appartiene a un altro gioco.",
       "private": "Questa stanza è privata: entra dall'elenco, con la sua password.",
+      "removed": "Sei stato rimosso da questa stanza: non puoi più entrarci.",
       "tooManyPasswords": "Troppe password errate per questa stanza: riprova tra un minuto.",
       "wrongPassword": "La password della stanza è errata."
     },
@@ -121,6 +122,7 @@
       "hostUnreachable": "La connessione all'host della stanza non è riuscita.",
       "joiningAgain": "La connessione all'host della stanza non è riuscita, nuovo tentativo…",
       "nameStillInRoom": "Questo nome è ancora nella stanza, riconnessione in corso…",
+      "removed": "L'host ti ha rimosso dalla stanza.",
       "roomFull": "La stanza è piena.",
       "roomGone": "Questa stanza è terminata o non esiste.",
       "roomLost": "La stanza ha perso la connessione al server: nessuno può più entrarci."

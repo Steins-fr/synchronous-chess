@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "Keine Links oder E-Mail-Adressen im Chat",
+    "muted": "Du bist bis {time} stummgeschaltet",
+    "mutedToEnd": "Du bist bis zum Ende des Raums stummgeschaltet",
     "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
     "unsent": "Warte, bis deine Nachrichten gesendet sind, bevor du weitere sendest",
     "wait": "Warte {seconds, plural, one {# Sekunde} other {# Sekunden}}, bevor du eine weitere Nachricht sendest"
@@ -14,11 +16,37 @@
     "flooding": "{name} sendet zu viele Nachrichten: sie werden kurz ausgeblendet",
     "floodingSelf": "Du hast zu viele Nachrichten gesendet: sie werden kurz ausgeblendet",
     "latest": "Neueste Nachrichten",
+    "mute": {
+      "byYou": "Du hast {name} für {minutes, plural, one {# Minute} other {# Minuten}} stummgeschaltet",
+      "byYouToEnd": "Du hast {name} bis zum Ende des Raums stummgeschaltet",
+      "other": "{moderator} hat {name} für {minutes, plural, one {# Minute} other {# Minuten}} stummgeschaltet",
+      "otherToEnd": "{moderator} hat {name} bis zum Ende des Raums stummgeschaltet",
+      "you": "{moderator} hat dich für {minutes, plural, one {# Minute} other {# Minuten}} stummgeschaltet",
+      "youToEnd": "{moderator} hat dich bis zum Ende des Raums stummgeschaltet"
+    },
+    "removal": {
+      "byYou": "Du hast {name} aus dem Raum entfernt",
+      "other": "{moderator} hat {name} aus dem Raum entfernt"
+    },
     "retry": "Erneut senden",
     "sending": "Wird gesendet…",
+    "unmute": {
+      "byYou": "Du hast die Stummschaltung von {name} aufgehoben",
+      "other": "{moderator} hat die Stummschaltung von {name} aufgehoben",
+      "you": "{moderator} hat deine Stummschaltung aufgehoben"
+    },
     "unread": "Neue Nachrichten"
   },
   "message": "Schreib deine Nachricht",
+  "moderation": {
+    "menu": "{name} moderieren",
+    "mute": "{minutes, plural, one {# Minute} other {# Minuten}} stummschalten",
+    "muteToEnd": "Bis zum Ende des Raums stummschalten",
+    "remove": "Aus dem Raum entfernen",
+    "removeMessage": "Dieser Teilnehmer verlässt den Raum und kann ihm nicht mehr beitreten, solange er besteht.",
+    "removeTitle": "Aus dem Raum entfernen?",
+    "unmute": "Stummschaltung aufheben"
+  },
   "newMessages": "{count, plural, one {# neue Nachricht} other {# neue Nachrichten}}",
   "options": {
     "arrivals": "Kommen und Gehen anzeigen",

@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "Niente link né indirizzi e-mail nella chat",
+    "muted": "Sei silenziato fino alle {time}",
+    "mutedToEnd": "Sei silenziato fino alla chiusura della stanza",
     "tooLong": "Massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
     "unsent": "Aspetta che i tuoi messaggi siano inviati prima di inviarne altri",
     "wait": "Aspetta {seconds, plural, one {# secondo} other {# secondi}} prima di inviare un altro messaggio"
@@ -14,11 +16,37 @@
     "flooding": "{name} invia troppi messaggi: sono nascosti per un momento",
     "floodingSelf": "Hai inviato troppi messaggi: sono nascosti per un momento",
     "latest": "Ultimi messaggi",
+    "mute": {
+      "byYou": "Hai silenziato {name} per {minutes, plural, one {# minuto} other {# minuti}}",
+      "byYouToEnd": "Hai silenziato {name} fino alla chiusura della stanza",
+      "other": "{moderator} ha silenziato {name} per {minutes, plural, one {# minuto} other {# minuti}}",
+      "otherToEnd": "{moderator} ha silenziato {name} fino alla chiusura della stanza",
+      "you": "{moderator} ti ha silenziato per {minutes, plural, one {# minuto} other {# minuti}}",
+      "youToEnd": "{moderator} ti ha silenziato fino alla chiusura della stanza"
+    },
+    "removal": {
+      "byYou": "Hai rimosso {name} dalla stanza",
+      "other": "{moderator} ha rimosso {name} dalla stanza"
+    },
     "retry": "Riprova",
     "sending": "Invio…",
+    "unmute": {
+      "byYou": "Hai riattivato {name}",
+      "other": "{moderator} ha riattivato {name}",
+      "you": "{moderator} ti ha riattivato"
+    },
     "unread": "Nuovi messaggi"
   },
   "message": "Scrivi il tuo messaggio",
+  "moderation": {
+    "menu": "Modera {name}",
+    "mute": "Silenzia per {minutes, plural, one {# minuto} other {# minuti}}",
+    "muteToEnd": "Silenzia fino alla chiusura della stanza",
+    "remove": "Rimuovi dalla stanza",
+    "removeMessage": "Questo partecipante lascia la stanza e non può più entrarci finché è aperta.",
+    "removeTitle": "Rimuovere dalla stanza?",
+    "unmute": "Riattiva"
+  },
   "newMessages": "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}",
   "options": {
     "arrivals": "Mostra entrate e uscite",
