@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "Bez linków i adresów e-mail na czacie",
+    "muted": "Masz wyciszenie do {time}",
+    "mutedToEnd": "Masz wyciszenie do zamknięcia pokoju",
     "tooLong": "Maksymalnie {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
     "unsent": "Poczekaj, aż twoje wiadomości zostaną wysłane, zanim wyślesz kolejne",
     "wait": "Poczekaj {seconds, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}} przed wysłaniem kolejnej wiadomości"

@@ -711,7 +711,7 @@ describe('ChatComponent', () => {
         // Given
         fixture.componentRef.setInput('open', false);
         await setRoom();
-        vi.spyOn(room, 'isHistory').mockReturnValueOnce(true);
+        vi.spyOn(room, 'isHistory').mockReturnValue(true);
 
         // When
         receive('remote', 'before');
@@ -1212,6 +1212,139 @@ describe('ChatComponent', () => {
 
             // Then
             expect(logLines()).toEqual(['host muted bob for 5 minutes', 'bob: after']);
+        });
+    });
+
+    describe('with the composer of a participant muted', () => {
+        const MINUTE: number = 60_000;
+
+        /** The time a hint tells, rounded up to the minute */
+        function hintTime(time: number): string {
+            return new Intl.DateTimeFormat('en', { timeStyle: 'short' }).format(Math.ceil(time / MINUTE) * MINUTE);
+        }
+
+        function retryButton(): HTMLButtonElement {
+            return [...log().querySelectorAll('button')].find((button: HTMLButtonElement) => button.textContent.includes('Retry')) as HTMLButtonElement;
+        }
+
+        beforeEach(() => {
+            // The end of a mute runs on an interval of RxJS
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+            vi.setSystemTime(new Date(2026, 9, 30, 10, 41, 58));
+            // Created at the time set: the composer reads it
+            fixture.destroy();
+            fixture = TestBed.createComponent(ChatComponent);
+            component = fixture.componentInstance;
+        });
+
+        test('should send nothing until the mute ends, telling until when', async () => {
+            // Given: a message failed
+            await setRoom();
+            const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+            await type('lost');
+            sendButton().click();
+            vi.advanceTimersByTime(15_000);
+            const mutedAt: number = Date.now();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: MuteMinutes.SHORT });
+            await type('hello');
+            press({});
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).toHaveBeenCalledTimes(1);
+            expect(sendButton().disabled).toEqual(true);
+            expect(retryButton().disabled).toEqual(true);
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(mutedAt + 5 * MINUTE) }`);
+
+            // When: the retry of the failed message, activated before the page renders its button disabled
+            const failed = TestHelper.cast<{ entries(): ChatEntry[] }>(component).entries().find((entry: ChatEntry) => entry.kind === ChatEntryKind.MESSAGE && entry.state === ChatMessageState.FAILED);
+            TestHelper.cast<{ retry(message: ChatEntry | undefined): void }>(component).retry(failed);
+
+            // Then
+            expect(transmitSpy).toHaveBeenCalledTimes(1);
+
+            // When
+            vi.advanceTimersByTime(5 * MINUTE);
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')).toBeNull();
+            expect(sendButton().disabled).toEqual(false);
+            expect(retryButton().disabled).toEqual(false);
+            expect(vi.getTimerCount()).toEqual(0);
+
+            // When
+            sendButton().click();
+
+            // Then
+            expect(transmitSpy).toHaveBeenLastCalledWith(ChatMessengerType.CHAT_MESSAGE, { id: expect.any(String), text: 'hello', at: Date.now() });
+            vi.useRealTimers();
+        });
+
+        test('should send nothing until the end of the room, until unmuted, scheduling nothing', async () => {
+            // Given
+            await setRoom();
+            const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: null });
+            decide('host', { action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+            await type('hello');
+            sendButton().click();
+            await fixture.whenStable();
+
+            // Then
+            expect(transmitSpy).not.toHaveBeenCalled();
+            expect(sendButton().disabled).toEqual(true);
+            expect(query('mat-hint')?.textContent).toEqual('You are muted until the end of the room');
+            expect(vi.getTimerCount()).toEqual(0);
+
+            // When
+            decide('host', { action: ChatModerationAction.UNMUTE, target: 'local' });
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')).toBeNull();
+            expect(sendButton().disabled).toEqual(false);
+            vi.useRealTimers();
+        });
+
+        test('should end a mute by the clock of the page, estimated on the blocks received live, again for another sequencer', async () => {
+            // Given: a mute of 30 minutes ordered 10 minutes ago, replayed
+            const now: number = Date.now();
+            let chainTime: number = now - 10 * MINUTE;
+            vi.spyOn(room, 'sequencedAt').mockImplementation(() => chainTime);
+            const historySpy = vi.spyOn(room, 'isHistory').mockReturnValueOnce(true);
+            await setRoom();
+
+            // When
+            decide('host', { action: ChatModerationAction.MUTE, target: 'local', minutes: MuteMinutes.LONG });
+            await fixture.whenStable();
+
+            // Then: no block received live, its end on the chain give or take the tolerance
+            expect(historySpy).toHaveBeenCalled();
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(now + 20 * MINUTE + 5000) }`);
+
+            // When: a block received live a second after its time
+            chainTime = now - 1000;
+            receive('bob', 'hello');
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(now + 20 * MINUTE + 1000) }`);
+
+            // When: a block received 2 minutes after its time, sequenced by another participant
+            vi.spyOn(room, 'sequencedBy').mockReturnValueOnce('bob');
+            chainTime = now - 2 * MINUTE;
+            receive('bob', 'late');
+            await fixture.whenStable();
+
+            // Then
+            expect(query('mat-hint')?.textContent).toEqual(`You are muted until ${ hintTime(now + 22 * MINUTE) }`);
+            vi.useRealTimers();
         });
     });
 

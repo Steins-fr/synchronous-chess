@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "No link nor e-mail address in the chat",
+    "muted": "You are muted until {time}",
+    "mutedToEnd": "You are muted until the end of the room",
     "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most",
     "unsent": "Wait until your messages are sent before sending more",
     "wait": "Wait {seconds, plural, one {# second} other {# seconds}} before sending another message"

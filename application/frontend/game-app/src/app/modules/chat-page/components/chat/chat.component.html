@@ -32,7 +32,7 @@
                 id="unread-divider">{{ t('log.unread') }}</p>
             }
             @if (line.entry.kind === kinds.MESSAGE) {
-            <app-chat-message [message]="line.entry" [retryDisabled]="isWaiting()" [startsGroup]="line.startsGroup" (retry)="retry(line.entry)" [time]="line.time" />
+            <app-chat-message [message]="line.entry" [retryDisabled]="isWaiting() || isMuted()" [startsGroup]="line.startsGroup" (retry)="retry(line.entry)" [time]="line.time" />
             } @else if (line.entry.kind === kinds.ARRIVAL) {
             <p class="chat-notice">{{ t('log.arrival', { name: line.entry.name }) }}</p>
             } @else if (line.entry.kind === kinds.FLOOD) {
@@ -59,10 +59,11 @@
     </div>
 
     <!-- Aligned at their top: the hint or the error of the field showing, Send stays in place -->
+    @let hint = composerHint();
     <div class="flex items-start gap-1 border-t border-app-border p-2" id="send-form">
-        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="isWaiting() ? t('composer.wait', { seconds: waitSeconds() }) : isHeldBack() ? t('composer.unsent') : undefined"
+        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="hint ? (hint.key | transloco: hint.params) : undefined"
             [label]="t('message')" class="flex-1" />
-        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting() || isHeldBack()" [title]="t('send')" class="mt-2" id="send" mat-icon-button type="button">
+        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting() || isHeldBack() || isMuted()" [title]="t('send')" class="mt-2" id="send" mat-icon-button type="button">
             <mat-icon>send</mat-icon>
         </button>
     </div>

@@ -58,7 +58,7 @@ export class ChatMessageComponent {
     public readonly startsGroup = input<boolean>(true);
     /** The time shown above the group, none when the setting hides it */
     public readonly time = input<string>();
-    /** Retry is disabled while the composer waits before sending another message */
+    /** Retry is disabled while the composer waits before sending another message, or while the local player is muted */
     public readonly retryDisabled = input<boolean>(false);
     /** The local player sends a failed message again */
     public readonly retry = output<void>();

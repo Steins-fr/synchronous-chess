@@ -2,6 +2,8 @@
   "author": "{author}:",
   "composer": {
     "link": "Sem links nem endereços de e-mail no bate-papo",
+    "muted": "Você está silenciado até {time}",
+    "mutedToEnd": "Você está silenciado até o fim da sala",
     "tooLong": "{maxLength, plural, one {# caractere} other {# caracteres}} no máximo",
     "unsent": "Aguarde o envio das suas mensagens antes de enviar mais",
     "wait": "Aguarde {seconds, plural, one {# segundo} other {# segundos}} para enviar outra mensagem"

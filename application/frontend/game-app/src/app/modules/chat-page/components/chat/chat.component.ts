@@ -36,6 +36,7 @@ import { scopedKey } from '@app/services/language/scoped-key';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { SequencerClock } from '@app/services/room-manager/classes/room/block-room/block-chain/sequencer-clock';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { map, merge, Subscription, switchMap, timer } from 'rxjs';
 import { holdsLink } from './chat-link';
@@ -152,6 +153,7 @@ function isLeftOut(entry: Readonly<ChatEntry>, hiddenAuthors: ReadonlySet<string
     }
 }
 
+const MINUTE: number = 60 * 1000;
 // A pause longer than this starts a new group of messages, its time shown again
 const GROUP_PAUSE: number = 5 * 60 * 1000;
 // The log is at its bottom closer than this, in pixels: the new messages keep it there
@@ -226,6 +228,40 @@ export class ChatComponent {
     protected readonly isWaiting = computed<boolean>(() => this.waitSeconds() > 0);
     // Too many messages of the local player the room did not send back yet: the composer waits until it does
     protected readonly isHeldBack = computed<boolean>(() => this.unsentMessages().length >= CHAT_UNSENT_LIMIT);
+    /** The decisions of the moderator in force on the chain */
+    private readonly moderation = signal<ChatModeration>(NO_MODERATION);
+    // How far the clock of this page runs from the chain, see observeChainTime: until a block received live tells it, the
+    // same, give or take the jump the chain tolerates of the clock of its sequencer
+    private readonly chainOffset = signal<number>(SequencerClock.TOLERANCE_MS);
+    private chainClock: { readonly sequencer: string | undefined; readonly offset: number } | undefined;
+    // The end of each mute in force, by the clock of this page: Number.POSITIVE_INFINITY until the end of the room
+    private readonly muteEnds = computed<ReadonlyMap<string, number>>(() => {
+        const offset: number = this.chainOffset();
+        const now: number = this.now();
+        return new Map([...this.moderation().mutes]
+            .map(([name, until]: [string, number]) => [name, until + offset] as const)
+            .filter(([, end]: readonly [string, number]) => end > now));
+    });
+    // The next mute in force to end, by the clock of this page: none while every mute lasts until the end of the room
+    private readonly nextMuteEnd = computed<number>(() => Math.min(Number.POSITIVE_INFINITY, ...this.muteEnds().values()));
+    // When the mute of the local player ends, by the clock of this page: none while it may send
+    private readonly mutedUntil = computed<number | undefined>(() => this.muteEnds().get(this.localName()));
+    protected readonly isMuted = computed<boolean>(() => this.mutedUntil() !== undefined);
+    /** Why the composer does not send: muted, until a time rounded up to the minute, then waiting, or held back */
+    protected readonly composerHint = computed<TranslatableText | undefined>(() => {
+        const mutedUntil: number | undefined = this.mutedUntil();
+        if (mutedUntil === Number.POSITIVE_INFINITY) {
+            return { key: scopedKey(TranslationScope.CHAT, marker('composer.mutedToEnd', undefined, 'chat')) };
+        }
+        if (mutedUntil !== undefined) {
+            const time: string = this.timeFormat().format(Math.ceil(mutedUntil / MINUTE) * MINUTE);
+            return { key: scopedKey(TranslationScope.CHAT, marker('composer.muted', undefined, 'chat')), params: { time } };
+        }
+        if (this.isWaiting()) {
+            return { key: scopedKey(TranslationScope.CHAT, marker('composer.wait', undefined, 'chat')), params: { seconds: this.waitSeconds() } };
+        }
+        return this.isHeldBack() ? { key: scopedKey(TranslationScope.CHAT, marker('composer.unsent', undefined, 'chat')) } : undefined;
+    });
     /** The players whose messages the local player hides */
     protected readonly hiddenAuthors = signal<ReadonlySet<string>>(new Set());
     // The messages of the others received while the chat was closed, or scrolled up
@@ -279,8 +315,6 @@ export class ChatComponent {
     private readonly ids: Generator<number, never> = idGenerator();
     /** The rate of the authors on the chain */
     private flood: ChatFlood = NO_FLOOD;
-    /** The decisions of the moderator in force on the chain */
-    private readonly moderation = signal<ChatModeration>(NO_MODERATION);
     /** The authors reported for an invalid message: their first one only, the same on every page, rather than a report per message */
     private readonly invalidAuthors = new Set<string>();
     private compositionEndedAt: number = Number.NEGATIVE_INFINITY;
@@ -299,6 +333,8 @@ export class ChatComponent {
                 // the former one did not send back are dropped: sent again, they would go to the new one
                 this.flood = NO_FLOOD;
                 this.moderation.set(NO_MODERATION);
+                this.chainClock = undefined;
+                this.chainOffset.set(SequencerClock.TOLERANCE_MS);
                 this.invalidAuthors.clear();
                 const unsent = new Set<Readonly<ChatEntry>>(this.unsentMessages());
                 this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => !unsent.has(entry)));
@@ -309,6 +345,7 @@ export class ChatComponent {
             }),
             takeUntilDestroyed(),
         ).subscribe(({ room, message }: { room: Room<ChatPayloads>; message: ChatRoomMessage | ChatModerationMessage }) => {
+            this.observeChainTime(room, message);
             if (message.type === ChatMessengerType.MODERATION) {
                 this.onModeration(room, message);
             } else {
@@ -350,6 +387,16 @@ export class ChatComponent {
             }
         });
 
+        // The end of the next mute: the composer of the local player sends again, the menu of the moderator mutes again
+        effect((onCleanup: (cleanup: () => void) => void) => {
+            const end: number = this.nextMuteEnd();
+            if (end !== Number.POSITIVE_INFINITY) {
+                const tick: Subscription = timer(Math.max(end - Date.now(), 0)).pipe(takeUntilDestroyed(this.destroyRef))
+                    .subscribe(() => this.now.set(Date.now()));
+                onCleanup(() => tick.unsubscribe());
+            }
+        });
+
         afterEveryRender({
             write: () => this.scroll(),
         });
@@ -364,7 +411,7 @@ export class ChatComponent {
 
     protected send(): void {
         this.now.set(Date.now());
-        if (this.isBlank() || this.isWaiting() || this.isHeldBack()) {
+        if (this.isBlank() || this.isWaiting() || this.isHeldBack() || this.isMuted()) {
             return;
         }
 
@@ -381,8 +428,8 @@ export class ChatComponent {
     /** Sends again a message the room did not send back in time, under the same id */
     protected retry(failed: Readonly<ChatMessage>): void {
         this.now.set(Date.now());
-        // Its button disabled while the composer waits, the retry of another message clicked before the page renders
-        if (this.isWaiting()) {
+        // Its button disabled while the composer waits or is muted, the retry of another message clicked before the page renders
+        if (this.isWaiting() || this.isMuted()) {
             return;
         }
         this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => entry !== failed));
@@ -507,6 +554,24 @@ export class ChatComponent {
         if (decision.action === ChatModerationAction.REMOVE) {
             room.exclude(decision.target);
         }
+    }
+
+    /**
+     * Estimates how far the clock of this page runs from the chain: the shortest delay from the time of a block to its
+     * reception, which the network only makes longer. A mute ends by this clock no sooner than on the chain, a message
+     * sent then ordered after it. The history, received long after its blocks, tells nothing; another sequencer, another
+     * clock: the estimate starts again
+     */
+    private observeChainTime(room: Room<ChatPayloads>, message: AppMessage): void {
+        if (room.isHistory(message)) {
+            return;
+        }
+        const sequencer: string | undefined = room.sequencedBy(message);
+        const delay: number = Date.now() - (room.sequencedAt(message) ?? Date.now());
+        const clock: { readonly sequencer: string | undefined; readonly offset: number } | undefined = this.chainClock;
+        const offset: number = clock !== undefined && clock.sequencer === sequencer ? Math.min(clock.offset, delay) : delay;
+        this.chainClock = { sequencer, offset };
+        this.chainOffset.set(offset);
     }
 
     /** Reports the first invalid message of an author only, the same on every page, rather than a report per message */
