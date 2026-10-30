@@ -18,6 +18,7 @@ import { HAND_SIZE } from '../rules/hand-evaluator';
 import { DRAW_PILE, HandPhase, MatchResult, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair, withSeat } from '../rules/poker-seat';
 import { SEVENTEEN_DECK, seventeenCard } from '../rules/seventeen-deck';
+import { wait } from '@app/helpers/wait.helper';
 
 export enum SPGameSessionType {
     /** A participant takes a seat, or leaves its seat */
@@ -185,6 +186,8 @@ export class SeventeenPokerSession {
     public readonly broken: Signal<boolean> = this._broken.asReadonly();
     /** The match is over, or stopped by a broken deck: its players may play a new one */
     public readonly over: Signal<boolean> = computed((): boolean => this.match().result() !== null || this._broken());
+    // The latest message queued came from the history of the room
+    private historyBehind: boolean = false;
     private readonly _historySteps = signal<number>(0);
     /**
      * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
@@ -241,7 +244,13 @@ export class SeventeenPokerSession {
             room.messenger(SPGameSessionType.REMATCH),
             room.messenger(SPGameSessionType.UNSEAT),
         ).subscribe((message: PokerGameMessage) => {
-            this.queue = this.queue.then(() => logHandlingFailure(message, this.handle(message)));
+            // The first live message after the history waits for the page to render the end of it: it is not taken for history
+            const history: boolean = room.isHistory(message);
+            const afterHistory: boolean = this.historyBehind && !history;
+            this.historyBehind = history;
+            this.queue = this.queue
+                .then(() => afterHistory ? wait(0) : undefined)
+                .then(() => logHandlingFailure(message, this.handle(message)));
         });
     }
 

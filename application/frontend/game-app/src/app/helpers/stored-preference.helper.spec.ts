@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { storageChanges, storedText, storedValue, storeValue } from './stored-preference.helper';
+import { storageChanges, storedNumber, storedText, storedValue, storeValue } from './stored-preference.helper';
 
 describe('stored preference', () => {
     enum Color {
@@ -52,6 +52,31 @@ describe('stored preference', () => {
         expect(storedText(window, textKey)).toBe('alice');
     });
 
+    test('should read the whole number stored', () => {
+        // When
+        storeValue(window, key, '42');
+
+        // Then
+        expect(storedNumber(window, key, 0, 100)).toBe(42);
+    });
+
+    test.each<[string, string | null]>([
+        ['none', null],
+        ['no number', 'loud'],
+        ['an empty text', ''],
+        ['a fraction', '4.2'],
+        ['a number below the minimum', '-1'],
+        ['a number above the maximum', '101'],
+    ])('should read no number when the storage holds %s', (_case: string, stored: string | null) => {
+        // Given
+        if (stored !== null) {
+            localStorage.setItem(key, stored);
+        }
+
+        // When, Then
+        expect(storedNumber(window, key, 0, 100)).toBeUndefined();
+    });
+
     test('should neither read nor store, without failing, when the storage is blocked', () => {
         // Given
         vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
@@ -68,6 +93,7 @@ describe('stored preference', () => {
         expect(setItem).toHaveBeenCalledOnce();
         expect(storedValue(window, key, Color)).toBeUndefined();
         expect(storedText(window, key)).toBeUndefined();
+        expect(storedNumber(window, key, 0, 100)).toBeUndefined();
     });
 
     test('should tell the changes another tab made to the value, or to the whole storage', () => {

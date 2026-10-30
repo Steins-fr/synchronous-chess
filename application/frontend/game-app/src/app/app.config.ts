@@ -5,6 +5,7 @@ import { provideTranslation } from '@app/services/language/provide-translation';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
+import { SoundService } from '@app/services/sound/sound.service';
 import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
 import { environment } from '@environments/environment';
 
@@ -31,5 +32,7 @@ export const appConfig: ApplicationConfig = {
         ...provideTranslation(),
         // Listens as soon as the app starts: a gesture while the code and the texts of the page load tells a person too
         provideEnvironmentInitializer(() => inject(VisitorPresenceService)),
+        // Listens as soon as the app starts too: the first gesture on the page starts the audio of the sounds
+        provideEnvironmentInitializer(() => inject(SoundService)),
     ],
 };

@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { RouletteCylinderComponent } from './roulette-cylinder.component';
 
 describe('RouletteCylinderComponent', () => {
@@ -33,10 +35,11 @@ describe('RouletteCylinderComponent', () => {
         expect(element().classList).toContain('large');
     });
 
-    test('should let the player pick the chambers of its bullets, no more than its bullets', async () => {
+    test('should let the player pick the chambers of its bullets, no more than its bullets, a bullet put sounding', async () => {
         // Given
         fixture.componentRef.setInput('selectable', true);
         await fixture.whenStable();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
 
         // When
         [4, 0, 9].forEach((index: number) => buttons()[index].click());
@@ -48,15 +51,17 @@ describe('RouletteCylinderComponent', () => {
         expect(buttons()[4].getAttribute('aria-label')).toEqual('Chamber 5');
         expect(buttons()[1].disabled).toBe(true);
         expect(buttons()[4].disabled).toBe(false);
+        expect(play.mock.calls).toEqual([[SoundEffect.ROULETTE_BULLET], [SoundEffect.ROULETTE_BULLET], [SoundEffect.ROULETTE_BULLET]]);
 
         // When a fourth chamber, then a chamber picked again
         buttons()[1].dispatchEvent(new Event('click'));
         buttons()[4].click();
         await fixture.whenStable();
 
-        // Then
+        // Then: neither the fourth bullet nor the bullet taken out sounds
         expect(fixture.componentInstance.selected()).toEqual([0, 9]);
         expect(buttons()[1].disabled).toBe(false);
+        expect(play).toHaveBeenCalledTimes(3);
     });
 
     test('should show the bullets loaded until the spins, then the chambers fired, the cylinder turned', async () => {

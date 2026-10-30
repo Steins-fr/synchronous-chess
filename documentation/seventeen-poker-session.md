@@ -276,6 +276,19 @@ session counts the steps of the history it applies (`historySteps`: the start an
 messages, a showdown moving the chips once the cards are opened), and a change of the table while it
 grows does not fly.
 
+The files of the sounds of the table load ahead (`SoundService.preload()`), and the first live message after the history
+of the room waits for the page to render the end of it (`wait(0)`), not to be taken for history.
+Each change of the table plays its sounds on every page, a hidden one included, none while the history grows
+(`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken (a pop, as at every game), a new deck shuffled (the
+table shows it shuffled 3.1 seconds at least, `SHUFFLE_HOLD`, the length of the sound: the cards, the actions and the
+clock of the move wait for it, a deck of the history of the room or already dealt shown at once), each card entering a hand as it flies in
+(0.16 second apart, as the deal), the chips moved, and the end of a hand, the fold or the cards turned at the showdown,
+then the pot once the end of the hand showed (0.8 second, `HAND_ENDING`: the cards turned over, or the hand folded
+fading), as its chips fly, the stacks of the seats showing them once they landed (`--chip-landing`): won for its winner and a spectator, lost for the other player, the chips moving when
+split or gone to the bank. The end of the match follows, 0.3 second after the end of its last hand: won, lost or drawn,
+as for every game (`gameEndSound()` of `services/sound/game-sounds.ts`). The cards, the chips and the fold are CC0 files of Kenney (`SOUND_FILES` of
+`services/sound/sound-files.ts`), the pot synthesized.
+
 ## Limits
 
 - A player leaving for good while the deck waits for its keys (a deal, the cards drawn in the exchange) blocks the match:

@@ -1,0 +1,42 @@
+<section class="flex flex-col gap-6 max-w-4xl mx-auto p-4">
+    <div class="flex flex-col gap-2">
+        <h1 class="m-0 mat-headline-medium">Sound lab</h1>
+        <p class="muted-note">
+            Every sound of the games, as they play it: synthesized at runtime through the Web Audio API, or from a CC0 file.
+        </p>
+        @if (mutedNote(); as note) {
+        <p class="m-0 font-medium text-app-accent-text" id="muted-note">{{ note }}</p>
+        }
+    </div>
+    @for (group of groups; track group.title) {
+    <section class="flex flex-col gap-3">
+        <h2 class="m-0 mat-title-large">{{ group.title }}</h2>
+        <ul class="m-0 p-0 list-none flex flex-col gap-2">
+            @for (sound of group.sounds; track sound.effect) {
+            <li [id]="'sound-' + sound.effect"
+                class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 border border-app-border rounded-lg bg-app-surface-raised">
+                <div class="flex flex-col grow basis-56">
+                    <span class="font-medium">{{ sound.name }}</span>
+                    <span class="muted-note text-sm">{{ sound.plays }}</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @for (source of sound.sources; track source.label) {
+                    <button (click)="play(sound.effect, source)" mat-stroked-button type="button">
+                        <mat-icon>{{ looping() === sound.effect ? 'stop' : source.icon }}</mat-icon> {{ source.label }}
+                    </button>
+                    @if (source.file !== undefined && failedFiles().has(source.file)) {
+                    <span class="self-center text-sm text-(--mat-sys-error)">{{ source.file }} failed to load</span>
+                    }
+                    }
+                </div>
+            </li>
+            }
+        </ul>
+    </section>
+    }
+    <p class="muted-note text-sm">
+        The files are CC0: the cards and the chips come from Casino Audio by Kenney (kenney.nl); from freesound.org, the hammer
+        and the shot come from 44_black_powder by Jon285, the bullets from Revolver reloading_2 by o_ciz, the spin from
+        Revolver Cylinder Spin - Remington 1875 by Guy_Personface, the empty chamber from Revolver Dryfire by AugustSandberg.
+    </p>
+</section>

@@ -28,7 +28,7 @@
 
 // The chips won pop up on the seat, once the pot reached it
 .gain-shown {
-    animation: gain-shown var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--app-motion-slow) backwards;
+    animation: gain-shown var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--chip-landing, var(--app-motion-slow)) backwards;
 }
 
 @keyframes gain-shown {

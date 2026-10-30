@@ -1,5 +1,5 @@
 import {
-    afterRenderEffect, Component, computed, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
+    afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,6 +15,8 @@ import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/co
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { TranslatableText } from '@app/types/translatable-text.type';
@@ -23,6 +25,7 @@ import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { PlayedMatch, PokerPayloads, PokerSessionOptions, SeatCard, SeventeenPokerSession } from '../../classes/game-sessions/seventeen-poker-session';
 import { handOutcomeText } from '../../helpers/hand-outcome-text.helper';
 import { ChipPlace, ChipPlaceKind, chipTransfers, ChipTransfer, TableChips } from '../../helpers/chip-transfers.helper';
+import { HAND_ENDING, HeardTable, tableSounds, TimedSound } from '../../helpers/table-sound.helper';
 import { BetAction, BetLimits } from '../../classes/rules/betting-round';
 import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
 import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand, PokerMatch } from '../../classes/rules/poker-match';
@@ -32,6 +35,12 @@ import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 
 /** The options of the session of the table: the cipher and the rules of the app, lighter ones for the specs */
 export const POKER_SESSION_OPTIONS = new InjectionToken<PokerSessionOptions>('POKER_SESSION_OPTIONS', { factory: (): PokerSessionOptions => ({}) });
+
+/**
+ * The milliseconds the deck of a new hand shows shuffled at least, the length of the sound of its shuffle: its cards are
+ * dealt once it is over. None in the specs
+ */
+export const SHUFFLE_HOLD = new InjectionToken<number>('SHUFFLE_HOLD', { factory: (): number => 3100 });
 
 /** The chips a click on more or less adds to the amount of a bet */
 const BET_STEP: number = 5;
@@ -57,6 +66,19 @@ export class PokerTableComponent implements OnDestroy {
         // The session state is made of signals, it must not become a dependency: only a new room recreates the session
         return untracked(() => new SeventeenPokerSession(room, this.options));
     });
+    private readonly shuffleHold: number = inject(SHUFFLE_HOLD);
+    private shuffleTimer?: ReturnType<typeof setTimeout>;
+    /**
+     * The latest deck the table showed shuffled: a deck dealt live once the sound of its shuffle is over, a deck of the
+     * history of the room, or already dealt when the page opens, at once
+     */
+    private readonly shuffledDeck = signal<string | null>(null);
+    /** The deck of the hand shows shuffled: its cards, the actions and the clock wait for it */
+    private readonly held: Signal<boolean> = computed((): boolean => {
+        const deck: string | undefined = this.session().deck()?.id;
+        return deck !== undefined && deck !== this.shuffledDeck();
+    });
+
     /** The local player plays the match: leaving the page asks to confirm */
     private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
 
@@ -86,8 +108,9 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly hands: Signal<ReadonlyArray<ReadonlyArray<Readonly<HandCard>>>> = computed((): ReadonlyArray<ReadonlyArray<Readonly<HandCard>>> => {
         const deckId: string | undefined = this.session().deck()?.id;
         const matchSeats: SeatPair<boolean> = this.matchSeats();
+        const held: boolean = this.held();
         return this.session().cards().map((cards: ReadonlyArray<Readonly<SeatCard>>, seat: number) => {
-            return matchSeats[seat] ? cards.map(({ position, card }) => ({ id: `${ deckId }:${ position }`, card })) : [];
+            return matchSeats[seat] && !held ? cards.map(({ position, card }) => ({ id: `${ deckId }:${ position }`, card })) : [];
         });
     });
 
@@ -95,8 +118,8 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly selected: WritableSignal<ReadonlyArray<string>> = signal<ReadonlyArray<string>>([]);
 
     protected readonly hand: Signal<PokerHand | null> = computed((): PokerHand | null => this.session().match().hand());
-    protected readonly exchanging: Signal<boolean> = computed((): boolean => this.session().myTurn() && this.hand()?.phase === HandPhase.EXCHANGE);
-    protected readonly betting: Signal<boolean> = computed((): boolean => this.session().myTurn() && this.hand()?.phase !== HandPhase.EXCHANGE);
+    protected readonly exchanging: Signal<boolean> = computed((): boolean => this.session().myTurn() && !this.held() && this.hand()?.phase === HandPhase.EXCHANGE);
+    protected readonly betting: Signal<boolean> = computed((): boolean => this.session().myTurn() && !this.held() && this.hand()?.phase !== HandPhase.EXCHANGE);
     /** The most cards the local player discards: the cards left to draw */
     protected readonly maxExchange: Signal<number> = computed((): number => Math.min(HAND_SIZE, this.session().match().drawPile()));
 
@@ -129,7 +152,7 @@ export class PokerTableComponent implements OnDestroy {
     protected readonly toAct: Signal<PokerSeat | null> = computed((): PokerSeat | null => {
         const hand: PokerHand | null = this.hand();
 
-        if (hand === null || this.session().dealing() || this.session().broken()) {
+        if (hand === null || this.session().dealing() || this.session().broken() || this.held()) {
             return null;
         }
 
@@ -168,10 +191,20 @@ export class PokerTableComponent implements OnDestroy {
     /** The chips in the middle of the cloth: the pot, but the bets of the round in progress */
     protected readonly potChips: Signal<number> = computed((): number => this.pot() - this.bets()[PokerSeat.ONE] - this.bets()[PokerSeat.TWO]);
 
+    /** The chips on the table, as it shows them: the stacks, the bets and the pot */
+    private readonly tableChips: Signal<Readonly<TableChips>> = computed((): Readonly<TableChips> =>
+        ({ stacks: this.session().match().stacks(), bets: this.bets(), pot: this.potChips() }));
+
     /** The outcome of the hand over, until the next one is dealt */
     protected readonly outcome: Signal<Readonly<HandOutcome> | null> = computed((): Readonly<HandOutcome> | null => {
         const hand: PokerHand | null = this.hand();
         return hand?.phase === HandPhase.OVER ? hand.outcome : null;
+    });
+
+    /** The hand over showed its end before its pot flies: the cards turned at the showdown, or the hand folded faded */
+    protected readonly handEnding: Signal<boolean> = computed((): boolean => {
+        const outcome: Readonly<HandOutcome> | null = this.outcome();
+        return outcome !== null && outcome.end !== HandEnd.NO_CONTEST;
     });
 
     /** The kind of hand of each seat, once shown */
@@ -184,7 +217,7 @@ export class PokerTableComponent implements OnDestroy {
     /** The deck is being shuffled and locked */
     protected readonly shuffling: Signal<boolean> = computed((): boolean => {
         const phase: DeckPhase | undefined = this.session().deck()?.phase();
-        return phase === DeckPhase.SHUFFLING || phase === DeckPhase.LOCKING;
+        return phase === DeckPhase.SHUFFLING || phase === DeckPhase.LOCKING || this.held();
     });
 
     /** The seat of the hand winning the pot at the showdown, while it shows */
@@ -214,6 +247,11 @@ export class PokerTableComponent implements OnDestroy {
 
         if (hand === null || hand.phase === HandPhase.OVER) {
             return session.match().result() === null ? this.dealStatus() : null;
+        }
+
+        // The deck of the dealer shows shuffled until the sound of its shuffle is over
+        if (this.held()) {
+            return { key: this.key(marker('table.status.shuffling', undefined, 'poker')), params: { name: session.seats()[otherSeat(hand.first)] } };
         }
 
         // A hand in progress has its deck
@@ -273,30 +311,85 @@ export class PokerTableComponent implements OnDestroy {
 
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
 
-    /** The chips on the table last shown, with their session, its match and the steps of its history applied then */
-    private shown: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly chips: Readonly<TableChips>; readonly historySteps: number } | null = null;
+    /** The chips on the table last shown, with their session, its match, the steps of its history applied then and the hands over */
+    private shown: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly chips: Readonly<TableChips>; readonly historySteps: number; readonly outcomes: number } | null = null;
 
-    // Once the table shows a change, the chips it moved fly from where they were to where they are
+    // Once the table shows a change, the chips it moved fly from where they were to where they are: the pot of a showdown or
+    // of a fold once the end of the hand showed, the cards turned over or the hand folded faded
     private readonly chipMoves = afterRenderEffect({
         earlyRead: (): ReadonlyArray<Readonly<ChipFlight>> => {
             const session: SeventeenPokerSession = this.session();
             const match: PokerMatch = session.match();
-            const chips: Readonly<TableChips> = { stacks: match.stacks(), bets: this.bets(), pot: this.potChips() };
+            const chips: Readonly<TableChips> = this.tableChips();
             const historySteps: number = session.historySteps();
+            const outcomes: ReadonlyArray<Readonly<HandOutcome>> = match.outcomes();
             // A new session or a new match starts from its own chips, and the history of the room it catches up with moves none
-            const previous: Readonly<TableChips> | null = this.shown?.session === session && this.shown.match === match && this.shown.historySteps === historySteps
-                ? this.shown.chips
+            const previous: typeof this.shown = this.shown?.session === session && this.shown.match === match && this.shown.historySteps === historySteps
+                ? this.shown
                 : null;
-            const transfers: ReadonlyArray<Readonly<ChipTransfer>> = previous === null ? [] : chipTransfers(previous, chips);
-            this.shown = { session, match, chips, historySteps };
-            return this.flightsOf(transfers);
+            const transfers: ReadonlyArray<Readonly<ChipTransfer>> = previous === null ? [] : chipTransfers(previous.chips, chips);
+            const ending: boolean = previous !== null && outcomes.length > previous.outcomes && outcomes.at(-1)?.end !== HandEnd.NO_CONTEST;
+            this.shown = { session, match, chips, historySteps, outcomes: outcomes.length };
+            return this.flightsOf(transfers, ending ? HAND_ENDING * 1000 : 0);
         },
         write: (flights: Signal<ReadonlyArray<Readonly<ChipFlight>>>): void => {
             this.chipFlights().launch(flights());
         },
     });
 
+    private readonly soundService = inject(SoundService);
+    /** The table the page last heard, with its session, its match and the steps of its history applied then */
+    private heard: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly table: Readonly<HeardTable>; readonly historySteps: number } | null = null;
+
+    // A change of the table plays its sounds on every page, a hidden one included. A new session or a new match starts
+    // from its own table, and the history of the room it catches up with plays none. The deck of a new hand shows shuffled
+    // as long as the sound of its shuffle, its cards dealt then
+    private readonly sounds = effect(() => {
+        const session: SeventeenPokerSession = this.session();
+        const match: PokerMatch = session.match();
+        const historySteps: number = session.historySteps();
+        const deck: string | null = session.deck()?.id ?? null;
+        const previous: typeof this.heard = this.heard;
+        const caughtUp: boolean = previous !== null && previous.session === session && previous.match === match && previous.historySteps === historySteps;
+        // A deck of the history, or already dealt, shows at once: before the hands are read
+        if (!caughtUp) {
+            this.shuffledDeck.set(deck);
+        }
+        // A new session loads ahead the files of the sounds of the table: their first play is not late
+        if (previous?.session !== session) {
+            this.soundService.preload([SoundEffect.POKER_SHUFFLE, SoundEffect.POKER_DEAL, SoundEffect.POKER_CARD_TURN, SoundEffect.CHIPS, SoundEffect.POKER_FOLD]);
+        }
+        const table: Readonly<HeardTable> = {
+            seats: session.seats(),
+            deck,
+            // The cards of the hands, once the deck showed shuffled: a player leaving its seat and taking it back deals none
+            hands: this.held() ? [] : session.cards().map((cards: ReadonlyArray<Readonly<SeatCard>>) => cards.map(({ position }) => `${ deck }:${ position }`)),
+            chips: this.tableChips(),
+            outcomes: match.outcomes(),
+            result: match.result(),
+        };
+        this.heard = { session, match, table, historySteps };
+
+        if (previous === null || !caughtUp) {
+            return;
+        }
+
+        const mySeat: PokerSeat | null = untracked(session.mySeat);
+        untracked(() => tableSounds(previous.table, table, mySeat).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
+        if (deck !== previous.table.deck) {
+            this.showShuffled(deck);
+        }
+    });
+
+    /** The deck dealt live shows shuffled until the sound of its shuffle is over */
+    private showShuffled(deck: string | null): void {
+        // The deck of a hand replaces the one of the hand before
+        clearTimeout(this.shuffleTimer);
+        this.shuffleTimer = setTimeout(() => this.shuffledDeck.set(deck), this.shuffleHold);
+    }
+
     public ngOnDestroy(): void {
+        clearTimeout(this.shuffleTimer);
         this.session().destroy();
     }
 
@@ -305,9 +398,10 @@ export class PokerTableComponent implements OnDestroy {
         return this.matchSeats()[seat] ? this.outcome()?.gains[seat] ?? 0 : 0;
     }
 
-    /** Whether the hand of a seat lost at the showdown */
+    /** Whether the hand of a seat lost, at the showdown or folded: it fades */
     protected losing(seat: PokerSeat): boolean {
-        return this.winner() === otherSeat(seat);
+        const outcome: Readonly<HandOutcome> | null = this.outcome();
+        return outcome !== null && outcome.winner === otherSeat(seat);
     }
 
     /** The cards of the seat winning the pot */
@@ -473,15 +567,15 @@ export class PokerTableComponent implements OnDestroy {
             : { key: this.key(marker('table.status.theirTurn', undefined, 'poker')), params: { name } };
     }
 
-    /** The chips moved fly between the places of the table, as it shows them now */
-    private flightsOf(transfers: ReadonlyArray<Readonly<ChipTransfer>>): ReadonlyArray<Readonly<ChipFlight>> {
+    /** The chips moved fly between the places of the table, as it shows them now, once the delay is over, in milliseconds */
+    private flightsOf(transfers: ReadonlyArray<Readonly<ChipTransfer>>, delay: number): ReadonlyArray<Readonly<ChipFlight>> {
         // A hidden page does not run its animations: its flights would all fly at once when shown again
         if (transfers.length === 0 || !untracked(this.pageVisibility.visible)) {
             return [];
         }
 
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
-        return transfers.map(({ from, to, amount }): ChipFlight => ({ amount, from: this.point(from, origin), to: this.point(to, origin) }));
+        return transfers.map(({ from, to, amount }): ChipFlight => ({ amount, from: this.point(from, origin), to: this.point(to, origin), delay }));
     }
 
     /** The middle of a place of the table, the right side of the cloth for the bank */

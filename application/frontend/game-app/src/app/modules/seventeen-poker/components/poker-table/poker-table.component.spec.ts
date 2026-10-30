@@ -10,11 +10,14 @@ import { RoomHub } from '@testing/room-hub';
 import { TEST_GROUP } from '@testing/sra-test-group';
 import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
+import { DEAL_STAGGER, HAND_ENDING } from '../../helpers/table-sound.helper';
 import { PokerPayloads, SeventeenPokerSession, SPGameSessionType } from '../../classes/game-sessions/seventeen-poker-session';
 import { BetAction } from '../../classes/rules/betting-round';
 import { HandEnd, PokerMatchRules, SEVENTEEN_POKER_RULES } from '../../classes/rules/poker-match';
 import { PokerSeat } from '../../classes/rules/poker-seat';
-import { POKER_SESSION_OPTIONS, PokerTableComponent } from './poker-table.component';
+import { POKER_SESSION_OPTIONS, SHUFFLE_HOLD, PokerTableComponent } from './poker-table.component';
 
 const cipher = new SraCipher(TEST_GROUP);
 const FACE_DOWN: string[] = Array.from({ length: 5 }, () => 'Face-down card');
@@ -28,9 +31,9 @@ describe('PokerTableComponent', () => {
     let rooms: Map<string, Room<PokerPayloads>>;
 
     /** The table of the local participant */
-    async function table(name: string, rules: PokerMatchRules = SEVENTEEN_POKER_RULES): Promise<void> {
-        // The warning before leaving a match is provided by the page
-        TestBed.configureTestingModule({ providers: [{ provide: POKER_SESSION_OPTIONS, useValue: { cipher, rules } }, MatchLeaveWarning] });
+    async function table(name: string, rules: PokerMatchRules = SEVENTEEN_POKER_RULES, shuffleHold: number = 0): Promise<void> {
+        // The deck dealt at once: the specs wait for its cards. The warning before leaving a match is provided by the page
+        TestBed.configureTestingModule({ providers: [{ provide: POKER_SESSION_OPTIONS, useValue: { cipher, rules } }, { provide: SHUFFLE_HOLD, useValue: shuffleHold }, MatchLeaveWarning] });
         fixture = TestBed.createComponent(PokerTableComponent);
         fixture.componentRef.setInput('room', hub.room(name));
         await fixture.whenStable();
@@ -312,6 +315,9 @@ describe('PokerTableComponent', () => {
         expect(categories).toHaveLength(2);
         expect(text('#hand-outcome')).toEqual(latestHand());
         expect(chipValues('.pot')).toEqual([]);
+        // The pot flies to the winner once the cards turned over
+        const potFlight: HTMLElement | undefined = Array.from(element().querySelectorAll<HTMLElement>('.chip-flight')).at(-1);
+        expect(potFlight?.style.getPropertyValue('--flight-delay')).toEqual('800ms');
         const hands: Element[] = Array.from(element().querySelectorAll('app-card-hand'));
         expect(hands[1].classList.contains('opacity-50')).toEqual(outcome?.winner === PokerSeat.TWO);
         expect(hands[0].classList.contains('opacity-50')).toEqual(outcome?.winner === PokerSeat.ONE);
@@ -324,6 +330,81 @@ describe('PokerTableComponent', () => {
             .every((image: Element) => image.classList.contains('outline-3'));
         expect(outlined(1)).toEqual(outcome?.winner === PokerSeat.ONE);
         expect(outlined(0)).toEqual(outcome?.winner === PokerSeat.TWO);
+    });
+
+    test('should play the sounds of the table: the seats taken, the deck shuffled, the cards dealt, the chips bet, a fold and the pot won', async () => {
+        // Given
+        await table('alice');
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+        const bob: SeventeenPokerSession = participant('bob');
+
+        // When
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
+        await until(() => play.mock.calls.length === 1);
+        bob.takeSeat(PokerSeat.TWO);
+        await until(() => status() === 'bob to deal.');
+
+        // Then
+        expect(play.mock.calls).toEqual([[SoundEffect.SEAT_TAKEN, 0], [SoundEffect.SEAT_TAKEN, 0]]);
+        play.mockClear();
+
+        // When
+        bob.deal();
+        await until(() => status() === 'Your turn.');
+
+        // Then: the cards of each hand dealt one after the other, the antes paid
+        expect(play).toHaveBeenCalledWith(SoundEffect.POKER_SHUFFLE, 0);
+        expect(play.mock.calls.filter(([effect]) => effect === SoundEffect.POKER_DEAL).map(([, delay]) => delay))
+            .toEqual([0, 1, 2, 3, 4].map((index: number) => index * DEAL_STAGGER));
+        expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, 0);
+
+        // When
+        play.mockClear();
+        await click('Bet more');
+        await click('Bet 6');
+        await until(() => status() === 'bob to speak.');
+
+        // Then
+        expect(play.mock.calls).toEqual([[SoundEffect.CHIPS, 0]]);
+
+        // When
+        play.mockClear();
+        bob.bet(BetAction.FOLD);
+        await until(() => status() === 'Your turn to deal.');
+
+        // Then
+        expect(play.mock.calls).toEqual([[SoundEffect.POKER_FOLD, 0], [SoundEffect.POKER_POT_WON, HAND_ENDING]]);
+        // The hand folded fades, then the pot flies to Alice
+        expect(element().querySelectorAll('app-card-hand')[0].classList).toContain('opacity-50');
+        expect(Array.from(element().querySelectorAll<HTMLElement>('.chip-flight')).at(-1)?.style.getPropertyValue('--flight-delay')).toEqual('800ms');
+        expect(element().querySelector('#hand-outcome')?.classList).toContain('after-ending');
+        // The stacks of the seats show the chips once the flight landed
+        expect(element().querySelector('#seat-top')?.classList).toContain('after-ending');
+        expect(element().querySelector('#seat-bottom')?.classList).toContain('after-ending');
+    });
+
+    test('should show the deck of a new hand shuffled as long as the sound of its shuffle, its cards, the actions and the clock waiting', async () => {
+        // Given: a shuffle sounding longer than the test
+        await table('alice', SEVENTEEN_POKER_RULES, 60_000);
+        const bob: SeventeenPokerSession = participant('bob');
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
+        bob.takeSeat(PokerSeat.TWO);
+        await until(() => status() === 'bob to deal.');
+        const alice: SeventeenPokerSession = fixture.componentInstance['session']();
+
+        // When the hand is dealt and read
+        bob.deal();
+        await until(() => alice.myTurn());
+
+        // Then the table still shows the deck shuffled
+        expect(status()).toEqual('bob shuffles the deck…');
+        expect(cards(0)).toEqual([]);
+        expect(cards(1)).toEqual([]);
+        expect(button('Check')).toBeUndefined();
+        // No clock running, the seat not acting
+        expect(text('#seat-bottom')).toEqual('alice145 chips');
+        expect(element().querySelector('#seat-bottom .seat')?.classList).not.toContain('acting');
+        expect(element().querySelector('.turn-clock')).toBeNull();
     });
 
     describe('the clock of a move', () => {
@@ -574,6 +655,7 @@ describe('PokerTableComponent', () => {
 
         // When: Carol joins, the chain giving her its history, the page showing the hands being opened
         await table('carol');
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
         const lastBet: number = hub.delivered.map((message: AppMessage) => message.type).lastIndexOf('SP_bet') + 1;
         hub.replay(fixture.componentInstance.room(), hub.delivered.slice(0, lastBet));
         await until(() => status() === 'The hands are shown…');
@@ -583,6 +665,7 @@ describe('PokerTableComponent', () => {
         // Then
         expect(text('#hand-outcome')).not.toEqual('');
         expect(flights()).toEqual([]);
+        expect(play).not.toHaveBeenCalled();
 
         // When
         alice.deal();
@@ -590,6 +673,7 @@ describe('PokerTableComponent', () => {
 
         // Then: the antes of the next hand fly
         expect(flights()).toEqual([['5'], ['5']]);
+        expect(play).toHaveBeenCalledWith(SoundEffect.POKER_SHUFFLE, 0);
     });
 
     test('should tell the player the deck waits for', async () => {
@@ -869,6 +953,27 @@ describe('PokerTableComponent', () => {
             expect(text('#seat-bottom')).toEqual('carol150 chips');
             expect(cards(1)).toEqual([]);
             expect(text('.badge')).toEqual('bob wins the match with 155 chips.');
+        });
+
+        test('should deal no card to a player taking back its seat once the match is over', async () => {
+            // Given: the match over, Alice leaving her seat
+            const bob: SeventeenPokerSession = await dealt(rules);
+            await click('Check');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.BET, 1);
+            await until(() => status() === 'Your turn.');
+            await click('Fold');
+            await until(() => button('Leave the seat') !== undefined);
+            await click('Leave the seat');
+            await until(() => status() === 'Waiting for two players to sit.');
+            const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+            // When: she takes it back, her last hand shown again
+            (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
+            await until(() => cards(1).length === 5);
+
+            // Then
+            expect(play.mock.calls).toEqual([[SoundEffect.SEAT_TAKEN, 0]]);
         });
 
         test('should let a player free the seat of the other one, away, while the seats are open', async () => {

@@ -77,6 +77,9 @@ export class Cylinder {
     });
     /** The players the cylinder waits for: the next step of each one */
     public readonly waitingFor: Signal<ReadonlyArray<string>> = this._waitingFor.asReadonly();
+    private readonly _loads = signal<number>(0);
+    /** The players who loaded their bullets */
+    public readonly loads: Signal<number> = this._loads.asReadonly();
     private readonly _first = signal<number | null>(null);
     /** The seat shooting first, once both players loaded their bullets */
     public readonly first: Signal<number | null> = this._first.asReadonly();
@@ -205,6 +208,7 @@ export class Cylinder {
     private changed(): void {
         this._phase.set(this.state.phase);
         this._waitingFor.set(this.state.waitingFor);
+        this._loads.set(this.state.loads.size);
         this._first.set(this.state.first);
         this._progress.set(this.state.progress);
     }

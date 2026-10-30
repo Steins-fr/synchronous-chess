@@ -11,6 +11,13 @@
       "poker": "Poker",
       "roulette": "Roulette"
     },
+    "sound": {
+      "menu": "Effetti sonori",
+      "mute": "Silenzia",
+      "muteChat": "Silenzia la chat",
+      "muteGame": "Silenzia il gioco",
+      "volume": "Volume"
+    },
     "theme": {
       "toDark": "Passa al tema scuro",
       "toLight": "Passa al tema chiaro"

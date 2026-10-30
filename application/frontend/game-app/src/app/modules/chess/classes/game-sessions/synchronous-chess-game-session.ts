@@ -30,6 +30,13 @@ export default abstract class SynchronousChessGameSession {
     public abstract readonly awayPlayers: Signal<ReadonlyArray<string>>;
     /** The local player waits for the other one, away, during the game: once its time is over, it claims the game */
     public abstract readonly forfeitClaimable: Signal<boolean>;
+    /**
+     * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
+     * the start and the end of each of its messages
+     */
+    public abstract readonly historySteps: Signal<number>;
+    /** The seats taken live, out of the history of the room: each one is heard */
+    public abstract readonly seatsTaken: Signal<number>;
 
     /** The number of turns run, the same for every participant applying the same moves */
     protected turnCount: number = 0;

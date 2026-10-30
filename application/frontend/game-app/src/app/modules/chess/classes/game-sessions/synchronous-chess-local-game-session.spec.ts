@@ -37,6 +37,8 @@ describe('SynchronousChessLocalGameSession', () => {
         expect(session.awayPlayers()).toEqual([]);
         expect(session.canRelease()).toEqual(false);
         expect(session.forfeitClaimable()).toEqual(false);
+        expect(session.historySteps()).toEqual(0);
+        expect(session.seatsTaken()).toEqual(0);
         expect(board).toBe(session.game.fenBoard());
     });
 

@@ -196,7 +196,8 @@ run by the CI.
 ### Testing a chess game
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
-  the Russian roulette page `/russian-roulette`: the home page only links to them.
+  the Russian roulette page `/russian-roulette`: the home page only links to them. The sound lab `/sound-lab` plays
+  every sound effect of the games, linked from nowhere.
 - Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
   `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from

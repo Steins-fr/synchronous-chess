@@ -1,0 +1,29 @@
+<ng-container *transloco="let t; prefix: 'app.sound'">
+    <button #origin="cdkOverlayOrigin" (click)="open.set(!open())" [attr.aria-expanded]="open()" [attr.aria-label]="t('menu')"
+        [title]="t('menu')" aria-haspopup="dialog" cdkOverlayOrigin id="sound-button" mat-icon-button type="button">
+        <mat-icon>{{ icon() }}</mat-icon>
+    </button>
+    <!-- A panel, not a menu: the keys of a menu would move its focus, out of the slider -->
+    <ng-template (backdropClick)="open.set(false)" (detach)="open.set(false)" (overlayKeydown)="closeOnEscape($event)"
+        [cdkConnectedOverlayOpen]="open()" [cdkConnectedOverlayOrigin]="origin" cdkConnectedOverlay cdkConnectedOverlayHasBackdrop
+        cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop">
+        <!-- Opened by the overlay, out of the flow of the page: not positioned by the browser as a dialog -->
+        <dialog [attr.aria-label]="t('menu')" cdkTrapFocus cdkTrapFocusAutoCapture id="sound-panel" open
+            class="static flex flex-col gap-1 m-0 px-4 py-3 border-0 rounded-lg bg-app-surface text-app-text shadow-(--mat-sys-level2)">
+            <mat-slide-toggle (change)="soundService.setMuted($event.checked)" [checked]="soundService.muted()">
+                {{ t('mute') }}
+            </mat-slide-toggle>
+            <mat-slide-toggle (change)="soundService.setCategoryMuted(category.GAME, $event.checked)" [checked]="soundService.categoryMuted(category.GAME)">
+                {{ t('muteGame') }}
+            </mat-slide-toggle>
+            <mat-slide-toggle (change)="soundService.setCategoryMuted(category.CHAT, $event.checked)" [checked]="soundService.categoryMuted(category.CHAT)">
+                {{ t('muteChat') }}
+            </mat-slide-toggle>
+            <span class="mt-2 text-sm text-app-text-muted" id="sound-volume-label">{{ t('volume') }}</span>
+            <mat-slider [max]="maxVolume" [min]="0" [step]="5">
+                <input (change)="preview()" (valueChange)="soundService.setVolume($event)" [value]="soundService.volume()"
+                    aria-labelledby="sound-volume-label" matSliderThumb>
+            </mat-slider>
+        </dialog>
+    </ng-template>
+</ng-container>

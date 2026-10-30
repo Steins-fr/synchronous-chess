@@ -11,6 +11,13 @@
       "poker": "Poker",
       "roulette": "Rulet"
     },
+    "sound": {
+      "menu": "Ses efektleri",
+      "mute": "Sesi kapat",
+      "muteChat": "Sohbetin sesini kapat",
+      "muteGame": "Oyunun sesini kapat",
+      "volume": "Ses düzeyi"
+    },
     "theme": {
       "toDark": "Koyu temaya geç",
       "toLight": "Açık temaya geç"

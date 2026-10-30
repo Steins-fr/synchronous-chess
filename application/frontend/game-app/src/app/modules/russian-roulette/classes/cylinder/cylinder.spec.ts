@@ -140,6 +140,7 @@ describe('Cylinder', { timeout: 30_000 }, () => {
         expect(c.cylinder.phase()).toEqual(CylinderPhase.KEYS);
         expect(c.cylinder.waitingFor()).toEqual(['a', 'b']);
         expect(c.cylinder.players).toEqual(['a', 'b']);
+        expect(c.cylinder.loads()).toEqual(0);
 
         // When
         await a.cylinder.load(LOADS['a']);
@@ -161,6 +162,7 @@ describe('Cylinder', { timeout: 30_000 }, () => {
         expect(new Set([a, b, c].map(({ cylinder }) => cylinder.first())).size).toEqual(1);
         expect([0, 1]).toContain(c.cylinder.first());
         expect(c.cylinder.waitingFor()).toEqual([]);
+        expect(c.cylinder.loads()).toEqual(2);
         expect(c.cylinder.bullets()).toEqual([]);
         expect(hub.reports).toEqual([]);
     });

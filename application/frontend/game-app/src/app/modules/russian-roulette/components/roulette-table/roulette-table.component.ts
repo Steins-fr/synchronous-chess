@@ -1,5 +1,5 @@
 import {
-    afterNextRender, afterRenderEffect, Component, computed, DestroyRef, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
+    afterNextRender, afterRenderEffect, Component, computed, DestroyRef, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,9 @@ import { PageVisibilityService } from '@app/services/page-visibility/page-visibi
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { Room } from '@app/services/room-manager/classes/room/room';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { OneShotSoundEffect } from '@app/services/sound/sound-files';
+import { SoundService } from '@app/services/sound/sound.service';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
@@ -26,6 +29,7 @@ import { otherSeat, RouletteSeat, SeatPair, withSeat } from '../../classes/rules
 import { RouletteCylinderComponent } from '../roulette-cylinder/roulette-cylinder.component';
 import { RevolverFire, RevolverShot, RouletteRevolverComponent } from '../roulette-revolver/roulette-revolver.component';
 import { RouletteSeatComponent, SeatShot } from '../roulette-seat/roulette-seat.component';
+import { HeardTable, tableSounds } from '../../helpers/table-sound.helper';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 
 /** The options of the session of the table: the cipher and the rules of the app, lighter ones for the specs */
@@ -95,9 +99,12 @@ interface PlayedMoves {
     readonly view: Readonly<TableView>;
 }
 
+/** Chips flying, once their delay is over: every flight of the table has one */
+type TableFlight = Readonly<Required<ChipFlight>>;
+
 /** What the moves applied since the latest render play on the table */
 interface MovePlay {
-    readonly flights: ReadonlyArray<Readonly<ChipFlight>>;
+    readonly flights: ReadonlyArray<TableFlight>;
     readonly stamp: Readonly<PassStamp> | null;
     readonly firing: Readonly<Firing> | null;
 }
@@ -450,8 +457,63 @@ export class RouletteTableComponent implements OnDestroy {
         },
     });
 
+    private readonly soundService = inject(SoundService);
+    /** The table the page last heard, with its session, its game and the steps of its history applied then */
+    private heard: Readonly<{ session: RussianRouletteSession; game: RouletteGame; historySteps: number; table: Readonly<HeardTable> }> | null = null;
+
+    // A change of the table plays its sounds on every page, a hidden one included. A new session or a new game starts from
+    // its own table, and the history of the room it catches up with plays none
+    private readonly sounds = effect(() => {
+        const session: RussianRouletteSession = this.session();
+        const game: RouletteGame = this.game();
+        const historySteps: number = session.historySteps();
+        const target: RevolverTarget = this.target();
+        const table: Readonly<HeardTable> = {
+            seats: session.seats(),
+            loads: session.cylinder()?.loads() ?? 0,
+            aim: target === null ? null : `${ target }`,
+            chambers: game.chambers(),
+            chips: [...game.stacks(), game.table(), game.bank()],
+            result: this._firing() === null && this.unplayed() === null ? game.result() : null,
+        };
+        const previous: typeof this.heard = this.heard;
+        this.heard = { session, game, historySteps, table };
+        // A new session loads ahead the files of the sounds of the table: their first play is not late
+        if (previous?.session !== session) {
+            this.soundService.preload([
+                SoundEffect.ROULETTE_BULLET, SoundEffect.ROULETTE_SPIN, SoundEffect.ROULETTE_COCK, SoundEffect.ROULETTE_CLICK, SoundEffect.ROULETTE_SHOT, SoundEffect.CHIPS,
+            ]);
+        }
+
+        if (previous?.session !== session || previous.game !== game || previous.historySteps !== historySteps) {
+            return;
+        }
+
+        untracked(() => tableSounds(previous.table, table, session.mySeat(), !this.pageVisibility.visible())
+            .forEach((sound: OneShotSoundEffect) => this.soundService.play(sound)));
+    });
+
+    // The cylinder turns while the players load and spin it: its clicks loop until it stops
+    private readonly spinSound = effect((onCleanup: (cleanup: () => void) => void) => {
+        // The audio started by a gesture made while the cylinder turns: its clicks loop from then
+        if (this.spinning() && this.soundService.started()) {
+            onCleanup(untracked(() => this.soundService.loop(SoundEffect.ROULETTE_SPIN)));
+        }
+    });
+
     public ngOnDestroy(): void {
         this.session().destroy();
+    }
+
+    /** The revolver fires, after it held in front of the player: the table tells what the chamber held, heard at once */
+    protected blast(): void {
+        const shot: Readonly<RevolverFire> | null = this.revolverShot();
+        // A shot the table ended already, its time over before the revolver fired on a hidden page, fires no more
+        if (shot === null) {
+            return;
+        }
+        this.blasted.set(true);
+        this.soundService.play(shot.kind === RevolverShot.BULLET ? SoundEffect.ROULETTE_SHOT : SoundEffect.ROULETTE_CLICK);
     }
 
     /** The pass the player of a seat just made, stamped on its seat */
@@ -474,9 +536,16 @@ export class RouletteTableComponent implements OnDestroy {
         return action.bullets === 0 ? SeatShot.EMPTY : SeatShot.DEATH;
     }
 
+    /** The chips fly, heard as each flight starts, once its delay is over */
+    private launch(flights: ReadonlyArray<TableFlight>): void {
+        this.chipFlights().launch(flights);
+        new Set<number>(flights.map((flight: TableFlight) => flight.delay))
+            .forEach((delay: number) => this.soundService.play(SoundEffect.CHIPS, delay / 1000));
+    }
+
     /** The moves start playing: their chips fly, a pass is stamped, a shot fires the revolver, ending a shot still firing */
     private start(played: Readonly<MovePlay>): void {
-        this.chipFlights().launch(played.flights);
+        this.launch(played.flights);
         if (played.stamp !== null) {
             this._stamp.set(played.stamp);
         }
@@ -506,15 +575,22 @@ export class RouletteTableComponent implements OnDestroy {
         const rendered: Readonly<TableView> = (this.shown as NonNullable<typeof this.shown>).view;
         this._played.update((played: Readonly<PlayedMoves> | null) => ({ ...played as Readonly<PlayedMoves>, view: rendered }));
 
-        if (action.kind === RouletteActionKind.REVEAL || !this.pageVisibility.visible()) {
+        if (action.kind === RouletteActionKind.REVEAL) {
+            return;
+        }
+        // A page hidden since the shot started moves its chips without flights: heard all the same
+        if (!this.pageVisibility.visible()) {
+            if (action.bullets !== 0 || action.chips > 0) {
+                this.soundService.play(SoundEffect.CHIPS);
+            }
             return;
         }
 
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
-        const flights: Array<Readonly<ChipFlight>> = action.bullets === 0
+        const flights: Array<TableFlight> = action.bullets === 0
             ? [this.flight(TablePlace.TABLE, action.seat, action.chips, 0, origin)]
             : [this.flight(action.seat, otherSeat(action.seat), this.game().rules.death, 0, origin), this.flight(TablePlace.TABLE, otherSeat(action.seat), action.chips, 0, origin)];
-        this.chipFlights().launch(flights.filter((flight: Readonly<ChipFlight>) => flight.amount > 0));
+        this.launch(flights.filter((flight: TableFlight) => flight.amount > 0));
     }
 
     /**
@@ -526,7 +602,7 @@ export class RouletteTableComponent implements OnDestroy {
      */
     private play(moves: ReadonlyArray<Readonly<RouletteAction>>, from: number, before: Readonly<TableView>, now: Readonly<TableView>): Readonly<MovePlay> {
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
-        const flights: Array<Readonly<ChipFlight>> = [];
+        const flights: Array<TableFlight> = [];
         let stamp: Readonly<PassStamp> | null = null;
         let firing: Readonly<Firing> | null = null;
         // The table after each move: a shot follows the passes played with it
@@ -563,7 +639,7 @@ export class RouletteTableComponent implements OnDestroy {
         };
     }
 
-    private flight(from: ChipPlace, to: ChipPlace, amount: number, delay: number, origin: DOMRect): Readonly<ChipFlight> {
+    private flight(from: ChipPlace, to: ChipPlace, amount: number, delay: number, origin: DOMRect): TableFlight {
         return { amount, from: this.chipPoint(from, origin), to: this.chipPoint(to, origin), delay };
     }
 

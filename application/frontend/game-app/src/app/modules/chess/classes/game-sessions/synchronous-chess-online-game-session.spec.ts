@@ -183,6 +183,9 @@ describe('SynchronousChessOnlineGameSession', () => {
         expect(reloaded.game.playedTurns()).toHaveLength(1);
         expect(reloaded.game.playedTurns()).toEqual(black.game.playedTurns());
         expect(hub.reports).toEqual([]);
+        // Its commitment restored and both reveals, each started then ended (the seats set apart): the pages playing live step none
+        await vi.waitFor(() => expect(reloaded.historySteps()).toEqual(6));
+        expect(sessions.map((session: SynchronousChessOnlineGameSession) => session.historySteps())).toEqual([0, 0, 0]);
 
         // When it plays the next turn
         reloaded.move(d2d4);
@@ -515,6 +518,16 @@ describe('SynchronousChessOnlineGameSession seats', () => {
         expect(host.inMatch()).toEqual(false);
     });
 
+    test('should count a seat taken once, its player asking it again', () => {
+        // When: a second click before the first one came back
+        other.takeSeat(PieceColor.WHITE);
+        other.takeSeat(PieceColor.WHITE);
+
+        // Then
+        expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'c', blackPlayer: undefined }));
+        expect(other.seatsTaken()).toEqual(1);
+    });
+
     test('should ignore a malformed seat request', () => {
         // Given
         other.takeSeat(PieceColor.WHITE);
@@ -633,9 +646,12 @@ describe('SynchronousChessOnlineGameSession seats', () => {
         const reloaded: SynchronousChessOnlineGameSession = new SynchronousChessOnlineGameSession(room);
         hub.replay(room);
 
-        // Then
+        // Then: both seats are steps of the history, a seat taken in it plays no sound, as the pages that saw them live do
         expect(reloaded.configuration()).toEqual({ whitePlayer: 'a', blackPlayer: 'b' });
         expect(reloaded.playingColor).toEqual(PieceColor.WHITE);
+        expect(reloaded.historySteps()).toEqual(4);
+        expect(reloaded.seatsTaken()).toEqual(0);
+        expect(joining.seatsTaken()).toEqual(2);
     });
 });
 

@@ -14,6 +14,7 @@ import { CylinderPhase } from '../cylinder/cylinder-state';
 import { RouletteGame, RouletteRules } from '../rules/roulette-game';
 import { PlayedGame } from './played-game';
 import { otherSeat, RouletteSeat, SeatPair } from '../rules/roulette-seat';
+import { wait } from '@app/helpers/wait.helper';
 
 export enum RRGameSessionType {
     /** A participant takes a seat, or leaves its seat */
@@ -166,6 +167,8 @@ export class RussianRouletteSession {
     private readonly _step = signal<number>(0);
     /** The moves and the steps of the cylinder applied in the game: a timeout names it, a move made meanwhile voids it */
     public readonly step: Signal<number> = this._step.asReadonly();
+    // The latest message queued came from the history of the room
+    private historyBehind: boolean = false;
     private readonly _historySteps = signal<number>(0);
     /**
      * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
@@ -222,7 +225,14 @@ export class RussianRouletteSession {
             ...Object.values(CylinderMessageType).map((type: CylinderMessageType) => room.messenger(type)),
         ).subscribe((message: RouletteMessage) => {
             this.pending++;
+            // The first live message after the history waits for the page to render the end of it: it is not taken for history
+            const history: boolean = room.isHistory(message);
+            const afterHistory: boolean = this.historyBehind && !history;
+            this.historyBehind = history;
             this.queue = this.queue.then(async () => {
+                if (afterHistory) {
+                    await wait(0);
+                }
                 await logHandlingFailure(message, this.handle(message));
                 // Once the messages received are applied, as a reloaded page catching up: its cylinders act on the chain
                 if (--this.pending === 0) {

@@ -19,7 +19,7 @@ describe('AppComponent', () => {
         return [...fixture.nativeElement.querySelectorAll('nav a')].map((link: HTMLElement) => link.textContent.trim());
     }
 
-    // The language menu, loaded once the app is idle: its placeholder before
+    // The language and sound menus, loaded once the app is idle: their placeholder before
     async function loadLanguageMenu(): Promise<void> {
         const [menu] = await fixture.getDeferBlocks();
         await menu.render(DeferBlockState.Complete);
@@ -85,16 +85,19 @@ describe('AppComponent', () => {
         expect(themeButton().getAttribute('aria-label')).toBe('Switch to the dark theme');
     });
 
-    test('should show a placeholder of the language menu until it loads, disabled', async () => {
+    test('should show a placeholder of the language and sound menus until they load, disabled', async () => {
         // Then
         expect(fixture.nativeElement.querySelector('app-language-menu')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-sound-menu')).toBeNull();
         expect(fixture.nativeElement.querySelector('nav [aria-label="Choose the language"]')?.getAttribute('aria-disabled')).toBe('true');
+        expect(fixture.nativeElement.querySelector('nav [aria-label="Sound effects"]')?.getAttribute('aria-disabled')).toBe('true');
 
         // When
         await loadLanguageMenu();
 
         // Then
         expect(fixture.nativeElement.querySelector('app-language-menu #language-button')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('app-sound-menu #sound-button')).not.toBeNull();
     });
 
     test('picking a language in the menu should translate the texts shown, without a reload', async () => {

@@ -16,3 +16,10 @@
         transform: translate(calc(-50% + var(--flight-x)), calc(-50% + var(--flight-y)));
     }
 }
+
+// No motion asked: the chips land at once, without waiting for their delay
+@media (prefers-reduced-motion: reduce) {
+    .chip-flight {
+        animation-delay: 0ms;
+    }
+}
