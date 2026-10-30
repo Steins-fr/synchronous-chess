@@ -152,7 +152,9 @@ hexadecimal digits is ignored.
 
 A player losing on time loses its seat too. While the seats are open, a seated player frees the seat of the other one,
 away from the room, with `Free the seat` (`RR_unseat`): no page can tell when the other one was away, so the chain
-applies the request whatever the presence of the player. A spectator frees no seat.
+applies the request whatever the presence of the player. The host frees the seat of a player away too, on either seat,
+even as a spectator: its request holds when the host ordered the block of its message, as the sequencer of the chain, a
+page replaying the chain applying it alike. Another spectator frees no seat.
 
 The table shows the local player at its bottom. A spectator sees it from the free seat it may take, the only one
 showing `Sit here`: it clicks where it then sits. Once both seats are taken, it sees the first seat at the bottom.
@@ -234,7 +236,7 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
 | `RR_disclose` | `{ game, secret }`: x | each player, by its page | the game over, or stopped |
 | `RR_timeout` | `{ game, step }` | a player | the time of a move of the other one over |
 | `RR_rematch` | `{ game }`: the index of the new game in the room | a player | once the game is settled, both seats taken |
-| `RR_unseat` | `{ seat, name }`: the seat of the other player, and its player | a player | while the seats are open, the other player away |
+| `RR_unseat` | `{ seat, name }`: the seat freed, and its player | a player, or the host | while the seats are open, the player of the seat away |
 
 ## Interface
 
@@ -254,7 +256,7 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
 - A status line (`<output>`, of the role `status`): what the table waits for.
 - The moves of the player: `Load (n/3)`, `Shoot`, `Pass (price)`, disabled when the player can not pay.
 - The result, provisional until the cylinder is checked, then the check; `Play again` for its players, `Free the
-  seat` on the seat of the other player away.
+  seat` on the seat of a player away, for the other player and for the host.
 - Out of the table, in the panel of the room beside the game or over it (`RoomHistoryComponent` of
   `modules/room-layout`, opened by the `History` button of the bar): the moves of the game (`Moves of the game`), the
   latest first, a shot once over, then the results of the former games (`Games played`). The table computes them

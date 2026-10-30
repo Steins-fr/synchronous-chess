@@ -178,6 +178,19 @@ run by the CI.
   (`bob sends too many messages: they are hidden for a moment`): a scenario sending more than 3 messages in a row
   waits between them. `transmitAroundComposer()` of `e2e/room-participant.ts` sends a flood as a script in the page
   would, through the debugging utilities of Angular (`ng`, the development build of `serve:local` only).
+- The host moderates the chat (the participant ordering the chain): a button beside the chip of each other participant
+  of `#player-list` (`Moderate bob`) opens its menu, `Mute for 5 minutes`, `Mute for 30 minutes`, `Mute until the end
+  of the room` (`Unmute` once muted) and `Remove from the room`, confirmed in the dialog of the app (`Confirm`):
+  `moderate(name, item)` of `e2e/room-participant.ts`. Every page tells it in a notice of the log (`.chat-notice`),
+  worded for each one: `You muted bob for 5 minutes` for the host, `alice muted you for 5 minutes` for bob, `alice
+  muted bob for 5 minutes` for the others, `alice removed bob from the room`. The composer of a muted participant
+  waits, `#send` disabled, its hint telling until when (`You are muted until 12:38 PM`), and every page hides its
+  messages. A participant removed is told `The host removed you from the room.` and sees the list again, its links
+  closed after 5 seconds; its joins are refused, under its name or from its browser under another one (`You were
+  removed from this room: you cannot join it again.`).
+- The API knows a browser by an id of its local storage (`synchronous-chess:browser-id`): the tabs of one Playwright
+  MCP server share their local storage, so one browser id. Play a removed participant in a second server
+  (`playwright2`), else the removal refuses every tab.
 
 ### Testing a chess game
 
@@ -196,6 +209,11 @@ run by the CI.
   `mcp__playwright__browser_console_messages` to check it.
 - The history of the room lists the moves of each turn (`Turn 1 · White: F2 → F3`), the latest turn first, white
   first in a turn.
+- Before the first move, the seat of a player away (its tab closed) shows `Free the seat` to the other player and to
+  the host, a spectator included. Once the game started, a status line below the board tells the wait to every page
+  (`#game-status`, `Waiting for bob to come back…`), and the player who played sees a clock of 30 seconds beside it
+  (`#away-clock`, `29 s`): once over, it wins the game (`Black was away when the time ran out: White wins`, the first
+  line of the history `Black was away when the time ran out`). The scenario of the clock is `SLOW`.
 
 ### Testing a poker game
 
@@ -214,6 +232,8 @@ run by the CI.
   without it, as `e2e/seventeen-poker.e2e.ts` does.
 - The hands played (`Hand 1: …`) and the matches played (`Match 1: …`) are in the history of the room, out of the
   table.
+- While the seats are open, the seat of a player away shows `Free the seat` to the other player and to the host, a
+  spectator included: the host frees the seat of a player alone at the table.
 
 ### Testing a Russian roulette game
 
@@ -230,6 +250,8 @@ run by the CI.
   shows the state before the shot (`#last-move`, the chambers, the stacks), and no button of the next move.
 - The moves of the game and the games played (`Game 1: …`) are in the history of the room, out of the table: a move
   joins it once its shot is over.
+- While the seats are open, the seat of a player away shows `Free the seat` to the other player and to the host, a
+  spectator included, as at poker.
 
 ### Cleanup after every browser test
 
