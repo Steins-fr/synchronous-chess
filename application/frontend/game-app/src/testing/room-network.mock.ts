@@ -27,6 +27,7 @@ export class RoomNetworkMock {
     public readonly changeHost = vi.fn();
     public readonly restoreLink = vi.fn();
     public readonly removeFromRoom = vi.fn();
+    public readonly exclude = vi.fn();
     public readonly rejoin = vi.fn().mockResolvedValue(RejoinResult.NOT_JOINED);
 
     public constructor(localPlayerName: string = 'local', public readonly initiator: boolean = true, public readonly hostName: string = 'host') {

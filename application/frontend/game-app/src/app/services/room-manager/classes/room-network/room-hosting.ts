@@ -26,6 +26,8 @@ export interface HostingContext {
      * joining again, it replaces its former connection
      */
     occupancy(playerName: string): number;
+    /** The players the room removed: refused joining it, and banned on the API */
+    refused(): ReadonlySet<string>;
     addNegotiator(negotiator: Negotiator): void;
     transmitMessage(message: NetworkMessage): void;
 }
@@ -41,6 +43,8 @@ export class RoomHosting {
     private static readonly RECONNECTION_RETRY_DELAY: number = 5000;
     /** Retries for 10 minutes, as long as the API keeps the room of a disconnected host (RoomService.HOST_RECONNECTION_DELAY) */
     private static readonly RECONNECTION_RETRIES: number = 120;
+    /** A ban failing is sent again a few times: its socket replaced meanwhile, the room sends it again once moved */
+    private static readonly BAN_RETRIES: number = 3;
 
     private readonly destroyRef = new Subject<void>();
     private readonly reconnectedSubject = new Subject<void>();
@@ -123,14 +127,17 @@ export class RoomHosting {
 
     /**
      * Tells the API the players of the room: the ones joining or leaving while the socket was closed never reached it,
-     * and the former host is removed after a takeover. The players lost but not agreed left stay in the room
+     * and the former host is removed after a takeover. The players lost but not agreed left stay in the room. Then the
+     * players the room removed, banned by the former sockets or not: a ban sent again changes nothing
      */
     private async synchronizePlayers(): Promise<void> {
         try {
             const roomName: string = this.context.roomName;
             const players: ReadonlyMap<string, Player> = this.context.players();
+            const refused: ReadonlySet<string> = this.context.refused();
             const serverPlayers: string[] = (await this.roomSocketApi.send(RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName })).players;
-            const missingPlayers: string[] = [...players.keys()].filter((playerName: string) => !serverPlayers.includes(playerName));
+            // A player removed, its link open until its grace ends, never joins the room again
+            const missingPlayers: string[] = [...players.keys()].filter((playerName: string) => !serverPlayers.includes(playerName) && !refused.has(playerName));
             const playersToRemove: string[] = serverPlayers.filter((playerName: string) => this.departed.has(playerName));
 
             for (const playerName of missingPlayers) {
@@ -145,10 +152,20 @@ export class RoomHosting {
         } catch (e) {
             console.error(e);
         }
+
+        // Each one apart: a ban failing stops neither the players of the room nor the other bans
+        this.context.refused().forEach((playerName: string) => this.ban(playerName));
     }
 
     private async onJoinNotification(data: JoinNotification): Promise<void> {
         const { roomName } = this.context;
+
+        if (this.context.refused().has(data.playerName)) {
+            // Not answered: the API refuses the join of the player once it has its ban (REMOVED), the player joining again
+            // through the socket once its negotiation timed out
+            this.ban(data.playerName);
+            return;
+        }
 
         if (this.context.occupancy(data.playerName) >= this.context.maxPlayer) {
             this.roomSocketApi
@@ -190,6 +207,21 @@ export class RoomHosting {
                 .send(RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: this.context.roomName, playerName })
                 .catch((err: unknown) => console.error(err));
         }
+    }
+
+    /**
+     * Tells the API the player the room removed: its joins refused, by its name and its browser. Sent again a few times
+     * on a failure; once the room moved to a new socket when the current one does not hold it
+     */
+    public ban(playerName: string): void {
+        if (!this.holdsRoom) {
+            return;
+        }
+
+        defer(() => this.roomSocketApi.send(RoomApiRequestTypeEnum.BAN, { roomName: this.context.roomName, playerName })).pipe(
+            retry({ count: RoomHosting.BAN_RETRIES, delay: RoomHosting.RECONNECTION_RETRY_DELAY }),
+            takeUntil(this.destroyRef),
+        ).subscribe({ error: (err: unknown) => console.error(err) });
     }
 
     public clear(): void {

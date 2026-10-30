@@ -183,6 +183,15 @@ export class PeerRoomNetwork extends RoomNetwork {
         }
     }
 
+    /** The host bans the player removed on the API too: its joins refused, by its name and its browser */
+    public override exclude(playerName: string): void {
+        super.exclude(playerName);
+
+        if (playerName !== this.localPlayer.name) {
+            this.hosting?.ban(playerName);
+        }
+    }
+
     public removeFromRoom(playerName: string): void {
         this.hosting?.removePlayer(playerName);
     }
@@ -283,7 +292,7 @@ export class PeerRoomNetwork extends RoomNetwork {
             return;
         }
 
-        if (this.isPlayerNameAlreadyInRoom(newPlayerPayload.playerName)) {
+        if (this.isRefused(newPlayerPayload.playerName) || this.isPlayerNameAlreadyInRoom(newPlayerPayload.playerName)) {
             return;
         }
         const negotiator: Negotiator = new WebrtcNegotiator(newPlayerPayload.playerName, new Webrtc(), this.hostPlayer);

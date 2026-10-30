@@ -46,6 +46,14 @@ describe('Room', () => {
         expect(room.queue()).toEqual(['pending']);
     });
 
+    test('should tell the network the players the room removed', () => {
+        // When
+        room.exclude('remote');
+
+        // Then
+        expect(network.exclude).toHaveBeenCalledExactlyOnceWith('remote');
+    });
+
     test('should follow the players of the room, a lost one having left it', () => {
         // Given
         const remote: Player = createRemotePlayer('remote');

@@ -429,6 +429,103 @@ describe('RoomHosting', () => {
         expect(roomSocketApi.send).not.toHaveBeenCalledWith(RoomApiRequestTypeEnum.PLAYER_REMOVE, expect.anything());
     });
 
+    describe('removal', () => {
+        test('should ban on the API a player the room removed, not the local player', async () => {
+            // Given
+            createNetwork();
+
+            // When
+            network.exclude('remote');
+            network.exclude('host');
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(roomSocketApi.send).toHaveBeenCalledExactlyOnceWith(RoomApiRequestTypeEnum.BAN, { roomName: 'room', playerName: 'remote' });
+        });
+
+        test('should ban again a few times, 5 seconds apart, a player whose ban failed', async () => {
+            // Given
+            createNetwork();
+            vi.mocked(roomSocketApi.send).mockRejectedValue('ban failure');
+
+            // When
+            network.exclude('remote');
+            await vi.advanceTimersByTimeAsync(20_000);
+
+            // Then
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(4);
+            expect(console.error).toHaveBeenCalledExactlyOnceWith('ban failure');
+        });
+
+        test('should stop banning again once cleared', async () => {
+            // Given
+            createNetwork();
+            vi.mocked(roomSocketApi.send).mockRejectedValue('ban failure');
+            network.exclude('remote');
+            await vi.advanceTimersByTimeAsync(0);
+
+            // When
+            network.clear();
+            await vi.advanceTimersByTimeAsync(20_000);
+
+            // Then
+            expect(roomSocketApi.send).toHaveBeenCalledTimes(1);
+            expect(console.error).not.toHaveBeenCalled();
+        });
+
+        test('should ban a player joining the room it removed, without negotiating with it, even with places free', async () => {
+            // Given
+            createNetwork(4);
+            network.exclude('remote');
+            await vi.advanceTimersByTimeAsync(0);
+            vi.mocked(roomSocketApi.send).mockClear();
+
+            // When
+            notification$.next({ type: RoomSocketApiNotificationEnum.JOIN_REQUEST, data: { playerName: 'remote' } });
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then: the API refuses its next join
+            expect(network.negotiators().size).toEqual(0);
+            expect(Negotiator.prototype.initiate).not.toHaveBeenCalled();
+            expect(roomSocketApi.send).toHaveBeenCalledExactlyOnceWith(RoomApiRequestTypeEnum.BAN, { roomName: 'room', playerName: 'remote' });
+        });
+
+        test('should ban the players the room removed once it moved to a new socket, after its players, a failed ban stopping nothing', async () => {
+            // Given: a player removed, its link open until its grace ends
+            createNetwork();
+            addRemotePlayer('remote');
+            addRemotePlayer('removed');
+            let moved: () => void = () => undefined;
+            vi.mocked(roomSocketApi.reconnect).mockReturnValue(new Promise<void>((resolve) => moved = resolve));
+            vi.mocked(roomSocketApi.send).mockImplementation(async (type: RoomApiRequestTypeEnum) => {
+                if (type === RoomApiRequestTypeEnum.BAN) {
+                    throw new Error('ban failure');
+                }
+
+                return type === RoomApiRequestTypeEnum.PLAYER_GET_ALL ? { players: ['host', 'ghost'] } : { playerName: '' };
+            });
+            closed$.next();
+            network.removeFromRoom('ghost');
+            network.exclude('removed');
+            network.exclude('gone');
+            const whileClosed: number = vi.mocked(roomSocketApi.send).mock.calls.length;
+
+            // When
+            moved();
+            await vi.advanceTimersByTimeAsync(0);
+
+            // Then
+            expect(whileClosed).toEqual(0);
+            expect(vi.mocked(roomSocketApi.send).mock.calls).toEqual([
+                [RoomApiRequestTypeEnum.PLAYER_GET_ALL, { roomName: 'room' }],
+                [RoomApiRequestTypeEnum.PLAYER_ADD, { roomName: 'room', playerName: 'remote' }],
+                [RoomApiRequestTypeEnum.PLAYER_REMOVE, { roomName: 'room', playerName: 'ghost' }],
+                [RoomApiRequestTypeEnum.BAN, { roomName: 'room', playerName: 'removed' }],
+                [RoomApiRequestTypeEnum.BAN, { roomName: 'room', playerName: 'gone' }],
+            ]);
+        });
+    });
+
     test('should tell the remote players, the new one included, that a player connected', () => {
         // Given
         createNetwork();

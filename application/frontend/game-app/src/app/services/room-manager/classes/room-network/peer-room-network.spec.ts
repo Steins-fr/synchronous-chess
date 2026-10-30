@@ -157,6 +157,20 @@ describe('PeerRoomNetwork', () => {
         expect(Negotiator.prototype.initiate).toHaveBeenCalledTimes(1);
     });
 
+    test('should not negotiate with a new player the room removed, a peer banning nobody', async () => {
+        // Given
+        network.onPlayerConnected(hostPlayer);
+
+        // When
+        network.exclude('newcomer');
+        network.onRoomMessage(newPlayerMessage('newcomer'));
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Then
+        expect(network.negotiators().has('newcomer')).toEqual(false);
+        expect(Negotiator.prototype.initiate).not.toHaveBeenCalled();
+    });
+
     describe('rejoin', () => {
         beforeEach(() => {
             network.clear();

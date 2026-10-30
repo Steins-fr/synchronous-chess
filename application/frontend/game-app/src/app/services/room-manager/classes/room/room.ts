@@ -115,6 +115,14 @@ export class Room<M extends object> {
         return this.sequencer();
     }
 
+    /**
+     * The room removed the player, every page alike, its history included: called for each removal, the local player's
+     * included, which gives the room up. See RoomNetwork.exclude
+     */
+    public exclude(playerName: string): void {
+        this._roomConnection.exclude(playerName);
+    }
+
     public transmitMessage<K extends keyof M & string>(type: K, payload: M[K]): void {
         const roomServiceMessage: RoomServiceMessage = {
             type,
