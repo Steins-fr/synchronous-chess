@@ -23,8 +23,8 @@ describe('ChessRulesComponent', () => {
         expect(element().querySelector('.title')?.textContent).toEqual('Rules');
         expect(element().querySelectorAll('.summary li')).toHaveLength(4);
         expect([...element().querySelectorAll('.case-card h4')].map((title: Element) => title.textContent?.trim())).toEqual(['a Capture', 'b Swap', 'c Clash']);
-        expect(element().querySelectorAll('.ends tbody tr')).toHaveLength(7);
-        expect(element().querySelectorAll('.ends .badge-win')).toHaveLength(2);
+        expect(element().querySelectorAll('.ends tbody tr')).toHaveLength(8);
+        expect(element().querySelectorAll('.ends .badge-win')).toHaveLength(3);
         expect(element().querySelector('.source a')?.getAttribute('href')).toEqual('http://www.hexenspiel.de/engl/synchronous-chess/');
         expect(element().querySelector('.summary li strong')?.textContent).toEqual('Simultaneous moves');
     });

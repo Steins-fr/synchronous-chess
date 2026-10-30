@@ -68,6 +68,7 @@ describe('SynchronousChess', () => {
             [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
             [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
             [SCGameSessionType.UNSEAT]: BlockChainName.CHESS,
+            [SCGameSessionType.FORFEIT]: BlockChainName.CHESS,
         }, expect.any(AbortSignal));
         await vi.waitFor(() => expect(fixture.nativeElement.querySelector('app-sync-chess-game')).not.toBeNull());
 

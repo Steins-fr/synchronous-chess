@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Menunggu {name} kembali…",
     "check": "Skak",
     "checkmate": "Skakmat",
+    "clock": "{seconds} dtk",
     "history": {
+      "away": "{color, select, w {Waktu habis saat Putih tidak hadir} other {Waktu habis saat Hitam tidak hadir}}",
       "move": "Giliran {turn}{kind, select, intermediate { (antara)} other {}} · {color, select, w {Putih} other {Hitam}}: {from} → {to}",
       "pass": "Giliran {turn}{kind, select, intermediate { (antara)} other {}} · {color, select, w {Putih melewati giliran} other {Hitam melewati giliran}}",
       "promotion": "Giliran {turn}{kind, select, intermediate { (antara)} other {}} · {color, select, w {Putih} other {Hitam}}: promosi di {square} menjadi {piece, select, q {menteri} r {benteng} b {gajah} other {kuda}}",
@@ -18,6 +21,7 @@
     "played": "sudah melangkah",
     "promotion": "Promosi",
     "result": {
+      "away": "{winner, select, w {Waktu habis saat Hitam tidak hadir: Putih menang} other {Waktu habis saat Putih tidak hadir: Hitam menang}}",
       "checkmate": "Skakmat: {winner, select, w {Putih menang} other {Hitam menang}}",
       "doubleCheckmate": "Remis: kedua pemain terkena skakmat",
       "fiftyTurns": "Remis: 50 giliran tanpa langkah pion maupun makan",
@@ -75,6 +79,7 @@
       "title": "Gerakan dan makan"
     },
     "end": {
+      "away": "Seorang pemain tidak hadir selama 30 detik saat pemain lain menunggu langkahnya",
       "caption": "Akhir permainan dan hasilnya",
       "checkmate": "Skakmat pada satu pemain",
       "doubleCheckmate": "Skakmat pada kedua pemain",

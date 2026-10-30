@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Ожидание возвращения игрока {name}…",
     "check": "Шах",
     "checkmate": "Мат",
+    "clock": "{seconds} с",
     "history": {
+      "away": "{color, select, w {Время вышло в отсутствие белых} other {Время вышло в отсутствие чёрных}}",
       "move": "Ход {turn}{kind, select, intermediate { (промежуточный)} other {}} · {color, select, w {Белые} other {Чёрные}}: {from} → {to}",
       "pass": "Ход {turn}{kind, select, intermediate { (промежуточный)} other {}} · {color, select, w {Белые пропускают ход} other {Чёрные пропускают ход}}",
       "promotion": "Ход {turn}{kind, select, intermediate { (промежуточный)} other {}} · {color, select, w {Белые} other {Чёрные}}: превращение на {square} в {piece, select, q {ферзя} r {ладью} b {слона} other {коня}}",
@@ -18,6 +21,7 @@
     "played": "сходил",
     "promotion": "Превращение",
     "result": {
+      "away": "{winner, select, w {Время вышло в отсутствие чёрных: победа белых} other {Время вышло в отсутствие белых: победа чёрных}}",
       "checkmate": "Мат: {winner, select, w {победа белых} other {победа чёрных}}",
       "doubleCheckmate": "Ничья: мат обоим игрокам",
       "fiftyTurns": "Ничья: 50 ходов без хода пешкой и без взятия",
@@ -75,6 +79,7 @@
       "title": "Ходы и взятия"
     },
     "end": {
+      "away": "Игрок отсутствует 30 секунд, пока другой ждёт его хода",
       "caption": "Окончания партии и их результат",
       "checkmate": "Мат одному игроку",
       "doubleCheckmate": "Мат обоим игрокам",

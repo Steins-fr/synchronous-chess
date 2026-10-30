@@ -9,6 +9,7 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     public readonly seatsOpen: Signal<boolean> = signal(false).asReadonly();
     public readonly inMatch: Signal<boolean> = signal(false).asReadonly();
     public readonly awayPlayers: Signal<ReadonlyArray<string>> = signal([]).asReadonly();
+    public readonly forfeitClaimable: Signal<boolean> = signal(false).asReadonly();
 
     public get playingColor(): PieceColor {
         return PieceColor.NONE;
@@ -27,6 +28,10 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     }
 
     public release(): void {
+        // Nothing to do
+    }
+
+    public claimForfeit(): void {
         // Nothing to do
     }
 

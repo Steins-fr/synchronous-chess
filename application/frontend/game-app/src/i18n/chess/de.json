@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Warte, bis {name} zurückkommt…",
     "check": "Schach",
     "checkmate": "Schachmatt",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {Die Zeit lief ab, während Weiß abwesend war} other {Die Zeit lief ab, während Schwarz abwesend war}}",
       "move": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß} other {Schwarz}}: {from} → {to}",
       "pass": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß passt} other {Schwarz passt}}",
       "promotion": "Runde {turn}{kind, select, intermediate { (Zwischenrunde)} other {}} · {color, select, w {Weiß} other {Schwarz}} wandelt auf {square} in {piece, select, q {eine Dame} r {einen Turm} b {einen Läufer} other {einen Springer}} um",
@@ -18,6 +21,7 @@
     "played": "hat gezogen",
     "promotion": "Umwandlung",
     "result": {
+      "away": "{winner, select, w {Die Zeit lief ab, während Schwarz abwesend war: Weiß gewinnt} other {Die Zeit lief ab, während Weiß abwesend war: Schwarz gewinnt}}",
       "checkmate": "Schachmatt: {winner, select, w {Weiß gewinnt} other {Schwarz gewinnt}}",
       "doubleCheckmate": "Remis: Beide Spieler sind schachmatt",
       "fiftyTurns": "Remis: 50 Runden ohne Bauernzug oder Schlagen",
@@ -75,6 +79,7 @@
       "title": "Zug und Schlagen"
     },
     "end": {
+      "away": "Ein Spieler ist 30 Sekunden abwesend, während der andere auf seinen Zug wartet",
       "caption": "Enden der Partie und ihr Ergebnis",
       "checkmate": "Schachmatt eines Spielers",
       "doubleCheckmate": "Schachmatt beider Spieler",

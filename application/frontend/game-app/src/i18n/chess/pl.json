@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Czekamy na powrót gracza {name}…",
     "check": "Szach",
     "checkmate": "Szach-mat",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {Czas minął podczas nieobecności białych} other {Czas minął podczas nieobecności czarnych}}",
       "move": "Tura {turn}{kind, select, intermediate { (pośrednia)} other {}} · {color, select, w {Białe} other {Czarne}}: {from} → {to}",
       "pass": "Tura {turn}{kind, select, intermediate { (pośrednia)} other {}} · {color, select, w {Białe pasują} other {Czarne pasują}}",
       "promotion": "Tura {turn}{kind, select, intermediate { (pośrednia)} other {}} · {color, select, w {Białe} other {Czarne}}: promocja na polu {square} na {piece, select, q {hetmana} r {wieżę} b {gońca} other {skoczka}}",
@@ -18,6 +21,7 @@
     "played": "zagrał",
     "promotion": "Promocja",
     "result": {
+      "away": "{winner, select, w {Czas minął podczas nieobecności czarnych: wygrywają białe} other {Czas minął podczas nieobecności białych: wygrywają czarne}}",
       "checkmate": "Szach-mat: {winner, select, w {wygrywają białe} other {wygrywają czarne}}",
       "doubleCheckmate": "Remis: obaj gracze dostali mata",
       "fiftyTurns": "Remis: 50 tur bez ruchu pionkiem ani bicia",
@@ -75,6 +79,7 @@
       "title": "Ruch i bicie"
     },
     "end": {
+      "away": "Gracz nieobecny przez 30 sekund, gdy drugi czeka na jego ruch",
       "caption": "Zakończenia partii i ich wynik",
       "checkmate": "Mat jednego gracza",
       "doubleCheckmate": "Mat obu graczy",

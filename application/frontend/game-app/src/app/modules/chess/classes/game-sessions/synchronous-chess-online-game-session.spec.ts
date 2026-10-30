@@ -1,6 +1,7 @@
 import SynchronousChessOnlineGameSession, {
     ChessPayloads,
     CommitMessage,
+    ForfeitMessage,
     RevealMessage,
     SCGameSessionType,
     SealedAction,
@@ -635,5 +636,229 @@ describe('SynchronousChessOnlineGameSession seats', () => {
         // Then
         expect(reloaded.configuration()).toEqual({ whitePlayer: 'a', blackPlayer: 'b' });
         expect(reloaded.playingColor).toEqual(PieceColor.WHITE);
+    });
+});
+
+describe('SynchronousChessOnlineGameSession forfeit', () => {
+    let hub: RoomHub<ChessPayloads>;
+    let rooms: Map<string, Room<ChessPayloads>>;
+    let white: SynchronousChessOnlineGameSession;
+    let black: SynchronousChessOnlineGameSession;
+    let spectator: SynchronousChessOnlineGameSession;
+    let sessions: SynchronousChessOnlineGameSession[];
+
+    /** The page of a participant, white played by a and black by b */
+    function page(name: string): SynchronousChessOnlineGameSession {
+        const room: Room<ChessPayloads> = hub.room(name);
+        rooms.set(name, room);
+        const session = new SynchronousChessOnlineGameSession(room);
+        configure(session);
+        sessions.push(session);
+        return session;
+    }
+
+    /** The participant leaves the room: the other pages see it away */
+    function leave(name: string): void {
+        hub.leave(rooms.get(name) as Room<ChessPayloads>);
+    }
+
+    function claim(from: string, turn: number): void {
+        hub.send({ from, type: SCGameSessionType.FORFEIT, payload: { turn } });
+    }
+
+    /** A player commits to its action of a turn, then reveals it if asked */
+    async function play(from: string, color: PieceColor, action: SealedAction, turn: number, reveal: boolean): Promise<void> {
+        hub.send({ from, type: SCGameSessionType.COMMIT, payload: { turn, commitment: await SynchronousChessOnlineGameSession.commitment(turn, color, action, 'salt') } });
+        if (reveal) {
+            hub.send({ from, type: SCGameSessionType.REVEAL, payload: { turn, action, salt: 'salt' } });
+        }
+    }
+
+    /** Every page applied the reveals and the claims delivered */
+    async function settled(): Promise<void> {
+        await Promise.all(sessions.map((session: SynchronousChessOnlineGameSession) => TestHelper.cast<{ reveals: Promise<void> }>(session).reveals));
+    }
+
+    const results = (pages: ReadonlyArray<SynchronousChessOnlineGameSession>): Array<GameResult | null> => pages.map((session) => session.game.result());
+
+    beforeEach(() => {
+        sessionStorage.clear();
+        hub = new RoomHub<ChessPayloads>();
+        rooms = new Map();
+        sessions = [];
+        white = page('a');
+        black = page('b');
+        spectator = page('c');
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    test('should end the game of the other player, away, once the player waiting for it claims it', async () => {
+        // Given: black leaves before the game starts
+        leave('b');
+        expect(white.awayPlayers()).toEqual(['b']);
+        expect(white.forfeitClaimable()).toEqual(false);
+
+        // When white plays
+        white.move(e2e4);
+
+        // Then
+        await vi.waitFor(() => expect(white.forfeitClaimable()).toEqual(true));
+        expect(spectator.forfeitClaimable()).toEqual(false);
+        expect(white.movePreview()).toBeDefined();
+
+        // When
+        white.claimForfeit();
+        white.claimForfeit();
+
+        // Then every page ends the game
+        expect(hub.delivered.filter((message: AppMessage) => message.type === SCGameSessionType.FORFEIT)).toEqual([{ from: 'a', type: SCGameSessionType.FORFEIT, payload: { turn: 0 } }]);
+        await settled();
+        expect(results([white, spectator])).toEqual(Array(2).fill({ winner: PieceColor.WHITE, reason: GameEndReason.AWAY }));
+        expect(white.movePreview()).toBeUndefined();
+        expect(white.forfeitClaimable()).toEqual(false);
+
+        // When black, back, claims too
+        claim('b', 0);
+        await settled();
+
+        // Then
+        expect(spectator.game.result()).toEqual({ winner: PieceColor.WHITE, reason: GameEndReason.AWAY });
+        expect(hub.reports).toEqual([]);
+    });
+
+    test('should refuse a claim before the start, from a spectator, for another turn, once over, or against a free seat', async () => {
+        // Given a page seeing white alone
+        const lone: SynchronousChessOnlineGameSession = page('d');
+        sessionState(lone).setConfiguration({ whitePlayer: 'a' });
+
+        // When white claims before the start, then once started from a spectator and for another turn
+        claim('a', 0);
+        white.move(e2e4);
+        await vi.waitFor(() => expect(spectator.seatsOpen()).toEqual(false));
+        claim('c', 0);
+        claim('a', 1);
+        await settled();
+
+        // Then
+        expect(results(sessions)).toEqual([null, null, null, null]);
+
+        // When the game is over for the spectator
+        gameState(spectator.game)._result.set({ winner: PieceColor.NONE, reason: GameEndReason.STALEMATE });
+        claim('a', 0);
+        await settled();
+
+        // Then
+        expect(results([spectator, lone])).toEqual([{ winner: PieceColor.NONE, reason: GameEndReason.STALEMATE }, null]);
+
+        // When black, connected, claims
+        const sent: number = hub.delivered.length;
+        black.claimForfeit();
+
+        // Then
+        expect(hub.delivered).toHaveLength(sent);
+    });
+
+    test('should refuse the claims of a player not committed to its action, or against a player who revealed it or without a part in the turn', async () => {
+        // Given both committed, black revealed its action
+        await play('a', PieceColor.WHITE, { kind: SealedActionKind.MOVE, move: e2e4 }, 0, false);
+        await play('b', PieceColor.BLACK, { kind: SealedActionKind.MOVE, move: e7e5 }, 0, true);
+
+        // When
+        claim('a', 0);
+        await settled();
+
+        // Then
+        expect(spectator.game.result()).toBeNull();
+
+        // When white reveals, then claims the next turn without committing to it
+        hub.send({ from: 'a', type: SCGameSessionType.REVEAL, payload: { turn: 0, action: { kind: SealedActionKind.MOVE, move: e2e4 }, salt: 'salt' } });
+        await vi.waitFor(() => expect(turnCount(spectator)).toEqual(1));
+        claim('a', 1);
+        await settled();
+
+        // Then
+        expect(spectator.game.result()).toBeNull();
+
+        // When white commits to a promotion it plays alone, then claims against black, without a part in it
+        sessions.forEach(promotionOfWhite);
+        await play('a', PieceColor.WHITE, { kind: SealedActionKind.PROMOTION, pieceType: PieceType.QUEEN }, 1, false);
+        claim('a', 1);
+        await settled();
+
+        // Then
+        expect(spectator.game.result()).toBeNull();
+
+        // When black, waiting for the promotion of white, claims
+        claim('b', 1);
+        await settled();
+
+        // Then
+        expect(spectator.game.result()).toEqual({ winner: PieceColor.BLACK, reason: GameEndReason.AWAY });
+    });
+
+    test('should apply a claim alike on the page of a player who ran a turn alone before its reveal is in the chain', async () => {
+        // Given a turn played, then a promotion of white only
+        white.move(e2e4);
+        black.move(e7e5);
+        await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
+        sessions.forEach(promotionOfWhite);
+
+        // When white promotes, its commitment waiting for the chain: its page runs the turn at once
+        hub.hold('a');
+        white.promote(PieceType.QUEEN);
+        await vi.waitFor(() => expect(hub.held).toHaveLength(1));
+        expect(sessions.map(turnCount)).toEqual([2, 1, 1]);
+
+        // When black claims the game meanwhile
+        claim('b', 1);
+        await settled();
+
+        // Then every page ends the game alike
+        expect(results(sessions)).toEqual(Array(3).fill({ winner: PieceColor.BLACK, reason: GameEndReason.AWAY }));
+
+        // When the commitment of white is in the chain, then its reveal
+        hub.release();
+        await vi.waitFor(() => expect(hub.types().filter((type: string) => type === SCGameSessionType.REVEAL)).toHaveLength(3));
+        await settled();
+
+        // Then the reveal is ignored, without a report
+        expect(hub.reports).toEqual([]);
+        expect(turnCount(spectator)).toEqual(1);
+        expect(results(sessions)).toEqual(Array(3).fill({ winner: PieceColor.BLACK, reason: GameEndReason.AWAY }));
+    });
+
+    test('should refuse a claim sent before the start, alike on a page replaying the chain', async () => {
+        // Given
+        claim('a', 0);
+        white.move(e2e4);
+        black.move(e7e5);
+        await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
+
+        // When a participant joins late
+        const late: SynchronousChessOnlineGameSession = page('d');
+        hub.replay(rooms.get('d') as Room<ChessPayloads>);
+
+        // Then
+        await vi.waitFor(() => expect(turnCount(late)).toEqual(1));
+        await settled();
+        expect(results(sessions)).toEqual([null, null, null, null]);
+    });
+
+    test('should go on with the reveals after a malformed claim', async () => {
+        // Given
+        vi.spyOn(TimedLogger, 'error').mockImplementation(() => undefined);
+        white.move(e2e4);
+        await vi.waitFor(() => expect(spectator.seatsOpen()).toEqual(false));
+
+        // When
+        hub.send({ from: 'a', type: SCGameSessionType.FORFEIT, payload: TestHelper.cast<ForfeitMessage>(null) });
+        black.move(e7e5);
+
+        // Then
+        await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
+        expect(TimedLogger.error).toHaveBeenCalledWith(`Failed to handle ${ SCGameSessionType.FORFEIT } from a`, expect.any(TypeError));
     });
 });

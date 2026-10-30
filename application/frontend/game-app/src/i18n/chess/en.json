@@ -1,8 +1,11 @@
 {
   "game": {
+    "away": "Waiting for {name} to come back…",
     "check": "Check",
     "checkmate": "Checkmate",
+    "clock": "{seconds} s",
     "history": {
+      "away": "{color, select, w {White was away when the time ran out} other {Black was away when the time ran out}}",
       "move": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White} other {Black}}: {from} → {to}",
       "pass": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White passes} other {Black passes}}",
       "promotion": "Turn {turn}{kind, select, intermediate { (intermediate)} other {}} · {color, select, w {White} other {Black}} promotes on {square} to {piece, select, q {a queen} r {a rook} b {a bishop} other {a knight}}",
@@ -18,6 +21,7 @@
     "played": "played",
     "promotion": "Promotion",
     "result": {
+      "away": "{winner, select, w {Black was away when the time ran out: White wins} other {White was away when the time ran out: Black wins}}",
       "checkmate": "Checkmate: {winner, select, w {White wins} other {Black wins}}",
       "doubleCheckmate": "Draw: both players are checkmated",
       "fiftyTurns": "Draw: 50 turns without a pawn move or a capture",
@@ -75,6 +79,7 @@
       "title": "Movement and capture"
     },
     "end": {
+      "away": "A player away for 30 seconds while the other one waits for its move",
       "caption": "Ends of the game and their result",
       "checkmate": "Checkmate of one player",
       "doubleCheckmate": "Checkmate of both players",
