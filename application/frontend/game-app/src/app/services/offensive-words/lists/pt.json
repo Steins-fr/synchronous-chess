@@ -1,0 +1,28 @@
+{
+  "source": "List of Dirty, Naughty, Obscene, and Otherwise Bad Words, © 2012–2020 Shutterstock, Inc. and the LDNOOBW contributors, https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words, commit 5faf2ba42d7b1c0977169ec3611df25a3c08eb13",
+  "license": "CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ — changes: entries removed, inflections merged into stems, allow-words added, lowercased, a few inflections added, accents restored",
+  "words": [
+    "bastardo",
+    "cabrão",
+    "caralho",
+    "chochota",
+    "colhões",
+    "cona",
+    "dar o rabo",
+    "esporra",
+    "filho da puta",
+    "foda",
+    "foda-se",
+    { "word": "foder", "allow": ["fodder"] },
+    "merda",
+    "paneleiro",
+    "puta",
+    "puta que pariu",
+    "puta que te pariu",
+    "putas",
+    "queca",
+    "vai tomar no cu",
+    "vai-te foder",
+    "xochota"
+  ]
+}
