@@ -20,7 +20,7 @@ import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
-import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenu, MatMenuContent, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { TextAreaFieldComponent } from '@app/modules/form/text-area-field/text-area-field.component';
@@ -31,6 +31,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
+import { DialogService } from '@app/services/dialog/dialog.service';
 import { LanguageService } from '@app/services/language/language.service';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { idGenerator } from '@app/helpers/id-generator.helper';
@@ -49,6 +50,7 @@ import {
     isChatDecision,
     isSilenced,
     moderateChat,
+    MuteMinutes,
     NO_MODERATION
 } from './chat-moderation';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
@@ -175,6 +177,7 @@ const COMPOSITION_END_DELAY: number = 100;
         MatIconButton,
         MatButton,
         MatMenu,
+        MatMenuContent,
         MatMenuItem,
         MatMenuTrigger,
         MatDivider,
@@ -188,9 +191,11 @@ const COMPOSITION_END_DELAY: number = 100;
 })
 export class ChatComponent {
     protected readonly kinds = ChatEntryKind;
+    protected readonly muteMinutes = MuteMinutes;
     protected readonly preferences = inject(ChatPreferencesService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly languageService = inject(LanguageService);
+    private readonly dialogService = inject(DialogService);
 
     /** The room of the chat, which lives with it */
     public readonly room = input.required<Room<ChatPayloads>>();
@@ -311,6 +316,12 @@ export class ChatComponent {
 
     /** The local player, whose own messages hidden for flooding are told apart */
     protected readonly localName = computed<string>(() => this.room().localPlayer.name);
+    /** The local player orders the chain: it moderates the room, its decisions valid */
+    protected readonly moderates = computed<boolean>(() => this.room().sequencer() === this.localName());
+    /** The participants muted, the menu of the moderator unmuting them */
+    protected readonly mutedNames = computed<ReadonlySet<string>>(() => new Set(this.muteEnds().keys()));
+    /** The participants a decision of the local player names, until the chain orders it: their menu disabled meanwhile */
+    protected readonly pendingTargets = signal<ReadonlySet<string>>(new Set());
 
     private readonly ids: Generator<number, never> = idGenerator();
     /** The rate of the authors on the chain */
@@ -335,6 +346,7 @@ export class ChatComponent {
                 this.moderation.set(NO_MODERATION);
                 this.chainClock = undefined;
                 this.chainOffset.set(SequencerClock.TOLERANCE_MS);
+                this.pendingTargets.set(new Set());
                 this.invalidAuthors.clear();
                 const unsent = new Set<Readonly<ChatEntry>>(this.unsentMessages());
                 this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => !unsent.has(entry)));
@@ -462,6 +474,27 @@ export class ChatComponent {
         this.scroll();
     }
 
+    protected mute(target: string, minutes: MuteMinutes | null): void {
+        this.decide(this.room(), { action: ChatModerationAction.MUTE, target, minutes });
+    }
+
+    protected unmute(target: string): void {
+        this.decide(this.room(), { action: ChatModerationAction.UNMUTE, target });
+    }
+
+    /** Confirmed first: nothing is sent once the room changed meanwhile, or once another participant orders it */
+    protected async remove(target: string): Promise<void> {
+        const room: Room<ChatPayloads> = this.room();
+        const confirmed: boolean = await this.dialogService.confirm(
+            scopedKey(TranslationScope.CHAT, marker('moderation.removeTitle', undefined, 'chat')),
+            scopedKey(TranslationScope.CHAT, marker('moderation.removeMessage', undefined, 'chat')),
+            'confirm-cancel',
+        );
+        if (confirmed && this.room() === room) {
+            this.decide(room, { action: ChatModerationAction.REMOVE, target });
+        }
+    }
+
     protected toggleAuthor(name: string): void {
         this.hiddenAuthors.update((hidden: ReadonlySet<string>) => {
             const toggled = new Set<string>(hidden);
@@ -470,6 +503,18 @@ export class ChatComponent {
             }
             return toggled;
         });
+    }
+
+    /**
+     * Sent while the local player orders the chain only, which would refuse it otherwise, and once per participant until
+     * the chain orders it: the chain sends its pending entries to its next sequencer, the decision always comes back
+     */
+    private decide(room: Room<ChatPayloads>, decision: ChatDecision): void {
+        if (!this.moderates() || this.pendingTargets().has(decision.target)) {
+            return;
+        }
+        this.pendingTargets.update((targets: ReadonlySet<string>) => new Set<string>(targets).add(decision.target));
+        room.transmitMessage(ChatMessengerType.MODERATION, decision);
     }
 
     /** Shows the message at once, waiting until the room sends it back: failed after a while */
@@ -538,7 +583,15 @@ export class ChatComponent {
      */
     private onModeration(room: Room<ChatPayloads>, message: ChatModerationMessage): void {
         const decision: unknown = message.payload;
-        if (!isChatDecision(decision) || message.from !== room.sequencedBy(message) || decision.target === message.from) {
+        if (!isChatDecision(decision)) {
+            this.reportInvalid(room, message);
+            return;
+        }
+        // Back from the chain, accepted or not: the menu of its target enabled again
+        if (message.from === room.localPlayer.name) {
+            this.pendingTargets.update((targets: ReadonlySet<string>) => new Set<string>([...targets].filter((target: string) => target !== decision.target)));
+        }
+        if (message.from !== room.sequencedBy(message) || decision.target === message.from) {
             this.reportInvalid(room, message);
             return;
         }

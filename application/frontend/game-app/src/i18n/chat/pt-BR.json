@@ -38,6 +38,15 @@
     "unread": "Novas mensagens"
   },
   "message": "Digite sua mensagem",
+  "moderation": {
+    "menu": "Moderar {name}",
+    "mute": "Silenciar por {minutes, plural, one {# minuto} other {# minutos}}",
+    "muteToEnd": "Silenciar até o fim da sala",
+    "remove": "Remover da sala",
+    "removeMessage": "Este participante sai da sala e não pode mais entrar nela enquanto ela durar.",
+    "removeTitle": "Remover da sala?",
+    "unmute": "Tirar o silêncio"
+  },
   "newMessages": "{count, plural, one {# nova mensagem} other {# novas mensagens}}",
   "options": {
     "arrivals": "Mostrar entradas e saídas",

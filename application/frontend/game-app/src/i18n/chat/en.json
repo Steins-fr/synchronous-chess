@@ -38,6 +38,15 @@
     "unread": "New messages"
   },
   "message": "Type your message",
+  "moderation": {
+    "menu": "Moderate {name}",
+    "mute": "Mute for {minutes, plural, one {# minute} other {# minutes}}",
+    "muteToEnd": "Mute until the end of the room",
+    "remove": "Remove from the room",
+    "removeMessage": "This participant leaves the room and can no longer join it while it lasts.",
+    "removeTitle": "Remove from the room?",
+    "unmute": "Unmute"
+  },
   "newMessages": "{count, plural, one {# new message} other {# new messages}}",
   "options": {
     "arrivals": "Show arrivals and departures",

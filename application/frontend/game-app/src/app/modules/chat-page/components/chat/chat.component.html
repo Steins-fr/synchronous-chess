@@ -16,6 +16,14 @@
         <mat-chip-set>
             @for (participant of players(); track participant.name) {
             <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" />
+            <!-- Beside the chip, out of it: the text of the chip holds the name of the player only -->
+            @if (moderates() && participant.name !== localName()) {
+            <button [attr.aria-label]="t('moderation.menu', { name: participant.name })" [disabled]="pendingTargets().has(participant.name)"
+                [matMenuTriggerData]="{ name: participant.name }" [matMenuTriggerFor]="moderation" [title]="t('moderation.menu', { name: participant.name })"
+                class="self-center" mat-icon-button type="button">
+                <mat-icon fontIcon="more_vert" />
+            </button>
+            }
             }
             @for (playerName of queuingPlayers(); track playerName) {
             <mat-chip>{{ playerName }}</mat-chip>
@@ -97,5 +105,18 @@
             }
         </div>
         }
+    </mat-menu>
+
+    <mat-menu #moderation="matMenu" xPosition="before">
+        <ng-template let-name="name" matMenuContent>
+            @if (mutedNames().has(name)) {
+            <button (click)="unmute(name)" mat-menu-item>{{ t('moderation.unmute') }}</button>
+            } @else {
+            <button (click)="mute(name, muteMinutes.SHORT)" mat-menu-item>{{ t('moderation.mute', { minutes: muteMinutes.SHORT }) }}</button>
+            <button (click)="mute(name, muteMinutes.LONG)" mat-menu-item>{{ t('moderation.mute', { minutes: muteMinutes.LONG }) }}</button>
+            <button (click)="mute(name, null)" mat-menu-item>{{ t('moderation.muteToEnd') }}</button>
+            }
+            <button (click)="remove(name)" mat-menu-item>{{ t('moderation.remove') }}</button>
+        </ng-template>
     </mat-menu>
 </section>

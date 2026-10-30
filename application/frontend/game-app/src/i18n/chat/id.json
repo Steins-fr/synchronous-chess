@@ -38,6 +38,15 @@
     "unread": "Pesan baru"
   },
   "message": "Ketik pesan Anda",
+  "moderation": {
+    "menu": "Moderasi {name}",
+    "mute": "Bisukan {minutes, plural, other {# menit}}",
+    "muteToEnd": "Bisukan hingga ruang berakhir",
+    "remove": "Keluarkan dari ruang",
+    "removeMessage": "Peserta ini keluar dari ruang dan tidak dapat bergabung lagi selama ruang masih ada.",
+    "removeTitle": "Keluarkan dari ruang?",
+    "unmute": "Batalkan bisu"
+  },
   "newMessages": "{count, plural, other {# pesan baru}}",
   "options": {
     "arrivals": "Tampilkan yang masuk dan keluar",

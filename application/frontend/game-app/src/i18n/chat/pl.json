@@ -38,6 +38,15 @@
     "unread": "Nowe wiadomości"
   },
   "message": "Wpisz wiadomość",
+  "moderation": {
+    "menu": "Moderuj: {name}",
+    "mute": "Wycisz na {minutes, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}",
+    "muteToEnd": "Wycisz do zamknięcia pokoju",
+    "remove": "Usuń z pokoju",
+    "removeMessage": "Ten uczestnik opuści pokój i nie będzie mógł do niego wrócić, dopóki pokój istnieje.",
+    "removeTitle": "Usunąć z pokoju?",
+    "unmute": "Cofnij wyciszenie"
+  },
   "newMessages": "{count, plural, one {# nowa wiadomość} few {# nowe wiadomości} many {# nowych wiadomości} other {# nowej wiadomości}}",
   "options": {
     "arrivals": "Pokazuj wejścia i wyjścia",

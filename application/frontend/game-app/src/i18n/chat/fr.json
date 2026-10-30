@@ -38,6 +38,15 @@
     "unread": "Nouveaux messages"
   },
   "message": "Tapez votre message",
+  "moderation": {
+    "menu": "Modérer {name}",
+    "mute": "Rendre muet {minutes, plural, one {# minute} other {# minutes}}",
+    "muteToEnd": "Rendre muet jusqu’à la fin de la salle",
+    "remove": "Exclure de la salle",
+    "removeMessage": "Ce participant quitte la salle et ne peut plus la rejoindre tant qu’elle dure.",
+    "removeTitle": "Exclure de la salle ?",
+    "unmute": "Rendre la parole"
+  },
   "newMessages": "{count, plural, one {# nouveau message} other {# nouveaux messages}}",
   "options": {
     "arrivals": "Afficher les arrivées et départs",

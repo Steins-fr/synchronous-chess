@@ -38,6 +38,15 @@
     "unread": "Neue Nachrichten"
   },
   "message": "Schreib deine Nachricht",
+  "moderation": {
+    "menu": "{name} moderieren",
+    "mute": "{minutes, plural, one {# Minute} other {# Minuten}} stummschalten",
+    "muteToEnd": "Bis zum Ende des Raums stummschalten",
+    "remove": "Aus dem Raum entfernen",
+    "removeMessage": "Dieser Teilnehmer verlässt den Raum und kann ihm nicht mehr beitreten, solange er besteht.",
+    "removeTitle": "Aus dem Raum entfernen?",
+    "unmute": "Stummschaltung aufheben"
+  },
   "newMessages": "{count, plural, one {# neue Nachricht} other {# neue Nachrichten}}",
   "options": {
     "arrivals": "Kommen und Gehen anzeigen",

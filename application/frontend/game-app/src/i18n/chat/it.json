@@ -38,6 +38,15 @@
     "unread": "Nuovi messaggi"
   },
   "message": "Scrivi il tuo messaggio",
+  "moderation": {
+    "menu": "Modera {name}",
+    "mute": "Silenzia per {minutes, plural, one {# minuto} other {# minuti}}",
+    "muteToEnd": "Silenzia fino alla chiusura della stanza",
+    "remove": "Rimuovi dalla stanza",
+    "removeMessage": "Questo partecipante lascia la stanza e non può più entrarci finché è aperta.",
+    "removeTitle": "Rimuovere dalla stanza?",
+    "unmute": "Riattiva"
+  },
   "newMessages": "{count, plural, one {# nuovo messaggio} other {# nuovi messaggi}}",
   "options": {
     "arrivals": "Mostra entrate e uscite",

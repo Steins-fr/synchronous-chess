@@ -38,6 +38,15 @@
     "unread": "Yeni mesajlar"
   },
   "message": "Mesajınızı yazın",
+  "moderation": {
+    "menu": "{name} için moderasyon",
+    "mute": "{minutes, plural, one {# dakika} other {# dakika}} sustur",
+    "muteToEnd": "Oda kapanana kadar sustur",
+    "remove": "Odadan çıkar",
+    "removeMessage": "Bu katılımcı odadan ayrılır ve oda açık kaldıkça tekrar katılamaz.",
+    "removeTitle": "Odadan çıkarılsın mı?",
+    "unmute": "Susturmayı kaldır"
+  },
   "newMessages": "{count, plural, one {# yeni mesaj} other {# yeni mesaj}}",
   "options": {
     "arrivals": "Giriş ve çıkışları göster",
