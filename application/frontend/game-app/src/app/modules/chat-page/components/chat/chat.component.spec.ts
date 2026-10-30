@@ -621,6 +621,21 @@ describe('ChatComponent', () => {
         expect(query('mat-error')?.textContent).toContain('1,000 characters at most');
     });
 
+    test('should send no link nor e-mail address, telling why', async () => {
+        // Given
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+
+        // When
+        await type('join me on https://example.fr');
+        sendButton().click();
+        await fixture.whenStable();
+
+        // Then
+        expect(transmitSpy).not.toHaveBeenCalled();
+        expect(query('mat-error')?.textContent).toContain('No link nor e-mail address in the chat');
+    });
+
     test('should count the messages received while closed, and show them from the first one once open', async () => {
         // Given
         fixture.componentRef.setInput('open', false);
@@ -1135,6 +1150,8 @@ describe('isChatText', () => {
         expect(isChatText({ id: 'x', text: 'a'.repeat(1001), at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: '', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: ' \n\t', at: 0 })).toEqual(false);
+        // A link sent around the composer
+        expect(isChatText({ id: 'x', text: 'see www.example.fr', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: '0' })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.NaN })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.POSITIVE_INFINITY })).toEqual(false);

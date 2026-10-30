@@ -1,6 +1,7 @@
 {
   "author": "{author}:",
   "composer": {
+    "link": "Niente link né indirizzi e-mail nella chat",
     "tooLong": "Massimo {maxLength, plural, one {# carattere} other {# caratteri}}",
     "unsent": "Aspetta che i tuoi messaggi siano inviati prima di inviarne altri",
     "wait": "Aspetta {seconds, plural, one {# secondo} other {# secondi}} prima di inviare un altro messaggio"

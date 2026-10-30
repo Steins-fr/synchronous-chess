@@ -15,7 +15,7 @@ import {
     viewChild
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { form, maxLength, SchemaPath, submit } from '@angular/forms/signals';
+import { form, maxLength, SchemaPath, submit, validate } from '@angular/forms/signals';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatIcon } from '@angular/material/icon';
@@ -37,6 +37,7 @@ import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { map, Subscription, switchMap, timer } from 'rxjs';
+import { holdsLink } from './chat-link';
 import { admitChatMessage, CHAT_UNSENT_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
@@ -55,11 +56,14 @@ export interface ChatText {
     readonly at: number;
 }
 
-/** A message of the chat from a peer, of the form the application sends: a time it formats, a text it holds, never blank */
+/**
+ * A message of the chat from a peer, of the form the application sends: a time it formats, a text it holds, never blank,
+ * without link (one sent around the composer is refused alike on every page)
+ */
 export function isChatText(payload: unknown): payload is ChatText {
     const text: Partial<Record<keyof ChatText, unknown>> = (typeof payload === 'object' && payload !== null ? payload : {});
     return typeof text.id === 'string' && typeof text.text === 'string' && text.text.trim() !== '' && text.text.length <= CHAT_MESSAGE_MAX_LENGTH
-        && typeof text.at === 'number' && Math.abs(text.at) <= LATEST_TIME;
+        && !holdsLink(text.text) && typeof text.at === 'number' && Math.abs(text.at) <= LATEST_TIME;
 }
 
 export interface ChatPayloads {
@@ -98,9 +102,12 @@ interface ChatLine {
 export const CHAT_MESSAGE_MAX_LENGTH: number = 1000;
 // The farthest time from 1970 a date holds, in milliseconds: beyond, formatting it throws
 const LATEST_TIME: number = 8.64e15;
-/** A message: a too long one is refused, its error shown */
+/** A message: a too long one, or one holding a link or an e-mail address, is refused, its error shown */
 function chatMessageRules(path: SchemaPath<string>): void {
     maxLength(path, CHAT_MESSAGE_MAX_LENGTH, { message: scopedKey(TranslationScope.CHAT, marker('composer.tooLong', undefined, 'chat')) });
+    validate(path, ({ value }) => (holdsLink(value())
+        ? { kind: 'link', message: scopedKey(TranslationScope.CHAT, marker('composer.link', undefined, 'chat')) }
+        : undefined));
 }
 
 /** Whether the log leaves an entry out: the messages of the authors the local player hides, and their floods, the arrivals and departures by the setting */

@@ -1,6 +1,7 @@
 {
   "author": "{author} :",
   "composer": {
+    "link": "Pas de lien ni d’adresse e-mail dans le tchat",
     "tooLong": "{maxLength, plural, one {# caractère} other {# caractères}} au maximum",
     "unsent": "Attendez que vos messages soient envoyés avant d’en envoyer d’autres",
     "wait": "Attendez {seconds, plural, one {# seconde} other {# secondes}} avant d’envoyer un autre message"

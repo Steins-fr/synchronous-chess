@@ -278,6 +278,7 @@ Claude writes the translations of every new or changed key, into every language:
 | load (the bullets) | charger | cargar | carregar | carregar | laden | зарядить | doldurmak | mengisi | załadować | caricare |
 | bank | banque | banca | banca | banca | Bank | казна | banka | bank | bank | banco |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
+| link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 
 ## APIs
 
