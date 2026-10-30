@@ -211,7 +211,8 @@ export class RoomHosting {
 
     /**
      * Tells the API the player the room removed: its joins refused, by its name and its browser. Sent again a few times
-     * on a failure; once the room moved to a new socket when the current one does not hold it
+     * on a failure of the network, not on a refusal of the API (the host not bannable, the room gone): it would refuse
+     * it again. Once the room moved to a new socket when the current one does not hold it
      */
     public ban(playerName: string): void {
         if (!this.holdsRoom) {
@@ -219,7 +220,10 @@ export class RoomHosting {
         }
 
         defer(() => this.roomSocketApi.send(RoomApiRequestTypeEnum.BAN, { roomName: this.context.roomName, playerName })).pipe(
-            retry({ count: RoomHosting.BAN_RETRIES, delay: RoomHosting.RECONNECTION_RETRY_DELAY }),
+            retry({
+                count: RoomHosting.BAN_RETRIES,
+                delay: (error: unknown) => error instanceof RoomApiError ? throwError(() => error) : timer(RoomHosting.RECONNECTION_RETRY_DELAY),
+            }),
             takeUntil(this.destroyRef),
         ).subscribe({ error: (err: unknown) => console.error(err) });
     }

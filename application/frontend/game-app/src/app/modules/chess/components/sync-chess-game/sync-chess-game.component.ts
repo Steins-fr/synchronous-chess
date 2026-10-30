@@ -30,6 +30,7 @@ import { TranslationScope } from '@app/services/language/enums/translation-scope
 import { scopedKey } from '@app/services/language/scoped-key';
 import { playedTurnLines, squareName } from '@app/modules/chess/helpers/played-turn-text.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { LanguageService } from '@app/services/language/language.service';
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -48,6 +49,7 @@ export class SyncChessGameComponent implements OnDestroy {
     });
     /** The local player plays the game: leaving the page asks to confirm */
     private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.gameSession().inMatch()));
+    private readonly languageService = inject(LanguageService);
 
     private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
     protected readonly validPlayBoard = signal<ValidPlayBoard>(ChessBoardHelper.createFilledBoard(false));
@@ -93,12 +95,14 @@ export class SyncChessGameComponent implements OnDestroy {
         away: computed((): boolean => false),
         timeOut: () => this.gameSession().claimForfeit(),
     });
+    /** The names of the players away, listed in the language of the page */
+    private readonly listFormat = computed<Intl.ListFormat>(() => new Intl.ListFormat(this.languageService.language(), { type: 'conjunction' }));
     /** A seated player away during the game: every page waits for it */
     protected readonly awayStatus: Signal<TranslatableText | undefined> = computed((): TranslatableText | undefined => {
         const session: SynchronousChessGameSession = this.gameSession();
         const away: ReadonlyArray<string> = session.awayPlayers();
         return away.length > 0 && !session.seatsOpen() && !session.game.isGameOver()
-            ? { key: scopedKey(TranslationScope.CHESS, marker('game.away', undefined, 'chess')), params: { name: away.join(', ') } }
+            ? { key: scopedKey(TranslationScope.CHESS, marker('game.away', undefined, 'chess')), params: { name: this.listFormat().format(away) } }
             : undefined;
     });
 

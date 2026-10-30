@@ -179,8 +179,9 @@ run by the CI.
   waits between them. `transmitAroundComposer()` of `e2e/room-participant.ts` sends a flood as a script in the page
   would, through the debugging utilities of Angular (`ng`, the development build of `serve:local` only).
 - The host moderates the chat (the participant ordering the chain): a button beside the chip of each other participant
-  of `#player-list` (`Moderate bob`) opens its menu, `Mute for 5 minutes`, `Mute for 30 minutes`, `Mute until the end
-  of the room` (`Unmute` once muted) and `Remove from the room`, confirmed in the dialog of the app (`Confirm`):
+  of `#player-list` (`Moderate bob`), the host of the room excepted, opens its menu, `Mute for 5 minutes`, `Mute for 30
+  minutes`, `Mute until the end of the room` (`Unmute` once muted) and `Remove from the room`, confirmed in the dialog of
+  the app (`Confirm`):
   `moderate(name, item)` of `e2e/room-participant.ts`. Every page tells it in a notice of the log (`.chat-notice`),
   worded for each one: `You muted bob for 5 minutes` for the host, `alice muted you for 5 minutes` for bob, `alice
   muted bob for 5 minutes` for the others, `alice removed bob from the room`. The composer of a muted participant

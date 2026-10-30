@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { DialogService } from '@app/services/dialog/dialog.service';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { RoomHub } from '@testing/room-hub';
@@ -109,8 +108,8 @@ describe('ChatComponent moderated on every page', () => {
         page('bob').room.transmitMessage(ChatMessengerType.MODERATION, { action: ChatModerationAction.MUTE, target: 'carol', minutes: MuteMinutes.SHORT });
         page('bob').room.transmitMessage(ChatMessengerType.MODERATION, { action: ChatModerationAction.REMOVE, target: 'carol' });
 
-        // Then: refused, reported once by every page
-        expect(hub.reported()).toEqual(['alice', 'bob', 'carol', 'erin'].map((name: string) => `${ name } ${ CheatReason.INVALID_MESSAGE } bob`));
+        // Then: dropped by every page, without report: a pending decision of an honest moderator comes back ordered by another sequencer
+        expect(hub.reported()).toEqual([]);
         expect(await logLines('erin')).toEqual(unmuted);
 
         // When: alice removes carol, whose page gives the room up
@@ -140,6 +139,6 @@ describe('ChatComponent moderated on every page', () => {
         // Then: the decisions of alice kept, ordered by it, the departures not on the chain
         expect(await logLines('dave')).toEqual([...removed, 'bob muted erin for 30 minutes', 'bob muted you until the end of the room']);
         expect(page('dave').fixture.nativeElement.querySelector('mat-hint')?.textContent).toEqual('You are muted until the end of the room');
-        expect(hub.reported()).toContain(`dave ${ CheatReason.INVALID_MESSAGE } bob`);
+        expect(hub.reported()).toEqual([]);
     });
 });

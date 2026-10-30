@@ -1,5 +1,6 @@
 import { gameState } from '@testing/chess-state.helper';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SyncChessGameComponent } from './sync-chess-game.component';
@@ -286,6 +287,19 @@ describe('SyncChessGameComponent', () => {
 
         // Then: the seat is free, at the bottom of the board
         expect(text('#seat-bottom')).toEqual('White player: Waiting Play white');
+    });
+
+    test('should wait for every player away, their names listed in the language of the page', async () => {
+        // Given: both seated players away during the game, set before the first render
+        network = new RoomNetworkMock('local', true);
+        fixture.componentRef.setInput('room', new Room<ChessPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork));
+        Object.assign(session(), { awayPlayers: signal<ReadonlyArray<string>>(['alice', 'bob']), seatsOpen: signal<boolean>(false) });
+
+        // When
+        await refresh();
+
+        // Then
+        expect(text('#game-status')).toEqual('Waiting for alice and bob to come back…');
     });
 
     test('should fix the seats once the game started', async () => {

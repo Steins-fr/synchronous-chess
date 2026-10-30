@@ -112,7 +112,7 @@
       "trigger": "<strong>Başlangıç.</strong> Eşzamanlı bir turdan sonra, hareket eden bir taş turdan önce rakibin zaten saldırdığı (ya da koruduğu) bir kareye geldiyse ve bir rakip taş onu kurallara uygun şekilde alabiliyorsa ara tur oynanır."
     },
     "players": {
-      "seats": "İki oyuncu. Odadaki her katılımcı, ev sahibi de dahil, boş yerler arasından rengini seçer. Yerler ilk hamleyle sabitlenir; diğer katılımcılar izleyicidir. O zamana kadar diğer oyuncu ya da ev sahibi, burada olmayan bir oyuncunun yerini boşaltabilir.",
+      "seatsFreed": "İki oyuncu. Odadaki her katılımcı, ev sahibi de dahil, boş yerler arasından rengini seçer. Yerler ilk hamleyle sabitlenir; diğer katılımcılar izleyicidir. O zamana kadar diğer oyuncu ya da ev sahibi, burada olmayan bir oyuncunun yerini boşaltabilir.",
       "shortTitle": "Oyuncular",
       "simultaneousMoves": "İki oyuncu hamlesini aynı anda, diğerinin hamlesini bilmeden yapar. İkisi de seçimini yaptığında iki hamle açıklanır ve aşağıdaki kurallara göre uygulanır.",
       "title": "Oyuncular ve ilke"

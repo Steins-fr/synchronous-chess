@@ -112,7 +112,7 @@
       "trigger": "<strong>Avvio.</strong> Dopo un turno sincrono, si gioca un turno intermedio se un pezzo che si è mosso è arrivato su una casa già attaccata (o protetta) dall'avversario prima del turno, e un pezzo avversario può catturarlo regolarmente."
     },
     "players": {
-      "seats": "Due giocatori. Ogni partecipante della stanza, host compreso, sceglie il proprio colore tra i posti liberi. I posti sono fissati dalla prima mossa giocata; gli altri partecipanti sono spettatori. Fino ad allora, l'altro giocatore o l'host può liberare il posto di un giocatore assente.",
+      "seatsFreed": "Due giocatori. Ogni partecipante della stanza, host compreso, sceglie il proprio colore tra i posti liberi. I posti sono fissati dalla prima mossa giocata; gli altri partecipanti sono spettatori. Fino ad allora, l'altro giocatore o l'host può liberare il posto di un giocatore assente.",
       "shortTitle": "Giocatori",
       "simultaneousMoves": "I due giocatori giocano la loro mossa contemporaneamente, ciascuno senza conoscere quella dell'altro. Quando entrambi hanno scelto, le due mosse vengono rivelate e applicate secondo le regole qui sotto.",
       "title": "Giocatori e principio"

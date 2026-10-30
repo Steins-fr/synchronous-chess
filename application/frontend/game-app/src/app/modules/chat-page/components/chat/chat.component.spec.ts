@@ -1066,7 +1066,7 @@ describe('ChatComponent', () => {
             expect(logLines()).toEqual(['host muted bob until the end of the room', 'host unmuted bob', 'bob: sorry']);
         });
 
-        test('should refuse and report once a decision not from the participant ordering it, on itself or of another form', async () => {
+        test('should drop a decision not from the participant ordering it or on itself, and report one of another form', async () => {
             // Given
             await setRoom();
             const reportSpy = vi.spyOn(room, 'reportCheat');
@@ -1080,8 +1080,7 @@ describe('ChatComponent', () => {
 
             // Then
             expect(reportSpy.mock.calls.map(([message, reason]) => [message.from, message.payload, reason])).toEqual([
-                ['bob', { action: ChatModerationAction.MUTE, target: 'carol', minutes: MuteMinutes.SHORT }, CheatReason.INVALID_MESSAGE],
-                ['host', { action: ChatModerationAction.REMOVE, target: 'host' }, CheatReason.INVALID_MESSAGE],
+                ['host', { action: ChatModerationAction.MUTE, target: 'carol', minutes: 10 }, CheatReason.INVALID_MESSAGE],
             ]);
             expect(logLines()).toEqual(['No messages yet. Say hello!']);
             expect(network.exclude).not.toHaveBeenCalled();
@@ -1393,6 +1392,20 @@ describe('ChatComponent', () => {
             expect(moderateButton('bob')?.title).toEqual('Moderate bob');
             expect(moderateButton('local')).toBeNull();
             expect(fixture.nativeElement.querySelector('#player-list mat-chip').textContent.trim()).toEqual('local');
+        });
+
+        test('should never show the menu of the host of the room, to a participant ordering the chain in its place', async () => {
+            // Given
+            network.playerAdded$.next(TestHelper.cast<Player>({ name: 'host', isLocal: false }));
+            sequencer.set('local');
+
+            // When
+            await setRoom();
+
+            // Then
+            expect(room.hostName).toEqual('host');
+            expect(moderateButton('host')).toBeNull();
+            expect(moderateButton('bob')?.title).toEqual('Moderate bob');
         });
 
         test('should mute a participant once until the chain orders it, then offer to unmute it', async () => {

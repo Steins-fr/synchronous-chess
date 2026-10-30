@@ -112,7 +112,7 @@
       "trigger": "<strong>Início.</strong> Após um turno sincronizado, ocorre um turno intermediário se uma peça que se moveu chegou a uma casa já atacada (ou protegida) pelo adversário antes do turno, e uma peça adversária pode capturá-la legalmente."
     },
     "players": {
-      "seats": "Dois jogadores. Cada participante da sala, inclusive o anfitrião, escolhe sua cor entre os lugares livres. Os lugares ficam fixos a partir do primeiro lance; os outros participantes são espectadores. Até lá, o outro jogador ou o anfitrião pode liberar o lugar de um jogador ausente.",
+      "seatsFreed": "Dois jogadores. Cada participante da sala, inclusive o anfitrião, escolhe sua cor entre os lugares livres. Os lugares ficam fixos a partir do primeiro lance; os outros participantes são espectadores. Até lá, o outro jogador ou o anfitrião pode liberar o lugar de um jogador ausente.",
       "shortTitle": "Jogadores",
       "simultaneousMoves": "Os dois jogadores jogam seu lance ao mesmo tempo, cada um sem conhecer o lance do outro. Quando os dois escolheram, os dois lances são revelados e aplicados segundo as regras abaixo.",
       "title": "Jogadores e princípio"

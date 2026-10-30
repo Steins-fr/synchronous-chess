@@ -318,6 +318,11 @@ export class ChatComponent {
     protected readonly localName = computed<string>(() => this.room().localPlayer.name);
     /** The local player orders the chain: it moderates the room, its decisions valid */
     protected readonly moderates = computed<boolean>(() => this.room().sequencer() === this.localName());
+    /**
+     * The participants out of the menu of the moderator: the local player, and the host of the room, which a sequencer
+     * taking over from a distrusted host must not remove: the API never bans the host, which would take the room back
+     */
+    protected readonly unmoderated = computed<ReadonlySet<string>>(() => new Set([this.localName(), this.room().hostName]));
     /** The participants muted, the menu of the moderator unmuting them */
     protected readonly mutedNames = computed<ReadonlySet<string>>(() => new Set(this.muteEnds().keys()));
     /** The participants a decision of the local player names, until the chain orders it: their menu disabled meanwhile */
@@ -579,7 +584,9 @@ export class ChatComponent {
     /**
      * A decision of the moderator: valid only when its author ordered its block, the same on every page, live or
      * replayed, whoever hosts the room then. A host the room distrusts no longer orders it: the participant ordering the
-     * chain in its place moderates, a decision of that host refused and reported as a cheat, which every page flags
+     * chain in its place moderates. A decision ordered by another participant, or on its own author, is dropped without
+     * report: the decision of an honest moderator, still pending when another sequencer took over, comes back ordered by
+     * it. An invalid one only is reported as a cheat
      */
     private onModeration(room: Room<ChatPayloads>, message: ChatModerationMessage): void {
         const decision: unknown = message.payload;
@@ -592,7 +599,6 @@ export class ChatComponent {
             this.pendingTargets.update((targets: ReadonlySet<string>) => new Set<string>([...targets].filter((target: string) => target !== decision.target)));
         }
         if (message.from !== room.sequencedBy(message) || decision.target === message.from) {
-            this.reportInvalid(room, message);
             return;
         }
 

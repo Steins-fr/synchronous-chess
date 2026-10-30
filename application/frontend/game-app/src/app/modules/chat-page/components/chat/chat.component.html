@@ -15,7 +15,7 @@
         <p class="muted-note mb-1 text-xs">{{ t('participants.count', { count: players().length }) }}</p>
         <mat-chip-set>
             @for (participant of players(); track participant.name) {
-            @if (moderates() && participant.name !== localName()) {
+            @if (moderates() && !unmoderated().has(participant.name)) {
             <!-- Beside the chip, out of it: the text of the chip holds the name of the player only. On the same line, the chip of a long name shortened -->
             <span class="flex min-w-0 max-w-full items-center">
                 <app-chat-participant [hidden]="hiddenAuthors().has(participant.name)" [player]="participant" class="min-w-0" />

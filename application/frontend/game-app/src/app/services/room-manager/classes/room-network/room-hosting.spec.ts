@@ -443,7 +443,7 @@ describe('RoomHosting', () => {
             expect(roomSocketApi.send).toHaveBeenCalledExactlyOnceWith(RoomApiRequestTypeEnum.BAN, { roomName: 'room', playerName: 'remote' });
         });
 
-        test('should ban again a few times, 5 seconds apart, a player whose ban failed', async () => {
+        test('should ban again a few times, 5 seconds apart, a player whose ban failed on the network', async () => {
             // Given
             createNetwork();
             vi.mocked(roomSocketApi.send).mockRejectedValue('ban failure');
@@ -455,6 +455,21 @@ describe('RoomHosting', () => {
             // Then
             expect(roomSocketApi.send).toHaveBeenCalledTimes(4);
             expect(console.error).toHaveBeenCalledExactlyOnceWith('ban failure');
+        });
+
+        test('should not ban again a player whose ban the API refused', async () => {
+            // Given
+            createNetwork();
+            const refusal: RoomApiError = new RoomApiError('Room \'room\' does not exist');
+            vi.mocked(roomSocketApi.send).mockRejectedValue(refusal);
+
+            // When
+            network.exclude('remote');
+            await vi.advanceTimersByTimeAsync(20_000);
+
+            // Then
+            expect(roomSocketApi.send).toHaveBeenCalledOnce();
+            expect(console.error).toHaveBeenCalledExactlyOnceWith(refusal);
         });
 
         test('should stop banning again once cleared', async () => {
