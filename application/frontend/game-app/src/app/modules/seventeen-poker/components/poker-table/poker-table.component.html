@@ -74,8 +74,10 @@
         [turnTime]="session().match().rules.turnTime"
         [canTake]="seats.canTake(bottom)"
         [canLeave]="seats.canLeave()"
+        [canRelease]="seats.canRelease(bottom)"
         (take)="takeSeat(bottom)"
-        (leave)="leaveSeat()" />
+        (leave)="leaveSeat()"
+        (release)="release(bottom)" />
 
     <!-- What the table waits for, the actions of the local player and the result, their place kept as buttons come and go -->
     <div appSteadyHeight class="flex flex-col gap-3">

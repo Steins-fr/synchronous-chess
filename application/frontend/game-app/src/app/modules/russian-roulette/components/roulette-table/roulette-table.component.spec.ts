@@ -876,6 +876,25 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         await until(() => text('#seat-bottom') === 'Free seatSit here');
     });
 
+    test('should offer the host, a spectator, Free the seat on the seat of a player away, at the bottom of the table too', async () => {
+        // Given: Alice hosts the room and watches Bob and Carol, seated
+        hub.sequencer.set('alice');
+        await table('alice');
+        participant('bob').takeSeat(RouletteSeat.ONE);
+        participant('carol').takeSeat(RouletteSeat.TWO);
+        await until(() => text('#seat-bottom').startsWith('bob') && text('#seat-top').startsWith('carol'));
+        expect(element().querySelector('#seat-bottom button')).toBeNull();
+
+        // When: Bob leaves the room
+        hub.leave(rooms.get('bob') as Room<RoulettePayloads>);
+        await until(() => element().querySelector('#seat-bottom button')?.textContent?.trim() === 'Free the seat');
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
+
+        // Then
+        await until(() => text('#seat-bottom') === 'Free seatSit here');
+        expect(hub.types()).toContain(RRGameSessionType.UNSEAT);
+    });
+
     describe('the clock of a move', () => {
         /** The clock of the moves runs on fake timers, the room and the cylinder on real ones */
         beforeEach(() => {
