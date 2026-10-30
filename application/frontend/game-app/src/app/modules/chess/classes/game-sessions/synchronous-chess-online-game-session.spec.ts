@@ -14,71 +14,20 @@ import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import Move, { FenColumn, FenRow } from '../../interfaces/move';
 import ChessBoardHelper from '../../helpers/chess-board-helper';
-import { signal, WritableSignal } from '@angular/core';
-import { Player } from '@app/services/room-manager/classes/player/player';
+import { WritableSignal } from '@angular/core';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { gameState, sessionState } from '@testing/chess-state.helper';
+import { RoomHub } from '@testing/room-hub';
 import { GameEndReason, GameResult } from '../games/game-result';
 import { TestHelper } from '@testing/test.helper';
-import { filter, Subject } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const e2e4: Move = { from: [FenColumn.E, FenRow._2], to: [FenColumn.E, FenRow._4] };
 const e7e5: Move = { from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] };
 const d2d4: Move = { from: [FenColumn.D, FenRow._2], to: [FenColumn.D, FenRow._4] };
-
-/** Delivers the messages of the players to all of them, in a single order, as the sequencer of a block chain does */
-class RoomHub {
-    public readonly delivered: AppMessage[] = [];
-    public readonly reports: Array<[string, AppMessage, CheatReason]> = [];
-    private readonly rooms = new Map<Room<ChessPayloads>, Subject<AppMessage>>();
-    /** The connected participants, the same for every room */
-    private readonly players = signal<ReadonlyArray<Readonly<Player>>>([]);
-    private readonly queue: AppMessage[] = [];
-    private delivering: boolean = false;
-
-    public room(name: string): Room<ChessPayloads> {
-        const messages = new Subject<AppMessage>();
-        const room: Room<ChessPayloads> = TestHelper.cast<Room<ChessPayloads>>({
-            localPlayer: { name },
-            roomName: 'room',
-            players: this.players,
-            messenger: (type: string) => messages.pipe(filter((message: AppMessage) => message.type === type)),
-            transmitMessage: (type: string, payload: unknown) => this.send({ from: name, type, payload }),
-            reportCheat: (message: AppMessage, reason: CheatReason) => this.reports.push([name, message, reason]),
-        });
-        this.rooms.set(room, messages);
-        this.players.update((players) => players.some((player) => player.name === name) ? players : [...players, TestHelper.cast<Player>({ name })]);
-        return room;
-    }
-
-    public send(message: AppMessage): void {
-        this.queue.push(message);
-
-        if (this.delivering) {
-            return;
-        }
-
-        this.delivering = true;
-        for (let next = this.queue.shift(); next; next = this.queue.shift()) {
-            this.delivered.push(next);
-            this.rooms.forEach((messages: Subject<AppMessage>) => messages.next(next));
-        }
-        this.delivering = false;
-    }
-
-    /** Delivers again messages of the chain to a room only, as when a player reloads the page */
-    public replay(room: Room<ChessPayloads>, messages: ReadonlyArray<AppMessage> = [...this.delivered]): void {
-        messages.forEach((message: AppMessage) => this.rooms.get(room)?.next(message));
-    }
-
-    public types(): string[] {
-        return this.delivered.map((message: AppMessage) => message.type);
-    }
-}
 
 function turnCount(session: SynchronousChessOnlineGameSession): number {
     return TestHelper.cast<{ turnCount: number }>(session).turnCount;
@@ -98,7 +47,7 @@ function configure(session: SynchronousChessOnlineGameSession): void {
 }
 
 describe('SynchronousChessOnlineGameSession', () => {
-    let hub: RoomHub;
+    let hub: RoomHub<ChessPayloads>;
     let white: SynchronousChessOnlineGameSession;
     let black: SynchronousChessOnlineGameSession;
     let spectator: SynchronousChessOnlineGameSession;
@@ -106,7 +55,7 @@ describe('SynchronousChessOnlineGameSession', () => {
 
     beforeEach(() => {
         sessionStorage.clear();
-        hub = new RoomHub();
+        hub = new RoomHub<ChessPayloads>();
         white = new SynchronousChessOnlineGameSession(hub.room('a'));
         black = new SynchronousChessOnlineGameSession(hub.room('b'));
         spectator = new SynchronousChessOnlineGameSession(hub.room('c'));
@@ -423,7 +372,7 @@ describe('SynchronousChessOnlineGameSession', () => {
 });
 
 describe('SynchronousChessOnlineGameSession seats', () => {
-    let hub: RoomHub;
+    let hub: RoomHub<ChessPayloads>;
     let host: SynchronousChessOnlineGameSession;
     let joining: SynchronousChessOnlineGameSession;
     let other: SynchronousChessOnlineGameSession;
@@ -431,7 +380,7 @@ describe('SynchronousChessOnlineGameSession seats', () => {
 
     beforeEach(() => {
         sessionStorage.clear();
-        hub = new RoomHub();
+        hub = new RoomHub<ChessPayloads>();
         host = new SynchronousChessOnlineGameSession(hub.room('a'));
         joining = new SynchronousChessOnlineGameSession(hub.room('b'));
         other = new SynchronousChessOnlineGameSession(hub.room('c'));
