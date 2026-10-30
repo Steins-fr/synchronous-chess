@@ -33,6 +33,7 @@
       "leave": "Deixar o lugar",
       "playBlack": "Jogar com as pretas",
       "playWhite": "Jogar com as brancas",
+      "release": "Libertar o lugar",
       "white": "Jogador das brancas:"
     },
     "spectators": "Espetadores: {count}",
@@ -106,7 +107,7 @@
       "trigger": "<strong>Início.</strong> Após um turno sincronizado, há um turno intermédio se uma peça que se moveu chegou a uma casa já atacada (ou protegida) pelo adversário antes do turno, e se uma peça adversária a pode capturar legalmente."
     },
     "players": {
-      "seats": "Dois jogadores. Cada participante da sala, incluindo o anfitrião, escolhe a sua cor entre os lugares livres. Os lugares ficam fixos a partir da primeira jogada; os restantes participantes são espetadores.",
+      "seats": "Dois jogadores. Cada participante da sala, incluindo o anfitrião, escolhe a sua cor entre os lugares livres. Os lugares ficam fixos a partir da primeira jogada; os restantes participantes são espetadores. Até lá, o outro jogador ou o anfitrião pode libertar o lugar de um jogador ausente.",
       "shortTitle": "Jogadores",
       "simultaneousMoves": "Os dois jogadores jogam a sua jogada em simultâneo, cada um sem conhecer a do outro. Quando ambos tiverem escolhido, as duas jogadas são reveladas e aplicadas segundo as regras abaixo.",
       "title": "Jogadores e princípio"

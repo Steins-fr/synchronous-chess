@@ -377,13 +377,27 @@ describe('SynchronousChessOnlineGameSession seats', () => {
     let joining: SynchronousChessOnlineGameSession;
     let other: SynchronousChessOnlineGameSession;
     let sessions: SynchronousChessOnlineGameSession[];
+    let rooms: Map<string, Room<ChessPayloads>>;
+
+    /** The page of a participant */
+    function page(name: string): SynchronousChessOnlineGameSession {
+        const room: Room<ChessPayloads> = hub.room(name);
+        rooms.set(name, room);
+        return new SynchronousChessOnlineGameSession(room);
+    }
+
+    /** The participant leaves the room: the other pages see it away */
+    function leave(name: string): void {
+        hub.leave(rooms.get(name) as Room<ChessPayloads>);
+    }
 
     beforeEach(() => {
         sessionStorage.clear();
         hub = new RoomHub<ChessPayloads>();
-        host = new SynchronousChessOnlineGameSession(hub.room('a'));
-        joining = new SynchronousChessOnlineGameSession(hub.room('b'));
-        other = new SynchronousChessOnlineGameSession(hub.room('c'));
+        rooms = new Map();
+        host = page('a');
+        joining = page('b');
+        other = page('c');
         sessions = [host, joining, other];
     });
 
@@ -509,6 +523,102 @@ describe('SynchronousChessOnlineGameSession seats', () => {
 
         // Then
         expect(configurations()).toEqual(Array(3).fill({ whitePlayer: 'c', blackPlayer: undefined }));
+    });
+
+    test('should let the other seated player or the host free the seat of a player away, before the game starts', () => {
+        // Given: a hosts the room, b and c play, d watches
+        hub.sequencer.set('a');
+        const spectator: SynchronousChessOnlineGameSession = page('d');
+        joining.takeSeat(PieceColor.WHITE);
+        other.takeSeat(PieceColor.BLACK);
+        expect(other.awayPlayers()).toEqual([]);
+        expect(other.canRelease(PieceColor.WHITE)).toEqual(false);
+
+        // When b leaves the room
+        leave('b');
+
+        // Then
+        expect(other.awayPlayers()).toEqual(['b']);
+        expect([other.canRelease(PieceColor.WHITE), other.canRelease(PieceColor.BLACK)]).toEqual([true, false]);
+        expect([host.canRelease(PieceColor.WHITE), spectator.canRelease(PieceColor.WHITE)]).toEqual([true, false]);
+
+        // When the spectator frees the seat, then c, its request waiting for the chain
+        spectator.release(PieceColor.WHITE);
+        hub.hold('c');
+        other.release(PieceColor.WHITE);
+
+        // Then
+        expect(spectator.configuration()).toEqual({ whitePlayer: 'b', blackPlayer: 'c' });
+        expect(other.canRelease(PieceColor.WHITE)).toEqual(false);
+
+        // When
+        hub.release();
+
+        // Then
+        expect([host, other, spectator].map((session) => session.configuration())).toEqual(Array(3).fill({ whitePlayer: undefined, blackPlayer: 'c' }));
+        expect(other.canRelease(PieceColor.WHITE)).toEqual(false);
+
+        // When c leaves too, then the host frees its seat
+        leave('c');
+        host.release(PieceColor.BLACK);
+
+        // Then
+        expect(spectator.configuration()).toEqual({ whitePlayer: undefined, blackPlayer: undefined });
+        expect(hub.types().filter((type: string) => type === SCGameSessionType.UNSEAT)).toHaveLength(3);
+    });
+
+    test('should free no seat once the game started, of another player, of a malformed color, nor from a participant not ordering its request', async () => {
+        // Given
+        hub.sequencer.set('a');
+        const spectator: SynchronousChessOnlineGameSession = page('d');
+        joining.takeSeat(PieceColor.WHITE);
+        other.takeSeat(PieceColor.BLACK);
+        leave('b');
+
+        // When
+        hub.send({ from: 'a', type: SCGameSessionType.UNSEAT, payload: { color: TestHelper.cast<PieceColor>('red'), name: 'b' } });
+        hub.send({ from: 'c', type: SCGameSessionType.UNSEAT, payload: { color: PieceColor.WHITE, name: 'd' } });
+        hub.send({ from: 'd', type: SCGameSessionType.UNSEAT, payload: { color: PieceColor.WHITE, name: 'b' } });
+        hub.sequencer.set('c');
+        hub.send({ from: 'a', type: SCGameSessionType.UNSEAT, payload: { color: PieceColor.WHITE, name: 'b' } });
+
+        // Then
+        expect(spectator.configuration()).toEqual({ whitePlayer: 'b', blackPlayer: 'c' });
+
+        // When the game starts, then c frees the seat of b
+        other.move(e7e5);
+        await vi.waitFor(() => expect(spectator.seatsOpen()).toEqual(false));
+        hub.send({ from: 'c', type: SCGameSessionType.UNSEAT, payload: { color: PieceColor.WHITE, name: 'b' } });
+
+        // Then
+        expect(spectator.configuration()).toEqual({ whitePlayer: 'b', blackPlayer: 'c' });
+        expect(other.canRelease(PieceColor.WHITE)).toEqual(false);
+    });
+
+    test('should free the seat the host freed alike on a page replaying the chain after a handover', () => {
+        // Given: a, the host, frees the seat of b
+        hub.sequencer.set('a');
+        joining.takeSeat(PieceColor.WHITE);
+        other.takeSeat(PieceColor.BLACK);
+        leave('b');
+        host.release(PieceColor.WHITE);
+
+        // When c orders the chain since, and d joins late
+        hub.sequencer.set('c');
+        const late: SynchronousChessOnlineGameSession = page('d');
+        hub.replay(rooms.get('d') as Room<ChessPayloads>);
+
+        // Then
+        expect(late.configuration()).toEqual({ whitePlayer: undefined, blackPlayer: 'c' });
+
+        // When d takes the seat then leaves, a, no longer the host, frees it
+        late.takeSeat(PieceColor.WHITE);
+        leave('d');
+        host.release(PieceColor.WHITE);
+
+        // Then
+        expect(host.canRelease(PieceColor.WHITE)).toEqual(false);
+        expect(other.configuration()).toEqual({ whitePlayer: 'd', blackPlayer: 'c' });
     });
 
     test('should seat the players again when the chain is replayed after a reload', () => {

@@ -33,6 +33,7 @@
       "leave": "Zwolnij miejsce",
       "playBlack": "Graj czarnymi",
       "playWhite": "Graj białymi",
+      "release": "Usuń z miejsca",
       "white": "Gracz białych:"
     },
     "spectators": "Widzowie: {count}",
@@ -106,7 +107,7 @@
       "trigger": "<strong>Rozpoczęcie.</strong> Po turze synchronicznej następuje tura pośrednia, jeśli bierka, która się ruszyła, weszła na pole atakowane (lub bronione) przez przeciwnika już przed turą, a bierka przeciwnika może ją zgodnie z zasadami zbić."
     },
     "players": {
-      "seats": "Dwóch graczy. Każdy uczestnik pokoju, także gospodarz, wybiera kolor spośród wolnych miejsc. Miejsca są ustalone od pierwszego ruchu; pozostali uczestnicy są widzami.",
+      "seats": "Dwóch graczy. Każdy uczestnik pokoju, także gospodarz, wybiera kolor spośród wolnych miejsc. Miejsca są ustalone od pierwszego ruchu; pozostali uczestnicy są widzami. Do tego czasu drugi gracz lub gospodarz może zwolnić miejsce nieobecnego gracza.",
       "shortTitle": "Gracze",
       "simultaneousMoves": "Obaj gracze wykonują ruch jednocześnie, nie znając ruchu drugiego. Gdy obaj wybiorą, oba ruchy są odsłaniane i wykonywane według poniższych zasad.",
       "title": "Gracze i zasada"

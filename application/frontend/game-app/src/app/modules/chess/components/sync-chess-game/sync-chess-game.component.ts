@@ -205,6 +205,18 @@ export class SyncChessGameComponent implements OnDestroy {
         return this.gameSession().seatsOpen() && this.gameSession().myColor !== PieceColor.NONE;
     }
 
+    /** The local player frees the seat of a player away, until the game starts: the other seated player, or the host */
+    public canRelease(color: PieceColor): boolean {
+        return this.gameSession().canRelease(color);
+    }
+
+    public release(color: PieceColor): void {
+        // A second click, before the request is in the chain, sends nothing
+        if (this.canRelease(color)) {
+            this.gameSession().release(color);
+        }
+    }
+
     public takeSeat(color: PieceColor): void {
         this.gameSession().takeSeat(color);
     }

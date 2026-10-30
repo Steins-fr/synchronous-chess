@@ -33,6 +33,7 @@
       "leave": "Platz verlassen",
       "playBlack": "Schwarz spielen",
       "playWhite": "Weiß spielen",
+      "release": "Platz freigeben",
       "white": "Spieler Weiß:"
     },
     "spectators": "Zuschauer: {count}",
@@ -106,7 +107,7 @@
       "trigger": "<strong>Auslöser.</strong> Nach einer synchronen Runde folgt eine Zwischenrunde, wenn eine gezogene Figur auf einem Feld angekommen ist, das der Gegner schon vor der Runde angegriffen (oder gedeckt) hat, und eine gegnerische Figur sie regelgerecht schlagen kann."
     },
     "players": {
-      "seats": "Zwei Spieler. Jeder Teilnehmer des Raums, auch der Gastgeber, wählt seine Farbe unter den freien Plätzen. Die Plätze stehen ab dem ersten Zug fest; die anderen Teilnehmer sind Zuschauer.",
+      "seats": "Zwei Spieler. Jeder Teilnehmer des Raums, auch der Gastgeber, wählt seine Farbe unter den freien Plätzen. Die Plätze stehen ab dem ersten Zug fest; die anderen Teilnehmer sind Zuschauer. Bis dahin kann der andere Spieler oder der Gastgeber den Platz eines abwesenden Spielers freigeben.",
       "shortTitle": "Spieler",
       "simultaneousMoves": "Beide Spieler ziehen gleichzeitig, jeder ohne den Zug des anderen zu kennen. Haben beide gewählt, werden die zwei Züge aufgedeckt und nach den folgenden Regeln ausgeführt.",
       "title": "Spieler und Prinzip"

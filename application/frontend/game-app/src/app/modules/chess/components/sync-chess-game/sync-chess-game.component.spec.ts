@@ -96,8 +96,8 @@ describe('SyncChessGameComponent', () => {
     }
 
     // A room with the local player and a remote one, no one seated yet
-    async function joinOnlineRoom(): Promise<void> {
-        network = new RoomNetworkMock('local', true);
+    async function joinOnlineRoom(hostName?: string): Promise<void> {
+        network = new RoomNetworkMock('local', true, hostName);
         const room: Room<ChessPayloads> = new Room<ChessPayloads>(TestHelper.cast<RoomSocketApi>({}), network.roomNetwork);
         fixture.componentRef.setInput('room', room);
         await fixture.whenStable();
@@ -235,6 +235,54 @@ describe('SyncChessGameComponent', () => {
         // Then
         expect(text('.black-seat')).toEqual('Black player: remote');
         expect(text('.white-seat')).toEqual('White player: Waiting Play white');
+    });
+
+    test.each([PieceColor.WHITE, PieceColor.BLACK])('should let the player of %s free the seat of the other one, away, before the game starts', async (localColor: PieceColor) => {
+        // Given
+        await createOnlineGame(localColor);
+        const away: 'black' | 'white' = localColor === PieceColor.WHITE ? 'black' : 'white';
+        expect(seatButton(away, 'Free the seat')).toBeUndefined();
+
+        // When the other player leaves the room
+        network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+        await refresh();
+
+        // Then
+        expect(text('#seat-top')).toEqual(`${ away === 'black' ? 'Black' : 'White' } player: remote Free the seat`);
+
+        // When
+        const transmit = vi.spyOn(component.room() as Room<ChessPayloads>, 'transmitMessage');
+        const release: HTMLButtonElement = seatButton(away, 'Free the seat') as HTMLButtonElement;
+        release.click();
+        release.click();
+        await refresh();
+
+        // Then
+        expect(text('#seat-top')).toEqual(`${ away === 'black' ? 'Black' : 'White' } player: Waiting`);
+        expect(transmit).toHaveBeenCalledExactlyOnceWith(SCGameSessionType.UNSEAT, { color: localColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE, name: 'remote' });
+    });
+
+    test('should let the host, a spectator, free the seat of a player away at the bottom of the board, before the game starts', async () => {
+        // Given: the local participant hosts the room, two others are seated
+        await joinOnlineRoom('local');
+        network.playerAdded$.next(TestHelper.cast<Player>({ name: 'other', isLocal: false, sendData: vi.fn() }));
+        remoteSeat(PieceColor.WHITE);
+        network.onMessage$.next({ type: SCGameSessionType.SEAT, payload: { color: PieceColor.BLACK }, origin: MessageOriginType.ROOM_SERVICE, from: 'other' });
+        await refresh();
+
+        // When the player of white leaves the room
+        network.playerRemoved$.next(TestHelper.cast<Player>({ name: 'remote', isLocal: false }));
+        await refresh();
+
+        // Then
+        expect(text('#seat-bottom')).toEqual('White player: remote Free the seat');
+
+        // When
+        seatButton('white', 'Free the seat')?.click();
+        await refresh();
+
+        // Then: the seat is free, at the bottom of the board
+        expect(text('#seat-bottom')).toEqual('White player: Waiting Play white');
     });
 
     test('should fix the seats once the game started', async () => {

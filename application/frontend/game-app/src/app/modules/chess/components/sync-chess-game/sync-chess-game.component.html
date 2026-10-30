@@ -3,6 +3,9 @@
     @let bottom = bottomColor();
     <div appSteadyHeight class="player chess-seat" id="seat-top" [class.white-seat]="top === whiteColor" [class.black-seat]="top === blackColor">
         {{ t(top === whiteColor ? 'seat.white' : 'seat.black') }} {{ seatedPlayer(top) || t('seat.free') }}
+        @if (canRelease(top)) {
+        <button (click)="release(top)" class="seat-button" mat-stroked-button>{{ t('seat.release') }}</button>
+        }
     </div>
     <div id="board-section">
         <div id="chess-board">
@@ -90,6 +93,9 @@
         }
         @if (canLeaveSeat()) {
         <button (click)="leaveSeat()" class="seat-button" mat-stroked-button>{{ t('seat.leave') }}</button>
+        }
+        @if (canRelease(bottom)) {
+        <button (click)="release(bottom)" class="seat-button" mat-stroked-button>{{ t('seat.release') }}</button>
         }
     </div>
     <div class="spectators">{{ t('spectators', { count: gameSession().spectatorNumber() }) }}</div>

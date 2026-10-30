@@ -33,6 +33,7 @@
       "leave": "Quitter la place",
       "playBlack": "Jouer les noirs",
       "playWhite": "Jouer les blancs",
+      "release": "Libérer la place",
       "white": "Joueur Blanc :"
     },
     "spectators": "Spectateurs : {count}",
@@ -106,7 +107,7 @@
       "trigger": "<strong>Déclenchement.</strong> Après un tour synchrone, un tour intermédiaire a lieu si une pièce qui a bougé est arrivée sur une case déjà attaquée (ou protégée) par l'adversaire avant le tour, et qu'une pièce adverse peut légalement la capturer."
     },
     "players": {
-      "seats": "Deux joueurs. Chaque participant de la salle, l'hôte compris, choisit sa couleur parmi les places libres. Les places sont fixées dès le premier coup joué ; les autres participants sont spectateurs.",
+      "seats": "Deux joueurs. Chaque participant de la salle, l'hôte compris, choisit sa couleur parmi les places libres. Les places sont fixées dès le premier coup joué ; les autres participants sont spectateurs. D'ici là, l'autre joueur ou l'hôte peut libérer la place d'un joueur absent.",
       "shortTitle": "Joueurs",
       "simultaneousMoves": "Les deux joueurs jouent leur coup simultanément, chacun sans connaître le coup de l'autre. Lorsque les deux joueurs ont fait leur choix, les deux coups sont révélés et appliqués selon les règles ci-dessous.",
       "title": "Joueurs et principe"

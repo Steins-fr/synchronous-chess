@@ -20,6 +20,8 @@ export enum SCGameSessionType {
     COMMIT = 'SC_GS_commit',
     /** The action of a player, revealed once every player of the turn is committed */
     REVEAL = 'SC_GS_reveal',
+    /** The other seated player or the host frees the seat of a player away, before the game starts */
+    UNSEAT = 'SC_GS_unseat',
 }
 
 export enum SealedActionKind {
@@ -34,6 +36,12 @@ export type SealedAction =
 
 export interface SeatMessage {
     color: PieceColor;
+}
+
+export interface UnseatMessage {
+    color: PieceColor;
+    /** The player of the seat, away: a request applied once another one took the seat frees nothing */
+    name: string;
 }
 
 export interface CommitMessage {
@@ -52,6 +60,7 @@ export interface ChessPayloads {
     [SCGameSessionType.SEAT]: SeatMessage;
     [SCGameSessionType.COMMIT]: CommitMessage;
     [SCGameSessionType.REVEAL]: RevealMessage;
+    [SCGameSessionType.UNSEAT]: UnseatMessage;
 }
 
 // The game has its own block chain, so the activity of another chain sharing the room (e.g. the chat) never delays it
@@ -59,6 +68,7 @@ export const chessBlockChains: BlockChainRouting<ChessPayloads> = {
     [SCGameSessionType.SEAT]: BlockChainName.CHESS,
     [SCGameSessionType.COMMIT]: BlockChainName.CHESS,
     [SCGameSessionType.REVEAL]: BlockChainName.CHESS,
+    [SCGameSessionType.UNSEAT]: BlockChainName.CHESS,
 };
 
 /** The action of the local player, revealed once every player of its turn is committed */
@@ -68,7 +78,8 @@ interface SealedTurn extends StoredTurn {
 
 /**
  * The participants take the seats themselves: the chain orders their requests, so every participant seats the same players,
- * the first request for a free seat getting it. The seats are final once a player committed to its first action.
+ * the first request for a free seat getting it. The seats are final once a player committed to its first action: until
+ * then, the other seated player or the host frees the seat of a player away.
  *
  * The players play at the same time: each one commits to its action first, and reveals it once every player of the turn
  * is committed. Neither the other player, nor the sequencer ordering the messages, can adapt its action to the other one.
@@ -83,6 +94,14 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         const { whitePlayer, blackPlayer } = this.configuration();
         return this.roomService.players().filter(({ name }) => name !== whitePlayer && name !== blackPlayer).length;
     });
+    /** The seated players not connected to this page */
+    public readonly awayPlayers: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
+        const connected: ReadonlySet<string> = new Set<string>(this.roomService.players().map(({ name }) => name));
+        const { whitePlayer, blackPlayer } = this.configuration();
+        return [whitePlayer, blackPlayer].filter((name: string | undefined): name is string => name !== undefined && !connected.has(name));
+    });
+    /** A request of the local player freeing a seat waits for the chain: it is sent once */
+    private readonly sending = signal<boolean>(false);
     /** The first commitment of each player for each turn, by `turn color` */
     private readonly commitments = new Map<string, string>();
     /**
@@ -102,6 +121,11 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         this.roomService.messenger(SCGameSessionType.SEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onSeat(message));
         this.roomService.messenger(SCGameSessionType.COMMIT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onCommit(message));
         this.roomService.messenger(SCGameSessionType.REVEAL).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onReveal(message));
+        this.roomService.messenger(SCGameSessionType.UNSEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onUnseat(message));
+    }
+
+    private static opponentOf(color: PieceColor): PieceColor {
+        return color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
     }
 
     public static async commitment(turn: number, color: PieceColor, action: SealedAction, salt: string): Promise<string> {
@@ -139,6 +163,12 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
             default:
                 return PieceColor.NONE;
         }
+    }
+
+    /** The player seated on a color */
+    private playerOf(color: PieceColor): string | undefined {
+        const { whitePlayer, blackPlayer } = this.configuration();
+        return color === PieceColor.WHITE ? whitePlayer : blackPlayer;
     }
 
     public override destroy(): void {
@@ -189,6 +219,43 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         }
 
         this.setConfiguration(seats);
+    }
+
+    /** The local player frees the seat of a player away, before the game starts: the other seated player, or the host (the sequencer of the room) */
+    public canRelease(color: PieceColor): boolean {
+        const name: string | undefined = this.playerOf(color);
+        return this.seatsOpen() && name !== undefined && this.awayPlayers().includes(name) && !this.sending()
+            && (this.myColor === SynchronousChessOnlineGameSession.opponentOf(color) || this.roomService.sequencer() === this.roomService.localPlayer.name);
+    }
+
+    public release(color: PieceColor): void {
+        this.sending.set(true);
+        this.roomService.transmitMessage(SCGameSessionType.UNSEAT, { color, name: this.playerOf(color) as string });
+    }
+
+    /**
+     * In the order of the chain, with the seats: the other seated player, or the host as the sequencer of the block of
+     * its request, alike on a page replaying the chain. No page can tell when the player was away, as for a timeout
+     */
+    protected onUnseat(message: AppMessage<SCGameSessionType.UNSEAT, UnseatMessage>): void {
+        this.sent(message);
+        const { color, name } = message.payload;
+        const seated: string | undefined = color === PieceColor.WHITE || color === PieceColor.BLACK ? this.playerOf(color) : undefined;
+
+        if (this.started() || seated === undefined || seated !== name
+            || (this.playerColor(message.from) !== SynchronousChessOnlineGameSession.opponentOf(color) && this.roomService.sequencedBy(message) !== message.from)) {
+            return;
+        }
+
+        const { whitePlayer, blackPlayer } = this.configuration();
+        this.setConfiguration(color === PieceColor.WHITE ? { whitePlayer: undefined, blackPlayer } : { whitePlayer, blackPlayer: undefined });
+    }
+
+    /** A request of the local player is in the chain */
+    private sent(message: AppMessage): void {
+        if (message.from === this.roomService.localPlayer.name) {
+            this.sending.set(false);
+        }
     }
 
     public move(move: Move | null): void {

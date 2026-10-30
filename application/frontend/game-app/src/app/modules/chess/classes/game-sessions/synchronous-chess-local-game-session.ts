@@ -8,6 +8,7 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     public readonly spectatorNumber: Signal<number> = signal(0).asReadonly();
     public readonly seatsOpen: Signal<boolean> = signal(false).asReadonly();
     public readonly inMatch: Signal<boolean> = signal(false).asReadonly();
+    public readonly awayPlayers: Signal<ReadonlyArray<string>> = signal([]).asReadonly();
 
     public get playingColor(): PieceColor {
         return PieceColor.NONE;
@@ -18,6 +19,14 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     }
 
     public leaveSeat(): void {
+        // Nothing to do
+    }
+
+    public canRelease(): boolean {
+        return false;
+    }
+
+    public release(): void {
         // Nothing to do
     }
 

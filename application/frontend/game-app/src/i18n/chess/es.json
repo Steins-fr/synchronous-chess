@@ -33,6 +33,7 @@
       "leave": "Dejar el puesto",
       "playBlack": "Jugar con negras",
       "playWhite": "Jugar con blancas",
+      "release": "Liberar el puesto",
       "white": "Jugador blanco:"
     },
     "spectators": "Espectadores: {count}",
@@ -106,7 +107,7 @@
       "trigger": "<strong>Inicio.</strong> Tras un turno sincronizado, hay un turno intermedio si una pieza que se ha movido ha llegado a una casilla ya atacada (o protegida) por el rival antes del turno, y una pieza rival puede capturarla legalmente."
     },
     "players": {
-      "seats": "Dos jugadores. Cada participante de la sala, incluido el anfitrión, elige su color entre los puestos libres. Los puestos quedan fijados desde la primera jugada; los demás participantes son espectadores.",
+      "seats": "Dos jugadores. Cada participante de la sala, incluido el anfitrión, elige su color entre los puestos libres. Los puestos quedan fijados desde la primera jugada; los demás participantes son espectadores. Hasta entonces, el otro jugador o el anfitrión puede liberar el puesto de un jugador ausente.",
       "shortTitle": "Jugadores",
       "simultaneousMoves": "Los dos jugadores juegan su jugada a la vez, cada uno sin conocer la del otro. Cuando ambos han elegido, las dos jugadas se revelan y se aplican según las reglas siguientes.",
       "title": "Jugadores y principio"

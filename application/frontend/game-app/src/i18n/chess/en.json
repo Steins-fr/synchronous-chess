@@ -33,6 +33,7 @@
       "leave": "Leave the seat",
       "playBlack": "Play black",
       "playWhite": "Play white",
+      "release": "Free the seat",
       "white": "White player:"
     },
     "spectators": "Spectators: {count}",
@@ -106,7 +107,7 @@
       "trigger": "<strong>Trigger.</strong> After a synchronous turn, an intermediate turn takes place if a piece that moved arrived on a square already attacked (or protected) by the opponent before the turn, and an opposing piece can legally capture it."
     },
     "players": {
-      "seats": "Two players. Each participant of the room, the host included, picks a color among the free seats. The seats are set from the first move played; the other participants are spectators.",
+      "seats": "Two players. Each participant of the room, the host included, picks a color among the free seats. The seats are set from the first move played; the other participants are spectators. Until then, the other player or the host may free the seat of a player away.",
       "shortTitle": "Players",
       "simultaneousMoves": "Both players play their move simultaneously, each without knowing the other's move. Once both players have chosen, the two moves are revealed and applied according to the rules below.",
       "title": "Players and principle"
