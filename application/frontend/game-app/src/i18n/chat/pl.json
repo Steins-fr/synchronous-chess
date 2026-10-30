@@ -22,6 +22,7 @@
   "options": {
     "arrivals": "Pokazuj wejścia i wyjścia",
     "enterSends": "Wysyłaj Enterem",
+    "hideOffensiveWords": "Ukrywaj obraźliwe słowa",
     "shownMessages": "Pokazuj wiadomości od",
     "times": "Pokazuj godziny"
   },

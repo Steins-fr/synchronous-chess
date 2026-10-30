@@ -22,6 +22,7 @@
   "options": {
     "arrivals": "Show arrivals and departures",
     "enterSends": "Send with Enter",
+    "hideOffensiveWords": "Hide offensive words",
     "shownMessages": "Show the messages of",
     "times": "Show the times"
   },

@@ -1,24 +1,32 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
+import { OffensiveWordsService } from '@app/services/offensive-words/offensive-words.service';
+import { OffensiveWordsMock } from '@testing/offensive-words.mock';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message.component';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+function message(changes: Partial<ChatMessage> = {}): ChatMessage {
+    return { id: 0, kind: ChatEntryKind.MESSAGE, messageId: 'message-1', author: 'remote', text: 'hello', isSelf: false, at: 0, state: ChatMessageState.SENT, ...changes };
+}
 
 describe('ChatMessageComponent', () => {
     let fixture: ComponentFixture<ChatMessageComponent>;
-
-    function message(changes: Partial<ChatMessage> = {}): ChatMessage {
-        return { id: 0, kind: ChatEntryKind.MESSAGE, messageId: 'message-1', author: 'remote', text: 'hello', isSelf: false, at: 0, state: ChatMessageState.SENT, ...changes };
-    }
 
     function bubble(): HTMLElement {
         return fixture.nativeElement.querySelector('.chat-bubble');
     }
 
     beforeEach(async () => {
+        localStorage.clear();
         await TestBed.configureTestingModule({
             imports: [ChatMessageComponent],
         }).compileComponents();
 
         fixture = TestBed.createComponent(ChatMessageComponent);
+    });
+
+    afterEach(() => {
+        localStorage.clear();
     });
 
     test('should show the author and the time above the first message of a group, on the left', async () => {
@@ -97,5 +105,45 @@ describe('ChatMessageComponent', () => {
 
         // Then
         expect((fixture.nativeElement.querySelector('button') as HTMLButtonElement).disabled).toEqual(true);
+    });
+
+    test('should mask the offensive words of a message', async () => {
+        // When
+        fixture.componentRef.setInput('message', message({ text: 'what the fuck' }));
+        await fixture.whenStable();
+
+        // Then
+        expect(bubble().textContent).toEqual('remote: what the f***');
+    });
+
+    test('should show a message as written while the setting shows the offensive words', async () => {
+        // Given
+        fixture.componentRef.setInput('message', message({ text: 'what the fuck' }));
+        await fixture.whenStable();
+
+        // When
+        TestBed.inject(ChatPreferencesService).hideOffensiveWords.set(false);
+        await fixture.whenStable();
+
+        // Then
+        expect(bubble().textContent).toEqual('remote: what the fuck');
+    });
+});
+
+describe('ChatMessageComponent without the offensive words', () => {
+    test('should show a message as written until the offensive words are loaded', async () => {
+        // Given
+        await TestBed.configureTestingModule({
+            imports: [ChatMessageComponent],
+            providers: [{ provide: OffensiveWordsService, useValue: new OffensiveWordsMock(false) }],
+        }).compileComponents();
+        const fixture: ComponentFixture<ChatMessageComponent> = TestBed.createComponent(ChatMessageComponent);
+
+        // When
+        fixture.componentRef.setInput('message', message({ text: 'what the fuck' }));
+        await fixture.whenStable();
+
+        // Then
+        expect(fixture.nativeElement.querySelector('.chat-bubble').textContent).toEqual('remote: what the fuck');
     });
 });

@@ -167,7 +167,8 @@ run by the CI.
   `historyLines()` and `pastLines()` of `e2e/room-participant.ts`. `#history-close` closes it.
 - A message is a bubble of `#chat-log` (`.chat-bubble`), its author in a hidden text first (`alice: hello`). Enter
   sends it, Shift+Enter starts a new line; the options of the chat (`#chat-options`) hide the arrivals and departures,
-  the times, a player's messages, or turn Enter into a new line.
+  the times, a player's messages, mask the offensive words (`Hide offensive words`, on by default: `f***`), or turn
+  Enter into a new line.
 - The composer sends 3 messages in 10 seconds at most: then `#send` and the Retry of a failed message are disabled,
   and a hint of the field counts down (`Wait 7 seconds before sending another message`). It waits too while 5 of its
   messages are not sent back (`Wait until your messages are sent before sending more`), Retry enabled. Each page hides the messages

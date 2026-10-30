@@ -22,6 +22,7 @@
   "options": {
     "arrivals": "Afficher les arrivées et départs",
     "enterSends": "Envoyer avec Entrée",
+    "hideOffensiveWords": "Masquer les mots offensants",
     "shownMessages": "Afficher les messages de",
     "times": "Afficher les heures"
   },

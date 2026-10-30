@@ -22,6 +22,7 @@
   "options": {
     "arrivals": "Tampilkan yang masuk dan keluar",
     "enterSends": "Kirim dengan Enter",
+    "hideOffensiveWords": "Sembunyikan kata kasar",
     "shownMessages": "Tampilkan pesan dari",
     "times": "Tampilkan waktu"
   },

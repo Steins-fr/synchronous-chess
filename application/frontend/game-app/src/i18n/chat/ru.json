@@ -22,6 +22,7 @@
   "options": {
     "arrivals": "Показывать входы и выходы",
     "enterSends": "Отправлять по Enter",
+    "hideOffensiveWords": "Скрывать оскорбительные слова",
     "shownMessages": "Показывать сообщения от",
     "times": "Показывать время"
   },

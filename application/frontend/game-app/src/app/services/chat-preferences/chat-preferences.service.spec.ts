@@ -25,6 +25,7 @@ describe('ChatPreferencesService', () => {
         expect(service.arrivals.on()).toEqual(true);
         expect(service.times.on()).toEqual(true);
         expect(service.enterSends.on()).toEqual(true);
+        expect(service.hideOffensiveWords.on()).toEqual(true);
     });
 
     test('should not send with Enter by default on a touch screen', () => {
@@ -45,6 +46,7 @@ describe('ChatPreferencesService', () => {
         localStorage.setItem(ChatPreferencesService.arrivalsKey, 'off');
         localStorage.setItem(ChatPreferencesService.timesKey, 'on');
         localStorage.setItem(ChatPreferencesService.enterSendsKey, 'unknown');
+        localStorage.setItem(ChatPreferencesService.hideOffensiveWordsKey, 'off');
 
         // When
         const service: ChatPreferencesService = createService();
@@ -54,6 +56,7 @@ describe('ChatPreferencesService', () => {
         expect(service.arrivals.on()).toEqual(false);
         expect(service.times.on()).toEqual(true);
         expect(service.enterSends.on()).toEqual(true);
+        expect(service.hideOffensiveWords.on()).toEqual(false);
     });
 
     test('should keep a setting picked', () => {
@@ -73,6 +76,13 @@ describe('ChatPreferencesService', () => {
         // Then
         expect(service.times.on()).toEqual(true);
         expect(localStorage.getItem(ChatPreferencesService.timesKey)).toEqual('on');
+
+        // When
+        service.hideOffensiveWords.set(false);
+
+        // Then
+        expect(service.hideOffensiveWords.on()).toEqual(false);
+        expect(localStorage.getItem(ChatPreferencesService.hideOffensiveWordsKey)).toEqual('off');
     });
 
     test('should follow the settings another tab picked, and a cleared storage', () => {
@@ -87,10 +97,18 @@ describe('ChatPreferencesService', () => {
         expect(service.arrivals.on()).toEqual(false);
 
         // When
+        localStorage.setItem(ChatPreferencesService.hideOffensiveWordsKey, 'off');
+        globalThis.dispatchEvent(new StorageEvent('storage', { key: ChatPreferencesService.hideOffensiveWordsKey }));
+
+        // Then
+        expect(service.hideOffensiveWords.on()).toEqual(false);
+
+        // When
         localStorage.clear();
         globalThis.dispatchEvent(new StorageEvent('storage', { key: null }));
 
         // Then
         expect(service.arrivals.on()).toEqual(true);
+        expect(service.hideOffensiveWords.on()).toEqual(true);
     });
 });

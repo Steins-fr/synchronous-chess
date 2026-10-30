@@ -86,6 +86,8 @@ This is an Angular TypeScript project with the following characteristics:
   exception is the debug panel of WebRTC (`modules/debug`), developer tooling, in English out of the keys: the
   room layout offers it, a floating button opening it in a bottom sheet, when `webrtcDebug` of the environment is
   on (`WEBRTC_DEBUG`: local and staging, not production)
+- The offensive words the chat masks are no texts: lists of their own (`services/offensive-words/lists`), the same in
+  every language, out of the keys and of the extraction, curated by the rules of their README
 - `LanguageService` picks the language: the user's pick, kept in the local storage, else the first
   language of the browser the app speaks, else English. The menu next to the theme toggle switches it
   live: never reload the page to change it, a reload in a match reconnects the peers. The other tabs of
@@ -275,6 +277,7 @@ Claude writes the translations of every new or changed key, into every language:
 | spin (the cylinder) | faire tourner | girar | girar | rodar | drehen | крутить | çevirmek | memutar | zakręcić | far girare |
 | load (the bullets) | charger | cargar | carregar | carregar | laden | зарядить | doldurmak | mengisi | załadować | caricare |
 | bank | banque | banca | banca | banca | Bank | казна | banka | bank | bank | banco |
+| offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 
 ## APIs
 
