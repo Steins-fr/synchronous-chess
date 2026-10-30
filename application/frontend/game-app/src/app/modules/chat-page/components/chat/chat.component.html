@@ -37,6 +37,8 @@
             <p class="chat-notice">{{ t('log.arrival', { name: line.entry.name }) }}</p>
             } @else if (line.entry.kind === kinds.FLOOD) {
             <p class="chat-notice">{{ line.entry.name === localName() ? t('log.floodingSelf') : t('log.flooding', { name: line.entry.name }) }}</p>
+            } @else if (line.entry.kind === kinds.MODERATION) {
+            <p class="chat-notice">{{ line.entry.text.key | transloco: line.entry.text.params }}</p>
             } @else {
             <p class="chat-notice">{{ t('log.departure', { name: line.entry.name }) }}</p>
             }

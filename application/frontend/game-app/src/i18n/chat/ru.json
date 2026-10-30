@@ -14,8 +14,25 @@
     "flooding": "{name} отправляет слишком много сообщений: они временно скрыты",
     "floodingSelf": "Вы отправили слишком много сообщений: они временно скрыты",
     "latest": "Последние сообщения",
+    "mute": {
+      "byYou": "Вы заглушили {name} на {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}",
+      "byYouToEnd": "Вы заглушили {name} до закрытия комнаты",
+      "other": "{moderator} заглушает {name} на {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}",
+      "otherToEnd": "{moderator} заглушает {name} до закрытия комнаты",
+      "you": "{moderator} заглушает вас на {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}",
+      "youToEnd": "{moderator} заглушает вас до закрытия комнаты"
+    },
+    "removal": {
+      "byYou": "Вы удалили {name} из комнаты",
+      "other": "{moderator} удаляет {name} из комнаты"
+    },
     "retry": "Повторить",
     "sending": "Отправка…",
+    "unmute": {
+      "byYou": "Вы сняли заглушение с {name}",
+      "other": "{moderator} снимает заглушение с {name}",
+      "you": "{moderator} снимает с вас заглушение"
+    },
     "unread": "Новые сообщения"
   },
   "message": "Введите сообщение",

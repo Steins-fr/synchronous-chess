@@ -14,8 +14,25 @@
     "flooding": "{name} mengirim terlalu banyak pesan: pesannya disembunyikan sementara",
     "floodingSelf": "Anda mengirim terlalu banyak pesan: pesan Anda disembunyikan sementara",
     "latest": "Pesan terbaru",
+    "mute": {
+      "byYou": "Anda membisukan {name} selama {minutes, plural, other {# menit}}",
+      "byYouToEnd": "Anda membisukan {name} hingga ruang berakhir",
+      "other": "{moderator} membisukan {name} selama {minutes, plural, other {# menit}}",
+      "otherToEnd": "{moderator} membisukan {name} hingga ruang berakhir",
+      "you": "{moderator} membisukan Anda selama {minutes, plural, other {# menit}}",
+      "youToEnd": "{moderator} membisukan Anda hingga ruang berakhir"
+    },
+    "removal": {
+      "byYou": "Anda mengeluarkan {name} dari ruang",
+      "other": "{moderator} mengeluarkan {name} dari ruang"
+    },
     "retry": "Coba lagi",
     "sending": "Mengirim…",
+    "unmute": {
+      "byYou": "Anda membatalkan bisu {name}",
+      "other": "{moderator} membatalkan bisu {name}",
+      "you": "{moderator} membatalkan bisu Anda"
+    },
     "unread": "Pesan baru"
   },
   "message": "Ketik pesan Anda",

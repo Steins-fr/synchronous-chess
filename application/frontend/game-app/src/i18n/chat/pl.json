@@ -14,8 +14,25 @@
     "flooding": "{name} wysyła za dużo wiadomości: są na chwilę ukryte",
     "floodingSelf": "Wysyłasz za dużo wiadomości: są na chwilę ukryte",
     "latest": "Najnowsze wiadomości",
+    "mute": {
+      "byYou": "Wyciszasz {name} na {minutes, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}",
+      "byYouToEnd": "Wyciszasz {name} do zamknięcia pokoju",
+      "other": "{moderator} wycisza {name} na {minutes, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}",
+      "otherToEnd": "{moderator} wycisza {name} do zamknięcia pokoju",
+      "you": "{moderator} wycisza cię na {minutes, plural, one {# minutę} few {# minuty} many {# minut} other {# minuty}}",
+      "youToEnd": "{moderator} wycisza cię do zamknięcia pokoju"
+    },
+    "removal": {
+      "byYou": "Usuwasz {name} z pokoju",
+      "other": "{moderator} usuwa {name} z pokoju"
+    },
     "retry": "Ponów",
     "sending": "Wysyłanie…",
+    "unmute": {
+      "byYou": "Cofasz wyciszenie {name}",
+      "other": "{moderator} cofa wyciszenie {name}",
+      "you": "{moderator} cofa twoje wyciszenie"
+    },
     "unread": "Nowe wiadomości"
   },
   "message": "Wpisz wiadomość",

@@ -14,8 +14,25 @@
     "flooding": "{name} sends too many messages: they are hidden for a moment",
     "floodingSelf": "You sent too many messages: they are hidden for a moment",
     "latest": "Latest messages",
+    "mute": {
+      "byYou": "You muted {name} for {minutes, plural, one {# minute} other {# minutes}}",
+      "byYouToEnd": "You muted {name} until the end of the room",
+      "other": "{moderator} muted {name} for {minutes, plural, one {# minute} other {# minutes}}",
+      "otherToEnd": "{moderator} muted {name} until the end of the room",
+      "you": "{moderator} muted you for {minutes, plural, one {# minute} other {# minutes}}",
+      "youToEnd": "{moderator} muted you until the end of the room"
+    },
+    "removal": {
+      "byYou": "You removed {name} from the room",
+      "other": "{moderator} removed {name} from the room"
+    },
     "retry": "Retry",
     "sending": "Sending…",
+    "unmute": {
+      "byYou": "You unmuted {name}",
+      "other": "{moderator} unmuted {name}",
+      "you": "{moderator} unmuted you"
+    },
     "unread": "New messages"
   },
   "message": "Type your message",

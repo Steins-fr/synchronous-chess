@@ -56,7 +56,7 @@ describe('ChatPage', () => {
         await fixture.whenStable();
 
         // Then
-        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT }, expect.any(AbortSignal));
+        expect(roomManagerService.buildBlockRoom).toHaveBeenCalledWith({ type: 'create', game: RoomGame.CHAT, roomName: 'room', playerName: 'local', token: 'token' }, 6, { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, [ChatMessengerType.MODERATION]: BlockChainName.CHAT }, expect.any(AbortSignal));
         expect(fixture.nativeElement.querySelector('#page-content app-chat')).not.toBeNull();
         // The debug panel of WebRTC out of the page: the room layout offers it
         expect(fixture.nativeElement.querySelector('app-debug-webrtc')).toBeNull();

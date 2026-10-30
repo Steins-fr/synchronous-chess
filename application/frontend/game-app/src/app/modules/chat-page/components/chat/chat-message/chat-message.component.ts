@@ -11,6 +11,8 @@ export enum ChatEntryKind {
     DEPARTURE = 'departure',
     /** An author sending too many messages: they are hidden until its rate falls back */
     FLOOD = 'flood',
+    /** A decision of the moderator of the room: a mute, its end, a removal */
+    MODERATION = 'moderation',
 }
 
 export enum ChatMessageState {

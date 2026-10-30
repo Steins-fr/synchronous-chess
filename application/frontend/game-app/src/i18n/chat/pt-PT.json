@@ -14,8 +14,25 @@
     "flooding": "{name} está a enviar demasiadas mensagens: ficam ocultas por um momento",
     "floodingSelf": "Enviou demasiadas mensagens: ficam ocultas por um momento",
     "latest": "Últimas mensagens",
+    "mute": {
+      "byYou": "Silenciou {name} durante {minutes, plural, one {# minuto} other {# minutos}}",
+      "byYouToEnd": "Silenciou {name} até ao fim da sala",
+      "other": "{moderator} silenciou {name} durante {minutes, plural, one {# minuto} other {# minutos}}",
+      "otherToEnd": "{moderator} silenciou {name} até ao fim da sala",
+      "you": "{moderator} silenciou-o durante {minutes, plural, one {# minuto} other {# minutos}}",
+      "youToEnd": "{moderator} silenciou-o até ao fim da sala"
+    },
+    "removal": {
+      "byYou": "Removeu {name} da sala",
+      "other": "{moderator} removeu {name} da sala"
+    },
     "retry": "Tentar novamente",
     "sending": "A enviar…",
+    "unmute": {
+      "byYou": "Tirou o silêncio a {name}",
+      "other": "{moderator} tirou o silêncio a {name}",
+      "you": "{moderator} tirou-lhe o silêncio"
+    },
     "unread": "Novas mensagens"
   },
   "message": "Escreva a sua mensagem",

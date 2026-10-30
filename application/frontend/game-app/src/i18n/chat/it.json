@@ -14,8 +14,25 @@
     "flooding": "{name} invia troppi messaggi: sono nascosti per un momento",
     "floodingSelf": "Hai inviato troppi messaggi: sono nascosti per un momento",
     "latest": "Ultimi messaggi",
+    "mute": {
+      "byYou": "Hai silenziato {name} per {minutes, plural, one {# minuto} other {# minuti}}",
+      "byYouToEnd": "Hai silenziato {name} fino alla chiusura della stanza",
+      "other": "{moderator} ha silenziato {name} per {minutes, plural, one {# minuto} other {# minuti}}",
+      "otherToEnd": "{moderator} ha silenziato {name} fino alla chiusura della stanza",
+      "you": "{moderator} ti ha silenziato per {minutes, plural, one {# minuto} other {# minuti}}",
+      "youToEnd": "{moderator} ti ha silenziato fino alla chiusura della stanza"
+    },
+    "removal": {
+      "byYou": "Hai rimosso {name} dalla stanza",
+      "other": "{moderator} ha rimosso {name} dalla stanza"
+    },
     "retry": "Riprova",
     "sending": "Invio…",
+    "unmute": {
+      "byYou": "Hai riattivato {name}",
+      "other": "{moderator} ha riattivato {name}",
+      "you": "{moderator} ti ha riattivato"
+    },
     "unread": "Nuovi messaggi"
   },
   "message": "Scrivi il tuo messaggio",

@@ -14,8 +14,25 @@
     "flooding": "{name} envoie trop de messages : ils sont masqués un moment",
     "floodingSelf": "Vous avez envoyé trop de messages : ils sont masqués un moment",
     "latest": "Derniers messages",
+    "mute": {
+      "byYou": "Vous avez rendu {name} muet pendant {minutes, plural, one {# minute} other {# minutes}}",
+      "byYouToEnd": "Vous avez rendu {name} muet jusqu’à la fin de la salle",
+      "other": "{moderator} a rendu {name} muet pendant {minutes, plural, one {# minute} other {# minutes}}",
+      "otherToEnd": "{moderator} a rendu {name} muet jusqu’à la fin de la salle",
+      "you": "{moderator} vous a rendu muet pendant {minutes, plural, one {# minute} other {# minutes}}",
+      "youToEnd": "{moderator} vous a rendu muet jusqu’à la fin de la salle"
+    },
+    "removal": {
+      "byYou": "Vous avez exclu {name} de la salle",
+      "other": "{moderator} a exclu {name} de la salle"
+    },
     "retry": "Réessayer",
     "sending": "Envoi…",
+    "unmute": {
+      "byYou": "Vous avez rendu la parole à {name}",
+      "other": "{moderator} a rendu la parole à {name}",
+      "you": "{moderator} vous a rendu la parole"
+    },
     "unread": "Nouveaux messages"
   },
   "message": "Tapez votre message",

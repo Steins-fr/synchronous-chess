@@ -21,7 +21,7 @@ import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatIcon } from '@angular/material/icon';
 import { MatDivider } from '@angular/material/divider';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { TextAreaFieldComponent } from '@app/modules/form/text-area-field/text-area-field.component';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
@@ -36,14 +36,27 @@ import { scopedKey } from '@app/services/language/scoped-key';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
-import { map, Subscription, switchMap, timer } from 'rxjs';
+import { TranslatableText } from '@app/types/translatable-text.type';
+import { map, merge, Subscription, switchMap, timer } from 'rxjs';
 import { holdsLink } from './chat-link';
 import { admitChatMessage, CHAT_UNSENT_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
+import {
+    ChatDecision,
+    ChatModeration,
+    ChatModerationAction,
+    decisionText,
+    isChatDecision,
+    isSilenced,
+    moderateChat,
+    NO_MODERATION
+} from './chat-moderation';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
 
 export enum ChatMessengerType {
     CHAT_MESSAGE = 'chatMessage',
+    /** A decision of the moderator of the room: a mute, its end, a removal */
+    MODERATION = 'chatModeration',
 }
 
 /**
@@ -68,14 +81,18 @@ export function isChatText(payload: unknown): payload is ChatText {
 
 export interface ChatPayloads {
     [ChatMessengerType.CHAT_MESSAGE]: ChatText;
+    [ChatMessengerType.MODERATION]: ChatDecision;
 }
 
 // The chat has its own block chain, so its activity never delays the messages of another chain sharing the room
 export const chatBlockChains: BlockChainRouting<ChatPayloads> = {
     [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
+    // On the chain of the messages, ordered among them: every page hides the same ones
+    [ChatMessengerType.MODERATION]: BlockChainName.CHAT,
 };
 
 type ChatRoomMessage = AppMessage<ChatMessengerType.CHAT_MESSAGE, ChatText>;
+type ChatModerationMessage = AppMessage<ChatMessengerType.MODERATION, ChatDecision>;
 
 /** A player arriving in the room, leaving it, or sending too many messages */
 export interface ChatNotice {
@@ -85,7 +102,15 @@ export interface ChatNotice {
     readonly at: number;
 }
 
-export type ChatEntry = ChatMessage | ChatNotice;
+/** A decision of the participant ordering the chain, told on every page, the history included: its text worded for the local player */
+export interface ChatModerationNotice {
+    readonly id: number;
+    readonly kind: ChatEntryKind.MODERATION;
+    readonly text: TranslatableText;
+    readonly at: number;
+}
+
+export type ChatEntry = ChatMessage | ChatNotice | ChatModerationNotice;
 
 /** An entry shown in the log */
 interface ChatLine {
@@ -110,13 +135,18 @@ function chatMessageRules(path: SchemaPath<string>): void {
         : undefined));
 }
 
-/** Whether the log leaves an entry out: the messages of the authors the local player hides, and their floods, the arrivals and departures by the setting */
+/**
+ * Whether the log leaves an entry out: the messages of the authors the local player hides, and their floods, the
+ * arrivals and departures by the setting. A decision of the moderator always shows, whoever it names
+ */
 function isLeftOut(entry: Readonly<ChatEntry>, hiddenAuthors: ReadonlySet<string>, showArrivals: boolean): boolean {
     switch (entry.kind) {
         case ChatEntryKind.MESSAGE:
             return hiddenAuthors.has(entry.author);
         case ChatEntryKind.FLOOD:
             return hiddenAuthors.has(entry.name);
+        case ChatEntryKind.MODERATION:
+            return false;
         default:
             return !showArrivals;
     }
@@ -148,6 +178,7 @@ const COMPOSITION_END_DELAY: number = 100;
         MatDivider,
         TextAreaFieldComponent,
         TranslocoDirective,
+        TranslocoPipe,
     ],
     host: {
         class: 'flex flex-col min-h-0 bg-app-surface-raised text-app-text',
@@ -248,6 +279,8 @@ export class ChatComponent {
     private readonly ids: Generator<number, never> = idGenerator();
     /** The rate of the authors on the chain */
     private flood: ChatFlood = NO_FLOOD;
+    /** The decisions of the moderator in force on the chain */
+    private readonly moderation = signal<ChatModeration>(NO_MODERATION);
     /** The authors reported for an invalid message: their first one only, the same on every page, rather than a report per message */
     private readonly invalidAuthors = new Set<string>();
     private compositionEndedAt: number = Number.NEGATIVE_INFINITY;
@@ -262,17 +295,26 @@ export class ChatComponent {
         // Handled in the subscription, a signal would only keep the last of several messages received in a row
         toObservable(this.room).pipe(
             switchMap((room: Room<ChatPayloads>) => {
-                // Another room, another chain: the rates of its authors and its cheaters start again. The messages the former
-                // one did not send back are dropped: sent again, they would go to the new one
+                // Another room, another chain: the rates of its authors, its decisions and its cheaters start again. The messages
+                // the former one did not send back are dropped: sent again, they would go to the new one
                 this.flood = NO_FLOOD;
+                this.moderation.set(NO_MODERATION);
                 this.invalidAuthors.clear();
                 const unsent = new Set<Readonly<ChatEntry>>(this.unsentMessages());
                 this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => !unsent.has(entry)));
-                // Read on the room it comes from: the input may change before the next one is listened to
-                return room.messenger(ChatMessengerType.CHAT_MESSAGE).pipe(map((message: ChatRoomMessage) => ({ room, message })));
+                // Read on the room it comes from: the input may change before the next one is listened to. Both filter the
+                // messages of the room as it delivers them: merged, they keep the order of the chain
+                return merge(room.messenger(ChatMessengerType.CHAT_MESSAGE), room.messenger(ChatMessengerType.MODERATION))
+                    .pipe(map((message: ChatRoomMessage | ChatModerationMessage) => ({ room, message })));
             }),
             takeUntilDestroyed(),
-        ).subscribe(({ room, message }: { room: Room<ChatPayloads>; message: ChatRoomMessage }) => this.onChatMessage(room, message));
+        ).subscribe(({ room, message }: { room: Room<ChatPayloads>; message: ChatRoomMessage | ChatModerationMessage }) => {
+            if (message.type === ChatMessengerType.MODERATION) {
+                this.onModeration(room, message);
+            } else {
+                this.onChatMessage(room, message);
+            }
+        });
 
         // A player the room agrees left: a participant losing its link to it may connect to it again meanwhile
         toObservable(this.room).pipe(
@@ -405,10 +447,7 @@ export class ChatComponent {
     private onChatMessage(room: Room<ChatPayloads>, message: ChatRoomMessage): void {
         // Checked where it enters: a peer cheating would break the log of everyone, its history included
         if (!isChatText(message.payload)) {
-            if (!this.invalidAuthors.has(message.from)) {
-                this.invalidAuthors.add(message.from);
-                room.reportCheat(message, CheatReason.INVALID_MESSAGE);
-            }
+            this.reportInvalid(room, message);
             return;
         }
         const { id: messageId, text, at } = message.payload;
@@ -446,11 +485,49 @@ export class ChatComponent {
     }
 
     /**
-     * Whether a message shows, by the rate of its author on the chain: every page hides the same ones, the history
-     * included. The first one hidden is told once. A room without chain times nothing: its messages show
+     * A decision of the moderator: valid only when its author ordered its block, the same on every page, live or
+     * replayed, whoever hosts the room then. A host the room distrusts no longer orders it: the participant ordering the
+     * chain in its place moderates, a decision of that host refused and reported as a cheat, which every page flags
+     */
+    private onModeration(room: Room<ChatPayloads>, message: ChatModerationMessage): void {
+        const decision: unknown = message.payload;
+        if (!isChatDecision(decision) || message.from !== room.sequencedBy(message) || decision.target === message.from) {
+            this.reportInvalid(room, message);
+            return;
+        }
+
+        const time: number = room.sequencedAt(message) ?? Date.now();
+        const { moderation, changed } = moderateChat(this.moderation(), decision, time);
+        this.moderation.set(moderation);
+        if (!changed) {
+            return;
+        }
+        this.notice([{ id: this.ids.next().value, kind: ChatEntryKind.MODERATION, text: decisionText(decision, message.from, room.localPlayer.name), at: time }]);
+        // Every page refuses the participant removed, its own page giving the room up
+        if (decision.action === ChatModerationAction.REMOVE) {
+            room.exclude(decision.target);
+        }
+    }
+
+    /** Reports the first invalid message of an author only, the same on every page, rather than a report per message */
+    private reportInvalid(room: Room<ChatPayloads>, message: AppMessage): void {
+        if (!this.invalidAuthors.has(message.from)) {
+            this.invalidAuthors.add(message.from);
+            room.reportCheat(message, CheatReason.INVALID_MESSAGE);
+        }
+    }
+
+    /**
+     * Whether a message shows: hidden when its author is muted or removed, else by its rate on the chain, every page
+     * hiding the same ones, the history included. The first one hidden for its rate is told once; a message silenced
+     * is neither counted nor told. A room without chain times its messages and decisions as they arrive, by the clock
+     * of the page, and does not count the rates
      */
     private isAdmitted(room: Room<ChatPayloads>, message: ChatRoomMessage): boolean {
         const time: number | undefined = room.sequencedAt(message);
+        if (isSilenced(this.moderation(), message.from, time ?? Date.now())) {
+            return false;
+        }
         if (time === undefined) {
             return true;
         }
@@ -489,10 +566,13 @@ export class ChatComponent {
         if (this.hiddenAuthors().has(name)) {
             this.toggleAuthor(name);
         }
-        this.notice([{ id: this.ids.next().value, kind: ChatEntryKind.DEPARTURE, name, at: Date.now() }]);
+        // A participant removed leaves: its removal told it already, on every page, the ones replaying it included
+        if (!this.moderation().removed.has(name)) {
+            this.notice([{ id: this.ids.next().value, kind: ChatEntryKind.DEPARTURE, name, at: Date.now() }]);
+        }
     }
 
-    private notice(notices: ReadonlyArray<ChatNotice>): void {
+    private notice(notices: ReadonlyArray<ChatNotice | ChatModerationNotice>): void {
         if (notices.length > 0) {
             if (this.open() && this.atBottom()) {
                 this.scrollTarget = 'bottom';
