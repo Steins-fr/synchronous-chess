@@ -1,6 +1,7 @@
 {
   "author": "{author}:",
   "composer": {
+    "link": "Keine Links oder E-Mail-Adressen im Chat",
     "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}",
     "unsent": "Warte, bis deine Nachrichten gesendet sind, bevor du weitere sendest",
     "wait": "Warte {seconds, plural, one {# Sekunde} other {# Sekunden}}, bevor du eine weitere Nachricht sendest"
@@ -22,6 +23,7 @@
   "options": {
     "arrivals": "Kommen und Gehen anzeigen",
     "enterSends": "Mit Enter senden",
+    "hideOffensiveWords": "Anstößige Wörter ausblenden",
     "shownMessages": "Nachrichten anzeigen von",
     "times": "Uhrzeiten anzeigen"
   },

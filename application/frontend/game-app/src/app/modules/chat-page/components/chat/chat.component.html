@@ -78,6 +78,10 @@
             <mat-icon>{{ preferences.enterSends.on() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
             <span>{{ t('options.enterSends') }}</span>
         </button>
+        <button (click)="preferences.hideOffensiveWords.set(!preferences.hideOffensiveWords.on())" [attr.aria-checked]="preferences.hideOffensiveWords.on()" mat-menu-item role="menuitemcheckbox">
+            <mat-icon>{{ preferences.hideOffensiveWords.on() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+            <span>{{ t('options.hideOffensiveWords') }}</span>
+        </button>
         @if (otherPlayers().length > 0) {
         <mat-divider />
         <div [attr.aria-label]="t('options.shownMessages')" role="group">

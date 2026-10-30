@@ -1,6 +1,7 @@
 {
   "author": "{author}:",
   "composer": {
+    "link": "Bez linków i adresów e-mail na czacie",
     "tooLong": "Maksymalnie {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
     "unsent": "Poczekaj, aż twoje wiadomości zostaną wysłane, zanim wyślesz kolejne",
     "wait": "Poczekaj {seconds, plural, one {# sekundę} few {# sekundy} many {# sekund} other {# sekundy}} przed wysłaniem kolejnej wiadomości"
@@ -22,6 +23,7 @@
   "options": {
     "arrivals": "Pokazuj wejścia i wyjścia",
     "enterSends": "Wysyłaj Enterem",
+    "hideOffensiveWords": "Ukrywaj obraźliwe słowa",
     "shownMessages": "Pokazuj wiadomości od",
     "times": "Pokazuj godziny"
   },

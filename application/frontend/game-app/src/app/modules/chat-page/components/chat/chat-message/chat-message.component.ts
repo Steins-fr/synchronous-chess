@@ -1,5 +1,8 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
+import { maskOffensiveWords, OffensiveWords } from '@app/services/offensive-words/offensive-words';
+import { OffensiveWordsService } from '@app/services/offensive-words/offensive-words.service';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 export enum ChatEntryKind {
@@ -45,6 +48,9 @@ export interface ChatMessage {
     },
 })
 export class ChatMessageComponent {
+    private readonly preferences = inject(ChatPreferencesService);
+    private readonly offensiveWords = inject(OffensiveWordsService);
+
     public readonly message = input.required<Readonly<ChatMessage>>();
     /** The first message of a group: its author and its time show above it */
     public readonly startsGroup = input<boolean>(true);
@@ -56,4 +62,13 @@ export class ChatMessageComponent {
     public readonly retry = output<void>();
 
     protected readonly states = ChatMessageState;
+    /**
+     * The text shown, its offensive words masked while the setting hides them: computed once per message, the message
+     * keeping its text as written, which Retry sends again
+     */
+    protected readonly text = computed<string>(() => {
+        const text: string = this.message().text;
+        const words: OffensiveWords | undefined = this.offensiveWords.words();
+        return words !== undefined && this.preferences.hideOffensiveWords.on() ? maskOffensiveWords(text, words) : text;
+    });
 }

@@ -6,7 +6,9 @@ import { provideTranslocoMissingHandler, Translation, TranslocoTestingModule } f
 import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
 import { Language } from '@app/services/language/enums/language.enum';
 import { TranslationPath } from '@app/services/language/translation.loader';
+import { OffensiveWordsService } from '@app/services/offensive-words/offensive-words.service';
 import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
+import { OffensiveWordsMock } from '@testing/offensive-words.mock';
 import { VisitorPresenceMock } from '@testing/visitor-presence.mock';
 import { ThrowingMissingHandler } from '@testing/throwing-missing-handler';
 import enTranslation from './i18n/en.json';
@@ -167,6 +169,8 @@ const testProviders: (Provider | EnvironmentProviders)[] = [
     provideTranslocoMissingHandler(ThrowingMissingHandler),
     // A person on the pages, acting on them: the pages reach the APIs at once
     { provide: VisitorPresenceService, useFactory: (): VisitorPresenceMock => new VisitorPresenceMock() },
+    // The lists of the offensive words loaded, as the translations are: the chat masks at its first render
+    { provide: OffensiveWordsService, useFactory: (): OffensiveWordsMock => new OffensiveWordsMock() },
 ];
 
 export default testProviders;

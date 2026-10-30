@@ -274,7 +274,7 @@ describe('ChatComponent', () => {
         await setRoom();
         receive('remote', 'hello');
         await fixture.whenStable();
-        (await openOptions())[3].click();
+        (await openOptions())[4].click();
         await fixture.whenStable();
         expect(logLines()).toEqual(['No messages yet. Say hello!']);
 
@@ -369,6 +369,40 @@ describe('ChatComponent', () => {
 
         // Then
         expect(log().textContent).not.toContain('Not sent');
+        vi.useRealTimers();
+    });
+
+    test('should mask the offensive words of the messages, sending the text as written again', async () => {
+        // Given
+        // The delay of a message runs on an interval of RxJS
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+        receive('remote', 'fuck off');
+        await type('what the fuck');
+        sendButton().click();
+
+        // When
+        vi.advanceTimersByTime(15_000);
+        await fixture.whenStable();
+
+        // Then
+        expect(logLines()).toEqual(['remote: f*** off', 'local: what the f***']);
+        expect(log().textContent).toContain('Not sent');
+        expect(transmitSpy).toHaveBeenCalledTimes(1);
+        const retry: HTMLButtonElement = [...log().querySelectorAll('button')].find((button: HTMLButtonElement) => button.textContent.includes('Retry')) as HTMLButtonElement;
+
+        // When
+        retry.click();
+        await fixture.whenStable();
+
+        // Then: sent again as written, under the same id
+        expect(transmitSpy).toHaveBeenCalledTimes(2);
+        expect(transmitSpy).toHaveBeenNthCalledWith(2, ChatMessengerType.CHAT_MESSAGE, {
+            id: (transmitSpy.mock.calls[0][1] as ChatText).id,
+            text: 'what the fuck',
+            at: expect.any(Number),
+        });
         vi.useRealTimers();
     });
 
@@ -585,6 +619,21 @@ describe('ChatComponent', () => {
         // Then
         expect(transmitSpy).not.toHaveBeenCalled();
         expect(query('mat-error')?.textContent).toContain('1,000 characters at most');
+    });
+
+    test('should send no link nor e-mail address, telling why', async () => {
+        // Given
+        await setRoom();
+        const transmitSpy = vi.spyOn(room, 'transmitMessage').mockImplementation(() => undefined);
+
+        // When
+        await type('join me on https://example.fr');
+        sendButton().click();
+        await fixture.whenStable();
+
+        // Then
+        expect(transmitSpy).not.toHaveBeenCalled();
+        expect(query('mat-error')?.textContent).toContain('No link nor e-mail address in the chat');
     });
 
     test('should count the messages received while closed, and show them from the first one once open', async () => {
@@ -984,9 +1033,10 @@ describe('ChatComponent', () => {
             ['check_box', 'Show arrivals and departures', 'true'],
             ['check_box', 'Show the times', 'true'],
             ['check_box', 'Send with Enter', 'true'],
+            ['check_box', 'Hide offensive words', 'true'],
             ['check_box', 'remote', 'true'],
         ]);
-        items[3].click();
+        items[4].click();
         await fixture.whenStable();
 
         // Then
@@ -1003,7 +1053,7 @@ describe('ChatComponent', () => {
 
         // When
         items = await openOptions();
-        items[3].click();
+        items[4].click();
         await fixture.whenStable();
 
         // Then
@@ -1015,7 +1065,7 @@ describe('ChatComponent', () => {
         await setRoom();
 
         // When
-        for (let index = 0; index < 3; index++) {
+        for (let index = 0; index < 4; index++) {
             (await openOptions())[index].click();
             await fixture.whenStable();
         }
@@ -1024,7 +1074,8 @@ describe('ChatComponent', () => {
         expect(preferences.arrivals.on()).toEqual(false);
         expect(preferences.times.on()).toEqual(false);
         expect(preferences.enterSends.on()).toEqual(false);
-        expect((await openOptions()).map((item: HTMLButtonElement) => item.getAttribute('aria-checked'))).toEqual(['false', 'false', 'false']);
+        expect(preferences.hideOffensiveWords.on()).toEqual(false);
+        expect((await openOptions()).map((item: HTMLButtonElement) => item.getAttribute('aria-checked'))).toEqual(['false', 'false', 'false', 'false']);
     });
 
     test('should stop listening to a room replaced by another one', async () => {
@@ -1099,6 +1150,8 @@ describe('isChatText', () => {
         expect(isChatText({ id: 'x', text: 'a'.repeat(1001), at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: '', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: ' \n\t', at: 0 })).toEqual(false);
+        // A link sent around the composer
+        expect(isChatText({ id: 'x', text: 'see www.example.fr', at: 0 })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: '0' })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.NaN })).toEqual(false);
         expect(isChatText({ id: 'x', text: 'hi', at: Number.POSITIVE_INFINITY })).toEqual(false);

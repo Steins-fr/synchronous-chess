@@ -1,6 +1,7 @@
 {
   "author": "{author}:",
   "composer": {
+    "link": "No link nor e-mail address in the chat",
     "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most",
     "unsent": "Wait until your messages are sent before sending more",
     "wait": "Wait {seconds, plural, one {# second} other {# seconds}} before sending another message"
@@ -22,6 +23,7 @@
   "options": {
     "arrivals": "Show arrivals and departures",
     "enterSends": "Send with Enter",
+    "hideOffensiveWords": "Hide offensive words",
     "shownMessages": "Show the messages of",
     "times": "Show the times"
   },

@@ -25,6 +25,7 @@ export class ChatPreferencesService {
     public static readonly arrivalsKey: string = 'chat-arrivals';
     public static readonly timesKey: string = 'chat-times';
     public static readonly enterSendsKey: string = 'chat-enter-sends';
+    public static readonly hideOffensiveWordsKey: string = 'chat-hide-offensive-words';
     public static readonly coarsePointerQuery: string = '(pointer: coarse)';
 
     private readonly destroyRef = inject(DestroyRef);
@@ -42,6 +43,8 @@ export class ChatPreferencesService {
         ChatPreferencesService.enterSendsKey,
         !this.window.matchMedia(ChatPreferencesService.coarsePointerQuery).matches,
     );
+    /** The offensive words of the messages masked, each one its first letter then stars: the text sent stays as written */
+    public readonly hideOffensiveWords: ChatSetting = this.setting(ChatPreferencesService.hideOffensiveWordsKey, true);
 
     private setting(key: string, byDefault: boolean): ChatSetting {
         const read = (): boolean => {

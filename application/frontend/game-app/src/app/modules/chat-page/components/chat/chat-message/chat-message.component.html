@@ -11,7 +11,7 @@
 <p [class.chat-bubble-other]="!message().isSelf" [class.chat-bubble-self]="message().isSelf" [class.opacity-60]="message().state !== states.SENT"
     class="chat-bubble">
     <!-- The author of each message, for a screen reader: the group shows it once -->
-    <span class="sr-only">{{ 'chat.author' | transloco: { author: message().author } }} </span>{{ message().text }}</p>
+    <span class="sr-only">{{ 'chat.author' | transloco: { author: message().author } }} </span>{{ text() }}</p>
 @if (message().state === states.SENDING) {
 <span class="px-1 text-xs text-app-text-muted">{{ 'chat.log.sending' | transloco }}</span>
 } @else if (message().state === states.FAILED) {

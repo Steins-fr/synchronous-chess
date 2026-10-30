@@ -1,6 +1,7 @@
 {
   "author": "{author}:",
   "composer": {
+    "link": "Tautan dan alamat email tidak diizinkan di obrolan",
     "tooLong": "Maksimal {maxLength, plural, other {# karakter}}",
     "unsent": "Tunggu hingga pesan Anda terkirim sebelum mengirim lagi",
     "wait": "Tunggu {seconds, plural, other {# detik}} sebelum mengirim pesan lain"
@@ -22,6 +23,7 @@
   "options": {
     "arrivals": "Tampilkan yang masuk dan keluar",
     "enterSends": "Kirim dengan Enter",
+    "hideOffensiveWords": "Sembunyikan kata kasar",
     "shownMessages": "Tampilkan pesan dari",
     "times": "Tampilkan waktu"
   },
