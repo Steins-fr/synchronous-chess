@@ -5,7 +5,7 @@ import { TranslationScope } from '@app/services/language/enums/translation-scope
 import { TranslationLoader } from '@app/services/language/translation.loader';
 import { firstValueFrom } from 'rxjs';
 import { OffensiveWordList, offensiveWordLists, offensiveWords } from './offensive-word-lists';
-import { compileOffensiveWords, findOffensiveWords, maskOffensiveWords, OffensiveWordEntry, OffensiveWords, OffensiveWordSpan } from './offensive-words';
+import { compileOffensiveWords, maskOffensiveWords, OffensiveWordEntry, OffensiveWords } from './offensive-words';
 import { describe, expect, test } from 'vitest';
 
 // Lowercase letters and their marks, the words of a phrase separated by a space, a hyphen or an apostrophe, a stem last
@@ -28,9 +28,10 @@ const ORDINARY_WORDS: ReadonlyArray<string> = [
     'jajko, debil, syf, pierdoła, dupa, męki, pieprzyć, nowy tasak, tasakiem',
     'regina, pesce, fava, finocchio, vacca, figa, troika, cazzuola, Troia, scopare, le gote rosse, Verga, una verga, puttanesche',
     'Kike',
+    'Thanks Jack. Off to bed', 'good hand! Job done', 'I won the gang. Bang!', 's h i i t a k e', 'shiiitake',
 ];
 
-/** One offensive word or phrase of each list, in the order of the lists */
+/** One offensive word or phrase of each list, in the order of the lists, then the words the punctuation sets apart */
 const OFFENSIVE_SAMPLES: ReadonlyArray<[string, string]> = [
     ['fucking hell', 'f****** hell'],
     ['espèce de connard', 'espèce de c******'],
@@ -42,6 +43,8 @@ const OFFENSIVE_SAMPLES: ReadonlyArray<[string, string]> = [
     ['dasar bangsat', 'dasar b******'],
     ['o kurwa', 'o k****'],
     ['vaffanculo', 'v*********'],
+    ['whatever!Shit', 'whatever!S***'],
+    ['bitch@gmail.com', 'b****@gmail.com'],
 ];
 
 function wordOf(entry: OffensiveWordEntry): string {
@@ -109,7 +112,7 @@ describe('The lists of offensive words', () => {
             const bare: OffensiveWords = compileOffensiveWords([[wordOf(entry)]]);
             const allowed: OffensiveWords = compileOffensiveWords([[entry]]);
             return allowOf(entry).filter((word: string) =>
-                findOffensiveWords(word, bare).length === 0 || findOffensiveWords(word, allowed).length > 0);
+                maskOffensiveWords(word, bare) === word || maskOffensiveWords(word, allowed) !== word);
         });
 
         // Then
@@ -138,7 +141,7 @@ describe('The lists of offensive words', () => {
             firstValueFrom(loader.getTranslation(`${ folder }${ language }`))))).flatMap(flatten);
 
         // When
-        const masked: ReadonlyArray<string> = texts.filter((text: string) => findOffensiveWords(text, offensiveWords).length > 0);
+        const masked: ReadonlyArray<string> = texts.filter((text: string) => maskOffensiveWords(text, offensiveWords) !== text);
 
         // Then
         expect(masked).toEqual([]);
@@ -146,10 +149,10 @@ describe('The lists of offensive words', () => {
 
     test('no ordinary word should be masked', () => {
         // When
-        const masked: ReadonlyArray<ReadonlyArray<OffensiveWordSpan>> = ORDINARY_WORDS.map((text: string) => findOffensiveWords(text, offensiveWords));
+        const masked: ReadonlyArray<string> = ORDINARY_WORDS.filter((text: string) => maskOffensiveWords(text, offensiveWords) !== text);
 
         // Then
-        expect(masked).toEqual(ORDINARY_WORDS.map(() => []));
+        expect(masked).toEqual([]);
     });
 
     test('an offensive word of each list should be masked', () => {

@@ -73,18 +73,26 @@ SOFTWARE.
 - Lowercase NFC, with the diacritics of the language (`coño`, `scheiß*`, `gówno`, `enculé*`): a text may drop them
   (`cono`, `gowno`), not add nor change them (`şık` is not `sik`). No digit, symbol nor emoji, 3 letters at least: the
   matcher reads the leet (`sh1t`), the repeated letters (`fuuuck`) and the words spelled out (`f.u.c.k`) by itself.
+- The leet: a digit or a `$` is a letter in a word holding a real letter (`sh1t`, `a$$hole`, not `100`), a `!` between
+  two letters only, the next one lowercase (`f!ck`, but `whatever!Shit` ends a sentence). `@` is a separator, never a
+  letter: `bitch@gmail.com` masks `bitch` only.
 - An entry matches whole words only: `cock` does not mask `cocktail`, nor `fag` the Polish `fagot`. Spelled out, the
   same: `c.o.c.k.t.a.i.l` is not masked.
 - A phrase separates its words by a space (`fils de pute`). A hyphen or an apostrophe is a separator too, in the
   entries as in the texts: `foda-se` matches `foda se`, `dolboy'eb` matches `dolboy eb`, and `dolboyeb` is listed
-  apart. The separators of a text between the words of a phrase can be anything.
+  apart. The separators of a text between the words of a phrase can be anything but the end of a sentence or a line:
+  a space, a comma, a hyphen, an apostrophe or a quote keeps the phrase (`fils, de pute`), a `.`, `!`, `?`, `;`, `:`,
+  `…` (or their fullwidth forms) or a line break ends it (`Thanks Jack. Off to bed` is not `jack off`).
 - A trailing `*` marks a stem of 3 letters at least: it matches every word starting with it (`fuck*`: fucking,
   fucker). A stem is allowed only when no ordinary word of the eleven languages (en, fr, es, pt, de, ru, tr, id, pl,
   it) starts with it, else its forms are listed (`salope`, `salopes`, not `salop*`: salopette).
 - `{ "word": "shit*", "allow": ["shiitake", "shitake"] }` keeps the words the entry would otherwise mask: the
   ordinary continuation of a stem (`puttan*` and `puttanesca`), or the form without diacritics of an entry that is an
-  ordinary word elsewhere (`pédé` and the Portuguese `pede`). An allow-word keeps the matched words starting with it,
-  as written, lowercased: `shiitake` keeps `shiitakes` and `Shiitakepilze`.
+  ordinary word elsewhere (`pédé` and the Portuguese `pede`). An allow-word keeps the whole words starting with it, a
+  word spelled out included, read as the matcher reads them (the case, the leet, the compatibility forms, the separators
+  and invisible characters dropped, a repeated letter as long as in the allow-word or longer) but with their diacritics:
+  `shiitake` keeps `shiitakes`, `Shiitakepilze`, `shiiitake` and `s h i i t a k e`; `pede` keeps `PEDE`, not `pédé`;
+  `fodder` does not keep `foder`.
 - The words are sorted (code point order), one entry per line. An exact entry already matched by a stem of any list
   is left out. The same word in two languages stays in both (`puta` in `es` and `pt`).
 
@@ -132,4 +140,5 @@ The filter is a courtesy to the readers, not a guarantee. It misses, on purpose:
 - the homoglyphs of another script (a Cyrillic `с` in `fuсk`);
 - the diacritics added to a word (`fúck`, `shít`): a text may drop the diacritics of an entry, not add one;
 - the French and Italian elisions written without their apostrophe (`lenculé`): `l'enculé` is matched;
+- a `!` written for a letter before a capital (`F!CK`): it reads as the end of a sentence (`whatever!Shit`);
 - the new slang and the spellings the lists do not have.

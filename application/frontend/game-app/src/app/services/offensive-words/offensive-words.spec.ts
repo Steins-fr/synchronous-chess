@@ -1,9 +1,9 @@
-import { compileOffensiveWords, findOffensiveWords, maskOffensiveWords, OffensiveWords } from './offensive-words';
+import { compileOffensiveWords, maskOffensiveWords, OffensiveWords } from './offensive-words';
 import { describe, expect, test } from 'vitest';
 
 const WORDS: OffensiveWords = compileOffensiveWords([
     ['fuck*', 'cum', 'ass', 'asshole*', 'cock', 'cunt*', { word: 'shit*', allow: ['shiitake'] }],
-    ['fils de pute', 'pute', 'salope'],
+    ['fils de pute', 'pute', 'salope', { word: 'pédé', allow: ['pede'] }],
     ['coño', 'puta'],
     ['puta', 'merda'],
     ['scheiße', { word: 'fick*', allow: ['fickle'] }],
@@ -46,12 +46,42 @@ describe('maskOffensiveWords', () => {
         expect(masked('shiitakes', 'Shiitakepilze', 'shi\u00ADitake', 'shitakes')).toEqual(['shiitakes', 'Shiitakepilze', 'shi\u00ADitake', 's*******']);
     });
 
+    test('should fold the words as the matching does to compare them with the allow-words', () => {
+        expect(masked('shiiitake', 'ＳＨＩＩＴＡＫＥ', 'sh1itake', '$hiitake')).toEqual(['shiiitake', 'ＳＨＩＩＴＡＫＥ', 'sh1itake', '$hiitake']);
+    });
+
+    test('should keep the diacritics of the words compared with the allow-words', () => {
+        expect(masked('pede', 'PEDE', 'pédé', 'PÉDÉ', 'pe\u0301de\u0301')).toEqual(['pede', 'PEDE', 'p***', 'P***', 'p***']);
+    });
+
+    test('should leave the words bearing the diacritics of an allow-word only', () => {
+        // Given
+        const words: OffensiveWords = compileOffensiveWords([[{ word: 'cul*', allow: ['culé'] }]]);
+
+        // When / Then
+        expect(['culé', 'Culés', 'cule', 'culè'].map((text: string) => maskOffensiveWords(text, words))).toEqual(['culé', 'Culés', 'c***', 'c***']);
+    });
+
+    test('should compare all the letters of a word spelled out with the allow-words', () => {
+        expect(masked('s h i i t a k e', 's.h.i.i.t.a.k.e', 's h i t t y')).toEqual(['s h i i t a k e', 's.h.i.i.t.a.k.e', 's * * * * y']);
+    });
+
     test('should match the lists sharing a word', () => {
         expect(masked('puta', 'merda')).toEqual(['p***', 'm****']);
     });
 
     test('should mask a phrase word by word, whatever separates its words', () => {
         expect(masked('fils de pute', 'fils, de pute', 'Fils-de-pute')).toEqual(['f*** d* p***', 'f***, d* p***', 'F***-d*-p***']);
+    });
+
+    test('should not match a phrase across the end of a sentence or a line', () => {
+        expect(masked('fils. de pute', 'fils de! pute', 'fils de? pute', 'fils de; pute', 'fils de: pute', 'fils de… pute', 'fils de\npute', 'fils de。pute'))
+            .toEqual(['fils. de p***', 'fils de! p***', 'fils de? p***', 'fils de; p***', 'fils de: p***', 'fils de… p***', 'fils de\np***', 'fils de。p***']);
+    });
+
+    test('should match a phrase across quotes and apostrophes', () => {
+        expect(masked('fils « de » pute', 'fils "de" pute', "fils 'de' pute", 'fils de pute. Fils de pute'))
+            .toEqual(['f*** « d* » p***', 'f*** "d*" p***', "f*** 'd*' p***", 'f*** d* p***. F*** d* p***']);
     });
 
     test('should not match a phrase missing a word', () => {
@@ -64,6 +94,11 @@ describe('maskOffensiveWords', () => {
 
         // When / Then
         expect(maskOffensiveWords('aa bb cc dd', words)).toEqual('a* b* c* d*');
+        expect(maskOffensiveWords('xx aa bb xx', words)).toEqual('xx a* b* xx');
+    });
+
+    test('should mask every word and phrase of a text', () => {
+        expect(masked('shit, then f u c k and fils de pute')).toEqual(['s***, then f * * * and f*** d* p***']);
     });
 
     test('should match a text dropping the diacritics of an entry, never adding nor changing them', () => {
@@ -98,11 +133,15 @@ describe('maskOffensiveWords', () => {
     });
 
     test('should read the digits and symbols written for letters inside a word', () => {
-        expect(masked('sh1t', '$hit', 'a$$hole', 'f!ck', 'Fu@k', '5h17')).toEqual(['s***', '$***', 'a******', 'f***', 'Fu@k', '5***']);
+        expect(masked('sh1t', '$hit', 'a$$hole', 'f!ck', 'sh!t', '5h17')).toEqual(['s***', '$***', 'a******', 'f***', 's***', '5***']);
     });
 
     test('should leave the digits and symbols out of a word', () => {
         expect(masked('5 minutes', 'h3ll0', '100', 'shit!', '!fuck', '@fuck', 'f!!ck')).toEqual(['5 minutes', 'h3ll0', '100', 's***!', '!f***', '@f***', 'f!!ck']);
+    });
+
+    test('should read an exclamation mark before a capital as the end of a sentence, and an at sign as a separator', () => {
+        expect(masked('whatever!Shit', 'F!CK', 'Fu@k', 'fuck@mail.com')).toEqual(['whatever!S***', 'F!CK', 'Fu@k', 'f***@mail.com']);
     });
 
     test('should read repeated letters as one, never fewer letters than the entry', () => {
@@ -130,7 +169,7 @@ describe('maskOffensiveWords', () => {
     });
 
     test('should keep the emojis around a word', () => {
-        expect(masked('fuck❤️', '👨‍👩‍👧 fuck', '3️⃣ fuck')).toEqual(['f***❤️', '👨‍👩‍👧 f***', '3️⃣ f***']);
+        expect(masked('fuck❤️', '👨‍👩‍👧 fuck', '3️⃣ fuck', '😀 fuck')).toEqual(['f***❤️', '👨‍👩‍👧 f***', '3️⃣ f***', '😀 f***']);
     });
 
     test('should read an apostrophe as a separator', () => {
@@ -153,32 +192,5 @@ describe('maskOffensiveWords', () => {
         // When / Then
         expect(maskOffensiveWords(letters, WORDS)).toEqual(letters);
         expect(maskOffensiveWords(words, WORDS)).toEqual('f*** d* p*** s***** '.repeat(50));
-    });
-});
-
-describe('findOffensiveWords', () => {
-    test('should give the spans in the text as written, across an astral character', () => {
-        expect(findOffensiveWords('😀 fuck', WORDS)).toEqual([{ start: 3, end: 7 }]);
-    });
-
-    test('should give sorted and disjoint spans', () => {
-        expect(findOffensiveWords('shit, then f u c k and fils de pute', WORDS)).toEqual([
-            { start: 0, end: 4 },
-            { start: 11, end: 18 },
-            { start: 23, end: 35 },
-        ]);
-    });
-
-    test('should give the union of every match, from every word', () => {
-        // Given
-        const words: OffensiveWords = compileOffensiveWords([['a b', 'b c d']]);
-
-        // When / Then
-        expect(findOffensiveWords('a b c d', words)).toEqual([{ start: 0, end: 7 }]);
-        expect(findOffensiveWords('x a b x', words)).toEqual([{ start: 2, end: 5 }]);
-    });
-
-    test('should give none when nothing matches', () => {
-        expect(findOffensiveWords('a friendly game', WORDS)).toEqual([]);
     });
 });

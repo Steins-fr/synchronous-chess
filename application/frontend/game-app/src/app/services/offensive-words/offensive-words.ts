@@ -1,16 +1,10 @@
 /**
  * An entry of a list: lowercase NFC, with the diacritics of its language. Its words are separated by spaces (a hyphen or
  * an apostrophe is a separator too), a trailing `*` makes its last word a stem, and `allow` lists the words it must not
- * mask, with every word starting with them: the text matched, lowercased in NFC (`shit*` allowing `shiitake`, so
- * `shiitakes` too)
+ * mask, with every word starting with them: the whole words matched, folded as the matching folds them but keeping their
+ * diacritics (`shit*` allowing `shiitake`, so `shiitakes` and `sh1iitake` too; `pédé` allowing `pede`, not `pédé`)
  */
 export type OffensiveWordEntry = string | { readonly word: string; readonly allow: ReadonlyArray<string> };
-
-/** Where an offensive word or phrase lies in a text, in UTF-16 code units of the text as written */
-export interface OffensiveWordSpan {
-    readonly start: number;
-    readonly end: number;
-}
 
 /** The lists compiled for the matching: opaque to the app */
 export interface OffensiveWords {
@@ -57,7 +51,8 @@ interface Word {
 
 interface Pattern {
     readonly words: ReadonlyArray<ReadonlyArray<Readonly<Run>>>;
-    readonly allow: ReadonlyArray<string>;
+    /** The runs of its allow-words, their words joined */
+    readonly allow: ReadonlyArray<ReadonlyArray<Readonly<Run>>>;
 }
 
 /** The units a match covers, word by word */
@@ -67,7 +62,7 @@ enum CharKind {
     LETTER = 'letter',
     /** A digit or a symbol written for a letter, inside a word holding a real letter */
     LEET = 'leet',
-    /** A symbol written for a letter, between two letters only */
+    /** A symbol written for a letter, between two letters only, the next one lowercase */
     INNER_LEET = 'inner-leet',
     /** A mark or an invisible format character, attached to the letter before it */
     MARK = 'mark',
@@ -89,17 +84,20 @@ interface CodePoint {
 }
 
 const LETTER = /\p{L}/u;
+const LOWERCASE = /\p{Ll}/u;
 const MARK = /\p{M}/u;
 const ATTACHED = /[\p{M}\p{Cf}]/u;
-const INVISIBLE = /\p{Cf}/gu;
+// Sentence punctuation, or a line break: what a phrase never crosses (`Thanks Jack. Off to bed`)
+const SENTENCE_END = /[.!?;:…\n。．！？；：]/u;
 /** One code point, a line break excluded: what separates the letters of a word spelled out */
 const SPELLING_SEPARATOR = /^.$/u;
 /** The single letters spelling a word out, at least */
 const SPELLED_LETTERS: number = 3;
 
 const LEET_LETTERS: ReadonlyMap<string, string> = new Map([['0', 'o'], ['1', 'i'], ['3', 'e'], ['4', 'a'], ['5', 's'], ['7', 't'], ['$', 's']]);
-// Between two letters only: `f!ck`, but `shit!` and `@bob`
-const INNER_LEET_LETTERS: ReadonlyMap<string, string> = new Map([['!', 'i'], ['@', 'a']]);
+// Between two letters only, the next one lowercase: `f!ck`, but `shit!`, `!fuck` and the sentence `whatever!Shit`. Not `@`,
+// which glues an address (`bitch@gmail.com`)
+const INNER_LEET_LETTERS: ReadonlyMap<string, string> = new Map([['!', 'i']]);
 
 /** The letters NFKD does not fold, by their lowercase form */
 const SPECIAL_LETTERS: ReadonlyMap<string, ReadonlyArray<Letter>> = new Map<string, ReadonlyArray<Letter>>([
@@ -163,7 +161,8 @@ function resolveLeet(points: ReadonlyArray<CodePoint>): void {
 function resolveInnerLeet(points: ReadonlyArray<CodePoint>): void {
     points.forEach((point: CodePoint, index: number) => {
         if (point.kind === CharKind.INNER_LEET) {
-            const between: boolean = points[index - 1]?.kind === CharKind.LETTER && points[index + 1]?.kind === CharKind.LETTER;
+            const next: CodePoint | undefined = points[index + 1];
+            const between: boolean = points[index - 1]?.kind === CharKind.LETTER && next?.kind === CharKind.LETTER && LOWERCASE.test(next.char);
             point.kind = between ? CharKind.LETTER : CharKind.SEPARATOR;
         }
     });
@@ -292,7 +291,7 @@ export function compileOffensiveWords(lists: ReadonlyArray<ReadonlyArray<Offensi
         const keys: ReadonlyArray<string> = words.map((runs: ReadonlyArray<Readonly<Run>>) => keyOf(runs));
         const key: string = keys.join(' ');
         const patterns: Map<string, Pattern[]> = stem ? stems : exact;
-        patterns.set(key, [...patterns.get(key) ?? [], { words, allow }]);
+        patterns.set(key, [...patterns.get(key) ?? [], { words, allow: allow.map((allowed: string) => runsOf(unitsOf(allowed).flat())) }]);
         keys.slice(1).forEach((_, index: number) => prefixes.add(keys.slice(0, index + 1).join(' ')));
         longestStem = stem ? Math.max(longestStem, last.length) : longestStem;
         longestWord = words.length === 1 ? Math.max(longestWord, last.length) : longestWord;
@@ -310,15 +309,31 @@ function fitsRun(run: Readonly<Run>, pattern: Readonly<Run>): boolean {
 }
 
 /**
- * Whether a pattern matches words of a text, of the same key: a stem on the first runs of its last word. Not the words
- * starting with an allow-word, as written, without their invisible characters (a soft hyphen)
+ * A run of a text written as a run of an allow-word: the same letter, as long or longer, bearing the same diacritics
+ * (`shiiitake` starts with `shiitake`, `foder` not with `fodder`, nor `pédé` with `pede`)
  */
-function accepts(pattern: Pattern, words: ReadonlyArray<Word>, match: Match, text: string): boolean {
-    const fits: boolean = pattern.words.every((runs: ReadonlyArray<Readonly<Run>>, index: number) =>
-        runs.every((run: Readonly<Run>, position: number) => fitsRun(words[index].runs[position], run)));
-    const { start, end }: OffensiveWordSpan = spanOf(match);
-    const written: string = text.slice(start, end).replaceAll(INVISIBLE, '').normalize('NFC').toLowerCase();
-    return fits && !pattern.allow.some((allowed: string) => written.startsWith(allowed));
+function writesRun(run: Readonly<Run>, allowed: Readonly<Run>): boolean {
+    return run.base === allowed.base && run.count >= allowed.count
+        && run.forms.size === allowed.forms.size && [...run.forms].every((form: string) => allowed.forms.has(form));
+}
+
+/**
+ * Whether words of a text start with an allow-word of a pattern: the whole words the pattern is tried on, a word spelled
+ * out included, folded (case, leet, compatibility forms, repeated letters) and joined, their diacritics kept
+ */
+function allows(pattern: Pattern, words: ReadonlyArray<Word>): boolean {
+    if (pattern.allow.length === 0) {
+        return false;
+    }
+    const runs: ReadonlyArray<Readonly<Run>> = runsOf(words.flatMap((word: Word) => word.units));
+    return pattern.allow.some((allowed: ReadonlyArray<Readonly<Run>>) =>
+        runs.length >= allowed.length && allowed.every((run: Readonly<Run>, index: number) => writesRun(runs[index], run)));
+}
+
+/** Whether a pattern matches words of a text, of the same key: a stem on the first runs of its last word */
+function accepts(pattern: Pattern, words: ReadonlyArray<Word>): boolean {
+    return pattern.words.every((runs: ReadonlyArray<Readonly<Run>>, index: number) =>
+        runs.every((run: Readonly<Run>, position: number) => fitsRun(words[index].runs[position], run))) && !allows(pattern, words);
 }
 
 function patternsOf(patterns: ReadonlyMap<string, ReadonlyArray<Pattern>>, key: string): ReadonlyArray<Pattern> {
@@ -334,16 +349,26 @@ function candidatesOf(words: OffensiveWords, prefix: string, last: Word): Readon
     ];
 }
 
-/** The words and phrases starting at a word of a text, whatever separates their words */
+/** Whether the separators between two words of a text end a sentence */
+function endsSentence(text: string, previous: Word, next: Word): boolean {
+    return SENTENCE_END.test(text.slice((previous.units.at(-1) as Unit).end, next.units[0].start));
+}
+
+/**
+ * The words and phrases starting at a word of a text, whatever separates their words (a space, a comma, a hyphen, a
+ * quote), but the end of a sentence
+ */
 function matchesAt(text: string, textWords: ReadonlyArray<Word>, first: number, words: OffensiveWords): ReadonlyArray<Match> {
     const matches: Match[] = [];
     let prefix = '';
     for (let end = first + 1; end <= textWords.length; end++) {
         const phrase: ReadonlyArray<Word> = textWords.slice(first, end);
         const last: Word = textWords[end - 1];
-        const match: Match = phrase.map((word: Word) => word.units);
-        if (candidatesOf(words, prefix, last).some((pattern: Pattern) => accepts(pattern, phrase, match, text))) {
-            matches.push(match);
+        if (end > first + 1 && endsSentence(text, textWords[end - 2], last)) {
+            break;
+        }
+        if (candidatesOf(words, prefix, last).some((pattern: Pattern) => accepts(pattern, phrase))) {
+            matches.push(phrase.map((word: Word) => word.units));
         }
         prefix += last.key;
         if (!words.prefixes.has(prefix)) {
@@ -356,16 +381,17 @@ function matchesAt(text: string, textWords: ReadonlyArray<Word>, first: number, 
 
 /**
  * The single word starting a word spelled out: its letters only, `f u c k you` and not `c l a s s`. A stem on its first
- * letters, an exact entry on all of them: `c.u.m.u.l.a.t.i.v.e` is not `cum`
+ * letters, an exact entry on all of them: `c.u.m.u.l.a.t.i.v.e` is not `cum`. The allow-words apply to all its letters:
+ * `s h i i t a k e` is not `shit`
  */
-function matchesSpelled(text: string, spelled: Word, words: OffensiveWords): ReadonlyArray<Match> {
+function matchesSpelled(spelled: Word, words: OffensiveWords): ReadonlyArray<Match> {
     const lengths: ReadonlyArray<number> = Array.from({ length: Math.min(spelled.runs.length, words.longestWord) }, (_, index: number) => index + 1);
     return lengths.flatMap((length: number) => {
         const key: string = keyOf(spelled.runs.slice(0, length));
         const match: Match = [spelled.units.slice(0, spelled.runs[length - 1].units)];
         const exact: ReadonlyArray<Pattern> = length === spelled.runs.length ? patternsOf(words.exact, key) : [];
         const patterns: ReadonlyArray<Pattern> = [...exact, ...patternsOf(words.stems, key)];
-        return patterns.some((pattern: Pattern) => accepts(pattern, [spelled], match, text)) ? [match] : [];
+        return patterns.some((pattern: Pattern) => accepts(pattern, [spelled])) ? [match] : [];
     });
 }
 
@@ -374,27 +400,8 @@ function matchesOf(text: string, words: OffensiveWords): ReadonlyArray<Match> {
     const { words: textWords, spelled } = wordsOf(text);
     return [
         ...textWords.flatMap((_, first: number) => matchesAt(text, textWords, first, words)),
-        ...spelled.flatMap((word: Word) => matchesSpelled(text, word, words)),
+        ...spelled.flatMap((word: Word) => matchesSpelled(word, words)),
     ];
-}
-
-function spanOf(match: Match): OffensiveWordSpan {
-    const units: ReadonlyArray<Unit> = match.flat();
-    return { start: units[0].start, end: (units.at(-1) as Unit).end };
-}
-
-/** Where the offensive words and phrases of a text lie: sorted, disjoint, the union of every match */
-export function findOffensiveWords(text: string, words: OffensiveWords): ReadonlyArray<OffensiveWordSpan> {
-    const spans: OffensiveWordSpan[] = [];
-    for (const span of matchesOf(text, words).map((match: Match) => spanOf(match)).sort((a: OffensiveWordSpan, b: OffensiveWordSpan) => a.start - b.start)) {
-        const last: OffensiveWordSpan | undefined = spans.at(-1);
-        if (last && span.start <= last.end) {
-            spans[spans.length - 1] = { start: last.start, end: Math.max(last.end, span.end) };
-        } else {
-            spans.push(span);
-        }
-    }
-    return spans;
 }
 
 /**
