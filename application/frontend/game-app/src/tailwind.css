@@ -65,9 +65,10 @@
     @apply m-0 text-center font-medium;
 }
 
-/* A seat of a table of two players: its player, its chips and its buttons, on two rows kept on a phone */
+/* A seat of a table of two players: its player, its chips and its buttons, on two rows kept on a phone. The height of
+   a button kept, shown or not: a button (2.5rem) within the padding and the border */
 @utility table-seat {
-    @apply relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-14 max-sm:min-h-[5.75rem] max-sm:content-start px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised;
+    @apply relative flex flex-wrap items-center gap-x-3 gap-y-1 min-h-[calc(2.5rem+1rem+2px)] max-sm:min-h-[5.75rem] max-sm:content-start px-3 py-2 rounded-xl border border-app-border bg-app-surface-raised;
 }
 
 /* What a table of two players waits for, always there: two lines kept on a phone */
