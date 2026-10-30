@@ -39,8 +39,11 @@ describe('SyncChessGameComponent', () => {
         return TestHelper.cast<{ gameSession(): SynchronousChessGameSession }>(component).gameSession();
     }
 
+    // The texts of its children apart: the player of a seat, then its button
     function text(selector: string): string {
-        return (fixture.nativeElement.querySelector(selector)?.textContent ?? '').replace(/\s+/g, ' ').trim();
+        const element: Element | null = fixture.nativeElement.querySelector(selector);
+        return [...element?.childNodes ?? []].filter((node: ChildNode) => node.nodeType !== Node.COMMENT_NODE)
+            .map((node: ChildNode) => node.textContent).join(' ').replace(/\s+/g, ' ').trim();
     }
 
     function skipButton(color: 'black' | 'white'): HTMLButtonElement | null {
@@ -143,7 +146,7 @@ describe('SyncChessGameComponent', () => {
         expect(seatButtons('white')).toEqual([]);
         expect(seatButtons('black')).toEqual([]);
         expect(fixture.nativeElement.textContent).toContain('Turn: Synchronous');
-        expect(text('.player-information.black-player')).toContain('nonewaiting');
+        expect(text('.player-information.black-player')).toContain('none waiting');
         expect(skipButton('white')).toBeNull();
         expect(skipButton('black')).toBeNull();
         expect(component.moveColor()).toEqual(PieceColor.NONE);
