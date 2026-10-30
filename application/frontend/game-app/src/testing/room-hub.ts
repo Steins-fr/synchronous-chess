@@ -22,6 +22,12 @@ export class RoomHub<M extends object> {
     /** The participants whose messages wait, as a page waiting for the chain before its message comes after it */
     private readonly holding = new Set<string>();
     public readonly held: AppMessage[] = [];
+    /** The participant ordering the next messages: none by default, a spec reading who ordered a message sets it */
+    public readonly sequencer = signal<string | undefined>(undefined);
+    /** The chain time stamped on the next messages, as the sequencer orders them */
+    public time: number = 0;
+    /** When each message delivered was ordered, and by whom once a sequencer is set: the same in every room, replayed too */
+    private readonly stamps = new WeakMap<AppMessage, { readonly time: number; readonly sequencer: string | undefined }>();
 
     /**
      * @param tamper changes a message of a participant before the chain orders it, as a cheating client would
@@ -37,6 +43,9 @@ export class RoomHub<M extends object> {
             transmitMessage: (type: string, payload: unknown) => this.transmit(tamper({ from: name, type, payload })),
             reportCheat: (message: AppMessage, reason: CheatReason) => this.reports.push([name, message, reason]),
             isHistory: (message: AppMessage) => history.has(message),
+            sequencer: this.sequencer.asReadonly(),
+            sequencedAt: (message: AppMessage) => this.stamps.get(message)?.time,
+            sequencedBy: (message: AppMessage) => this.stamps.get(message)?.sequencer,
         });
         this.rooms.set(room, { messages, history });
         this.players.update((players) => players.some((player) => player.name === name) ? players : [...players, TestHelper.cast<Player>({ name })]);
@@ -81,6 +90,7 @@ export class RoomHub<M extends object> {
 
         this.delivering = true;
         for (let next = this.queue.shift(); next; next = this.queue.shift()) {
+            this.stamps.set(next, { time: this.time, sequencer: this.sequencer() });
             this.delivered.push(next);
             this.rooms.forEach(({ messages }) => messages.next(next));
         }

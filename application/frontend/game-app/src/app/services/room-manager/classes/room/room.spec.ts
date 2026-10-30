@@ -41,6 +41,7 @@ describe('Room', () => {
         expect(room.initiator).toEqual(true);
         expect(room.roomName).toEqual('room');
         expect(room.hostName).toEqual('host');
+        expect(room.sequencer()).toEqual('host');
         expect(room.players()).toEqual([network.localPlayer]);
         expect(room.queue()).toEqual(['pending']);
     });
@@ -91,6 +92,8 @@ describe('Room', () => {
         expect(moves).toEqual([{ type: 'move', payload: 'e4', origin: MessageOriginType.ROOM_SERVICE, from: 'remote' }]);
         expect(room.isHistory(moves[0])).toEqual(false);
         expect(room.sequencedAt(moves[0])).toBeUndefined();
+        // Without block chain, the host orders every message
+        expect(room.sequencedBy(moves[0])).toEqual('host');
     });
 
     test('reportCheat should only log, without anti-cheat', () => {

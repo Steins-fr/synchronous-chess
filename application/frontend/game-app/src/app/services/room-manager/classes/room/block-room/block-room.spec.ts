@@ -168,7 +168,7 @@ describe('BlockRoom', () => {
         expect(() => room.transmitMessage(TestHelper.cast<'move'>('unknown'), 'e4')).toThrow('No block chain routes the unknown messages');
     });
 
-    test('notifyMessage should publish the message of the block, telling whether it is history', () => {
+    test('notifyMessage should publish the message of the block, telling whether it is history, when and by whom it was ordered', () => {
         // Given
         const room: BlockRoom<TestPayloads> = createRoom();
         const data: AppMessage = { from: 'remote', type: 'move', payload: 'd5' };
@@ -178,7 +178,7 @@ describe('BlockRoom', () => {
 
         // When
         room.notifyMessage(BlockChainName.CHESS, new Block(1, 'previous', { id: 'id', data, signature: 'signature' }, 'local', 1000, 'hash', 'signature'), true);
-        room.notifyMessage(BlockChainName.CHESS, new Block(2, 'hash', { id: 'id2', data: liveData, signature: 'signature' }, 'local', 2000, 'hash2', 'signature'), false);
+        room.notifyMessage(BlockChainName.CHESS, new Block(2, 'hash', { id: 'id2', data: liveData, signature: 'signature' }, 'b', 2000, 'hash2', 'signature'), false);
 
         // Then
         expect(moves).toEqual([data, liveData]);
@@ -188,6 +188,9 @@ describe('BlockRoom', () => {
         expect(room.sequencedAt(data)).toEqual(1000);
         expect(room.sequencedAt(liveData)).toEqual(2000);
         expect(room.sequencedAt({ ...data })).toBeUndefined();
+        expect(room.sequencedBy(data)).toEqual('local');
+        expect(room.sequencedBy(liveData)).toEqual('b');
+        expect(room.sequencedBy({ ...data })).toBeUndefined();
     });
 
     test('should dispatch the network messages to the participants, the anti-cheat or their block chain', () => {
@@ -258,7 +261,7 @@ describe('BlockRoom', () => {
         network = new RoomNetworkMock('local', false, 'host');
         const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
         vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
-        createRoom();
+        const room: BlockRoom<TestPayloads> = createRoom();
         const b: Player = createRemote('b');
         ['host', 'c'].forEach((name: string) => network.playerAdded$.next(createRemote(name)));
         network.playerAdded$.next(b);
@@ -277,6 +280,7 @@ describe('BlockRoom', () => {
 
         // Then the state of a participant who left does not count
         expect(changeSequencerSpy).not.toHaveBeenCalled();
+        expect(room.sequencer()).toEqual('host');
 
         // When b comes back and tells it again
         network.playerAdded$.next(b);
@@ -285,6 +289,7 @@ describe('BlockRoom', () => {
 
         // Then
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+        expect(room.sequencer()).toEqual('b');
         expect(TimedLogger.warn).toHaveBeenCalledWith('Most of the participants follow b, after 1 handovers');
     });
 
@@ -304,11 +309,14 @@ describe('BlockRoom', () => {
         network.playerRemoved$.next(host);
         connectedParticipants('b', ['host', 'local']);
         const whileConnected: number = changeSequencerSpy.mock.calls.length;
+        const sequencerWhileConnected: string = room.sequencer();
         // Then b loses it too
         connectedParticipants('b', ['local']);
 
         // Then
         expect(whileConnected).toEqual(0);
+        expect(sequencerWhileConnected).toEqual('host');
+        expect(room.sequencer()).toEqual('b');
         expect(room.players()).toEqual([network.localPlayer, other]);
         expect(onParticipantLeftSpy.mock.calls).toEqual([['host'], ['host']]);
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
@@ -325,7 +333,7 @@ describe('BlockRoom', () => {
         vi.spyOn(SequencedBlockChain.prototype, 'onParticipantLeft').mockImplementation(() => undefined);
         const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
         vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
-        createRoom();
+        const room: BlockRoom<TestPayloads> = createRoom();
         const host: Player = createRemote('host');
         const c: Player = createRemote('c');
         [host, c, createRemote('z')].forEach((player: Player) => network.playerAdded$.next(player));
@@ -343,6 +351,7 @@ describe('BlockRoom', () => {
 
         // Then
         expect(changeSequencerSpy.mock.calls).toEqual([['c'], ['c'], ['local'], ['local']]);
+        expect(room.sequencer()).toEqual('local');
         expect(network.changeHost.mock.calls).toEqual([['local']]);
         expect(network.removeFromRoom.mock.calls).toEqual([['host'], ['c']]);
     });
@@ -705,7 +714,7 @@ describe('BlockRoom', () => {
         // Given
         network = new RoomNetworkMock('local', false, 'host');
         const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
-        createRoom();
+        const room: BlockRoom<TestPayloads> = createRoom();
         ['host', 'b', 'c'].forEach((name: string) => network.playerAdded$.next(createRemote(name)));
         const report = (from: string, sequencer: string = 'host'): void => network.onMessage$.next({
             type: AntiCheatMessageType.CHEAT_REPORT,
@@ -720,12 +729,14 @@ describe('BlockRoom', () => {
 
         // Then
         expect(changeSequencerSpy).not.toHaveBeenCalled();
+        expect(room.sequencer()).toEqual('host');
 
         // When most of them report it
         report('c');
 
         // Then the first participant by name takes over
         expect(changeSequencerSpy.mock.calls).toEqual([['b'], ['b']]);
+        expect(room.sequencer()).toEqual('b');
     });
 
     test('should keep its sequencer when no participant can take over', () => {
@@ -733,6 +744,7 @@ describe('BlockRoom', () => {
         const changeSequencerSpy = vi.spyOn(SequencedBlockChain.prototype, 'changeSequencer').mockImplementation(() => undefined);
         const warnSpy = vi.spyOn(TimedLogger, 'warn').mockImplementation(() => undefined);
         const room: BlockRoom<TestPayloads> = createRoom();
+        expect(room.sequencer()).toEqual('local');
         network.playerAdded$.next(createRemote('b'));
         network.onMessage$.next({
             type: AntiCheatMessageType.CHEAT_REPORT,
@@ -747,6 +759,7 @@ describe('BlockRoom', () => {
 
         // Then
         expect(changeSequencerSpy).toHaveBeenCalledTimes(2);
+        expect(room.sequencer()).toEqual('b');
         expect(warnSpy).toHaveBeenCalledWith('No participant left to order the blocks');
     });
 

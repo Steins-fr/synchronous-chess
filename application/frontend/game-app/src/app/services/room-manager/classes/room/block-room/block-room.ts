@@ -63,7 +63,6 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private readonly blockChains: ReadonlyMap<BlockChainName, SequencedBlockChain>;
     /** The block of each message delivered to the application, to report it */
     private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block; history: boolean }>();
-    private sequencer: string;
     /** The sequencers most of the other participants reported as cheating */
     private distrusted = new Set<string>();
     /** The number of handovers made, to know whether the other participants follow a later sequencer */
@@ -98,7 +97,6 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         this.participants = new ParticipantRegistry(this.localPlayer, keys);
         this.antiCheat = new AntiCheat(this.participants);
         this.cheatFlags = this.antiCheat.flags;
-        this.sequencer = this.hostName;
 
         const routes: BlockChainRouting<M> = routing;
         const routeMap: ReadonlyMap<string, BlockChainName> = new Map(Object.entries<BlockChainName>(routes));
@@ -106,7 +104,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         const blockChainOf = new Map<string, SequencedBlockChain>();
         for (const [type, name] of routeMap) {
             const blockChain: SequencedBlockChain = blockChainByName.get(name)
-                ?? new SequencedBlockChain(name, routeMap, this, this.participants, this.antiCheat, this.sequencer);
+                ?? new SequencedBlockChain(name, routeMap, this, this.participants, this.antiCheat, this.sequencer());
             blockChainByName.set(name, blockChain);
             blockChainOf.set(type, blockChain);
         }
@@ -239,12 +237,12 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     private onDeparted(names: ReadonlyArray<string>, hostLeft: boolean = names.includes(this.hostName)): void {
         names.forEach((name: string) => TimedLogger.warn(`${ name } has left the room`));
 
-        if (names.includes(this.sequencer)) {
+        if (names.includes(this.sequencer())) {
             this.handOver();
         }
 
         if (hostLeft) {
-            this.roomConnection.changeHost(this.sequencer);
+            this.roomConnection.changeHost(this.sequencer());
         }
 
         names.forEach((name: string) => {
@@ -255,12 +253,13 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     /** Most of the other participants reporting the sequencer as cheating take the ordering away from it */
     private checkSequencerTrust(): void {
-        const accusers: ReadonlySet<string> = this.antiCheat.accusersOf(this.sequencer);
-        const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== this.sequencer);
+        const sequencer: string = this.sequencer();
+        const accusers: ReadonlySet<string> = this.antiCheat.accusersOf(sequencer);
+        const others: ReadonlyArray<string> = this.participantNames().filter((name: string) => name !== sequencer);
 
         if (others.filter((name: string) => accusers.has(name)).length * 2 > others.length) {
-            TimedLogger.warn(`${ this.sequencer } is reported as cheating by most of the participants, it does not order the blocks anymore`);
-            this.distrusted.add(this.sequencer);
+            TimedLogger.warn(`${ sequencer } is reported as cheating by most of the participants, it does not order the blocks anymore`);
+            this.distrusted.add(sequencer);
             this.handOver();
         }
     }
@@ -287,14 +286,14 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     }
 
     private follow(sequencer: string): void {
-        this.sequencer = sequencer;
+        this._sequencer.set(sequencer);
         this.blockChains.forEach((blockChain: SequencedBlockChain) => blockChain.changeSequencer(sequencer));
     }
 
     private sendSequencerState(name: string): void {
         this.participants.send(name, {
             type: AntiCheatMessageType.SEQUENCER_STATE,
-            payload: { sequencer: this.sequencer, handovers: this.handovers, distrusted: [...this.distrusted].sort(BlockRoom.byCodeUnits) },
+            payload: { sequencer: this.sequencer(), handovers: this.handovers, distrusted: [...this.distrusted].sort(BlockRoom.byCodeUnits) },
             origin: MessageOriginType.ANTI_CHEAT,
         });
     }
@@ -374,6 +373,15 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
 
     public override sequencedAt(message: AppMessage): number | undefined {
         return this.deliveredBlocks.get(message)?.block.time;
+    }
+
+    /**
+     * The sequencer of the block of a message delivered by this room, which it hashed and signed: a decision of the host
+     * is valid when its author ordered its block, alike live or replayed, whoever hosts the room since. A host the
+     * participants distrust stops ordering the blocks, so the sequencer taking over decides in its place
+     */
+    public override sequencedBy(message: AppMessage): string | undefined {
+        return this.deliveredBlocks.get(message)?.block.sequencer;
     }
 
     protected override onMessage(message: ReceivedMessage): void {
