@@ -72,4 +72,27 @@ describe('RoomHub', () => {
         expect(replayed).toEqual(received);
         expect(replayed.map((message: AppMessage) => [reloaded.sequencedBy(message), reloaded.sequencedAt(message)])).toEqual([['a', 1000], ['b', 2000]]);
     });
+
+    test('should tell the others a participant left, and record the participants each one excluded', () => {
+        // Given
+        const hub = new RoomHub<{ ping: number }>();
+        const a = hub.room('a');
+        const b = hub.room('b');
+        const c = hub.room('c');
+        const departures: string[] = [];
+        a.departed$.subscribe((name: string) => departures.push(`a sees ${ name }`));
+        b.departed$.subscribe((name: string) => departures.push(`b sees ${ name }`));
+        c.departed$.subscribe((name: string) => departures.push(`c sees ${ name }`));
+
+        // When
+        a.exclude('c');
+        c.exclude('c');
+        hub.leave(c);
+
+        // Then
+        expect(hub.excluded).toEqual([['a', 'c'], ['c', 'c']]);
+        expect(departures).toEqual(['a sees c', 'b sees c']);
+        expect(a.players().map((player) => player.name)).toEqual(['a', 'b']);
+        expect(a.queue()).toEqual([]);
+    });
 });

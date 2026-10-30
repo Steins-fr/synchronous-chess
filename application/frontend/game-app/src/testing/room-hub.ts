@@ -14,8 +14,10 @@ export class RoomHub<M extends object> {
     public readonly delivered: AppMessage[] = [];
     /** The cheats each participant reported */
     public readonly reports: Array<[string, AppMessage, CheatReason]> = [];
-    /** The messages of each room, and the ones replayed to it, its history */
-    private readonly rooms = new Map<Room<M>, { readonly messages: Subject<AppMessage>; readonly history: Set<AppMessage> }>();
+    /** The participants each one excluded, as `[page, player]` */
+    public readonly excluded: Array<[string, string]> = [];
+    /** The messages of each room, the ones replayed to it, its history, and the departures it sees */
+    private readonly rooms = new Map<Room<M>, { readonly messages: Subject<AppMessage>; readonly history: Set<AppMessage>; readonly departed: Subject<string> }>();
     private readonly players = signal<ReadonlyArray<Readonly<Player>>>([]);
     private readonly queue: AppMessage[] = [];
     private delivering: boolean = false;
@@ -35,10 +37,14 @@ export class RoomHub<M extends object> {
     public room(name: string, tamper: (message: AppMessage) => AppMessage = (message: AppMessage) => message): Room<M> {
         const messages = new Subject<AppMessage>();
         const history = new Set<AppMessage>();
+        const departed = new Subject<string>();
         const room: Room<M> = TestHelper.cast<Room<M>>({
             localPlayer: { name },
             roomName: 'room',
             players: this.players,
+            queue: signal<ReadonlyArray<string>>([]).asReadonly(),
+            departed$: departed.asObservable(),
+            exclude: (player: string) => this.excluded.push([name, player]),
             messenger: (type: string) => messages.pipe(filter((message: AppMessage) => message.type === type)),
             transmitMessage: (type: string, payload: unknown) => this.transmit(tamper({ from: name, type, payload })),
             reportCheat: (message: AppMessage, reason: CheatReason) => this.reports.push([name, message, reason]),
@@ -47,7 +53,7 @@ export class RoomHub<M extends object> {
             sequencedAt: (message: AppMessage) => this.stamps.get(message)?.time,
             sequencedBy: (message: AppMessage) => this.stamps.get(message)?.sequencer,
         });
-        this.rooms.set(room, { messages, history });
+        this.rooms.set(room, { messages, history, departed });
         this.players.update((players) => players.some((player) => player.name === name) ? players : [...players, TestHelper.cast<Player>({ name })]);
         return room;
     }
@@ -57,10 +63,11 @@ export class RoomHub<M extends object> {
         this.rooms.delete(room);
     }
 
-    /** The participant leaves the room: its page closed, the others no longer see it */
+    /** The participant leaves the room: its page closed, the others no longer see it, and agree it left */
     public leave(room: Room<M>): void {
         this.close(room);
         this.players.update((players) => players.filter((player) => player.name !== room.localPlayer.name));
+        this.rooms.forEach(({ departed }) => departed.next(room.localPlayer.name));
     }
 
     /** The messages of the participant wait until released */
