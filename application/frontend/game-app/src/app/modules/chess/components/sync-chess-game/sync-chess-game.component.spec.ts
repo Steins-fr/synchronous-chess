@@ -18,6 +18,8 @@ import SyncTurn from '@app/modules/chess/classes/turns/sync-turn';
 import Turn from '@app/modules/chess/classes/turns/turn';
 import TurnType from '@app/modules/chess/classes/turns/turn.types';
 import { Vec2 } from '@app/modules/chess/classes/vector/vec2';
+import ChessBoardHelper from '@app/modules/chess/helpers/chess-board-helper';
+import { FenPiece } from '@app/modules/chess/enums/fen-piece.enum';
 import { PieceColor } from '@app/modules/chess/enums/piece-color.enum';
 import { PieceType } from '@app/modules/chess/enums/piece-type.enum';
 import Move, { FenColumn, FenRow } from '@app/modules/chess/interfaces/move';
@@ -28,6 +30,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SOUND_GAP } from '@app/services/sound/game-sounds';
 import { SoundService } from '@app/services/sound/sound.service';
 import { TestHelper } from '@testing/test.helper';
 import { translated } from '@testing/translatable-text.helper';
@@ -87,6 +90,12 @@ describe('SyncChessGameComponent', () => {
         network.onMessage$.next({ type: SCGameSessionType.COMMIT, payload: { turn, commitment }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
         network.onMessage$.next({ type: SCGameSessionType.REVEAL, payload: { turn, action, salt: 'salt' }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
         await vi.waitFor(() => expect(session().game.colorHasPlayed(color) || TestHelper.cast<{ turnCount: number }>(session()).turnCount > turn).toEqual(true));
+    }
+
+    // The remote player commits to its move then reveals it at once, its commitment mocked
+    function remoteSealed(turn: number, move: Move): void {
+        network.onMessage$.next({ type: SCGameSessionType.COMMIT, payload: { turn, commitment: 'c' }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
+        network.onMessage$.next({ type: SCGameSessionType.REVEAL, payload: { turn, action: { kind: SealedActionKind.MOVE, move }, salt: 'salt' }, origin: MessageOriginType.ROOM_SERVICE, from: 'remote' });
     }
 
     function seatButtons(color: 'black' | 'white'): HTMLButtonElement[] {
@@ -421,7 +430,7 @@ describe('SyncChessGameComponent', () => {
 
         // When the reveals of the turn are in the history
         await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
-        await vi.waitFor(() => expect(session().historySteps()).toEqual(4));
+        await vi.waitFor(() => expect(session().game.playedTurns()).toHaveLength(1));
         await refresh();
 
         // Then
@@ -436,7 +445,38 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then: the pawn of E5 may take the one of D4, an intermediate turn starts after the moves
-        expect(play.mock.calls).toEqual([[SoundEffect.CHESS_MOVE, 0], [SoundEffect.CHESS_TURN_START, SyncChessGameComponent.SOUND_GAP]]);
+        expect(play.mock.calls).toEqual([[SoundEffect.CHESS_MOVE, 0], [SoundEffect.CHESS_TURN_START, SOUND_GAP]]);
+    });
+
+    test('should play the sound of a live turn only, run in the render of the history of the room before it', async () => {
+        // Given: a black pawn white may take, the commitments checked in microtasks only, as no render may run between the
+        // history and the live turn
+        await createOnlineGame();
+        gameState(session().game)._fenBoard.update((fenBoard) => ChessBoardHelper.setFenPiece(fenBoard, [FenColumn.D, FenRow._3], FenPiece.BLACK_PAWN));
+        await refresh();
+        vi.spyOn(SynchronousChessOnlineGameSession, 'commitment').mockResolvedValue('c');
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+        const isHistory = vi.spyOn(TestHelper.cast<Room<ChessPayloads>>(component.room()), 'isHistory').mockReturnValue(true);
+        const reveals = (): Promise<void> => TestHelper.cast<{ reveals: Promise<void> }>(session()).reveals;
+
+        // When a turn of the history takes the pawn
+        board().piecePicked.emit(new Vec2(4, 6));
+        board().pieceDropped.emit(new Vec2(3, 5));
+        remoteSealed(0, { from: [FenColumn.A, FenRow._7], to: [FenColumn.A, FenRow._6] });
+        await reveals();
+
+        // And the next turn is live, a plain move, rendered with it
+        isHistory.mockReturnValue(false);
+        expect(session().game.playedTurns()).toHaveLength(1);
+        board().piecePicked.emit(new Vec2(7, 6));
+        board().pieceDropped.emit(new Vec2(7, 5));
+        remoteSealed(1, { from: [FenColumn.H, FenRow._7], to: [FenColumn.H, FenRow._6] });
+        await reveals();
+        expect(session().game.playedTurns()).toHaveLength(2);
+        await refresh();
+
+        // Then: the live turn is heard from the board the history left, its capture not heard
+        expect(play.mock.calls).toEqual([[SoundEffect.CHESS_MOVE, 0]]);
     });
 
     test('should skip an intermediate turn', async () => {

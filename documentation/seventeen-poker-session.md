@@ -272,13 +272,14 @@ fold). The chips of each move fly between the places as the page shows them, mea
 (`ChipFlightsComponent` of `modules/two-seat-table`, shared with the Russian roulette), then the stack there shows them dropping on it, the gains and the outcome with them, the chips it changes for others
 fading out then. A stack paying out shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights,
 as does the history of the room a reloaded page or a participant joining late catches up with: the
-session counts the steps of the history it applies (`historySteps`: the start and the end of each of its
-messages, a showdown moving the chips once the cards are opened), and a change of the table while it
-grows does not fly.
+session tells when it caught up with it (`caughtUp`, right before the first live message applies), and the
+chips fly from the table as the history left it, whatever the page rendered of it.
 
-The files of the sounds of the table load ahead (`SoundService.preload()`), and the first live message after the history
-of the room waits for the page to render the end of it (`wait(0)`), not to be taken for history.
-Each change of the table plays its sounds on every page, a hidden one included, none while the history grows
+The files of the sounds of the table load ahead (`SoundService.preload()`). The session counts the changes of the table
+it applies live, out of the history of the room (`live`: the hands dealt, the cards drawn by each seat, the changes
+moving chips and the hands over; `seatsTaken`, counted by the seats of the table), each one with its change: a render
+catching up with the history and a live change at once plays the live one only.
+Each change of the table counted live plays its sounds on every page, a hidden one included
 (`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken (a pop, as at every game), a new deck shuffled (the
 table shows it shuffled 3.1 seconds at least, `SHUFFLE_HOLD`, the length of the sound: the cards, the actions and the
 clock of the move wait for it, a deck of the history of the room or already dealt shown at once), each card entering a hand as it flies in

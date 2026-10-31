@@ -12,13 +12,12 @@ import { BlockChainRouting, mergeBlockChainRoutings } from '@app/services/room-m
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
-import { merge, Subscription } from 'rxjs';
+import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { BetAction } from '../rules/betting-round';
 import { HAND_SIZE } from '../rules/hand-evaluator';
 import { DRAW_PILE, HandPhase, MatchResult, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair, withSeat } from '../rules/poker-seat';
 import { SEVENTEEN_DECK, seventeenCard } from '../rules/seventeen-deck';
-import { wait } from '@app/helpers/wait.helper';
 
 export enum SPGameSessionType {
     /** A participant takes a seat, or leaves its seat */
@@ -95,6 +94,18 @@ export interface SeatCard {
     readonly card: PlayingCard | null;
 }
 
+/** The changes of the table applied live, out of the history of the room, counted for the table to hear them */
+export interface LiveTable {
+    /** The hands dealt: their decks shuffled */
+    readonly deals: number;
+    /** The cards drawn into the hand of each seat at the exchanges */
+    readonly draws: SeatPair<number>;
+    /** The changes moving chips: the antes of a hand dealt, a bet adding to the pot */
+    readonly chips: number;
+    /** The hands over: the latest outcome of the match tells their sounds */
+    readonly outcomes: number;
+}
+
 type PokerGameMessage = {
     [Type in keyof PokerGamePayloads]: AppMessage<Type, PokerGamePayloads[Type]>;
 }[keyof PokerGamePayloads];
@@ -156,6 +167,8 @@ export class SeventeenPokerSession {
     });
     /** The players of each seat */
     public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
+    /** The seats taken live, out of the history of the room: each one is heard */
+    public readonly seatsTaken: Signal<number> = this.tableSeats.seatsTaken;
     /** The players of the match, the ones of the seats until its first hand: the seats may change once it is over */
     public readonly players: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
         // A hand of the match has its deck, shuffled by both players
@@ -186,14 +199,20 @@ export class SeventeenPokerSession {
     public readonly broken: Signal<boolean> = this._broken.asReadonly();
     /** The match is over, or stopped by a broken deck: its players may play a new one */
     public readonly over: Signal<boolean> = computed((): boolean => this.match().result() !== null || this._broken());
-    // The latest message queued came from the history of the room
-    private historyBehind: boolean = false;
-    private readonly _historySteps = signal<number>(0);
+    private readonly _live = signal<Readonly<LiveTable>>({ deals: 0, draws: [0, 0], chips: 0, outcomes: 0 });
     /**
-     * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
-     * the start and the end of each of its messages, a showdown moving the chips once the cards are opened
+     * The changes of the table applied live, counted as they apply: the history of the room, which a page reloaded or a
+     * participant joining late catches up with, counts none
      */
-    public readonly historySteps: Signal<number> = this._historySteps.asReadonly();
+    public readonly live: Signal<Readonly<LiveTable>> = this._live.asReadonly();
+    // A live message applied already: the history of the room is behind
+    private historyOver: boolean = false;
+    private readonly _caughtUp = new Subject<void>();
+    /**
+     * Emitted once, right before the first live message applies: the table shows the end of the history of the room then,
+     * whatever the page rendered of it, and what follows the table as it shows it (the chips flying) starts from there
+     */
+    public readonly caughtUp: Observable<void> = this._caughtUp.asObservable();
     /** The check of the decks of the match, a signal of its own: it may end once the next match started */
     private readonly _verification = signal<WritableSignal<DeckVerification>>(signal<DeckVerification>(DeckVerification.PENDING));
     /** The check of every deck of the match, once it is over */
@@ -244,13 +263,13 @@ export class SeventeenPokerSession {
             room.messenger(SPGameSessionType.REMATCH),
             room.messenger(SPGameSessionType.UNSEAT),
         ).subscribe((message: PokerGameMessage) => {
-            // The first live message after the history waits for the page to render the end of it: it is not taken for history
-            const history: boolean = room.isHistory(message);
-            const afterHistory: boolean = this.historyBehind && !history;
-            this.historyBehind = history;
-            this.queue = this.queue
-                .then(() => afterHistory ? wait(0) : undefined)
-                .then(() => logHandlingFailure(message, this.handle(message)));
+            this.queue = this.queue.then(() => {
+                if (!this.historyOver && !room.isHistory(message)) {
+                    this.historyOver = true;
+                    this._caughtUp.next();
+                }
+                return logHandlingFailure(message, this.apply(message));
+            });
         });
     }
 
@@ -307,20 +326,13 @@ export class SeventeenPokerSession {
         return this.tableSeats.seatOf(name);
     }
 
-    private async handle(message: PokerGameMessage): Promise<void> {
-        const history: boolean = this.room.isHistory(message);
-        const step = (): void => this._historySteps.update((steps: number) => steps + 1);
-
-        if (history) {
-            step();
-        }
-
-        try {
-            await this.apply(message);
-        } finally {
-            if (history) {
-                step();
-            }
+    /**
+     * A change of the table applied live, out of the history of the room: counted, the table hears it. Counted with the
+     * change, before any wait: the page never shows one without the other
+     */
+    private countLive(message: PokerGameMessage, change: (live: Readonly<LiveTable>) => Readonly<LiveTable>): void {
+        if (!this.room.isHistory(message)) {
+            this._live.update(change);
         }
     }
 
@@ -378,6 +390,8 @@ export class SeventeenPokerSession {
         this.decks.push(deck);
         this._deck.set(deck);
         this._positions.set(positions);
+        // The deck shuffled, the antes paid
+        this.countLive(message, (live: Readonly<LiveTable>) => ({ ...live, deals: live.deals + 1, chips: live.chips + 1 }));
         await this.dealt(Promise.all([deck.deal(positions[PokerSeat.ONE], one.name), deck.deal(positions[PokerSeat.TWO], two.name)]));
     }
 
@@ -389,13 +403,26 @@ export class SeventeenPokerSession {
             return;
         }
 
+        const pot: number | undefined = this.match().hand()?.pot;
+        const outcomes: number = this.match().outcomes().length;
+
         if (hand !== this.match().hand()?.index || !this.match().bet(seat, action, amount)) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
             return;
         }
 
+        // The chips of a bet, a call or a raise, not of a check nor a fold
+        if (this.match().hand()?.pot !== pot) {
+            this.countLive(message, (live: Readonly<LiveTable>) => ({ ...live, chips: live.chips + 1 }));
+        }
+
         if (this.match().hand()?.phase === HandPhase.SHOWDOWN) {
             await this.showdown();
+        }
+
+        // The hand over: a fold, a no contest, or the hands shown
+        if (this.match().outcomes().length > outcomes) {
+            this.countLive(message, (live: Readonly<LiveTable>) => ({ ...live, outcomes: live.outcomes + 1 }));
         }
 
         this.verifyOnceOver();
@@ -428,6 +455,7 @@ export class SeventeenPokerSession {
         })));
 
         if (draws.length > 0) {
+            this.countLive(message, (live: Readonly<LiveTable>) => ({ ...live, draws: withSeat(live.draws, seat, live.draws[seat] + draws.length) }));
             await this.dealt(deck.deal(draws, this.seats()[seat] as string));
         }
     }
@@ -445,6 +473,7 @@ export class SeventeenPokerSession {
             return;
         }
 
+        this.countLive(message, (live: Readonly<LiveTable>) => ({ ...live, outcomes: live.outcomes + 1 }));
         // The player away loses its seat too: it may not come back, and a spectator may take it for the next match
         this.tableSeats.free(otherSeat(seat));
         this.verifyOnceOver();

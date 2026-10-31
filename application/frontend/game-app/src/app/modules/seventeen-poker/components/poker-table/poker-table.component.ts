@@ -2,6 +2,7 @@ import {
     afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { DeckVerification, MentalDeck } from '@app/modules/mental-poker/classes/mental-deck';
@@ -15,6 +16,7 @@ import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/co
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
 import { scopedKey } from '@app/services/language/scoped-key';
@@ -22,7 +24,8 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import { PlayedMatch, PokerPayloads, PokerSessionOptions, SeatCard, SeventeenPokerSession } from '../../classes/game-sessions/seventeen-poker-session';
+import { map, Subscription, switchMap } from 'rxjs';
+import { LiveTable, PlayedMatch, PokerPayloads, PokerSessionOptions, SeatCard, SeventeenPokerSession } from '../../classes/game-sessions/seventeen-poker-session';
 import { handOutcomeText } from '../../helpers/hand-outcome-text.helper';
 import { ChipPlace, ChipPlaceKind, chipTransfers, ChipTransfer, TableChips } from '../../helpers/chip-transfers.helper';
 import { HAND_ENDING, HeardTable, tableSounds, TimedSound } from '../../helpers/table-sound.helper';
@@ -311,8 +314,10 @@ export class PokerTableComponent implements OnDestroy {
 
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
 
-    /** The chips on the table last shown, with their session, its match, the steps of its history applied then and the hands over */
-    private shown: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly chips: Readonly<TableChips>; readonly historySteps: number; readonly outcomes: number } | null = null;
+    /** The chips on the table last shown, with their session, its match and the hands over */
+    private shown: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly chips: Readonly<TableChips>; readonly outcomes: number } | null = null;
+    /** The session caught up with the history of the room: the changes of the table it applies now are live */
+    private liveSession: SeventeenPokerSession | null = null;
 
     // Once the table shows a change, the chips it moved fly from where they were to where they are: the pot of a showdown or
     // of a fold once the end of the hand showed, the cards turned over or the hand folded faded
@@ -321,15 +326,15 @@ export class PokerTableComponent implements OnDestroy {
             const session: SeventeenPokerSession = this.session();
             const match: PokerMatch = session.match();
             const chips: Readonly<TableChips> = this.tableChips();
-            const historySteps: number = session.historySteps();
             const outcomes: ReadonlyArray<Readonly<HandOutcome>> = match.outcomes();
-            // A new session or a new match starts from its own chips, and the history of the room it catches up with moves none
-            const previous: typeof this.shown = this.shown?.session === session && this.shown.match === match && this.shown.historySteps === historySteps
+            // A new session or a new match starts from its own chips, and the history of the room it catches up with moves none:
+            // the live changes start from the table it left (caughtUp())
+            const previous: typeof this.shown = this.liveSession === session && this.shown?.session === session && this.shown.match === match
                 ? this.shown
                 : null;
             const transfers: ReadonlyArray<Readonly<ChipTransfer>> = previous === null ? [] : chipTransfers(previous.chips, chips);
             const ending: boolean = previous !== null && outcomes.length > previous.outcomes && outcomes.at(-1)?.end !== HandEnd.NO_CONTEST;
-            this.shown = { session, match, chips, historySteps, outcomes: outcomes.length };
+            this.shown = { session, match, chips, outcomes: outcomes.length };
             return this.flightsOf(transfers, ending ? HAND_ENDING * 1000 : 0);
         },
         write: (flights: Signal<ReadonlyArray<Readonly<ChipFlight>>>): void => {
@@ -338,47 +343,61 @@ export class PokerTableComponent implements OnDestroy {
     });
 
     private readonly soundService = inject(SoundService);
-    /** The table the page last heard, with its session, its match and the steps of its history applied then */
-    private heard: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly table: Readonly<HeardTable>; readonly historySteps: number } | null = null;
+    private readonly reducedMotion: ReducedMotionService = inject(ReducedMotionService);
+    /** The table the page last heard, with its session and the deck of its hand */
+    private heard: { readonly session: SeventeenPokerSession; readonly deck: string | null; readonly table: Readonly<HeardTable> } | null = null;
 
-    // A change of the table plays its sounds on every page, a hidden one included. A new session or a new match starts
-    // from its own table, and the history of the room it catches up with plays none. The deck of a new hand shows shuffled
-    // as long as the sound of its shuffle, its cards dealt then
+    // A change of the table applied live plays its sounds on every page, a hidden one included: the session counts them,
+    // the history of the room it catches up with counting none, its rematches included. A new session starts from its own
+    // table. The deck of a new hand dealt live shows shuffled as long as the sound of its shuffle, its cards dealt then
     private readonly sounds = effect(() => {
         const session: SeventeenPokerSession = this.session();
         const match: PokerMatch = session.match();
-        const historySteps: number = session.historySteps();
+        const live: Readonly<LiveTable> = session.live();
         const deck: string | null = session.deck()?.id ?? null;
-        const previous: typeof this.heard = this.heard;
-        const caughtUp: boolean = previous !== null && previous.session === session && previous.match === match && previous.historySteps === historySteps;
+        const heard: typeof this.heard = this.heard;
+        const previous: typeof this.heard = heard?.session === session ? heard : null;
+        // A deck dealt live shows shuffled as long as the sound of its shuffle
+        const dealtLive: boolean = previous !== null && live.deals !== previous.table.live.deals;
         // A deck of the history, or already dealt, shows at once: before the hands are read
-        if (!caughtUp) {
+        if (previous === null || (deck !== previous.deck && !dealtLive)) {
             this.shuffledDeck.set(deck);
         }
         // A new session loads ahead the files of the sounds of the table: their first play is not late
-        if (previous?.session !== session) {
+        if (heard?.session !== session) {
             this.soundService.preload([SoundEffect.POKER_SHUFFLE, SoundEffect.POKER_DEAL, SoundEffect.POKER_CARD_TURN, SoundEffect.CHIPS, SoundEffect.POKER_FOLD]);
         }
         const table: Readonly<HeardTable> = {
-            seats: session.seats(),
-            deck,
-            // The cards of the hands, once the deck showed shuffled: a player leaving its seat and taking it back deals none
-            hands: this.held() ? [] : session.cards().map((cards: ReadonlyArray<Readonly<SeatCard>>) => cards.map(({ position }) => `${ deck }:${ position }`)),
-            chips: this.tableChips(),
-            outcomes: match.outcomes(),
+            seatsTaken: session.seatsTaken(),
+            live,
+            held: this.held(),
+            // The cards of the hands, not of their seats: a player leaving its seat and taking it back deals none
+            cards: Math.max(...session.positions().map((positions: ReadonlyArray<number>) => positions.length)),
+            outcome: match.outcomes().at(-1) ?? null,
             result: match.result(),
         };
-        this.heard = { session, match, table, historySteps };
+        this.heard = { session, deck, table };
 
-        if (previous === null || !caughtUp) {
+        if (previous === null) {
             return;
         }
 
         const mySeat: PokerSeat | null = untracked(session.mySeat);
-        untracked(() => tableSounds(previous.table, table, mySeat).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
-        if (deck !== previous.table.deck) {
+        untracked(() => tableSounds(previous.table, table, mySeat, this.reducedMotion.reduced()).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
+        if (dealtLive) {
             this.showShuffled(deck);
         }
+    });
+
+    // Once the session caught up with the history of the room, the table as the history left it, whatever the page rendered
+    // of it: the chips its live changes move fly from there
+    private readonly caughtUp: Subscription = toObservable(this.session).pipe(
+        switchMap((session: SeventeenPokerSession) => session.caughtUp.pipe(map(() => session))),
+        takeUntilDestroyed(),
+    ).subscribe((session: SeventeenPokerSession) => {
+        const match: PokerMatch = session.match();
+        this.liveSession = session;
+        this.shown = { session, match, chips: this.tableChips(), outcomes: match.outcomes().length };
     });
 
     /** The deck dealt live shows shuffled until the sound of its shuffle is over */

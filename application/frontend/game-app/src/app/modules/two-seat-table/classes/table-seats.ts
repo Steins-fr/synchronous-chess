@@ -52,6 +52,9 @@ export class TableSeats<Seat extends string, Unseat extends string> {
     private readonly _seated = signal<SeatPair<Readonly<SeatedPlayer> | null>>([null, null]);
     /** The players of each seat, with their salts */
     public readonly seated: Signal<SeatPair<Readonly<SeatedPlayer> | null>> = this._seated.asReadonly();
+    private readonly _seatsTaken = signal<number>(0);
+    /** The seats taken live, out of the history of the room: each one is heard */
+    public readonly seatsTaken: Signal<number> = this._seatsTaken.asReadonly();
     /** The players of each seat */
     public readonly seats: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
         const [one, two] = this._seated();
@@ -141,6 +144,10 @@ export class TableSeats<Seat extends string, Unseat extends string> {
             this._seated.set(left);
         } else if (left[seat] === null && typeof salt === 'string' && SALT_PATTERN.test(salt)) {
             this._seated.set(withSeat(left, seat, { name: message.from, salt }));
+            // A seat asked again by its player (a second click before the first one came back) is no seat taken
+            if ([one, two][seat]?.name !== message.from && !this.room.isHistory(message)) {
+                this._seatsTaken.update((taken: number) => taken + 1);
+            }
         }
         return true;
     }

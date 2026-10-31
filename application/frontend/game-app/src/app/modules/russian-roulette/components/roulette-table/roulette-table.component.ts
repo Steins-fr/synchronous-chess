@@ -2,6 +2,7 @@ import {
     afterNextRender, afterRenderEffect, Component, computed, DestroyRef, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
@@ -11,6 +12,7 @@ import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.di
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -20,6 +22,7 @@ import { SoundService } from '@app/services/sound/sound.service';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
+import { map, Subscription, switchMap } from 'rxjs';
 import { Cylinder, CylinderVerification } from '../../classes/cylinder/cylinder';
 import { CylinderPhase } from '../../classes/cylinder/cylinder-state';
 import { PlayedGame } from '../../classes/game-sessions/played-game';
@@ -396,25 +399,29 @@ export class RouletteTableComponent implements OnDestroy {
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
     private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
-    /** The moves last shown, with their session, their game, the steps of the history applied then, and the table shown */
-    private shown: Readonly<{ session: RussianRouletteSession; game: RouletteGame; historySteps: number; moves: number; view: Readonly<TableView> }> | null = null;
+    /**
+     * The session caught up with the history of the room, which the table showed and heard at once: the table plays and
+     * hears its changes from there
+     */
+    private liveSession: RussianRouletteSession | null = null;
+    /** The moves last shown, with their session, their game, and the table shown */
+    private shown: Readonly<{ session: RussianRouletteSession; game: RouletteGame; moves: number; view: Readonly<TableView> }> | null = null;
 
     // Once the table shows new moves, they play: a pass stamps its seat and its chips fly to the table, the 5th one in a
-    // row taking them to the bank; a shot or a chamber revealed fires the revolver
+    // row taking them to the bank; a shot or a chamber revealed fires the revolver. A hidden page, whose animations would
+    // wait for it to be shown, hears them at once
     private readonly movePlays = afterRenderEffect({
         earlyRead: (): Readonly<{ game: RouletteGame; moves: number; play: Readonly<MovePlay> | null }> => {
             const session: RussianRouletteSession = this.session();
             const game: RouletteGame = this.game();
             const actions: ReadonlyArray<Readonly<RouletteAction>> = game.actions();
-            const historySteps: number = session.historySteps();
             const view: Readonly<TableView> = this.liveView();
             const previous: typeof this.shown = this.shown;
-            this.shown = { session, game, historySteps, moves: actions.length, view };
+            this.shown = { session, game, moves: actions.length, view };
 
-            // A new session or a new game starts from its own moves, the history of the room it catches up with plays none,
-            // nor does a hidden page: its animations would wait for it to be shown
-            if (previous?.session !== session || previous.game !== game || previous.historySteps !== historySteps || actions.length <= previous.moves
-                || !untracked(this.pageVisibility.visible)) {
+            // A new session or a new game starts from its own moves, and the history of the room plays none: the session
+            // caught up with it, the moves play from the table it left
+            if (this.liveSession !== session || previous?.session !== session || previous.game !== game || actions.length <= previous.moves) {
                 return { game, moves: actions.length, play: null };
             }
             return { game, moves: actions.length, play: this.play(actions.slice(previous.moves), previous.moves, previous.view, view) };
@@ -425,7 +432,11 @@ export class RouletteTableComponent implements OnDestroy {
             // The phase depends on the moves played only: the signals it writes must not run it again
             untracked(() => {
                 if (play !== null) {
-                    this.start(play);
+                    if (this.pageVisibility.visible()) {
+                        this.start(play);
+                    } else {
+                        this.heardAtOnce(play);
+                    }
                 }
                 this._played.set({ game, moves: count, view: this._firing()?.before ?? this.liveView() });
             });
@@ -458,26 +469,36 @@ export class RouletteTableComponent implements OnDestroy {
     });
 
     private readonly soundService = inject(SoundService);
-    /** The table the page last heard, with its session, its game and the steps of its history applied then */
-    private heard: Readonly<{ session: RussianRouletteSession; game: RouletteGame; historySteps: number; table: Readonly<HeardTable> }> | null = null;
+    private readonly reducedMotion: ReducedMotionService = inject(ReducedMotionService);
+    /** The table as the page hears it: the changes of its session made live, and what it shows */
+    private readonly heardTable: Signal<Readonly<HeardTable>> = computed((): Readonly<HeardTable> => {
+        const session: RussianRouletteSession = this.session();
+        const target: RevolverTarget = this.target();
+        return {
+            seatsTaken: session.seatsTaken(),
+            loads: session.loads(),
+            aim: target === null ? null : `${ target }`,
+            result: this._firing() === null && this.unplayed() === null ? this.game().result() : null,
+        };
+    });
+    /** The table the page last heard, with its session and its game */
+    private heard: Readonly<{ session: RussianRouletteSession; game: RouletteGame; table: Readonly<HeardTable> }> | null = null;
+
+    // A session catches up with the history of the room before its first live message: the table shows it at once, then
+    // plays and hears the changes from there
+    private readonly catchingUp: Subscription = toObservable(this.session).pipe(
+        switchMap((session: RussianRouletteSession) => session.caughtUp.pipe(map(() => session))),
+        takeUntilDestroyed(),
+    ).subscribe((session: RussianRouletteSession) => this.caughtUp(session));
 
     // A change of the table plays its sounds on every page, a hidden one included. A new session or a new game starts from
-    // its own table, and the history of the room it catches up with plays none
+    // its own table, and the history of the room plays none: the session caught up with it, the changes play from there
     private readonly sounds = effect(() => {
         const session: RussianRouletteSession = this.session();
         const game: RouletteGame = this.game();
-        const historySteps: number = session.historySteps();
-        const target: RevolverTarget = this.target();
-        const table: Readonly<HeardTable> = {
-            seats: session.seats(),
-            loaded: session.cylinder()?.keys() ?? 0,
-            aim: target === null ? null : `${ target }`,
-            chambers: game.chambers(),
-            chips: [...game.stacks(), game.table(), game.bank()],
-            result: this._firing() === null && this.unplayed() === null ? game.result() : null,
-        };
+        const table: Readonly<HeardTable> = this.heardTable();
         const previous: typeof this.heard = this.heard;
-        this.heard = { session, game, historySteps, table };
+        this.heard = { session, game, table };
         // A new session loads ahead the files of the sounds of the table: their first play is not late
         if (previous?.session !== session) {
             this.soundService.preload([
@@ -485,12 +506,11 @@ export class RouletteTableComponent implements OnDestroy {
             ]);
         }
 
-        if (previous?.session !== session || previous.game !== game || previous.historySteps !== historySteps) {
+        if (this.liveSession !== session || previous?.session !== session || previous.game !== game) {
             return;
         }
 
-        untracked(() => tableSounds(previous.table, table, session.mySeat(), !this.pageVisibility.visible())
-            .forEach((sound: OneShotSoundEffect) => this.soundService.play(sound)));
+        untracked(() => tableSounds(previous.table, table, session.mySeat()).forEach((sound: OneShotSoundEffect) => this.soundService.play(sound)));
     });
 
     // The cylinder turns while the players load and spin it: its clicks loop until it stops
@@ -503,6 +523,20 @@ export class RouletteTableComponent implements OnDestroy {
 
     public ngOnDestroy(): void {
         this.session().destroy();
+    }
+
+    /**
+     * The session applied the history of the room, its first live message next: the table shows the game it left at once,
+     * the moves played and the table heard, whether the page rendered the end of the history or not. The live changes play
+     * from there, the ones applied with the history in a single render included
+     */
+    private caughtUp(session: RussianRouletteSession): void {
+        const game: RouletteGame = session.game();
+        const moves: number = game.actions().length;
+        this.liveSession = session;
+        this._played.set({ game, moves, view: this.liveView() });
+        this.shown = { session, game, moves, view: this.liveView() };
+        this.heard = { session, game, table: this.heardTable() };
     }
 
     /** The revolver fires, after it held in front of the player: the table tells what the chamber held, heard at once */
@@ -536,10 +570,21 @@ export class RouletteTableComponent implements OnDestroy {
         return action.bullets === 0 ? SeatShot.EMPTY : SeatShot.DEATH;
     }
 
-    /** The chips fly, heard as each flight starts, once its delay is over */
+    /**
+     * The chips fly, heard as each flight starts, once its delay is over. A hidden page runs no animation: it hears the
+     * chips moved once, at once
+     */
     private launch(flights: ReadonlyArray<TableFlight>): void {
+        if (!this.pageVisibility.visible()) {
+            if (flights.length > 0) {
+                this.soundService.play(SoundEffect.CHIPS);
+            }
+            return;
+        }
         this.chipFlights().launch(flights);
-        new Set<number>(flights.map((flight: TableFlight) => flight.delay))
+        // Without motion, the chips all land at once: heard once
+        const reduced: boolean = this.reducedMotion.reduced();
+        new Set<number>(flights.map((flight: TableFlight) => reduced ? 0 : flight.delay))
             .forEach((delay: number) => this.soundService.play(SoundEffect.CHIPS, delay / 1000));
     }
 
@@ -579,18 +624,28 @@ export class RouletteTableComponent implements OnDestroy {
             return;
         }
         // A page hidden since the shot started moves its chips without flights: heard all the same
-        if (!this.pageVisibility.visible()) {
-            if (action.bullets !== 0 || action.chips > 0) {
-                this.soundService.play(SoundEffect.CHIPS);
-            }
-            return;
-        }
+        this.launch(this.shotFlights(action));
+    }
 
+    /** The chips a shot moves: the table to the shooter of an empty chamber, else its death and the table to the other player */
+    private shotFlights(action: Readonly<RouletteAction>): ReadonlyArray<TableFlight> {
         const origin: DOMRect = this.tableView().nativeElement.getBoundingClientRect();
         const flights: Array<TableFlight> = action.bullets === 0
             ? [this.flight(TablePlace.TABLE, action.seat, action.chips, 0, origin)]
             : [this.flight(action.seat, otherSeat(action.seat), this.game().rules.death, 0, origin), this.flight(TablePlace.TABLE, otherSeat(action.seat), action.chips, 0, origin)];
-        this.launch(flights.filter((flight: TableFlight) => flight.amount > 0));
+        return flights.filter((flight: TableFlight) => flight.amount > 0);
+    }
+
+    /**
+     * Moves a hidden page does not play, running no animation: the latest chamber fired, then the chips the moves moved,
+     * the ones of a shot included, heard at once
+     */
+    private heardAtOnce({ flights, firing }: Readonly<MovePlay>): void {
+        const fired: Readonly<RouletteAction> | undefined = firing?.action;
+        if (fired !== undefined) {
+            this.soundService.play(fired.bullets === 0 ? SoundEffect.ROULETTE_CLICK : SoundEffect.ROULETTE_SHOT);
+        }
+        this.launch(fired?.kind === RouletteActionKind.SHOT ? [...flights, ...this.shotFlights(fired)] : flights);
     }
 
     /**

@@ -62,16 +62,16 @@ describe('SoundLabPage', () => {
         buttons(SoundEffect.POKER_SHUFFLE)[0].click();
 
         // Then
-        expect(buttonTexts(SoundEffect.POKER_SHUFFLE)).toEqual(['audio_file card-shuffle.wav']);
-        expect(buttonTexts(SoundEffect.ROULETTE_BULLET)).toEqual([1, 2, 3, 4, 5].map((take: number) => `audio_file bullet-${ take }.wav`));
-        expect(playFile).toHaveBeenCalledExactlyOnceWith('assets/sounds/card-shuffle.wav');
+        expect(buttonTexts(SoundEffect.POKER_SHUFFLE)).toEqual(['audio_file card-shuffle.mp3']);
+        expect(buttonTexts(SoundEffect.ROULETTE_BULLET)).toEqual([1, 2, 3, 4, 5].map((take: number) => `audio_file bullet-${ take }.mp3`));
+        expect(playFile).toHaveBeenCalledExactlyOnceWith('assets/sounds/card-shuffle.mp3');
     });
 
     test('should loop a sound until its button stops it, or the page is left', async () => {
         // Given
         const stop = vi.fn();
         const loop = vi.spyOn(soundService, 'loop').mockReturnValue(stop);
-        expect(buttonTexts(SoundEffect.ROULETTE_SPIN)).toEqual(['repeat spin-start.wav, then spin-idle.wav looping']);
+        expect(buttonTexts(SoundEffect.ROULETTE_SPIN)).toEqual(['repeat spin.mp3, looping from 1.242 s to 2.442 s']);
 
         // When
         buttons(SoundEffect.ROULETTE_SPIN)[0].click();
@@ -79,7 +79,7 @@ describe('SoundLabPage', () => {
 
         // Then
         expect(loop).toHaveBeenCalledExactlyOnceWith(SoundEffect.ROULETTE_SPIN);
-        expect(buttonTexts(SoundEffect.ROULETTE_SPIN)).toEqual(['stop spin-start.wav, then spin-idle.wav looping']);
+        expect(buttonTexts(SoundEffect.ROULETTE_SPIN)).toEqual(['stop spin.mp3, looping from 1.242 s to 2.442 s']);
 
         // When
         buttons(SoundEffect.ROULETTE_SPIN)[0].click();
@@ -107,7 +107,7 @@ describe('SoundLabPage', () => {
         await fixture.whenStable();
 
         // Then
-        expect(soundRow(SoundEffect.POKER_SHUFFLE).textContent).toContain('card-shuffle.wav failed to load');
+        expect(soundRow(SoundEffect.POKER_SHUFFLE).textContent).toContain('card-shuffle.mp3 failed to load');
     });
 
     test('should tell the sounds are muted, all of them or the ones of a category', async () => {

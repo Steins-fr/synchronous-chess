@@ -3,8 +3,8 @@ import { SynthesizedSoundEffect } from './sound-files';
 import { SOUND_RECIPES } from './sound-recipes';
 
 /**
- * Plays the sounds synthesized at runtime, by their recipes. Loaded once the audio starts (SoundService), out of the bundle
- * of the start of the app
+ * Plays the sounds synthesized at runtime, by their recipes. Loaded with the engine of the sounds (SoundEngine), out of the
+ * bundle of the start of the app
  */
 export class SoundSynth {
     private static readonly DEFAULT_ATTACK: number = 0.005;

@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
@@ -12,6 +13,7 @@ import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { DEAL_STAGGER, HAND_ENDING } from '../../helpers/table-sound.helper';
 import { PokerPayloads, SeventeenPokerSession, SPGameSessionType } from '../../classes/game-sessions/seventeen-poker-session';
 import { BetAction } from '../../classes/rules/betting-round';
@@ -330,6 +332,31 @@ describe('PokerTableComponent', () => {
             .every((image: Element) => image.classList.contains('outline-3'));
         expect(outlined(1)).toEqual(outcome?.winner === PokerSeat.ONE);
         expect(outlined(0)).toEqual(outcome?.winner === PokerSeat.TWO);
+    });
+
+    test('should play the cards dealt once, and the pot at once, when the user asks for less motion', async () => {
+        // Given
+        TestBed.configureTestingModule({ providers: [{ provide: ReducedMotionService, useValue: { reduced: signal(true) } }] });
+        const bob: SeventeenPokerSession = await seated();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When
+        bob.deal();
+        await until(() => status() === 'Your turn.');
+
+        // Then
+        expect(play.mock.calls.filter(([effect]) => effect === SoundEffect.POKER_DEAL)).toEqual([[SoundEffect.POKER_DEAL, 0]]);
+
+        // When Alice bets, then Bob folds
+        await click('Bet more');
+        await click('Bet 6');
+        await until(() => status() === 'bob to speak.');
+        play.mockClear();
+        bob.bet(BetAction.FOLD);
+        await until(() => status() === 'Your turn to deal.');
+
+        // Then
+        expect(play.mock.calls).toEqual([[SoundEffect.POKER_FOLD, 0], [SoundEffect.POKER_POT_WON, 0]]);
     });
 
     test('should play the sounds of the table: the seats taken, the deck shuffled, the cards dealt, the chips bet, a fold and the pot won', async () => {
@@ -676,6 +703,29 @@ describe('PokerTableComponent', () => {
         expect(play).toHaveBeenCalledWith(SoundEffect.POKER_SHUFFLE, 0);
     });
 
+    test('should play the live change only of a render catching up with the history of the room too', async () => {
+        // Given: the seats taken before Carol joins
+        const alice: SeventeenPokerSession = participant('alice');
+        const bob: SeventeenPokerSession = participant('bob');
+        alice.takeSeat(PokerSeat.ONE);
+        bob.takeSeat(PokerSeat.TWO);
+        await table('carol');
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When: the chain gives her its history, then the first hand dealt live, before the page renders
+        hub.replay(fixture.componentInstance.room());
+        bob.deal();
+        await until(() => status() === 'alice to speak.');
+
+        // Then: the deck shuffled, the antes paid, then the cards dealt, not the seats of the history; the antes fly
+        expect(play.mock.calls).toEqual([
+            [SoundEffect.POKER_SHUFFLE, 0],
+            [SoundEffect.CHIPS, 0],
+            ...[0, 1, 2, 3, 4].map((index: number) => [SoundEffect.POKER_DEAL, index * DEAL_STAGGER]),
+        ]);
+        expect(flights()).toEqual([['5'], ['5']]);
+    });
+
     test('should tell the player the deck waits for', async () => {
         // Given: the keys of Bob do not reach the chain once he shuffled
         let dropKeys: boolean = false;
@@ -883,6 +933,34 @@ describe('PokerTableComponent', () => {
             expect(flights()).toEqual([['5', '5']]);
             expect(text('.badge')).toEqual('Draw: both players end with 145 chips.');
             expect(element().querySelector('.badge')?.classList).toContain('badge-draw');
+        });
+
+        test('should play the live change of a render catching up with a history ending with a new match', async () => {
+            // Given: a match played, then a new one asked, before Carol joins
+            const alice: SeventeenPokerSession = participant('alice', rules);
+            const bob: SeventeenPokerSession = participant('bob', rules);
+            alice.takeSeat(PokerSeat.ONE);
+            bob.takeSeat(PokerSeat.TWO);
+            bob.deal();
+            await vi.waitFor(() => expect(alice.myTurn()).toBe(true));
+            alice.bet(BetAction.BET, 1);
+            await vi.waitFor(() => expect(bob.myTurn()).toBe(true));
+            bob.bet(BetAction.FOLD);
+            await vi.waitFor(() => expect(alice.verification()).toEqual(DeckVerification.FAIR));
+            alice.rematch();
+            await vi.waitFor(() => expect(alice.over()).toBe(false));
+            await table('carol', rules);
+            const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+            // When: the chain gives her its history, then the first hand of the new match dealt live, the new match and the
+            // deal applied before the page renders
+            hub.replay(fixture.componentInstance.room());
+            bob.deal();
+            await until(() => status() === 'alice to speak.');
+
+            // Then
+            expect(play).toHaveBeenCalledWith(SoundEffect.POKER_SHUFFLE, 0);
+            expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, 0);
         });
 
         test('should play a new match once the match is over', async () => {

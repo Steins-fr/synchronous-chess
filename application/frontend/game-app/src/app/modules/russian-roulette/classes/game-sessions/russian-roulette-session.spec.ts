@@ -246,7 +246,8 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             // When
             await loaded(alice, bob);
 
-            // Then
+            // Then: the keys of both players given live, their bullets heard loaded
+            expect(sessions.map((session: RussianRouletteSession) => session.loads())).toEqual([2, 2, 2]);
             expect(new Set(sessions.map((session: RussianRouletteSession) => session.game().first())).size).toEqual(1);
             const first: RouletteSeat = carol.game().first() as RouletteSeat;
             expect(sessions[first].myTurn()).toBe(true);
@@ -759,16 +760,25 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
         bob.destroy();
         hub.close(rooms.get('bob') as Room<RoulettePayloads>);
         const reloaded: RussianRouletteSession = page('bob');
+        const caughtUp = vi.fn();
+        reloaded.caughtUp.subscribe(caughtUp);
         sessions.splice(1, 1);
         sessions.splice(1, 0, sessions.pop() as RussianRouletteSession);
         hub.replay(rooms.get('bob') as Room<RoulettePayloads>);
         await settled([reloaded], (session: RussianRouletteSession) => session.game().chambers().length === 1);
 
-        // Then
+        // Then: the seats taken and the bullets loaded in the history of the room are not heard
         expect(reloaded.mySeat()).toEqual(TWO);
-        expect(reloaded.historySteps()).toEqual(2 * hub.delivered.length);
+        expect(reloaded.seatsTaken()).toEqual(0);
+        expect(reloaded.loads()).toEqual(0);
+        expect(caughtUp).not.toHaveBeenCalled();
+
+        // When the game goes on live
         await play('shoot');
+
+        // Then: caught up with the history once, before the first live message
         expect(reloaded.game().chambers()).toEqual(alice.game().chambers());
+        expect(caughtUp).toHaveBeenCalledOnce();
     });
 
     test('should play a lighter game with the rules given', async () => {

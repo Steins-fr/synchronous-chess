@@ -15,11 +15,13 @@ import { BetAction } from '../rules/betting-round';
 import { compareHands, evaluateHand } from '../rules/hand-evaluator';
 import { HandEnd, HandPhase, PokerMatchRules, SEVENTEEN_POKER_RULES } from '../rules/poker-match';
 import { PokerSeat } from '../rules/poker-seat';
-import { pokerBlockChains, PokerPayloads, SeventeenPokerSession, SPGameSessionType } from './seventeen-poker-session';
+import { LiveTable, pokerBlockChains, PokerPayloads, SeventeenPokerSession, SPGameSessionType } from './seventeen-poker-session';
 
 const cipher = new SraCipher(TEST_GROUP);
 const SALT: string = 'a'.repeat(32);
 const { ONE, TWO } = PokerSeat;
+/** No change of the table applied live */
+const NO_LIVE: LiveTable = { deals: 0, draws: [0, 0], chips: 0, outcomes: 0 };
 
 type Tamper = (message: AppMessage) => AppMessage;
 
@@ -357,6 +359,8 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             // Then
             expect(carol.match().outcomes()).toEqual([{ end: HandEnd.NO_CONTEST, winner: null, pot: 10, gains: [0, 0], hands: null }]);
             expect(carol.match().stacks()).toEqual([145, 145]);
+            // The antes moved chips, the checks none
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, chips: 1, outcomes: 1 });
         });
 
         test('should keep the local player from acting again until its action is in the chain', async () => {
@@ -433,6 +437,7 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             // Then
             expect(carol.match().hand()?.outcome?.end).toEqual(HandEnd.FOLD);
             expect(carol.match().stacks()).toEqual([155, 145]);
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, chips: 2, outcomes: 1 });
             expect(read(carol, TWO)).toEqual([null, null, null, null, null]);
             expect(read(alice, TWO)).toEqual([null, null, null, null, null]);
         });
@@ -454,6 +459,7 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             // Given
             const [alice, bob, carol] = await exchanging();
             const kept: Array<PlayingCard | null> = read(alice, ONE);
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, chips: 3 });
 
             // When
             alice.exchange([1, 3]);
@@ -465,6 +471,7 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             expect(read(alice, ONE)[0]).toEqual(kept[0]);
             expect(read(bob, ONE)).toEqual([null, null, null, null, null]);
             expect(carol.deckCount()).toEqual(5);
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, draws: [2, 0], chips: 3 });
             expect(bob.myTurn()).toBe(true);
 
             // When
@@ -473,6 +480,7 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
 
             // Then
             expect(carol.positions()[TWO]).toEqual([5, 6, 7, 8, 9]);
+            expect(carol.live().draws).toEqual([2, 0]);
             expect(messagesOf(MentalDeckMessageType.KEYS, 'bob').at(-1)?.payload).toMatchObject({ keys: [{ position: 10 }, { position: 11 }] });
             expect(alice.myTurn()).toBe(true);
         });
@@ -550,6 +558,8 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             expect(carol.match().hand()?.outcome?.end).toEqual(HandEnd.SHOWDOWN);
             expect(carol.match().hand()?.outcome?.winner).toEqual(comparison === 0 ? null : comparison > 0 ? ONE : TWO);
             expect(alice.match().stacks()).toEqual(carol.match().stacks());
+            // The bet and the call moved chips, the checks and the cards kept none
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, chips: 3, outcomes: 1 });
         });
 
         test('should stop the match when a hand shown does not open', async () => {
@@ -592,6 +602,7 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             // Then
             expect(carol.match().forfeited()).toEqual(ONE);
             expect(carol.match().result()).toEqual({ winner: TWO, stacks: [145, 155] });
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, chips: 1, outcomes: 1 });
             expect(bob.sending()).toBe(false);
             await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
         });
@@ -999,18 +1010,28 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
         bob.destroy();
         hub.close(rooms.get('bob') as Room<PokerPayloads>);
         const reloaded: SeventeenPokerSession = page('bob');
+        // The player to act when the session caught up with the history
+        const caughtUp: Array<PokerSeat | null | undefined> = [];
+        reloaded.caughtUp.subscribe(() => caughtUp.push(reloaded.match().hand()?.round.toAct));
         hub.replay(rooms.get('bob') as Room<PokerPayloads>);
         await settled([reloaded], (session: SeventeenPokerSession) => known(session, TWO));
 
-        // Then: the messages of the game it caught up with are its history
+        // Then: the messages of the game it caught up with are its history, no change of the table applied live
         expect(read(reloaded, TWO)).toEqual(cards);
         expect(reloaded.mySeat()).toEqual(TWO);
-        const steps: number = 2 * hub.delivered.filter((message: AppMessage) => message.type.startsWith('SP_')).length;
-        expect(reloaded.historySteps()).toEqual(steps);
+        expect(reloaded.live()).toEqual(NO_LIVE);
+        expect(reloaded.seatsTaken()).toEqual(0);
+        expect(caughtUp).toEqual([]);
+
+        // When: the first live message, a check moving no chips
         alice.bet(BetAction.CHECK);
         await settled([reloaded], (session: SeventeenPokerSession) => session.myTurn());
+
+        // Then: caught up once, right before it applied
         expect(reloaded.match().hand()?.round.toAct).toEqual(TWO);
-        expect(reloaded.historySteps()).toEqual(steps);
+        expect(caughtUp).toEqual([ONE]);
+        expect(reloaded.live()).toEqual(NO_LIVE);
+        expect(reloaded.seatsTaken()).toEqual(0);
     });
 
     test('should stop receiving the messages once destroyed', async () => {

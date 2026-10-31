@@ -7,14 +7,13 @@ import { BlockChainRouting } from '@app/services/room-manager/classes/room/block
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
-import { merge, Subscription } from 'rxjs';
+import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { Cylinder } from '../cylinder/cylinder';
 import { CylinderMessage, CylinderMessageType, CylinderPayloads } from '../cylinder/cylinder-messages';
 import { CylinderPhase } from '../cylinder/cylinder-state';
 import { RouletteGame, RouletteRules } from '../rules/roulette-game';
 import { PlayedGame } from './played-game';
 import { otherSeat, RouletteSeat, SeatPair } from '../rules/roulette-seat';
-import { wait } from '@app/helpers/wait.helper';
 
 export enum RRGameSessionType {
     /** A participant takes a seat, or leaves its seat */
@@ -129,6 +128,8 @@ export class RussianRouletteSession {
     });
     /** The players of each seat */
     public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
+    /** The seats taken live, out of the history of the room: each one is heard */
+    public readonly seatsTaken: Signal<number> = this.tableSeats.seatsTaken;
 
     /** The cylinder of the game in progress, once both seats are taken */
     public readonly cylinder: Signal<Cylinder | null> = computed((): Cylinder | null => this._played().cylinder());
@@ -167,14 +168,17 @@ export class RussianRouletteSession {
     private readonly _step = signal<number>(0);
     /** The moves and the steps of the cylinder applied in the game: a timeout names it, a move made meanwhile voids it */
     public readonly step: Signal<number> = this._step.asReadonly();
-    // The latest message queued came from the history of the room
-    private historyBehind: boolean = false;
-    private readonly _historySteps = signal<number>(0);
+    private readonly _loads = signal<number>(0);
+    /** The bullets of a player loaded live, out of the history of the room: its key given as it clicks to load them, heard */
+    public readonly loads: Signal<number> = this._loads.asReadonly();
+    // The session applied a live message: it caught up with the history of the room
+    private live: boolean = false;
+    private readonly _caughtUp = new Subject<void>();
     /**
-     * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
-     * the start and the end of each of its messages
+     * Emits once, right before the first live message applies: a page reloaded or a participant joining late caught up
+     * with the history of the room, which the table shows at once. It plays and hears the changes from there
      */
-    public readonly historySteps: Signal<number> = this._historySteps.asReadonly();
+    public readonly caughtUp: Observable<void> = this._caughtUp.asObservable();
 
     /**
      * The moves the game waits for, of one player or both: none before a player loads its bullets, nor once it is checked.
@@ -225,15 +229,14 @@ export class RussianRouletteSession {
             ...Object.values(CylinderMessageType).map((type: CylinderMessageType) => room.messenger(type)),
         ).subscribe((message: RouletteMessage) => {
             this.pending++;
-            // The first live message after the history waits for the page to render the end of it: it is not taken for history
             const history: boolean = room.isHistory(message);
-            const afterHistory: boolean = this.historyBehind && !history;
-            this.historyBehind = history;
             this.queue = this.queue.then(async () => {
-                if (afterHistory) {
-                    await wait(0);
+                // The history of the room applied, before the first live message: the table catches up with it
+                if (!history && !this.live) {
+                    this.live = true;
+                    this._caughtUp.next();
                 }
-                await logHandlingFailure(message, this.handle(message));
+                await logHandlingFailure(message, this.apply(message));
                 // Once the messages received are applied, as a reloaded page catching up: its cylinders act on the chain
                 if (--this.pending === 0) {
                     this.cylinders.forEach((cylinder: Cylinder) => void cylinder.act());
@@ -301,23 +304,6 @@ export class RussianRouletteSession {
     private playerSeatOf(name: string): RouletteSeat | null {
         const index: number = this.players().indexOf(name);
         return index === -1 ? null : index;
-    }
-
-    private async handle(message: RouletteMessage): Promise<void> {
-        const history: boolean = this.room.isHistory(message);
-        const step = (): void => this._historySteps.update((steps: number) => steps + 1);
-
-        if (history) {
-            step();
-        }
-
-        try {
-            await this.apply(message);
-        } finally {
-            if (history) {
-                step();
-            }
-        }
     }
 
     private async apply(message: RouletteMessage): Promise<void> {
@@ -464,6 +450,7 @@ export class RussianRouletteSession {
         }
 
         const progress: number = cylinder.progress();
+        const keys: number = cylinder.keys();
         const applied = await cylinder.apply(message);
 
         if (cylinder !== this.cylinder()) {
@@ -471,6 +458,10 @@ export class RussianRouletteSession {
         }
         if (cylinder.progress() !== progress) {
             this._step.update((value: number) => value + 1);
+        }
+        // A key given live: the bullets of its player loaded, heard by the table
+        if (cylinder.keys() > keys && !this.room.isHistory(message)) {
+            this._loads.update((loads: number) => loads + 1);
         }
 
         const first: number | null = cylinder.first();

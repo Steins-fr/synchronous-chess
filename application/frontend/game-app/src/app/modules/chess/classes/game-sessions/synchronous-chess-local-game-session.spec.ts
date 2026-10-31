@@ -1,6 +1,7 @@
 import { sessionState } from '@testing/chess-state.helper';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
 import { PieceColor } from '../../enums/piece-color.enum';
+import ChessBoardHelper from '../../helpers/chess-board-helper';
 import SynchronousChessLocalGameSession from './synchronous-chess-local-game-session';
 import { describe, test, expect } from 'vitest';
 
@@ -37,7 +38,7 @@ describe('SynchronousChessLocalGameSession', () => {
         expect(session.awayPlayers()).toEqual([]);
         expect(session.canRelease()).toEqual(false);
         expect(session.forfeitClaimable()).toEqual(false);
-        expect(session.historySteps()).toEqual(0);
+        expect(session.liveTurns()).toEqual({ count: 0, history: 0, board: ChessBoardHelper.createFenBoard() });
         expect(session.seatsTaken()).toEqual(0);
         expect(board).toBe(session.game.fenBoard());
     });

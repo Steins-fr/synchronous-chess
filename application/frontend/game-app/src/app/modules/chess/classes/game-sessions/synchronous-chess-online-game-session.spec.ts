@@ -183,15 +183,17 @@ describe('SynchronousChessOnlineGameSession', () => {
         expect(reloaded.game.playedTurns()).toHaveLength(1);
         expect(reloaded.game.playedTurns()).toEqual(black.game.playedTurns());
         expect(hub.reports).toEqual([]);
-        // Its commitment restored and both reveals, each started then ended (the seats set apart): the pages playing live step none
-        await vi.waitFor(() => expect(reloaded.historySteps()).toEqual(6));
-        expect(sessions.map((session: SynchronousChessOnlineGameSession) => session.historySteps())).toEqual([0, 0, 0]);
+        // The turn run by the history of the room, which the reloaded page does not hear: the pages playing live do
+        await vi.waitFor(() => expect(reloaded.liveTurns()).toEqual({ count: 0, history: 1, board: black.board() }));
+        expect(sessions.map((session: SynchronousChessOnlineGameSession) => session.liveTurns().count)).toEqual([1, 1, 1]);
+        expect(sessions.map((session: SynchronousChessOnlineGameSession) => session.liveTurns().history)).toEqual([0, 0, 0]);
 
         // When it plays the next turn
         reloaded.move(d2d4);
 
-        // Then
+        // Then: no turn run until black plays
         await vi.waitFor(() => expect(hub.delivered.at(-1)).toEqual(expect.objectContaining({ from: 'a', type: SCGameSessionType.COMMIT, payload: expect.objectContaining({ turn: 1 }) })));
+        expect(reloaded.liveTurns().count).toEqual(0);
     });
 
     test('should reveal after a reload the action committed to before', async () => {
@@ -265,6 +267,42 @@ describe('SynchronousChessOnlineGameSession', () => {
         await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
         await new Promise((resolve) => setTimeout(resolve, 20));
         expect(hub.reports).toEqual([]);
+    });
+
+    test('should count once a turn the local player plays alone while a reveal sent again is checked', async () => {
+        // Given a turn run, then a promotion of black only
+        const whiteAction: SealedAction = { kind: SealedActionKind.MOVE, move: e2e4 };
+        await sealed('a', PieceColor.WHITE, whiteAction);
+        await sealed('b', PieceColor.BLACK, { kind: SealedActionKind.MOVE, move: e7e5 });
+        await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
+        gameState(black.game)._turn.set(new PromotionTurn({
+            whiteFenCoordinate: null,
+            blackFenCoordinate: [FenColumn.A, FenRow._1],
+            whitePiece: null,
+            blackPiece: null,
+        }, new SyncTurn()));
+        expect(black.liveTurns().count).toEqual(1);
+        // The commitment of the reveal sent again is checked until released
+        let release: () => void = () => undefined;
+        const checked: Promise<void> = new Promise<void>((resolve) => release = resolve);
+        const commitment = SynchronousChessOnlineGameSession.commitment;
+        vi.spyOn(SynchronousChessOnlineGameSession, 'commitment').mockImplementation(async (turn: number, color: PieceColor, action: SealedAction, salt: string) => {
+            if (turn === 0 && color === PieceColor.WHITE) {
+                await checked;
+            }
+            return commitment(turn, color, action, salt);
+        });
+
+        // When white reveals its turn again, and black promotes while it is checked
+        hub.send({ from: 'a', type: SCGameSessionType.REVEAL, payload: { turn: 0, action: whiteAction, salt: 'salt' } });
+        await new Promise((resolve) => setTimeout(resolve));
+        black.promote(PieceType.QUEEN);
+        release();
+        await black['reveals'];
+
+        // Then
+        expect(turnCount(black)).toEqual(2);
+        expect(black.liveTurns().count).toEqual(2);
     });
 
     test('should go on with the next reveals after a malformed one', async () => {
@@ -646,10 +684,10 @@ describe('SynchronousChessOnlineGameSession seats', () => {
         const reloaded: SynchronousChessOnlineGameSession = new SynchronousChessOnlineGameSession(room);
         hub.replay(room);
 
-        // Then: both seats are steps of the history, a seat taken in it plays no sound, as the pages that saw them live do
+        // Then: both seats are taken in the history, a seat taken in it plays no sound, as the pages that saw them live do
         expect(reloaded.configuration()).toEqual({ whitePlayer: 'a', blackPlayer: 'b' });
         expect(reloaded.playingColor).toEqual(PieceColor.WHITE);
-        expect(reloaded.historySteps()).toEqual(4);
+        expect(reloaded.liveTurns().count).toEqual(0);
         expect(reloaded.seatsTaken()).toEqual(0);
         expect(joining.seatsTaken()).toEqual(2);
     });
@@ -729,12 +767,13 @@ describe('SynchronousChessOnlineGameSession forfeit', () => {
         white.claimForfeit();
         white.claimForfeit();
 
-        // Then every page ends the game
+        // Then every page ends the game, heard as a live change without a turn run
         expect(hub.delivered.filter((message: AppMessage) => message.type === SCGameSessionType.FORFEIT)).toEqual([{ from: 'a', type: SCGameSessionType.FORFEIT, payload: { turn: 0 } }]);
         await settled();
         expect(results([white, spectator])).toEqual(Array(2).fill({ winner: PieceColor.WHITE, reason: GameEndReason.AWAY }));
         expect(white.movePreview()).toBeUndefined();
         expect(white.forfeitClaimable()).toEqual(false);
+        expect(spectator.liveTurns()).toEqual({ count: 1, history: 0, board: ChessBoardHelper.createFenBoard() });
 
         // When black, back, claims too
         claim('b', 0);
@@ -742,6 +781,7 @@ describe('SynchronousChessOnlineGameSession forfeit', () => {
 
         // Then
         expect(spectator.game.result()).toEqual({ winner: PieceColor.WHITE, reason: GameEndReason.AWAY });
+        expect(spectator.liveTurns().count).toEqual(1);
         expect(hub.reports).toEqual([]);
     });
 

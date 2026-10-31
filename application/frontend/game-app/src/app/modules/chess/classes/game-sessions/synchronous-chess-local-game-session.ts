@@ -1,6 +1,6 @@
 import { Signal, signal } from '@angular/core';
 import { PieceColor } from '../../enums/piece-color.enum';
-import SynchronousChessGameSession from './synchronous-chess-game-session';
+import SynchronousChessGameSession, { LiveTurns } from './synchronous-chess-game-session';
 
 export default class SynchronousChessLocalGameSession extends SynchronousChessGameSession {
 
@@ -10,7 +10,7 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     public readonly inMatch: Signal<boolean> = signal(false).asReadonly();
     public readonly awayPlayers: Signal<ReadonlyArray<string>> = signal([]).asReadonly();
     public readonly forfeitClaimable: Signal<boolean> = signal(false).asReadonly();
-    public readonly historySteps: Signal<number> = signal(0).asReadonly();
+    public readonly liveTurns: Signal<Readonly<LiveTurns>> = signal<Readonly<LiveTurns>>({ count: 0, history: 0, board: this.game.fenBoard() }).asReadonly();
     public readonly seatsTaken: Signal<number> = signal(0).asReadonly();
 
     public get playingColor(): PieceColor {

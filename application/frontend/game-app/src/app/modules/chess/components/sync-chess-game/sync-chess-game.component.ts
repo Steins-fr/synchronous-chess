@@ -3,7 +3,7 @@ import { Component, OnDestroy, Signal, computed, effect, inject, input, signal, 
 import { MatButtonModule } from '@angular/material/button';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import SynchronousChessGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGameSession, { LiveTurns } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import SynchronousChessGame from '@app/modules/chess/classes/games/synchronous-chess-game';
 import SynchronousChessGameSessionBuilder from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session-builder';
 import SynchronousChessLocalGameSession from '@app/modules/chess/classes/game-sessions/synchronous-chess-local-game-session';
@@ -33,6 +33,7 @@ import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { LanguageService } from '@app/services/language/language.service';
 import { turnSounds } from '@app/modules/chess/helpers/turn-sound.helper';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SOUND_GAP } from '@app/services/sound/game-sounds';
 import { OneShotSoundEffect } from '@app/services/sound/sound-files';
 import { SoundService } from '@app/services/sound/sound.service';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
@@ -41,10 +42,10 @@ import { PlayedTurn } from '@app/modules/chess/classes/games/played-turn';
 /** The game as the page last heard it */
 interface HeardGame {
     readonly session: SynchronousChessGameSession;
-    readonly historySteps: number;
+    /** The changes of the game made live */
+    readonly live: number;
     readonly turns: number;
     readonly board: FenBoard;
-    readonly over: boolean;
     /** The seats taken live */
     readonly seatsTaken: number;
 }
@@ -124,19 +125,17 @@ export class SyncChessGameComponent implements OnDestroy {
             : undefined;
     });
 
-    /** The time between the sounds of the same turns, in seconds */
-    public static readonly SOUND_GAP: number = 0.3;
     private heard: Readonly<HeardGame> | null = null;
     // A seat taken, the turns run since the page last heard the game, or its end, play their sounds on every page, a hidden
     // one included. A new session starts from its own game, the history of the room it catches up with plays none: the
-    // seats taken live are counted by the session, the turns heard once the history steps did not change
+    // seats taken and the changes of the game made live are counted by the session
     private readonly sounds = effect(() => {
         const session: SynchronousChessGameSession = this.gameSession();
         const game: SynchronousChessGame = session.game;
         const playedTurns: ReadonlyArray<Readonly<PlayedTurn>> = game.playedTurns();
+        const live: Readonly<LiveTurns> = session.liveTurns();
         const heard: Readonly<HeardGame> = {
-            session, historySteps: session.historySteps(), turns: playedTurns.length, board: game.fenBoard(), over: game.isGameOver(),
-            seatsTaken: session.seatsTaken(),
+            session, live: live.count, turns: playedTurns.length, board: game.fenBoard(), seatsTaken: session.seatsTaken(),
         };
         const previous: Readonly<HeardGame> | null = this.heard;
         this.heard = heard;
@@ -146,10 +145,12 @@ export class SyncChessGameComponent implements OnDestroy {
         }
 
         const sounds: OneShotSoundEffect[] = heard.seatsTaken > previous.seatsTaken ? [SoundEffect.SEAT_TAKEN] : [];
-        if (previous.historySteps === heard.historySteps && (heard.turns !== previous.turns || heard.over !== previous.over)) {
-            sounds.push(...this.playedTurnSounds(previous, heard));
+        if (heard.live !== previous.live) {
+            // The turns the history of the room ran since the page last heard the game are not heard, rendered with the
+            // live ones that follow them or not: these start from the board the history left
+            sounds.push(...this.playedTurnSounds(previous.turns < live.history ? { ...previous, turns: live.history, board: live.board } : previous, heard));
         }
-        untracked(() => sounds.forEach((sound: OneShotSoundEffect, index: number) => this.soundService.play(sound, index * SyncChessGameComponent.SOUND_GAP)));
+        untracked(() => sounds.forEach((sound: OneShotSoundEffect, index: number) => this.soundService.play(sound, index * SOUND_GAP)));
     });
 
     /** The sounds of the turns run since the page last heard the game */
