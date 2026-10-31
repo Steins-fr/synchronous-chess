@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SoundEffect } from './enums/sound-effect.enum';
 import { SoundCategory } from './enums/sound-category.enum';
 import { SoundState } from './enums/sound-state.enum';
+import { SoundEngine } from './sound-engine';
 import { isFileSound, isLoopSound, SynthesizedSoundEffect } from './sound-files';
 import { SoundService } from './sound.service';
 
@@ -19,12 +20,12 @@ describe('SoundService', () => {
 
     /**
      * Runs the listener of a gesture of the service with an event of a person (trusted), or of a script: jsdom trusts no
-     * event the code dispatches, and never lets a spec trust one. Then lets the audio resume, and its synthesizer load
+     * event the code dispatches, and never lets a spec trust one. Then lets the audio resume, and its engine load
      */
     async function act(type: string = 'pointerdown', isTrusted: boolean = true): Promise<void> {
         const call = vi.mocked(document.addEventListener).mock.calls.find(([listened]: Parameters<Document['addEventListener']>) => listened === type);
         (call?.[1] as (event: Event) => void)({ isTrusted } as Event);
-        // The synthesizer, loaded once the audio starts
+        // The engine, loaded once the audio starts
         await vi.dynamicImportSettled();
     }
 
@@ -108,20 +109,29 @@ describe('SoundService', () => {
         expect(context().sources).toHaveLength(0);
     });
 
-    test('should play no sound while its synthesizer loads, once the audio started', async () => {
+    test('should play no sound, nor load a file, while its engine loads, once the audio started', async () => {
         // Given
         const service: SoundService = createService();
+        const http: HttpTestingController = TestBed.inject(HttpTestingController);
         const call = vi.mocked(document.addEventListener).mock.calls.find(([listened]: Parameters<Document['addEventListener']>) => listened === 'click');
         (call?.[1] as (event: Event) => void)({ isTrusted: true } as Event);
         await Promise.resolve();
 
         // When
         service.play(SoundEffect.CHESS_MOVE);
+        service.play(SoundEffect.POKER_FOLD);
 
-        // Then
+        // Then: the audio resumed in the gesture
+        expect(service.started()).toBe(false);
         expect(context().state).toBe('running');
         expect(context().sources).toHaveLength(0);
+        http.expectNone('assets/sounds/card-shove-1.wav');
+
+        // When
         await vi.dynamicImportSettled();
+
+        // Then
+        expect(service.started()).toBe(true);
     });
 
     test('should play no sound in a browser without the Web Audio API', () => {
@@ -285,9 +295,9 @@ describe('SoundService', () => {
         stop();
 
         // Then
-        expect(fade.gain.linearRampToValueAtTime).toHaveBeenCalledExactlyOnceWith(0, 5 + SoundService.LOOP_FADE);
-        expect(start.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundService.LOOP_FADE);
-        expect(loop.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundService.LOOP_FADE);
+        expect(fade.gain.linearRampToValueAtTime).toHaveBeenCalledExactlyOnceWith(0, 5 + SoundEngine.LOOP_FADE);
+        expect(start.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundEngine.LOOP_FADE);
+        expect(loop.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundEngine.LOOP_FADE);
     });
 
     test('should loop no sound before the audio starts, once stopped while its files load, nor when they fail to load', async () => {
@@ -387,14 +397,17 @@ describe('SoundService', () => {
     test('should play no sound at a volume of 0', async () => {
         // Given
         const service: SoundService = createService();
+        const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
 
         // When
         service.setVolume(0);
         service.play(SoundEffect.CHESS_MOVE);
+        service.play(SoundEffect.POKER_FOLD);
 
-        // Then
+        // Then: nor loads its file
         expect(context().sources).toHaveLength(0);
+        http.expectNone('assets/sounds/card-shove-1.wav');
     });
 
     test('should play no sound once muted, keeping the volume, and play again once unmuted', async () => {
@@ -596,7 +609,7 @@ describe('SoundService', () => {
         expect(context().state).toBe('running');
     });
 
-    test('should load ahead the files of the sounds of a page, once the audio starts', async () => {
+    test('should load ahead the files of the sounds of a page, once the audio starts and its engine loaded', async () => {
         // Given
         const service: SoundService = createService();
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
@@ -656,26 +669,32 @@ describe('SoundService', () => {
         expect(context().sources).toHaveLength(1);
     });
 
-    test('should load the synthesizer again at the next gesture once its loading failed', async () => {
+    test('should load the engine again at the next gesture once its loading failed, the preloads waiting for it', async () => {
         // Given
         const service: SoundService = createService();
-        const importSynth = vi.spyOn(TestHelper.cast<{ importSynth(): Promise<unknown> }>(SoundService.prototype), 'importSynth')
+        const http: HttpTestingController = TestBed.inject(HttpTestingController);
+        const importEngine = vi.spyOn(TestHelper.cast<{ importEngine(): Promise<unknown> }>(SoundService.prototype), 'importEngine')
             .mockRejectedValueOnce(new Error('Chunk lost'));
+        service.preload([SoundEffect.POKER_SHUFFLE]);
 
         // When
         await act();
         service.play(SoundEffect.CHESS_MOVE);
 
         // Then
+        expect(service.started()).toBe(false);
         expect(context().sources).toHaveLength(0);
+        http.expectNone('assets/sounds/card-shuffle.wav');
 
         // When
         await act();
         service.play(SoundEffect.CHESS_MOVE);
 
         // Then
-        expect(importSynth).toHaveBeenCalledTimes(2);
+        expect(importEngine).toHaveBeenCalledTimes(2);
+        expect(service.started()).toBe(true);
         expect(context().sources).not.toHaveLength(0);
+        http.expectOne('assets/sounds/card-shuffle.wav');
     });
 
     test('should not load again a file the browser can not decode', async () => {
