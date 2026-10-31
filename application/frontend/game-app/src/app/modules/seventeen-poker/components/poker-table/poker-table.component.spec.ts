@@ -935,6 +935,34 @@ describe('PokerTableComponent', () => {
             expect(element().querySelector('.badge')?.classList).toContain('badge-draw');
         });
 
+        test('should play the live change of a render catching up with a history ending with a new match', async () => {
+            // Given: a match played, then a new one asked, before Carol joins
+            const alice: SeventeenPokerSession = participant('alice', rules);
+            const bob: SeventeenPokerSession = participant('bob', rules);
+            alice.takeSeat(PokerSeat.ONE);
+            bob.takeSeat(PokerSeat.TWO);
+            bob.deal();
+            await vi.waitFor(() => expect(alice.myTurn()).toBe(true));
+            alice.bet(BetAction.BET, 1);
+            await vi.waitFor(() => expect(bob.myTurn()).toBe(true));
+            bob.bet(BetAction.FOLD);
+            await vi.waitFor(() => expect(alice.verification()).toEqual(DeckVerification.FAIR));
+            alice.rematch();
+            await vi.waitFor(() => expect(alice.over()).toBe(false));
+            await table('carol', rules);
+            const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+            // When: the chain gives her its history, then the first hand of the new match dealt live, the new match and the
+            // deal applied before the page renders
+            hub.replay(fixture.componentInstance.room());
+            bob.deal();
+            await until(() => status() === 'alice to speak.');
+
+            // Then
+            expect(play).toHaveBeenCalledWith(SoundEffect.POKER_SHUFFLE, 0);
+            expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, 0);
+        });
+
         test('should play a new match once the match is over', async () => {
             // Given
             const bob: SeventeenPokerSession = await dealt(rules);

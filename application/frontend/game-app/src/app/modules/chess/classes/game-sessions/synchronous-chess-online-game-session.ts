@@ -140,6 +140,9 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     private reveals: Promise<void> = Promise.resolve();
     private readonly _liveTurns = signal<Readonly<LiveTurns>>({ count: 0, history: 0, board: this.game.fenBoard() });
     public readonly liveTurns: Signal<Readonly<LiveTurns>> = this._liveTurns.asReadonly();
+    // The turns run and the end of the game the latest change counted: a change counted by the local player, at its play,
+    // is not counted again by a reveal handled meanwhile
+    private counted: Readonly<{ turns: number; over: boolean }> = { turns: 0, over: false };
     private readonly _seatsTaken = signal<number>(0);
     public readonly seatsTaken: Signal<number> = this._seatsTaken.asReadonly();
 
@@ -325,10 +328,8 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     private inOrder(message: AppMessage, handling: () => Promise<void>): void {
         const history: boolean = this.roomService.isHistory(message);
         this.reveals = this.reveals.then(async () => {
-            const turns: number = this.turnCount;
-            const over: boolean = this.game.isGameOver();
             await handling();
-            this.changed(history, turns, over);
+            this.changed(history);
         });
     }
 
@@ -337,11 +338,14 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
      * history of the room moves the start of the turns heard past it, with the board it left. The page then needs not
      * render the end of the history before the first live change: it hears it from there whatever the render
      */
-    private changed(history: boolean, turns: number, over: boolean): void {
-        if (this.turnCount === turns && this.game.isGameOver() === over) {
+    private changed(history: boolean): void {
+        const turns: number = this.turnCount;
+        const over: boolean = this.game.isGameOver();
+        if (turns === this.counted.turns && over === this.counted.over) {
             return;
         }
 
+        this.counted = { turns, over };
         this._liveTurns.update((live: Readonly<LiveTurns>): Readonly<LiveTurns> => history
             ? { ...live, history: this.game.playedTurns().length, board: this.game.fenBoard() }
             : { ...live, count: live.count + 1 });
@@ -397,7 +401,6 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         const color: PieceColor = this.playerColor(this.roomService.localPlayer.name);
         const turn: number = this.turnCount;
         const colors: ReadonlyArray<PieceColor> = [PieceColor.WHITE, PieceColor.BLACK].filter((playing: PieceColor) => !this.game.colorHasPlayed(playing));
-        const over: boolean = this.game.isGameOver();
 
         if (color !== PieceColor.NONE && this.runAction(color, action)) {
             const salt: string = CryptoHelper.randomHex(16);
@@ -406,7 +409,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
             this.sealedTurns.set(turn, sealedTurn);
             void this.commit(sealedTurn, color);
             // A turn the local player plays alone runs at once, out of the reveals: heard as a live one
-            this.changed(false, turn, over);
+            this.changed(false);
         }
     }
 

@@ -344,19 +344,19 @@ export class PokerTableComponent implements OnDestroy {
 
     private readonly soundService = inject(SoundService);
     private readonly reducedMotion: ReducedMotionService = inject(ReducedMotionService);
-    /** The table the page last heard, with its session, its match and the deck of its hand */
-    private heard: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly deck: string | null; readonly table: Readonly<HeardTable> } | null = null;
+    /** The table the page last heard, with its session and the deck of its hand */
+    private heard: { readonly session: SeventeenPokerSession; readonly deck: string | null; readonly table: Readonly<HeardTable> } | null = null;
 
     // A change of the table applied live plays its sounds on every page, a hidden one included: the session counts them,
-    // the history of the room it catches up with counting none. A new session or a new match starts from its own table.
-    // The deck of a new hand dealt live shows shuffled as long as the sound of its shuffle, its cards dealt then
+    // the history of the room it catches up with counting none, its rematches included. A new session starts from its own
+    // table. The deck of a new hand dealt live shows shuffled as long as the sound of its shuffle, its cards dealt then
     private readonly sounds = effect(() => {
         const session: SeventeenPokerSession = this.session();
         const match: PokerMatch = session.match();
         const live: Readonly<LiveTable> = session.live();
         const deck: string | null = session.deck()?.id ?? null;
         const heard: typeof this.heard = this.heard;
-        const previous: typeof this.heard = heard?.session === session && heard.match === match ? heard : null;
+        const previous: typeof this.heard = heard?.session === session ? heard : null;
         // A deck dealt live shows shuffled as long as the sound of its shuffle
         const dealtLive: boolean = previous !== null && live.deals !== previous.table.live.deals;
         // A deck of the history, or already dealt, shows at once: before the hands are read
@@ -376,7 +376,7 @@ export class PokerTableComponent implements OnDestroy {
             outcome: match.outcomes().at(-1) ?? null,
             result: match.result(),
         };
-        this.heard = { session, match, deck, table };
+        this.heard = { session, deck, table };
 
         if (previous === null) {
             return;

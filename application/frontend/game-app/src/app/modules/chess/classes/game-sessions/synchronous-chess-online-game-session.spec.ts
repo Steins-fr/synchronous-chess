@@ -269,6 +269,42 @@ describe('SynchronousChessOnlineGameSession', () => {
         expect(hub.reports).toEqual([]);
     });
 
+    test('should count once a turn the local player plays alone while a reveal sent again is checked', async () => {
+        // Given a turn run, then a promotion of black only
+        const whiteAction: SealedAction = { kind: SealedActionKind.MOVE, move: e2e4 };
+        await sealed('a', PieceColor.WHITE, whiteAction);
+        await sealed('b', PieceColor.BLACK, { kind: SealedActionKind.MOVE, move: e7e5 });
+        await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
+        gameState(black.game)._turn.set(new PromotionTurn({
+            whiteFenCoordinate: null,
+            blackFenCoordinate: [FenColumn.A, FenRow._1],
+            whitePiece: null,
+            blackPiece: null,
+        }, new SyncTurn()));
+        expect(black.liveTurns().count).toEqual(1);
+        // The commitment of the reveal sent again is checked until released
+        let release: () => void = () => undefined;
+        const checked: Promise<void> = new Promise<void>((resolve) => release = resolve);
+        const commitment = SynchronousChessOnlineGameSession.commitment;
+        vi.spyOn(SynchronousChessOnlineGameSession, 'commitment').mockImplementation(async (turn: number, color: PieceColor, action: SealedAction, salt: string) => {
+            if (turn === 0 && color === PieceColor.WHITE) {
+                await checked;
+            }
+            return commitment(turn, color, action, salt);
+        });
+
+        // When white reveals its turn again, and black promotes while it is checked
+        hub.send({ from: 'a', type: SCGameSessionType.REVEAL, payload: { turn: 0, action: whiteAction, salt: 'salt' } });
+        await new Promise((resolve) => setTimeout(resolve));
+        black.promote(PieceType.QUEEN);
+        release();
+        await black['reveals'];
+
+        // Then
+        expect(turnCount(black)).toEqual(2);
+        expect(black.liveTurns().count).toEqual(2);
+    });
+
     test('should go on with the next reveals after a malformed one', async () => {
         // Given
         vi.spyOn(TimedLogger, 'error').mockImplementation(() => undefined);
