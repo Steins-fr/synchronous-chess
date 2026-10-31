@@ -307,8 +307,8 @@ at once.
 The files of the sounds of the table load ahead (`SoundService.preload()`), and the first live message after the history
 of the room waits for the page to render the end of it (`wait(0)`), not to be taken for history.
 Each change of the table plays its sounds on every page, a hidden one included, none while the history grows
-(`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken, the bullets of a player loaded (`loads` of the
-cylinder), the hammer cocked as the revolver aims at a player or at the sky, and the end of the game once its latest
+(`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken, the bullets of a player loaded (`keys` of the
+cylinder: its key given as it clicks to load them, the load itself following once both keys are in), the hammer cocked as the revolver aims at a player or at the sky, and the end of the game once its latest
 shot is over, won, lost or drawn for the local player, as for every game (`gameEndSound()` of
 `services/sound/game-sounds.ts`). The revolver firing (`blast`) plays the shot or the dry click of the hammer, never
 before, and the chips sound as each flight leaves (`CHIPS`, the sound of the chips of the poker): a pass, the table going

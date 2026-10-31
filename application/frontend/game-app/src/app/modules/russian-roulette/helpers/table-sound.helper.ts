@@ -8,8 +8,8 @@ import { RouletteSeat } from '../classes/rules/roulette-seat';
 export interface HeardTable {
     /** The participant on each seat */
     readonly seats: ReadonlyArray<string | null>;
-    /** The players who loaded their bullets in the cylinder */
-    readonly loads: number;
+    /** The players who loaded their bullets: their key given as they click to load them */
+    readonly loaded: number;
     /** Where the revolver aims: a seat, or the sky to reveal a chamber; null while it lies on the cloth */
     readonly aim: string | null;
     /** The bullets of each chamber fired */
@@ -32,7 +32,7 @@ export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardT
     if (seatTaken(before.seats, after.seats)) {
         sounds.push(SoundEffect.SEAT_TAKEN);
     }
-    if (after.loads > before.loads) {
+    if (after.loaded > before.loaded) {
         sounds.push(SoundEffect.ROULETTE_LOAD);
     }
     if (after.aim !== null && after.aim !== before.aim) {

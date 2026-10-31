@@ -470,7 +470,7 @@ export class RouletteTableComponent implements OnDestroy {
         const target: RevolverTarget = this.target();
         const table: Readonly<HeardTable> = {
             seats: session.seats(),
-            loads: session.cylinder()?.loads() ?? 0,
+            loaded: session.cylinder()?.keys() ?? 0,
             aim: target === null ? null : `${ target }`,
             chambers: game.chambers(),
             chips: [...game.stacks(), game.table(), game.bank()],

@@ -286,12 +286,13 @@ describe('ChatComponent', () => {
         // Then
         expect(play).not.toHaveBeenCalled();
 
-        // When: the history read, scrolled up
+        // When: the history read, scrolled up, two messages coming together
         scrollLog(300);
         receive('remote', 'unread');
+        receive('remote', 'unread too');
         await fixture.whenStable();
 
-        // Then
+        // Then: one sound for both
         expect(play).toHaveBeenCalledExactlyOnceWith(SoundEffect.CHAT_MESSAGE);
 
         // When: back at the bottom, the page hidden

@@ -57,6 +57,7 @@ import { ChatParticipantComponent } from './chat-participant/chat-participant.co
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { OneShotSoundEffect } from '@app/services/sound/sound-files';
 import { SoundService } from '@app/services/sound/sound.service';
 
 export enum ChatMessengerType {
@@ -345,8 +346,8 @@ export class ChatComponent {
     private knownRoom: Room<ChatPayloads> | undefined;
     private seenPlayers = new Set<string>();
     private departed = new Set<string>();
-    // A departure rung in this task: the others told with it ring no more
-    private departureRung: boolean = false;
+    // The sounds played in this task: the events told with them ring no more
+    private readonly rung = new Set<OneShotSoundEffect>();
 
     public constructor() {
         // Handled in the subscription, a signal would only keep the last of several messages received in a row
@@ -577,7 +578,7 @@ export class ChatComponent {
         const fromOther: boolean = !isSelf && !this.hiddenAuthors().has(message.from) && !room.isHistory(message);
         // A message of another participant rings unless read as it comes: unread, or the page hidden
         if (fromOther && (!seen || !this.pageVisibility.visible())) {
-            this.soundService.play(SoundEffect.CHAT_MESSAGE);
+            this.ringOnce(SoundEffect.CHAT_MESSAGE);
         }
         if (seen) {
             this.scrollTarget = 'bottom';
@@ -716,14 +717,19 @@ export class ChatComponent {
 
     /** Heard as the departures show, once for the ones told together (the room ended, the network lost), as the arrivals */
     private ringDeparture(): void {
-        if (!this.preferences.arrivals.on() || this.departureRung) {
+        if (this.preferences.arrivals.on()) {
+            this.ringOnce(SoundEffect.ROOM_LEAVE);
+        }
+    }
+
+    /** Plays a sound once for the events told together, in the same task (messages or departures delivered at once) */
+    private ringOnce(effect: OneShotSoundEffect): void {
+        if (this.rung.has(effect)) {
             return;
         }
-        this.departureRung = true;
-        queueMicrotask(() => {
-            this.departureRung = false;
-        });
-        this.soundService.play(SoundEffect.ROOM_LEAVE);
+        this.rung.add(effect);
+        queueMicrotask(() => this.rung.delete(effect));
+        this.soundService.play(effect);
     }
 
     private notice(notices: ReadonlyArray<ChatNotice | ChatModerationNotice>): void {

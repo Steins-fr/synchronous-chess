@@ -141,7 +141,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     private reveals: Promise<void> = Promise.resolve();
     private readonly _historySteps = signal<number>(0);
     public readonly historySteps: Signal<number> = this._historySteps.asReadonly();
-    // The latest message chained on the reveals came from the history of the room
+    // A message of the history of the room was handled since the latest live message chained on the reveals
     private historyBehind: boolean = false;
     private readonly _seatsTaken = signal<number>(0);
     public readonly seatsTaken: Signal<number> = this._seatsTaken.asReadonly();
@@ -338,9 +338,20 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
 
     /** Handles a message at once, a message of the history of the room stepping it before and after */
     private atOnce(message: AppMessage, handling: () => void): void {
+        this.markHistory(message);
         this.stepHistory(message);
         handling();
         this.stepHistory(message);
+    }
+
+    /**
+     * A message of the history of the room handled at once, out of the reveals (a seat, a commitment): the next live message
+     * chained on them waits for the page to render the end of the history all the same
+     */
+    private markHistory(message: AppMessage): void {
+        if (this.roomService.isHistory(message)) {
+            this.historyBehind = true;
+        }
     }
 
     private stepHistory(message: AppMessage): void {
@@ -420,6 +431,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
 
     /** The commitments of every player, the local one included */
     protected onCommit(message: AppMessage<SCGameSessionType.COMMIT, CommitMessage>): void {
+        this.markHistory(message);
         const color: PieceColor = this.playerColor(message.from);
         const key: string = `${ message.payload.turn } ${ color }`;
 

@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, DestroyRef, DOCUMENT, effect, inject, Injectable, Signal, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { storageChanges, storedNumber, storedValue, storeValue } from '@app/helpers/stored-preference.helper';
 import { firstValueFrom, merge } from 'rxjs';
 import { SoundCategory } from './enums/sound-category.enum';
@@ -153,7 +152,8 @@ export class SoundService {
         const category: SoundCategory = soundCategory(effect);
         if (isFileSound(effect)) {
             const files: ReadonlyArray<string> = SOUND_FILES[effect];
-            const file: string = files[Number(CryptoHelper.randomBigInt(BigInt(files.length)))];
+            // Not CryptoHelper: the service starts with the app, its bundle kept small
+            const file: string = files[crypto.getRandomValues(new Uint32Array(1))[0] % files.length];
             this.playFileInto(`${ SOUNDS_PATH }${ file }`, delay, category).catch(() => undefined);
             return;
         }

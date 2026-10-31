@@ -4,7 +4,7 @@ import { RouletteSeat } from '../classes/rules/roulette-seat';
 import { HeardTable, tableSounds } from './table-sound.helper';
 
 describe('tableSounds', () => {
-    const table: HeardTable = { seats: ['alice', 'bob'], loads: 2, aim: null, chambers: [], chips: [150, 150, 0, 0], result: null };
+    const table: HeardTable = { seats: ['alice', 'bob'], loaded: 2, aim: null, chambers: [], chips: [150, 150, 0, 0], result: null };
 
     test('should tell nothing when the table did not change', () => {
         expect(tableSounds(table, { ...table }, RouletteSeat.ONE, false)).toEqual([]);
@@ -16,8 +16,8 @@ describe('tableSounds', () => {
     });
 
     test('should tell the bullets of a player loaded', () => {
-        expect(tableSounds({ ...table, loads: 0 }, { ...table, loads: 1 }, RouletteSeat.ONE, false)).toEqual([SoundEffect.ROULETTE_LOAD]);
-        expect(tableSounds({ ...table, loads: 1 }, { ...table, loads: 0 }, RouletteSeat.ONE, false)).toEqual([]);
+        expect(tableSounds({ ...table, loaded: 0 }, { ...table, loaded: 1 }, RouletteSeat.ONE, false)).toEqual([SoundEffect.ROULETTE_LOAD]);
+        expect(tableSounds({ ...table, loaded: 1 }, { ...table, loaded: 0 }, RouletteSeat.ONE, false)).toEqual([]);
     });
 
     test('should tell the hammer cocked as the revolver aims at a player, then at the other one or at the sky', () => {

@@ -1,7 +1,6 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { AudioBufferSourceNodeMock, AudioContextMock, AudioNodeMock, GainNodeMock, OscillatorNodeMock } from '@testing/audio-context.mock';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TestHelper } from '@testing/test.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SoundEffect } from './enums/sound-effect.enum';
@@ -242,13 +241,16 @@ describe('SoundService', () => {
         const service: SoundService = createService();
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
-        vi.spyOn(CryptoHelper, 'randomBigInt').mockReturnValue(2n);
+        const random = vi.spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
+            (array as unknown as Uint32Array)[0] = 7;
+            return array;
+        });
 
         // When
         service.play(SoundEffect.ROULETTE_BULLET);
 
-        // Then
-        expect(CryptoHelper.randomBigInt).toHaveBeenCalledExactlyOnceWith(5n);
+        // Then: the 3rd of the 5 files
+        expect(random).toHaveBeenCalledOnce();
         http.expectOne('assets/sounds/bullet-3.wav');
     });
 
