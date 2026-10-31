@@ -13,6 +13,15 @@ export interface SessionConfiguration {
     blackPlayer?: string;
 }
 
+/** The turns run live, as a page hears them: from the game the history of the room left, whose turns are not heard */
+export interface LiveTurns {
+    /** The changes of the game made live, out of the history of the room: a turn run, or its end */
+    readonly count: number;
+    /** The turns the history of the room ran, and the board it left: the turns run live start from them */
+    readonly history: number;
+    readonly board: FenBoard;
+}
+
 export default abstract class SynchronousChessGameSession {
 
     public readonly game: SynchronousChessGame = new SynchronousChessGame();
@@ -31,10 +40,10 @@ export default abstract class SynchronousChessGameSession {
     /** The local player waits for the other one, away, during the game: once its time is over, it claims the game */
     public abstract readonly forfeitClaimable: Signal<boolean>;
     /**
-     * The steps of the history of the room applied, which a page reloaded or a participant joining late catches up with:
-     * the start and the end of each of its messages
+     * The turns run live, counted for the page to hear them, and the game the history of the room left, which a page
+     * reloaded or a participant joining late catches up with
      */
-    public abstract readonly historySteps: Signal<number>;
+    public abstract readonly liveTurns: Signal<Readonly<LiveTurns>>;
     /** The seats taken live, out of the history of the room: each one is heard */
     public abstract readonly seatsTaken: Signal<number>;
 

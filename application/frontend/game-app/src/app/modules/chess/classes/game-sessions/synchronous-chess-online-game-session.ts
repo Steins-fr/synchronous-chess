@@ -1,5 +1,5 @@
 import { computed, Signal, signal } from '@angular/core';
-import SynchronousChessGameSession, { SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
+import SynchronousChessGameSession, { LiveTurns, SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import Move from '@app/modules/chess/interfaces/move';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
@@ -13,7 +13,6 @@ import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import { GameEndReason } from '../games/game-result';
 import { SealedTurnStore, StoredTurn } from './sealed-turn-store';
-import { wait } from '@app/helpers/wait.helper';
 
 export enum SCGameSessionType {
     /** A participant takes the seat of a color, or leaves its seat with no color */
@@ -139,19 +138,17 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     private store?: SealedTurnStore;
     /** The reveals are checked one after the other: the reveal of a turn must not be checked before the previous turn is run */
     private reveals: Promise<void> = Promise.resolve();
-    private readonly _historySteps = signal<number>(0);
-    public readonly historySteps: Signal<number> = this._historySteps.asReadonly();
-    // A message of the history of the room was handled since the latest live message chained on the reveals
-    private historyBehind: boolean = false;
+    private readonly _liveTurns = signal<Readonly<LiveTurns>>({ count: 0, history: 0, board: this.game.fenBoard() });
+    public readonly liveTurns: Signal<Readonly<LiveTurns>> = this._liveTurns.asReadonly();
     private readonly _seatsTaken = signal<number>(0);
     public readonly seatsTaken: Signal<number> = this._seatsTaken.asReadonly();
 
     public constructor(protected readonly roomService: Room<ChessPayloads>) {
         super();
-        this.roomService.messenger(SCGameSessionType.SEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.atOnce(message, () => this.onSeat(message)));
+        this.roomService.messenger(SCGameSessionType.SEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onSeat(message));
         this.roomService.messenger(SCGameSessionType.COMMIT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onCommit(message));
         this.roomService.messenger(SCGameSessionType.REVEAL).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onReveal(message));
-        this.roomService.messenger(SCGameSessionType.UNSEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.atOnce(message, () => this.onUnseat(message)));
+        this.roomService.messenger(SCGameSessionType.UNSEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onUnseat(message));
         this.roomService.messenger(SCGameSessionType.FORFEIT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onForfeit(message));
     }
 
@@ -250,8 +247,8 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         }
 
         this.setConfiguration(seats);
-        // Counted apart from the history steps: a seat taken live as the page ends catching up is heard. A seat asked again by
-        // its player (a second click before the first one came back) is no seat taken
+        // A seat taken live as the page ends catching up is heard. A seat asked again by its player (a second click before
+        // the first one came back) is no seat taken
         const held: string | undefined = message.payload.color === PieceColor.WHITE ? whitePlayer : blackPlayer;
         if (message.payload.color !== PieceColor.NONE && held !== message.from && !this.roomService.isHistory(message)) {
             this._seatsTaken.update((taken: number) => taken + 1);
@@ -322,42 +319,32 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     }
 
     /**
-     * Handles a message once the reveals before it are, a message of the history of the room stepping it before and after.
-     * The first live message after the history waits for the page to render the end of it: its turn is not heard as history
+     * Handles a message once the reveals before it are: the turns it runs, or the end of the game, are heard when it is
+     * live. Counted in the same task as the change, only microtasks apart: no render sees the turn without its count
      */
     private inOrder(message: AppMessage, handling: () => Promise<void>): void {
         const history: boolean = this.roomService.isHistory(message);
-        const afterHistory: boolean = this.historyBehind && !history;
-        this.historyBehind = history;
-        this.reveals = this.reveals
-            .then(() => afterHistory ? wait(0) : undefined)
-            .then(() => this.stepHistory(message))
-            .then(handling)
-            .then(() => this.stepHistory(message));
-    }
-
-    /** Handles a message at once, a message of the history of the room stepping it before and after */
-    private atOnce(message: AppMessage, handling: () => void): void {
-        this.markHistory(message);
-        this.stepHistory(message);
-        handling();
-        this.stepHistory(message);
+        this.reveals = this.reveals.then(async () => {
+            const turns: number = this.turnCount;
+            const over: boolean = this.game.isGameOver();
+            await handling();
+            this.changed(history, turns, over);
+        });
     }
 
     /**
-     * A message of the history of the room handled at once, out of the reveals (a seat, a commitment): the next live message
-     * chained on them waits for the page to render the end of the history all the same
+     * The turns a change of the game ran, or its end: a live change is counted, for the page to hear it; a change of the
+     * history of the room moves the start of the turns heard past it, with the board it left. The page then needs not
+     * render the end of the history before the first live change: it hears it from there whatever the render
      */
-    private markHistory(message: AppMessage): void {
-        if (this.roomService.isHistory(message)) {
-            this.historyBehind = true;
+    private changed(history: boolean, turns: number, over: boolean): void {
+        if (this.turnCount === turns && this.game.isGameOver() === over) {
+            return;
         }
-    }
 
-    private stepHistory(message: AppMessage): void {
-        if (this.roomService.isHistory(message)) {
-            this._historySteps.update((steps: number) => steps + 1);
-        }
+        this._liveTurns.update((live: Readonly<LiveTurns>): Readonly<LiveTurns> => history
+            ? { ...live, history: this.game.playedTurns().length, board: this.game.fenBoard() }
+            : { ...live, count: live.count + 1 });
     }
 
     /**
@@ -410,6 +397,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         const color: PieceColor = this.playerColor(this.roomService.localPlayer.name);
         const turn: number = this.turnCount;
         const colors: ReadonlyArray<PieceColor> = [PieceColor.WHITE, PieceColor.BLACK].filter((playing: PieceColor) => !this.game.colorHasPlayed(playing));
+        const over: boolean = this.game.isGameOver();
 
         if (color !== PieceColor.NONE && this.runAction(color, action)) {
             const salt: string = CryptoHelper.randomHex(16);
@@ -417,6 +405,8 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
             const sealedTurn: SealedTurn = { turn, colors, action, salt, revealed: false };
             this.sealedTurns.set(turn, sealedTurn);
             void this.commit(sealedTurn, color);
+            // A turn the local player plays alone runs at once, out of the reveals: heard as a live one
+            this.changed(false, turn, over);
         }
     }
 
@@ -431,7 +421,6 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
 
     /** The commitments of every player, the local one included */
     protected onCommit(message: AppMessage<SCGameSessionType.COMMIT, CommitMessage>): void {
-        this.markHistory(message);
         const color: PieceColor = this.playerColor(message.from);
         const key: string = `${ message.payload.turn } ${ color }`;
 

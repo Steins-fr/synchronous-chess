@@ -264,10 +264,12 @@ A reloaded page builds a new session, and the chain delivers again all its messa
   kept in `SealedTurnStore` (session storage of the tab), played once the game reaches its turn, then
   revealed. A reveal sent twice is ignored by the others.
 
-The session counts the steps of that history (`historySteps`, the start and the end of each of its messages
-seating a player, running a turn or ending the game): the page plays no sound of what it catches up with. The first
-live message after the history waits for the page to render the end of it (`wait(0)`), so its turn is not heard as
-history; the seats taken live are counted apart (`seatsTaken`), a seat asked again by its player not counted.
+The page plays no sound of what it catches up with: the session counts the changes of the game made live
+(`liveTurns.count`, a turn run or the end of the game, by a live message or a turn the local player runs alone), and
+keeps the turns the history ran and the board it left (`liveTurns.history`, `liveTurns.board`). The page hears the
+turns once the count moved, from that board when the history ran turns since it last heard the game: the first live
+turn is heard alone, even rendered with the end of the history. The seats taken live are counted apart
+(`seatsTaken`), a seat asked again by its player not counted.
 
 ## Messages
 
