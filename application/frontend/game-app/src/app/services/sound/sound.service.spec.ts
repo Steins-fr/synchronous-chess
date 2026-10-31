@@ -54,12 +54,12 @@ describe('SoundService', () => {
 
         // When
         service.play(SoundEffect.CHESS_MOVE);
-        await service.playFile('assets/sounds/card-shuffle.wav');
+        await service.playFile('assets/sounds/card-shuffle.mp3');
         await act('pointerdown', false);
 
         // Then
         expect(AudioContextMock.instances).toHaveLength(0);
-        TestBed.inject(HttpTestingController).expectNone('assets/sounds/card-shuffle.wav');
+        TestBed.inject(HttpTestingController).expectNone('assets/sounds/card-shuffle.mp3');
     });
 
     test.each(activations)('should start the audio at a %s of a person, on the volume of the sounds', async (type: string) => {
@@ -125,7 +125,7 @@ describe('SoundService', () => {
         expect(service.started()).toBe(false);
         expect(context().state).toBe('running');
         expect(context().sources).toHaveLength(0);
-        http.expectNone('assets/sounds/card-shove-1.wav');
+        http.expectNone('assets/sounds/card-shove-1.mp3');
 
         // When
         await vi.dynamicImportSettled();
@@ -212,10 +212,10 @@ describe('SoundService', () => {
         await act();
 
         // When
-        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.wav');
-        http.expectOne('assets/sounds/card-shuffle.wav').flush(new ArrayBuffer(8));
+        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.mp3');
+        http.expectOne('assets/sounds/card-shuffle.mp3').flush(new ArrayBuffer(8));
         await played;
-        await service.playFile('assets/sounds/card-shuffle.wav');
+        await service.playFile('assets/sounds/card-shuffle.mp3');
 
         // Then
         http.verify();
@@ -237,8 +237,8 @@ describe('SoundService', () => {
         // When
         service.play(SoundEffect.POKER_FOLD, 0.5);
         service.play(SoundEffect.POKER_SHUFFLE);
-        http.expectOne('assets/sounds/card-shuffle.wav').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
-        http.expectOne('assets/sounds/card-shove-1.wav').flush(new ArrayBuffer(8));
+        http.expectOne('assets/sounds/card-shuffle.mp3').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
+        http.expectOne('assets/sounds/card-shove-1.mp3').flush(new ArrayBuffer(8));
         await vi.waitFor(() => expect(context().sources).toHaveLength(1));
 
         // Then
@@ -261,31 +261,31 @@ describe('SoundService', () => {
 
         // Then: the 3rd of the 5 files
         expect(random).toHaveBeenCalledOnce();
-        http.expectOne('assets/sounds/bullet-3.wav');
+        http.expectOne('assets/sounds/bullet-3.mp3');
     });
 
-    test('should play the start of a sound looping, then its loop right after it, until stopped, fading out', async () => {
+    test('should play the start of a sound looping, then its loop in the same file, until stopped, fading out', async () => {
         // Given
         const service: SoundService = createService();
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
         context().currentTime = 1;
 
-        // When: a start of 0.8 second
+        // When: a file of 3.2 seconds
         const stop: () => void = service.loop(SoundEffect.ROULETTE_SPIN);
-        http.expectOne('assets/sounds/spin-start.wav').flush(new ArrayBuffer(38_400));
-        http.expectOne('assets/sounds/spin-idle.wav').flush(new ArrayBuffer(57_600));
-        await vi.waitFor(() => expect(context().sources).toHaveLength(2));
+        http.expectOne('assets/sounds/spin.mp3').flush(new ArrayBuffer(153_600));
+        await vi.waitFor(() => expect(context().sources).toHaveLength(1));
 
-        // Then: into the sounds of the game, after the output and the gains of the categories
-        const [start, loop] = context().sources as AudioBufferSourceNodeMock[];
+        // Then: from its start at once, looping over a turn of the cylinder, into the sounds of the game, after the output
+        // and the gains of the categories
+        const [source] = context().sources as AudioBufferSourceNodeMock[];
         const fade: GainNodeMock = context().gains[3];
-        expect(start.loop).toBe(false);
-        expect(start.start).toHaveBeenCalledExactlyOnceWith(1);
-        expect(loop.loop).toBe(true);
-        expect(loop.start).toHaveBeenCalledExactlyOnceWith(1.8);
-        expect(start.connections).toEqual([fade]);
-        expect(loop.connections).toEqual([fade]);
+        expect(source.buffer?.duration).toBe(3.2);
+        expect(source.loop).toBe(true);
+        expect(source.loopStart).toBe(1.242);
+        expect(source.loopEnd).toBe(2.442);
+        expect(source.start).toHaveBeenCalledExactlyOnceWith(1);
+        expect(source.connections).toEqual([fade]);
         expect(fade.connections).toEqual([context().gains[1]]);
         expect(context().gains[1].connections).toEqual([output()]);
 
@@ -295,33 +295,33 @@ describe('SoundService', () => {
         stop();
 
         // Then
+        expect(fade.gain.setValueAtTime).toHaveBeenCalledExactlyOnceWith(1, 5);
         expect(fade.gain.linearRampToValueAtTime).toHaveBeenCalledExactlyOnceWith(0, 5 + SoundEngine.LOOP_FADE);
-        expect(start.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundEngine.LOOP_FADE);
-        expect(loop.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundEngine.LOOP_FADE);
+        expect(source.stop).toHaveBeenCalledExactlyOnceWith(5 + SoundEngine.LOOP_FADE);
+        expect(fade.disconnect).not.toHaveBeenCalled();
     });
 
-    test('should loop no sound before the audio starts, once stopped while its files load, nor when they fail to load', async () => {
+    test('should loop no sound before the audio starts, once stopped while its file loads, nor when it fails to load', async () => {
         // Given
         const service: SoundService = createService();
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
 
         // When, Then: no audio yet
         service.loop(SoundEffect.ROULETTE_SPIN)();
-        http.expectNone('assets/sounds/spin-start.wav');
+        http.expectNone('assets/sounds/spin.mp3');
 
-        // When: a file failing to load
+        // When: its file failing to load
         await act();
         service.loop(SoundEffect.ROULETTE_SPIN);
-        http.expectOne('assets/sounds/spin-start.wav').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
-        http.expectOne('assets/sounds/spin-idle.wav').flush(new ArrayBuffer(57_600));
+        http.expectOne('assets/sounds/spin.mp3').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
         // The file failed, forgotten once its failure is seen
         await new Promise((resolve) => setTimeout(resolve));
 
-        // When: stopped before its files are loaded
+        // When: stopped before its file is loaded
         const stop: () => void = service.loop(SoundEffect.ROULETTE_SPIN);
         stop();
-        http.expectOne('assets/sounds/spin-start.wav').flush(new ArrayBuffer(38_400));
-        await vi.waitFor(() => expect(context().decodeAudioData).toHaveBeenCalledTimes(2));
+        http.expectOne('assets/sounds/spin.mp3').flush(new ArrayBuffer(153_600));
+        await vi.waitFor(() => expect(context().decodeAudioData).toHaveBeenCalledOnce());
 
         // Then
         expect(context().sources).toEqual([]);
@@ -350,13 +350,13 @@ describe('SoundService', () => {
         const service: SoundService = createService();
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
-        const failed: Promise<void> = service.playFile('assets/sounds/missing.wav');
-        http.expectOne('assets/sounds/missing.wav').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
+        const failed: Promise<void> = service.playFile('assets/sounds/missing.mp3');
+        http.expectOne('assets/sounds/missing.mp3').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
         await expect(failed).rejects.toThrow();
 
         // When
-        const played: Promise<void> = service.playFile('assets/sounds/missing.wav');
-        http.expectOne('assets/sounds/missing.wav').flush(new ArrayBuffer(8));
+        const played: Promise<void> = service.playFile('assets/sounds/missing.mp3');
+        http.expectOne('assets/sounds/missing.mp3').flush(new ArrayBuffer(8));
         await played;
 
         // Then
@@ -368,11 +368,11 @@ describe('SoundService', () => {
         const service: SoundService = createService();
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
-        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.wav');
+        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.mp3');
 
         // When
         service.setMuted(true);
-        http.expectOne('assets/sounds/card-shuffle.wav').flush(new ArrayBuffer(8));
+        http.expectOne('assets/sounds/card-shuffle.mp3').flush(new ArrayBuffer(8));
         await played;
 
         // Then
@@ -407,7 +407,7 @@ describe('SoundService', () => {
 
         // Then: nor loads its file
         expect(context().sources).toHaveLength(0);
-        http.expectNone('assets/sounds/card-shove-1.wav');
+        http.expectNone('assets/sounds/card-shove-1.mp3');
     });
 
     test('should play no sound once muted, keeping the volume, and play again once unmuted', async () => {
@@ -527,7 +527,7 @@ describe('SoundService', () => {
         // When
         service.setVolume(50);
         service.play(SoundEffect.POKER_FOLD);
-        http.expectOne('assets/sounds/card-shove-1.wav').flush(new ArrayBuffer(8));
+        http.expectOne('assets/sounds/card-shove-1.mp3').flush(new ArrayBuffer(8));
 
         // Then: scheduled, the audio still resuming
         await vi.waitFor(() => expect(context().sources).toHaveLength(1));
@@ -541,9 +541,8 @@ describe('SoundService', () => {
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
         const stop: () => void = service.loop(SoundEffect.ROULETTE_SPIN);
-        http.expectOne('assets/sounds/spin-start.wav').flush(new ArrayBuffer(38_400));
-        http.expectOne('assets/sounds/spin-idle.wav').flush(new ArrayBuffer(57_600));
-        await vi.waitFor(() => expect(context().sources).toHaveLength(2));
+        http.expectOne('assets/sounds/spin.mp3').flush(new ArrayBuffer(153_600));
+        await vi.waitFor(() => expect(context().sources).toHaveLength(1));
 
         // When
         stop();
@@ -552,7 +551,7 @@ describe('SoundService', () => {
         const fade: GainNodeMock = context().gains[3];
         expect(fade.disconnect).toHaveBeenCalledOnce();
         expect(fade.gain.linearRampToValueAtTime).not.toHaveBeenCalled();
-        context().sources.forEach((source) => expect(source.stop).toHaveBeenCalledExactlyOnceWith());
+        expect(context().sources[0].stop).toHaveBeenCalledExactlyOnceWith();
     });
 
     test('should wake an audio suspending for a file of no category', async () => {
@@ -565,8 +564,8 @@ describe('SoundService', () => {
         service.setCategoryMuted(SoundCategory.CHAT, true);
 
         // When: a file of the sound lab
-        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.wav');
-        http.expectOne('assets/sounds/card-shuffle.wav').flush(new ArrayBuffer(8));
+        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.mp3');
+        http.expectOne('assets/sounds/card-shuffle.mp3').flush(new ArrayBuffer(8));
         await played;
 
         // Then: resumed after the suspend
@@ -600,9 +599,8 @@ describe('SoundService', () => {
 
         // When
         service.loop(SoundEffect.ROULETTE_SPIN);
-        http.expectOne('assets/sounds/spin-start.wav').flush(new ArrayBuffer(38_400));
-        http.expectOne('assets/sounds/spin-idle.wav').flush(new ArrayBuffer(57_600));
-        await vi.waitFor(() => expect(context().sources).toHaveLength(2));
+        http.expectOne('assets/sounds/spin.mp3').flush(new ArrayBuffer(153_600));
+        await vi.waitFor(() => expect(context().sources).toHaveLength(1));
         service.setMuted(false);
 
         // Then: scheduled on the audio suspended, which resumes
@@ -618,14 +616,14 @@ describe('SoundService', () => {
         service.preload([SoundEffect.POKER_SHUFFLE, SoundEffect.ROULETTE_SPIN, SoundEffect.CHESS_MOVE]);
 
         // Then
-        http.expectNone('assets/sounds/card-shuffle.wav');
+        http.expectNone('assets/sounds/card-shuffle.mp3');
 
         // When
         await act();
-        ['card-shuffle.wav', 'spin-start.wav', 'spin-idle.wav'].forEach((file: string) => http.expectOne(`assets/sounds/${ file }`).flush(new ArrayBuffer(8)));
+        ['card-shuffle.mp3', 'spin.mp3'].forEach((file: string) => http.expectOne(`assets/sounds/${ file }`).flush(new ArrayBuffer(8)));
         service.preload([SoundEffect.POKER_FOLD]);
         // A file failing to load, loaded again when played
-        http.expectOne('assets/sounds/card-shove-1.wav').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
+        http.expectOne('assets/sounds/card-shove-1.mp3').flush(new ArrayBuffer(0), { status: 404, statusText: 'Not Found' });
         service.play(SoundEffect.POKER_SHUFFLE);
 
         // Then: loaded once, played at once
@@ -660,8 +658,8 @@ describe('SoundService', () => {
         expect(context().state).toBe('suspended');
 
         // When: a file of the sound lab
-        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.wav');
-        http.expectOne('assets/sounds/card-shuffle.wav').flush(new ArrayBuffer(8));
+        const played: Promise<void> = service.playFile('assets/sounds/card-shuffle.mp3');
+        http.expectOne('assets/sounds/card-shuffle.mp3').flush(new ArrayBuffer(8));
         await played;
 
         // Then
@@ -684,7 +682,7 @@ describe('SoundService', () => {
         // Then
         expect(service.started()).toBe(false);
         expect(context().sources).toHaveLength(0);
-        http.expectNone('assets/sounds/card-shuffle.wav');
+        http.expectNone('assets/sounds/card-shuffle.mp3');
 
         // When
         await act();
@@ -694,7 +692,7 @@ describe('SoundService', () => {
         expect(importEngine).toHaveBeenCalledTimes(2);
         expect(service.started()).toBe(true);
         expect(context().sources).not.toHaveLength(0);
-        http.expectOne('assets/sounds/card-shuffle.wav');
+        http.expectOne('assets/sounds/card-shuffle.mp3');
     });
 
     test('should not load again a file the browser can not decode', async () => {
@@ -703,12 +701,12 @@ describe('SoundService', () => {
         const http: HttpTestingController = TestBed.inject(HttpTestingController);
         await act();
         context().decodeAudioData.mockRejectedValueOnce(new Error('Unable to decode'));
-        const failed: Promise<void> = service.playFile('assets/sounds/card-shuffle.wav');
-        http.expectOne('assets/sounds/card-shuffle.wav').flush(new ArrayBuffer(8));
+        const failed: Promise<void> = service.playFile('assets/sounds/card-shuffle.mp3');
+        http.expectOne('assets/sounds/card-shuffle.mp3').flush(new ArrayBuffer(8));
         await expect(failed).rejects.toThrow('Unable to decode');
 
         // When
-        await expect(service.playFile('assets/sounds/card-shuffle.wav')).rejects.toThrow('Unable to decode');
+        await expect(service.playFile('assets/sounds/card-shuffle.mp3')).rejects.toThrow('Unable to decode');
 
         // Then
         http.verify();

@@ -40,7 +40,7 @@ const gameSources = (effect: SoundEffect): ReadonlyArray<Readonly<LabSource>> =>
         return SOUND_FILES[effect].map((file: string) => fileSource({ label: file, file }));
     }
     return isLoopSound(effect)
-        ? [{ icon: 'repeat', label: `${ SOUND_LOOPS[effect].start }, then ${ SOUND_LOOPS[effect].loop } looping` }]
+        ? [{ icon: 'repeat', label: `${ SOUND_LOOPS[effect].file }, looping from ${ SOUND_LOOPS[effect].loopStart } s to ${ SOUND_LOOPS[effect].loopEnd } s` }]
         : [{ icon: 'graphic_eq', label: 'Synthesized' }];
 };
 

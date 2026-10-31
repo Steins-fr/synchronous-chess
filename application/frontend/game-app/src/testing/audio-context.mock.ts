@@ -44,6 +44,8 @@ export class OscillatorNodeMock extends ScheduledSourceNodeMock {
 export class AudioBufferSourceNodeMock extends ScheduledSourceNodeMock {
     public buffer: AudioBuffer | null = null;
     public loop: boolean = false;
+    public loopStart: number = 0;
+    public loopEnd: number = 0;
 }
 
 export class AudioBufferMock {

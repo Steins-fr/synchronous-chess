@@ -61,25 +61,23 @@ export class SoundEngine {
         const { context } = this.audio;
         const fade: GainNode = context.createGain();
         fade.connect(this.audio.categories[soundCategory(effect)]);
-        const sources: AudioBufferSourceNode[] = [];
+        let source: AudioBufferSourceNode | undefined;
         let stopped: boolean = false;
-        const { start, loop } = SOUND_LOOPS[effect];
+        const { file, loopStart, loopEnd } = SOUND_LOOPS[effect];
 
-        Promise.all([this.decodedFile(`${ SOUNDS_PATH }${ start }`), this.decodedFile(`${ SOUNDS_PATH }${ loop }`)])
-            .then(([startBuffer, loopBuffer]: [AudioBuffer, AudioBuffer]) => {
+        this.decodedFile(`${ SOUNDS_PATH }${ file }`)
+            .then((buffer: AudioBuffer) => {
                 if (stopped) {
                     return;
                 }
-                const first: AudioBufferSourceNode = context.createBufferSource();
-                first.buffer = startBuffer;
-                const looping: AudioBufferSourceNode = context.createBufferSource();
-                looping.buffer = loopBuffer;
-                looping.loop = true;
-                [first, looping].forEach((source: AudioBufferSourceNode) => source.connect(fade));
-                // The loop follows the start to the sample
-                first.start(context.currentTime);
-                looping.start(context.currentTime + startBuffer.duration);
-                sources.push(first, looping);
+                // One source playing its start, then looping: the loop follows the start within the same signal
+                source = context.createBufferSource();
+                source.buffer = buffer;
+                source.loop = true;
+                source.loopStart = loopStart;
+                source.loopEnd = loopEnd;
+                source.connect(fade);
+                source.start(context.currentTime);
             })
             .catch(() => undefined);
 
@@ -91,13 +89,13 @@ export class SoundEngine {
             // Suspended, its time stands still: a fade would play once the audio resumes
             if (context.state !== 'running') {
                 fade.disconnect();
-                sources.forEach((source: AudioBufferSourceNode) => source.stop());
+                source?.stop();
                 return;
             }
             const end: number = context.currentTime + SoundEngine.LOOP_FADE;
             fade.gain.setValueAtTime(1, context.currentTime);
             fade.gain.linearRampToValueAtTime(0, end);
-            sources.forEach((source: AudioBufferSourceNode) => source.stop(end));
+            source?.stop(end);
         };
     }
 
