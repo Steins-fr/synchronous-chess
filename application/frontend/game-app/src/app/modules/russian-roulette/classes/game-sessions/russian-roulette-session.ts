@@ -129,6 +129,8 @@ export class RussianRouletteSession {
     });
     /** The players of each seat */
     public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
+    /** The seats taken live, out of the history of the room: each one is heard */
+    public readonly seatsTaken: Signal<number> = this.tableSeats.seatsTaken;
 
     /** The cylinder of the game in progress, once both seats are taken */
     public readonly cylinder: Signal<Cylinder | null> = computed((): Cylinder | null => this._played().cylinder());

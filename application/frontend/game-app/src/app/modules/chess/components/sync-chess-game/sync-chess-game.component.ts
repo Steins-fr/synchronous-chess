@@ -33,6 +33,7 @@ import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { LanguageService } from '@app/services/language/language.service';
 import { turnSounds } from '@app/modules/chess/helpers/turn-sound.helper';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SOUND_GAP } from '@app/services/sound/game-sounds';
 import { OneShotSoundEffect } from '@app/services/sound/sound-files';
 import { SoundService } from '@app/services/sound/sound.service';
 import { FenBoard } from '@app/modules/chess/types/fen-board';
@@ -124,8 +125,6 @@ export class SyncChessGameComponent implements OnDestroy {
             : undefined;
     });
 
-    /** The time between the sounds of the same turns, in seconds */
-    public static readonly SOUND_GAP: number = 0.3;
     private heard: Readonly<HeardGame> | null = null;
     // A seat taken, the turns run since the page last heard the game, or its end, play their sounds on every page, a hidden
     // one included. A new session starts from its own game, the history of the room it catches up with plays none: the
@@ -149,7 +148,7 @@ export class SyncChessGameComponent implements OnDestroy {
         if (previous.historySteps === heard.historySteps && (heard.turns !== previous.turns || heard.over !== previous.over)) {
             sounds.push(...this.playedTurnSounds(previous, heard));
         }
-        untracked(() => sounds.forEach((sound: OneShotSoundEffect, index: number) => this.soundService.play(sound, index * SyncChessGameComponent.SOUND_GAP)));
+        untracked(() => sounds.forEach((sound: OneShotSoundEffect, index: number) => this.soundService.play(sound, index * SOUND_GAP)));
     });
 
     /** The sounds of the turns run since the page last heard the game */

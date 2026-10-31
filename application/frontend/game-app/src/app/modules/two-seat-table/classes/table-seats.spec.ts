@@ -56,6 +56,36 @@ describe('TableSeats', () => {
         expect([alice.bottomSeat(), alice.topSeat(), carol.bottomSeat(), carol.topSeat()]).toEqual([TWO, ONE, ONE, TWO]);
     });
 
+    test('should count the seats taken live, not the seat asked again by its player, a seat left or freed, nor the history', () => {
+        // Given
+        const alice = page('alice');
+        const bob = page('bob');
+
+        // When: Alice moves to the other seat, Bob asks his seat twice
+        alice.takeSeat(ONE);
+        alice.takeSeat(TWO);
+        bob.takeSeat(ONE);
+        bob.takeSeat(ONE);
+
+        // Then
+        expect(bob.seatsTaken()).toEqual(3);
+
+        // When
+        alice.leaveSeat();
+        bob.free(ONE);
+
+        // Then
+        expect(bob.seatsTaken()).toEqual(3);
+
+        // When Carol joins late, replaying the chain
+        const carol = page('carol');
+        hub.replay(rooms.get('carol') as Room<Payloads>);
+
+        // Then
+        expect(carol.seats()).toEqual(['bob', null]);
+        expect(carol.seatsTaken()).toEqual(0);
+    });
+
     test('should free the seat a participant leaves, and refuse a seat out of the table or without a salt', () => {
         // Given
         const alice = page('alice');

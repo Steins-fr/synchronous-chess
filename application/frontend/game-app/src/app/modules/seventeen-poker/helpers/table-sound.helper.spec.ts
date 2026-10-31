@@ -2,7 +2,8 @@ import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { describe, expect, test } from 'vitest';
 import { HandEnd, HandOutcome } from '../classes/rules/poker-match';
 import { PokerSeat } from '../classes/rules/poker-seat';
-import { HAND_ENDING, DEAL_STAGGER, HeardTable, SOUND_GAP, tableSounds } from './table-sound.helper';
+import { SOUND_GAP } from '@app/services/sound/game-sounds';
+import { HAND_ENDING, DEAL_STAGGER, HeardTable, tableSounds } from './table-sound.helper';
 
 describe('tableSounds', () => {
     const table: HeardTable = { seats: ['alice', 'bob'], deck: null, hands: [[], []], chips: { stacks: [150, 150], bets: [0, 0], pot: 0 }, outcomes: [], result: null };

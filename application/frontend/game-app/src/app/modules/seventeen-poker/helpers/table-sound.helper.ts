@@ -1,5 +1,5 @@
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
-import { gameEndSound, seatTaken } from '@app/services/sound/game-sounds';
+import { gameEndSound, seatTaken, SOUND_GAP } from '@app/services/sound/game-sounds';
 import { OneShotSoundEffect } from '@app/services/sound/sound-files';
 import { HandEnd, HandOutcome, MatchResult } from '../classes/rules/poker-match';
 import { PokerSeat } from '../classes/rules/poker-seat';
@@ -28,8 +28,6 @@ export interface TimedSound {
 
 /** The time between the cards dealt into a hand, in seconds, as the hand shows them (--app-motion-stagger) */
 export const DEAL_STAGGER: number = 0.16;
-/** The time between the sounds of the end of a hand, in seconds */
-export const SOUND_GAP: number = 0.3;
 /**
  * The time the end of a hand shows before its pot flies, in seconds (--app-motion-slow): the cards turned over at the
  * showdown, or the hand folded fading

@@ -156,6 +156,8 @@ export class SeventeenPokerSession {
     });
     /** The players of each seat */
     public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
+    /** The seats taken live, out of the history of the room: each one is heard */
+    public readonly seatsTaken: Signal<number> = this.tableSeats.seatsTaken;
     /** The players of the match, the ones of the seats until its first hand: the seats may change once it is over */
     public readonly players: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => {
         // A hand of the match has its deck, shuffled by both players

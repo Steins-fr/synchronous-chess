@@ -28,6 +28,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SOUND_GAP } from '@app/services/sound/game-sounds';
 import { SoundService } from '@app/services/sound/sound.service';
 import { TestHelper } from '@testing/test.helper';
 import { translated } from '@testing/translatable-text.helper';
@@ -436,7 +437,7 @@ describe('SyncChessGameComponent', () => {
         await refresh();
 
         // Then: the pawn of E5 may take the one of D4, an intermediate turn starts after the moves
-        expect(play.mock.calls).toEqual([[SoundEffect.CHESS_MOVE, 0], [SoundEffect.CHESS_TURN_START, SyncChessGameComponent.SOUND_GAP]]);
+        expect(play.mock.calls).toEqual([[SoundEffect.CHESS_MOVE, 0], [SoundEffect.CHESS_TURN_START, SOUND_GAP]]);
     });
 
     test('should skip an intermediate turn', async () => {
