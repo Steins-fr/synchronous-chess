@@ -318,7 +318,7 @@ shot is over, won, lost or drawn for the local player, as for every game (`gameE
 before, and the chips sound as each flight leaves (`CHIPS`, the sound of the chips of the poker, played by `launch()`
 only): a pass, the table going to the bank, the chips of a shot once it is over. A hidden page, without the animation,
 hears the moves as they come (`heardAtOnce()`): the latest chamber fired, then the chips they moved, once. While the cylinder turns (`spinning`), the audio started (a
-gesture made meanwhile starting them), its clicks loop (`SoundService.loop()`: `spin-start.wav` slowing down to the speed of its animation, then `spin-idle.wav`),
+gesture made meanwhile starting them), its clicks loop (`SoundService.loop()`: `spin.mp3`, the cylinder slowing down to the speed of its animation, then a turn at that speed looping within the file),
 faded out once it stops. Only the page picking its chambers hears a bullet put in each one, one of five clicks at random.
 
 ## Limits
