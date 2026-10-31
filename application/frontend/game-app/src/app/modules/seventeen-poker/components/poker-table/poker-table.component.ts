@@ -16,6 +16,7 @@ import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/co
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
 import { scopedKey } from '@app/services/language/scoped-key';
@@ -342,6 +343,7 @@ export class PokerTableComponent implements OnDestroy {
     });
 
     private readonly soundService = inject(SoundService);
+    private readonly reducedMotion: ReducedMotionService = inject(ReducedMotionService);
     /** The table the page last heard, with its session, its match and the deck of its hand */
     private heard: { readonly session: SeventeenPokerSession; readonly match: PokerMatch; readonly deck: string | null; readonly table: Readonly<HeardTable> } | null = null;
 
@@ -381,7 +383,7 @@ export class PokerTableComponent implements OnDestroy {
         }
 
         const mySeat: PokerSeat | null = untracked(session.mySeat);
-        untracked(() => tableSounds(previous.table, table, mySeat).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
+        untracked(() => tableSounds(previous.table, table, mySeat, this.reducedMotion.reduced()).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
         if (dealtLive) {
             this.showShuffled(deck);
         }

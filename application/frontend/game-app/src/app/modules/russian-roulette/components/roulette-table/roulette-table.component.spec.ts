@@ -1,4 +1,4 @@
-import { WritableSignal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { By } from '@angular/platform-browser';
@@ -14,6 +14,7 @@ import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { CylinderMessageType, CylinderSpinMessage } from '../../classes/cylinder/cylinder-messages';
 import { RoulettePayloads, RRGameSessionType, RussianRouletteSession } from '../../classes/game-sessions/russian-roulette-session';
 import { RouletteRules, RUSSIAN_ROULETTE_RULES } from '../../classes/rules/roulette-game';
@@ -657,6 +658,29 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
             await fixture.whenStable();
             expect(fixture.componentInstance['chipFlights']()['flights']().map(({ amount }) => amount)).toEqual([1, 2, 4, 8, 16, 31]);
         });
+    });
+
+    test('should play the chips flying to the table and to the bank once, at once, when the user asks for less motion', async () => {
+        // Given
+        TestBed.configureTestingModule({ providers: [{ provide: ReducedMotionService, useValue: { reduced: signal(true) } }] });
+        aliceFirst();
+        await started(SHORT);
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+        const step: number = fixture.componentInstance['session']().step();
+        hub.hold('alice');
+        hub.hold('bob');
+
+        // When the 5 passes reach the page at once, the bank taking the table later
+        ['alice', 'bob', 'alice', 'bob', 'alice'].forEach((name: string, index: number) =>
+            rooms.get(name)?.transmitMessage(RRGameSessionType.PASS, { game: 0, step: step + index }));
+        hub.release();
+        await eventually(async () => {
+            await fixture.whenStable();
+            expect(fixture.componentInstance['chipFlights']()['flights']()).toHaveLength(6);
+        });
+
+        // Then
+        expect(play.mock.calls.filter(([sound]) => sound === SoundEffect.CHIPS)).toEqual([[SoundEffect.CHIPS, 0]]);
     });
 
     test('should forget the chambers picked for a cylinder once another one comes', async () => {

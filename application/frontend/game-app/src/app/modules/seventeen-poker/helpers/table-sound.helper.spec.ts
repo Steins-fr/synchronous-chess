@@ -83,6 +83,24 @@ describe('tableSounds', () => {
         ]);
     });
 
+    test('should tell the sounds waiting for an animation at once when the user asks for less motion: the cards once, the pot', () => {
+        // Given: the deck showed shuffled, a hand holding 5 cards
+        const before: HeardTable = { ...table, held: true };
+        const after: HeardTable = { ...ended(outcome(HandEnd.FOLD, PokerSeat.ONE)), result: { winner: PokerSeat.ONE, stacks: [300, 0] } };
+
+        // When, Then
+        expect(tableSounds(before, table, PokerSeat.ONE, true)).toEqual([{ effect: SoundEffect.POKER_DEAL, delay: 0 }]);
+        expect(tableSounds(table, after, PokerSeat.ONE, true)).toEqual([
+            { effect: SoundEffect.POKER_FOLD, delay: 0 },
+            { effect: SoundEffect.POKER_POT_WON, delay: 0 },
+            { effect: SoundEffect.GAME_WON, delay: SOUND_GAP },
+        ]);
+        expect(tableSounds(table, ended(outcome(HandEnd.SHOWDOWN, null)), PokerSeat.ONE, true)).toEqual([
+            { effect: SoundEffect.POKER_CARD_TURN, delay: 0 },
+            { effect: SoundEffect.CHIPS, delay: 0 },
+        ]);
+    });
+
     test('should tell the antes of a no contest going to the bank', () => {
         expect(tableSounds(table, ended(outcome(HandEnd.NO_CONTEST, null)), PokerSeat.ONE)).toEqual([{ effect: SoundEffect.CHIPS, delay: 0 }]);
     });

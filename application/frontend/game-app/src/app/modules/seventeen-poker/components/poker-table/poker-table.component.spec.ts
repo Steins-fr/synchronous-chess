@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
@@ -12,6 +13,7 @@ import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { DEAL_STAGGER, HAND_ENDING } from '../../helpers/table-sound.helper';
 import { PokerPayloads, SeventeenPokerSession, SPGameSessionType } from '../../classes/game-sessions/seventeen-poker-session';
 import { BetAction } from '../../classes/rules/betting-round';
@@ -330,6 +332,31 @@ describe('PokerTableComponent', () => {
             .every((image: Element) => image.classList.contains('outline-3'));
         expect(outlined(1)).toEqual(outcome?.winner === PokerSeat.ONE);
         expect(outlined(0)).toEqual(outcome?.winner === PokerSeat.TWO);
+    });
+
+    test('should play the cards dealt once, and the pot at once, when the user asks for less motion', async () => {
+        // Given
+        TestBed.configureTestingModule({ providers: [{ provide: ReducedMotionService, useValue: { reduced: signal(true) } }] });
+        const bob: SeventeenPokerSession = await seated();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When
+        bob.deal();
+        await until(() => status() === 'Your turn.');
+
+        // Then
+        expect(play.mock.calls.filter(([effect]) => effect === SoundEffect.POKER_DEAL)).toEqual([[SoundEffect.POKER_DEAL, 0]]);
+
+        // When Alice bets, then Bob folds
+        await click('Bet more');
+        await click('Bet 6');
+        await until(() => status() === 'bob to speak.');
+        play.mockClear();
+        bob.bet(BetAction.FOLD);
+        await until(() => status() === 'Your turn to deal.');
+
+        // Then
+        expect(play.mock.calls).toEqual([[SoundEffect.POKER_FOLD, 0], [SoundEffect.POKER_POT_WON, 0]]);
     });
 
     test('should play the sounds of the table: the seats taken, the deck shuffled, the cards dealt, the chips bet, a fold and the pot won', async () => {

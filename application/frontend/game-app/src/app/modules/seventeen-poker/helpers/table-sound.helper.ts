@@ -43,15 +43,19 @@ function potSound(winner: PokerSeat | null, mySeat: PokerSeat | null): OneShotSo
     return mySeat === null || mySeat === winner ? SoundEffect.POKER_POT_WON : SoundEffect.POKER_POT_LOST;
 }
 
-/** The end of a hand: the fold, or the cards turned at the showdown, then the pot going to its winner once it showed */
-function outcomeSounds({ end, winner }: Readonly<HandOutcome>, mySeat: PokerSeat | null): ReadonlyArray<TimedSound> {
+/**
+ * The end of a hand: the fold, or the cards turned at the showdown, then the pot going to its winner once it showed, at
+ * once when the user asks for less motion (the pot flies without waiting)
+ */
+function outcomeSounds({ end, winner }: Readonly<HandOutcome>, mySeat: PokerSeat | null, reducedMotion: boolean): ReadonlyArray<TimedSound> {
     const pot: OneShotSoundEffect = potSound(winner, mySeat);
+    const ending: number = reducedMotion ? 0 : HAND_ENDING;
 
     switch (end) {
         case HandEnd.FOLD:
-            return [{ effect: SoundEffect.POKER_FOLD, delay: 0 }, { effect: pot, delay: HAND_ENDING }];
+            return [{ effect: SoundEffect.POKER_FOLD, delay: 0 }, { effect: pot, delay: ending }];
         case HandEnd.SHOWDOWN:
-            return [{ effect: SoundEffect.POKER_CARD_TURN, delay: 0 }, { effect: pot, delay: HAND_ENDING }];
+            return [{ effect: SoundEffect.POKER_CARD_TURN, delay: 0 }, { effect: pot, delay: ending }];
         case HandEnd.NO_CONTEST:
             return [{ effect: pot, delay: 0 }];
     }
@@ -78,9 +82,10 @@ function dealtCards(before: Readonly<HeardTable>, after: Readonly<HeardTable>): 
  * The sounds of the changes of the table its session applied live since the page last heard it: a seat taken, a new deck
  * shuffled, each card dealt into a hand as it flies in, the chips moved by the antes or a bet, and the end of a hand,
  * whose pot sound replaces the one of the chips, then the end of the match, won, lost or drawn for the local player. The
- * history of the room, counting none, plays none
+ * history of the room, counting none, plays none. When the user asks for less motion, the sounds waiting for an animation
+ * do not: the cards of the hands, shown at once, are heard once, and the pot as soon as the hand ends
  */
-export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardTable>, mySeat: PokerSeat | null): ReadonlyArray<TimedSound> {
+export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardTable>, mySeat: PokerSeat | null, reducedMotion: boolean = false): ReadonlyArray<TimedSound> {
     const sounds: TimedSound[] = [];
 
     if (after.seatsTaken !== before.seatsTaken) {
@@ -91,14 +96,15 @@ export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardT
         sounds.push({ effect: SoundEffect.POKER_SHUFFLE, delay: 0 });
     }
 
-    // The hands are dealt together, each card of a hand after the previous one
-    const dealt: number = dealtCards(before, after);
+    // The hands are dealt together, each card of a hand after the previous one, or all at once without motion
+    const cards: number = dealtCards(before, after);
+    const dealt: number = reducedMotion ? Math.min(cards, 1) : cards;
     sounds.push(...Array.from({ length: dealt }, (_: unknown, index: number): TimedSound => ({ effect: SoundEffect.POKER_DEAL, delay: index * DEAL_STAGGER })));
 
     // A hand over live: the latest outcome of the match is its own
     const outcome: Readonly<HandOutcome> | null = after.live.outcomes === before.live.outcomes ? null : after.outcome;
     if (outcome !== null) {
-        sounds.push(...outcomeSounds(outcome, mySeat));
+        sounds.push(...outcomeSounds(outcome, mySeat, reducedMotion));
     } else if (after.live.chips !== before.live.chips) {
         sounds.push({ effect: SoundEffect.CHIPS, delay: 0 });
     }

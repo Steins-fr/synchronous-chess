@@ -12,6 +12,7 @@ import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.di
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -468,6 +469,7 @@ export class RouletteTableComponent implements OnDestroy {
     });
 
     private readonly soundService = inject(SoundService);
+    private readonly reducedMotion: ReducedMotionService = inject(ReducedMotionService);
     /** The table as the page hears it: the changes of its session made live, and what it shows */
     private readonly heardTable: Signal<Readonly<HeardTable>> = computed((): Readonly<HeardTable> => {
         const session: RussianRouletteSession = this.session();
@@ -581,7 +583,9 @@ export class RouletteTableComponent implements OnDestroy {
             return;
         }
         this.chipFlights().launch(flights);
-        new Set<number>(flights.map((flight: TableFlight) => flight.delay))
+        // Without motion, the chips all land at once: heard once
+        const reduced: boolean = this.reducedMotion.reduced();
+        new Set<number>(flights.map((flight: TableFlight) => reduced ? 0 : flight.delay))
             .forEach((delay: number) => this.soundService.play(SoundEffect.CHIPS, delay / 1000));
     }
 
