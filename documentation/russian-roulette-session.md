@@ -304,15 +304,20 @@ at once.
 
 ### Sounds
 
-The files of the sounds of the table load ahead (`SoundService.preload()`), and the first live message after the history
-of the room waits for the page to render the end of it (`wait(0)`), not to be taken for history.
-Each change of the table plays its sounds on every page, a hidden one included, none while the history grows
-(`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken, the bullets of a player loaded (`keys` of the
-cylinder: its key given as it clicks to load them, the load itself following once both keys are in), the hammer cocked as the revolver aims at a player or at the sky, and the end of the game once its latest
+The files of the sounds of the table load ahead (`SoundService.preload()`). The session counts the changes it applies
+live, out of the history of the room: the seats taken (`seatsTaken`, of the seats of the table) and the keys given
+(`loads`). Right before its first live message applies, it tells the table it caught up with the history (`caughtUp`):
+the table shows the game the history left at once, its moves played and its sounds heard, whether the page rendered the
+end of the history or not, then plays and hears the changes from there, the live ones applied with the history in a
+single render included.
+Each change of the table plays its sounds on every page, a hidden one included, none of the history of the room
+(`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken, the bullets of a player loaded (its key given as it
+clicks to load them, the load itself following once both keys are in), the hammer cocked as the revolver aims at a player or at the sky, and the end of the game once its latest
 shot is over, won, lost or drawn for the local player, as for every game (`gameEndSound()` of
 `services/sound/game-sounds.ts`). The revolver firing (`blast`) plays the shot or the dry click of the hammer, never
-before, and the chips sound as each flight leaves (`CHIPS`, the sound of the chips of the poker): a pass, the table going
-to the bank, the chips of a shot once it is over. A hidden page, without the animation, plays them as the move comes. While the cylinder turns (`spinning`), the audio started (a
+before, and the chips sound as each flight leaves (`CHIPS`, the sound of the chips of the poker, played by `launch()`
+only): a pass, the table going to the bank, the chips of a shot once it is over. A hidden page, without the animation,
+hears the moves as they come (`heardAtOnce()`): the latest chamber fired, then the chips they moved, once. While the cylinder turns (`spinning`), the audio started (a
 gesture made meanwhile starting them), its clicks loop (`SoundService.loop()`: `spin-start.wav` slowing down to the speed of its animation, then `spin-idle.wav`),
 faded out once it stops. Only the page picking its chambers hears a bullet put in each one, one of five clicks at random.
 
