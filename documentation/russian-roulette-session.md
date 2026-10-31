@@ -302,6 +302,20 @@ it is over, no seat shows its ring nor its clock, which runs meanwhile, and no b
 chamber fires. The history of the room a reloaded page catches up with plays nothing, nor does a hidden page: their moves show
 at once.
 
+### Sounds
+
+The files of the sounds of the table load ahead (`SoundService.preload()`), and the first live message after the history
+of the room waits for the page to render the end of it (`wait(0)`), not to be taken for history.
+Each change of the table plays its sounds on every page, a hidden one included, none while the history grows
+(`tableSounds()` of `helpers/table-sound.helper.ts`): a seat taken, the bullets of a player loaded (`keys` of the
+cylinder: its key given as it clicks to load them, the load itself following once both keys are in), the hammer cocked as the revolver aims at a player or at the sky, and the end of the game once its latest
+shot is over, won, lost or drawn for the local player, as for every game (`gameEndSound()` of
+`services/sound/game-sounds.ts`). The revolver firing (`blast`) plays the shot or the dry click of the hammer, never
+before, and the chips sound as each flight leaves (`CHIPS`, the sound of the chips of the poker): a pass, the table going
+to the bank, the chips of a shot once it is over. A hidden page, without the animation, plays them as the move comes. While the cylinder turns (`spinning`), the audio started (a
+gesture made meanwhile starting them), its clicks loop (`SoundService.loop()`: `spin-start.wav` slowing down to the speed of its animation, then `spin-idle.wav`),
+faded out once it stops. Only the page picking its chambers hears a bullet put in each one, one of five clicks at random.
+
 ## Limits
 
 - **A spin is checked at the end of the game only**: a player replacing the cylinder decides the game, and loses it

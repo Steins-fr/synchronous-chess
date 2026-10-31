@@ -1,5 +1,5 @@
 
-import { Component, OnDestroy, Signal, computed, inject, input, signal, untracked } from '@angular/core';
+import { Component, OnDestroy, Signal, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
@@ -31,6 +31,23 @@ import { scopedKey } from '@app/services/language/scoped-key';
 import { playedTurnLines, squareName } from '@app/modules/chess/helpers/played-turn-text.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { LanguageService } from '@app/services/language/language.service';
+import { turnSounds } from '@app/modules/chess/helpers/turn-sound.helper';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { OneShotSoundEffect } from '@app/services/sound/sound-files';
+import { SoundService } from '@app/services/sound/sound.service';
+import { FenBoard } from '@app/modules/chess/types/fen-board';
+import { PlayedTurn } from '@app/modules/chess/classes/games/played-turn';
+
+/** The game as the page last heard it */
+interface HeardGame {
+    readonly session: SynchronousChessGameSession;
+    readonly historySteps: number;
+    readonly turns: number;
+    readonly board: FenBoard;
+    readonly over: boolean;
+    /** The seats taken live */
+    readonly seatsTaken: number;
+}
 
 @Component({
     selector: 'app-sync-chess-game',
@@ -50,6 +67,7 @@ export class SyncChessGameComponent implements OnDestroy {
     /** The local player plays the game: leaving the page asks to confirm */
     private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.gameSession().inMatch()));
     private readonly languageService = inject(LanguageService);
+    private readonly soundService = inject(SoundService);
 
     private readonly playedPiece = signal<Vec2>(new Vec2(-1, -1));
     protected readonly validPlayBoard = signal<ValidPlayBoard>(ChessBoardHelper.createFilledBoard(false));
@@ -105,6 +123,49 @@ export class SyncChessGameComponent implements OnDestroy {
             ? { key: scopedKey(TranslationScope.CHESS, marker('game.away', undefined, 'chess')), params: { name: this.listFormat().format(away) } }
             : undefined;
     });
+
+    /** The time between the sounds of the same turns, in seconds */
+    public static readonly SOUND_GAP: number = 0.3;
+    private heard: Readonly<HeardGame> | null = null;
+    // A seat taken, the turns run since the page last heard the game, or its end, play their sounds on every page, a hidden
+    // one included. A new session starts from its own game, the history of the room it catches up with plays none: the
+    // seats taken live are counted by the session, the turns heard once the history steps did not change
+    private readonly sounds = effect(() => {
+        const session: SynchronousChessGameSession = this.gameSession();
+        const game: SynchronousChessGame = session.game;
+        const playedTurns: ReadonlyArray<Readonly<PlayedTurn>> = game.playedTurns();
+        const heard: Readonly<HeardGame> = {
+            session, historySteps: session.historySteps(), turns: playedTurns.length, board: game.fenBoard(), over: game.isGameOver(),
+            seatsTaken: session.seatsTaken(),
+        };
+        const previous: Readonly<HeardGame> | null = this.heard;
+        this.heard = heard;
+
+        if (previous?.session !== session) {
+            return;
+        }
+
+        const sounds: OneShotSoundEffect[] = heard.seatsTaken > previous.seatsTaken ? [SoundEffect.SEAT_TAKEN] : [];
+        if (previous.historySteps === heard.historySteps && (heard.turns !== previous.turns || heard.over !== previous.over)) {
+            sounds.push(...this.playedTurnSounds(previous, heard));
+        }
+        untracked(() => sounds.forEach((sound: OneShotSoundEffect, index: number) => this.soundService.play(sound, index * SyncChessGameComponent.SOUND_GAP)));
+    });
+
+    /** The sounds of the turns run since the page last heard the game */
+    private playedTurnSounds(previous: Readonly<HeardGame>, heard: Readonly<HeardGame>): ReadonlyArray<OneShotSoundEffect> {
+        const { session } = heard;
+        const game: SynchronousChessGame = session.game;
+        return turnSounds({
+            played: game.playedTurns().slice(previous.turns),
+            before: previous.board,
+            after: heard.board,
+            result: game.result(),
+            check: game.isWhiteInCheck() || game.isBlackInCheck(),
+            nextTurn: game.getTurnType(),
+            myColor: untracked(() => session.myColor),
+        });
+    }
 
     public ngOnDestroy(): void {
         this.gameSession().destroy();

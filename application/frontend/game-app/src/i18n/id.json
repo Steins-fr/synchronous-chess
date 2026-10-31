@@ -11,6 +11,13 @@
       "poker": "Poker",
       "roulette": "Rulet"
     },
+    "sound": {
+      "menu": "Efek suara",
+      "mute": "Bisukan",
+      "muteChat": "Bisukan obrolan",
+      "muteGame": "Bisukan permainan",
+      "volume": "Volume"
+    },
     "theme": {
       "toDark": "Beralih ke tema gelap",
       "toLight": "Beralih ke tema terang"

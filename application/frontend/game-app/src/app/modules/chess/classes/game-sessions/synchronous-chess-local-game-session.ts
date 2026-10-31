@@ -10,6 +10,8 @@ export default class SynchronousChessLocalGameSession extends SynchronousChessGa
     public readonly inMatch: Signal<boolean> = signal(false).asReadonly();
     public readonly awayPlayers: Signal<ReadonlyArray<string>> = signal([]).asReadonly();
     public readonly forfeitClaimable: Signal<boolean> = signal(false).asReadonly();
+    public readonly historySteps: Signal<number> = signal(0).asReadonly();
+    public readonly seatsTaken: Signal<number> = signal(0).asReadonly();
 
     public get playingColor(): PieceColor {
         return PieceColor.NONE;

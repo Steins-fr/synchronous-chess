@@ -10,14 +10,20 @@
     </div>
     <!-- The touch target of an icon button exceeds it by 4px: held in the page, it scrolls nothing at its right edge -->
     <div class="ml-auto mr-1 flex shrink-0 items-center">
-        <!-- The menu, with the overlay it opens, loads once the app is idle: out of the bundle of its start -->
+        <!-- The menus, with the overlays they open, load once the app is idle: out of the bundle of its start -->
         @defer (on idle) {
         <app-language-menu />
+        <app-sound-menu />
         } @placeholder {
-        <!-- Disabled for the assistive technologies and the tests: a click before the menu loads opens nothing -->
-        <button [attr.aria-label]="t('language.pick')" [title]="t('language.pick')" aria-disabled="true" mat-icon-button type="button">
-            <mat-icon>translate</mat-icon>
-        </button>
+        <!-- Disabled for the assistive technologies and the tests: a click before the menus load opens nothing -->
+        <span class="flex items-center">
+            <button [attr.aria-label]="t('language.pick')" [title]="t('language.pick')" aria-disabled="true" mat-icon-button type="button">
+                <mat-icon>translate</mat-icon>
+            </button>
+            <button [attr.aria-label]="t('sound.menu')" [title]="t('sound.menu')" aria-disabled="true" mat-icon-button type="button">
+                <mat-icon>volume_up</mat-icon>
+            </button>
+        </span>
         }
         <button
             (click)="themeService.toggle()" [attr.aria-label]="themeButton().label | transloco"

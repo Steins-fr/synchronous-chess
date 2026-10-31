@@ -24,6 +24,18 @@ export function storedText(window: Window, key: string): string | undefined {
     }
 }
 
+/** The whole number stored under the key, when it lies between min and max, else undefined */
+export function storedNumber(window: Window, key: string, min: number, max: number): number | undefined {
+    try {
+        const stored: string = window.localStorage.getItem(key) ?? '';
+        // NaN lies in no range
+        const value: number = /^-?\d+$/.test(stored) ? Number(stored) : Number.NaN;
+        return value >= min && value <= max ? value : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 export function storeValue(window: Window, key: string, value: string): void {
     try {
         window.localStorage.setItem(key, value);

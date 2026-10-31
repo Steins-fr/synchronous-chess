@@ -1,6 +1,8 @@
-import { Component, computed, input, model, Signal } from '@angular/core';
+import { Component, computed, inject, input, model, Signal } from '@angular/core';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 
@@ -63,6 +65,7 @@ export class RouletteCylinderComponent {
     public readonly large = input<boolean>(false);
 
     protected readonly state: typeof ChamberState = ChamberState;
+    private readonly soundService = inject(SoundService);
 
     protected readonly views: Signal<ReadonlyArray<ChamberView>> = computed((): ReadonlyArray<ChamberView> => {
         const [selected, loaded, fired] = [this.selected(), this.loaded(), this.fired()];
@@ -90,6 +93,7 @@ export class RouletteCylinderComponent {
             this.selected.set(selected.filter((chamber: number) => chamber !== index));
         } else if (!this.full()) {
             this.selected.set([...selected, index].sort((one: number, other: number) => one - other));
+            this.soundService.play(SoundEffect.ROULETTE_BULLET);
         }
     }
 }

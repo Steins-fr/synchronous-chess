@@ -27,6 +27,8 @@ import { Player } from '@app/services/room-manager/classes/player/player';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import MessageOriginType from '@app/services/room-manager/classes/webrtc/messages/message-origin.types';
 import { RoomNetworkMock } from '@testing/room-network.mock';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
 import { TestHelper } from '@testing/test.helper';
 import { translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -370,6 +372,73 @@ describe('SyncChessGameComponent', () => {
         expect(component.history().map(translated)).toEqual(['Turn 1 · White: E2 → E4', 'Turn 1 · Black: E7 → E5']);
     });
 
+    test('should play the sound of a seat taken, by the local player or another one, not of a seat left', async () => {
+        // Given
+        await joinOnlineRoom();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When
+        seatButton('white', 'Play white')?.click();
+        await refresh();
+        remoteSeat(PieceColor.BLACK);
+        await refresh();
+        seatButton('white', 'Leave the seat')?.click();
+        await refresh();
+
+        // Then
+        expect(session().configuration()).toEqual({ whitePlayer: undefined, blackPlayer: 'remote' });
+        expect(play.mock.calls).toEqual([[SoundEffect.SEAT_TAKEN, 0], [SoundEffect.SEAT_TAKEN, 0]]);
+    });
+
+    test('should play the sound of a turn once run, on every page', async () => {
+        // Given
+        await createOnlineGame();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When the local player moves alone
+        board().piecePicked.emit(new Vec2(4, 6));
+        board().pieceDropped.emit(new Vec2(4, 4));
+        await refresh();
+
+        // Then: no turn run
+        expect(play).not.toHaveBeenCalled();
+
+        // When
+        await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
+        await refresh();
+
+        // Then
+        expect(play).toHaveBeenCalledExactlyOnceWith(SoundEffect.CHESS_MOVE, 0);
+    });
+
+    test('should play no sound of the history of the room it catches up with', async () => {
+        // Given
+        await createOnlineGame();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+        const isHistory = vi.spyOn(TestHelper.cast<Room<ChessPayloads>>(component.room()), 'isHistory').mockReturnValue(true);
+        board().piecePicked.emit(new Vec2(4, 6));
+        board().pieceDropped.emit(new Vec2(4, 4));
+
+        // When the reveals of the turn are in the history
+        await remotePlay({ from: [FenColumn.E, FenRow._7], to: [FenColumn.E, FenRow._5] });
+        await vi.waitFor(() => expect(session().historySteps()).toEqual(4));
+        await refresh();
+
+        // Then
+        expect(session().game.playedTurns()).toHaveLength(1);
+        expect(play).not.toHaveBeenCalled();
+
+        // When the next turn is live
+        isHistory.mockReturnValue(false);
+        board().piecePicked.emit(new Vec2(3, 6));
+        board().pieceDropped.emit(new Vec2(3, 4));
+        await remotePlay({ from: [FenColumn.D, FenRow._7], to: [FenColumn.D, FenRow._6] });
+        await refresh();
+
+        // Then: the pawn of E5 may take the one of D4, an intermediate turn starts after the moves
+        expect(play.mock.calls).toEqual([[SoundEffect.CHESS_MOVE, 0], [SoundEffect.CHESS_TURN_START, SyncChessGameComponent.SOUND_GAP]]);
+    });
+
     test('should skip an intermediate turn', async () => {
         // Given
         await createOnlineGame();
@@ -544,6 +613,7 @@ describe('SyncChessGameComponent', () => {
         test('should claim the game of the other player away 30 seconds after the local player played', async () => {
             // Given
             await playedSecondTurn();
+            const play = vi.spyOn(TestBed.inject(SoundService), 'play');
             expect(text('#game-status')).toEqual('');
 
             // When the other player leaves the room
@@ -573,6 +643,7 @@ describe('SyncChessGameComponent', () => {
                 'Turn 1 · White: E2 → E4',
                 'Turn 1 · Black: E7 → E5',
             ]);
+            expect(play).toHaveBeenCalledExactlyOnceWith(SoundEffect.GAME_WON, 0);
         });
 
         test('should stop the clock when the other player comes back', async () => {

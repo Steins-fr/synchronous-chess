@@ -1,6 +1,7 @@
-// A chip placed drops on its pile, once the chips moved to the stack reached it: not the change of a stack paying out
+// A chip placed drops on its pile, once the chips moved to the stack reached it (--chip-landing, the flight of the chips
+// unless a table delays it): not the change of a stack paying out
 .chip-placed {
-    animation: chip-placed var(--app-motion-medium) ease-out var(--app-motion-slow) backwards;
+    animation: chip-placed var(--app-motion-medium) ease-out var(--chip-landing, var(--app-motion-slow)) backwards;
 }
 
 :host(.still) .chip-placed {
@@ -22,7 +23,7 @@
 // A growing stack changes its chips once the chips moved to it reached it, as its chips placed: until then, it shows the
 // chips it had
 :host(:not(.still)) .chip-taken {
-    animation-delay: var(--app-motion-slow);
+    animation-delay: var(--chip-landing, var(--app-motion-slow));
 }
 
 @keyframes chip-taken {

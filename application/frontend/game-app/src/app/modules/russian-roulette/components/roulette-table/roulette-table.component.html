@@ -123,7 +123,7 @@
         [style.left.px]="place?.x"
         [style.top.px]="place?.y"
         [style.--aim]="(place?.angle ?? 0) + 'deg'"
-        (blast)="blasted.set(true)"
+        (blast)="blast()"
         (fired)="fired()" />
 
     <!-- The chips moved from a place of the table to another one, flying over it -->

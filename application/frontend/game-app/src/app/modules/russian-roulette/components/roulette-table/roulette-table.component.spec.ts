@@ -1,3 +1,4 @@
+import { WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { By } from '@angular/platform-browser';
@@ -11,6 +12,8 @@ import { TEST_GROUP } from '@testing/sra-test-group';
 import { TestHelper } from '@testing/test.helper';
 import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
 import { CylinderMessageType, CylinderSpinMessage } from '../../classes/cylinder/cylinder-messages';
 import { RoulettePayloads, RRGameSessionType, RussianRouletteSession } from '../../classes/game-sessions/russian-roulette-session';
 import { RouletteRules, RUSSIAN_ROULETTE_RULES } from '../../classes/rules/roulette-game';
@@ -316,6 +319,139 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then
         expect(pastGames()).toEqual([expect.stringMatching(/^Game 1: .+ The cylinder was fair\.$/)]);
         expect(text('.badge')).toEqual('');
+    });
+
+    test('should play the sounds of the table: the seats taken, the bullets put and loaded, the spin, the hammer, the shot and the chips', async () => {
+        // Given: the spins turn the cylinder by 0, Alice plays first, the first chamber holding her bullet
+        fixedCylinder();
+        await table('alice');
+        const sounds: SoundService = TestBed.inject(SoundService);
+        const play = vi.spyOn(sounds, 'play');
+        const stopSpin = vi.fn();
+        const loop = vi.spyOn(sounds, 'loop').mockReturnValue(stopSpin);
+        // The audio started by a gesture: jsdom has no Web Audio
+        TestHelper.cast<{ isStarted: WritableSignal<boolean> }>(sounds).isStarted.set(true);
+        const played = (): ReadonlyArray<unknown> => play.mock.calls.map(([sound]) => sound);
+        const bob: RussianRouletteSession = participant('bob');
+
+        // When
+        (element().querySelector('#seat-bottom button') as HTMLButtonElement).click();
+        await until(() => played().length === 1);
+        bob.takeSeat(RouletteSeat.TWO);
+        await until(() => status().startsWith('Pick the chambers'));
+
+        // Then
+        expect(played()).toEqual([SoundEffect.SEAT_TAKEN, SoundEffect.SEAT_TAKEN]);
+
+        // When both players load, Alice picking her chambers: the load of Bob waits for her key
+        play.mockClear();
+        bob.load([6, 8, 11]);
+        [0, 1, 3].forEach((index: number) => chamber(index).click());
+        await fixture.whenStable();
+        await click(/^Load/);
+        await until(() => status() === 'Your turn: shoot, or pass.');
+
+        // Then: a bullet put in each chamber, the loads, the cylinder turned while spun
+        expect(played().slice(0, 3)).toEqual([SoundEffect.ROULETTE_BULLET, SoundEffect.ROULETTE_BULLET, SoundEffect.ROULETTE_BULLET]);
+        expect(played().slice(3)).toContain(SoundEffect.ROULETTE_LOAD);
+        expect(new Set(played().slice(3))).toEqual(new Set([SoundEffect.ROULETTE_LOAD]));
+        expect(loop).toHaveBeenCalledExactlyOnceWith(SoundEffect.ROULETTE_SPIN);
+        expect(stopSpin).toHaveBeenCalledOnce();
+
+        // When
+        play.mockClear();
+        await click('Shoot');
+        await until(() => text('#last-move').startsWith('alice fires chamber 1'));
+
+        // Then: the revolver rises before Alice, fires her bullet, then the chips of her death fly to Bob
+        expect(played()).toEqual([SoundEffect.ROULETTE_COCK, SoundEffect.ROULETTE_SHOT, SoundEffect.CHIPS]);
+    });
+
+    test('should play the chips of a shot over once the page is hidden, without their flights', async () => {
+        // Given: Bob shooting, after a pass of Alice on the table, the revolver fired on the visible page
+        const bob: RussianRouletteSession = await started(SHORT);
+        await aliceToAct(bob);
+        await click(/^Pass/);
+        await until(() => status() === 'bob shoots or passes…');
+        bob.shoot();
+        await eventually(async () => {
+            await fixture.whenStable();
+            expect(fixture.componentInstance['blasted']()).toBe(true);
+        });
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When: the page hidden, the shot over
+        vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+        document.dispatchEvent(new Event('visibilitychange'));
+        animationsEnd();
+        await fixture.whenStable();
+
+        // Then: the chips heard, none flying
+        expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS);
+        expect(element().querySelector('.chip-flight')).toBeNull();
+    });
+
+    test('should play no chips of an empty chamber shot without chips on the table, once the page is hidden', async () => {
+        // Given the first chambers empty, Alice playing first, her shot fired on the visible page
+        fixedCylinder();
+        const bob: RussianRouletteSession = await seated(SHORT);
+        bob.load([3]);
+        chamber(2).click();
+        await fixture.whenStable();
+        await click(/^Load/);
+        await until(() => status() === 'Your turn: shoot, or pass.');
+        await click('Shoot');
+        await eventually(async () => {
+            await fixture.whenStable();
+            expect(fixture.componentInstance['blasted']()).toBe(true);
+        });
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When: the page hidden, the shot over
+        vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+        document.dispatchEvent(new Event('visibilitychange'));
+        animationsEnd();
+        await fixture.whenStable();
+
+        // Then
+        expect(text('#last-move')).toEqual('alice fires chamber 1: empty.');
+        expect(play).not.toHaveBeenCalledWith(SoundEffect.CHIPS);
+    });
+
+    test('should fire nothing once the revolver fires a shot the table ended already', async () => {
+        // Given: a game started, no chamber firing
+        aliceFirst();
+        await started();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When: the timer of a shot ended meanwhile fires
+        revolver().blast.emit();
+        await fixture.whenStable();
+
+        // Then
+        expect(fixture.componentInstance['blasted']()).toBe(false);
+        expect(play).not.toHaveBeenCalled();
+    });
+
+    test('should play no sound of the history of the room to a participant joining late', async () => {
+        // Given: a game loaded and spun
+        const alice: RussianRouletteSession = participant('alice');
+        const bob: RussianRouletteSession = participant('bob');
+        alice.takeSeat(RouletteSeat.ONE);
+        bob.takeSeat(RouletteSeat.TWO);
+        await eventually(() => expect(alice.canLoad() && bob.canLoad()).toBe(true));
+        alice.load([0, 1, 3]);
+        bob.load([6, 8, 11]);
+        await eventually(() => expect(alice.game().first()).not.toBeNull());
+
+        // When Carol joins, the chain giving her its history
+        await table('carol');
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+        hub.replay(fixture.componentInstance.room());
+        await until(() => fixture.componentInstance['session']().game().first() !== null);
+
+        // Then
+        expect(play).not.toHaveBeenCalled();
     });
 
     /** Every random draw of the players is the same: the spins turn the cylinder by 0, and Alice plays first */

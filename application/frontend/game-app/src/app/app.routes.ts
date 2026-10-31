@@ -8,6 +8,8 @@ export const chessPath: string = 'synchronous-chess';
 export const chatPath: string = 'simple-chat';
 export const pokerPath: string = 'seventeen-poker';
 export const roulettePath: string = 'russian-roulette';
+// Developer tooling, linked from nowhere: every sound of the games, to listen to them
+export const soundLabPath: string = 'sound-lab';
 
 // The pages are loaded on their first visit, each in a chunk of its own: the initial bundle only holds the shell of the
 // app (the navigation, the theme). The pages of the games show once their translations are loaded (TranslationScope):
@@ -49,5 +51,9 @@ export const routes: Routes = [
         providers: [provideTranslocoScope('roulette', 'chat')],
         loadComponent: () => import('@app/modules/russian-roulette/pages/russian-roulette/russian-roulette')
             .then((page) => page.RussianRoulette),
+    },
+    {
+        path: soundLabPath,
+        loadComponent: () => import('@app/modules/sound-lab/sound-lab.page').then((page) => page.SoundLabPage),
     },
 ];

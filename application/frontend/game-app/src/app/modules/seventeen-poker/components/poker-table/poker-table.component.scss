@@ -1,6 +1,16 @@
-// The outcome of a hand shows once the pot reached its winner
+// The outcome of a hand shows once the pot reached its winner, flying once the end of a showdown or of a fold showed
+// (HAND_ENDING)
 .outcome-shown {
     animation: outcome-shown var(--app-motion-slow) ease-out var(--app-motion-slow) backwards;
+
+    &.after-ending {
+        animation-delay: calc(var(--app-motion-slow) * 2);
+    }
+}
+
+// The chips of a pot won once the end of a showdown or of a fold showed land on the stack of the seat after their flight
+app-poker-seat.after-ending {
+    --chip-landing: calc(var(--app-motion-slow) * 2);
 }
 
 @keyframes outcome-shown {

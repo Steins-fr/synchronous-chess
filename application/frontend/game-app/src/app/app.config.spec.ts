@@ -6,6 +6,7 @@ import { Language } from '@app/services/language/enums/language.enum';
 import { HTTP_API_SERVER } from '@app/services/room-api/http-api-server.token';
 import { HTTP_API_WITH_CREDENTIALS } from '@app/services/room-api/http-api-with-credentials.token';
 import { WEB_SOCKET_SERVER } from '@app/services/room-api/web-socket-server.token';
+import { SoundService } from '@app/services/sound/sound.service';
 import { VisitorPresenceService } from '@app/services/visitor-presence/visitor-presence.service';
 import { environment } from '@environments/environment';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -15,6 +16,7 @@ describe('appConfig', () => {
     afterEach(() => {
         // @ts-expect-error The API of a spec only, missing from jsdom
         delete window.performance.getEntriesByType;
+        vi.unstubAllGlobals();
         vi.restoreAllMocks();
     });
 
@@ -48,6 +50,20 @@ describe('appConfig', () => {
 
         // Then
         expect(added).toHaveBeenCalledWith('pointermove', expect.any(Function), { capture: true, passive: true });
+    });
+
+    test('should listen for the first gesture on the page as soon as the app starts, to start the audio', () => {
+        // Given
+        vi.stubGlobal('AudioContext', class {});
+        TestBed.configureTestingModule({ providers: appConfig.providers });
+        const added = vi.spyOn(document, 'addEventListener');
+
+        // When
+        TestBed.inject(ApplicationInitStatus);
+
+        // Then
+        expect(added).toHaveBeenCalledWith('pointerup', expect.any(Function), { capture: true, passive: true });
+        expect(TestBed.inject(SoundService)).toBeDefined();
     });
 
     test('should load the language of the user before the app starts', async () => {

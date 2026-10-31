@@ -1,10 +1,11 @@
-// The riffle: the halves part, then fall into each other, the left one passing over the right one halfway
+// The riffle: the halves part, then fall into each other, the left one passing over the right one halfway. About four
+// riffles while the sound of the shuffle plays (SHUFFLE_HOLD of the poker table)
 .shuffling .deck-half-left {
-    animation: riffle-left calc(var(--app-motion-slow) * 2.5) ease-in-out infinite;
+    animation: riffle-left var(--app-motion-slow) ease-in-out infinite;
 }
 
 .shuffling .deck-half-right {
-    animation: riffle-right calc(var(--app-motion-slow) * 2.5) ease-in-out infinite;
+    animation: riffle-right var(--app-motion-slow) ease-in-out infinite;
 }
 
 @keyframes riffle-left {

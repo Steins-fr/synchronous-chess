@@ -16,6 +16,8 @@ import { TestHelper } from '@testing/test.helper';
 import { textAreaFieldInput } from '@testing/text-field.helper';
 import { WebrtcMock } from '@testing/webrtc.mock';
 import { Subject } from 'rxjs';
+import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
+import { SoundService } from '@app/services/sound/sound.service';
 import { afterEach, beforeEach, describe, expect, MockInstance, test, vi } from 'vitest';
 
 describe('ChatComponent', () => {
@@ -242,6 +244,67 @@ describe('ChatComponent', () => {
 
         // Then
         expect(logLines()).toEqual(['No messages yet. Say hello!']);
+    });
+
+    test('should ring the players arriving and leaving, not once their notices are hidden', async () => {
+        // Given
+        await setRoom();
+        const host: WebRtcPlayer = webRtcPlayer('host', false);
+        network.playerAdded$.next(host);
+        await fixture.whenStable();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When
+        network.playerAdded$.next(webRtcPlayer('other', true));
+        await fixture.whenStable();
+        network.playerRemoved$.next(host);
+        await fixture.whenStable();
+        // Two players arriving together, then leaving together
+        const pair: WebRtcPlayer[] = [webRtcPlayer('first', true), webRtcPlayer('second', true)];
+        pair.forEach((player: WebRtcPlayer) => network.playerAdded$.next(player));
+        await fixture.whenStable();
+        pair.forEach((player: WebRtcPlayer) => network.playerRemoved$.next(player));
+        await fixture.whenStable();
+        preferences.arrivals.set(false);
+        network.playerAdded$.next(webRtcPlayer('third', true));
+        network.playerRemoved$.next(webRtcPlayer('other', true));
+        await fixture.whenStable();
+
+        // Then: a sound for the arrivals or the departures told together
+        expect(play.mock.calls).toEqual([[SoundEffect.ROOM_JOIN], [SoundEffect.ROOM_LEAVE], [SoundEffect.ROOM_JOIN], [SoundEffect.ROOM_LEAVE]]);
+    });
+
+    test('should ring a message of another participant unless read as it comes: unread, or the page hidden', async () => {
+        // Given
+        await setRoom();
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When: shown at the bottom of the chat open
+        receive('remote', 'read');
+        await fixture.whenStable();
+
+        // Then
+        expect(play).not.toHaveBeenCalled();
+
+        // When: the history read, scrolled up, two messages coming together
+        scrollLog(300);
+        receive('remote', 'unread');
+        receive('remote', 'unread too');
+        await fixture.whenStable();
+
+        // Then: one sound for both
+        expect(play).toHaveBeenCalledExactlyOnceWith(SoundEffect.CHAT_MESSAGE);
+
+        // When: back at the bottom, the page hidden
+        (query('#jump-to-latest') as HTMLButtonElement).click();
+        await fixture.whenStable();
+        vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+        document.dispatchEvent(new Event('visibilitychange'));
+        receive('remote', 'hidden');
+        await fixture.whenStable();
+
+        // Then
+        expect(play).toHaveBeenCalledTimes(2);
     });
 
     test('should tell a player left once the room agrees, not for a link lost then restored', async () => {

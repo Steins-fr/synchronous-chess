@@ -5,6 +5,7 @@
     <app-poker-seat
         #topSeatView
         appSteadyHeight
+        [class.after-ending]="handEnding()"
         id="seat-top"
         [name]="session().seats()[top]"
         [chips]="chips()[top]"
@@ -14,7 +15,7 @@
         [turnTime]="session().match().rules.turnTime"
         [canRelease]="seats.canRelease(top)"
         (release)="release(top)" />
-    <app-card-hand class="table-hand [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
+    <app-card-hand class="table-hand transition-opacity duration-(--app-motion-slow) [--deal-from-y:8.5rem]" [class.opacity-50]="losing(top)" [cards]="hands()[top]" [highlighted]="winning(top)" />
     <!-- The kind of each hand shown, its line kept before the showdown -->
     @let topCategory = categories()[top];
     <p class="table-line min-h-lh">{{ topCategory ? (topCategory.key | transloco: topCategory.params) : '' }}</p>
@@ -39,7 +40,7 @@
         <!-- The place of the outcome of the hand over, kept while the hand is played -->
         <div class="flex min-h-[calc(1lh+0.5rem)] max-sm:min-h-[calc(2lh+0.5rem)] items-center justify-center font-bold">
             @if (outcomeText(); as current) {
-            <p id="hand-outcome" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center" animate.enter="outcome-shown">
+            <p id="hand-outcome" class="m-0 px-3 py-1 rounded-lg bg-app-on-color/15 text-center" [class.after-ending]="handEnding()" animate.enter="outcome-shown">
                 {{ current.key | transloco: current.params }}
             </p>
             }
@@ -55,7 +56,7 @@
     @let bottomCategory = categories()[bottom];
     <p class="table-line min-h-lh">{{ bottomCategory ? (bottomCategory.key | transloco: bottomCategory.params) : '' }}</p>
     <app-card-hand
-        class="table-hand [--deal-from-y:-8.5rem]"
+        class="table-hand transition-opacity duration-(--app-motion-slow) [--deal-from-y:-8.5rem]"
         [class.opacity-50]="losing(bottom)"
         [cards]="hands()[bottom]"
         [selectable]="exchanging()"
@@ -64,6 +65,7 @@
         (selectedChange)="selected.set($event)" />
     <app-poker-seat
         #bottomSeatView
+        [class.after-ending]="handEnding()"
         appSteadyHeight
         id="seat-bottom"
         [name]="session().seats()[bottom]"

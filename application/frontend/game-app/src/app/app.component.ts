@@ -6,6 +6,7 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { LanguageMenuComponent } from '@app/modules/language-menu/language-menu.component';
 import { PageLoaderComponent } from '@app/modules/page-loader/page-loader.component';
+import { SoundMenuComponent } from '@app/modules/sound-menu/sound-menu.component';
 import { ThemeModeEnum } from '@app/services/theme/enums/theme-mode.enum';
 import { ShownTheme, ThemeService } from '@app/services/theme/theme.service';
 import { chatPath, chessPath, homePath, pokerPath, roulettePath } from './app.routes';
@@ -19,8 +20,8 @@ type ThemeButton = {
 @Component({
     selector: 'app-root',
     imports: [
-        RouterOutlet, RouterModule, MatIconButton, MatIcon, LanguageMenuComponent, PageLoaderComponent, TranslocoDirective,
-        TranslocoPipe,
+        RouterOutlet, RouterModule, MatIconButton, MatIcon, LanguageMenuComponent, SoundMenuComponent, PageLoaderComponent,
+        TranslocoDirective, TranslocoPipe,
     ],
     templateUrl: './app.component.html',
     host: {

@@ -13,6 +13,7 @@ import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import { GameEndReason } from '../games/game-result';
 import { SealedTurnStore, StoredTurn } from './sealed-turn-store';
+import { wait } from '@app/helpers/wait.helper';
 
 export enum SCGameSessionType {
     /** A participant takes the seat of a color, or leaves its seat with no color */
@@ -138,13 +139,19 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     private store?: SealedTurnStore;
     /** The reveals are checked one after the other: the reveal of a turn must not be checked before the previous turn is run */
     private reveals: Promise<void> = Promise.resolve();
+    private readonly _historySteps = signal<number>(0);
+    public readonly historySteps: Signal<number> = this._historySteps.asReadonly();
+    // A message of the history of the room was handled since the latest live message chained on the reveals
+    private historyBehind: boolean = false;
+    private readonly _seatsTaken = signal<number>(0);
+    public readonly seatsTaken: Signal<number> = this._seatsTaken.asReadonly();
 
     public constructor(protected readonly roomService: Room<ChessPayloads>) {
         super();
-        this.roomService.messenger(SCGameSessionType.SEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onSeat(message));
+        this.roomService.messenger(SCGameSessionType.SEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.atOnce(message, () => this.onSeat(message)));
         this.roomService.messenger(SCGameSessionType.COMMIT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onCommit(message));
         this.roomService.messenger(SCGameSessionType.REVEAL).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onReveal(message));
-        this.roomService.messenger(SCGameSessionType.UNSEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onUnseat(message));
+        this.roomService.messenger(SCGameSessionType.UNSEAT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.atOnce(message, () => this.onUnseat(message)));
         this.roomService.messenger(SCGameSessionType.FORFEIT).pipe(takeUntil(this.destroyRef)).subscribe((message) => this.onForfeit(message));
     }
 
@@ -243,6 +250,12 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         }
 
         this.setConfiguration(seats);
+        // Counted apart from the history steps: a seat taken live as the page ends catching up is heard. A seat asked again by
+        // its player (a second click before the first one came back) is no seat taken
+        const held: string | undefined = message.payload.color === PieceColor.WHITE ? whitePlayer : blackPlayer;
+        if (message.payload.color !== PieceColor.NONE && held !== message.from && !this.roomService.isHistory(message)) {
+            this._seatsTaken.update((taken: number) => taken + 1);
+        }
     }
 
     /** The local player frees the seat of a player away, before the game starts: the other seated player, or the host (the sequencer of the room) */
@@ -305,7 +318,46 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         }
 
         // A claim throwing, its payload being malformed, must not stop the next reveals
-        this.reveals = logHandlingFailure(message, this.reveals.then(() => this.applyForfeit(message, color)));
+        this.inOrder(message, () => logHandlingFailure(message, Promise.resolve().then(() => this.applyForfeit(message, color))));
+    }
+
+    /**
+     * Handles a message once the reveals before it are, a message of the history of the room stepping it before and after.
+     * The first live message after the history waits for the page to render the end of it: its turn is not heard as history
+     */
+    private inOrder(message: AppMessage, handling: () => Promise<void>): void {
+        const history: boolean = this.roomService.isHistory(message);
+        const afterHistory: boolean = this.historyBehind && !history;
+        this.historyBehind = history;
+        this.reveals = this.reveals
+            .then(() => afterHistory ? wait(0) : undefined)
+            .then(() => this.stepHistory(message))
+            .then(handling)
+            .then(() => this.stepHistory(message));
+    }
+
+    /** Handles a message at once, a message of the history of the room stepping it before and after */
+    private atOnce(message: AppMessage, handling: () => void): void {
+        this.markHistory(message);
+        this.stepHistory(message);
+        handling();
+        this.stepHistory(message);
+    }
+
+    /**
+     * A message of the history of the room handled at once, out of the reveals (a seat, a commitment): the next live message
+     * chained on them waits for the page to render the end of the history all the same
+     */
+    private markHistory(message: AppMessage): void {
+        if (this.roomService.isHistory(message)) {
+            this.historyBehind = true;
+        }
+    }
+
+    private stepHistory(message: AppMessage): void {
+        if (this.roomService.isHistory(message)) {
+            this._historySteps.update((steps: number) => steps + 1);
+        }
     }
 
     /**
@@ -379,6 +431,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
 
     /** The commitments of every player, the local one included */
     protected onCommit(message: AppMessage<SCGameSessionType.COMMIT, CommitMessage>): void {
+        this.markHistory(message);
         const color: PieceColor = this.playerColor(message.from);
         const key: string = `${ message.payload.turn } ${ color }`;
 
@@ -393,7 +446,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         // A commitment of the local player it did not play in this page: the page was reloaded since
         if (message.from === this.roomService.localPlayer.name && !this.sealedTurns.has(message.payload.turn)) {
             const { turn, commitment } = message.payload;
-            this.reveals = this.reveals.then(() => logHandlingFailure(message, this.restore(turn, color, commitment)));
+            this.inOrder(message, () => logHandlingFailure(message, this.restore(turn, color, commitment)));
         }
 
         this.revealCommittedTurns();
@@ -439,9 +492,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         }
 
         // A reveal throwing, its payload being malformed, must not stop the next ones
-        this.reveals = this.reveals
-            .then(() => logHandlingFailure(message, this.applyReveal(message, color)))
-            .then(() => this.playRestoredTurns());
+        this.inOrder(message, () => logHandlingFailure(message, this.applyReveal(message, color)).then(() => this.playRestoredTurns()));
     }
 
     private async applyReveal(message: AppMessage<SCGameSessionType.REVEAL, RevealMessage>, color: PieceColor): Promise<void> {

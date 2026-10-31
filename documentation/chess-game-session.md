@@ -264,6 +264,11 @@ A reloaded page builds a new session, and the chain delivers again all its messa
   kept in `SealedTurnStore` (session storage of the tab), played once the game reaches its turn, then
   revealed. A reveal sent twice is ignored by the others.
 
+The session counts the steps of that history (`historySteps`, the start and the end of each of its messages
+seating a player, running a turn or ending the game): the page plays no sound of what it catches up with. The first
+live message after the history waits for the page to render the end of it (`wait(0)`), so its turn is not heard as
+history; the seats taken live are counted apart (`seatsTaken`), a seat asked again by its player not counted.
+
 ## Messages
 
 All the messages go through the `chess` chain (`chessBlockChains`), and are delivered to every
@@ -308,6 +313,12 @@ room, the game replaces the presentation, and the rules are folded below it.
   playing a turn, the latest turn first, white first (`Turn 1 · White: F2 → F3`, `Turn 1 (intermediate) ·
   Black passes`, `Turn 2 · White promotes on A8 to a queen`), from `playedTurnLines()` of
   `helpers/played-turn-text.helper.ts`. One game per room: no past games.
+- **Sounds.** A seat taken plays a pop on every page (`seatTaken()` of `services/sound/game-sounds.ts`, as at every
+  game). Each turn run plays its sound on every page, a hidden one included, from `turnSounds()` of
+  `helpers/turn-sound.helper.ts`: the end of the game alone (won for its winner and a spectator, lost for the
+  other player, or drawn: `gameEndSound()` of `services/sound/game-sounds.ts`, the same for every game), else the most telling one of
+  a check, a promotion, a castling, a capture and a move, then the turn starting, 0.3 second later, when the
+  next turn waits for a choice (intermediate or promotion). Passes only play the turn starting alone.
 
 The page never jumps: a seat keeps the height of its button, shown or not, and the tallest height it had
 (`SteadyHeightDirective` of `modules/room-layout`). `e2e/synchronous-chess.e2e.ts` plays a game to its checkmate,

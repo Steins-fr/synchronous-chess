@@ -83,9 +83,9 @@ This is an Angular TypeScript project with the following characteristics:
 - The app speaks the languages of `Language` (`services/language/enums/language.enum.ts`), English
   being the source: every text shown goes through a key of Transloco, translated in
   `src/i18n/<code>.json`, or in the files of its scope for a text of a game (see Scopes). The only
-  exception is the debug panel of WebRTC (`modules/debug`), developer tooling, in English out of the keys: the
-  room layout offers it, a floating button opening it in a bottom sheet, when `webrtcDebug` of the environment is
-  on (`WEBRTC_DEBUG`: local and staging, not production)
+  exceptions are the debug panel of WebRTC (`modules/debug`) and the sound lab (`modules/sound-lab`), developer
+  tooling, in English out of the keys: the room layout offers the debug panel, a floating button opening it in a
+  bottom sheet, when `webrtcDebug` of the environment is on (`WEBRTC_DEBUG`: local and staging, not production)
 - The offensive words the chat masks are no texts: lists of their own (`services/offensive-words/lists`), the same in
   every language, out of the keys and of the extraction, curated by the rules of their README
 - `LanguageService` picks the language: the user's pick, kept in the local storage, else the first
@@ -227,7 +227,8 @@ Claude writes the translations of every new or changed key, into every language:
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
 | unread (message) | non lu | sin leer | não lida | não lida | ungelesen | непрочитанное | okunmamış | belum dibaca | nieprzeczytana | non letto |
 | hide (a player's messages) | masquer | ocultar | ocultar | ocultar | ausblenden | скрыть | gizlemek | sembunyikan | ukryć | nascondere |
-| mute | rendre muet | silenciar | silenciar | silenciar | stummschalten | заглушить | sustur | bisukan | wycisz | silenzia |
+| mute (a participant) | rendre muet | silenciar | silenciar | silenciar | stummschalten | заглушить | sustur | bisukan | wycisz | silenzia |
+| mute (the sounds) | couper le son | silenciar | silenciar | silenciar | stummschalten | без звука | sesi kapat | bisukan | wycisz | silenzia |
 | unmute | rendre la parole | quitar el silencio | tirar o silêncio | tirar o silêncio | Stummschaltung aufheben | снять заглушение | susturmayı kaldır | batalkan bisu | cofnij wyciszenie | riattiva |
 | remove (from a room) | exclure | expulsar | remover | remover | entfernen | удалить | çıkarmak | mengeluarkan | usunąć | rimuovere |
 | history | historique | historial | histórico | histórico | Verlauf | история | geçmiş | riwayat | historia | cronologia |
