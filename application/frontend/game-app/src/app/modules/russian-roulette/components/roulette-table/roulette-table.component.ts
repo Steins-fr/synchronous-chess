@@ -2,7 +2,7 @@ import {
     afterNextRender, afterRenderEffect, Component, computed, DestroyRef, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, signal, untracked, viewChild,
     WritableSignal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
@@ -22,7 +22,7 @@ import { SoundService } from '@app/services/sound/sound.service';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import { Subscription } from 'rxjs';
+import { map, Subscription, switchMap } from 'rxjs';
 import { Cylinder, CylinderVerification } from '../../classes/cylinder/cylinder';
 import { CylinderPhase } from '../../classes/cylinder/cylinder-state';
 import { PlayedGame } from '../../classes/game-sessions/played-game';
@@ -486,11 +486,10 @@ export class RouletteTableComponent implements OnDestroy {
 
     // A session catches up with the history of the room before its first live message: the table shows it at once, then
     // plays and hears the changes from there
-    private readonly catchingUp = effect((onCleanup: (cleanup: () => void) => void) => {
-        const session: RussianRouletteSession = this.session();
-        const caughtUp: Subscription = session.caughtUp.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.caughtUp(session));
-        onCleanup(() => caughtUp.unsubscribe());
-    });
+    private readonly catchingUp: Subscription = toObservable(this.session).pipe(
+        switchMap((session: RussianRouletteSession) => session.caughtUp.pipe(map(() => session))),
+        takeUntilDestroyed(),
+    ).subscribe((session: RussianRouletteSession) => this.caughtUp(session));
 
     // A change of the table plays its sounds on every page, a hidden one included. A new session or a new game starts from
     // its own table, and the history of the room plays none: the session caught up with it, the changes play from there
