@@ -676,6 +676,29 @@ describe('PokerTableComponent', () => {
         expect(play).toHaveBeenCalledWith(SoundEffect.POKER_SHUFFLE, 0);
     });
 
+    test('should play the live change only of a render catching up with the history of the room too', async () => {
+        // Given: the seats taken before Carol joins
+        const alice: SeventeenPokerSession = participant('alice');
+        const bob: SeventeenPokerSession = participant('bob');
+        alice.takeSeat(PokerSeat.ONE);
+        bob.takeSeat(PokerSeat.TWO);
+        await table('carol');
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When: the chain gives her its history, then the first hand dealt live, before the page renders
+        hub.replay(fixture.componentInstance.room());
+        bob.deal();
+        await until(() => status() === 'alice to speak.');
+
+        // Then: the deck shuffled, the antes paid, then the cards dealt, not the seats of the history; the antes fly
+        expect(play.mock.calls).toEqual([
+            [SoundEffect.POKER_SHUFFLE, 0],
+            [SoundEffect.CHIPS, 0],
+            ...[0, 1, 2, 3, 4].map((index: number) => [SoundEffect.POKER_DEAL, index * DEAL_STAGGER]),
+        ]);
+        expect(flights()).toEqual([['5'], ['5']]);
+    });
+
     test('should tell the player the deck waits for', async () => {
         // Given: the keys of Bob do not reach the chain once he shuffled
         let dropKeys: boolean = false;

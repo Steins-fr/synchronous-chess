@@ -1,21 +1,21 @@
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
-import { gameEndSound, seatTaken, SOUND_GAP } from '@app/services/sound/game-sounds';
+import { gameEndSound, SOUND_GAP } from '@app/services/sound/game-sounds';
 import { OneShotSoundEffect } from '@app/services/sound/sound-files';
+import { LiveTable } from '../classes/game-sessions/seventeen-poker-session';
 import { HandEnd, HandOutcome, MatchResult } from '../classes/rules/poker-match';
 import { PokerSeat } from '../classes/rules/poker-seat';
-import { chipTransfers, TableChips } from './chip-transfers.helper';
 
-/** The table as a page hears it */
+/** The table as a page hears it: the changes its session applied live, counted, and what tells their sounds */
 export interface HeardTable {
-    /** The participant on each seat */
-    readonly seats: ReadonlyArray<string | null>;
-    /** The id of the deck of the hand, shuffled by both players before the deal */
-    readonly deck: string | null;
-    /** The ids of the cards of each hand */
-    readonly hands: ReadonlyArray<ReadonlyArray<string>>;
-    readonly chips: Readonly<TableChips>;
-    /** The outcome of each hand played in the match */
-    readonly outcomes: ReadonlyArray<Readonly<HandOutcome>>;
+    /** The seats taken live */
+    readonly seatsTaken: number;
+    readonly live: Readonly<LiveTable>;
+    /** The deck of the hand shows shuffled, as long as the sound of its shuffle: its cards wait for it */
+    readonly held: boolean;
+    /** The most cards of a hand, all dealt into it once its deck showed shuffled */
+    readonly cards: number;
+    /** The outcome of the latest hand of the match */
+    readonly outcome: Readonly<HandOutcome> | null;
     /** The result of the match, once over */
     readonly result: Readonly<MatchResult> | null;
 }
@@ -58,38 +58,55 @@ function outcomeSounds({ end, winner }: Readonly<HandOutcome>, mySeat: PokerSeat
 }
 
 /**
- * The sounds of a change of the table, from what the page last heard: a seat taken, a new deck shuffled, each card dealt into a hand as
- * it flies in, the chips moved by a bet, and the end of a hand, whose pot sound replaces the one of the chips, then the end
- * of the match, won, lost or drawn for the local player
+ * The cards entering the hands, the most of a hand: none while the deck of the hand shows shuffled, the whole hands once
+ * it showed, else the cards drawn at an exchange
+ */
+function dealtCards(before: Readonly<HeardTable>, after: Readonly<HeardTable>): number {
+    if (after.held) {
+        return 0;
+    }
+
+    // A card drawn while the deck showed shuffled waits for it too: it is dealt with its hand
+    if (before.held) {
+        return after.cards;
+    }
+
+    return Math.max(...after.live.draws.map((drawn: number, seat: number) => drawn - before.live.draws[seat]));
+}
+
+/**
+ * The sounds of the changes of the table its session applied live since the page last heard it: a seat taken, a new deck
+ * shuffled, each card dealt into a hand as it flies in, the chips moved by the antes or a bet, and the end of a hand,
+ * whose pot sound replaces the one of the chips, then the end of the match, won, lost or drawn for the local player. The
+ * history of the room, counting none, plays none
  */
 export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardTable>, mySeat: PokerSeat | null): ReadonlyArray<TimedSound> {
     const sounds: TimedSound[] = [];
 
-    if (seatTaken(before.seats, after.seats)) {
+    if (after.seatsTaken !== before.seatsTaken) {
         sounds.push({ effect: SoundEffect.SEAT_TAKEN, delay: 0 });
     }
 
-    if (after.deck !== null && after.deck !== before.deck) {
+    if (after.live.deals !== before.live.deals) {
         sounds.push({ effect: SoundEffect.POKER_SHUFFLE, delay: 0 });
     }
 
     // The hands are dealt together, each card of a hand after the previous one
-    const dealt: number = Math.max(0, ...after.hands.map((hand: ReadonlyArray<string>, seat: number) => {
-        const held: ReadonlySet<string> = new Set<string>(before.hands[seat]);
-        return hand.filter((id: string) => !held.has(id)).length;
-    }));
+    const dealt: number = dealtCards(before, after);
     sounds.push(...Array.from({ length: dealt }, (_: unknown, index: number): TimedSound => ({ effect: SoundEffect.POKER_DEAL, delay: index * DEAL_STAGGER })));
 
-    const outcome: Readonly<HandOutcome> | undefined = after.outcomes.length > before.outcomes.length ? after.outcomes.at(-1) : undefined;
-    if (outcome !== undefined) {
+    // A hand over live: the latest outcome of the match is its own
+    const outcome: Readonly<HandOutcome> | null = after.live.outcomes === before.live.outcomes ? null : after.outcome;
+    if (outcome !== null) {
         sounds.push(...outcomeSounds(outcome, mySeat));
-    } else if (chipTransfers(before.chips, after.chips).length > 0) {
+    } else if (after.live.chips !== before.live.chips) {
         sounds.push({ effect: SoundEffect.CHIPS, delay: 0 });
     }
 
-    if (after.result !== null && before.result === null) {
+    // The result of a match comes with the outcome of its last hand
+    if (outcome !== null && after.result !== null) {
         // After the sounds of the hand ending the match
-        const delay: number = sounds.length === 0 ? 0 : Math.max(...sounds.map((sound: TimedSound) => sound.delay)) + SOUND_GAP;
+        const delay: number = Math.max(...sounds.map((sound: TimedSound) => sound.delay)) + SOUND_GAP;
         sounds.push({ effect: gameEndSound(after.result.winner, mySeat), delay });
     }
 
