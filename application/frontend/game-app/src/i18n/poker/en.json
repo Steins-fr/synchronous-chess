@@ -101,6 +101,7 @@
       "broken": "A deck was cheated: the match stops.",
       "keys": "Waiting for the keys of {name}…",
       "myDeal": "Your turn to deal.",
+      "myDealEnding": "Your turn to deal: time is running out.",
       "myExchange": "Select the cards to discard, then exchange them.",
       "myExchangeEnding": "Exchange your cards: time is running out.",
       "myTurn": "Your turn.",

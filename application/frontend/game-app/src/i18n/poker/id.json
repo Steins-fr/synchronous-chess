@@ -101,6 +101,7 @@
       "broken": "Ada kecurangan pada tumpukan kartu: pertandingan dihentikan.",
       "keys": "Menunggu kunci dari {name}…",
       "myDeal": "Giliran Anda membagikan kartu.",
+      "myDealEnding": "Giliran Anda membagikan kartu: waktu hampir habis.",
       "myExchange": "Pilih kartu yang dibuang, lalu tukar.",
       "myExchangeEnding": "Tukar kartu Anda: waktu hampir habis.",
       "myTurn": "Giliran Anda.",

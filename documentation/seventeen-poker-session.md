@@ -210,9 +210,12 @@ over the whole move, started late on a hidden page and never restarted on the sa
 
 ## The clock of a deal
 
-From the second hand of a match, the table runs the clock for the dealer too, with the time of a move (`turnTime`), from
+From the second hand of a match, the table runs a clock for the dealer too, with the time of a move (`turnTime`), from
 when its page sees the hand over: the seat of the dealer shows the ring and the seconds left, as for a move
-(`timedSeat` of the table, the player to act, else the dealer between two hands). The first hand of a match, the first
+(`timedSeat` of the table, the player to act, else the dealer between two hands), and its status tells the dealer once
+the time runs out. The clock is its own, apart from the one of the moves: a tick of the clock of the last move coming
+before the page renders the hand over never deals, and a late tick of the clock of the deal, the hand dealt already,
+does nothing. The first hand of a match, the first
 one of a new match after `Play again` included, keeps the `Deal` button alone: until it is dealt, the seats are open, and
 dealing it at once would close them behind the backs of the participants. `Deal` stays offered while the clock runs.
 

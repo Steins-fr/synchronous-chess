@@ -101,6 +101,7 @@
       "broken": "W talii oszukano: partia zostaje przerwana.",
       "keys": "Czekamy na klucze gracza {name}…",
       "myDeal": "Rozdajesz karty.",
+      "myDealEnding": "Rozdajesz karty: czas się kończy.",
       "myExchange": "Wybierz karty do odrzucenia, potem je wymień.",
       "myExchangeEnding": "Wymień karty: czas się kończy.",
       "myTurn": "Twoja kolej.",

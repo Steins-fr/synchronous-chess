@@ -665,7 +665,13 @@ describe('PokerTableComponent', () => {
             expect(button('Deal')).toBeDefined();
 
             // When
-            await elapse(44);
+            await elapse(40);
+
+            // Then: the status tells the time runs out
+            expect(status()).toEqual('Your turn to deal: time is running out.');
+
+            // When
+            await elapse(4);
 
             // Then
             expect(deals('alice')).toEqual(0);
@@ -677,6 +683,30 @@ describe('PokerTableComponent', () => {
             // Then
             expect(deals('alice')).toEqual(1);
             expect(element().textContent).toContain('Hand 2 of 10');
+        });
+
+        test('should leave a late tick of a clock to its own wait: the move over deals nothing, the deal over claims nothing', async () => {
+            // Given: the hand over, Alice to deal
+            await firstHandOver();
+
+            // When: a late tick of the clock of the last move, the table rendering the hand over after it
+            fixture.componentInstance['timeOut']();
+            await fixture.whenStable();
+
+            // Then: the deal has its own time
+            expect(deals('alice')).toEqual(0);
+            expect(text('#seat-bottom')).toMatch(/ 45 s$/);
+
+            // When: Alice deals, Bob leaves, then a late tick of the clock of the deal
+            await click('Deal');
+            await until(() => status() === 'bob to speak.');
+            hub.leave(rooms.get('bob') as Room<PokerPayloads>);
+            fixture.componentInstance['dealTimeOut']();
+            await fixture.whenStable();
+
+            // Then
+            expect(deals('alice')).toEqual(1);
+            expect(hub.types()).not.toContain(SPGameSessionType.TIMEOUT);
         });
 
         test('should deal nothing more once the time is over while the deal waits for the chain', async () => {

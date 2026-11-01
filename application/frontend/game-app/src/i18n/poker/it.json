@@ -101,6 +101,7 @@
       "broken": "Un mazzo è stato truccato: la partita si ferma.",
       "keys": "In attesa delle chiavi di {name}…",
       "myDeal": "Tocca a te distribuire.",
+      "myDealEnding": "Tocca a te distribuire: il tempo sta per scadere.",
       "myExchange": "Seleziona le carte da scartare, poi cambiale.",
       "myExchangeEnding": "Cambia le tue carte: il tempo sta per scadere.",
       "myTurn": "Tocca a te.",

@@ -101,6 +101,7 @@
       "broken": "Un paquet a été triché : la partie s'arrête.",
       "keys": "En attente des clés de {name}…",
       "myDeal": "À vous de distribuer.",
+      "myDealEnding": "À vous de distribuer : le temps presse.",
       "myExchange": "Sélectionnez les cartes à défausser, puis échangez-les.",
       "myExchangeEnding": "Échangez vos cartes : le temps presse.",
       "myTurn": "À vous de jouer.",

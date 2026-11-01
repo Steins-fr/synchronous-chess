@@ -101,6 +101,7 @@
       "broken": "Bei einem Blatt wurde betrogen: Die Partie endet.",
       "keys": "Warte auf die Schlüssel von {name}…",
       "myDeal": "Du teilst aus.",
+      "myDealEnding": "Du teilst aus: Die Zeit läuft ab.",
       "myExchange": "Wähle die Karten zum Abwerfen und tausche sie.",
       "myExchangeEnding": "Tausche deine Karten: Die Zeit läuft ab.",
       "myTurn": "Du bist dran.",

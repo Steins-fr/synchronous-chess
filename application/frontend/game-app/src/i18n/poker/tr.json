@@ -101,6 +101,7 @@
       "broken": "Bir destede hile yapıldı: maç duruyor.",
       "keys": "{name} kullanıcısının anahtarları bekleniyor…",
       "myDeal": "Kartları siz dağıtıyorsunuz.",
+      "myDealEnding": "Kartları siz dağıtıyorsunuz: süre doluyor.",
       "myExchange": "Atacağınız kartları seçin, sonra değiştirin.",
       "myExchangeEnding": "Kartlarınızı değiştirin: süre doluyor.",
       "myTurn": "Sıra sizde.",
