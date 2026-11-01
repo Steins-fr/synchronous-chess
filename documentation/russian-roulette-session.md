@@ -30,7 +30,7 @@ The code lives in `application/frontend/game-app/src/app/modules/russian-roulett
 
 | Class | File | Role |
 |---|---|---|
-| `RouletteGame` | `classes/rules/roulette-game.ts` | The game without the cylinder, in signals: the passes, the shots, the stacks, the deaths, the result, a game lost on time |
+| `RouletteGame` | `classes/rules/roulette-game.ts` | The game without the cylinder, in signals: the passes, the shots, the stacks, the deaths, the result, a game lost on time or on a bankruptcy |
 | `ExponentialElGamal`, `zk-proofs` | `modules/mental-poker/classes` | The cipher of the cylinder and its proofs (see [Mental poker](mental-poker.md#the-exponential-elgamal)) |
 | `CylinderState` | `classes/cylinder/cylinder-state.ts` | What the chain tells of a cylinder, the same for every participant: the keys, the loads and the spins, the shares of each chamber fired, the disclosures |
 | `Cylinder` | `classes/cylinder/cylinder.ts` | Applies the messages of a cylinder, makes the steps of the local player (its load, its spin, its shares, its disclosure) |
@@ -60,10 +60,12 @@ The chips (`ChipStackComponent`) come from `modules/playing-cards`, shared with 
     **revealed**: its bullets are spent, without a death, and count among the 6 fired. Passing never dodges a bullet,
     else the players would pass for ever. A player who can not pay the pass shoots.
   - **Shot, empty chamber**: the shooter takes the chips of the table.
-  - **Shot, a bullet or two**: one death. The shooter gives 50 chips and the chips of the table to the other player,
-    its stack going below 0 if need be, a debt.
-- The game ends once its 6 bullets fired (or its 24 chambers). The player with fewer deaths wins, then the one with
-  more chips; else the game is a draw. A chamber loaded by both players counts both its bullets, for one death.
+  - **Shot, a bullet or two**: one death. The shooter gives 50 chips and the chips of the table to the other player.
+- A death leaving the shooter with 0 chips or fewer makes it **bankrupt** (`bankrupt`): it loses the game at once,
+  whatever its deaths and its chips, the bullets left unfired. A stack emptied by passes bankrupts no one: its player
+  shoots, as it can not pay the pass.
+- Else the game ends once its 6 bullets fired (or its 24 chambers). The player with fewer deaths wins, then the one
+  with more chips; else the game is a draw. A chamber loaded by both players counts both its bullets, for one death.
 - Each move lasts 45 seconds at most (`turnTime`), 30 more once while a seated player is away (`awayTime`): see
   [The clock of a move](#the-clock-of-a-move). The player late loses the game, whatever its deaths and its chips.
 - A player whose spin the check finds cheated, or who never shows its key, loses the game (see
@@ -175,10 +177,11 @@ showing `Sit here`: it clicks where it then sits. Once both seats are taken, it 
 
 ## End of the game
 
-Once the game is over, both players disclose their keys and every participant checks the spins. The table tells the
-result, provisional until the check ends, then whether the cylinder was fair: a cheated spin gives the game to the other
-player. A game over before its cylinder was spun has nothing to check: the session drops its cylinder, a step coming
-late applies nothing. The key of a player who lost on time is awaited too, its result provisional until the check: a
+Once the game is over, after its last bullet or the shot bankrupting a player, both players disclose their keys and
+every participant checks the spins: a bankruptcy ends the game as its last bullet does, once its shot is over. The table
+tells the result, provisional until the check ends, then whether the cylinder was fair: a cheated spin gives the game to
+the other player. A game over before its cylinder was spun has nothing to check: the session drops its cylinder, a step
+coming late applies nothing. The key of a player who lost on time is awaited too, its result provisional until the check: a
 spin it finds cheated still decides the game. Its time over again, the key is withheld, and the result final. A share
 coming once the game is lost on time fires nothing.
 
@@ -240,8 +243,8 @@ All the messages go through the `roulette` chain (`rouletteBlockChains`).
 
 ## Interface
 
-- The seats, at the top and the bottom of the table: the player, its chips (as piles and as a count, a debt below 0)
-  and its deaths, a ring around a player the game waits for, with the seconds left to its move and a bar emptying over
+- The seats, at the top and the bottom of the table: the player, its chips (as piles and as a count, 0 or below once
+  bankrupt) and its deaths, a ring around a player the game waits for, with the seconds left to its move and a bar emptying over
   them.
 - The cloth: the bank, the spectators, the cylinder, the chips of the table and the bullets left, and the latest move.
   The cylinder shows its 24 chambers around its axis, the hammer at the top: while the player places its bullets, its
