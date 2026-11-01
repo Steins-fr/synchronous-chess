@@ -887,12 +887,15 @@ export class RouletteTableComponent implements OnDestroy {
         if (cheated) {
             return { key: this.key(marker('table.result.cheated', undefined, 'roulette')), params: { winner, loser } };
         }
-        // A player lost on time, then its key withheld: its time over tells it
-        if (played.withheld() !== null && played.withheld() !== played.game.forfeited()) {
+        // A player lost on time or bankrupt, then its key withheld: its time over, or its bankruptcy, tells it
+        if (played.withheld() !== null && played.withheld() !== played.game.loser()) {
             return { key: this.key(marker('table.result.withheld', undefined, 'roulette')), params: { winner, loser } };
         }
         if (played.game.forfeited() !== null) {
             return { key: this.key(marker('table.result.forfeit', undefined, 'roulette')), params: { winner, loser } };
+        }
+        if (played.game.bankrupt() !== null) {
+            return { key: this.key(marker('table.result.bankrupt', undefined, 'roulette')), params: { winner, loser } };
         }
         return {
             key: this.key(marker('table.result.win', undefined, 'roulette')),

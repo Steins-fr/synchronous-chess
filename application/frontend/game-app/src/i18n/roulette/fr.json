@@ -9,13 +9,13 @@
     "loaded": "Chambre {number} : votre balle"
   },
   "presentation": {
-    "intro": "Chaque joueur charge 3 balles dans les chambres de son choix, puis le barillet tourne. À tour de rôle, tirez pour prendre les jetons de la table, ou passez en payant, le prix doublant à chaque passe d'affilée. Une balle est une mort, qui coûte 50 jetons : une fois les 6 balles tirées, le moins de morts gagne.",
     "points": {
       "checked": "Une fois la partie finie, toutes les clés sont montrées : chaque participant vérifie que personne n'a triché.",
       "hidden": "Les deux joueurs font tourner le barillet tour à tour : personne, pas même le serveur, ne sait quelle chambre vient ensuite, ni à qui est la balle tirée.",
       "placed": "Vous seul savez où sont vos balles : elles sont chiffrées avant que l'autre joueur les voie."
     },
     "rooms": "Créez une salle ou rejoignez-en une ouverte : les participants sans place regardent la partie.",
+    "summary": "Chaque joueur charge 3 balles dans les chambres de son choix, puis le barillet tourne. À tour de rôle, tirez pour prendre les jetons de la table, ou passez en payant, le prix doublant à chaque passe d'affilée. Une balle est une mort, qui coûte 50 jetons : un joueur qu'une mort laisse sans jetons fait faillite et perd aussitôt ; sinon, une fois les 6 balles tirées, le moins de morts gagne.",
     "tagline": "Un duel à deux joueurs, avec un revolver de 24 chambres.",
     "title": "Roulette russe"
   },
@@ -26,8 +26,9 @@
       "title": "Le barillet"
     },
     "end": {
-      "title": "Fin de la partie",
-      "winner": "La partie se termine une fois les 6 balles tirées. Le joueur avec le moins de morts gagne, puis celui avec le plus de jetons ; sinon, la partie est nulle."
+      "bankrupt": "Un joueur qu'une mort laisse à 0 jeton ou moins fait faillite : il perd la partie aussitôt, sans tirer les balles restantes.",
+      "bullets": "Sinon, la partie se termine une fois les 6 balles tirées. Le joueur avec le moins de morts gagne, puis celui avec le plus de jetons ; à défaut, la partie est nulle.",
+      "title": "Fin de la partie"
     },
     "fair": {
       "checked": "Une fois la partie finie, les deux clés sont montrées et chaque participant vérifie les tours de barillet : le résultat est alors définitif. Un joueur qui a triché, ou qui garde sa clé, perd la partie.",
@@ -38,8 +39,8 @@
     "title": "Règles",
     "turn": {
       "away": "Tant qu'un joueur est absent, le coup dispose de 30 secondes de plus, une fois : le joueur toujours absent perd la partie.",
+      "bullet": "Tirer une balle, ou deux : une mort. Le tireur donne 50 jetons et les jetons de la table à l'autre joueur.",
       "clock": "Chaque coup dure 45 secondes au plus : ensuite, la page passe pour le joueur, ou tire s'il ne peut pas payer, et charge 3 chambres au hasard pour un joueur qui n'a pas chargé.",
-      "death": "Tirer une balle, ou deux : une mort. Le tireur donne 50 jetons et les jetons de la table à l'autre joueur, quitte à s'endetter.",
       "empty": "Tirer une chambre vide : prendre les jetons de la table.",
       "pass": "Passer : poser des jetons sur la table, 1 jeton, doublé à chaque passe d'affilée (1, 2, 4, 8, 16). Un joueur qui ne peut pas payer doit tirer.",
       "reveal": "Après 5 passes d'affilée, la banque prend les 31 jetons de la table, et la chambre suivante est révélée : ses balles sont perdues, sans mort. Passer n'évite jamais une balle.",
@@ -71,6 +72,7 @@
     "pastGames": "Parties jouées",
     "provisional": "Résultat provisoire : le barillet est vérifié une fois les deux clés montrées.",
     "result": {
+      "bankrupt": "{loser} fait faillite : {winner} gagne la partie.",
       "bothCheated": "Les deux joueurs ont triché sur le barillet : aucun vainqueur.",
       "cheated": "{loser} a triché sur le barillet : {winner} gagne la partie.",
       "draw": "Partie nulle : les deux joueurs finissent avec autant de morts et de jetons.",

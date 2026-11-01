@@ -8,7 +8,10 @@ export interface RouletteRules {
     readonly bullets: number;
     /** The chips of each player at the start */
     readonly stack: number;
-    /** The chips a death costs, given to the other player with the chips of the table */
+    /**
+     * The chips a death costs, given to the other player with the chips of the table: the shooter left with 0 chips or
+     * fewer is bankrupt, and loses the game
+     */
     readonly death: number;
     /** The passes in a row making a draw: the bank takes the chips of the table */
     readonly passes: number;
@@ -51,7 +54,10 @@ export interface RouletteAction {
 }
 
 export interface RouletteResult {
-    /** The player with the fewest deaths, then the most chips, none when they are even */
+    /**
+     * The other player of a player lost on time or bankrupt, else the player with the fewest deaths, then the most chips,
+     * none when they are even
+     */
     readonly winner: RouletteSeat | null;
     readonly deaths: SeatPair<number>;
     readonly stacks: SeatPair<number>;
@@ -66,7 +72,7 @@ export class RouletteGame {
     /** The player shooting first, drawn once the cylinder is loaded: null until then */
     public readonly first = this._first.asReadonly();
     private readonly _stacks = signal<SeatPair<number>>([this.rules.stack, this.rules.stack]);
-    /** The chips of each player: a death may take it below 0, a debt */
+    /** The chips of each player: a death may take it to 0 or below, bankrupting its player */
     public readonly stacks = this._stacks.asReadonly();
     private readonly _table = signal<number>(0);
     /** The chips the players passing put on the table */
@@ -94,6 +100,9 @@ export class RouletteGame {
     private readonly _forfeited = signal<RouletteSeat | null>(null);
     /** The player who lost the game on time */
     public readonly forfeited = this._forfeited.asReadonly();
+    private readonly _bankrupt = signal<RouletteSeat | null>(null);
+    /** The player a death left with 0 chips or fewer: it lost the game, the bullets left unfired */
+    public readonly bankrupt = this._bankrupt.asReadonly();
 
     /** The bullets fired */
     public readonly firedBullets: Signal<number> = computed((): number => this._chambers().reduce((sum: number, bullets: number) => sum + bullets, 0));
@@ -102,7 +111,10 @@ export class RouletteGame {
     private readonly finished: Signal<boolean> = computed((): boolean =>
         this.firedBullets() >= 2 * this.rules.bullets || this._chambers().length >= this.rules.chambers);
 
-    public readonly over: Signal<boolean> = computed((): boolean => this._forfeited() !== null || this.finished());
+    /** The player who lost the game before its end: on time, or bankrupt */
+    public readonly loser: Signal<RouletteSeat | null> = computed((): RouletteSeat | null => this._forfeited() ?? this._bankrupt());
+
+    public readonly over: Signal<boolean> = computed((): boolean => this.loser() !== null || this.finished());
 
     /** The player to shoot or pass, null before the draw, while a chamber fires or is revealed, and once the game is over */
     public readonly toAct: Signal<RouletteSeat | null> = computed((): RouletteSeat | null =>
@@ -112,10 +124,11 @@ export class RouletteGame {
     public readonly passPrice: Signal<number> = computed((): number => 2 ** this._streak());
 
     public readonly result: Signal<RouletteResult | null> = computed((): RouletteResult | null => {
-        const [deaths, stacks, forfeited] = [this._deaths(), this._stacks(), this._forfeited()];
+        const [deaths, stacks, loser] = [this._deaths(), this._stacks(), this.loser()];
 
-        if (forfeited !== null) {
-            return { winner: otherSeat(forfeited), deaths, stacks };
+        // A player lost on time or bankrupt loses the game whatever the deaths, on the last bullet too
+        if (loser !== null) {
+            return { winner: otherSeat(loser), deaths, stacks };
         }
 
         return this.finished() ? { winner: RouletteGame.leader(deaths, stacks), deaths, stacks } : null;
@@ -182,14 +195,14 @@ export class RouletteGame {
 
     /**
      * The bullets of the chamber fired: empty, the shooter takes the table; loaded, by one player or both, it is one
-     * death, and the shooter gives the chips of a death and the table to the other player. A chamber revealed by the 5th
-     * pass in a row kills no one: its bullets are spent
+     * death, and the shooter gives the chips of a death and the table to the other player, bankrupt once left with 0 chips
+     * or fewer. A chamber revealed by the 5th pass in a row kills no one: its bullets are spent
      */
     public fire(bullets: number): boolean {
         const shooter: RouletteSeat | null = this._shooting();
         const revealer: RouletteSeat | null = this._revealing();
 
-        // A share late once the game was lost on time fires nothing
+        // A share late once the game is over, lost on time or on a bankruptcy, fires nothing
         if (this.over() || (shooter === null && revealer === null) || !Number.isInteger(bullets) || bullets < 0 || bullets > 2) {
             return false;
         }
@@ -213,6 +226,9 @@ export class RouletteGame {
             this._deaths.update((deaths: SeatPair<number>) => withSeat(deaths, shooter, deaths[shooter] + 1));
             this._stacks.update((stacks: SeatPair<number>) =>
                 withSeat(withSeat(stacks, shooter, stacks[shooter] - this.rules.death), other, stacks[other] + this.rules.death + table));
+            if (this._stacks()[shooter] <= 0) {
+                this._bankrupt.set(shooter);
+            }
         }
         this._table.set(0);
         this._streak.set(0);

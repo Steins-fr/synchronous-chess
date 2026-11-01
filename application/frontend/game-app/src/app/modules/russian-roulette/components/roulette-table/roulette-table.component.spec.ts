@@ -1034,6 +1034,54 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
             await until(() => text('p.muted-note') === 'The cylinder was fair.');
         });
 
+        test('should tell a game lost on a bankruptcy once its shot is over, then among the former games', async () => {
+            // Given the spins turning the cylinder by 0, Alice playing first, the first chamber holding her bullet, a death costing every chip
+            fixedCylinder();
+            await started({ ...LIGHT, stack: 50 });
+
+            // When
+            await click('Shoot');
+            await eventually(async () => {
+                await fixture.whenStable();
+                expect(fixture.componentInstance['session']().game().bankrupt()).toEqual(RouletteSeat.ONE);
+            });
+
+            // Then the revolver fires before the result
+            expect(status()).toEqual('Chamber 1 fires…');
+            expect(text('.badge')).toEqual('');
+
+            // When the shot is over
+            await until(() => text('.badge') === 'alice went bankrupt: bob wins the game.');
+
+            // Then the bullets left are not fired
+            expect(text('#last-move')).toEqual('alice fires chamber 1: a bullet, one death.');
+            expect(text('#seat-bottom')).toMatch(/^alice0 chips1 death/);
+            await until(() => text('p.muted-note') === 'The cylinder was fair.');
+
+            // When
+            await click('Play again');
+            await until(() => pastGames().length > 0);
+
+            // Then
+            expect(pastGames()).toEqual(['Game 1: alice went bankrupt: bob wins the game. The cylinder was fair.']);
+        });
+
+        test('should tell the bankruptcy of a player withholding its key', async () => {
+            // Given Alice bankrupt by the first chamber, her page disclosing another key
+            fixedCylinder();
+            const bob: RussianRouletteSession = await started({ ...LIGHT, stack: 50 }, { alice: withheldKey });
+            await click('Shoot');
+            await until(() => text('.badge') === 'alice went bankrupt: bob wins the game.');
+
+            // When
+            await eventually(() => expect(bob.awaited()).toEqual([{ seat: RouletteSeat.ONE, own: false }]));
+            bob.claimTimeout();
+
+            // Then
+            await until(() => fixture.componentInstance['session']().played().withheld() === RouletteSeat.ONE);
+            expect(text('.badge')).toEqual('alice went bankrupt: bob wins the game.');
+        });
+
         test('should tell the result provisional until the keys are disclosed, then a key withheld', async () => {
             // Given 2 chambers, each one loaded by a player, Alice disclosing another key
             const bob: RussianRouletteSession = await started({ ...SHORT, chambers: 2 }, { alice: withheldKey });

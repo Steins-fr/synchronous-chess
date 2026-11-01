@@ -9,13 +9,13 @@
     "loaded": "Komora {number}: twoja kula"
   },
   "presentation": {
-    "intro": "Każdy gracz ładuje 3 kule do wybranych komór, po czym bęben zostaje zakręcony. Na zmianę strzelasz, by zgarnąć żetony ze stołu, albo pasujesz, płacąc cenę, która podwaja się przy każdym kolejnym pasie z rzędu. Kula to śmierć, która kosztuje 50 żetonów: po wystrzeleniu 6 kul wygrywa ten, kto ma mniej śmierci.",
     "points": {
       "checked": "Po zakończeniu partii wszystkie klucze są pokazywane: każdy uczestnik sprawdza, że nikt nie oszukiwał.",
       "hidden": "Gracze kręcą bębnem na zmianę: nikt, nawet serwer, nie wie, która komora jest następna ani czyja kula wystrzeli.",
       "placed": "Tylko ty wiesz, gdzie są twoje kule: są szyfrowane, zanim zobaczy je drugi gracz."
     },
     "rooms": "Utwórz pokój lub dołącz do otwartego: uczestnicy bez miejsca oglądają partię.",
+    "summary": "Każdy gracz ładuje 3 kule do wybranych komór, po czym bęben zostaje zakręcony. Na zmianę strzelasz, by zgarnąć żetony ze stołu, albo pasujesz, płacąc cenę, która podwaja się przy każdym kolejnym pasie z rzędu. Kula to śmierć, która kosztuje 50 żetonów: gracz, któremu po śmierci nie zostają żadne żetony, jest bankrutem i od razu przegrywa; w przeciwnym razie po wystrzeleniu 6 kul wygrywa ten, kto ma mniej śmierci.",
     "tagline": "Pojedynek dla dwóch graczy z rewolwerem o 24 komorach.",
     "title": "Rosyjska ruletka"
   },
@@ -26,8 +26,9 @@
       "title": "Bęben"
     },
     "end": {
-      "title": "Koniec partii",
-      "winner": "Partia kończy się po wystrzeleniu 6 kul. Wygrywa gracz z mniejszą liczbą śmierci, potem ten z większą liczbą żetonów; w przeciwnym razie jest remis."
+      "bankrupt": "Gracz, któremu po śmierci zostaje 0 żetonów lub mniej, jest bankrutem: od razu przegrywa partię, a pozostałe kule nie są wystrzeliwane.",
+      "bullets": "W przeciwnym razie partia kończy się po wystrzeleniu 6 kul. Wygrywa gracz z mniejszą liczbą śmierci, potem ten z większą liczbą żetonów; przy równości jest remis.",
+      "title": "Koniec partii"
     },
     "fair": {
       "checked": "Po zakończeniu partii oba klucze są pokazywane, a każdy uczestnik sprawdza obroty bębna: wtedy wynik jest ostateczny. Gracz, który oszukiwał lub zatrzymuje swój klucz, przegrywa partię.",
@@ -38,8 +39,8 @@
     "title": "Zasady",
     "turn": {
       "away": "Gdy gracza nie ma, ruch dostaje jeszcze 30 sekund, jeden raz: gracz, którego nadal nie ma, przegrywa partię.",
+      "bullet": "Strzał z kulą, albo z dwiema: jedna śmierć. Strzelający oddaje drugiemu graczowi 50 żetonów i żetony ze stołu.",
       "clock": "Każdy ruch trwa najwyżej 45 sekund: potem strona pasuje za gracza albo strzela, gdy nie może zapłacić, i ładuje 3 losowe komory za gracza, który nie załadował.",
-      "death": "Strzał z kulą, albo z dwiema: jedna śmierć. Strzelający oddaje drugiemu graczowi 50 żetonów i żetony ze stołu, w razie potrzeby na dług.",
       "empty": "Strzał w pustą komorę: zgarnij żetony ze stołu.",
       "pass": "Pasuj: połóż żetony na stole, 1 żeton, podwajany przy każdym pasie z rzędu (1, 2, 4, 8, 16). Gracz, który nie może zapłacić, musi strzelić.",
       "reveal": "Po 5 pasach z rzędu bank zabiera 31 żetonów ze stołu, a następna komora zostaje odsłonięta: jej kule przepadają, bez śmierci. Pasowanie nigdy nie chroni przed kulą.",
@@ -71,6 +72,7 @@
     "pastGames": "Rozegrane partie",
     "provisional": "Wynik tymczasowy: bęben zostanie sprawdzony po pokazaniu obu kluczy.",
     "result": {
+      "bankrupt": "Gracz {loser} jest bankrutem: {winner} wygrywa partię.",
       "bothCheated": "Obaj gracze oszukiwali przy bębnie: brak zwycięzcy.",
       "cheated": "{loser} oszukiwał przy bębnie: {winner} wygrywa partię.",
       "draw": "Remis: obaj gracze mają tyle samo śmierci i żetonów.",
