@@ -164,6 +164,22 @@ test.describe('Seventeen poker', () => {
         await expect(table(alice).getByRole('status')).toHaveText('Your turn.');
     });
 
+    test('deals the next hand once the time of the dealer is over, the first hand waiting for Deal', SLOW, async ({ poker }) => {
+        // A deal of 45 seconds
+        test.setTimeout(120_000);
+        const [alice, bob, carol] = await seated(poker);
+        await deal(alice, bob);
+        await table(alice).getByRole('button', { name: 'Bet 1' }).click();
+        await table(bob).getByRole('button', { name: 'Fold' }).click();
+
+        // Alice deals the second hand: her seat shows her clock, then her page deals for her
+        await expect(table(alice).getByRole('status')).toHaveText('Your turn to deal.');
+        await expect(table(carol).locator('#seat-bottom').getByText(/ s$/)).toBeVisible();
+        await expect(table(carol).getByText('Hand 2 of 10')).toBeVisible({ timeout: 60_000 });
+        await expect(table(alice).getByRole('status')).toHaveText('bob to speak.', { timeout: 15_000 });
+        await expect.poll(() => cardsOf(bob, 1)).not.toContain('Face-down card');
+    });
+
     test('gives the pot to the other player when a player folds, the folded hand staying hidden', async ({ poker }) => {
         const [alice, bob, carol] = await seated(poker);
         await deal(alice, bob);
