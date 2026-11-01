@@ -162,18 +162,31 @@ export class PokerTableComponent implements OnDestroy {
         return this.session().match().toAct();
     });
 
+    /**
+     * The dealer the next hand waits for, from the second hand of the match: the first one, the seats open until then,
+     * waits for the Deal button only
+     */
+    private readonly toDeal: Signal<PokerSeat | null> = computed((): PokerSeat | null => {
+        const session: SeventeenPokerSession = this.session();
+        return this.hand()?.phase === HandPhase.OVER && !session.over() ? session.match().dealer() : null;
+    });
+
+    /** The seat whose player the clock runs for: the player to act, or the dealer between two hands */
+    protected readonly timedSeat: Signal<PokerSeat | null> = computed((): PokerSeat | null => this.toAct() ?? this.toDeal());
+
     /** A seated player is away: the table waits for it, the clock of the move running */
     private readonly waiting: Signal<boolean> = computed((): boolean => this.session().awayPlayers().length > 0);
-    // Each move has its time, from when the page sees it, a new one at each action (a seat acting twice in a row too):
-    // once over, the page of its player plays for it, or the page of the other player ends the match while it is away
-    /** The seconds left to the player to act for its move */
+    // Each move has its time, from when the page sees it, a new one at each action (a seat acting twice in a row too), and
+    // the deal of the next hand as many, from when the page sees the hand over: once over, the page of its player plays or
+    // deals for it, or the page of the other player ends the match while it is away
+    /** The seconds left to the player to act for its move, or to the dealer for the deal */
     protected readonly timeLeft: Signal<number | null> = turnClock({
-        running: () => this.hand() !== null && this.toAct() !== null,
+        running: () => this.hand() !== null && this.timedSeat() !== null,
         times: () => this.session().match().rules,
         away: this.waiting,
         timeOut: () => this.timeOut(),
     });
-    /** The time of the move runs out: the status of the local player tells it, once, for a screen reader too */
+    /** The time runs out: the status of the local player to act tells it, once, for a screen reader too */
     private readonly hurry: Signal<boolean> = computed((): boolean => {
         const left: number | null = this.timeLeft();
         return left !== null && left <= CLOCK_LOW;
@@ -497,6 +510,12 @@ export class PokerTableComponent implements OnDestroy {
      */
     private timeOut(): void {
         const session: SeventeenPokerSession = this.session();
+
+        if (this.toDeal() !== null) {
+            this.dealTimeOut(session);
+            return;
+        }
+
         const toAct: PokerSeat = this.toAct() as PokerSeat;
 
         if (this.exchanging()) {
@@ -506,6 +525,24 @@ export class PokerTableComponent implements OnDestroy {
             this.act(this.actions().includes(BetAction.CHECK) ? BetAction.CHECK : BetAction.FOLD);
         } else if (session.mySeat() === otherSeat(toAct) && session.awayPlayers().includes(session.seats()[toAct] as string)) {
             session.claimTimeout();
+        }
+    }
+
+    /**
+     * The time of the deal is over. A player away loses the match, claimed by the other one: the deck of the next hand
+     * needs both. Else the page of the dealer deals: a deal sent meanwhile is the deal
+     */
+    private dealTimeOut(session: SeventeenPokerSession): void {
+        const mySeat: PokerSeat | null = session.mySeat();
+
+        if (mySeat === null) {
+            return;
+        }
+
+        if (session.awayPlayers().includes(session.seats()[otherSeat(mySeat)] as string)) {
+            session.claimTimeout();
+        } else {
+            this.deal();
         }
     }
 

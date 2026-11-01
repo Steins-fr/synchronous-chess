@@ -24,6 +24,7 @@
       "ante": "Cada jugador paga un ante de 5 fichas y recibe 5 cartas.",
       "away": "Mientras un jugador está ausente, la jugada gana 30 segundos, una sola vez: el jugador que debe jugar y sigue ausente al acabarse el tiempo pierde la partida.",
       "clock": "Cada jugada dura 45 segundos como máximo: agotado el tiempo, el jugador pasa, se retira ante una apuesta o se queda con su mano en el cambio.",
+      "deal": "Desde la segunda mano de una partida, el crupier tiene 45 segundos para repartir: agotado el tiempo, la mano se reparte por él. La ausencia de un jugador da 30 segundos más, una sola vez: si sigue ausente al acabarse el tiempo, pierde la partida.",
       "exchange": "Cambio: cada jugador, por turno, descarta cartas y roba otras tantas; el segundo roba de las cartas que quedan.",
       "firstRound": "Primera ronda: pasar, apostar, subir, igualar o retirarse. Si los dos jugadores pasan, los antes van a la banca.",
       "secondRound": "Segunda ronda: una apuesta es al menos la de la primera ronda, y de 30 fichas como máximo.",

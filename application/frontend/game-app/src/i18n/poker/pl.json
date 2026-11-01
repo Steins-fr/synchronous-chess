@@ -24,6 +24,7 @@
       "ante": "Każdy gracz płaci ante w wysokości 5 żetonów i dostaje 5 kart.",
       "away": "Gdy gracz jest nieobecny, ruch raz dostaje 30 sekund więcej: gracz, który ma ruch i nie wrócił przed upływem czasu, przegrywa partię.",
       "clock": "Każdy ruch trwa najwyżej 45 sekund: po upływie czasu gracz czeka, pasuje wobec stawki albo zatrzymuje swój układ przy wymianie.",
+      "deal": "Od drugiego rozdania partii krupier ma 45 sekund na rozdanie: po upływie czasu karty są rozdawane za niego. Gdy gracz jest nieobecny, czas raz wydłuża się o 30 sekund: gracz, który nie wrócił przed jego upływem, przegrywa partię.",
       "exchange": "Wymiana: każdy gracz po kolei odrzuca karty i dobiera tyle samo; drugi dobiera z pozostałych kart.",
       "firstRound": "Pierwsza runda licytacji: czekaj, postaw, przebij, sprawdź albo pas. Jeśli obaj gracze czekają, ante trafiają do banku.",
       "secondRound": "Druga runda licytacji: stawka wynosi co najmniej tyle, co w pierwszej rundzie, i najwyżej 30 żetonów.",

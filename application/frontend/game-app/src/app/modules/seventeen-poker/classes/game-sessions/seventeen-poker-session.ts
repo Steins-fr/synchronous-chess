@@ -28,7 +28,7 @@ export enum SPGameSessionType {
     BET = 'SP_bet',
     /** The cards a player discards, to draw as many */
     EXCHANGE = 'SP_exchange',
-    /** A player tells the time of the move of the other one, away, is over: the other one loses the match */
+    /** A player tells the time of the move of the other one, or of the deal, is over, the other one away: it loses the match */
     TIMEOUT = 'SP_timeout',
     /** A player starts a new match, once the former one is over */
     REMATCH = 'SP_rematch',
@@ -104,6 +104,8 @@ export interface LiveTable {
     readonly chips: number;
     /** The hands over: the latest outcome of the match tells their sounds */
     readonly outcomes: number;
+    /** The matches lost on time between two hands, which end no hand */
+    readonly forfeits: number;
 }
 
 type PokerGameMessage = {
@@ -199,7 +201,7 @@ export class SeventeenPokerSession {
     public readonly broken: Signal<boolean> = this._broken.asReadonly();
     /** The match is over, or stopped by a broken deck: its players may play a new one */
     public readonly over: Signal<boolean> = computed((): boolean => this.match().result() !== null || this._broken());
-    private readonly _live = signal<Readonly<LiveTable>>({ deals: 0, draws: [0, 0], chips: 0, outcomes: 0 });
+    private readonly _live = signal<Readonly<LiveTable>>({ deals: 0, draws: [0, 0], chips: 0, outcomes: 0, forfeits: 0 });
     /**
      * The changes of the table applied live, counted as they apply: the history of the room, which a page reloaded or a
      * participant joining late catches up with, counts none
@@ -303,7 +305,7 @@ export class SeventeenPokerSession {
         this.room.transmitMessage(SPGameSessionType.EXCHANGE, { hand: this.match().hand()?.index ?? 0, positions: [...positions] });
     }
 
-    /** The time of the move of the other player is over, while it is away: it loses the match */
+    /** The time of the move of the other player, or of the deal of the next hand, is over, while it is away: it loses the match */
     public claimTimeout(): void {
         const hand: PokerHand | null = this.match().hand();
         this._sending.set(true);
@@ -461,19 +463,23 @@ export class SeventeenPokerSession {
     }
 
     /**
-     * A player ends the move of the other one, away once its time was over, unless the move was played before: the
-     * chain orders the move and the timeout, the first one counts. No page can tell when the other one was away
+     * A player ends the move of the other one, or the wait for the deal of the next hand, away once its time was over,
+     * unless the move or the deal was played before: the chain orders them and the timeout, the first one counts. No page
+     * can tell when the other one was away
      */
     private onTimeout(message: AppMessage<SPGameSessionType.TIMEOUT, PokerTimeoutMessage>): void {
         const seat: PokerSeat | null = this.seatOf(message.from);
         const { hand, move } = message.payload;
         const current: PokerHand | null = this.match().hand();
 
+        const between: boolean = current?.phase === HandPhase.OVER;
+
         if (seat === null || hand !== current?.index || move !== current.moves || !this.match().forfeit(otherSeat(seat))) {
             return;
         }
 
-        this.countLive(message, (live: Readonly<LiveTable>) => ({ ...live, outcomes: live.outcomes + 1 }));
+        // A move lost on time ends its hand, the wait for a deal the match only
+        this.countLive(message, (live: Readonly<LiveTable>) => between ? { ...live, forfeits: live.forfeits + 1 } : { ...live, outcomes: live.outcomes + 1 });
         // The player away loses its seat too: it may not come back, and a spectator may take it for the next match
         this.tableSeats.free(otherSeat(seat));
         this.verifyOnceOver();

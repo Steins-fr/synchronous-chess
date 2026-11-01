@@ -7,7 +7,7 @@ import { SOUND_GAP } from '@app/services/sound/game-sounds';
 import { HAND_ENDING, DEAL_STAGGER, HeardTable, tableSounds } from './table-sound.helper';
 
 describe('tableSounds', () => {
-    const live: LiveTable = { deals: 1, draws: [0, 0], chips: 1, outcomes: 0 };
+    const live: LiveTable = { deals: 1, draws: [0, 0], chips: 1, outcomes: 0, forfeits: 0 };
     const table: HeardTable = { seatsTaken: 2, live, held: false, cards: 5, outcome: null, result: null };
 
     function outcome(end: HandEnd, winner: PokerSeat | null): Readonly<HandOutcome> {
@@ -120,6 +120,16 @@ describe('tableSounds', () => {
             { effect: SoundEffect.CHIPS, delay: 0 },
             { effect: SoundEffect.GAME_DRAW, delay: SOUND_GAP },
         ]);
+    });
+
+    test('should tell the end of a match lost on time between two hands at once, the hand before heard already', () => {
+        // Given: the latest hand over, heard already
+        const before: HeardTable = ended(outcome(HandEnd.FOLD, PokerSeat.ONE));
+        const after: HeardTable = { ...before, live: { ...before.live, forfeits: 1 }, result: { winner: PokerSeat.ONE, stacks: [160, 140] } };
+
+        // When, Then
+        expect(tableSounds(before, after, PokerSeat.ONE)).toEqual([{ effect: SoundEffect.GAME_WON, delay: 0 }]);
+        expect(tableSounds(before, after, PokerSeat.TWO)).toEqual([{ effect: SoundEffect.GAME_LOST, delay: 0 }]);
     });
 
     test('should tell nothing of the history of the room: its seats, its hands and its match over count no change', () => {

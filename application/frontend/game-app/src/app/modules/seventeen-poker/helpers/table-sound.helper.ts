@@ -81,9 +81,10 @@ function dealtCards(before: Readonly<HeardTable>, after: Readonly<HeardTable>): 
 /**
  * The sounds of the changes of the table its session applied live since the page last heard it: a seat taken, a new deck
  * shuffled, each card dealt into a hand as it flies in, the chips moved by the antes or a bet, and the end of a hand,
- * whose pot sound replaces the one of the chips, then the end of the match, won, lost or drawn for the local player. The
- * history of the room, counting none, plays none. When the user asks for less motion, the sounds waiting for an animation
- * do not: the cards of the hands, shown at once, are heard once, and the pot as soon as the hand ends
+ * whose pot sound replaces the one of the chips, then the end of the match, won, lost or drawn for the local player, at
+ * once when lost on time between two hands. The history of the room, counting none, plays none. When the user asks for
+ * less motion, the sounds waiting for an animation do not: the cards of the hands, shown at once, are heard once, and the
+ * pot as soon as the hand ends
  */
 export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardTable>, mySeat: PokerSeat | null, reducedMotion: boolean = false): ReadonlyArray<TimedSound> {
     const sounds: TimedSound[] = [];
@@ -109,10 +110,10 @@ export function tableSounds(before: Readonly<HeardTable>, after: Readonly<HeardT
         sounds.push({ effect: SoundEffect.CHIPS, delay: 0 });
     }
 
-    // The result of a match comes with the outcome of its last hand
-    if (outcome !== null && after.result !== null) {
+    // The result of a match comes with the outcome of its last hand, or a player losing it on time between two hands
+    if (after.result !== null && (outcome !== null || after.live.forfeits !== before.live.forfeits)) {
         // After the sounds of the hand ending the match
-        const delay: number = Math.max(...sounds.map((sound: TimedSound) => sound.delay)) + SOUND_GAP;
+        const delay: number = sounds.length === 0 ? 0 : Math.max(...sounds.map((sound: TimedSound) => sound.delay)) + SOUND_GAP;
         sounds.push({ effect: gameEndSound(after.result.winner, mySeat), delay });
     }
 

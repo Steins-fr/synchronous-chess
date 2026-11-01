@@ -13,11 +13,14 @@ export interface PokerMatchRules {
     readonly ante: number;
     /** The most a player bets in the second round, in antes */
     readonly secondRoundAntes: number;
-    /** The seconds a player has for each move: then its page checks, folds against a bet, or keeps the hand */
+    /**
+     * The seconds a player has for each move: then its page checks, folds against a bet, or keeps the hand. The dealer
+     * has as many to deal the next hand, from the second one of the match: then its page deals
+     */
     readonly turnTime: number;
     /**
-     * The seconds a move gains, once, while a seated player is away: the player to act still away once its time is over
-     * loses the match
+     * The seconds a move or a deal gains, once, while a seated player is away: the player to act, or a player away between
+     * two hands, still away once its time is over loses the match
      */
     readonly awayTime: number;
 }
@@ -245,11 +248,17 @@ export class PokerMatch {
     }
 
     /**
-     * The player to act ran out of time, away from the table: it loses the hand, as on a fold, and the match, whatever the
-     * chips
+     * A player ran out of time, away from the table: the player to act loses the hand, as on a fold, and the match,
+     * whatever the chips. Between two hands, either player away keeps the next one from being dealt: it loses the match,
+     * without a hand to settle
      */
     public forfeit(seat: PokerSeat): boolean {
         const hand: PokerHand | null = this._hand();
+
+        if (hand?.phase === HandPhase.OVER && this.result() === null) {
+            this._forfeited.set(seat);
+            return true;
+        }
 
         if (hand === null || this.toAct() !== seat) {
             return false;
