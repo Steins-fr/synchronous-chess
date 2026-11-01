@@ -2,7 +2,7 @@ import { cards } from '@testing/playing-cards.helper';
 import { BetAction } from './betting-round';
 import { HandCategory } from './hand-evaluator';
 import { DRAW_PILE, HandEnd, HandPhase, PokerHand, PokerMatch, PokerMatchRules, SEVENTEEN_POKER_RULES } from './poker-match';
-import { PokerSeat } from './poker-seat';
+import { otherSeat, PokerSeat } from './poker-seat';
 import { describe, expect, test } from 'vitest';
 
 const { ONE, TWO } = PokerSeat;
@@ -440,5 +440,24 @@ describe('PokerMatch', () => {
         expect(match.hand()?.outcome).toEqual({ end: HandEnd.FOLD, winner: TWO, pot: 40, gains: [0, 40], hands: null });
         expect(match.result()).toEqual({ winner: TWO, stacks: [135, 165] });
         expect(match.startHand()).toBe(false);
+    });
+
+    test.each([ONE, TWO])('should end the match of a player on its timeout between two hands, without a hand to settle (seat %s)', (seat: PokerSeat) => {
+        // Given
+        const match: PokerMatch = new PokerMatch();
+        match.startHand();
+        match.bet(ONE, BetAction.BET, 10);
+        match.bet(TWO, BetAction.FOLD);
+
+        // When
+        const forfeited: boolean = match.forfeit(seat);
+
+        // Then
+        expect(forfeited).toBe(true);
+        expect(match.forfeited()).toEqual(seat);
+        expect(match.outcomes()).toHaveLength(1);
+        expect(match.result()).toEqual({ winner: otherSeat(seat), stacks: [155, 145] });
+        expect(match.startHand()).toBe(false);
+        expect(match.forfeit(otherSeat(seat))).toBe(false);
     });
 });

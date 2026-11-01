@@ -138,7 +138,7 @@ run by the CI.
 - Run one scenario with `npx playwright test -g "<part of its name>"`.
 - Two suites: `npm run e2e:fast` runs the quick scenarios, `npm run e2e:slow` the ones tagged `SLOW` (`@slow`,
   `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing
-  out after 15 seconds, the room handed over, the moves of a poker hand timing out after 45 seconds, 30 more for a player away. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
+  out after 15 seconds, the room handed over, the moves of a poker hand or its next deal timing out after 45 seconds, 30 more for a player away. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
 
@@ -221,8 +221,9 @@ run by the CI.
 
 - Each participant takes a seat with `Sit here`, on the free seat at the bottom of the table only (`#seat-bottom`
   of `app-poker-table`, `#seat-top` the other one), then the dealer clicks `Deal`: the second seat deals the first
-  hand, then the players deal by turns. The table shows the local player at its bottom, a spectator the free seat it
-  may take, else the first seat. See `documentation/seventeen-poker-session.md`.
+  hand, then the players deal by turns. From the second hand of a match, the seat of the dealer shows a clock of 45
+  seconds, then its page deals by itself: the first hand waits for `Deal`. The table shows the local player at its
+  bottom, a spectator the free seat it may take, else the first seat. See `documentation/seventeen-poker-session.md`.
 - The actions are buttons named by their text (`Check`, `Bet 6`, `Call 6`, `Raise to 13`, `Fold`, `Bet more`,
   `Min`, `Max`, `Keep my hand`, `Exchange 2 cards`, `Play again` once the match is over, `Free the seat` of a player away); the cards of the player are buttons during the exchange,
   `aria-pressed` once selected. A card is an image named by its card (`Ace of spades`, `Face-down card`), and

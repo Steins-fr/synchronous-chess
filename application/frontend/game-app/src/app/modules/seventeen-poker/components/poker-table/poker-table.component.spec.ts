@@ -601,6 +601,206 @@ describe('PokerTableComponent', () => {
         });
     });
 
+    describe('the clock of a deal', () => {
+        /** The clock runs on fake timers, the room and the decks on real ones */
+        beforeEach(() => {
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'performance'] });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        async function elapse(seconds: number): Promise<void> {
+            vi.advanceTimersByTime(seconds * 1000);
+            await fixture.whenStable();
+        }
+
+        const deals = (from: string): number => hub.delivered.filter((message: AppMessage) => message.type === SPGameSessionType.DEAL && message.from === from).length;
+
+        /** Bob folds the first hand against a bet of Alice: Alice deals the second one */
+        async function firstHandOver(): Promise<SeventeenPokerSession> {
+            const bob: SeventeenPokerSession = await dealt();
+            await click('Bet 1');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.FOLD);
+            await until(() => status() === 'Your turn to deal.');
+            return bob;
+        }
+
+        /** Alice deals the second hand, then folds it against a bet of Bob: Bob deals the third one */
+        async function secondHandOver(): Promise<SeventeenPokerSession> {
+            const bob: SeventeenPokerSession = await firstHandOver();
+            await click('Deal');
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.BET, 1);
+            await until(() => status() === 'Your turn.');
+            await click('Fold');
+            await until(() => status() === 'bob to deal.');
+            return bob;
+        }
+
+        test('should leave the first hand of a match to the Deal button, without clock', async () => {
+            // Given
+            await seated();
+
+            // When
+            await elapse(60);
+
+            // Then
+            expect(status()).toEqual('bob to deal.');
+            expect(text('#seat-top')).toEqual('bob150 chips');
+            expect(element().querySelector('#seat-top .seat')?.classList).not.toContain('acting');
+            expect(element().querySelector('.turn-clock')).toBeNull();
+            expect(hub.types()).not.toContain(SPGameSessionType.DEAL);
+        });
+
+        test('should deal the next hand for the dealer once its time is over', async () => {
+            // Given
+            await firstHandOver();
+
+            // Then: the clock of Alice runs from the hand over
+            expect(text('#seat-bottom')).toMatch(/ 45 s$/);
+            expect(element().querySelector('#seat-bottom .seat')?.classList).toContain('acting');
+            expect(button('Deal')).toBeDefined();
+
+            // When
+            await elapse(40);
+
+            // Then: the status tells the time runs out
+            expect(status()).toEqual('Your turn to deal: time is running out.');
+
+            // When
+            await elapse(4);
+
+            // Then
+            expect(deals('alice')).toEqual(0);
+
+            // When: the time is over
+            await elapse(1);
+            await until(() => status() === 'bob to speak.');
+
+            // Then
+            expect(deals('alice')).toEqual(1);
+            expect(element().textContent).toContain('Hand 2 of 10');
+        });
+
+        test('should leave a late tick of a clock to its own wait: the move over deals nothing, the deal over claims nothing', async () => {
+            // Given: the hand over, Alice to deal
+            await firstHandOver();
+
+            // When: a late tick of the clock of the last move, the table rendering the hand over after it
+            fixture.componentInstance['timeOut']();
+            await fixture.whenStable();
+
+            // Then: the deal has its own time
+            expect(deals('alice')).toEqual(0);
+            expect(text('#seat-bottom')).toMatch(/ 45 s$/);
+
+            // When: Alice deals, Bob leaves, then a late tick of the clock of the deal
+            await click('Deal');
+            await until(() => status() === 'bob to speak.');
+            hub.leave(rooms.get('bob') as Room<PokerPayloads>);
+            fixture.componentInstance['dealTimeOut']();
+            await fixture.whenStable();
+
+            // Then
+            expect(deals('alice')).toEqual(1);
+            expect(hub.types()).not.toContain(SPGameSessionType.TIMEOUT);
+        });
+
+        test('should deal nothing more once the time is over while the deal waits for the chain', async () => {
+            // Given
+            await firstHandOver();
+            hub.hold('alice');
+            await click('Deal');
+
+            // When
+            await elapse(45);
+            hub.release();
+            await until(() => status() === 'bob to speak.');
+
+            // Then: the deal sent is the deal
+            expect(deals('alice')).toEqual(1);
+        });
+
+        test('should leave the deal of the other player to its page', async () => {
+            // Given
+            await secondHandOver();
+
+            // When
+            await elapse(50);
+
+            // Then: the clock of Bob stops at 0, his deal awaited
+            expect(text('#seat-top')).toMatch(/ 0 s$/);
+            expect(status()).toEqual('bob to deal.');
+            expect(deals('bob')).toEqual(1);
+            expect(hub.types()).not.toContain(SPGameSessionType.TIMEOUT);
+        });
+
+        test('should run the clock of the dealer for a spectator, without dealing', async () => {
+            // Given
+            await table('carol');
+            const alice: SeventeenPokerSession = participant('alice');
+            const bob: SeventeenPokerSession = participant('bob');
+            alice.takeSeat(PokerSeat.ONE);
+            bob.takeSeat(PokerSeat.TWO);
+            await until(() => status() === 'bob to deal.');
+            bob.deal();
+            await until(() => status() === 'alice to speak.');
+            alice.bet(BetAction.BET, 1);
+            await until(() => status() === 'bob to speak.');
+            bob.bet(BetAction.FOLD);
+            await until(() => status() === 'alice to deal.');
+
+            // When
+            await elapse(50);
+
+            // Then: Alice sits at the bottom of the table of a spectator
+            expect(text('#seat-bottom')).toMatch(/ 0 s$/);
+            expect(deals('alice')).toEqual(0);
+            expect(hub.types()).not.toContain(SPGameSessionType.TIMEOUT);
+        });
+
+        test('should end the match of the dealer away once its time is over, 30 seconds more', async () => {
+            // Given
+            await secondHandOver();
+
+            // When: Bob leaves the room
+            hub.leave(rooms.get('bob') as Room<PokerPayloads>);
+            await elapse(1);
+
+            // Then
+            expect(status()).toEqual('Waiting for bob to come back…');
+            expect(text('#seat-top')).toMatch(/ 74 s$/);
+
+            // When
+            await elapse(74);
+            await until(() => text('.badge') !== '');
+
+            // Then: no hand ends with the match
+            expect(text('.badge')).toEqual('bob was away when the time ran out: alice wins the match.');
+            expect(fixture.componentInstance.history()).toHaveLength(2);
+            expect(hub.types().filter((type: string) => type === SPGameSessionType.TIMEOUT)).toHaveLength(1);
+            expect(text('#seat-top')).toEqual('Free seat');
+        });
+
+        test('should end the match of the other player away once the time of the dealer is over: the deck needs both', async () => {
+            // Given
+            await firstHandOver();
+
+            // When: Bob leaves the room
+            hub.leave(rooms.get('bob') as Room<PokerPayloads>);
+            await elapse(75);
+            await until(() => text('.badge') !== '');
+
+            // Then
+            expect(text('.badge')).toEqual('bob was away when the time ran out: alice wins the match.');
+            expect(deals('alice')).toEqual(0);
+            expect(hub.types().filter((type: string) => type === SPGameSessionType.TIMEOUT)).toHaveLength(1);
+        });
+    });
+
     test('should raise or fold against a bet', async () => {
         // Given
         const bob: SeventeenPokerSession = await dealt();
@@ -621,7 +821,8 @@ describe('PokerTableComponent', () => {
         // Then: the pot goes to Bob, at the top of the table
         expect(latestHand()).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
         expect(text('#hand-outcome')).toEqual('Hand 1: alice folds, bob takes the pot of 17.');
-        expect(text('#seat-bottom')).toEqual('alice142 chips');
+        // Alice deals the next hand: her clock runs
+        expect(text('#seat-bottom')).toEqual('alice142 chips45 s');
         expect(text('#seat-top')).toEqual('bob158 chips +17');
         // A folded hand is not shown: no kind of hand
         expect(Array.from(element().querySelectorAll('p.table-line'), (line: Element) => line.textContent?.trim())).toEqual(['', '']);

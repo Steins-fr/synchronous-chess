@@ -19,6 +19,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 - [End of the match](#end-of-the-match)
 - [A new match](#a-new-match)
 - [The clock of a move](#the-clock-of-a-move)
+- [The clock of a deal](#the-clock-of-a-deal)
 - [Reloading the page](#reloading-the-page)
 - [Messages](#messages)
 - [Interface](#interface)
@@ -35,8 +36,8 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
 | `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
-| `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move |
-| `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock of the move while its player acts, what it won in the hand over |
+| `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move and of each deal |
+| `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock while the table waits for its player (a move, a deal), what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
 
 The cards and the chips themselves (`PlayingCardComponent`, `CardHandComponent`, `CardDeckComponent`,
@@ -59,6 +60,9 @@ The cards and the chips themselves (`PlayingCardComponent`, `CardHandComponent`,
   checks, folds against a bet, or keeps its hand in the exchange. While a seated player is away, the move gets 30 more
   seconds, once (`awayTime`): the player to act still away once the time is up loses the hand, as on a fold, and the
   match, whatever the chips.
+- From the second hand of a match, the dealer has as long to deal (`turnTime`, see
+  [The clock of a deal](#the-clock-of-a-deal)): once over, the hand is dealt for it. A player away gives the deal 30
+  more seconds, once: still away once the time is up, it loses the match. The first hand of a match waits for `Deal`.
 - The player speaking first alternates, the other one deals the hand. The match ends after 10 hands, or once a player can not pay the
   ante; the player with the most chips wins.
 
@@ -132,7 +136,8 @@ showing `Sit here`: it clicks where it then sits. Once both seats are taken, it 
 
 ## A hand
 
-1. The dealer clicks `Deal` (`SP_deal`), once both seats are taken and both players are in the room: the
+1. The dealer clicks `Deal` (`SP_deal`), or its page deals once its time is over from the second hand of the match (see
+   [The clock of a deal](#the-clock-of-a-deal)), once both seats are taken and both players are in the room: the
    players deal by turns, the second seat first, the other player speaking first. The deal starts the
    hand, the antes paid; a deal of the other player is ignored. Every participant creates the deck of
    the hand.
@@ -203,6 +208,25 @@ The bar of the clock follows the seconds left, from a second to the next one (a 
 again for a new move of the same seat, and shows the time left at once on a page shown again, rather than an animation
 over the whole move, started late on a hidden page and never restarted on the same element.
 
+## The clock of a deal
+
+From the second hand of a match, the table runs a clock for the dealer too, with the time of a move (`turnTime`), from
+when its page sees the hand over: the seat of the dealer shows the ring and the seconds left, as for a move
+(`timedSeat` of the table, the player to act, else the dealer between two hands), and its status tells the dealer once
+the time runs out. The clock is its own, apart from the one of the moves: a tick of the clock of the last move coming
+before the page renders the hand over never deals, and a late tick of the clock of the deal, the hand dealt already,
+does nothing. The first hand of a match, the first
+one of a new match after `Play again` included, keeps the `Deal` button alone: until it is dealt, the seats are open, and
+dealing it at once would close them behind the backs of the participants. `Deal` stays offered while the clock runs.
+
+When the clock runs out, the page of the dealer deals for it (`dealTimeOut()` of the table, through `deal()`): a deal sent
+meanwhile is the deal. The deck of the next hand needs both players, so no page deals for a player away: while a seated
+player is away, the deal gets 30 more seconds, once, as a move does; once over, the page of the other player sends
+`SP_timeout`, naming the hand over and its `moves`, and the player away loses the match (`forfeit()` of the match between
+two hands, without a hand to settle), the dealer or the other player alike, and its seat. The chain orders the timeout
+with the deal, the first one counts. No hand ends with such a match: the session counts it apart (`forfeits` of
+`LiveTable`), for the table to play the end of the match only.
+
 ## Reloading the page
 
 The page joins its room again by itself, from its URL and the session of its tab, as the chess does (see
@@ -222,10 +246,10 @@ All the messages go through the `poker` chain, with the messages of the decks (`
 | Type | Payload | Sent by | When |
 |---|---|---|---|
 | `SP_seat` | `{ seat, salt }`: 0, 1, or null to leave; the salt of the player, 16 random bytes in hexadecimal | a participant | before the first hand of a match, or once it is over |
-| `SP_deal` | `{ hand }`: the index of the hand | the dealer of the hand | between two hands |
+| `SP_deal` | `{ hand }`: the index of the hand | the dealer of the hand, or its page once its time is over from the second hand | between two hands |
 | `SP_bet` | `{ hand, action, amount? }`: the amount is the total of the player in the round | a player | its turn of a betting round |
 | `SP_exchange` | `{ hand, positions }`: the positions discarded | a player | its turn of the exchange |
-| `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over; the player away loses its seat too | a player | the time of the move of the other player over, while it is away |
+| `SP_timeout` | `{ hand, move }`: the actions played in the hand before the move over, the ones of the hand over before a deal; the player away loses its seat too | a player | the time of the move of the other player over, while it is away, or the time of the deal, either player away |
 | `SP_rematch` | `{ match }`: the index of the new match in the room | a player | once the match is over or stopped, both seats taken |
 | `SP_unseat` | `{ seat, name }`: the seat freed, and its player | a player, or the host | while the seats are open, the player of the seat away |
 | `MP_*` | see [Mental poker](mental-poker.md#messages) | the players, by themselves | as the session deals and opens |

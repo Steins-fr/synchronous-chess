@@ -21,7 +21,7 @@ const cipher = new SraCipher(TEST_GROUP);
 const SALT: string = 'a'.repeat(32);
 const { ONE, TWO } = PokerSeat;
 /** No change of the table applied live */
-const NO_LIVE: LiveTable = { deals: 0, draws: [0, 0], chips: 0, outcomes: 0 };
+const NO_LIVE: LiveTable = { deals: 0, draws: [0, 0], chips: 0, outcomes: 0, forfeits: 0 };
 
 type Tamper = (message: AppMessage) => AppMessage;
 
@@ -645,6 +645,49 @@ describe('SeventeenPokerSession', { timeout: 30_000 }, () => {
             expect(carol.match().result()).toBeNull();
             expect(carol.match().toAct()).toEqual(TWO);
             expect(hub.reports).toEqual([]);
+        });
+
+        test('should end the match of a player away between two hands, without a hand to settle, the deal coming after ignored', async () => {
+            // Given: Alice folds the first hand, then deals the next one
+            const [alice, bob, carol] = table();
+            await deal(alice, bob, carol);
+            alice.bet(BetAction.FOLD);
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match().hand()?.phase === HandPhase.OVER);
+
+            // When: the timeout of Bob comes before the deal of Alice
+            bob.claimTimeout();
+            alice.deal();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match().result() !== null && !session.sending());
+
+            // Then
+            expect(carol.match().forfeited()).toEqual(ONE);
+            expect(carol.match().result()).toEqual({ winner: TWO, stacks: [145, 155] });
+            expect(carol.match().outcomes()).toHaveLength(1);
+            expect(carol.match().hand()?.index).toEqual(0);
+            expect(carol.live()).toEqual({ ...NO_LIVE, deals: 1, chips: 1, outcomes: 1, forfeits: 1 });
+            expect(carol.seats()).toEqual([null, 'bob']);
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.verification() === DeckVerification.FAIR);
+        });
+
+        test('should ignore a timeout between two hands coming after the next deal', async () => {
+            // Given
+            const [alice, bob, carol] = table();
+            await deal(alice, bob, carol);
+            alice.bet(BetAction.FOLD);
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match().hand()?.phase === HandPhase.OVER);
+
+            // When: the timeout of Bob names the hand over, the deal of Alice before it
+            hub.hold('bob');
+            bob.claimTimeout();
+            alice.deal();
+            await vi.waitFor(() => expect(messagesOf(SPGameSessionType.DEAL, 'alice')).toHaveLength(1));
+            hub.release();
+            await settled([alice, bob, carol], (session: SeventeenPokerSession) => session.match().hand()?.index === 1 && !session.sending());
+
+            // Then
+            expect(messagesOf(SPGameSessionType.TIMEOUT)).toHaveLength(1);
+            expect(carol.match().result()).toBeNull();
+            expect(carol.match().hand()?.index).toEqual(1);
         });
     });
 
