@@ -20,7 +20,7 @@ describe('RouletteSeatComponent', () => {
         // Then
         expect(text()).toEqual('alice150 chips0 deaths');
 
-        // When a debt
+        // When bankrupt
         fixture.componentRef.setInput('chips', -31);
         fixture.componentRef.setInput('deaths', 3);
         await fixture.whenStable();

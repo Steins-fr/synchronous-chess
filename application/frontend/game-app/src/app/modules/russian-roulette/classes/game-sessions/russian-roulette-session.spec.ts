@@ -11,7 +11,7 @@ import { Cylinder, CylinderVerification } from '../cylinder/cylinder';
 import { CylinderMessageType, CylinderSpinMessage } from '../cylinder/cylinder-messages';
 import { CylinderPhase } from '../cylinder/cylinder-state';
 import { RouletteRules, RUSSIAN_ROULETTE_RULES } from '../rules/roulette-game';
-import { RouletteSeat } from '../rules/roulette-seat';
+import { otherSeat, RouletteSeat } from '../rules/roulette-seat';
 import { PlayedGame } from './played-game';
 import { rouletteBlockChains, RoulettePayloads, RRGameSessionType, RussianRouletteSession } from './russian-roulette-session';
 
@@ -20,8 +20,11 @@ const SALT: string = 'a'.repeat(32);
 const { ONE, TWO } = RouletteSeat;
 /** The chambers each player loads */
 const LOADS: Readonly<Record<string, ReadonlyArray<number>>> = { alice: [0, 1, 3], bob: [6, 8, 11] };
-/** A cylinder of fewer chambers than in a game, for the specs to run fast */
-const LIGHT: RouletteRules = { ...RUSSIAN_ROULETTE_RULES, chambers: 12 };
+/**
+ * A cylinder of fewer chambers than in a game, for the specs to run fast, and a stack no spin bankrupts: its 6 deaths cost
+ * 300 chips
+ */
+const LIGHT: RouletteRules = { ...RUSSIAN_ROULETTE_RULES, chambers: 12, stack: 400 };
 
 type Tamper = (message: AppMessage) => AppMessage;
 
@@ -269,6 +272,39 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             expect(carol.seatsOpen()).toBe(true);
             expect(sessions.some((session: RussianRouletteSession) => session.inMatch())).toBe(false);
             expect(hub.reports).toEqual([]);
+        });
+
+        test('should end the game on a death bankrupting its shooter, the bullets left unfired, a page replaying the chain alike', async () => {
+            // Given a death costing every chip
+            const rules: RouletteRules = { ...LIGHT, stack: 50 };
+            const [alice, bob, carol] = await table({}, rules);
+            await loaded(alice, bob);
+
+            // When
+            while (!carol.over()) {
+                await play('shoot');
+            }
+
+            // Then the shooter of the first bullet is bankrupt: the other player wins
+            const bankrupt: RouletteSeat = carol.game().actions().at(-1)?.seat as RouletteSeat;
+            expect(sessions.map((session: RussianRouletteSession) => session.game().bankrupt())).toEqual([bankrupt, bankrupt, bankrupt]);
+            expect(carol.game().deaths()[bankrupt]).toEqual(1);
+            expect(carol.game().firedBullets()).toBeLessThanOrEqual(2);
+            expect(carol.game().toAct()).toBeNull();
+            await settled(sessions, (session: RussianRouletteSession) => session.played().verification() === CylinderVerification.FAIR);
+            expect(carol.played().result()?.winner).toEqual(otherSeat(bankrupt));
+            expect(carol.awaited()).toEqual([]);
+            expect(carol.seatsOpen()).toBe(true);
+            expect(hub.reports).toEqual([]);
+
+            // When Dave joins late, replaying the chain
+            const dave: RussianRouletteSession = page('dave', rules);
+            hub.replay(rooms.get('dave') as Room<RoulettePayloads>);
+
+            // Then
+            await settled([dave], (session: RussianRouletteSession) => session.played().verification() === CylinderVerification.FAIR);
+            expect(dave.game().bankrupt()).toEqual(bankrupt);
+            expect(dave.played().result()).toEqual(carol.played().result());
         });
 
         test('should tell the result provisional until the cylinder is checked', async () => {
@@ -571,7 +607,7 @@ describe('RussianRouletteSession', { timeout: 30_000 }, () => {
             expect(hub.reported()).toContain(`carol ${ CheatReason.INVALID_SPIN } bob`);
             await settled(sessions, (session: RussianRouletteSession) => session.played().verification() === CylinderVerification.CHEATED);
             expect(messagesOf(CylinderMessageType.DISCLOSE)).toHaveLength(2);
-            expect(carol.played().result()).toEqual({ winner: ONE, deaths: [0, 0], stacks: [150, 150] });
+            expect(carol.played().result()).toEqual({ winner: ONE, deaths: [0, 0], stacks: [400, 400] });
             expect(carol.played().provisional()).toBe(false);
             expect(carol.seatsOpen()).toBe(true);
 

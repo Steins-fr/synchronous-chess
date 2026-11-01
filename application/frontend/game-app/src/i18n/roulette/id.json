@@ -9,13 +9,13 @@
     "loaded": "Kamar {number}: peluru Anda"
   },
   "presentation": {
-    "intro": "Setiap pemain mengisi 3 peluru ke kamar pilihannya, lalu silinder diputar. Secara bergiliran, tembak untuk mengambil chip di meja, atau lewati dengan membayar, harganya berlipat dua setiap kali melewati berturut-turut. Satu peluru adalah satu kematian, yang berharga 50 chip: setelah 6 peluru ditembakkan, yang paling sedikit mati menang.",
     "points": {
       "checked": "Setelah permainan selesai, semua kunci ditampilkan: setiap peserta memeriksa bahwa tidak ada yang curang.",
       "hidden": "Kedua pemain memutar silinder secara bergiliran: tidak ada yang tahu, bahkan server pun tidak, kamar mana yang berikutnya atau milik siapa peluru yang meletus.",
       "placed": "Hanya Anda yang tahu letak peluru Anda: peluru dienkripsi sebelum pemain lain melihatnya."
     },
     "rooms": "Buat ruang atau gabung ke ruang terbuka: peserta tanpa kursi menonton permainan.",
+    "summary": "Setiap pemain mengisi 3 peluru ke kamar pilihannya, lalu silinder diputar. Secara bergiliran, tembak untuk mengambil chip di meja, atau lewati dengan membayar, harganya berlipat dua setiap kali melewati berturut-turut. Satu peluru adalah satu kematian, yang berharga 50 chip: pemain yang kehabisan chip akibat kematian menjadi bangkrut dan langsung kalah; jika tidak, setelah 6 peluru ditembakkan, yang paling sedikit mati menang.",
     "tagline": "Duel untuk dua pemain, dengan revolver 24 kamar.",
     "title": "Rulet Rusia"
   },
@@ -26,8 +26,9 @@
       "title": "Silinder"
     },
     "end": {
-      "title": "Akhir permainan",
-      "winner": "Permainan berakhir setelah 6 peluru ditembakkan. Pemain dengan kematian paling sedikit menang, lalu yang chipnya paling banyak; jika tidak, remis."
+      "bankrupt": "Pemain yang tersisa 0 chip atau kurang akibat satu kematian menjadi bangkrut: ia langsung kalah, dan peluru yang tersisa tidak ditembakkan.",
+      "bullets": "Jika tidak, permainan berakhir setelah 6 peluru ditembakkan. Pemain dengan kematian paling sedikit menang, lalu yang chipnya paling banyak; jika masih sama, remis.",
+      "title": "Akhir permainan"
     },
     "fair": {
       "checked": "Setelah permainan selesai, kedua kunci ditampilkan dan setiap peserta memeriksa putaran silinder: hasilnya pun final. Pemain yang curang, atau menyimpan kuncinya, kalah.",
@@ -38,8 +39,8 @@
     "title": "Aturan",
     "turn": {
       "away": "Selama seorang pemain pergi, langkah mendapat 30 detik tambahan, sekali: pemain yang masih pergi kalah.",
+      "bullet": "Menembak satu peluru, atau dua: satu kematian. Penembak memberi 50 chip dan chip di meja kepada pemain lain.",
       "clock": "Setiap langkah berlangsung paling lama 45 detik: setelah itu, halaman melewati untuk pemain, atau menembak jika ia tidak bisa membayar, dan mengisi 3 kamar acak untuk pemain yang belum mengisi.",
-      "death": "Menembak satu peluru, atau dua: satu kematian. Penembak memberi 50 chip dan chip di meja kepada pemain lain, berutang bila perlu.",
       "empty": "Menembak kamar kosong: ambil chip di meja.",
       "pass": "Lewati: taruh chip di meja, 1 chip, berlipat dua setiap kali melewati berturut-turut (1, 2, 4, 8, 16). Pemain yang tidak bisa membayar harus menembak.",
       "reveal": "Setelah 5 kali melewati berturut-turut, bank mengambil 31 chip di meja, dan kamar berikutnya dibuka: pelurunya hangus, tanpa kematian. Melewati tidak pernah menghindarkan peluru.",
@@ -71,6 +72,7 @@
     "pastGames": "Permainan yang dimainkan",
     "provisional": "Hasil sementara: silinder diperiksa setelah kedua kunci ditampilkan.",
     "result": {
+      "bankrupt": "{loser} bangkrut: {winner} memenangkan permainan.",
       "bothCheated": "Kedua pemain curang pada silinder: tidak ada pemenang.",
       "cheated": "{loser} curang pada silinder: {winner} memenangkan permainan.",
       "draw": "Remis: kedua pemain memiliki kematian dan chip yang sama.",

@@ -9,13 +9,13 @@
     "loaded": "Kammer {number}: deine Kugel"
   },
   "presentation": {
-    "intro": "Jeder Spieler lädt 3 Kugeln in Kammern seiner Wahl, dann wird die Trommel gedreht. Abwechselnd drückst du ab, um die Chips auf dem Tisch zu nehmen, oder du passt gegen Bezahlung, wobei sich der Preis bei jedem Passen in Folge verdoppelt. Eine Kugel ist ein Tod, der 50 Chips kostet: Sind alle 6 Kugeln abgefeuert, gewinnt, wer weniger Tode hat.",
     "points": {
       "checked": "Ist die Partie vorbei, werden alle Schlüssel gezeigt: Jeder Teilnehmer prüft, dass niemand betrogen hat.",
       "hidden": "Beide Spieler drehen die Trommel nacheinander: Niemand, nicht einmal der Server, weiß, welche Kammer als Nächstes kommt oder wessen Kugel feuert.",
       "placed": "Nur du weißt, wo deine Kugeln sind: Sie werden verschlüsselt, bevor der andere Spieler sie sieht."
     },
     "rooms": "Erstelle einen Raum oder tritt einem offenen bei: Die Teilnehmer ohne Platz schauen der Partie zu.",
+    "summary": "Jeder Spieler lädt 3 Kugeln in Kammern seiner Wahl, dann wird die Trommel gedreht. Abwechselnd drückst du ab, um die Chips auf dem Tisch zu nehmen, oder du passt gegen Bezahlung, wobei sich der Preis bei jedem Passen in Folge verdoppelt. Eine Kugel ist ein Tod, der 50 Chips kostet: Wer durch einen Tod keine Chips mehr hat, ist bankrott und verliert sofort; sonst gewinnt, sind alle 6 Kugeln abgefeuert, wer weniger Tode hat.",
     "tagline": "Ein Duell für zwei Spieler, mit einem Revolver mit 24 Kammern.",
     "title": "Russisches Roulette"
   },
@@ -26,8 +26,9 @@
       "title": "Die Trommel"
     },
     "end": {
-      "title": "Ende der Partie",
-      "winner": "Die Partie endet, sobald die 6 Kugeln abgefeuert sind. Es gewinnt, wer weniger Tode hat, dann wer mehr Chips hat; sonst ist es ein Remis."
+      "bankrupt": "Wer durch einen Tod auf 0 Chips oder weniger fällt, ist bankrott: Er verliert die Partie sofort, die übrigen Kugeln werden nicht abgefeuert.",
+      "bullets": "Sonst endet die Partie, sobald die 6 Kugeln abgefeuert sind. Es gewinnt, wer weniger Tode hat, dann wer mehr Chips hat; bei Gleichstand ist es ein Remis.",
+      "title": "Ende der Partie"
     },
     "fair": {
       "checked": "Ist die Partie vorbei, werden beide Schlüssel gezeigt und jeder Teilnehmer prüft das Drehen der Trommel: Dann ist das Ergebnis endgültig. Wer betrogen hat oder seinen Schlüssel zurückhält, verliert die Partie.",
@@ -38,8 +39,8 @@
     "title": "Regeln",
     "turn": {
       "away": "Solange ein Spieler weg ist, bekommt der Zug einmalig 30 Sekunden mehr: Wer dann noch weg ist, verliert die Partie.",
+      "bullet": "Auf eine Kugel abdrücken, oder auf zwei: ein Tod. Der Schütze gibt dem anderen Spieler 50 Chips und die Chips vom Tisch.",
       "clock": "Jeder Zug dauert höchstens 45 Sekunden: Danach passt die Seite für den Spieler oder drückt ab, wenn er nicht zahlen kann, und lädt für einen Spieler, der nicht geladen hat, 3 zufällige Kammern.",
-      "death": "Auf eine Kugel abdrücken, oder auf zwei: ein Tod. Der Schütze gibt dem anderen Spieler 50 Chips und die Chips vom Tisch, notfalls auf Schulden.",
       "empty": "Auf eine leere Kammer abdrücken: die Chips vom Tisch nehmen.",
       "pass": "Passen: Chips auf den Tisch legen, 1 Chip, der sich bei jedem Passen in Folge verdoppelt (1, 2, 4, 8, 16). Wer nicht zahlen kann, muss abdrücken.",
       "reveal": "Nach 5 Mal Passen in Folge nimmt die Bank die 31 Chips vom Tisch, und die nächste Kammer wird aufgedeckt: Ihre Kugeln sind verbraucht, ohne Tod. Passen weicht nie einer Kugel aus.",
@@ -71,6 +72,7 @@
     "pastGames": "Gespielte Partien",
     "provisional": "Vorläufiges Ergebnis: Die Trommel wird geprüft, sobald beide Schlüssel gezeigt sind.",
     "result": {
+      "bankrupt": "{loser} ist bankrott: {winner} gewinnt die Partie.",
       "bothCheated": "Beide Spieler haben bei der Trommel betrogen: kein Sieger.",
       "cheated": "{loser} hat bei der Trommel betrogen: {winner} gewinnt die Partie.",
       "draw": "Remis: Beide Spieler haben gleich viele Tode und Chips.",

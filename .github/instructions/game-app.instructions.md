@@ -281,6 +281,7 @@ Claude writes the translations of every new or changed key, into every language:
 | spin (the cylinder) | faire tourner | girar | girar | rodar | drehen | крутить | çevirmek | memutar | zakręcić | far girare |
 | load (the bullets) | charger | cargar | carregar | carregar | laden | зарядить | doldurmak | mengisi | załadować | caricare |
 | bank | banque | banca | banca | banca | Bank | казна | banka | bank | bank | banco |
+| bankrupt (go) | faire faillite | caer en bancarrota | ir à falência | ir à falência | bankrott | банкрот | iflas etmek | bangkrut | bankrut | in bancarotta |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 

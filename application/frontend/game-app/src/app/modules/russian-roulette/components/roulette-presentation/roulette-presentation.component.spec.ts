@@ -13,5 +13,6 @@ describe('RoulettePresentationComponent', () => {
     test('should describe the game', () => {
         expect(fixture.nativeElement.querySelector('h1')?.textContent).toEqual('Russian roulette');
         expect(fixture.nativeElement.querySelectorAll('ul.list-disc li')).toHaveLength(3);
+        expect(fixture.nativeElement.textContent).toContain('a player left without chips by a death goes bankrupt and loses at once');
     });
 });

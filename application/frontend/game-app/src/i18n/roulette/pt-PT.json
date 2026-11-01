@@ -9,13 +9,13 @@
     "loaded": "Câmara {number}: a sua bala"
   },
   "presentation": {
-    "intro": "Cada jogador carrega 3 balas nas câmaras que escolher e depois o tambor roda. À vez, dispare para ficar com as fichas da mesa, ou passe pagando, com o preço a duplicar a cada passagem seguida. Uma bala é uma morte, que custa 50 fichas: quando as 6 balas forem disparadas, ganha quem tiver menos mortes.",
     "points": {
       "checked": "Quando a partida termina, todas as chaves são mostradas: cada participante verifica que ninguém fez batota.",
       "hidden": "Os dois jogadores rodam o tambor à vez: ninguém, nem mesmo o servidor, sabe que câmara vem a seguir, nem de quem é a bala disparada.",
       "placed": "As suas balas só são conhecidas por si: são cifradas antes de o outro jogador as ver."
     },
     "rooms": "Crie uma sala ou entre numa aberta: os participantes sem lugar assistem à partida.",
+    "summary": "Cada jogador carrega 3 balas nas câmaras que escolher e depois o tambor roda. À vez, dispare para ficar com as fichas da mesa, ou passe pagando, com o preço a duplicar a cada passagem seguida. Uma bala é uma morte, que custa 50 fichas: quem fica sem fichas por uma morte vai à falência e perde de imediato; caso contrário, quando as 6 balas forem disparadas, ganha quem tiver menos mortes.",
     "tagline": "Um duelo para dois jogadores, com um revólver de 24 câmaras.",
     "title": "Roleta russa"
   },
@@ -26,8 +26,9 @@
       "title": "O tambor"
     },
     "end": {
-      "title": "Fim da partida",
-      "winner": "A partida termina quando as 6 balas são disparadas. Ganha o jogador com menos mortes, depois o que tiver mais fichas; caso contrário, é empate."
+      "bankrupt": "Um jogador que uma morte deixe com 0 fichas ou menos vai à falência: perde a partida de imediato, sem disparar as balas restantes.",
+      "bullets": "Caso contrário, a partida termina quando as 6 balas são disparadas. Ganha o jogador com menos mortes, depois o que tiver mais fichas; se persistir a igualdade, é empate.",
+      "title": "Fim da partida"
     },
     "fair": {
       "checked": "Quando a partida termina, as duas chaves são mostradas e cada participante verifica as rodagens do tambor: o resultado passa a ser definitivo. Um jogador que fez batota, ou que guarda a sua chave, perde a partida.",
@@ -38,8 +39,8 @@
     "title": "Regras",
     "turn": {
       "away": "Enquanto um jogador está ausente, a jogada ganha mais 30 segundos, uma vez: o jogador ainda ausente perde a partida.",
+      "bullet": "Disparar uma bala, ou duas: uma morte. O atirador dá 50 fichas e as fichas da mesa ao outro jogador.",
       "clock": "Cada jogada dura no máximo 45 segundos: depois, a página passa pelo jogador, ou dispara se este não puder pagar, e carrega 3 câmaras ao acaso para um jogador que não carregou.",
-      "death": "Disparar uma bala, ou duas: uma morte. O atirador dá 50 fichas e as fichas da mesa ao outro jogador, endividando-se se for preciso.",
       "empty": "Disparar uma câmara vazia: ficar com as fichas da mesa.",
       "pass": "Passar: pôr fichas na mesa, 1 ficha, duplicada a cada passagem seguida (1, 2, 4, 8, 16). Um jogador que não pode pagar tem de disparar.",
       "reveal": "Após 5 passagens seguidas, a banca fica com as 31 fichas da mesa e a câmara seguinte é revelada: as suas balas perdem-se, sem morte. Passar nunca evita uma bala.",
@@ -71,6 +72,7 @@
     "pastGames": "Partidas jogadas",
     "provisional": "Resultado provisório: o tambor é verificado quando as duas chaves forem mostradas.",
     "result": {
+      "bankrupt": "{loser} foi à falência: {winner} ganha a partida.",
       "bothCheated": "Os dois jogadores fizeram batota no tambor: nenhum vencedor.",
       "cheated": "{loser} fez batota no tambor: {winner} ganha a partida.",
       "draw": "Empate: os dois jogadores terminam com tantas mortes e fichas.",

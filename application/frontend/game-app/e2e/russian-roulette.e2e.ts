@@ -137,18 +137,25 @@ test.describe('Russian roulette', () => {
         await loaded(alice, bob, carol);
         expect((await chambers(carol)).every((label: string) => /^Chamber \d+$/.test(label))).toBe(true);
 
-        // The players shoot until the 6 bullets fired
+        // The players shoot until the 6 bullets fired, or a death bankrupts a player
         // eslint-disable-next-line no-await-in-loop -- the moves one after the other
         while (await table(carol).locator('.badge').count() === 0) {
             // eslint-disable-next-line no-await-in-loop -- the moves one after the other
             await play('Shoot', alice, bob, carol);
         }
 
-        await expect(table(carol).locator('.badge')).toHaveText(/(alice|bob) wins the game: \d against \d deaths?, with \d+ chips\.|Draw/);
+        await expect(table(carol).locator('.badge'))
+            .toHaveText(/(alice|bob) wins the game: \d against \d deaths?, with \d+ chips\.|Draw|(?<bankrupt>alice|bob) went bankrupt: (?!\k<bankrupt>)(?:alice|bob) wins the game\./);
         await expect(table(carol).getByText('The cylinder was fair.')).toBeVisible();
         const fired: string[] = (await chambers(carol)).filter((label: string) => label.includes(':'));
         const bullets: number = fired.filter((label: string) => label.endsWith('a bullet')).length + 2 * fired.filter((label: string) => label.endsWith('two bullets')).length;
-        expect(bullets).toEqual(6);
+        const bankrupt: string | undefined = /^(alice|bob) went bankrupt/.exec(await table(carol).locator('.badge').innerText())?.[1];
+        if (bankrupt === undefined) {
+            expect(bullets).toEqual(6);
+        } else {
+            // A death left the bankrupt player without chips, maybe before the 6 bullets fired
+            await expect(table(carol).locator('#seat-top, #seat-bottom').filter({ hasText: bankrupt })).toHaveText(new RegExp(String.raw`^${ bankrupt }\s*(0|-\d+) chips`));
+        }
         expect(await chambers(alice)).toEqual(await chambers(carol));
         await expect(table(alice).getByRole('button', { name: 'Play again' })).toBeVisible();
         // The cylinder spun, the buttons, the moves and the result moved nothing

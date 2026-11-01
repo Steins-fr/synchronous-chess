@@ -5,7 +5,7 @@
     [class.shot-empty]="shot() === survived">
     <span #nameView class="font-medium">{{ name() ?? t('free') }}</span>
     @if (name() !== null) {
-    <!-- A stack below 0, a debt, shows no chip -->
+    <!-- A stack below 0, of a player bankrupt, shows no chip -->
     <app-chip-stack #stack [amount]="chips() > 0 ? chips() : 0" />
     <span class="muted-note text-sm">{{ t('chips', { count: chips() }) }}</span>
     <span class="text-sm font-bold" [class.text-app-death]="deaths() > 0">{{ t('deaths', { count: deaths() }) }}</span>

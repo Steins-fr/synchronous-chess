@@ -9,13 +9,13 @@
     "loaded": "Hazne {number}: merminiz"
   },
   "presentation": {
-    "intro": "Her oyuncu seçtiği haznelere 3 mermi doldurur, ardından tambur çevrilir. Sırayla ateş ederek masadaki fişleri alın ya da ödeyerek pas geçin; fiyat art arda her pasta ikiye katlanır. Bir mermi bir ölümdür ve 50 fişe mal olur: 6 mermi de ateşlendiğinde en az ölümü olan kazanır.",
     "points": {
       "checked": "Oyun bittiğinde tüm anahtarlar gösterilir: her katılımcı kimsenin hile yapmadığını doğrular.",
       "hidden": "İki oyuncu tamburu sırayla çevirir: sunucu dahil hiç kimse sıradaki hazneyi ya da ateşlenen merminin kime ait olduğunu bilmez.",
       "placed": "Mermilerinizin yerini yalnızca siz bilirsiniz: diğer oyuncu görmeden önce şifrelenirler."
     },
     "rooms": "Bir oda oluşturun ya da açık bir odaya katılın: yeri olmayan katılımcılar oyunu izler.",
+    "summary": "Her oyuncu seçtiği haznelere 3 mermi doldurur, ardından tambur çevrilir. Sırayla ateş ederek masadaki fişleri alın ya da ödeyerek pas geçin; fiyat art arda her pasta ikiye katlanır. Bir mermi bir ölümdür ve 50 fişe mal olur: bir ölümün ardından fişsiz kalan oyuncu iflas eder ve hemen kaybeder; aksi hâlde 6 mermi de ateşlendiğinde en az ölümü olan kazanır.",
     "tagline": "24 hazneli bir altıpatlarla iki oyunculu bir düello.",
     "title": "Rus ruleti"
   },
@@ -26,8 +26,9 @@
       "title": "Tambur"
     },
     "end": {
-      "title": "Oyunun sonu",
-      "winner": "Oyun 6 mermi de ateşlendiğinde biter. En az ölümü olan oyuncu kazanır, ardından en çok fişi olan; aksi hâlde berabere."
+      "bankrupt": "Bir ölümün ardından 0 ya da daha az fişi kalan oyuncu iflas eder: oyunu hemen kaybeder, kalan mermiler ateşlenmez.",
+      "bullets": "Aksi hâlde oyun 6 mermi de ateşlendiğinde biter. En az ölümü olan oyuncu kazanır, ardından en çok fişi olan; o da eşitse berabere.",
+      "title": "Oyunun sonu"
     },
     "fair": {
       "checked": "Oyun bittiğinde iki anahtar da gösterilir ve her katılımcı tambur çevirmelerini doğrular: sonuç o zaman kesinleşir. Hile yapan ya da anahtarını saklayan oyuncu oyunu kaybeder.",
@@ -38,8 +39,8 @@
     "title": "Kurallar",
     "turn": {
       "away": "Bir oyuncu yokken hamle bir kez 30 saniye daha alır: hâlâ olmayan oyuncu oyunu kaybeder.",
+      "bullet": "Bir ya da iki mermiye ateş edin: bir ölüm. Ateş eden, diğer oyuncuya 50 fiş ve masadaki fişleri verir.",
       "clock": "Her hamle en fazla 45 saniye sürer: ardından sayfa oyuncu adına pas geçer ya da ödeyemiyorsa ateş eder; doldurmamış bir oyuncu için de rastgele 3 hazne doldurur.",
-      "death": "Bir ya da iki mermiye ateş edin: bir ölüm. Ateş eden, gerekirse borçlanarak diğer oyuncuya 50 fiş ve masadaki fişleri verir.",
       "empty": "Boş bir hazneye ateş edin: masadaki fişleri alın.",
       "pass": "Pas geç: masaya fiş koyun, 1 fiş, art arda her pasta ikiye katlanır (1, 2, 4, 8, 16). Ödeyemeyen oyuncu ateş etmek zorundadır.",
       "reveal": "Art arda 5 pastan sonra banka masadaki 31 fişi alır ve sıradaki hazne açılır: mermileri ölüm olmadan harcanır. Pas geçmek mermiden asla kaçırmaz.",
@@ -71,6 +72,7 @@
     "pastGames": "Oynanan oyunlar",
     "provisional": "Geçici sonuç: tambur, iki anahtar da gösterildiğinde doğrulanır.",
     "result": {
+      "bankrupt": "{loser} iflas etti: {winner} oyunu kazanıyor.",
       "bothCheated": "İki oyuncu da tamburda hile yaptı: kazanan yok.",
       "cheated": "{loser} tamburda hile yaptı: {winner} oyunu kazanıyor.",
       "draw": "Berabere: iki oyuncunun da ölüm ve fiş sayısı eşit.",

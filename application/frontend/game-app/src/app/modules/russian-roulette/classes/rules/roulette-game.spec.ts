@@ -142,7 +142,7 @@ describe('RouletteGame', () => {
         expect(game.chambers()).toEqual([]);
     });
 
-    test('should make a player who can not pay the pass shoot, a death taking its stack below 0', () => {
+    test('should make a player who can not pay the pass shoot, a death taking its stack below 0 bankrupting it', () => {
         // Given
         const game = new RouletteGame({ ...RUSSIAN_ROULETTE_RULES, stack: 2 });
         game.start(ONE);
@@ -158,7 +158,65 @@ describe('RouletteGame', () => {
 
         // Then
         expect(game.stacks()).toEqual([1 - 50, 0 + 50 + 3]);
-        expect(game.canPass(TWO)).toBe(true);
+        expect(game.bankrupt()).toEqual(ONE);
+        expect(game.canPass(TWO)).toBe(false);
+    });
+
+    test.each<[number]>([[50], [40]])('should end the game on a death leaving its shooter with 0 chips or fewer, from %s chips, the other player winning', (stack: number) => {
+        // Given
+        const game = new RouletteGame({ ...RUSSIAN_ROULETTE_RULES, stack });
+        game.start(ONE);
+        shoot(game, 0);
+
+        // When
+        shoot(game, 1);
+
+        // Then the bullets left are not fired
+        expect(game.bankrupt()).toEqual(TWO);
+        expect(game.over()).toBe(true);
+        expect(game.toAct()).toBeNull();
+        expect(game.firedBullets()).toEqual(1);
+        expect(game.result()).toEqual({ winner: ONE, deaths: [0, 1], stacks: [stack + 50, stack - 50] });
+        expect(game.shoot(ONE)).toBe(false);
+        expect(game.pass(ONE)).toBe(false);
+        expect(game.fire(1)).toBe(false);
+        expect(game.forfeit(ONE)).toBe(false);
+        expect(game.forfeited()).toBeNull();
+    });
+
+    test('should bankrupt no one emptied by passes, nor shooting an empty chamber without chips', () => {
+        // Given
+        const game = new RouletteGame({ ...RUSSIAN_ROULETTE_RULES, stack: 1 });
+        game.start(ONE);
+
+        // When the first player pays its last chip, the second one can not pay and takes the table
+        game.pass(ONE);
+        shoot(game, 0);
+        shoot(game, 0);
+
+        // Then
+        expect(game.stacks()).toEqual([0, 2]);
+        expect(game.bankrupt()).toBeNull();
+        expect(game.over()).toBe(false);
+        expect(game.toAct()).toEqual(TWO);
+    });
+
+    test('should give the game to the other player of a player bankrupt by the last bullet, whatever the deaths', () => {
+        // Given 4 bullets, a death costing 1 chip
+        const game = new RouletteGame({ ...RUSSIAN_ROULETTE_RULES, stack: 4, death: 1, bullets: 2 });
+        game.start(TWO);
+        [2, 0, 1].forEach((bullets: number) => shoot(game, bullets));
+        [ONE, TWO, ONE].forEach((seat: RouletteSeat) => expect(game.pass(seat)).toBe(true));
+        shoot(game, 0);
+
+        // When the first player, with fewer deaths, fires the last bullet
+        expect(game.stacks()).toEqual([1, 7]);
+        shoot(game, 1);
+
+        // Then
+        expect(game.firedBullets()).toEqual(4);
+        expect(game.bankrupt()).toEqual(ONE);
+        expect(game.result()).toEqual({ winner: TWO, deaths: [1, 2], stacks: [0, 8] });
     });
 
     test('should end once every bullet fired, the fewest deaths winning', () => {
