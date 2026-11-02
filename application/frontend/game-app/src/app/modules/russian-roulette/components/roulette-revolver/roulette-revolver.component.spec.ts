@@ -12,11 +12,20 @@ describe('RouletteRevolverComponent', () => {
 
     async function set(name: 'aiming' | 'shot', value: unknown): Promise<void> {
         fixture.componentRef.setInput(name, value);
-        await fixture.whenStable();
+        await settle();
     }
 
     async function elapse(ms: number): Promise<void> {
         vi.advanceTimersByTime(ms);
+        await settle();
+    }
+
+    /**
+     * Runs the change detection at once: Angular schedules it on a timer, faked here, and on a frame, which jsdom fires
+     * no more once a spec run before in the worker left one pending while it faked setInterval
+     */
+    async function settle(): Promise<void> {
+        fixture.detectChanges();
         await fixture.whenStable();
     }
 
@@ -27,7 +36,7 @@ describe('RouletteRevolverComponent', () => {
         ends = vi.fn<() => void>();
         fixture.componentInstance.blast.subscribe(blasts);
         fixture.componentInstance.fired.subscribe(ends);
-        await fixture.whenStable();
+        await settle();
     });
 
     afterEach(() => {
