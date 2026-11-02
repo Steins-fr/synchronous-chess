@@ -131,3 +131,83 @@ export function evaluateHand(cards: ReadonlyArray<PlayingCard>): HandValue {
 
     return others.reduce((best: HandValue, value: HandValue) => compareHands(value, best) > 0 ? value : best, first);
 }
+
+/** The best hand of 5 cards out of more */
+export interface BestHand {
+    readonly value: HandValue;
+    /** The 5 cards of the hand, the very objects given */
+    readonly cards: ReadonlyArray<Readonly<SuitedCard>>;
+}
+
+type Cards = ReadonlyArray<Readonly<SuitedCard>>;
+
+/** The cards of each value, the highest value first */
+function byValue(cards: Cards): Map<number, Readonly<SuitedCard>[]> {
+    const values = new Map<number, Readonly<SuitedCard>[]>();
+    [...cards].sort((one: Readonly<SuitedCard>, other: Readonly<SuitedCard>) => rankValue(other.rank) - rankValue(one.rank))
+        .forEach((card: Readonly<SuitedCard>) => values.set(rankValue(card.rank), [...values.get(rankValue(card.rank)) ?? [], card]));
+    return values;
+}
+
+/** The straights, of any suits and of a suit, the ace high or low */
+function runs(values: ReadonlyMap<number, ReadonlyArray<Readonly<SuitedCard>>>): Cards[] {
+    const found: Cards[] = [];
+
+    for (let top = ACE; top >= WHEEL[1]; top--) {
+        const run: ReadonlyArray<ReadonlyArray<Readonly<SuitedCard>>> = Array.from({ length: HAND_SIZE }, (_, index: number) => values.get(top - index < LOWEST ? ACE : top - index) ?? []);
+
+        if (run.every((cards: ReadonlyArray<Readonly<SuitedCard>>) => cards.length > 0)) {
+            found.push(run.map((cards: ReadonlyArray<Readonly<SuitedCard>>) => cards[0]));
+            Object.values(CardSuit).forEach((suit: CardSuit) => {
+                const suited: Array<Readonly<SuitedCard> | undefined> = run.map((cards: ReadonlyArray<Readonly<SuitedCard>>) => cards.find((card: Readonly<SuitedCard>) => card.suit === suit));
+                if (!suited.includes(undefined)) {
+                    found.push(suited as Cards);
+                }
+            });
+        }
+    }
+
+    return found;
+}
+
+/** The 5 highest cards of each suit holding 5 at least */
+function flushes(values: ReadonlyMap<number, ReadonlyArray<Readonly<SuitedCard>>>): Cards[] {
+    const highest: Cards = [...values.values()].flat();
+    return Object.values(CardSuit)
+        .map((suit: CardSuit) => highest.filter((card: Readonly<SuitedCard>) => card.suit === suit))
+        .filter((suited: Cards) => suited.length >= HAND_SIZE)
+        .map((suited: Cards) => suited.slice(0, HAND_SIZE));
+}
+
+/** The best hand of groups of a rank: the largest groups first, the highest of them, then the highest cards left */
+function groups(values: ReadonlyMap<number, ReadonlyArray<Readonly<SuitedCard>>>): Cards {
+    const left = new Map<number, ReadonlyArray<Readonly<SuitedCard>>>(values);
+    const hand: Readonly<SuitedCard>[] = [];
+
+    while (hand.length < HAND_SIZE) {
+        const places: number = HAND_SIZE - hand.length;
+        const [[value, cards]] = [...left].sort(([valueA, cardsA]: [number, ReadonlyArray<Readonly<SuitedCard>>], [valueB, cardsB]: [number, ReadonlyArray<Readonly<SuitedCard>>]) =>
+            Math.min(cardsB.length, places) - Math.min(cardsA.length, places) || valueB - valueA);
+        hand.push(...cards.slice(0, places));
+        left.delete(value);
+    }
+
+    return hand;
+}
+
+/**
+ * The best hand of 5 cards out of 5 or more, without the joker. It is the best of the best hand of each kind: the
+ * straights, the flushes and the groups of a rank, a few dozens of hands, rather than every 5 cards out of them
+ */
+export function bestHand(cards: Cards): BestHand {
+    if (cards.length < HAND_SIZE) {
+        throw new Error(`A hand holds ${ HAND_SIZE } cards at least, not ${ cards.length }`);
+    }
+
+    const values: Map<number, Readonly<SuitedCard>[]> = byValue(cards);
+
+    const [first, ...others]: BestHand[] = [groups(values), ...runs(values), ...flushes(values)]
+        .map((hand: Cards): BestHand => ({ value: evaluateHand(hand), cards: hand }));
+
+    return others.reduce((best: BestHand, hand: BestHand) => compareHands(hand.value, best.value) > 0 ? hand : best, first);
+}

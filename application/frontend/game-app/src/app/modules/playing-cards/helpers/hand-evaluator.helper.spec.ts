@@ -1,6 +1,6 @@
-import { CardRank } from '@app/modules/playing-cards/types/playing-card';
-import { cards } from '@testing/playing-cards.helper';
-import { compareHands, evaluateHand, HandCategory, HandValue } from './hand-evaluator.helper';
+import { CardRank, FULL_DECK, SuitedCard } from '@app/modules/playing-cards/types/playing-card';
+import { cards, suitedCards } from '@testing/playing-cards.helper';
+import { bestHand, BestHand, compareHands, evaluateHand, HandCategory, HandValue } from './hand-evaluator.helper';
 import { describe, expect, test } from 'vitest';
 
 const { ACE, KING, QUEEN, JACK, TEN, NINE, SEVEN, FIVE, FOUR, THREE, TWO } = CardRank;
@@ -104,5 +104,69 @@ describe('HandEvaluator', () => {
     test('should refuse a hand of two jokers', () => {
         // Then
         expect(() => evaluateHand(cards('KS KH QD * *'))).toThrow('A hand holds a single joker');
+    });
+
+    describe('the best hand out of more cards', () => {
+        /** Every hand of 5 cards out of them, the best kept: the slow way */
+        function everyHand(held: ReadonlyArray<SuitedCard>): HandValue {
+            let best: HandValue | null = null;
+            const choose = (hand: ReadonlyArray<SuitedCard>, from: number): void => {
+                if (hand.length === 5) {
+                    const value: HandValue = evaluateHand(hand);
+                    best = best === null || compareHands(value, best) > 0 ? value : best;
+                    return;
+                }
+                for (let index = from; index < held.length; index++) {
+                    choose([...hand, held[index]], index + 1);
+                }
+            };
+            choose([], 0);
+            return best as unknown as HandValue;
+        }
+
+        test('should find the best hand of every hand of 5 to 9 cards, as the slow way does', () => {
+            // Given hands drawn by a generator of its own, the same at each run
+            let state: number = 201;
+            const next = (bound: number): number => {
+                state = (state * 1_103_515_245 + 12_345) % 2_147_483_648;
+                return state % bound;
+            };
+
+            for (let hand = 0; hand < 300; hand++) {
+                const deck: SuitedCard[] = [...FULL_DECK];
+                const held: SuitedCard[] = Array.from({ length: 5 + next(5) }, () => deck.splice(next(deck.length), 1)[0]);
+
+                // When
+                const best: BestHand = bestHand(held);
+
+                // Then
+                expect(compareHands(best.value, everyHand(held))).toEqual(0);
+                expect(best.cards).toHaveLength(5);
+                best.cards.forEach((card: SuitedCard) => expect(held).toContain(card));
+            }
+        });
+
+        test.each<{ held: string; category: HandCategory; ranks: CardRank[] }>([
+            { held: 'KS KH KD QC QS QD AS AH', category: HandCategory.FULL_HOUSE, ranks: [KING, ACE] },
+            { held: '2S 2H 2D 2C AS AH AD', category: HandCategory.FOUR_OF_A_KIND, ranks: [TWO, ACE] },
+            { held: '9S 9H 7D 7C 3S 3H KD', category: HandCategory.TWO_PAIR, ranks: [NINE, SEVEN, KING] },
+            { held: '7S AH 2D 3C 4S 5H KD', category: HandCategory.STRAIGHT, ranks: [FIVE, FOUR, THREE, TWO, ACE] },
+            { held: '5H 6H 7H 8H 9H KH AH', category: HandCategory.STRAIGHT_FLUSH, ranks: [NINE, CardRank.EIGHT, SEVEN, CardRank.SIX, FIVE] },
+            { held: 'AS KH 9D 5C 3S', category: HandCategory.HIGH_CARD, ranks: [ACE, KING, NINE, FIVE, THREE] },
+        ])('should find the $category of $held', ({ held, category, ranks }) => {
+            // When
+            const best: BestHand = bestHand(suitedCards(held));
+
+            // Then
+            expect(best.value).toEqual({ category, ranks, joker: false });
+        });
+
+        test('should find the royal flush in the whole deck', () => {
+            expect(bestHand(FULL_DECK).value.category).toEqual(HandCategory.ROYAL_FLUSH);
+        });
+
+        test('should refuse fewer than 5 cards', () => {
+            expect(() => bestHand(suitedCards('AS KH 9D 5C'))).toThrow('A hand holds 5 cards at least, not 4');
+        });
     });
 });
