@@ -1,7 +1,7 @@
 import { computed, Signal, signal } from '@angular/core';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
-import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/two-seat-table/classes/table-seats';
+import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/game-table/classes/table-seats';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';

@@ -39,7 +39,7 @@ The code lives in `application/frontend/game-app/src/app/modules/russian-roulett
 | `KeptSecrets`, `StepRunner` | `modules/mental-poker/classes` | The secrets of the player in the cylinder and its steps one at a time, shared with the decks of the poker |
 | `PlayedGame` | `classes/game-sessions/played-game.ts` | A game of the room: its rules, its cylinder, its check and its result, final once checked |
 | `RussianRouletteSession` | `classes/game-sessions/russian-roulette-session.ts` | The games of the room: seats, moves, timeouts, a new game once one is over |
-| `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |
+| `TableSeats` | `modules/game-table/classes/table-seats.ts` | The two seats, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `RouletteTableComponent` | `components/roulette-table` | Shows the session, turns the clicks into seat requests and moves, and runs the clock of each move |
 | `RouletteCylinderComponent` | `components/roulette-cylinder` | The 24 chambers around the cylinder: buttons while the player places its bullets, then the chambers fired |
 | `RouletteSeatComponent` | `components/roulette-seat` | A seat: its player, its chips and its deaths, a ring and the clock of the move while the game waits for its player, the stamp of a pass, the shot of its player |
@@ -279,7 +279,7 @@ it, without trembling nor recoil.
 
 The pass is stamped on the seat of its player (`Pass (2)`), landing turned then fading out, and its chips fly from its
 stack to the table; the 5th one in a row takes the chips of the table to the bank. The chips fly over the table as in
-the Seventeen Poker (`ChipFlightsComponent` of `modules/two-seat-table`). The seat getting the turn lights up,
+the Seventeen Poker (`ChipFlightsComponent` of `modules/game-table`). The seat getting the turn lights up,
 a glow around it, before its ring pulses.
 
 ### A shot on the table

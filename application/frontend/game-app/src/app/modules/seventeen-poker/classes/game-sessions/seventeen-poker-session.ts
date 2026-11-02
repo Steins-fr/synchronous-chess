@@ -6,7 +6,7 @@ import { DeckPhase } from '@app/modules/mental-poker/classes/mental-deck-state';
 import { SraCipher } from '@app/modules/mental-poker/classes/sra-cipher';
 import { mentalDeckBlockChains, MentalDeckPayloads } from '@app/modules/mental-poker/mental-deck-messages';
 import { PlayingCard } from '@app/modules/playing-cards/types/playing-card';
-import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/two-seat-table/classes/table-seats';
+import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/game-table/classes/table-seats';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainRouting, mergeBlockChainRoutings } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';

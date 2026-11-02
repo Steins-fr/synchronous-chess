@@ -12,8 +12,8 @@ import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-s
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
-import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
-import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
+import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
+import { middle, TablePoint } from '@app/modules/game-table/helpers/table-point.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
