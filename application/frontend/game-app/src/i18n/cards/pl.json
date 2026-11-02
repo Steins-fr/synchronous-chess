@@ -1,7 +1,7 @@
 {
   "deck": "{count, plural, one {Talia: # karta} few {Talia: # karty} many {Talia: # kart} other {Talia: # karty}}",
   "hidden": "Zakryta karta",
-  "index": "{rank, select, ace {A} king {K} queen {D} other {W}}",
+  "index": "{rank, select, ace {A} king {K} queen {D} jack {W} ten {10} nine {9} eight {8} seven {7} six {6} five {5} four {4} three {3} other {2}}",
   "joker": "Joker",
-  "name": "{rank, select, ace {As} king {Król} queen {Dama} other {Walet}} {suit, select, spades {pik} hearts {kier} diamonds {karo} other {trefl}}"
+  "name": "{rank, select, ace {As} king {Król} queen {Dama} jack {Walet} ten {Dziesiątka} nine {Dziewiątka} eight {Ósemka} seven {Siódemka} six {Szóstka} five {Piątka} four {Czwórka} three {Trójka} other {Dwójka}} {suit, select, spades {pik} hearts {kier} diamonds {karo} other {trefl}}"
 }

@@ -39,6 +39,7 @@ describe('PlayingCardComponent', () => {
         expect(image().getAttribute('aria-label')).toEqual('Ace of spades');
         expect(image().classList).not.toContain('rotate-y-180');
         expect(texts()).toEqual(['A', 'A']);
+        expect(fixture.nativeElement.querySelector('text[textLength]')).toBeNull();
         expect(face()?.getAttribute('class')).toContain('fill-app-card-ink');
         expect(fixture.nativeElement.querySelector('path[transform="translate(28 48) scale(0.44)"]')).not.toBeNull();
     });
@@ -51,6 +52,41 @@ describe('PlayingCardComponent', () => {
         expect(image().getAttribute('aria-label')).toEqual('Queen of hearts');
         expect(texts()).toEqual(['Q', 'Q', 'Q']);
         expect(face()?.getAttribute('class')).toContain('fill-app-card-red');
+    });
+
+    test.each<{ rank: CardRank; index: string; pips: number; flipped: number }>([
+        { rank: CardRank.TWO, index: '2', pips: 2, flipped: 1 },
+        { rank: CardRank.THREE, index: '3', pips: 3, flipped: 1 },
+        { rank: CardRank.FOUR, index: '4', pips: 4, flipped: 2 },
+        { rank: CardRank.FIVE, index: '5', pips: 5, flipped: 2 },
+        { rank: CardRank.SIX, index: '6', pips: 6, flipped: 2 },
+        { rank: CardRank.SEVEN, index: '7', pips: 7, flipped: 2 },
+        { rank: CardRank.EIGHT, index: '8', pips: 8, flipped: 3 },
+        { rank: CardRank.NINE, index: '9', pips: 9, flipped: 4 },
+        { rank: CardRank.TEN, index: '10', pips: 10, flipped: 5 },
+    ])('should show the $rank with its rank in the corners and its pips', async ({ rank, index, pips, flipped }) => {
+        // When
+        await show({ rank, suit: CardSuit.CLUBS });
+
+        // Then the pips beside the two of the corners, the lower ones upside down
+        const transforms: string[] = Array.from(face()?.querySelectorAll(':scope > path') ?? [], (path: Element) => path.getAttribute('transform') as string);
+        expect(texts()).toEqual([index, index]);
+        expect(transforms).toHaveLength(pips + 1);
+        expect(transforms.filter((transform: string) => transform.startsWith('rotate(180'))).toHaveLength(flipped);
+        expect(fixture.nativeElement.querySelector('rect[x="24"]')).toBeNull();
+    });
+
+    test('should narrow the index of the ten to its corner, named in red', async () => {
+        // When
+        await show({ rank: CardRank.TEN, suit: CardSuit.HEARTS });
+
+        // Then
+        expect(image().getAttribute('aria-label')).toEqual('Ten of hearts');
+        expect(face()?.getAttribute('class')).toContain('fill-app-card-red');
+        Array.from(fixture.nativeElement.querySelectorAll('text'), (text: SVGTextElement) => {
+            expect(text.getAttribute('textLength')).toEqual('16');
+            expect(text.getAttribute('lengthAdjust')).toEqual('spacingAndGlyphs');
+        });
     });
 
     test('should show the joker with its star', async () => {
@@ -93,5 +129,17 @@ describe('PlayingCardComponent', () => {
         // Then
         expect(image().getAttribute('aria-label')).toEqual('Roi de cœur');
         expect(texts()).toEqual(['R', 'R', 'R']);
+    });
+
+    test('should name a number card in the language of the user', async () => {
+        // Given
+        TestBed.inject(TranslocoService).setActiveLang(Language.FR);
+
+        // When
+        await show({ rank: CardRank.TEN, suit: CardSuit.DIAMONDS });
+
+        // Then
+        expect(image().getAttribute('aria-label')).toEqual('Dix de carreau');
+        expect(texts()).toEqual(['10', '10']);
     });
 });
