@@ -28,6 +28,22 @@ describe('CardHandComponent', () => {
         expect(items().map((item: HTMLLIElement) => item.style.getPropertyValue('--fan-offset'))).toEqual(['-1', '0', '1']);
         expect(items().map((item: HTMLLIElement) => item.style.getPropertyValue('--deal-index'))).toEqual(['0', '1', '2']);
         expect(buttons()).toHaveLength(0);
+        const fan: HTMLUListElement = fixture.nativeElement.querySelector('ul');
+        expect([fan.style.getPropertyValue('--fan-scale'), fan.style.getPropertyValue('--fan-gaps')]).toEqual(['1', '2']);
+    });
+
+    test.each([
+        { count: 1, scale: '1', gaps: '1' },
+        { count: 5, scale: '1', gaps: '4' },
+        { count: 11, scale: '0.4', gaps: '10' },
+    ])('should turn the $count cards of a hand no more than the ones of a hand of 5 cards', async ({ count, scale, gaps }) => {
+        // When
+        fixture.componentRef.setInput('cards', Array.from({ length: count }, (_, index: number) => ({ id: `deck:${ index }`, card: null })));
+        await fixture.whenStable();
+
+        // Then
+        const fan: HTMLUListElement = fixture.nativeElement.querySelector('ul');
+        expect([fan.style.getPropertyValue('--fan-scale'), fan.style.getPropertyValue('--fan-gaps')]).toEqual([scale, gaps]);
     });
 
     test('should outline the cards of the winning hand', async () => {
