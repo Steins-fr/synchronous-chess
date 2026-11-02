@@ -1,4 +1,5 @@
 {
+  "category": "{category, select, fiveOfAKind {Покер} royalFlush {Роял-флеш} straightFlush {Стрит-флеш} fourOfAKind {Каре} fullHouse {Фулл-хаус} flush {Флеш} straight {Стрит} threeOfAKind {Сет} twoPair {Две пары} onePair {Пара} other {Старшая карта}}",
   "deck": "{count, plural, one {Колода: # карта} few {Колода: # карты} many {Колода: # карт} other {Колода: # карты}}",
   "hidden": "Карта рубашкой вверх",
   "index": "{rank, select, ace {Т} king {К} queen {Д} jack {В} ten {10} nine {9} eight {8} seven {7} six {6} five {5} four {4} three {3} other {2}}",

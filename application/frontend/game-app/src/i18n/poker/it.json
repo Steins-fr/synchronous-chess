@@ -68,7 +68,6 @@
       "rematch": "Gioca ancora"
     },
     "bet": "Puntata {amount}",
-    "category": "{category, select, fiveOfAKind {Pokerissimo} royalFlush {Scala reale} fourOfAKind {Poker} fullHouse {Full} straight {Scala} threeOfAKind {Tris} twoPair {Doppia coppia} other {Coppia}}",
     "hand": "Mano {index} di {hands}",
     "history": "Mani giocate",
     "match": "Partita {number}:",

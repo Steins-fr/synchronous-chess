@@ -68,7 +68,6 @@
       "rematch": "Jogar outra vez"
     },
     "bet": "Aposta {amount}",
-    "category": "{category, select, fiveOfAKind {Quina} royalFlush {Sequência real} fourOfAKind {Póquer} fullHouse {Full house} straight {Sequência} threeOfAKind {Trio} twoPair {Dois pares} other {Par}}",
     "hand": "Mão {index} de {hands}",
     "history": "Mãos jogadas",
     "match": "Partida {number}:",

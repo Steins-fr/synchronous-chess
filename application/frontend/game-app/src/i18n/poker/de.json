@@ -68,7 +68,6 @@
       "rematch": "Nochmal spielen"
     },
     "bet": "Einsatz {amount}",
-    "category": "{category, select, fiveOfAKind {Fünfling} royalFlush {Royal Flush} fourOfAKind {Vierling} fullHouse {Full House} straight {Straße} threeOfAKind {Drilling} twoPair {Zwei Paare} other {Ein Paar}}",
     "hand": "Hand {index} von {hands}",
     "history": "Gespielte Hände",
     "match": "Partie {number}:",

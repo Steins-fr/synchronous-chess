@@ -1,4 +1,5 @@
 {
+  "category": "{category, select, fiveOfAKind {Fünfling} royalFlush {Royal Flush} straightFlush {Straight Flush} fourOfAKind {Vierling} fullHouse {Full House} flush {Flush} straight {Straße} threeOfAKind {Drilling} twoPair {Zwei Paare} onePair {Ein Paar} other {Höchste Karte}}",
   "deck": "{count, plural, one {Blatt mit # Karte} other {Blatt mit # Karten}}",
   "hidden": "Verdeckte Karte",
   "index": "{rank, select, ace {A} king {K} queen {D} jack {B} ten {10} nine {9} eight {8} seven {7} six {6} five {5} four {4} three {3} other {2}}",

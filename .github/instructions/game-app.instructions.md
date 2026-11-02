@@ -266,12 +266,15 @@ Claude writes the translations of every new or changed key, into every language:
 | no contest | aucun vainqueur | mano nula | mão anulada | mão anulada | kein Spiel | без победителя | kazanan yok | tanpa pemenang | bez zwycięzcy | mano nulla |
 | five of a kind | cinq identiques | repóker | quina | quina | Fünfling | покер | beşli | five of a kind | pięć jednakowych | pokerissimo |
 | royal flush | quinte flush royale | escalera real | royal flush | sequência real | Royal Flush | роял-флеш | royal floş | royal flush | poker królewski | scala reale |
+| straight flush | quinte flush | escalera de color | straight flush | sequência de cor | Straight Flush | стрит-флеш | sıralı floş | straight flush | poker | scala colore |
 | four of a kind | carré | póker | quadra | póquer | Vierling | каре | kare | four of a kind | kareta | poker |
 | full house | full | full | full house | full house | Full House | фулл-хаус | full | full house | full | full |
+| flush | couleur | color | flush | cor | Flush | флеш | floş | flush | kolor | colore |
 | straight | quinte | escalera | sequência | sequência | Straße | стрит | kent | straight | strit | scala |
 | three of a kind | brelan | trío | trinca | trio | Drilling | сет | üçlü | three of a kind | trójka | tris |
 | two pair | double paire | doble pareja | dois pares | dois pares | zwei Paare | две пары | döper | two pair | dwie pary | doppia coppia |
 | one pair | paire | pareja | um par | par | ein Paar | пара | per | one pair | para | coppia |
+| high card | carte haute | carta alta | carta alta | carta alta | höchste Karte | старшая карта | yüksek kart | high card | wysoka karta | carta alta |
 | revolver | revolver | revólver | revólver | revólver | Revolver | револьвер | altıpatlar | revolver | rewolwer | revolver |
 | chamber | chambre | recámara | câmara | câmara | Kammer | гнездо | hazne | kamar | komora | camera |
 | bullet | balle | bala | bala | bala | Kugel | пуля | mermi | peluru | kula | proiettile |

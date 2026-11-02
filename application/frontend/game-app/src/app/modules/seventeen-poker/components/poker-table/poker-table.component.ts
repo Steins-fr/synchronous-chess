@@ -237,7 +237,7 @@ export class PokerTableComponent implements OnDestroy {
     /** The kind of hand of each seat, once shown */
     protected readonly categories: Signal<SeatPair<TranslatableText | null>> = computed((): SeatPair<TranslatableText | null> => {
         const hands: SeatPair<HandValue> | null | undefined = this.outcome()?.hands;
-        const of = (seat: PokerSeat): TranslatableText | null => hands && this.matchSeats()[seat] ? { key: this.key(marker('table.category', undefined, 'poker')), params: { category: hands[seat].category } } : null;
+        const of = (seat: PokerSeat): TranslatableText | null => hands && this.matchSeats()[seat] ? { key: scopedKey(TranslationScope.CARDS, marker('category', undefined, 'cards')), params: { category: hands[seat].category } } : null;
         return [of(PokerSeat.ONE), of(PokerSeat.TWO)];
     });
 
