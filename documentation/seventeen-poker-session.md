@@ -35,7 +35,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
-| `TableSeats` | `modules/two-seat-table/classes/table-seats.ts` | The two seats, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
+| `TableSeats` | `modules/game-table/classes/table-seats.ts` | The seats of a table, two here, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move and of each deal |
 | `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock while the table waits for its player (a move, a deal), what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
@@ -293,7 +293,7 @@ shows a change of its chips, `chipTransfers` tells the chips it moved: a bet fro
 the antes and the bets of a round over to the pot, the pot to its winner, half to each player when it is
 split, to the bank on a no contest; a player taking the pot alone takes the bets of the cloth with it (a
 fold). The chips of each move fly between the places as the page shows them, measured once rendered
-(`ChipFlightsComponent` of `modules/two-seat-table`, shared with the Russian roulette), then the stack there shows them dropping on it, the gains and the outcome with them, the chips it changes for others
+(`ChipFlightsComponent` of `modules/game-table`, shared with the Russian roulette), then the stack there shows them dropping on it, the gains and the outcome with them, the chips it changes for others
 fading out then. A stack paying out shows its change at once, a chip leaving it fading out. A hidden page moves its chips without flights,
 as does the history of the room a reloaded page or a participant joining late catches up with: the
 session tells when it caught up with it (`caughtUp`, right before the first live message applies), and the

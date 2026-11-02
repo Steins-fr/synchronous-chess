@@ -1,6 +1,7 @@
 import { Signal, signal } from '@angular/core';
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { timeSlices } from '@app/helpers/time-slices.helper';
+import { FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
 import { ElGamalCipherText, ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
 import { KeptSecrets } from '@app/modules/mental-poker/classes/kept-secrets';
 import { SecretStore } from '@app/modules/mental-poker/classes/secret-store';
@@ -150,7 +151,7 @@ export class Cylinder {
 
         const secrets: Secrets = {
             secret: this.cipher.randomScalar(),
-            nonce: CryptoHelper.randomHex(16),
+            nonce: FairDraw.drawPart(),
             bullets: [...chambers].sort((one: number, other: number) => one - other),
         };
         this.secrets.keep({ secret: secrets.secret.toString(16), nonce: secrets.nonce, bullets: secrets.bullets }, secrets);
@@ -162,7 +163,7 @@ export class Cylinder {
             game: this.id,
             key: key.toString(16),
             proof: await proveEqualLogs(this.cipher, this.state.context('key', this.seat), [this.cipher.generator], [key], secrets.secret),
-            commitment: await CylinderState.commitment(this.id, this.seat, secrets.nonce),
+            commitment: await FairDraw.commitment(this.id, this.seat, secrets.nonce),
         });
     }
 

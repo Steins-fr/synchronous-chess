@@ -1,7 +1,7 @@
 import { computed, Signal, signal } from '@angular/core';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
-import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/two-seat-table/classes/table-seats';
+import { SeatMessage, TableSeats, UnseatMessage } from '@app/modules/game-table/classes/table-seats';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -13,7 +13,7 @@ import { CylinderMessage, CylinderMessageType, CylinderPayloads } from '../cylin
 import { CylinderPhase } from '../cylinder/cylinder-state';
 import { RouletteGame, RouletteRules } from '../rules/roulette-game';
 import { PlayedGame } from './played-game';
-import { otherSeat, RouletteSeat, SeatPair } from '../rules/roulette-seat';
+import { otherSeat, RouletteSeat, SeatPair, toSeatPair } from '../rules/roulette-seat';
 
 export enum RRGameSessionType {
     /** A participant takes a seat, or leaves its seat */
@@ -122,12 +122,13 @@ export class RussianRouletteSession {
 
     /** The seats of the table, open until a player loads its bullets, and once the game is settled */
     public readonly tableSeats = new TableSeats(this.room, {
+        count: 2,
         types: { seat: RRGameSessionType.SEAT, unseat: RRGameSessionType.UNSEAT },
         open: (): boolean => this.seatsOpen(),
         sending: this.sending,
     });
     /** The players of each seat */
-    public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
+    public readonly seats: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => toSeatPair(this.tableSeats.seats()));
     /** The seats taken live, out of the history of the room: each one is heard */
     public readonly seatsTaken: Signal<number> = this.tableSeats.seatsTaken;
 

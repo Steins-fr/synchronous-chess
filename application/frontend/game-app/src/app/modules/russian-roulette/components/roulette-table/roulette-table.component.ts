@@ -9,8 +9,8 @@ import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
-import { ChipFlight, ChipFlightsComponent } from '@app/modules/two-seat-table/components/chip-flights/chip-flights.component';
-import { middle, TablePoint } from '@app/modules/two-seat-table/helpers/table-point.helper';
+import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
+import { middle, TablePoint } from '@app/modules/game-table/helpers/table-point.helper';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
 import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -137,7 +137,7 @@ export class RouletteTableComponent implements OnDestroy {
 
     /** The seat at the bottom of the table: the one of the local player, the first one for a spectator */
     protected readonly bottomSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.bottomSeat());
-    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.topSeat());
+    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => otherSeat(this.session().tableSeats.bottomSeat()));
 
     /** Whether each seat holds the player of the game: once it is over, another participant may take it */
     private readonly gameSeats: Signal<SeatPair<boolean>> = computed((): SeatPair<boolean> => {

@@ -1,6 +1,8 @@
 import { computed, Signal, signal } from '@angular/core';
 import SynchronousChessGameSession, { LiveTurns, SessionConfiguration } from '@app/modules/chess/classes/game-sessions/synchronous-chess-game-session';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
+import { commitmentOf, drawSalt } from '@app/modules/commit-reveal/classes/commitment';
+import { SealedCommitments } from '@app/modules/commit-reveal/classes/sealed-commitments';
+import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import Move from '@app/modules/chess/interfaces/move';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -12,7 +14,6 @@ import { Subject, takeUntil } from 'rxjs';
 import { PieceColor } from '../../enums/piece-color.enum';
 import { PieceType } from '../../enums/piece-type.enum';
 import { GameEndReason } from '../games/game-result';
-import { SealedTurnStore, StoredTurn } from './sealed-turn-store';
 
 export enum SCGameSessionType {
     /** A participant takes the seat of a color, or leaves its seat with no color */
@@ -84,6 +85,15 @@ export const chessBlockChains: BlockChainRouting<ChessPayloads> = {
 /** The seconds a player away gets before it loses the game, as the time it gains at poker and at the roulette */
 export const CHESS_AWAY_TIME: number = 30;
 
+/** An action the local player committed to, with what it needs to reveal it */
+export interface StoredTurn {
+    turn: number;
+    /** The colors playing the turn */
+    colors: ReadonlyArray<PieceColor>;
+    action: SealedAction;
+    salt: string;
+}
+
 /** The action of the local player, revealed once every player of its turn is committed */
 interface SealedTurn extends StoredTurn {
     revealed: boolean;
@@ -123,8 +133,8 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         return color !== PieceColor.NONE && this.started() && !this.game.isGameOver() && this.game.colorHasPlayed(color)
             && opponent !== undefined && this.awayPlayers().includes(opponent) && !this.sending();
     });
-    /** The first commitment of each player for each turn, by `turn color` */
-    private readonly commitments = new Map<string, string>();
+    /** The first commitment of each player for each turn, by turn and color */
+    private readonly commitments = new SealedCommitments<number>();
     /**
      * The actions the local player played in this session, by turn: a turn played alone runs at once, so the next turn
      * may be played before the commitments of the previous one are in the chain. They are kept once revealed, the
@@ -135,7 +145,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     private readonly revealed = new Set<string>();
     /** The actions committed to before a reload of the page, played once the game reaches their turn */
     private readonly restoredTurns = new Map<number, SealedTurn>();
-    private store?: SealedTurnStore;
+    private store?: SealedStore<StoredTurn>;
     /** The reveals are checked one after the other: the reveal of a turn must not be checked before the previous turn is run */
     private reveals: Promise<void> = Promise.resolve();
     private readonly _liveTurns = signal<Readonly<LiveTurns>>({ count: 0, history: 0, board: this.game.fenBoard() });
@@ -160,12 +170,12 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     }
 
     public static async commitment(turn: number, color: PieceColor, action: SealedAction, salt: string): Promise<string> {
-        return await CryptoHelper.sha256(`${ turn } ${ color } ${ JSON.stringify(action) } ${ salt }`);
+        return await commitmentOf([turn, color, JSON.stringify(action), salt], ' ');
     }
 
     /** The actions committed to and not revealed in the chain yet, kept across the reloads of the page */
-    private get sealedTurnStore(): SealedTurnStore {
-        this.store ??= new SealedTurnStore(this.roomService.roomName, this.roomService.localPlayer.name);
+    private get sealedTurnStore(): SealedStore<StoredTurn> {
+        this.store ??= new SealedStore<StoredTurn>('turns', this.roomService.roomName, this.roomService.localPlayer.name);
         return this.store;
     }
 
@@ -364,7 +374,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
 
         if (this.game.result()?.reason === GameEndReason.AWAY || (this.game.isGameOver() && turn === this.turnCount) || message.payload.turn !== turn
             || !this.hasPart(turn, late) || this.revealed.has(`${ turn } ${ late }`)
-            || (this.hasPart(turn, color) && !this.commitments.has(`${ turn } ${ color }`))) {
+            || (this.hasPart(turn, color) && !this.commitments.has(turn, color))) {
             return;
         }
 
@@ -403,8 +413,8 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
         const colors: ReadonlyArray<PieceColor> = [PieceColor.WHITE, PieceColor.BLACK].filter((playing: PieceColor) => !this.game.colorHasPlayed(playing));
 
         if (color !== PieceColor.NONE && this.runAction(color, action)) {
-            const salt: string = CryptoHelper.randomHex(16);
-            this.sealedTurnStore.save({ turn, colors, action, salt });
+            const salt: string = drawSalt();
+            this.sealedTurnStore.save(turn, { turn, colors, action, salt });
             const sealedTurn: SealedTurn = { turn, colors, action, salt, revealed: false };
             this.sealedTurns.set(turn, sealedTurn);
             void this.commit(sealedTurn, color);
@@ -425,14 +435,12 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     /** The commitments of every player, the local one included */
     protected onCommit(message: AppMessage<SCGameSessionType.COMMIT, CommitMessage>): void {
         const color: PieceColor = this.playerColor(message.from);
-        const key: string = `${ message.payload.turn } ${ color }`;
 
         // A player can not change its action once committed
-        if (color === PieceColor.NONE || this.commitments.has(key)) {
+        if (color === PieceColor.NONE || !this.commitments.record(message.payload.turn, color, message.payload.commitment)) {
             return;
         }
 
-        this.commitments.set(key, message.payload.commitment);
         this.started.set(true);
 
         // A commitment of the local player it did not play in this page: the page was reloaded since
@@ -468,7 +476,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
     /** In the order of the turns */
     private revealCommittedTurns(): void {
         for (const sealedTurn of this.sealedTurns.values()) {
-            if (!sealedTurn.revealed && sealedTurn.colors.every((color: PieceColor) => this.commitments.has(`${ sealedTurn.turn } ${ color }`))) {
+            if (!sealedTurn.revealed && this.commitments.hasAll(sealedTurn.turn, sealedTurn.colors)) {
                 sealedTurn.revealed = true;
                 this.roomService.transmitMessage(SCGameSessionType.REVEAL, { turn: sealedTurn.turn, action: sealedTurn.action, salt: sealedTurn.salt });
             }
@@ -506,7 +514,7 @@ export default class SynchronousChessOnlineGameSession extends SynchronousChessG
             return;
         }
 
-        const isCommitted: boolean = this.commitments.get(`${ turn } ${ color }`) === await SynchronousChessOnlineGameSession.commitment(turn, color, action, salt);
+        const isCommitted: boolean = this.commitments.get(turn, color) === await SynchronousChessOnlineGameSession.commitment(turn, color, action, salt);
 
         // A player reloading the page may not know its reveal is in the chain already, and reveal it again
         if (isCommitted && (turn < this.turnCount || (turn === this.turnCount && this.game.colorHasPlayed(color)))) {
