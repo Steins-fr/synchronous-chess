@@ -1,4 +1,5 @@
-import { CryptoHelper } from '@app/helpers/crypto.helper';
+import { isCommitment } from '@app/modules/commit-reveal/classes/commitment';
+import { DrawStep, FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
 import { ElGamalCipherText, ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
 import { verifyBit, verifyEqualLogs } from '@app/modules/mental-poker/classes/zk-proofs';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
@@ -34,7 +35,6 @@ export interface CylinderStep {
 interface PlayerKey {
     readonly message: CylinderMessage;
     readonly key: bigint;
-    readonly commitment: string;
 }
 
 /** What applying a message gave: a cheat to report, the bullets of a chamber once both shares are in */
@@ -43,8 +43,6 @@ export interface CylinderApplied {
     readonly fired?: { readonly chamber: number; readonly bullets: number };
 }
 
-const COMMITMENT: RegExp = /^[0-9a-f]{64}$/;
-
 /**
  * What the chain tells of a cylinder, the same for every participant: the keys, the loads and the spins of the players,
  * the shares of each chamber fired and the disclosures. A message applies once its proofs are checked, before the next
@@ -52,7 +50,7 @@ const COMMITMENT: RegExp = /^[0-9a-f]{64}$/;
  */
 export class CylinderState {
     public readonly keys = new Map<string, PlayerKey>();
-    public readonly loads = new Map<string, CylinderStep & { readonly nonce: string }>();
+    public readonly loads = new Map<string, CylinderStep>();
     /** The cylinder of both loads, each chamber hiding the bullets of both players */
     public loaded: ReadonlyArray<ElGamalCipherText> = [];
     /** The spins, in the order of the seats */
@@ -65,6 +63,8 @@ export class CylinderState {
     /** The spin that was not a cylinder, breaking it: reported once applied, its player cheated */
     public malformedSpin?: CylinderMessage;
     private broken: boolean = false;
+    /** The draw of the first shooter: each player commits to a random part with its key, and reveals it with its load */
+    private readonly draw: FairDraw;
 
     /**
      * @param id unique to the cylinder: the context of every proof, so a proof of another cylinder proves nothing here
@@ -80,6 +80,7 @@ export class CylinderState {
         if (players[0] === players[1]) {
             throw new Error('A cylinder needs 2 players');
         }
+        this.draw = new FairDraw(id, players);
     }
 
     public get phase(): CylinderPhase {
@@ -195,12 +196,13 @@ export class CylinderState {
         }
 
         const key: bigint | undefined = this.cipher.parseValue(payload.key);
-        if (key === undefined || typeof payload.commitment !== 'string' || !COMMITMENT.test(payload.commitment)
+        if (key === undefined || !isCommitment(payload.commitment)
             || !await verifyEqualLogs(this.cipher, this.context('key', seat), [this.cipher.generator], [key], payload.proof)) {
             return { cheat: { message, reason: CheatReason.INVALID_LOAD } };
         }
 
-        this.keys.set(message.from, { message, key, commitment: payload.commitment });
+        this.keys.set(message.from, { message, key });
+        this.draw.commit(message.from, payload.commitment);
         return {};
     }
 
@@ -214,18 +216,17 @@ export class CylinderState {
             return { cheat: { message, reason: CheatReason.INVALID_LOAD } };
         }
 
-        const commitment: string = (this.keys.get(message.from) as PlayerKey).commitment;
-        if (typeof payload.nonce !== 'string' || await CylinderState.commitment(this.id, seat, payload.nonce) !== commitment) {
+        if (await this.draw.reveal(message.from, payload.nonce) !== DrawStep.APPLIED) {
             return { cheat: { message, reason: CheatReason.INVALID_REVEAL } };
         }
 
-        this.loads.set(message.from, { message, chambers, nonce: payload.nonce });
+        this.loads.set(message.from, { message, chambers });
 
         if (this.loads.size === 2) {
-            const [one, two] = this.players.map((player: string) => this.loads.get(player) as CylinderStep & { readonly nonce: string });
+            const [one, two] = this.players.map((player: string) => this.loads.get(player) as CylinderStep);
             this.loaded = one.chambers.map((chamber: ElGamalCipherText, index: number) => this.cipher.multiply(chamber, two.chambers[index]));
             // The last digit of the hash of both random parts: neither player chose it, each committed to its part first
-            this.first = Number.parseInt((await CryptoHelper.sha256(`${ one.nonce }:${ two.nonce }`)).slice(-1), 16) % 2;
+            this.first = Number.parseInt((await this.draw.seed() as string).slice(-1), 16) % 2;
         }
 
         return {};
@@ -314,10 +315,5 @@ export class CylinderState {
         }
         const parsed: Array<ElGamalCipherText | undefined> = chambers.map((chamber: unknown) => this.cipher.parseCipherText(chamber));
         return parsed.includes(undefined) ? undefined : parsed as ReadonlyArray<ElGamalCipherText>;
-    }
-
-    /** The commitment of a player to its random part of the draw */
-    public static commitment(id: string, seat: number, nonce: string): Promise<string> {
-        return CryptoHelper.sha256(`${ id }:${ seat }:${ nonce }`);
     }
 }
