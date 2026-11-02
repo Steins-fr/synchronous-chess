@@ -41,7 +41,7 @@ describe('SealedStore', () => {
         // When
         new SealedStore<Sealed>('turns', 'room', 'a').save(0, value0);
 
-        // Then the turns of the chess keep the key of the pages of every version
+        // Then the turns of the chess keep their key
         expect(JSON.parse(sessionStorage.getItem('synchronous-chess:sealed-turns:room:a') as string)).toEqual({ 0: value0 });
     });
 

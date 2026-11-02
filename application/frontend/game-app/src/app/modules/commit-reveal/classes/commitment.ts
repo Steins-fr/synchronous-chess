@@ -9,8 +9,8 @@ const COMMITMENT: RegExp = /^[0-9a-f]{64}$/;
 export type CommitmentPart = string | number;
 
 /**
- * The text joining the parts. Each game keeps its own, the commitments of its pages on another version being checked
- * alike. A part holding it, as an id of salts joined by colons, has a fixed form: two lists of parts must not give one
+ * The text joining the parts. Each game keeps its own: changing it would change every commitment of the game. A part
+ * holding it, as an id of salts joined by colons, has a fixed form: two lists of parts must not give one
  * text, or two values would share a commitment
  */
 export type CommitmentSeparator = ' ' | ':';

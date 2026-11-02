@@ -88,8 +88,8 @@ sum of their counts, and a cipher text re-randomized can not be told from a new 
    Damgård and Schoenmakers) and that their product hides 3: a load copying the other one to cancel its bullets, or
    loading 0 or 24 bullets, is refused (`invalidLoad`). The load reveals the random part of the draw (`invalidReveal` if
    it is not the one committed to). Every participant multiplies both loads, chamber by chamber: the cylinder, each
-   chamber hiding the bullets of both players. The first shooter is the last digit of the hash of both random parts,
-   in the order of the seats: the seed of a `FairDraw`.
+   chamber hiding the bullets of both players. The first shooter is the parity of the last hexadecimal digit of the
+   hash of both random parts, in the order of the seats: the seed of a `FairDraw`.
 3. **Spins** (`RR_spin`): the first seat, then the second one, turns the cylinder by an offset of its own and
    re-randomizes every chamber. No participant follows a chamber through a spin, the owner of a bullet included. A spin
    that is not a cylinder breaks it (`invalidSpin`): its player loses the game once the keys are disclosed.

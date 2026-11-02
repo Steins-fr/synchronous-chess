@@ -78,7 +78,7 @@ describe('SynchronousChessOnlineGameSession', () => {
         hub.send({ from, type: SCGameSessionType.REVEAL, payload: reveal });
     }
 
-    test('should commit to the turn, the color, the action and the salt, as the pages of every version', async () => {
+    test('should commit to the turn, the color, the action and the salt, in this order', async () => {
         await expect(SynchronousChessOnlineGameSession.commitment(0, PieceColor.WHITE, { kind: SealedActionKind.MOVE, move: null }, 'salt'))
             .resolves.toEqual('8761b3a5f16a26dfd1b2906df79c09b9b0628949fa1136d7074d03e1a87bea84');
     });

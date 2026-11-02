@@ -19,6 +19,7 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 - [Hidden moves: commit then reveal](#hidden-moves-commit-then-reveal)
 - [Hidden cards: mental poker](#hidden-cards-mental-poker)
 - [Hidden bullets: the cylinder of the roulette](#hidden-bullets-the-cylinder-of-the-roulette)
+- [A fair draw](#a-fair-draw)
 - [Anti-cheat](#anti-cheat)
 - [Messages](#messages)
 - [Trust model and limits](#trust-model-and-limits)
@@ -382,19 +383,21 @@ made with its key. Once the game is over, the players disclose their keys and ev
 A game drawing at random, the first shooter of the roulette, needs a draw no player chose alone, nor the sequencer.
 `FairDraw` (`modules/commit-reveal`) draws a seed over the chain of its game:
 
-1. Each player draws a random part, keeps it in its tab, and sends its commitment: the SHA-256 of the context of the
-   draw (unique to it), its index among the players drawing (not its seat: a seat may be free between them) and its
-   part, joined by colons. The first commitment of a player counts.
+1. Each player draws a random part, keeps it in its tab (the game stores it: `FairDraw` keeps nothing, a reload would
+   lose it), and sends its commitment: the SHA-256 of the context of the draw (unique to it), its index among the
+   players drawing (not its seat: a seat may be free between them) and its part, joined by colons. The first
+   well-formed commitment of a player counts: a malformed one is a cheat, not kept.
 2. Once every player committed, each one reveals its part. A part not matching its commitment is an `invalidReveal`,
    not kept: a later reveal matching it still counts.
 3. Once every part is revealed, the seed is the SHA-256 of the parts in the order of the seats, joined by colons: the
    same for every participant, whatever the order of the reveals.
 
-The roulette draws its first shooter from the last digit of the seed. From a seed, `SeededRandom` makes every page
-draw alike: its bytes are the SHA-256 digests of `seed:0`, `seed:1`... one after the other; a draw below a bound reads
-the bytes holding the bits of the bound minus one, keeps these bits only and draws again beyond the bound, so no value
-is likelier than another; `shuffle()` is a Fisher-Yates from the last item. Changing any of it would make two pages
-on two versions disagree: its specs pin its draws.
+The roulette draws its first shooter from the parity of the last hexadecimal digit of the seed. From a seed,
+`SeededRandom` makes every page draw alike: its bytes are the SHA-256 digests of `seed:0`, `seed:1`... one after the
+other; a draw below a bound reads the bytes holding the bits of the bound minus one, keeps these bits only and draws
+again a value not below the bound, so no value is likelier than another; `shuffle()` is a Fisher-Yates from the last
+item. Its specs pin its draws: a change of the bytes, of their order or of the shuffle, which would change every deck,
+can not go unnoticed.
 
 ## Anti-cheat
 

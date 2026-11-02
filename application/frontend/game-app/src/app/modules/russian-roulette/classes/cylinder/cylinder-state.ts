@@ -225,7 +225,7 @@ export class CylinderState {
         if (this.loads.size === 2) {
             const [one, two] = this.players.map((player: string) => this.loads.get(player) as CylinderStep);
             this.loaded = one.chambers.map((chamber: ElGamalCipherText, index: number) => this.cipher.multiply(chamber, two.chambers[index]));
-            // The last digit of the hash of both random parts: neither player chose it, each committed to its part first
+            // The parity of the last hexadecimal digit of the hash of both random parts: neither player chose it, each committed to its part first
             this.first = Number.parseInt((await this.draw.seed() as string).slice(-1), 16) % 2;
         }
 

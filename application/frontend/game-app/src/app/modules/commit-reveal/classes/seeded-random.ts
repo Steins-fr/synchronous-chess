@@ -7,8 +7,8 @@ const MAX_BOUND: number = 2 ** 32;
  * Random draws every page makes alike from a seed, the one of a fair draw: the shuffle of a deck no player chose.
  *
  * The bytes are the SHA-256 digests of `seed:0`, `seed:1`... one after the other. A draw below a bound reads the bytes
- * holding the bits of the bound minus one, keeps these bits only, and draws again a value beyond the bound: no value is
- * likelier than another. Every page must draw alike: changing the bytes, their order or the shuffle changes the deck.
+ * holding the bits of the bound minus one, keeps these bits only, and draws again a value not below the bound: no value
+ * is likelier than another. Every page must draw alike: changing the bytes, their order or the shuffle changes the deck.
  */
 export class SeededRandom {
     private counter: number = 0;
