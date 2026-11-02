@@ -383,7 +383,8 @@ A game drawing at random, the first shooter of the roulette, needs a draw no pla
 `FairDraw` (`modules/commit-reveal`) draws a seed over the chain of its game:
 
 1. Each player draws a random part, keeps it in its tab, and sends its commitment: the SHA-256 of the context of the
-   draw (unique to it), its seat and its part, joined by colons. The first commitment of a player counts.
+   draw (unique to it), its index among the players drawing (not its seat: a seat may be free between them) and its
+   part, joined by colons. The first commitment of a player counts.
 2. Once every player committed, each one reveals its part. A part not matching its commitment is an `invalidReveal`,
    not kept: a later reveal matching it still counts.
 3. Once every part is revealed, the seed is the SHA-256 of the parts in the order of the seats, joined by colons: the
