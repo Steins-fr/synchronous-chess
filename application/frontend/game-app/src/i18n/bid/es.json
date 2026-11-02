@@ -48,5 +48,84 @@
       "title": "Los tiempos"
     },
     "title": "Reglas"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jugar otra vez",
+      "start": "Empezar la partida"
+    },
+    "bank": "Banca: {coins, plural, one {# moneda} other {# monedas}}",
+    "bid": {
+      "integer": "Puja monedas enteras",
+      "label": "Tu puja",
+      "max": "Como mucho tus {max, plural, one {# moneda} other {# monedas}}",
+      "min": "{min, plural, one {# moneda} other {# monedas}} como mínimo",
+      "none": "Sin puja",
+      "required": "Escribe tu puja",
+      "sealed": "Tu puja de {amount, plural, one {# moneda} other {# monedas}} está sellada",
+      "submit": "Pujar"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Conservar mis cartas",
+      "submit": "Descartar {count, plural, one {# carta} other {# cartas}}"
+    },
+    "game": "Partida {number}:",
+    "history": "Jugadas de la partida",
+    "lot": {
+      "back": "Sin vender: vuelve a su vendedor",
+      "bank": "de la banca",
+      "name": "Lote {letter}",
+      "out": "Sin vender: sale de la partida",
+      "seller": "de {name}",
+      "sold": "Para {name} por {price, plural, one {# moneda} other {# monedas}}"
+    },
+    "move": {
+      "discards": "Ronda de cambio {session}: {name} descarta {count, plural, one {# carta} other {# cartas}}, lote {letter}",
+      "illegal": "{names}: {phase, select, revealing {una puja superior a sus monedas, sin puja} other {un descarte de una carta que no tiene, sin descarte}}",
+      "invalid": "{names}: revelado distinto de lo sellado, sin valor, cerdo al final",
+      "late": "{names}: {phase, select, bidding {sin puja a tiempo} revealing {puja no revelada a tiempo, cerdo al final} discarding {sin descarte a tiempo} other {descartes no revelados a tiempo, cerdo al final}}",
+      "noDiscard": "Ronda de cambio {session}: ninguna carta descartada",
+      "sold": "Lote {letter}: {name} gana por {price, plural, one {# moneda} other {# monedas}} (pujas: {bids})",
+      "soldTie": "Lote {letter}: {name} gana por {price, plural, one {# moneda} other {# monedas}}, pujó antes que {tied} (pujas: {bids})",
+      "unsoldBack": "Lote {letter}: sin pujas, vuelve a {name}",
+      "unsoldOut": "Lote {letter}: sin pujas, sale de la partida"
+    },
+    "past": "{first} primero, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
+    "pastGames": "Partidas jugadas",
+    "result": {
+      "balance": "{balance, plural, one {# moneda} other {# monedas}} al final",
+      "noHand": "Sin mano",
+      "pig": "Cerdo",
+      "place": "Posición {place}"
+    },
+    "seat": {
+      "absent": "Omitido",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moneda} other {# monedas}}",
+      "free": "Puesto libre",
+      "leave": "Dejar el puesto",
+      "release": "Liberar el puesto",
+      "sealed": "Sellado",
+      "take": "Sentarse"
+    },
+    "session": "{session, select, 0 {Ronda de reparto} other {Ronda de cambio {session} de {total}}}",
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "status": {
+      "away": "Esperando el regreso de {names}…",
+      "bid": "Puja por el lote {letter}, sellada: 0 para no pujar.",
+      "bidding": "Lote {letter} en subasta: esperando a {names}.",
+      "discard": "Elige las cartas que descartas, en su orden, o quédate con las tuyas.",
+      "discarding": "Los jugadores descartan: esperando a {names}.",
+      "disclosing": "Se revelan los descartes…",
+      "drawing": "Los jugadores barajan las cartas: esperando a {names}.",
+      "hurry": "Date prisa: ¡se te acaba el tiempo!",
+      "over": "La partida ha terminado.",
+      "revealing": "Se revelan las pujas por el lote {letter}…",
+      "sealed": "Sellado: esperando a {names}.",
+      "seats": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: la partida empieza con {min} como mínimo.",
+      "start": "Empieza la partida cuando todos los jugadores estén sentados.",
+      "waitingStart": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: esperando a que uno de ellos la empiece."
+    }
   }
 }

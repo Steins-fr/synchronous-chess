@@ -48,5 +48,84 @@
       "title": "Os tempos"
     },
     "title": "Regras"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar de novo",
+      "start": "Iniciar a partida"
+    },
+    "bank": "Banca: {coins, plural, one {# moeda} other {# moedas}}",
+    "bid": {
+      "integer": "Dê lances em moedas inteiras",
+      "label": "Seu lance",
+      "max": "No máximo {max, plural, one {sua # moeda} other {suas # moedas}}",
+      "min": "Pelo menos {min, plural, one {# moeda} other {# moedas}}",
+      "none": "Sem lance",
+      "required": "Digite seu lance",
+      "sealed": "Seu lance de {amount, plural, one {# moeda} other {# moedas}} está lacrado",
+      "submit": "Dar lance"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Manter minhas cartas",
+      "submit": "{count, plural, one {Descartar # carta} other {Descartar # cartas}}"
+    },
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "lot": {
+      "back": "Não vendido: volta ao seu vendedor",
+      "bank": "da banca",
+      "name": "Lote {letter}",
+      "out": "Não vendido: sai do jogo",
+      "seller": "de {name}",
+      "sold": "Para {name} por {price, plural, one {# moeda} other {# moedas}}"
+    },
+    "move": {
+      "discards": "Rodada de troca {session}: {name} descarta {count, plural, one {# carta} other {# cartas}}, lote {letter}",
+      "illegal": "{names}: {phase, select, revealing {um lance acima das moedas, nenhum lance} other {o descarte de uma carta que não tinha, nenhum descarte}}",
+      "invalid": "{names}: revelação diferente da lacrada, sem valor, porco no fim",
+      "late": "{names}: {phase, select, bidding {nenhum lance a tempo} revealing {lance não revelado a tempo, porco no fim} discarding {nenhum descarte a tempo} other {descartes não revelados a tempo, porco no fim}}",
+      "noDiscard": "Rodada de troca {session}: nenhuma carta descartada",
+      "sold": "Lote {letter}: {name} leva por {price, plural, one {# moeda} other {# moedas}} (lances: {bids})",
+      "soldTie": "Lote {letter}: {name} leva por {price, plural, one {# moeda} other {# moedas}}, lance dado antes de {tied} (lances: {bids})",
+      "unsoldBack": "Lote {letter}: nenhum lance, volta para {name}",
+      "unsoldOut": "Lote {letter}: nenhum lance, sai do jogo"
+    },
+    "past": "{first} em primeiro, {count, plural, one {# porco} other {# porcos}}: {pigs}",
+    "pastGames": "Partidas jogadas",
+    "result": {
+      "balance": "{balance, plural, one {# moeda} other {# moedas}} no fim",
+      "noHand": "Sem mão",
+      "pig": "Porco",
+      "place": "Posição {place}"
+    },
+    "seat": {
+      "absent": "Pulado",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moeda} other {# moedas}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "release": "Liberar o lugar",
+      "sealed": "Lacrado",
+      "take": "Sentar"
+    },
+    "session": "{session, select, 0 {Rodada de distribuição} other {Rodada de troca {session} de {total}}}",
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "status": {
+      "away": "Aguardando {names} voltar…",
+      "bid": "Dê seu lance no lote {letter}, lacrado: 0 para nenhum lance.",
+      "bidding": "Lote {letter} em leilão: aguardando {names}.",
+      "discard": "Escolha as cartas a descartar, na ordem, ou mantenha as suas.",
+      "discarding": "Os jogadores descartam: aguardando {names}.",
+      "disclosing": "Os descartes são revelados…",
+      "drawing": "Os jogadores embaralham o baralho: aguardando {names}.",
+      "hurry": "Rápido: seu tempo está acabando!",
+      "over": "A partida terminou.",
+      "revealing": "Os lances do lote {letter} são revelados…",
+      "sealed": "Lacrado: aguardando {names}.",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa com pelo menos {min}.",
+      "start": "Inicie a partida quando todos os jogadores estiverem sentados.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: aguardando que um deles inicie."
+    }
   }
 }

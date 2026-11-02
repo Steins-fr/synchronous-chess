@@ -48,5 +48,84 @@
       "title": "Os tempos"
     },
     "title": "Regras"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar outra vez",
+      "start": "Iniciar a partida"
+    },
+    "bank": "Banca: {coins, plural, one {# moeda} other {# moedas}}",
+    "bid": {
+      "integer": "Licite moedas inteiras",
+      "label": "A sua licitação",
+      "max": "No máximo {max, plural, one {a sua # moeda} other {as suas # moedas}}",
+      "min": "Pelo menos {min, plural, one {# moeda} other {# moedas}}",
+      "none": "Sem licitação",
+      "required": "Introduza a sua licitação",
+      "sealed": "A sua licitação de {amount, plural, one {# moeda} other {# moedas}} está fechada",
+      "submit": "Licitar"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Manter as cartas",
+      "submit": "{count, plural, one {Descartar # carta} other {Descartar # cartas}}"
+    },
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "lot": {
+      "back": "Não vendido: volta para o vendedor",
+      "bank": "da banca",
+      "name": "Lote {letter}",
+      "out": "Não vendido: sai do jogo",
+      "seller": "de {name}",
+      "sold": "Para {name} por {price, plural, one {# moeda} other {# moedas}}"
+    },
+    "move": {
+      "discards": "Ronda de troca {session}: {name} descarta {count, plural, one {# carta} other {# cartas}}, lote {letter}",
+      "illegal": "{names}: {phase, select, revealing {uma licitação acima das moedas, sem licitação} other {o descarte de uma carta que não tinha, sem descarte}}",
+      "invalid": "{names}: revelado de forma diferente do fechado, sem valor, porco no fim",
+      "late": "{names}: {phase, select, bidding {sem licitação a tempo} revealing {licitação não revelada a tempo, porco no fim} discarding {sem descarte a tempo} other {descartes não revelados a tempo, porco no fim}}",
+      "noDiscard": "Ronda de troca {session}: nenhuma carta descartada",
+      "sold": "Lote {letter}: {name} ganha por {price, plural, one {# moeda} other {# moedas}} (licitações: {bids})",
+      "soldTie": "Lote {letter}: {name} ganha por {price, plural, one {# moeda} other {# moedas}}, licitou antes de {tied} (licitações: {bids})",
+      "unsoldBack": "Lote {letter}: sem licitações, volta para {name}",
+      "unsoldOut": "Lote {letter}: sem licitações, sai do jogo"
+    },
+    "past": "{first} em primeiro, {count, plural, one {# porco} other {# porcos}}: {pigs}",
+    "pastGames": "Partidas jogadas",
+    "result": {
+      "balance": "{balance, plural, one {# moeda} other {# moedas}} no fim",
+      "noHand": "Sem mão",
+      "pig": "Porco",
+      "place": "Posição {place}"
+    },
+    "seat": {
+      "absent": "Saltado",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moeda} other {# moedas}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "release": "Libertar o lugar",
+      "sealed": "Fechado",
+      "take": "Sentar-se"
+    },
+    "session": "{session, select, 0 {Ronda de distribuição} other {Ronda de troca {session} de {total}}}",
+    "spectators": "{count, plural, one {# espetador} other {# espetadores}}",
+    "status": {
+      "away": "A aguardar o regresso de {names}…",
+      "bid": "Licite no lote {letter}, em licitação fechada: 0 para não licitar.",
+      "bidding": "Lote {letter} em leilão: a aguardar {names}.",
+      "discard": "Escolha as cartas a descartar, pela ordem, ou mantenha as suas.",
+      "discarding": "Os jogadores descartam: a aguardar {names}.",
+      "disclosing": "Os descartes são revelados…",
+      "drawing": "Os jogadores baralham o baralho: a aguardar {names}.",
+      "hurry": "Depressa: o seu tempo está a acabar!",
+      "over": "A partida terminou.",
+      "revealing": "As licitações no lote {letter} são reveladas…",
+      "sealed": "Fechado: a aguardar {names}.",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa com pelo menos {min}.",
+      "start": "Inicie a partida quando todos os jogadores estiverem sentados.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a aguardar que um deles inicie a partida."
+    }
   }
 }

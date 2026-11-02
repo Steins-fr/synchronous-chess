@@ -48,5 +48,84 @@
       "title": "Время"
     },
     "title": "Правила"
+  },
+  "table": {
+    "action": {
+      "rematch": "Сыграть ещё",
+      "start": "Начать партию"
+    },
+    "bank": "Казна: {coins, plural, one {# монета} few {# монеты} many {# монет} other {# монеты}}",
+    "bid": {
+      "integer": "Только целые монеты",
+      "label": "Ваша ставка",
+      "max": "Не больше, чем у вас: {max, plural, one {# монета} few {# монеты} many {# монет} other {# монеты}}",
+      "min": "Не меньше {min, plural, one {# монеты} few {# монет} many {# монет} other {# монеты}}",
+      "none": "Без ставки",
+      "required": "Введите ставку",
+      "sealed": "Ваша ставка в {amount, plural, one {# монету} few {# монеты} many {# монет} other {# монеты}} закрыта",
+      "submit": "Поставить"
+    },
+    "clock": "{seconds} с",
+    "discard": {
+      "keep": "Оставить карты",
+      "submit": "Сбросить {count, plural, one {# карту} few {# карты} many {# карт} other {# карты}}"
+    },
+    "game": "Партия {number}:",
+    "history": "Ходы партии",
+    "lot": {
+      "back": "Не продан: возвращается продавцу",
+      "bank": "из казны",
+      "name": "Лот {letter}",
+      "out": "Не продан: выходит из игры",
+      "seller": "от игрока {name}",
+      "sold": "Продан игроку {name} за {price, plural, one {# монету} few {# монеты} many {# монет} other {# монеты}}"
+    },
+    "move": {
+      "discards": "Раунд обмена {session}: {name} сбрасывает {count, plural, one {# карту} few {# карты} many {# карт} other {# карты}}, лот {letter}",
+      "illegal": "{names}: {phase, select, revealing {ставка больше монет игрока — ставки нет} other {сброс карты, которой нет на руках, — сброса нет}}",
+      "invalid": "{names}: раскрыто не так, как закрыто — не засчитано, в конце свинья",
+      "late": "{names}: {phase, select, bidding {ставка не сделана вовремя} revealing {ставка не раскрыта вовремя, в конце свинья} discarding {сброс не сделан вовремя} other {сброс не раскрыт вовремя, в конце свинья}}",
+      "noDiscard": "Раунд обмена {session}: карты не сброшены",
+      "sold": "Лот {letter}: {name} выигрывает за {price, plural, one {# монету} few {# монеты} many {# монет} other {# монеты}} (ставки: {bids})",
+      "soldTie": "Лот {letter}: {name} выигрывает за {price, plural, one {# монету} few {# монеты} many {# монет} other {# монеты}}, ставка сделана раньше, чем у {tied} (ставки: {bids})",
+      "unsoldBack": "Лот {letter}: ставок нет, возвращается игроку {name}",
+      "unsoldOut": "Лот {letter}: ставок нет, выходит из игры"
+    },
+    "past": "{first} — первый, {count, plural, one {# свинья} few {# свиньи} many {# свиней} other {# свиньи}}: {pigs}",
+    "pastGames": "Сыгранные партии",
+    "result": {
+      "balance": "В конце: {balance, plural, one {# монета} few {# монеты} many {# монет} other {# монеты}}",
+      "noHand": "Нет комбинации",
+      "pig": "Свинья",
+      "place": "Место {place}"
+    },
+    "seat": {
+      "absent": "Пропуск",
+      "clock": "{seconds} с",
+      "coins": "{count, plural, one {# монета} few {# монеты} many {# монет} other {# монеты}}",
+      "free": "Свободное место",
+      "leave": "Освободить место",
+      "release": "Убрать с места",
+      "sealed": "Закрыто",
+      "take": "Сесть"
+    },
+    "session": "{session, select, 0 {Раунд раздачи} other {Раунд обмена {session} из {total}}}",
+    "spectators": "{count, plural, one {# зритель} few {# зрителя} many {# зрителей} other {# зрителя}}",
+    "status": {
+      "away": "Ожидание возвращения: {names}…",
+      "bid": "Сделайте закрытую ставку на лот {letter}: 0 — без ставки.",
+      "bidding": "Лот {letter} на аукционе, ожидание: {names}.",
+      "discard": "Выберите карты для сброса по порядку или оставьте свои.",
+      "discarding": "Игроки сбрасывают карты, ожидание: {names}.",
+      "disclosing": "Сбросы раскрываются…",
+      "drawing": "Игроки тасуют колоду, ожидание: {names}.",
+      "hurry": "Скорее: ваше время на исходе!",
+      "over": "Партия окончена.",
+      "revealing": "Ставки на лот {letter} раскрываются…",
+      "sealed": "Закрыто, ожидание: {names}.",
+      "seats": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: партия начнётся, когда их будет не меньше {min}.",
+      "start": "Начните партию, когда все игроки сядут.",
+      "waitingStart": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: ожидание, пока один из них начнёт партию."
+    }
   }
 }

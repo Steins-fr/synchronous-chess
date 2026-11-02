@@ -1,11 +1,18 @@
 <app-room-layout [dimContent]="false" [game]="game" [room]="room()">
     <app-bid-presentation roomPresentation />
-    @if (room()) {
+    @if (room(); as myRoom) {
+    <app-bid-table #bidTable [room]="myRoom" />
     <details class="rules-details">
         <summary>{{ 'bid.rules.summary' | transloco }}</summary>
         <app-bid-rules [withTitle]="false" />
     </details>
     } @else {
     <app-bid-rules />
+    }
+    <!-- The history of the table, in the panel of the room -->
+    @if (table(); as table) {
+    <app-room-history
+        [currentTitle]="'bid.table.history' | transloco" [current]="table.history()" [pastTitle]="'bid.table.pastGames' | transloco"
+        [past]="table.pastResults()" roomHistory />
     }
 </app-room-layout>

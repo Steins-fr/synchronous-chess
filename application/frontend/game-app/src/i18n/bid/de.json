@@ -48,5 +48,84 @@
       "title": "Die Zeiten"
     },
     "title": "Regeln"
+  },
+  "table": {
+    "action": {
+      "rematch": "Nochmal spielen",
+      "start": "Spiel starten"
+    },
+    "bank": "Bank: {coins, plural, one {# Münze} other {# Münzen}}",
+    "bid": {
+      "integer": "Biete ganze Münzen",
+      "label": "Dein Gebot",
+      "max": "Höchstens deine {max, plural, one {# Münze} other {# Münzen}}",
+      "min": "Mindestens {min, plural, one {# Münze} other {# Münzen}}",
+      "none": "Kein Gebot",
+      "required": "Gib dein Gebot ein",
+      "sealed": "Dein Gebot von {amount, plural, one {# Münze} other {# Münzen}} ist verdeckt",
+      "submit": "Bieten"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Karten behalten",
+      "submit": "{count, plural, one {# Karte abwerfen} other {# Karten abwerfen}}"
+    },
+    "game": "Spiel {number}:",
+    "history": "Züge des Spiels",
+    "lot": {
+      "back": "Unverkauft: zurück an den Verkäufer",
+      "bank": "von der Bank",
+      "name": "Los {letter}",
+      "out": "Unverkauft: aus dem Spiel",
+      "seller": "von {name}",
+      "sold": "An {name} für {price, plural, one {# Münze} other {# Münzen}}"
+    },
+    "move": {
+      "discards": "Tauschrunde {session}: {name} wirft {count, plural, one {# Karte} other {# Karten}} ab, Los {letter}",
+      "illegal": "{names}: {phase, select, revealing {Gebot über die Münzen hinaus, kein Gebot} other {Abwurf einer nicht gehaltenen Karte, kein Abwurf}}",
+      "invalid": "{names}: anders aufgedeckt als abgegeben, zählt nicht, am Ende ein Schwein",
+      "late": "{names}: {phase, select, bidding {kein rechtzeitiges Gebot} revealing {Gebot nicht rechtzeitig aufgedeckt, am Ende ein Schwein} discarding {kein rechtzeitiger Abwurf} other {Abwurf nicht rechtzeitig aufgedeckt, am Ende ein Schwein}}",
+      "noDiscard": "Tauschrunde {session}: keine Karte abgeworfen",
+      "sold": "Los {letter}: {name} gewinnt für {price, plural, one {# Münze} other {# Münzen}} (Gebote: {bids})",
+      "soldTie": "Los {letter}: {name} gewinnt für {price, plural, one {# Münze} other {# Münzen}}, früher geboten als {tied} (Gebote: {bids})",
+      "unsoldBack": "Los {letter}: kein Gebot, zurück an {name}",
+      "unsoldOut": "Los {letter}: kein Gebot, aus dem Spiel"
+    },
+    "past": "{first} auf Platz 1, {count, plural, one {# Schwein} other {# Schweine}}: {pigs}",
+    "pastGames": "Gespielte Spiele",
+    "result": {
+      "balance": "{balance, plural, one {# Münze} other {# Münzen}} am Ende",
+      "noHand": "Keine Hand",
+      "pig": "Schwein",
+      "place": "Platz {place}"
+    },
+    "seat": {
+      "absent": "Übersprungen",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# Münze} other {# Münzen}}",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "release": "Platz freigeben",
+      "sealed": "Verdeckt",
+      "take": "Hinsetzen"
+    },
+    "session": "{session, select, 0 {Verteilungsrunde} other {Tauschrunde {session} von {total}}}",
+    "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "status": {
+      "away": "Warte auf die Rückkehr von {names}…",
+      "bid": "Biete verdeckt auf Los {letter}: 0 für kein Gebot.",
+      "bidding": "Los {letter} wird versteigert: Warte auf {names}.",
+      "discard": "Wähle die Karten zum Abwerfen in ihrer Reihenfolge oder behalte deine.",
+      "discarding": "Die Spieler werfen ab: Warte auf {names}.",
+      "disclosing": "Die Abwürfe werden aufgedeckt…",
+      "drawing": "Die Spieler mischen das Blatt: Warte auf {names}.",
+      "hurry": "Beeil dich: Deine Zeit läuft ab!",
+      "over": "Das Spiel ist vorbei.",
+      "revealing": "Die Gebote auf Los {letter} werden aufgedeckt…",
+      "sealed": "Verdeckt: Warte auf {names}.",
+      "seats": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Das Spiel startet mit mindestens {min}.",
+      "start": "Starte das Spiel, sobald alle Spieler sitzen.",
+      "waitingStart": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Warte, bis einer von ihnen startet."
+    }
   }
 }

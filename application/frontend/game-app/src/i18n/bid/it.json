@@ -48,5 +48,84 @@
       "title": "I tempi"
     },
     "title": "Regole"
+  },
+  "table": {
+    "action": {
+      "rematch": "Gioca ancora",
+      "start": "Avvia la partita"
+    },
+    "bank": "Banco: {coins, plural, one {# moneta} other {# monete}}",
+    "bid": {
+      "integer": "Offri monete intere",
+      "label": "La tua offerta",
+      "max": "Al massimo {max, plural, one {la tua # moneta} other {le tue # monete}}",
+      "min": "Almeno {min, plural, one {# moneta} other {# monete}}",
+      "none": "Nessuna offerta",
+      "required": "Scrivi la tua offerta",
+      "sealed": "La tua offerta di {amount, plural, one {# moneta} other {# monete}} è sigillata",
+      "submit": "Offri"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Tieni le carte",
+      "submit": "Scarta {count, plural, one {# carta} other {# carte}}"
+    },
+    "game": "Partita {number}:",
+    "history": "Mosse della partita",
+    "lot": {
+      "back": "Invenduto: torna al venditore",
+      "bank": "dal banco",
+      "name": "Lotto {letter}",
+      "out": "Invenduto: esce dal gioco",
+      "seller": "da {name}",
+      "sold": "A {name} per {price, plural, one {# moneta} other {# monete}}"
+    },
+    "move": {
+      "discards": "Sessione di cambio {session}: {name} scarta {count, plural, one {# carta} other {# carte}}, lotto {letter}",
+      "illegal": "{names}: {phase, select, revealing {offerta superiore alle monete, nessuna offerta} other {scarto di una carta non posseduta, nessuno scarto}}",
+      "invalid": "{names}: rivelato diversamente da come sigillato, senza valore, maiale alla fine",
+      "late": "{names}: {phase, select, bidding {nessuna offerta in tempo} revealing {offerta non rivelata in tempo, maiale alla fine} discarding {nessuno scarto in tempo} other {scarti non rivelati in tempo, maiale alla fine}}",
+      "noDiscard": "Sessione di cambio {session}: nessuna carta scartata",
+      "sold": "Lotto {letter}: {name} vince per {price, plural, one {# moneta} other {# monete}} (offerte: {bids})",
+      "soldTie": "Lotto {letter}: {name} vince per {price, plural, one {# moneta} other {# monete}}, offerta prima di {tied} (offerte: {bids})",
+      "unsoldBack": "Lotto {letter}: nessuna offerta, torna a {name}",
+      "unsoldOut": "Lotto {letter}: nessuna offerta, esce dal gioco"
+    },
+    "past": "Primo: {first}, {count, plural, one {# maiale} other {# maiali}}: {pigs}",
+    "pastGames": "Partite giocate",
+    "result": {
+      "balance": "{balance, plural, one {# moneta} other {# monete}} alla fine",
+      "noHand": "Nessuna mano",
+      "pig": "Maiale",
+      "place": "{place}° posto"
+    },
+    "seat": {
+      "absent": "Saltato",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moneta} other {# monete}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "release": "Libera il posto",
+      "sealed": "Sigillato",
+      "take": "Siediti"
+    },
+    "session": "{session, select, 0 {Sessione di distribuzione} other {Sessione di cambio {session} di {total}}}",
+    "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "status": {
+      "away": "In attesa del ritorno di {names}…",
+      "bid": "Offerta sigillata sul lotto {letter}: 0 per non offrire.",
+      "bidding": "Lotto {letter} all'asta: in attesa di {names}.",
+      "discard": "Scegli le carte da scartare, nel loro ordine, o tieni le tue.",
+      "discarding": "I giocatori scartano: in attesa di {names}.",
+      "disclosing": "Gli scarti vengono rivelati…",
+      "drawing": "I giocatori mescolano il mazzo: in attesa di {names}.",
+      "hurry": "Sbrigati: il tempo sta per scadere!",
+      "over": "La partita è finita.",
+      "revealing": "Le offerte sul lotto {letter} vengono rivelate…",
+      "sealed": "Sigillato: in attesa di {names}.",
+      "seats": "{count, plural, one {# giocatore seduto} other {# giocatori seduti}}: la partita inizia con almeno {min}.",
+      "start": "Avvia la partita quando tutti i giocatori sono seduti.",
+      "waitingStart": "{count, plural, one {# giocatore seduto: in attesa che avvii la partita.} other {# giocatori seduti: in attesa che uno di loro avvii la partita.}}"
+    }
   }
 }

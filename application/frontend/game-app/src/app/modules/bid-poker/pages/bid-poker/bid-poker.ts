@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
+import { RoomHistoryComponent } from '@app/modules/room-layout/room-history/room-history.component';
 import { MatchPage } from '@app/modules/room-layout/leave-match.guard';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
@@ -10,12 +11,13 @@ import { chatBlockChains, ChatPayloads } from '@app/modules/chat-page/components
 import { bidPokerBlockChains, BidPokerPayloads } from '../../classes/game-sessions/bid-poker-messages';
 import { BidPresentationComponent } from '../../components/bid-presentation/bid-presentation.component';
 import { BidRulesComponent } from '../../components/bid-rules/bid-rules.component';
+import { BidTableComponent } from '../../components/bid-table/bid-table.component';
 
 /** The page of the Bid Poker: its rooms, each one holding a table and the chat */
 @Component({
     selector: 'app-bid-poker',
     templateUrl: './bid-poker.html',
-    imports: [RoomLayoutComponent, BidPresentationComponent, BidRulesComponent, TranslocoPipe],
+    imports: [RoomLayoutComponent, RoomHistoryComponent, BidPresentationComponent, BidRulesComponent, BidTableComponent, TranslocoPipe],
     providers: [provideRooms()],
 })
 export class BidPoker implements MatchPage {
@@ -24,4 +26,6 @@ export class BidPoker implements MatchPage {
     protected readonly maxPlayer: number = 8;
     public readonly room = roomFromSetup<ChatPayloads & BidPokerPayloads>(this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, bidPokerBlockChains));
     public readonly leaveWarning: MatchLeaveWarning = inject(MatchLeaveWarning);
+    // By its reference: its history given to the panel of the room
+    protected readonly table = viewChild<BidTableComponent>('bidTable');
 }

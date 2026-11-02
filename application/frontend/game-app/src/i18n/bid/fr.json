@@ -48,5 +48,84 @@
       "title": "Les délais"
     },
     "title": "Règles"
+  },
+  "table": {
+    "action": {
+      "rematch": "Rejouer",
+      "start": "Lancer la partie"
+    },
+    "bank": "Banque : {coins, plural, one {# pièce} other {# pièces}}",
+    "bid": {
+      "integer": "Enchérissez en pièces entières",
+      "label": "Votre enchère",
+      "max": "Vous n'avez que {max, plural, one {# pièce} other {# pièces}}",
+      "min": "{min, plural, one {# pièce} other {# pièces}} au moins",
+      "none": "Pas d'enchère",
+      "required": "Saisissez votre enchère",
+      "sealed": "Votre enchère de {amount, plural, one {# pièce} other {# pièces}} est scellée",
+      "submit": "Enchérir"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Garder mes cartes",
+      "submit": "Défausser {count, plural, one {# carte} other {# cartes}}"
+    },
+    "game": "Partie {number} :",
+    "history": "Coups de la partie",
+    "lot": {
+      "back": "Invendu : retour à son vendeur",
+      "bank": "de la banque",
+      "name": "Lot {letter}",
+      "out": "Invendu : sort du jeu",
+      "seller": "de {name}",
+      "sold": "À {name} pour {price, plural, one {# pièce} other {# pièces}}"
+    },
+    "move": {
+      "discards": "Séance d'échange {session} : {name} défausse {count, plural, one {# carte} other {# cartes}}, lot {letter}",
+      "illegal": "{names} : {phase, select, revealing {une enchère supérieure aux pièces, pas d'enchère} other {la défausse d'une carte non détenue, pas de défausse}}",
+      "invalid": "{names} : révélé autrement que scellé, ne compte pas, cochon à la fin",
+      "late": "{names} : {phase, select, bidding {pas d'enchère à temps} revealing {enchère non révélée à temps, cochon à la fin} discarding {pas de défausse à temps} other {défausses non révélées à temps, cochon à la fin}}",
+      "noDiscard": "Séance d'échange {session} : aucune carte défaussée",
+      "sold": "Lot {letter} : {name} l'emporte pour {price, plural, one {# pièce} other {# pièces}} (enchères : {bids})",
+      "soldTie": "Lot {letter} : {name} l'emporte pour {price, plural, one {# pièce} other {# pièces}}, enchère faite avant {tied} (enchères : {bids})",
+      "unsoldBack": "Lot {letter} : aucune enchère, retour à {name}",
+      "unsoldOut": "Lot {letter} : aucune enchère, sort du jeu"
+    },
+    "past": "{first} premier, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
+    "pastGames": "Parties jouées",
+    "result": {
+      "balance": "{balance, plural, one {# pièce} other {# pièces}} à la fin",
+      "noHand": "Pas de main",
+      "pig": "Cochon",
+      "place": "Rang {place}"
+    },
+    "seat": {
+      "absent": "Absent",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# pièce} other {# pièces}}",
+      "free": "Place libre",
+      "leave": "Quitter la place",
+      "release": "Libérer la place",
+      "sealed": "Scellé",
+      "take": "S'asseoir"
+    },
+    "session": "{session, select, 0 {Séance de distribution} other {Séance d'échange {session} sur {total}}}",
+    "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "status": {
+      "away": "En attente du retour de {names}…",
+      "bid": "Enchérissez sur le lot {letter}, sous pli scellé : 0 pour ne pas enchérir.",
+      "bidding": "Lot {letter} aux enchères : en attente de {names}.",
+      "discard": "Choisissez les cartes à défausser, dans leur ordre, ou gardez les vôtres.",
+      "discarding": "Les joueurs défaussent : en attente de {names}.",
+      "disclosing": "Les défausses sont révélées…",
+      "drawing": "Les joueurs mélangent le paquet : en attente de {names}.",
+      "hurry": "Vite : votre temps s'écoule !",
+      "over": "La partie est terminée.",
+      "revealing": "Les enchères sur le lot {letter} sont révélées…",
+      "sealed": "Scellé : en attente de {names}.",
+      "seats": "{count, plural, one {# joueur assis} other {# joueurs assis}} : la partie commence à {min} au moins.",
+      "start": "Lancez la partie une fois tous les joueurs assis.",
+      "waitingStart": "{count, plural, one {# joueur assis} other {# joueurs assis}} : en attente que l'un d'eux lance la partie."
+    }
   }
 }

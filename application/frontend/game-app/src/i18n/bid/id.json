@@ -48,5 +48,84 @@
       "title": "Waktu"
     },
     "title": "Aturan"
+  },
+  "table": {
+    "action": {
+      "rematch": "Main lagi",
+      "start": "Mulai permainan"
+    },
+    "bank": "Bank: {coins, plural, other {# koin}}",
+    "bid": {
+      "integer": "Tawar dalam koin utuh",
+      "label": "Tawaran Anda",
+      "max": "Paling banyak {max, plural, other {# koin}} Anda",
+      "min": "Paling sedikit {min, plural, other {# koin}}",
+      "none": "Tidak menawar",
+      "required": "Ketik tawaran Anda",
+      "sealed": "Tawaran Anda sebesar {amount, plural, other {# koin}} telah tertutup",
+      "submit": "Tawar"
+    },
+    "clock": "{seconds} dtk",
+    "discard": {
+      "keep": "Simpan kartu saya",
+      "submit": "Buang {count, plural, other {# kartu}}"
+    },
+    "game": "Permainan {number}:",
+    "history": "Langkah permainan",
+    "lot": {
+      "back": "Tak terjual: kembali ke penjualnya",
+      "bank": "dari bank",
+      "name": "Lot {letter}",
+      "out": "Tak terjual: keluar dari permainan",
+      "seller": "dari {name}",
+      "sold": "Untuk {name} seharga {price, plural, other {# koin}}"
+    },
+    "move": {
+      "discards": "Sesi tukar {session}: {name} membuang {count, plural, other {# kartu}}, lot {letter}",
+      "illegal": "{names}: {phase, select, revealing {tawaran melebihi koinnya, tidak menawar} other {membuang kartu yang tidak dimiliki, tidak membuang}}",
+      "invalid": "{names}: diungkapkan tidak sesuai yang tertutup, tidak dihitung, menjadi babi di akhir",
+      "late": "{names}: {phase, select, bidding {tidak menawar tepat waktu} revealing {tawaran tidak diungkapkan tepat waktu, menjadi babi di akhir} discarding {tidak membuang tepat waktu} other {kartu buangan tidak diungkapkan tepat waktu, menjadi babi di akhir}}",
+      "noDiscard": "Sesi tukar {session}: tidak ada kartu yang dibuang",
+      "sold": "Lot {letter}: {name} menang dengan {price, plural, other {# koin}} (tawaran: {bids})",
+      "soldTie": "Lot {letter}: {name} menang dengan {price, plural, other {# koin}}, menawar lebih dulu dari {tied} (tawaran: {bids})",
+      "unsoldBack": "Lot {letter}: tidak ditawar, kembali ke {name}",
+      "unsoldOut": "Lot {letter}: tidak ditawar, keluar dari permainan"
+    },
+    "past": "{first} pertama, {count, plural, other {# babi}}: {pigs}",
+    "pastGames": "Permainan yang dimainkan",
+    "result": {
+      "balance": "{balance, plural, other {# koin}} di akhir",
+      "noHand": "Tanpa kombinasi",
+      "pig": "Babi",
+      "place": "Peringkat {place}"
+    },
+    "seat": {
+      "absent": "Dilewati",
+      "clock": "{seconds} dtk",
+      "coins": "{count, plural, other {# koin}}",
+      "free": "Kursi kosong",
+      "leave": "Tinggalkan kursi",
+      "release": "Kosongkan kursi",
+      "sealed": "Tertutup",
+      "take": "Duduk"
+    },
+    "session": "{session, select, 0 {Sesi pembagian} other {Sesi tukar {session} dari {total}}}",
+    "spectators": "{count, plural, other {# penonton}}",
+    "status": {
+      "away": "Menunggu {names} kembali…",
+      "bid": "Tawar lot {letter} secara tertutup: 0 untuk tidak menawar.",
+      "bidding": "Lot {letter} dilelang: menunggu {names}.",
+      "discard": "Pilih kartu yang dibuang, sesuai urutannya, atau simpan kartu Anda.",
+      "discarding": "Para pemain membuang kartu: menunggu {names}.",
+      "disclosing": "Kartu buangan diungkapkan…",
+      "drawing": "Para pemain mengocok setumpuk kartu: menunggu {names}.",
+      "hurry": "Cepat: waktu Anda hampir habis!",
+      "over": "Permainan selesai.",
+      "revealing": "Tawaran untuk lot {letter} diungkapkan…",
+      "sealed": "Tertutup: menunggu {names}.",
+      "seats": "{count, plural, other {# pemain duduk}}: permainan dimulai dengan paling sedikit {min} pemain.",
+      "start": "Mulai permainan setelah semua pemain duduk.",
+      "waitingStart": "{count, plural, other {# pemain duduk}}: menunggu salah satu dari mereka memulai."
+    }
   }
 }

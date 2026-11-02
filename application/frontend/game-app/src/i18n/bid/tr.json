@@ -48,5 +48,84 @@
       "title": "Süreler"
     },
     "title": "Kurallar"
+  },
+  "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Oyunu başlat"
+    },
+    "bank": "Banka: {coins, plural, one {# jeton} other {# jeton}}",
+    "bid": {
+      "integer": "Tam jetonla teklif verin",
+      "label": "Teklifiniz",
+      "max": "En fazla {max, plural, one {sahip olduğunuz # jeton} other {sahip olduğunuz # jeton}}",
+      "min": "En az {min, plural, one {# jeton} other {# jeton}}",
+      "none": "Teklif yok",
+      "required": "Teklifinizi yazın",
+      "sealed": "{amount, plural, one {# jetonluk} other {# jetonluk}} teklifiniz kapalı olarak verildi",
+      "submit": "Teklif ver"
+    },
+    "clock": "{seconds} sn",
+    "discard": {
+      "keep": "Kartlarımı koru",
+      "submit": "{count, plural, one {# kart at} other {# kart at}}"
+    },
+    "game": "Oyun {number}:",
+    "history": "Oyunun hamleleri",
+    "lot": {
+      "back": "Satılmadı: satıcısına döndü",
+      "bank": "bankadan",
+      "name": "Lot {letter}",
+      "out": "Satılmadı: oyundan çıktı",
+      "seller": "satıcı: {name}",
+      "sold": "{price, plural, one {# jetona} other {# jetona}} alan: {name}"
+    },
+    "move": {
+      "discards": "{session}. değişim turu: {name} {count, plural, one {# kart atıyor} other {# kart atıyor}}, lot {letter}",
+      "illegal": "{names}: {phase, select, revealing {jetonları aşan teklif, teklif yok} other {elde olmayan kart atıldı, atma yok}}",
+      "invalid": "{names}: kapalı hâlinden farklı açıldı, sayılmadı, sonunda domuz",
+      "late": "{names}: {phase, select, bidding {zamanında teklif yok} revealing {teklif zamanında açılmadı, sonunda domuz} discarding {zamanında kart atılmadı} other {atılan kartlar zamanında açılmadı, sonunda domuz}}",
+      "noDiscard": "{session}. değişim turu: hiç kart atılmadı",
+      "sold": "Lot {letter}: {name} {price, plural, one {# jetona} other {# jetona}} kazanıyor (teklifler: {bids})",
+      "soldTie": "Lot {letter}: {name} {price, plural, one {# jetona} other {# jetona}} kazanıyor, {tied} ile eşit ama önce teklif verdi (teklifler: {bids})",
+      "unsoldBack": "Lot {letter}: teklif yok, {name} kullanıcısına döndü",
+      "unsoldOut": "Lot {letter}: teklif yok, oyundan çıktı"
+    },
+    "past": "{first} birinci, {count, plural, one {# domuz} other {# domuz}}: {pigs}",
+    "pastGames": "Oynanan oyunlar",
+    "result": {
+      "balance": "Sonunda {balance, plural, one {# jeton} other {# jeton}}",
+      "noHand": "El yok",
+      "pig": "Domuz",
+      "place": "{place}. sıra"
+    },
+    "seat": {
+      "absent": "Atlandı",
+      "clock": "{seconds} sn",
+      "coins": "{count, plural, one {# jeton} other {# jeton}}",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "release": "Yeri boşalt",
+      "sealed": "Kapalı",
+      "take": "Otur"
+    },
+    "session": "{session, select, 0 {Dağıtım turu} other {Değişim turu {session}/{total}}}",
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "status": {
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "bid": "Lot {letter} için kapalı teklif verin: teklif yoksa 0.",
+      "bidding": "Lot {letter} açık artırmada, beklenenler: {names}.",
+      "discard": "Atılacak kartları sırasıyla seçin ya da kartlarınızı koruyun.",
+      "discarding": "Oyuncular kart atıyor, beklenenler: {names}.",
+      "disclosing": "Atılan kartlar açılıyor…",
+      "drawing": "Oyuncular desteyi karıştırıyor, beklenenler: {names}.",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Oyun bitti.",
+      "revealing": "Lot {letter} teklifleri açılıyor…",
+      "sealed": "Kapalı olarak verildi, beklenenler: {names}.",
+      "seats": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: oyun en az {min} oyuncuyla başlar.",
+      "start": "Her oyuncu oturunca oyunu başlatın.",
+      "waitingStart": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: içlerinden birinin başlatması bekleniyor."
+    }
   }
 }

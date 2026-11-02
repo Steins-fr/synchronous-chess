@@ -48,5 +48,84 @@
       "title": "The times"
     },
     "title": "Rules"
+  },
+  "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the game"
+    },
+    "bank": "Bank: {coins, plural, one {# coin} other {# coins}}",
+    "bid": {
+      "integer": "Bid whole coins",
+      "label": "Your bid",
+      "max": "At most your {max, plural, one {# coin} other {# coins}}",
+      "min": "{min, plural, one {# coin} other {# coins}} at least",
+      "none": "No bid",
+      "required": "Type your bid",
+      "sealed": "Your bid of {amount, plural, one {# coin} other {# coins}} is sealed",
+      "submit": "Bid"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Keep my cards",
+      "submit": "Discard {count, plural, one {# card} other {# cards}}"
+    },
+    "game": "Game {number}:",
+    "history": "Moves of the game",
+    "lot": {
+      "back": "Unsold: back to its seller",
+      "bank": "from the bank",
+      "name": "Lot {letter}",
+      "out": "Unsold: out of the game",
+      "seller": "from {name}",
+      "sold": "To {name} for {price, plural, one {# coin} other {# coins}}"
+    },
+    "move": {
+      "discards": "Change session {session}: {name} discards {count, plural, one {# card} other {# cards}}, lot {letter}",
+      "illegal": "{names}: {phase, select, revealing {a bid above the coins, no bid} other {a discard of a card not held, no discard}}",
+      "invalid": "{names}: revealed otherwise than sealed, no value, a pig at the end",
+      "late": "{names}: {phase, select, bidding {no bid in time} revealing {bid not revealed in time, a pig at the end} discarding {no discard in time} other {discards not revealed in time, a pig at the end}}",
+      "noDiscard": "Change session {session}: no card discarded",
+      "sold": "Lot {letter}: {name} wins for {price, plural, one {# coin} other {# coins}} (bids: {bids})",
+      "soldTie": "Lot {letter}: {name} wins for {price, plural, one {# coin} other {# coins}}, bid before {tied} (bids: {bids})",
+      "unsoldBack": "Lot {letter}: no bid, back to {name}",
+      "unsoldOut": "Lot {letter}: no bid, out of the game"
+    },
+    "past": "{first} first, {count, plural, one {# pig} other {# pigs}}: {pigs}",
+    "pastGames": "Games played",
+    "result": {
+      "balance": "{balance, plural, one {# coin} other {# coins}} at the end",
+      "noHand": "No hand",
+      "pig": "Pig",
+      "place": "Place {place}"
+    },
+    "seat": {
+      "absent": "Skipped",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# coin} other {# coins}}",
+      "free": "Free seat",
+      "leave": "Leave",
+      "release": "Free the seat",
+      "sealed": "Sealed",
+      "take": "Sit here"
+    },
+    "session": "{session, select, 0 {Dealing session} other {Change session {session} of {total}}}",
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "status": {
+      "away": "Waiting for {names} to come back…",
+      "bid": "Bid on lot {letter}, sealed: 0 for no bid.",
+      "bidding": "Lot {letter} on auction: waiting for {names}.",
+      "discard": "Pick the cards to discard, in their order, or keep yours.",
+      "discarding": "The players discard: waiting for {names}.",
+      "disclosing": "The discards are revealed…",
+      "drawing": "The players shuffle the deck: waiting for {names}.",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The game is over.",
+      "revealing": "The bids on lot {letter} are revealed…",
+      "sealed": "Sealed: waiting for {names}.",
+      "seats": "{count, plural, one {# player seated} other {# players seated}}: the game starts with {min} at least.",
+      "start": "Start the game once every player is seated.",
+      "waitingStart": "{count, plural, one {# player seated} other {# players seated}}: waiting for one of them to start."
+    }
   }
 }

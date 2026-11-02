@@ -48,5 +48,84 @@
       "title": "Czas"
     },
     "title": "Zasady"
+  },
+  "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "bank": "Bank: {coins, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
+    "bid": {
+      "integer": "Licytuj w całych monetach",
+      "label": "Twoja oferta",
+      "max": "Masz tylko {max, plural, one {# monetę} few {# monety} many {# monet} other {# monety}}",
+      "min": "Co najmniej {min, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
+      "none": "Brak oferty",
+      "required": "Wpisz swoją ofertę",
+      "sealed": "Twoja oferta jest zapieczętowana: {amount, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
+      "submit": "Licytuj"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Zostaw karty",
+      "submit": "{count, plural, one {Odrzuć # kartę} few {Odrzuć # karty} many {Odrzuć # kart} other {Odrzuć # karty}}"
+    },
+    "game": "Partia {number}:",
+    "history": "Ruchy partii",
+    "lot": {
+      "back": "Niesprzedany: wraca do sprzedawcy",
+      "bank": "z banku",
+      "name": "Pakiet {letter}",
+      "out": "Niesprzedany: odpada z gry",
+      "seller": "sprzedaje {name}",
+      "sold": "{name} kupuje za {price, plural, one {# monetę} few {# monety} many {# monet} other {# monety}}"
+    },
+    "move": {
+      "discards": "Runda wymiany {session}: {name} odrzuca {count, plural, one {# kartę} few {# karty} many {# kart} other {# karty}}, pakiet {letter}",
+      "illegal": "{names}: {phase, select, revealing {oferta wyższa niż posiadane monety, brak oferty} other {odrzucona karta, której gracz nie ma, nic nie odrzucono}}",
+      "invalid": "{names}: ujawnione inaczej niż zapieczętowane, nie liczy się, świnia na koniec",
+      "late": "{names}: {phase, select, bidding {brak oferty na czas} revealing {oferta nieujawniona na czas, świnia na koniec} discarding {nic nie odrzucono na czas} other {odrzucone karty nieujawnione na czas, świnia na koniec}}",
+      "noDiscard": "Runda wymiany {session}: nie odrzucono żadnej karty",
+      "sold": "Pakiet {letter}: {name} wygrywa za {price, plural, one {# monetę} few {# monety} many {# monet} other {# monety}} (oferty: {bids})",
+      "soldTie": "Pakiet {letter}: {name} wygrywa za {price, plural, one {# monetę} few {# monety} many {# monet} other {# monety}}, oferta wcześniejsza niż {tied} (oferty: {bids})",
+      "unsoldBack": "Pakiet {letter}: brak ofert, wraca do gracza {name}",
+      "unsoldOut": "Pakiet {letter}: brak ofert, odpada z gry"
+    },
+    "past": "1. miejsce: {first}, {count, plural, one {# świnia} few {# świnie} many {# świń} other {# świni}}: {pigs}",
+    "pastGames": "Rozegrane partie",
+    "result": {
+      "balance": "Na koniec: {balance, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
+      "noHand": "Brak układu",
+      "pig": "Świnia",
+      "place": "Miejsce {place}"
+    },
+    "seat": {
+      "absent": "Pominięty",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "release": "Usuń z miejsca",
+      "sealed": "Zapieczętowano",
+      "take": "Usiądź"
+    },
+    "session": "{session, select, 0 {Runda rozdania} other {Runda wymiany {session} z {total}}}",
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "bid": "Licytuj pakiet {letter}, w tajemnicy: 0 to brak oferty.",
+      "bidding": "Pakiet {letter} na licytacji: czekamy na {names}.",
+      "discard": "Wybierz karty do odrzucenia, w ich kolejności, albo zostaw swoje.",
+      "discarding": "Gracze odrzucają karty: czekamy na {names}.",
+      "disclosing": "Odrzucone karty są ujawniane…",
+      "drawing": "Gracze tasują talię: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "revealing": "Oferty na pakiet {letter} są ujawniane…",
+      "sealed": "Zapieczętowano: czekamy na {names}.",
+      "seats": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: partia wymaga co najmniej {min} graczy.",
+      "start": "Rozpocznij partię, gdy wszyscy gracze usiądą.",
+      "waitingStart": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: czekamy, aż jeden z nich rozpocznie partię."
+    }
   }
 }

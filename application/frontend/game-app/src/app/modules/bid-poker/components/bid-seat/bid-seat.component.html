@@ -1,0 +1,37 @@
+<ng-container *transloco="let t; prefix: 'bid.table.seat'">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span class="font-medium">{{ name() ?? t('free') }}</span>
+        @if (coins(); as count) {
+        <app-chip-stack [amount]="count" />
+        }
+        @if (coins() !== null) {
+        <span class="muted-note text-sm">{{ t('coins', { count: coins() }) }}</span>
+        }
+        @if (sealed()) {
+        <span class="badge badge-draw">{{ t('sealed') }}</span>
+        }
+        @if (absent()) {
+        <span class="badge badge-draw">{{ t('absent') }}</span>
+        }
+        @if (standing(); as text) {
+        <span class="badge badge-win">{{ text.key | transloco: text.params }}</span>
+        }
+        @let left = timeLeft();
+        @if (left !== null) {
+        <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="left <= clockLow">{{ t('clock', { seconds: left }) }}</span>
+        }
+        @if (canTake()) {
+        <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>
+        }
+        @if (canLeave()) {
+        <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+        }
+        @if (canRelease()) {
+        <button class="ml-auto" mat-stroked-button type="button" (click)="release.emit()">{{ t('release') }}</button>
+        }
+    </div>
+    @if (cards().length > 0) {
+    <app-card-hand [cards]="cards()" [selectable]="selectable()" [selected]="selected()" (selectedChange)="selected.set($event)"
+        [highlighted]="highlighted()" />
+    }
+</ng-container>

@@ -83,6 +83,8 @@ export class BidPokerSession {
         open: (): boolean => this.seatsOpen(),
         sending: this.sending,
     });
+    /** The seated players not connected: the seats are the players of the game while it is played */
+    public readonly awayPlayers: Signal<ReadonlyArray<string>> = this.tableSeats.awayPlayers;
     /** The players of the game, the seated ones in the order of their seats until it starts */
     public readonly players: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => this.started()
         ? this._played().players()
