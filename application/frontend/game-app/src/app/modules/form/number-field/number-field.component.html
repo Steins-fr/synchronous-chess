@@ -1,0 +1,8 @@
+<mat-form-field appearance="outline" class="w-full">
+    <mat-label>{{ label() }}</mat-label>
+    <input [formField]="field()" type="number" inputmode="numeric" autocomplete="off" matInput />
+    <!-- Shown by Material once the field is touched and invalid: the message given by the rule of the schema -->
+    @if (error(); as error) {
+    <mat-error>{{ error.key | transloco: error.params }}</mat-error>
+    }
+</mat-form-field>
