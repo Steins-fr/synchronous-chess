@@ -1,7 +1,8 @@
 {
+  "category": "{category, select, fiveOfAKind {Five of a kind} royalFlush {Royal flush} straightFlush {Straight flush} fourOfAKind {Four of a kind} fullHouse {Full house} flush {Flush} straight {Straight} threeOfAKind {Three of a kind} twoPair {Two pair} onePair {One pair} other {High card}}",
   "deck": "{count, plural, one {Deck of # card} other {Deck of # cards}}",
   "hidden": "Face-down card",
-  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "index": "{rank, select, ace {A} king {K} queen {Q} jack {J} ten {10} nine {9} eight {8} seven {7} six {6} five {5} four {4} three {3} other {2}}",
   "joker": "Joker",
-  "name": "{rank, select, ace {Ace} king {King} queen {Queen} other {Jack}} of {suit, select, spades {spades} hearts {hearts} diamonds {diamonds} other {clubs}}"
+  "name": "{rank, select, ace {Ace} king {King} queen {Queen} jack {Jack} ten {Ten} nine {Nine} eight {Eight} seven {Seven} six {Six} five {Five} four {Four} three {Three} other {Two}} of {suit, select, spades {spades} hearts {hearts} diamonds {diamonds} other {clubs}}"
 }

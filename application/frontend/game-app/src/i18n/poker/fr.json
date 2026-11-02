@@ -68,7 +68,6 @@
       "rematch": "Rejouer"
     },
     "bet": "Mise {amount}",
-    "category": "{category, select, fiveOfAKind {Cinq identiques} royalFlush {Quinte flush royale} fourOfAKind {Carré} fullHouse {Full} straight {Quinte} threeOfAKind {Brelan} twoPair {Double paire} other {Paire}}",
     "hand": "Main {index} sur {hands}",
     "history": "Mains jouées",
     "match": "Partie {number} :",

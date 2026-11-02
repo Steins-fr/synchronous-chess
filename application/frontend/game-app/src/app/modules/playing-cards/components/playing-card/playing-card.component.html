@@ -10,13 +10,19 @@
         @if (card() !== null) {
         <g [class]="red() ? 'fill-app-card-red stroke-app-card-red' : 'fill-app-card-ink stroke-app-card-ink'">
             @if (suited(); as suitedCard) {
-            <text x="11" y="23" font-size="19" font-weight="700" text-anchor="middle" stroke="none">{{ t('index', { rank: suitedCard.rank }) }}</text>
+            <text x="11" y="23" font-size="19" font-weight="700" text-anchor="middle" stroke="none"
+                [attr.textLength]="suitedCard.rank === ten ? 16 : null" [attr.lengthAdjust]="suitedCard.rank === ten ? 'spacingAndGlyphs' : null">{{ t('index', { rank: suitedCard.rank }) }}</text>
             <path transform="translate(5 28) scale(0.12)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
             <g transform="rotate(180 50 70)">
-                <text x="11" y="23" font-size="19" font-weight="700" text-anchor="middle" stroke="none">{{ t('index', { rank: suitedCard.rank }) }}</text>
+                <text x="11" y="23" font-size="19" font-weight="700" text-anchor="middle" stroke="none"
+                    [attr.textLength]="suitedCard.rank === ten ? 16 : null" [attr.lengthAdjust]="suitedCard.rank === ten ? 'spacingAndGlyphs' : null">{{ t('index', { rank: suitedCard.rank }) }}</text>
                 <path transform="translate(5 28) scale(0.12)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
             </g>
-            @if (suitedCard.rank === ace) {
+            @if (pips().length > 0) {
+            @for (pipTransform of pips(); track $index) {
+            <path stroke="none" [attr.transform]="pipTransform" [attr.d]="suitPaths[suitedCard.suit]" />
+            }
+            } @else if (suitedCard.rank === ace) {
             <path transform="translate(28 48) scale(0.44)" stroke="none" [attr.d]="suitPaths[suitedCard.suit]" />
             } @else {
             <rect x="24" y="28" width="52" height="84" rx="4" fill="none" stroke-width="1.5" />

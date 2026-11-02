@@ -1,4 +1,4 @@
-import { Component, input, linkedSignal, model, WritableSignal } from '@angular/core';
+import { Component, computed, input, linkedSignal, model, Signal, WritableSignal } from '@angular/core';
 import { PlayingCardComponent } from '@app/modules/playing-cards/components/playing-card/playing-card.component';
 import { PlayingCard } from '@app/modules/playing-cards/types/playing-card';
 
@@ -12,8 +12,11 @@ export interface HandCard {
     readonly card: PlayingCard | null;
 }
 
+/** The place of the outer card of a fan from its middle, at most: a larger hand turns and drops less for each card */
+const MAX_FAN_OFFSET: number = 2;
+
 /**
- * The cards of a hand, in a fan. The cards entering the hand are dealt one after the other, in the order of the hand; a
+ * The cards of a hand, in a fan, held within the width of the hand: the cards of a large hand overlap more. The cards entering the hand are dealt one after the other, in the order of the hand; a
  * card leaving it is thrown away. Selectable, each card is a button toggling its selection, lifted out of the fan: the
  * page clears the selection it acted on.
  */
@@ -22,7 +25,7 @@ export interface HandCard {
     templateUrl: './card-hand.component.html',
     styleUrl: './card-hand.component.scss',
     imports: [PlayingCardComponent],
-    host: { class: 'block' },
+    host: { class: 'block w-full @container' },
 })
 export class CardHandComponent {
     public readonly cards = input.required<ReadonlyArray<Readonly<HandCard>>>();
@@ -42,6 +45,11 @@ export class CardHandComponent {
             return new Map<string, number>(entering.map((card: Readonly<HandCard>, order: number): [string, number] => [card.id, order]));
         },
     });
+
+    /** How much each card turns and drops: as a hand of 5 cards, a larger hand turning no more */
+    protected readonly fanScale: Signal<number> = computed((): number => Math.min(1, MAX_FAN_OFFSET / Math.max(1, (this.cards().length - 1) / 2)));
+    /** The gaps between the cards, which share the width of the hand */
+    protected readonly fanGaps: Signal<number> = computed((): number => Math.max(1, this.cards().length - 1));
 
     /** The place of a card from the middle of the fan, negative on its left */
     protected fanOffset(index: number): number {

@@ -30,7 +30,7 @@ import { handOutcomeText } from '../../helpers/hand-outcome-text.helper';
 import { ChipPlace, ChipPlaceKind, chipTransfers, ChipTransfer, TableChips } from '../../helpers/chip-transfers.helper';
 import { HAND_ENDING, HeardTable, tableSounds, TimedSound } from '../../helpers/table-sound.helper';
 import { BetAction, BetLimits } from '../../classes/rules/betting-round';
-import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
+import { HAND_SIZE, HandValue } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand, PokerMatch } from '../../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../../classes/rules/poker-seat';
 import { PokerSeatComponent } from '../poker-seat/poker-seat.component';
@@ -237,7 +237,7 @@ export class PokerTableComponent implements OnDestroy {
     /** The kind of hand of each seat, once shown */
     protected readonly categories: Signal<SeatPair<TranslatableText | null>> = computed((): SeatPair<TranslatableText | null> => {
         const hands: SeatPair<HandValue> | null | undefined = this.outcome()?.hands;
-        const of = (seat: PokerSeat): TranslatableText | null => hands && this.matchSeats()[seat] ? { key: this.key(marker('table.category', undefined, 'poker')), params: { category: hands[seat].category } } : null;
+        const of = (seat: PokerSeat): TranslatableText | null => hands && this.matchSeats()[seat] ? { key: scopedKey(TranslationScope.CARDS, marker('category', undefined, 'cards')), params: { category: hands[seat].category } } : null;
         return [of(PokerSeat.ONE), of(PokerSeat.TWO)];
     });
 

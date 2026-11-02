@@ -1,6 +1,6 @@
 import { cards } from '@testing/playing-cards.helper';
 import { BetAction } from './betting-round';
-import { HandCategory } from './hand-evaluator';
+import { HandCategory } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { DRAW_PILE, HandEnd, HandPhase, PokerHand, PokerMatch, PokerMatchRules, SEVENTEEN_POKER_RULES } from './poker-match';
 import { otherSeat, PokerSeat } from './poker-seat';
 import { describe, expect, test } from 'vitest';

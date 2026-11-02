@@ -16,6 +16,38 @@ const SUIT_PATHS: Readonly<Record<CardSuit, string>> = {
 
 const RED_SUITS: ReadonlySet<CardSuit> = new Set<CardSuit>([CardSuit.HEARTS, CardSuit.DIAMONDS]);
 
+/** The ranks drawn with their pips, the ace and the faces aside */
+type NumberRank = Exclude<CardRank, CardRank.JACK | CardRank.QUEEN | CardRank.KING | CardRank.ACE>;
+
+/** The middle of the card: the pips below it are drawn upside down */
+const MIDDLE: number = 70;
+
+/** A pip of 16 by 16 centered on a point of the card, upside down in the lower half */
+function pip(x: number, y: number): string {
+    const placed: string = `translate(${ x - 8 } ${ y - 8 }) scale(0.16)`;
+    return y > MIDDLE ? `rotate(180 ${ x } ${ y }) ${ placed }` : placed;
+}
+
+/** The pips of the four corners, then the pips of the sides of the nine and the ten */
+const CORNERS: ReadonlyArray<string> = [pip(32, 24), pip(68, 24), pip(32, 116), pip(68, 116)];
+const SIDES: ReadonlyArray<string> = [...CORNERS, pip(32, 55), pip(68, 55), pip(32, 85), pip(68, 85)];
+const SIX: ReadonlyArray<string> = [...CORNERS, pip(32, MIDDLE), pip(68, MIDDLE)];
+
+/** The pips of each number card, the classic layouts in three columns */
+const PIP_LAYOUTS: Readonly<Record<NumberRank, ReadonlyArray<string>>> = {
+    [CardRank.TWO]: [pip(50, 24), pip(50, 116)],
+    [CardRank.THREE]: [pip(50, 24), pip(50, MIDDLE), pip(50, 116)],
+    [CardRank.FOUR]: CORNERS,
+    [CardRank.FIVE]: [...CORNERS, pip(50, MIDDLE)],
+    [CardRank.SIX]: SIX,
+    [CardRank.SEVEN]: [...SIX, pip(50, 47)],
+    [CardRank.EIGHT]: [...SIX, pip(50, 47), pip(50, 93)],
+    [CardRank.NINE]: [...SIDES, pip(50, MIDDLE)],
+    [CardRank.TEN]: [...SIDES, pip(50, 40), pip(50, 100)],
+};
+
+const isNumberRank = (rank: CardRank): rank is NumberRank => rank in PIP_LAYOUTS;
+
 /** A star of 5 branches, the mark of the joker, in a box of 100 by 100 */
 const JOKER_STAR: string = `M${ Array.from({ length: 10 }, (_: unknown, point: number): string => {
     const radius: number = point % 2 === 0 ? 50 : 21;
@@ -47,6 +79,8 @@ export class PlayingCardComponent {
     public readonly highlighted = input<boolean>(false);
 
     protected readonly ace: CardRank = CardRank.ACE;
+    /** Its index of two digits is narrowed to the corner */
+    protected readonly ten: CardRank = CardRank.TEN;
     protected readonly suitPaths: Readonly<Record<CardSuit, string>> = SUIT_PATHS;
     protected readonly jokerStar: string = JOKER_STAR;
     protected readonly backPattern: string = BACK_PATTERN;
@@ -67,6 +101,12 @@ export class PlayingCardComponent {
         return card === JOKER
             ? { key: scopedKey(TranslationScope.CARDS, marker('joker', undefined, 'cards')) }
             : { key: scopedKey(TranslationScope.CARDS, marker('name', undefined, 'cards')), params: { rank: card.rank, suit: card.suit } };
+    });
+
+    /** The pips of a number card, none for the ace and the faces */
+    protected readonly pips: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
+        const suited: SuitedCard | null = this.suited();
+        return suited !== null && isNumberRank(suited.rank) ? PIP_LAYOUTS[suited.rank] : [];
     });
 
     protected readonly red: Signal<boolean> = computed((): boolean => {

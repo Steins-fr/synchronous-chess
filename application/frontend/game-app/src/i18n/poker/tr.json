@@ -68,7 +68,6 @@
       "rematch": "Tekrar oyna"
     },
     "bet": "Bahis {amount}",
-    "category": "{category, select, fiveOfAKind {Beşli} royalFlush {Royal floş} fourOfAKind {Kare} fullHouse {Full} straight {Kent} threeOfAKind {Üçlü} twoPair {Döper} other {Per}}",
     "hand": "El {index}/{hands}",
     "history": "Oynanan eller",
     "match": "Maç {number}:",

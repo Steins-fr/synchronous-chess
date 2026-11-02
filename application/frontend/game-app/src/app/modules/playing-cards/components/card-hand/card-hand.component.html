@@ -1,6 +1,6 @@
-<ul class="flex justify-center m-0 pt-4 pb-8 px-0 list-none">
+<ul class="flex justify-center m-0 pt-4 pb-8 px-0 list-none" [style.--fan-scale]="fanScale()" [style.--fan-gaps]="fanGaps()">
     @for (handCard of cards(); track handCard.id) {
-    <li class="hand-card not-first:-ml-[calc(var(--app-card-width)*0.4)]"
+    <li class="hand-card"
         animate.enter="card-dealt"
         animate.leave="card-discarded"
         [class.selected]="selectable() && selected().includes(handCard.id)"

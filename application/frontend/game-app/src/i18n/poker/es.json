@@ -68,7 +68,6 @@
       "rematch": "Jugar otra vez"
     },
     "bet": "Apuesta {amount}",
-    "category": "{category, select, fiveOfAKind {Repóker} royalFlush {Escalera real} fourOfAKind {Póker} fullHouse {Full} straight {Escalera} threeOfAKind {Trío} twoPair {Doble pareja} other {Pareja}}",
     "hand": "Mano {index} de {hands}",
     "history": "Manos jugadas",
     "match": "Partida {number}:",

@@ -1,5 +1,14 @@
-/** The ranks of the cards the games use, from the lowest */
+/** The ranks of the cards, from the lowest: the order of the values is the order of the ranks */
 export enum CardRank {
+    TWO = 'two',
+    THREE = 'three',
+    FOUR = 'four',
+    FIVE = 'five',
+    SIX = 'six',
+    SEVEN = 'seven',
+    EIGHT = 'eight',
+    NINE = 'nine',
+    TEN = 'ten',
     JACK = 'jack',
     QUEEN = 'queen',
     KING = 'king',
@@ -23,3 +32,7 @@ export interface SuitedCard {
 
 /** A card of a deck: a rank of a suit, or the joker */
 export type PlayingCard = SuitedCard | Joker;
+
+/** The 52 cards, each rank of each suit, from the two of spades */
+export const FULL_DECK: ReadonlyArray<Readonly<SuitedCard>> = Object.values(CardSuit)
+    .flatMap((suit: CardSuit): SuitedCard[] => Object.values(CardRank).map((rank: CardRank): SuitedCard => ({ rank, suit })));

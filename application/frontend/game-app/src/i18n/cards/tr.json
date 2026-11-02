@@ -1,7 +1,8 @@
 {
+  "category": "{category, select, fiveOfAKind {Beşli} royalFlush {Royal floş} straightFlush {Sıralı floş} fourOfAKind {Kare} fullHouse {Full} flush {Floş} straight {Kent} threeOfAKind {Üçlü} twoPair {Döper} onePair {Per} other {Yüksek kart}}",
   "deck": "{count, plural, one {# kartlık deste} other {# kartlık deste}}",
   "hidden": "Kapalı kart",
-  "index": "{rank, select, ace {A} king {K} queen {Q} other {J}}",
+  "index": "{rank, select, ace {A} king {K} queen {Q} jack {J} ten {10} nine {9} eight {8} seven {7} six {6} five {5} four {4} three {3} other {2}}",
   "joker": "Joker",
-  "name": "{suit, select, spades {Maça} hearts {Kupa} diamonds {Karo} other {Sinek}} {rank, select, ace {ası} king {papazı} queen {kızı} other {valesi}}"
+  "name": "{suit, select, spades {Maça} hearts {Kupa} diamonds {Karo} other {Sinek}} {rank, select, ace {ası} king {papazı} queen {kızı} jack {valesi} ten {onlusu} nine {dokuzlusu} eight {sekizlisi} seven {yedilisi} six {altılısı} five {beşlisi} four {dörtlüsü} three {üçlüsü} other {ikilisi}}"
 }

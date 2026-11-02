@@ -68,7 +68,6 @@
       "rematch": "Сыграть ещё"
     },
     "bet": "Ставка {amount}",
-    "category": "{category, select, fiveOfAKind {Покер} royalFlush {Роял-флеш} fourOfAKind {Каре} fullHouse {Фулл-хаус} straight {Стрит} threeOfAKind {Сет} twoPair {Две пары} other {Пара}}",
     "hand": "Раздача {index} из {hands}",
     "history": "Сыгранные раздачи",
     "match": "Партия {number}:",

@@ -2,7 +2,7 @@ import { TranslationScope } from '@app/services/language/enums/translation-scope
 import { scopedKey } from '@app/services/language/scoped-key';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
-import { HandValue } from '../classes/rules/hand-evaluator';
+import { HandValue } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { HandEnd, HandOutcome } from '../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../classes/rules/poker-seat';
 
