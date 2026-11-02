@@ -41,7 +41,9 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |
 
 The cards and the chips themselves (`PlayingCardComponent`, `CardHandComponent`, `CardDeckComponent`,
-`ChipStackComponent`) live in `modules/playing-cards`, shared with the card games to come.
+`ChipStackComponent`) live in `modules/playing-cards`, shared with the card games, with the 52 cards, the names of the
+kinds of hands (the `cards` scope, `cards.category`) and the hand evaluator: the Seventeen Poker deals the jacks to the
+aces only, and its hands never are a flush, a straight flush nor a high card.
 
 ## Rules
 
