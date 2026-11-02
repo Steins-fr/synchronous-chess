@@ -263,7 +263,6 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
             const types: string[] = hub.types();
             expect(types.indexOf(BPGameSessionType.REVEAL)).toBeGreaterThan(types.lastIndexOf(BPGameSessionType.COMMIT));
             expect(gameOf('eve').coins()).toEqual([300, 270, 300, 300]);
-            expect(of('eve').liveEvents()).toEqual(1);
             expect(hub.reports).toEqual([]);
             expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:bob')).toEqual('{}');
         });
@@ -536,7 +535,7 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
         await eventually(() => expect(reloaded.myBid()).toEqual(42));
 
         // Then
-        expect([reloaded.canBid(), reloaded.catalogues(), reloaded.liveEvents()]).toEqual([false, 0, 0]);
+        expect([reloaded.canBid(), reloaded.catalogues()]).toEqual([false, 0]);
 
         // When
         await auction([0, undefined, 0, 0]);

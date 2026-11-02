@@ -296,7 +296,7 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
         expect(text('#standings')).toContain('No hand');
         expect(text('#standings')).toContain('Pig');
         expect(text('#standings')).toContain('Place 1');
-        expect(text('#seat-1')).toMatch(/Place [12]/);
+        expect(text('#seat-1 .badge-win')).toMatch(/Place [12]/);
         expect(element().querySelectorAll('#seat-1 app-playing-card .outline-3')).toHaveLength(5);
         expect(play).toHaveBeenCalledWith(SoundEffect.GAME_LOST);
 

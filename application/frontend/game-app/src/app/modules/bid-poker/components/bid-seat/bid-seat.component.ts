@@ -38,6 +38,8 @@ export class BidSeatComponent {
     public readonly timeLeft = input<number | null>(null);
     /** The end of the game for its player */
     public readonly standing = input<TranslatableText | null>(null);
+    /** Its player won a prize: the standing of the others shows in the neutral colors */
+    public readonly winning = input<boolean>(false);
     public readonly canTake = input<boolean>(false);
     public readonly canLeave = input<boolean>(false);
     public readonly canRelease = input<boolean>(false);

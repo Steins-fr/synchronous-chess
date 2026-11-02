@@ -49,6 +49,8 @@ interface SeatView {
     readonly sealed: boolean;
     readonly absent: boolean;
     readonly standing: TranslatableText | null;
+    /** Its player won a prize */
+    readonly winning: boolean;
     /** The 5 cards of its hand, once the game is over */
     readonly highlighted: ReadonlyArray<string>;
 }
@@ -151,13 +153,13 @@ export class BidTableComponent implements OnDestroy {
     });
     /** A player the game waits for is away: it gets more time, once */
     private readonly waitingAway: Signal<boolean> = computed((): boolean => this.awaitedAway().length > 0);
-    /** The round and the step the clock runs for, from its start: a late tick of a phase closed acts on nothing */
-    private clocked: Readonly<{ round: string; step: number }> | null = null;
+    /** The round the clock runs for, from its start: a late tick of a phase closed acts on nothing */
+    private clocked: string | null = null;
     /** The seconds left to the players the phase waits for */
     protected readonly timeLeft: Signal<number | null> = turnClock({
         running: () => this.clockKey() !== null,
         times: () => {
-            this.clocked = { round: this.roundKey(), step: this.session().step() };
+            this.clocked = this.roundKey();
             return {
                 turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
                 awayTime: this.session().rules.awayTime,
@@ -235,7 +237,7 @@ export class BidTableComponent implements OnDestroy {
 
     /** The result of each game over before the one in progress, by its number in the room, the latest first */
     public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: PlayedBidGame, index: number): PastResult => {
+        this.session().pastGames().map((played: Readonly<PlayedBidGame>, index: number): PastResult => {
             const result: BidPokerResult = played.result() as BidPokerResult;
             const names = (standings: ReadonlyArray<Readonly<Standing>>): string => standings.map((standing: Readonly<Standing>) => played.players()[standing.player]).join(', ');
             const first: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.place === 1));
@@ -333,8 +335,8 @@ export class BidTableComponent implements OnDestroy {
     private timeOut(): void {
         const session: BidPokerSession = this.session();
 
-        if (this.clocked?.round === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
-            session.claimTimeout(this.clocked.step);
+        if (this.clocked === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
+            session.claimTimeout();
         }
     }
 
@@ -355,6 +357,7 @@ export class BidTableComponent implements OnDestroy {
             sealed: playing !== null && (game as BidPokerGame).committed().includes(playing) && (game as BidPokerGame).awaited().length > 0,
             absent: playing !== null && (game as BidPokerGame).absent().includes(playing),
             standing: standing === undefined ? null : this.placeText(standing),
+            winning: (standing?.prize ?? 0) > 0,
             highlighted: standing?.best?.cards.map((card: Readonly<SuitedCard>) => `${ CARD_ID }${ session.rules.deck.indexOf(card) }`) ?? [],
         };
     }

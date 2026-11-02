@@ -49,11 +49,22 @@ describe('BidSeatComponent', () => {
         expect(text()).toContain('290 coins');
         expect(text()).toContain('Sealed');
         expect(text()).toContain('Skipped');
-        expect(text()).toContain('Pig');
+        const pig: Element | undefined = Array.from(host().querySelectorAll('.badge')).find((badge: Element) => badge.textContent?.trim() === 'Pig');
+        expect(pig?.classList).toContain('badge-draw');
+        expect(host().querySelector('.badge-win')).toBeNull();
         expect(host().querySelector('.tabular-nums')?.classList).toContain('text-app-clock-low');
         expect(host().classList).toContain('outline-2');
         expect(host().querySelectorAll('app-playing-card')).toHaveLength(1);
         expect(host().querySelector('app-chip-stack')).not.toBeNull();
+    });
+
+    test('should show the standing of a player winning a prize as a win', async () => {
+        // When
+        await show({ name: 'bob', coins: 340, standing: { key: 'bid.table.result.place', params: { place: 1 } }, winning: true });
+
+        // Then
+        expect(host().querySelector('.badge-win')?.textContent?.trim()).toEqual('Place 1');
+        expect(host().querySelector('.badge-draw')).toBeNull();
     });
 
     test('should show no chips for a player without coins', async () => {

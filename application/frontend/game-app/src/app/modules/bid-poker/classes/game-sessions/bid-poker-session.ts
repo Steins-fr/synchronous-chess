@@ -61,9 +61,9 @@ export class BidPokerSession {
     private readonly _played = signal<PlayedBidGame>(new PlayedBidGame(0, 0));
     /** The game in progress, else the latest */
     public readonly played: Signal<PlayedBidGame> = this._played.asReadonly();
-    private readonly _pastGames = signal<ReadonlyArray<PlayedBidGame>>([]);
+    private readonly _pastGames = signal<ReadonlyArray<Readonly<PlayedBidGame>>>([]);
     /** The games over before the one in progress, the first one first */
-    public readonly pastGames: Signal<ReadonlyArray<PlayedBidGame>> = this._pastGames.asReadonly();
+    public readonly pastGames: Signal<ReadonlyArray<Readonly<PlayedBidGame>>> = this._pastGames.asReadonly();
     /** The game, once its deck is drawn */
     public readonly game: Signal<BidPokerGame | null> = computed((): BidPokerGame | null => this._played().game());
 
@@ -150,9 +150,6 @@ export class BidPokerSession {
     private readonly _catalogues = signal<number>(0);
     /** The catalogues drawn live, out of the history of the room: each one is heard */
     public readonly catalogues: Signal<number> = this._catalogues.asReadonly();
-    private readonly _liveEvents = signal<number>(0);
-    /** The events of the game told live: the table hears the latest ones */
-    public readonly liveEvents: Signal<number> = this._liveEvents.asReadonly();
     // The session applied a live message: it caught up with the history of the room
     private live: boolean = false;
     private readonly _caughtUp = new Subject<void>();
@@ -183,13 +180,9 @@ export class BidPokerSession {
                         this._caughtUp.next();
                     }
                     const step: string = this.stepKey();
-                    const events: number = this.game()?.events().length ?? 0;
                     await logHandlingFailure(message, this.apply(message));
                     if (this.stepKey() !== step) {
                         this.openedAt = room.sequencedAt(message) ?? 0;
-                    }
-                    if (!history) {
-                        this._liveEvents.update((count: number) => count + Math.max(0, (this.game()?.events().length ?? 0) - events));
                     }
                     // Once the messages received are applied, as a reloaded page catching up: the page acts on the chain
                     if (--this.pending === 0) {
@@ -244,13 +237,12 @@ export class BidPokerSession {
     }
 
     /**
-     * The time of the phase is over: the players it waits for act with no bid or no discard
-     *
-     * @param step the step of the phase whose time is over: a claim of a phase closed meanwhile is void
+     * The time of the phase is over: the players it waits for act with no bid or no discard. The claim names the step of
+     * the phase: a claim of a phase closed meanwhile is void
      */
-    public claimTimeout(step: number = this.step()): void {
+    public claimTimeout(): void {
         this._sending.set(true);
-        this.room.transmitMessage(BPGameSessionType.TIMEOUT, { ...this.round(), step });
+        this.room.transmitMessage(BPGameSessionType.TIMEOUT, { ...this.round(), step: this.step() });
     }
 
     /** A player of the game over starts a new one */
@@ -522,7 +514,7 @@ export class BidPokerSession {
             return;
         }
 
-        this._pastGames.update((games: ReadonlyArray<PlayedBidGame>) => [...games, this._played()]);
+        this._pastGames.update((games: ReadonlyArray<Readonly<PlayedBidGame>>) => [...games, this._played()]);
         this._played.set(new PlayedBidGame(game, 0));
         this.commitments = new SealedCommitments<string>();
         this._seals.set(new Map());

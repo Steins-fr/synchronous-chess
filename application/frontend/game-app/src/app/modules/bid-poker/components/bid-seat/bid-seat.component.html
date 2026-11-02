@@ -14,7 +14,7 @@
         <span class="badge badge-draw">{{ t('absent') }}</span>
         }
         @if (standing(); as text) {
-        <span class="badge badge-win">{{ text.key | transloco: text.params }}</span>
+        <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">{{ text.key | transloco: text.params }}</span>
         }
         @let left = timeLeft();
         @if (left !== null) {
