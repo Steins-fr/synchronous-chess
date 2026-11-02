@@ -18,8 +18,8 @@ function committed(): FairDraw {
 }
 
 describe('FairDraw', () => {
-    test('should need distinct players', () => {
-        expect(() => new FairDraw('ctx', ['a', 'b', 'a'])).toThrow('A fair draw needs distinct players');
+    test.each([[['a', 'b', 'a']], [[]]])('should need distinct players, one at least: %j', (players: string[]) => {
+        expect(() => new FairDraw('ctx', players)).toThrow('A fair draw needs distinct players, one at least');
     });
 
     test('should commit to the context, the seat and the part', async () => {

@@ -17,6 +17,7 @@ describe('SealedCommitments', () => {
         expect(commitments.has(0, 'a')).toBe(true);
         expect(commitments.has(0, 'b')).toBe(false);
         expect(commitments.get(1, 'a')).toBeUndefined();
+        expect(commitments.has(1, 'a')).toBe(false);
     });
 
     test('should know a round by its text', () => {
@@ -38,5 +39,17 @@ describe('SealedCommitments', () => {
         expect(commitments.hasAll(0, ['a', 'b'])).toBe(false);
         expect(commitments.hasAll(0, ['a'])).toBe(true);
         expect(commitments.hasAll(0, [])).toBe(true);
+    });
+
+    test('should count a player as committed, whatever its commitment, as it can not commit again', () => {
+        // Given
+        const commitments = new SealedCommitments<number>();
+
+        // When a malformed payload carries no commitment
+        commitments.record(0, 'a', undefined as unknown as string);
+
+        // Then
+        expect(commitments.has(0, 'a')).toBe(true);
+        expect(commitments.record(0, 'a', 'one')).toBe(false);
     });
 });

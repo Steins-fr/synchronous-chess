@@ -334,7 +334,8 @@ ignored by every participant alike, and reported against its player with `Room.r
 
 The games share the parts of a commit-reveal (`modules/commit-reveal`), each one keeping its messages:
 `commitmentOf()` hashes the parts of a commitment joined by the separator of the game (a space for the chess, a
-colon for the roulette), a part never holding it; `drawSalt()` draws the salt; `SealedCommitments` keeps the first
+colon for the roulette), a part holding it having a fixed form (an id of salts joined by colons), so two lists of
+parts never give one text; `drawSalt()` draws the salt; `SealedCommitments` keeps the first
 commitment of each player for each round, in the order of the chain; `SealedStore` keeps the values the player
 committed to across the reloads of the page.
 

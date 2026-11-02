@@ -10,7 +10,8 @@ export type CommitmentPart = string | number;
 
 /**
  * The text joining the parts. Each game keeps its own, the commitments of its pages on another version being checked
- * alike: a part must not hold it, or two values would share a commitment
+ * alike. A part holding it, as an id of salts joined by colons, has a fixed form: two lists of parts must not give one
+ * text, or two values would share a commitment
  */
 export type CommitmentSeparator = ' ' | ':';
 

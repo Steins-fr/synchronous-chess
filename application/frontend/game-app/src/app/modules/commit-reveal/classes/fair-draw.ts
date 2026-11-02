@@ -34,8 +34,8 @@ export class FairDraw {
      * @param players the players drawing, in the order of their seats: the order of the parts in the seed
      */
     public constructor(public readonly context: string, public readonly players: ReadonlyArray<string>) {
-        if (new Set(players).size !== players.length) {
-            throw new Error('A fair draw needs distinct players');
+        if (players.length === 0 || new Set(players).size !== players.length) {
+            throw new Error('A fair draw needs distinct players, one at least');
         }
     }
 

@@ -25,7 +25,7 @@ export class SealedCommitments<Round extends string | number> {
     }
 
     public has(round: Round, player: string): boolean {
-        return this.get(round, player) !== undefined;
+        return this.rounds.get(String(round))?.has(player) ?? false;
     }
 
     /** Whether every player committed to the round: then each one reveals */
