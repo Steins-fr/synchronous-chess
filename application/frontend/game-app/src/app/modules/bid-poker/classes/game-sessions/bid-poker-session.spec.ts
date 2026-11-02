@@ -148,6 +148,8 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
             expect([of('eve').step(), of('eve').awaited(), of('eve').phaseTime()]).toEqual([2, PLAYERS, LIGHT.catalogueTime + LIGHT.bidTime]);
             expect(of('eve').catalogues()).toEqual(1);
             expect(hub.reports).toEqual([]);
+            // Their parts in the chain, the pages keep them no more
+            expect(sessionStorage.getItem('synchronous-chess:sealed-draws:room:alice')).toEqual('{}');
 
             // When a page sends its part again, the deck drawn
             hub.send(messagesOf(BPGameSessionType.DRAW, 'bob')[1]);
@@ -436,6 +438,31 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
             expect(gameOf('eve').events()[0]).toMatchObject({ kind: BidEventKind.MISSED, reason: MissedReason.LATE, players: [1, 2, 3] });
             expect(gameOf('eve').events()[1]).toMatchObject({ kind: BidEventKind.SOLD, winner: 0, price: 10 });
             expect(of('eve').awaited()).toEqual(['alice']);
+        });
+
+        test('should tell no bid sealed of a player whose commitment came once the bidding closed', async () => {
+            // Given Bob reveals nothing yet, and the commitment of Dave waits
+            await started();
+            await Promise.all([of('alice').bid(10), of('bob').bid(20), of('carol').bid(0)]);
+            await settled((session: BidPokerSession) => session.game()?.committed().length === 3);
+            hub.hold('bob');
+            hub.hold('dave');
+            await of('dave').bid(30);
+            expect(of('dave').myBid()).toEqual(30);
+
+            // When the time of the bidding runs out first
+            claim('alice');
+            await settled((session: BidPokerSession) => session.game()?.phase() === BidPokerPhase.REVEALING);
+
+            // Then
+            expect([of('dave').myBid(), of('bob').myBid(), of('eve').myBid()]).toEqual([null, 20, null]);
+
+            // When
+            hub.release();
+
+            // Then the lot is sold without the bid of Dave
+            await settled((session: BidPokerSession) => session.game()?.lotIndex() === 1);
+            expect(gameOf('eve').events()[1]).toMatchObject({ kind: BidEventKind.SOLD, winner: 1, price: 20 });
         });
 
         test('should void a claim coming before the time of the phase, its claimer waiting again', async () => {

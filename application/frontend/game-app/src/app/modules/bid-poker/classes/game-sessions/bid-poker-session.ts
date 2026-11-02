@@ -130,11 +130,21 @@ export class BidPokerSession {
     });
 
     private readonly _seals = signal<ReadonlyMap<string, Readonly<Seal>>>(new Map());
-    /** The bid of the local player on the lot auctioned, sealed until the bidding closes */
+    /**
+     * The bid of the local player on the lot auctioned, sealed until the bidding closes. Once closed, the game counts it
+     * only when its commitment came first: sent as the time ran out, it is no bid
+     */
     public readonly myBid: Signal<number | null> = computed((): number | null => {
         const game: BidPokerGame | null = this.game();
         const lot: Readonly<Lot> | null = game?.lot() ?? null;
-        const seal: Readonly<Seal> | undefined = lot === null ? undefined : this._seals().get(`${ (game as BidPokerGame).session() }:${ lot.index }`);
+        const me: number | null = this.myIndex();
+        const counted: boolean = game?.phase() === BidPokerPhase.BIDDING || (me !== null && game?.committed().includes(me) === true);
+
+        if (lot === null || !counted) {
+            return null;
+        }
+
+        const seal: Readonly<Seal> | undefined = this._seals().get(`${ (game as BidPokerGame).session() }:${ lot.index }`);
         return typeof seal?.value === 'number' ? seal.value : null;
     });
     /** The discards of the local player in the change session, sealed until the discarding closes */
@@ -356,6 +366,8 @@ export class BidPokerSession {
 
         const seed: string | undefined = await draw.seed();
         if (seed !== undefined) {
+            // Every part is in the chain: a page reloaded draws the seed again from it
+            this.partStore.remove(this._played().drawContext);
             this._played().start(new BidPokerGame(this.rules, draw.players.length, await drawCatalogue(seed, this.rules)));
             if (!this.room.isHistory(message)) {
                 this._catalogues.update((count: number) => count + 1);

@@ -215,11 +215,12 @@ export class BidTableComponent implements OnDestroy {
         }));
     });
 
-    /** The standings, once the game is over */
+    /** The standings, once the game is over, by place: the pigs last, the players of a place in the order of the seats */
     protected readonly standings: Signal<ReadonlyArray<Readonly<StandingView>>> = computed((): ReadonlyArray<Readonly<StandingView>> => {
         const result: BidPokerResult | null = this.session().played().result();
         const names: ReadonlyArray<string> = this.session().players();
-        return result === null ? [] : result.standings.map((standing: Readonly<Standing>): StandingView => ({
+        const rank = (standing: Readonly<Standing>): number => standing.place ?? names.length;
+        return result === null ? [] : [...result.standings].sort((one: Readonly<Standing>, other: Readonly<Standing>) => rank(one) - rank(other)).map((standing: Readonly<Standing>): StandingView => ({
             name: names[standing.player],
             place: this.placeText(standing),
             hand: standing.best === null

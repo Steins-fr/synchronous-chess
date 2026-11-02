@@ -292,7 +292,10 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
 
         // Then the game is over
         await until(() => status() === 'The game is over.');
-        expect(element().querySelectorAll('#standings tr')).toHaveLength(4);
+        const rows: string[] = Array.from(element().querySelectorAll('#standings tr'), (row: Element) => row.textContent ?? '');
+        expect(rows).toHaveLength(4);
+        expect(rows[0]).toContain('Place 1');
+        expect(rows[3]).toContain('Pig');
         expect(text('#standings')).toContain('No hand');
         expect(text('#standings')).toContain('Pig');
         expect(text('#standings')).toContain('Place 1');
