@@ -25,8 +25,8 @@
     "title": "Синхронные шахматы"
   },
   "cheat": {
-    "flagged": "Сообщение {index} ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} other {}}) от {author} помечено как жульничество игроками: {reporters}",
-    "ignored": "Сообщение ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} other {}}) от {author} проигнорировано игроком {sequencer}, отмечено игроками: {reporters}"
+    "flagged": "Сообщение {index} ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} bid {аукционный покер} other {}}) от {author} помечено как жульничество игроками: {reporters}",
+    "ignored": "Сообщение ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} bid {аукционный покер} other {}}) от {author} проигнорировано игроком {sequencer}, отмечено игроками: {reporters}"
   },
   "dialog": {
     "cancel": "Отмена",

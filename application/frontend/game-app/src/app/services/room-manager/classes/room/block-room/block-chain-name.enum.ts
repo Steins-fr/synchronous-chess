@@ -4,4 +4,6 @@ export enum BlockChainName {
     CHESS = 'chess',
     POKER = 'poker',
     ROULETTE = 'roulette',
+    /** The Bid Poker: a name without a hyphen, a key of the selects of the texts of a cheat */
+    BID_POKER = 'bid',
 }
