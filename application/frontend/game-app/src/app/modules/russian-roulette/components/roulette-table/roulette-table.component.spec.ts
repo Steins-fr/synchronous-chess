@@ -555,6 +555,8 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         const revealed: number = session.game().chambers().length;
         while (session.game().chambers().length === revealed) {
             const moves: number = session.game().actions().length;
+            // The button of the next move shows once the chamber revealed is shown
+            await until(() => bob.myTurn() || button(/^Pass/) !== undefined);
             if (bob.myTurn()) {
                 bob.pass();
             } else {
