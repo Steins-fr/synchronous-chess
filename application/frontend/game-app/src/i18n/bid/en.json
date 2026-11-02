@@ -43,6 +43,7 @@
     },
     "summary": "Rules of the bid poker",
     "times": {
+      "allLate": "When every player a lot or the discards would wait for is skipped, the game waits for every player again instead of closing them at once.",
       "late": "A player who does not act in time bids or discards nothing, and the game goes on without waiting for it until it acts again.",
       "phases": "A lot is open for 30 seconds (90 for the first, to read the catalogue), a reveal for 15 seconds and the discards for 45 seconds: each closes as soon as every player acted.",
       "title": "The times"

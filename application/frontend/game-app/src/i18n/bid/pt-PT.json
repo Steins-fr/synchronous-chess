@@ -43,6 +43,7 @@
     },
     "summary": "Regras do póquer de leilão",
     "times": {
+      "allLate": "Quando todos os jogadores que um lote ou os descartes aguardariam foram saltados, o jogo volta a aguardar todos os jogadores em vez de os fechar de imediato.",
       "late": "Um jogador que não age a tempo não licita nem descarta nada, e o jogo continua sem esperar por ele até que volte a agir.",
       "phases": "Um lote fica aberto durante 30 segundos (90 para o primeiro, para ler o catálogo), uma revelação durante 15 segundos e os descartes durante 45 segundos: cada um fecha assim que todos os jogadores tiverem agido.",
       "title": "Os tempos"

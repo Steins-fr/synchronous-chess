@@ -43,6 +43,7 @@
     },
     "summary": "Règles du poker aux enchères",
     "times": {
+      "allLate": "Quand tous les joueurs qu'un lot ou les défausses attendraient sont absents, la partie attend de nouveau tous les joueurs au lieu de les fermer aussitôt.",
       "late": "Un joueur qui n'agit pas à temps n'enchérit pas et ne défausse rien, et la partie continue sans l'attendre jusqu'à ce qu'il agisse de nouveau.",
       "phases": "Un lot reste ouvert 30 secondes (90 pour le premier, le temps de lire le catalogue), la révélation des enchères 15 secondes et les défausses 45 secondes : chacun se ferme dès que tous les joueurs ont agi.",
       "title": "Les délais"

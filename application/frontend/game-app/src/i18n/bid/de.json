@@ -43,6 +43,7 @@
     },
     "summary": "Regeln des Auktionspokers",
     "times": {
+      "allLate": "Sind alle Spieler, auf die ein Los oder das Abwerfen warten würde, übersprungen, wartet das Spiel wieder auf alle Spieler, statt sofort zu enden.",
       "late": "Ein Spieler, der nicht rechtzeitig handelt, bietet nichts bzw. wirft nichts ab, und das Spiel wartet nicht mehr auf ihn, bis er wieder handelt.",
       "phases": "Ein Los ist 30 Sekunden offen (das erste 90, um den Katalog zu lesen), ein Aufdecken 15 Sekunden und das Abwerfen 45 Sekunden: Jede Phase endet, sobald alle Spieler gehandelt haben.",
       "title": "Die Zeiten"

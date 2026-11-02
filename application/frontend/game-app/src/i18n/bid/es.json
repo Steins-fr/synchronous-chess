@@ -43,6 +43,7 @@
     },
     "summary": "Reglas del póker de subasta",
     "times": {
+      "allLate": "Cuando todos los jugadores que esperaría un lote o los descartes están omitidos, la partida vuelve a esperar a todos los jugadores en lugar de cerrarlos al instante.",
       "late": "Un jugador que no actúa a tiempo no puja ni descarta nada, y la partida sigue sin esperarlo hasta que vuelva a actuar.",
       "phases": "Un lote está abierto 30 segundos (90 el primero, para leer el catálogo), una revelación 15 segundos y los descartes 45 segundos: cada uno se cierra en cuanto todos los jugadores han actuado.",
       "title": "Los tiempos"

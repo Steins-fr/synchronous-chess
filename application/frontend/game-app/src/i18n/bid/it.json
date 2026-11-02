@@ -43,6 +43,7 @@
     },
     "summary": "Regole del poker all'asta",
     "times": {
+      "allLate": "Quando tutti i giocatori che un lotto o gli scarti aspetterebbero sono saltati, la partita aspetta di nuovo tutti i giocatori invece di chiuderli subito.",
       "late": "Un giocatore che non agisce in tempo non offre né scarta nulla, e la partita va avanti senza aspettarlo finché non agisce di nuovo.",
       "phases": "Un lotto resta aperto 30 secondi (90 per il primo, per leggere il catalogo), una rivelazione 15 secondi e gli scarti 45 secondi: ciascuno si chiude appena tutti i giocatori hanno agito.",
       "title": "I tempi"

@@ -87,7 +87,7 @@ interface BidPokerState {
     readonly holdings: ReadonlyArray<ReadonlyArray<number>>;
     /** The cards of the lots of the dealing session nobody bought */
     readonly out: ReadonlyArray<number>;
-    /** The players who let a phase close without acting: no longer awaited, until they commit again */
+    /** The players who let a phase close without acting: no longer awaited, until they commit again or a phase would await none but them */
     readonly absent: ReadonlyArray<number>;
     /**
      * The players who sealed a bid or discards and did not reveal them, in time or as committed: withholding would let
@@ -405,8 +405,16 @@ export class BidPokerGame {
         return { ...cleared, phase: BidPokerPhase.OVER, result, bank: state.bank + this.players * this.rules.debt + result.unpaid };
     }
 
-    /** A phase opening without any player to wait for (every one absent) is over at once */
+    /**
+     * A phase opening without any player to wait for is over at once. When the players it would wait for are all absent,
+     * it waits for every player again: the game does not play itself to its end
+     */
     private opened(state: Readonly<BidPokerState>): BidPokerState {
-        return this.awaitedIn(state).length > 0 ? state : this.advanced(state);
+        if (this.awaitedIn(state).length > 0) {
+            return state;
+        }
+
+        const back: BidPokerState = { ...state, absent: [] };
+        return this.awaitedIn(back).length > 0 ? back : this.advanced(state);
     }
 }

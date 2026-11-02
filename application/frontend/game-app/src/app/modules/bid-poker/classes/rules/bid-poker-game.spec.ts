@@ -373,19 +373,26 @@ describe('BidPokerGame', () => {
         expect(bidPoker.events().filter(({ kind }) => kind === BidEventKind.NO_DISCARD)).toHaveLength(2);
     });
 
-    test('should end at once when every player is absent', () => {
+    test('should wait for every player again once every one it would wait for is absent', () => {
         // Given
         const bidPoker: BidPokerGame = game(4, CATALOGUE, { ...RULES, changeSessions: 2 });
 
-        // When
+        // When nobody bids on the first lot
         bidPoker.close();
 
-        // Then every lot is unsold, and the change sessions have no discard
-        expect(bidPoker.phase()).toEqual(BidPokerPhase.OVER);
-        expect(bidPoker.out()).toHaveLength(15);
-        expect(bidPoker.events().map(({ kind }) => kind)).toEqual([
-            BidEventKind.MISSED, BidEventKind.UNSOLD, BidEventKind.UNSOLD, BidEventKind.UNSOLD, BidEventKind.NO_DISCARD, BidEventKind.NO_DISCARD,
-        ]);
-        expect(bidPoker.result()?.pigs).toEqual(4);
+        // Then the next lot waits for every player
+        expect(bidPoker.events().map(({ kind }) => kind)).toEqual([BidEventKind.MISSED, BidEventKind.UNSOLD]);
+        expect([bidPoker.phase(), bidPoker.lotIndex(), bidPoker.absent(), bidPoker.awaited()]).toEqual([BidPokerPhase.BIDDING, 1, [], [0, 1, 2, 3]]);
+
+        // When player 0 buys the other lots alone, the others late, then nobody discards
+        bidPoker.commitBid(0);
+        bidPoker.close();
+        bidPoker.revealBid(0, 1);
+        auction(bidPoker, [1]);
+        bidPoker.close();
+
+        // Then the next change session waits for player 0 again, the only one holding cards
+        expect(bidPoker.events().at(-1)).toEqual({ kind: BidEventKind.NO_DISCARD, session: 1 });
+        expect([bidPoker.phase(), bidPoker.session(), bidPoker.absent(), bidPoker.awaited()]).toEqual([BidPokerPhase.DISCARDING, 2, [], [0]]);
     });
 });

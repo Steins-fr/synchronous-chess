@@ -153,7 +153,8 @@ claim naming a step past is void.
   block opening the phase, 2 seconds of slack), is void: a page can not close a phase early to win a lot. Its page waits
   again for 5 seconds, then claims again.
 - The players late, the local player included, bid or discard nothing, and are **absent**: the game no longer waits for
-  them, until they commit again. A player who sealed a value and did not reveal it withheld it.
+  them, until they commit again. A lot or discards opening with every player they would wait for absent wait for every
+  player again: the game does not play its phases out at once, every lot unsold. A player who sealed a value and did not reveal it withheld it.
 - The draw timing out frees the seats of its late players and opens the seats again: a seated player starts the game
   again (a new attempt, with its own commitments) once 4 players are seated.
 

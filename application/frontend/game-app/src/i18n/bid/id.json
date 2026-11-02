@@ -43,6 +43,7 @@
     },
     "summary": "Aturan poker lelang",
     "times": {
+      "allLate": "Jika semua pemain yang akan ditunggu suatu lot atau pembuangan dilewati, permainan kembali menunggu semua pemain alih-alih langsung menutupnya.",
       "late": "Pemain yang tidak bertindak tepat waktu tidak menawar atau membuang apa pun, dan permainan berlanjut tanpa menunggunya hingga ia bertindak lagi.",
       "phases": "Satu lot dibuka selama 30 detik (90 detik untuk yang pertama, agar katalog sempat dibaca), pengungkapan tawaran selama 15 detik, dan pembuangan selama 45 detik: masing-masing ditutup begitu semua pemain bertindak.",
       "title": "Waktu"

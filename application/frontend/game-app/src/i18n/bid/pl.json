@@ -43,6 +43,7 @@
     },
     "summary": "Zasady pokera licytacyjnego",
     "times": {
+      "allLate": "Gdy wszyscy gracze, na których czekałby pakiet lub odrzucanie, są pominięci, gra znów czeka na wszystkich graczy, zamiast od razu je zamknąć.",
       "late": "Gracz, który nie zdąży, niczego nie licytuje ani nie odrzuca, a gra toczy się dalej bez czekania na niego, dopóki znów nie wykona ruchu.",
       "phases": "Pakiet jest otwarty przez 30 sekund (90 dla pierwszego, by przeczytać katalog), odsłanianie trwa 15 sekund, a odrzucanie 45 sekund: każda faza kończy się, gdy tylko wszyscy gracze wykonają ruch.",
       "title": "Czas"

@@ -43,6 +43,7 @@
     },
     "summary": "Açık artırma pokerinin kuralları",
     "times": {
+      "allLate": "Bir lotun ya da kart atmanın bekleyeceği oyuncuların hepsi atlandıysa, oyun hemen kapatmak yerine yeniden tüm oyuncuları bekler.",
       "late": "Zamanında hamle yapmayan oyuncu hiç teklif vermemiş ya da hiç kart atmamış sayılır ve oyun, o oyuncu yeniden hamle yapana kadar onu beklemeden devam eder.",
       "phases": "Bir lot 30 saniye (kataloğu okumak için ilki 90 saniye), bir açıklama 15 saniye ve kart atma 45 saniye açık kalır: her biri tüm oyuncular hamlesini yapar yapmaz kapanır.",
       "title": "Süreler"
