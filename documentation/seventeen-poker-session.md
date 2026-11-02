@@ -35,7 +35,7 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
-| `TableSeats` | `modules/game-table/classes/table-seats.ts` | The two seats, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
+| `TableSeats` | `modules/game-table/classes/table-seats.ts` | The seats of a table, two here, shared with the Russian roulette: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `PokerTableComponent` | `components/poker-table` | Shows the session, turns the clicks into seat requests and actions, and runs the clock of each move and of each deal |
 | `PokerSeatComponent` | `components/poker-seat` | A seat: its player and its chips, a ring and the clock while the table waits for its player (a move, a deal), what it won in the hand over |
 | `PokerRulesComponent` | `components/poker-rules` | The rules, on the page |

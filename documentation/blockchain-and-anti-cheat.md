@@ -64,7 +64,8 @@ flowchart LR
 | `ParticipantKeyStore` | `block-chain/participant-key-store.ts` | Keeps the key pair of the player in the browser |
 | `AntiCheat` | `anti-cheat/anti-cheat.ts` | Collects the cheat reports into flags, names the accusers of a sequencer |
 | `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
-| `SealedTurnStore` | `modules/chess/classes/game-sessions` | Keeps the hidden moves across the reloads of the page |
+| `SealedStore`, `SealedCommitments` | `modules/commit-reveal/classes` | Keep the hidden values of a player across the reloads of the page, and the first commitment of each player for each round (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
+| `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | Draw a seed no player chose alone, and shuffle from it alike on every page (see [A fair draw](#a-fair-draw)) |
 | `MentalDeck` | `modules/mental-poker/classes` | Shuffles, deals and opens a deck no participant sees, checks it at the end of the game (see [Mental poker](mental-poker.md)) |
 | `SeventeenPokerSession` | `modules/seventeen-poker/classes/game-sessions` | Seats the players, deals each hand with a mental deck, reports the illegal actions (see [Seventeen Poker session](seventeen-poker-session.md)) |
 | `Cylinder` | `modules/russian-roulette/classes/cylinder` | Loads, spins and fires a cylinder no participant sees, checks it at the end of the game (see [Russian roulette session](russian-roulette-session.md#the-cylinder)) |
@@ -331,6 +332,12 @@ online game session hides the moves:
 A reveal not matching its commitment (`invalidReveal`) or a move against the rules (`illegalMove`) is
 ignored by every participant alike, and reported against its player with `Room.reportCheat()`.
 
+The games share the parts of a commit-reveal (`modules/commit-reveal`), each one keeping its messages:
+`commitmentOf()` hashes the parts of a commitment joined by the separator of the game (a space for the chess, a
+colon for the roulette), a part never holding it; `drawSalt()` draws the salt; `SealedCommitments` keeps the first
+commitment of each player for each round, in the order of the chain; `SealedStore` keeps the values the player
+committed to across the reloads of the page.
+
 The turn number is counted by each participant, the same for all of them since they run the same
 actions.
 
@@ -339,9 +346,9 @@ before the commitments of the previous one are in the chain: it keeps each actio
 is revealed. A player runs its own actions when playing them; after a reload of the page, the chain
 replays its reveals, which it runs like the ones of the other players.
 
-**Reloading the page.** `SealedTurnStore` keeps the actions the player committed to and whose reveal
+**Reloading the page.** `SealedStore` keeps the actions the player committed to and whose reveal
 is not in the chain yet, with their salt, in the session storage of the tab (key
-`synchronous-chess:sealed-turns:<room>:<player>`). When the chain replays a commitment of the player
+`synchronous-chess:sealed-<kind>:<room>:<player>`, the kind `turns` for the chess). When the chain replays a commitment of the player
 that its new page did not play, the stored action of that turn is used if it matches the commitment:
 the action of a previous game in a room of the same name never does. It is played once the game
 reaches its turn, then revealed as usual. The page does not know whether its reveal is in the chain
@@ -368,6 +375,24 @@ count, then each player turns the cylinder and re-randomizes it. A chamber fires
 made with its key. Once the game is over, the players disclose their keys and every participant checks the spins. See
 [Russian roulette session](russian-roulette-session.md#the-cylinder) and
 [The exponential ElGamal](mental-poker.md#the-exponential-elgamal).
+
+## A fair draw
+
+A game drawing at random, the first shooter of the roulette, needs a draw no player chose alone, nor the sequencer.
+`FairDraw` (`modules/commit-reveal`) draws a seed over the chain of its game:
+
+1. Each player draws a random part, keeps it in its tab, and sends its commitment: the SHA-256 of the context of the
+   draw (unique to it), its seat and its part, joined by colons. The first commitment of a player counts.
+2. Once every player committed, each one reveals its part. A part not matching its commitment is an `invalidReveal`,
+   not kept: a later reveal matching it still counts.
+3. Once every part is revealed, the seed is the SHA-256 of the parts in the order of the seats, joined by colons: the
+   same for every participant, whatever the order of the reveals.
+
+The roulette draws its first shooter from the last digit of the seed. From a seed, `SeededRandom` makes every page
+draw alike: its bytes are the SHA-256 digests of `seed:0`, `seed:1`... one after the other; a draw below a bound reads
+the bytes holding the bits of the bound minus one, keeps these bits only and draws again beyond the bound, so no value
+is likelier than another; `shuffle()` is a Fisher-Yates from the last item. Changing any of it would make two pages
+on two versions disagree: its specs pin its draws.
 
 ## Anti-cheat
 

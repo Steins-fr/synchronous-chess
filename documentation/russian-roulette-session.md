@@ -33,13 +33,14 @@ The code lives in `application/frontend/game-app/src/app/modules/russian-roulett
 | `RouletteGame` | `classes/rules/roulette-game.ts` | The game without the cylinder, in signals: the passes, the shots, the stacks, the deaths, the result, a game lost on time or on a bankruptcy |
 | `ExponentialElGamal`, `zk-proofs` | `modules/mental-poker/classes` | The cipher of the cylinder and its proofs (see [Mental poker](mental-poker.md#the-exponential-elgamal)) |
 | `CylinderState` | `classes/cylinder/cylinder-state.ts` | What the chain tells of a cylinder, the same for every participant: the keys, the loads and the spins, the shares of each chamber fired, the disclosures |
+| `FairDraw` | `modules/commit-reveal/classes/fair-draw.ts` | The draw of the first shooter, from the random part each player commits to with its key and reveals with its load (see [A fair draw](blockchain-and-anti-cheat.md#a-fair-draw)) |
 | `Cylinder` | `classes/cylinder/cylinder.ts` | Applies the messages of a cylinder, makes the steps of the local player (its load, its spin, its shares, its disclosure) |
 | `verifyCylinder` | `classes/cylinder/cylinder-verification.ts` | Checks the spins once both players disclosed their keys |
 | `SecretStore` | `modules/mental-poker/classes/secret-store.ts` | Keeps the secrets of the player across the reloads of the page, as for the decks of the poker |
 | `KeptSecrets`, `StepRunner` | `modules/mental-poker/classes` | The secrets of the player in the cylinder and its steps one at a time, shared with the decks of the poker |
 | `PlayedGame` | `classes/game-sessions/played-game.ts` | A game of the room: its rules, its cylinder, its check and its result, final once checked |
 | `RussianRouletteSession` | `classes/game-sessions/russian-roulette-session.ts` | The games of the room: seats, moves, timeouts, a new game once one is over |
-| `TableSeats` | `modules/game-table/classes/table-seats.ts` | The two seats, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |
+| `TableSeats` | `modules/game-table/classes/table-seats.ts` | The seats of a table, two here, shared with the Seventeen Poker: the requests of the participants, the salts, a seat freed, what the local participant may do |
 | `RouletteTableComponent` | `components/roulette-table` | Shows the session, turns the clicks into seat requests and moves, and runs the clock of each move |
 | `RouletteCylinderComponent` | `components/roulette-cylinder` | The 24 chambers around the cylinder: buttons while the player places its bullets, then the chambers fired |
 | `RouletteSeatComponent` | `components/roulette-seat` | A seat: its player, its chips and its deaths, a ring and the clock of the move while the game waits for its player, the stamp of a pass, the shot of its player |
@@ -87,7 +88,8 @@ sum of their counts, and a cipher text re-randomized can not be told from a new 
    Damgård and Schoenmakers) and that their product hides 3: a load copying the other one to cancel its bullets, or
    loading 0 or 24 bullets, is refused (`invalidLoad`). The load reveals the random part of the draw (`invalidReveal` if
    it is not the one committed to). Every participant multiplies both loads, chamber by chamber: the cylinder, each
-   chamber hiding the bullets of both players. The first shooter is the last digit of the hash of both random parts.
+   chamber hiding the bullets of both players. The first shooter is the last digit of the hash of both random parts,
+   in the order of the seats: the seed of a `FairDraw`.
 3. **Spins** (`RR_spin`): the first seat, then the second one, turns the cylinder by an offset of its own and
    re-randomizes every chamber. No participant follows a chamber through a spin, the owner of a bullet included. A spin
    that is not a cylinder breaks it (`invalidSpin`): its player loses the game once the keys are disclosed.
@@ -348,6 +350,8 @@ faded out once it stops. Only the page picking its chambers hears a bullet put i
   bullets, the end and the ties.
 - The cipher and the proofs: `exponential-elgamal.spec.ts`, `zk-proofs.spec.ts` in `modules/mental-poker`, a small
   prime (`@testing/sra-test-group`) and one proof at 2048 bits.
+- The draw: `fair-draw.spec.ts` in `modules/commit-reveal`, its commitments and its seed pinned; the first shooter
+  drawn from known random parts, and the commitments of the keys, pinned in `cylinder.spec.ts`.
 - The cylinder: `cylinder.spec.ts`, with a `RoomHub` and 12 chambers: a game, a chamber of 2 bullets, the reloads with
   and without storage, and each cheat (a key without proof, a load of 4 bullets or copied, a wrong random part, a spin
   broken or reversed, a wrong share, a wrong disclosure).

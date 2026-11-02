@@ -28,7 +28,8 @@ ordering and checking of the messages is described in
 | `SynchronousChessOnlineGameSession` | `synchronous-chess-online-game-session.ts` | The session of a room: seats, spectators, hidden moves (commit then reveal), cheat reports |
 | `SynchronousChessLocalGameSession` | `synchronous-chess-local-game-session.ts` | Without a room: shows the starting board, ignores every action |
 | `SynchronousChessGameSessionBuilder` | `synchronous-chess-game-session-builder.ts` | Builds the online session of a room, or the local one |
-| `SealedTurnStore` | `sealed-turn-store.ts` | Keeps the hidden action of the local player across the reloads of the page |
+| `SealedStore` | `modules/commit-reveal/classes/sealed-store.ts` | Keeps the hidden action of the local player across the reloads of the page (kind `turns`), shared with the other games |
+| `SealedCommitments` | `modules/commit-reveal/classes/sealed-commitments.ts` | The first commitment of each color for each turn, in the order of the chain |
 | `SyncChessGameComponent` | `components/sync-chess-game` | Shows the session, and turns the clicks and drops into seat requests and actions |
 
 The rules of the game (moves, turns, check, end of the game) belong to `SynchronousChessGame`, its
@@ -146,7 +147,8 @@ sequenceDiagram
    action on the local game at once, if the local player is seated and the game accepts it. A move
    shows its preview on the board until the turn runs.
 2. **Commit.** The session sends `SC_GS_commit`: the SHA-256 of the turn number, the color, the action
-   and a random salt. The action and the salt are kept in memory and in `SealedTurnStore`.
+   and a random salt, joined by spaces (`commitmentOf` of `modules/commit-reveal`). The action and the salt are kept
+   in memory and in `SealedStore`.
 3. **Collect the commitments.** Each session records the first commitment of each seated player for
    each turn; the commitments of a spectator are ignored.
 4. **Reveal.** Once the commitments of every color playing the turn are in the chain, the session sends
@@ -261,7 +263,7 @@ A reloaded page builds a new session, and the chain delivers again all its messa
 - the reveals replay the turns already played, the actions of the local player included: `playedTurns`
   is rebuilt the same, so the history of the page holds the turns played before its reload;
 - the commitment of the local player whose reveal is not in the chain yet is matched with the action
-  kept in `SealedTurnStore` (session storage of the tab), played once the game reaches its turn, then
+  kept in `SealedStore` (session storage of the tab), played once the game reaches its turn, then
   revealed. A reveal sent twice is ignored by the others.
 
 The page plays no sound of what it catches up with: the session counts the changes of the game made live
