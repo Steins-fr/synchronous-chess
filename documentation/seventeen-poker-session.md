@@ -30,8 +30,8 @@ The code lives in `application/frontend/game-app/src/app/modules/seventeen-poker
 
 | Class | File | Role |
 |---|---|---|
-| `SEVENTEEN_DECK` | `classes/rules/seventeen-deck.ts` | The card of each of the 17 positions a mental deck deals |
-| `evaluateHand`, `compareHands` | `classes/rules/hand-evaluator.ts` | The value of a hand, the joker standing for the card giving the best one, and their comparison |
+| `SEVENTEEN_DECK` | `classes/rules/seventeen-deck.ts` | The card of each of the 17 positions a mental deck deals, of the ranks `SEVENTEEN_RANKS`: the jacks to the aces |
+| `evaluateHand`, `compareHands` | `modules/playing-cards/helpers/hand-evaluator.helper.ts` | The value of a hand, the joker standing for the card giving the best one, and their comparison, shared with the card games |
 | `BettingRound` | `classes/rules/betting-round.ts` | A betting round, as a value: check, bet, raise, call and fold within its bounds |
 | `PokerMatch` | `classes/rules/poker-match.ts` | The match without the cards, in signals: antes, rounds, exchange, showdown, the 10 hands, a match lost on time |
 | `SeventeenPokerSession` | `classes/game-sessions/seventeen-poker-session.ts` | The matches in a room: seats, decks, cards, cheat reports, a new match once one is over |
@@ -336,7 +336,8 @@ as for every game (`gameEndSound()` of `services/sound/game-sounds.ts`). The car
 
 ## Testing
 
-- The rules: `classes/rules/*.spec.ts`, every hand of the deck evaluated once.
+- The rules: `classes/rules/*.spec.ts`, every hand of the deck evaluated once (`seventeen-deck.spec.ts`); the hands
+  themselves in `hand-evaluator.helper.spec.ts` of `modules/playing-cards`.
 - The session: `seventeen-poker-session.spec.ts`, with a `RoomHub` and a small prime
   (`@testing/sra-test-group`): seats, deals, bets, exchanges, showdowns, the end of the match, a new
   match (the seats open again, fresh deck ids, the check of the former decks ending later, a page reloaded during it),

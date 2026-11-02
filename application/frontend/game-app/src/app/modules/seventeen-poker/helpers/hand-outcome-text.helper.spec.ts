@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { HandCategory, HandValue } from '../classes/rules/hand-evaluator';
+import { HandCategory, HandValue } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { HandEnd } from '../classes/rules/poker-match';
 import { PokerSeat } from '../classes/rules/poker-seat';
 import { handOutcomeText } from './hand-outcome-text.helper';

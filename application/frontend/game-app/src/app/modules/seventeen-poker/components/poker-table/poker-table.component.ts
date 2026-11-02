@@ -30,7 +30,7 @@ import { handOutcomeText } from '../../helpers/hand-outcome-text.helper';
 import { ChipPlace, ChipPlaceKind, chipTransfers, ChipTransfer, TableChips } from '../../helpers/chip-transfers.helper';
 import { HAND_ENDING, HeardTable, tableSounds, TimedSound } from '../../helpers/table-sound.helper';
 import { BetAction, BetLimits } from '../../classes/rules/betting-round';
-import { HAND_SIZE, HandValue } from '../../classes/rules/hand-evaluator';
+import { HAND_SIZE, HandValue } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { HandEnd, HandOutcome, HandPhase, MatchResult, PokerHand, PokerMatch } from '../../classes/rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair } from '../../classes/rules/poker-seat';
 import { PokerSeatComponent } from '../poker-seat/poker-seat.component';

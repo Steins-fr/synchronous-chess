@@ -1,7 +1,6 @@
-import { CardRank, PlayingCard } from '@app/modules/playing-cards/types/playing-card';
+import { CardRank } from '@app/modules/playing-cards/types/playing-card';
 import { cards } from '@testing/playing-cards.helper';
-import { compareHands, evaluateHand, HandCategory, HandValue } from './hand-evaluator';
-import { SEVENTEEN_DECK } from './seventeen-deck';
+import { compareHands, evaluateHand, HandCategory, HandValue } from './hand-evaluator.helper';
 import { describe, expect, test } from 'vitest';
 
 const { ACE, KING, QUEEN, JACK } = CardRank;
@@ -71,37 +70,6 @@ describe('HandEvaluator', () => {
     ])('should find equal hands of $name', ({ first, second }) => {
         // Then
         expect(compareHands(evaluateHand(cards(first)), evaluateHand(cards(second)))).toEqual(0);
-    });
-
-    test('should find a category for every hand the deck deals, a pair at least', () => {
-        // Given
-        const counts: Map<HandCategory, number> = new Map<HandCategory, number>();
-        const deal = (hand: ReadonlyArray<PlayingCard>, from: number): void => {
-            if (hand.length === 5) {
-                const category: HandCategory = evaluateHand(hand).category;
-                counts.set(category, (counts.get(category) ?? 0) + 1);
-                return;
-            }
-
-            for (let position: number = from; position < SEVENTEEN_DECK.length; position++) {
-                deal([...hand, SEVENTEEN_DECK[position]], position + 1);
-            }
-        };
-
-        // When
-        deal([], 0);
-
-        // Then: the 6188 hands of 5 cards out of 17, none without a pair
-        expect(Object.fromEntries(counts)).toEqual({
-            [HandCategory.FIVE_OF_A_KIND]: 4,
-            [HandCategory.ROYAL_FLUSH]: 4,
-            [HandCategory.FOUR_OF_A_KIND]: 240,
-            [HandCategory.FULL_HOUSE]: 504,
-            [HandCategory.STRAIGHT]: 252,
-            [HandCategory.THREE_OF_A_KIND]: 1920,
-            [HandCategory.TWO_PAIR]: 1728,
-            [HandCategory.ONE_PAIR]: 1536,
-        });
     });
 
     test.each(['KS KH QD AC', 'KS KH QD AC JS JH'])('should refuse a hand of other than 5 cards, %s', (hand: string) => {

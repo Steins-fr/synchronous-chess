@@ -14,7 +14,7 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { BetAction } from '../rules/betting-round';
-import { HAND_SIZE } from '../rules/hand-evaluator';
+import { HAND_SIZE } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { DRAW_PILE, HandPhase, MatchResult, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
 import { otherSeat, PokerSeat, SeatPair, toSeatPair, withSeat } from '../rules/poker-seat';
 import { SEVENTEEN_DECK, seventeenCard } from '../rules/seventeen-deck';

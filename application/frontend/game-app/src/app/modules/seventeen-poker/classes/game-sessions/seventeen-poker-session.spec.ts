@@ -12,7 +12,7 @@ import { RoomHub } from '@testing/room-hub';
 import { TEST_GROUP } from '@testing/sra-test-group';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { BetAction } from '../rules/betting-round';
-import { compareHands, evaluateHand } from '../rules/hand-evaluator';
+import { compareHands, evaluateHand } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { HandEnd, HandPhase, PokerMatchRules, SEVENTEEN_POKER_RULES } from '../rules/poker-match';
 import { PokerSeat } from '../rules/poker-seat';
 import { LiveTable, pokerBlockChains, PokerPayloads, SeventeenPokerSession, SPGameSessionType } from './seventeen-poker-session';

@@ -1,7 +1,7 @@
 import { computed, Signal, signal } from '@angular/core';
 import { PlayingCard } from '@app/modules/playing-cards/types/playing-card';
 import { BetAction, BetLimits, BettingRound, RoundEnd } from './betting-round';
-import { compareHands, evaluateHand, HAND_SIZE, HandValue } from './hand-evaluator';
+import { compareHands, evaluateHand, HAND_SIZE, HandValue } from '@app/modules/playing-cards/helpers/hand-evaluator.helper';
 import { otherSeat, PokerSeat, SeatPair, withSeat } from './poker-seat';
 import { SEVENTEEN_DECK } from './seventeen-deck';
 
