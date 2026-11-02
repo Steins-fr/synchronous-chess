@@ -1,16 +1,21 @@
 import { CardRank, CardSuit, JOKER, PlayingCard, SuitedCard } from '@app/modules/playing-cards/types/playing-card';
 
-/** The hands of the Seventeen Poker, from the lowest. With its 17 cards, every hand holds a pair at least */
+/** The kinds of poker hands, from the lowest */
 export enum HandCategory {
+    HIGH_CARD = 'highCard',
     ONE_PAIR = 'onePair',
     TWO_PAIR = 'twoPair',
     THREE_OF_A_KIND = 'threeOfAKind',
-    /** The joker as the ten, and the four ranks of different suits */
+    /** Five ranks in a row, the ace high or low (the ace to the five) */
     STRAIGHT = 'straight',
+    /** Five cards of a suit */
+    FLUSH = 'flush',
     FULL_HOUSE = 'fullHouse',
     FOUR_OF_A_KIND = 'fourOfAKind',
-    /** The joker as the ten, and the four ranks of a suit: the only flush the deck can make */
+    STRAIGHT_FLUSH = 'straightFlush',
+    /** The ten to the ace of a suit */
     ROYAL_FLUSH = 'royalFlush',
+    /** Five cards of a rank: with the joker only */
     FIVE_OF_A_KIND = 'fiveOfAKind',
 }
 
@@ -18,7 +23,7 @@ export interface HandValue {
     readonly category: HandCategory;
     /**
      * The rank of each group of cards, from the largest group, the highest rank first: a full house of kings over jacks
-     * gives [king, jack]. The ten the joker stands for in a straight is out of the ranks
+     * gives [king, jack]. A straight from the ace to the five gives its ace last
      */
     readonly ranks: ReadonlyArray<CardRank>;
     /** Whether the hand holds the joker: a natural hand beats the same hand made with the joker */
@@ -29,22 +34,24 @@ export const HAND_SIZE: number = 5;
 
 const RANKS: ReadonlyArray<CardRank> = Object.values(CardRank);
 const CATEGORIES: ReadonlyArray<HandCategory> = Object.values(HandCategory);
-/** The value of a rank: the jack follows the ten the joker can stand for */
-const TEN: number = 10;
-const rankValue = (rank: CardRank): number => TEN + 1 + RANKS.indexOf(rank);
+/** The value of the lowest rank, the two */
+const LOWEST: number = 2;
+const ACE: number = LOWEST + RANKS.length - 1;
+const rankValue = (rank: CardRank): number => LOWEST + RANKS.indexOf(rank);
+const rankOf = (value: number): CardRank => RANKS[value - LOWEST];
+/** The values of the straight from the ace to the five, the highest first */
+const WHEEL: ReadonlyArray<number> = [ACE, 5, 4, 3, 2];
 
 interface Face {
     readonly value: number;
     readonly suit: CardSuit;
 }
 
-/** The card the joker can stand for: the ten of a straight, or any card of the deck */
-const JOKER_FACES: ReadonlyArray<Face> = Object.values(CardSuit).flatMap((suit: CardSuit): Face[] => [
-    { value: TEN, suit },
-    ...RANKS.map((rank: CardRank): Face => ({ value: rankValue(rank), suit })),
-]);
+/** The cards the joker can stand for: any card of the deck */
+const JOKER_FACES: ReadonlyArray<Face> = Object.values(CardSuit)
+    .flatMap((suit: CardSuit): Face[] => RANKS.map((rank: CardRank): Face => ({ value: rankValue(rank), suit })));
 
-/** The category of the size of each group of cards, from the largest */
+/** The category of the size of each group of cards, from the largest, five different ranks aside */
 const CATEGORY_OF_GROUPS: Readonly<Record<string, HandCategory>> = {
     '5': HandCategory.FIVE_OF_A_KIND,
     '41': HandCategory.FOUR_OF_A_KIND,
@@ -52,20 +59,36 @@ const CATEGORY_OF_GROUPS: Readonly<Record<string, HandCategory>> = {
     '311': HandCategory.THREE_OF_A_KIND,
     '221': HandCategory.TWO_PAIR,
     '2111': HandCategory.ONE_PAIR,
-    // Five values out of the five the cards have: always the ten to the ace
-    '11111': HandCategory.STRAIGHT,
 };
+
+/** The category of five cards of different ranks */
+function distinctCategory(straight: boolean, flush: boolean, aceHigh: boolean): HandCategory {
+    if (straight && flush) {
+        return aceHigh ? HandCategory.ROYAL_FLUSH : HandCategory.STRAIGHT_FLUSH;
+    }
+    if (straight) {
+        return HandCategory.STRAIGHT;
+    }
+    return flush ? HandCategory.FLUSH : HandCategory.HIGH_CARD;
+}
 
 function faceValue(faces: ReadonlyArray<Face>, joker: boolean): HandValue {
     const counts: Map<number, number> = new Map<number, number>();
     faces.forEach((face: Face) => counts.set(face.value, (counts.get(face.value) ?? 0) + 1));
     const groups: [number, number][] = [...counts].sort(([valueA, countA]: [number, number], [valueB, countB]: [number, number]): number => countB - countA || valueB - valueA);
-    const category: HandCategory = CATEGORY_OF_GROUPS[groups.map(([, count]: [number, number]) => count).join('')];
+    const values: number[] = groups.map(([value]: [number, number]) => value);
+
+    if (groups.length < HAND_SIZE) {
+        return { category: CATEGORY_OF_GROUPS[groups.map(([, count]: [number, number]) => count).join('')], ranks: values.map((value: number) => rankOf(value)), joker };
+    }
+
+    const wheel: boolean = values.every((value: number, index: number) => value === WHEEL[index]);
+    const straight: boolean = wheel || values[0] - values[HAND_SIZE - 1] === HAND_SIZE - 1;
     const flush: boolean = faces.every((face: Face) => face.suit === faces[0].suit);
 
     return {
-        category: category === HandCategory.STRAIGHT && flush ? HandCategory.ROYAL_FLUSH : category,
-        ranks: groups.filter(([value]: [number, number]) => value !== TEN).map(([value]: [number, number]) => RANKS[value - TEN - 1]),
+        category: distinctCategory(straight, flush, values[0] === ACE && !wheel),
+        ranks: (wheel ? [...values.slice(1), ACE] : values).map((value: number) => rankOf(value)),
         joker,
     };
 }
