@@ -5,6 +5,7 @@
     },
     "loadingPage": "Memuat halaman…",
     "nav": {
+      "bidPoker": "Lelang",
       "chat": "Obrolan",
       "chess": "Catur",
       "home": "Beranda",
@@ -36,6 +37,11 @@
     "yes": "Ya"
   },
   "home": {
+    "bidPoker": {
+      "action": "Main",
+      "description": "4 hingga 8 pemain membeli kombinasi poker mereka lewat lelang dengan tawaran tertutup: yang terakhir membayar para pemenang.",
+      "title": "Poker lelang"
+    },
     "chat": {
       "action": "Mengobrol",
       "description": "Obrolan antarpeserta sebuah ruang, pesannya dikirim langsung dari peer ke peer.",

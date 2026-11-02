@@ -1,6 +1,7 @@
 import { Type } from '@angular/core';
 import { Route } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
+import { BidPoker } from '@app/modules/bid-poker/pages/bid-poker/bid-poker';
 import { ChatPage } from '@app/modules/chat-page/chat.page';
 import { SynchronousChess } from '@app/modules/chess/pages/synchronous-chess/synchronous-chess';
 import { HomePage } from '@app/modules/home-page/home.page';
@@ -11,7 +12,7 @@ import { TranslationScope } from '@app/services/language/enums/translation-scope
 import { leaveMatchGuard } from '@app/modules/room-layout/leave-match.guard';
 import { translationScopesGuard } from '@app/services/language/translation-scopes.guard';
 import { describe, expect, test } from 'vitest';
-import { chatPath, chessPath, homePath, pokerPath, roulettePath, routes, soundLabPath } from './app.routes';
+import { bidPokerPath, chatPath, chessPath, homePath, pokerPath, roulettePath, routes, soundLabPath } from './app.routes';
 
 describe('routes', () => {
     async function loadedComponent(path: string): Promise<unknown> {
@@ -25,6 +26,7 @@ describe('routes', () => {
         [chatPath, [translationScopesGuard]],
         [pokerPath, [translationScopesGuard]],
         [roulettePath, [translationScopesGuard]],
+        [bidPokerPath, [translationScopesGuard]],
         [soundLabPath, undefined],
     ])('the route \'%s\' should show once the translations of its games are loaded, without waiting for the APIs', (path: string, guards: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.canActivate).toEqual(guards);
@@ -36,6 +38,7 @@ describe('routes', () => {
         [chatPath, undefined],
         [pokerPath, [leaveMatchGuard]],
         [roulettePath, [leaveMatchGuard]],
+        [bidPokerPath, [leaveMatchGuard]],
     ])('the route \'%s\' should ask to confirm leaving a match its player plays', (path: string, guards: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.canDeactivate).toEqual(guards);
     });
@@ -46,6 +49,7 @@ describe('routes', () => {
         [chatPath, [provideTranslocoScope(TranslationScope.CHAT)]],
         [pokerPath, [provideTranslocoScope(TranslationScope.POKER, TranslationScope.CARDS, TranslationScope.CHAT)]],
         [roulettePath, [provideTranslocoScope(TranslationScope.ROULETTE, TranslationScope.CHAT)]],
+        [bidPokerPath, [provideTranslocoScope(TranslationScope.BID, TranslationScope.CARDS, TranslationScope.CHAT)]],
         [soundLabPath, undefined],
     ])('the route \'%s\' should provide the translations of the games it holds', (path: string, providers: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.providers).toEqual(providers);
@@ -57,6 +61,7 @@ describe('routes', () => {
         [chatPath, ChatPage],
         [pokerPath, SeventeenPoker],
         [roulettePath, RussianRoulette],
+        [bidPokerPath, BidPoker],
         [soundLabPath, SoundLabPage],
     ])('the route \'%s\' should load its page on demand', async (path: string, page: Type<unknown>) => {
         // When

@@ -285,6 +285,16 @@ Claude writes the translations of every new or changed key, into every language:
 | load (the bullets) | charger | cargar | carregar | carregar | laden | зарядить | doldurmak | mengisi | załadować | caricare |
 | bank | banque | banca | banca | banca | Bank | казна | banka | bank | bank | banco |
 | bankrupt (go) | faire faillite | caer en bancarrota | ir à falência | ir à falência | bankrott | банкрот | iflas etmek | bangkrut | bankrut | in bancarotta |
+| lot (of cards) | lot | lote | lote | lote | Los | лот | lot | lot | pakiet | lotto |
+| bid | enchère / enchérir | puja / pujar | lance / dar um lance | licitação / licitar | Gebot / bieten | ставка | teklif | tawaran | oferta / licytować | offerta |
+| auction | enchères | subasta | leilão | leilão | Auktion | аукцион | açık artırma | lelang | licytacja | asta |
+| catalogue (of the lots) | catalogue | catálogo | catálogo | catálogo | Katalog | каталог | katalog | katalog | katalog | catalogo |
+| dealing session | séance de distribution | ronda de reparto | rodada de distribuição | ronda de distribuição | Verteilungsrunde | раунд раздачи | dağıtım turu | sesi pembagian | runda rozdania | sessione di distribuzione |
+| change session | séance d'échange | ronda de cambio | rodada de troca | ronda de troca | Tauschrunde | раунд обмена | değişim turu | sesi tukar | runda wymiany | sessione di cambio |
+| discard | défausser | descartar | descartar | descartar | abwerfen | сбросить | atmak | membuang | odrzucić | scartare |
+| seller (of a lot) | vendeur | vendedor | vendedor | vendedor | Verkäufer | продавец | satıcı | penjual | sprzedawca | venditore |
+| pig (the last ones) | cochon | cerdo | porco | porco | Schwein | свинья | domuz | babi | świnia | maiale |
+| coin | pièce | moneda | moeda | moeda | Münze | монета | jeton | koin | moneta | moneta |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 

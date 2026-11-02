@@ -5,6 +5,8 @@ export enum TranslationScope {
     CHAT = 'chat',
     POKER = 'poker',
     ROULETTE = 'roulette',
+    /** The Bid Poker */
+    BID = 'bid',
     /** The names of the playing cards, shared by the card games */
     CARDS = 'cards',
 }

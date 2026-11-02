@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Os lances são lacrados: ninguém, nem mesmo o servidor, vê um lance antes que o leilão do lote termine.",
+      "lots": "As 52 cartas são divididas em lotes públicos: cada jogador vê as cartas dos outros.",
+      "pigs": "Os últimos são os porcos: eles pagam os prêmios dos três primeiros."
+    },
+    "rooms": "Crie uma sala ou entre em uma, para jogar com outras pessoas.",
+    "summary": "Um jogo do mangá Liar Game: de 4 a 8 jogadores dão lances com suas moedas em lotes de cartas, depois vendem seus descartes uns aos outros, para terminar com a melhor mão de pôquer.",
+    "tagline": "Compre sua mão de pôquer em leilão.",
+    "title": "Pôquer de leilão"
+  },
+  "rules": {
+    "change": {
+      "discard": "Depois vêm 5 rodadas de troca. Cada jogador pode descartar cartas, também de forma lacrada: as cartas que um jogador descarta formam um lote, na ordem dos seus descartes. Os lotes vão a leilão da mesma forma, e as cartas novas vêm só dos leilões:",
+      "seller": "As moedas vão para o jogador que descartou o lote, que não pode dar lances nele.",
+      "title": "As rodadas de troca",
+      "unsold": "Um lote sem nenhum lance volta para o jogador que o descartou."
+    },
+    "dealing": {
+      "bank": "As moedas vão para a banca. Um lote sem nenhum lance sai do jogo.",
+      "catalogue": "As 52 cartas são embaralhadas e divididas em 9 ou 10 lotes de 5 ou 6 cartas, o catálogo, mostrado a todos os jogadores. Depois cada lote vai a leilão, um de cada vez:",
+      "highest": "O lance mais alto leva o lote. Em caso de empate, vence o lance dado primeiro.",
+      "sealed": "Todos os jogadores dão seus lances ao mesmo tempo, lacrados: ninguém vê um lance antes que os lances do lote se encerrem. Um lance de 0 não é um lance. Um lance não pode ser alterado.",
+      "title": "A rodada de distribuição"
+    },
+    "end": {
+      "hand": "A mão de um jogador são suas 5 melhores cartas, classificadas como no pôquer, carta alta incluída. Um jogador com menos de 5 cartas não tem mão.",
+      "pigs": "Os últimos são os porcos: todo jogador sem mão ou, quando todos têm uma, os jogadores da pior mão. Sempre há pelo menos um porco, e cada porco paga 150 moedas.",
+      "prizes": "O 1º, o 2º e o 3º dos outros ganham 100, 40 e 10 moedas, multiplicadas pelo número de porcos. Mãos iguais dividem os prêmios das suas posições, em moedas inteiras, e o resto vai para a banca. Quando todas as mãos são iguais, todos os jogadores são porcos.",
+      "title": "O fim"
+    },
+    "fair": {
+      "deck": "Ninguém embaralha sozinho: cada jogador dá uma parte aleatória lacrada, e o baralho é embaralhado a partir de todas elas, o mesmo em todas as páginas.",
+      "sealed": "Um lance é lacrado: a página envia o hash dele com um salt aleatório, depois o revela quando os lances se encerram. Um lance revelado diferente do lacrado, ou acima das moedas do seu jogador, conta como nenhum lance e é denunciado.",
+      "title": "Jogo limpo"
+    },
+    "setup": {
+      "coins": "Cada jogador começa com 300 moedas e deve 100 no fim da partida.",
+      "players": "De 4 a 8 jogadores ocupam os lugares, depois um deles inicia a partida: os lugares ficam ocupados até o fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do pôquer de leilão",
+    "times": {
+      "late": "Um jogador que não age a tempo não dá lance nem descarta nada, e a partida continua sem esperar por ele até que ele volte a agir.",
+      "phases": "Um lote fica aberto por 30 segundos (90 para o primeiro, para ler o catálogo), uma revelação por 15 segundos e os descartes por 45 segundos: cada um se encerra assim que todos os jogadores agiram.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "As licitações são fechadas: ninguém, nem sequer o servidor, vê uma licitação antes de o leilão do seu lote fechar.",
+      "lots": "As 52 cartas são divididas em lotes públicos: cada jogador vê as cartas dos outros.",
+      "pigs": "Os últimos são os porcos: pagam os prémios dos três primeiros."
+    },
+    "rooms": "Crie uma sala, ou entre numa, para jogar com outros.",
+    "summary": "Um jogo da manga Liar Game: 4 a 8 jogadores licitam as suas moedas em lotes de cartas e depois vendem uns aos outros as cartas que descartam, para terminar com a melhor mão de póquer.",
+    "tagline": "Compre a sua mão de póquer em leilão.",
+    "title": "Póquer de leilão"
+  },
+  "rules": {
+    "change": {
+      "discard": "Seguem-se 5 rondas de troca. Cada jogador pode descartar cartas, também em segredo: as cartas que um jogador descarta formam um lote, pela ordem em que as descartou. Os lotes vão a leilão da mesma forma, e as cartas novas só vêm dos leilões:",
+      "seller": "As moedas vão para o jogador que descartou o lote, que não pode licitar nele.",
+      "title": "As rondas de troca",
+      "unsold": "Um lote sem licitações volta para o jogador que o descartou."
+    },
+    "dealing": {
+      "bank": "As moedas vão para a banca. Um lote sem licitações sai do jogo.",
+      "catalogue": "As 52 cartas são baralhadas e divididas em 9 ou 10 lotes de 5 ou 6 cartas, o catálogo, mostrado a todos os jogadores. Depois, cada lote vai a leilão à vez:",
+      "highest": "A licitação mais alta ganha o lote. Em caso de empate, ganha a licitação feita primeiro.",
+      "sealed": "Todos os jogadores licitam ao mesmo tempo, em licitação fechada: ninguém vê uma licitação antes de as licitações do lote fecharem. Uma licitação de 0 não é uma licitação. Uma licitação não pode ser alterada.",
+      "title": "A ronda de distribuição"
+    },
+    "end": {
+      "hand": "A mão de um jogador são as suas 5 melhores cartas, classificadas como no póquer, incluindo a carta alta. Um jogador com menos de 5 cartas não tem mão.",
+      "pigs": "Os últimos são os porcos: todos os jogadores sem mão ou, quando todos os jogadores têm uma, os jogadores da pior mão. Há sempre pelo menos um porco, e cada porco paga 150 moedas.",
+      "prizes": "O 1.º, o 2.º e o 3.º dos restantes ganham 100, 40 e 10 moedas, multiplicadas pelo número de porcos. As mãos iguais dividem os prémios das suas posições, em moedas inteiras, e o resto vai para a banca. Quando todas as mãos são iguais, todos os jogadores são porcos.",
+      "title": "O fim"
+    },
+    "fair": {
+      "deck": "Ninguém baralha sozinho: cada jogador dá uma parte aleatória fechada, e o baralho é baralhado a partir de todas elas, igual em todas as páginas.",
+      "sealed": "Uma licitação é fechada: a página envia o seu hash com um sal aleatório e depois revela-a quando as licitações fecham. Uma licitação revelada de forma diferente da fechada, ou acima das moedas do seu jogador, conta como nenhuma licitação e é denunciada.",
+      "title": "Jogo limpo"
+    },
+    "setup": {
+      "coins": "Cada jogador começa com 300 moedas e deve 100 no fim do jogo.",
+      "players": "4 a 8 jogadores ocupam os lugares e depois um deles inicia o jogo: os lugares ficam ocupados até ao fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do póquer de leilão",
+    "times": {
+      "late": "Um jogador que não age a tempo não licita nem descarta nada, e o jogo continua sem esperar por ele até que volte a agir.",
+      "phases": "Um lote fica aberto durante 30 segundos (90 para o primeiro, para ler o catálogo), uma revelação durante 15 segundos e os descartes durante 45 segundos: cada um fecha assim que todos os jogadores tiverem agido.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  }
+}

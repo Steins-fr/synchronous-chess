@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Oferty są tajne: nikt, nawet serwer, nie widzi oferty, zanim nie zamknie się licytacja jej pakietu.",
+      "lots": "52 karty są dzielone na jawne pakiety: każdy gracz widzi karty pozostałych.",
+      "pigs": "Ostatni to świnie: płacą nagrody pierwszej trójki."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z mangi Liar Game: od 4 do 8 graczy licytuje monetami pakiety kart, a potem sprzedaje sobie nawzajem odrzucone karty, by skończyć z najlepszym układem pokerowym.",
+    "tagline": "Kup swój układ pokerowy na licytacji.",
+    "title": "Poker licytacyjny"
+  },
+  "rules": {
+    "change": {
+      "discard": "Potem następuje 5 rund wymiany. Każdy gracz może odrzucić karty, również w tajemnicy: karty odrzucone przez gracza tworzą pakiet, w kolejności ich odrzucenia. Pakiety są licytowane w ten sam sposób, a nowe karty pochodzą wyłącznie z licytacji:",
+      "seller": "Monety trafiają do gracza, który odrzucił pakiet i nie może go licytować.",
+      "title": "Rundy wymiany",
+      "unsold": "Pakiet, którego nikt nie licytuje, wraca do gracza, który go odrzucił."
+    },
+    "dealing": {
+      "bank": "Monety trafiają do banku. Pakiet, którego nikt nie licytuje, odpada z gry.",
+      "catalogue": "52 karty są tasowane i dzielone na 9 lub 10 pakietów po 5 lub 6 kart, tworzących katalog, który widzi każdy gracz. Następnie każdy pakiet po kolei trafia na licytację:",
+      "highest": "Najwyższa oferta wygrywa pakiet. Przy równych ofertach wygrywa ta złożona wcześniej.",
+      "sealed": "Wszyscy gracze składają oferty jednocześnie, w tajemnicy: nikt nie widzi oferty przed zamknięciem licytacji pakietu. Oferta 0 oznacza brak oferty. Oferty nie można zmienić.",
+      "title": "Runda rozdania"
+    },
+    "end": {
+      "hand": "Układ gracza to jego 5 najlepszych kart, ocenianych jak w pokerze, łącznie z wysoką kartą. Gracz, który ma mniej niż 5 kart, nie ma układu.",
+      "pigs": "Ostatni to świnie: każdy gracz bez układu, a gdy każdy gracz ma układ, gracze z najsłabszym układem. Zawsze jest co najmniej jedna świnia, a każda świnia płaci 150 monet.",
+      "prizes": "1., 2. i 3. spośród pozostałych wygrywają 100, 40 i 10 monet, pomnożone przez liczbę świń. Równe układy dzielą się nagrodami swoich miejsc, w całych monetach, a reszta trafia do banku. Gdy wszystkie układy są równe, każdy gracz jest świnią.",
+      "title": "Koniec partii"
+    },
+    "fair": {
+      "deck": "Nikt nie tasuje sam: każdy gracz daje tajną losową część, a talia jest tasowana ze wszystkich części, tak samo na każdej stronie.",
+      "sealed": "Oferta jest tajna: strona wysyła jej skrót z losową solą, a odsłania ją po zamknięciu licytacji. Oferta odsłonięta niezgodnie z wysłanym skrótem lub wyższa niż monety gracza liczy się jako brak oferty i zostaje zgłoszona.",
+      "title": "Uczciwa gra"
+    },
+    "setup": {
+      "coins": "Każdy gracz zaczyna z 300 monetami, a na koniec partii jest winien 100.",
+      "players": "Od 4 do 8 graczy zajmuje miejsca, potem jeden z nich rozpoczyna partię: miejsca pozostają zajęte do jej końca.",
+      "title": "Stół"
+    },
+    "summary": "Zasady pokera licytacyjnego",
+    "times": {
+      "late": "Gracz, który nie zdąży, niczego nie licytuje ani nie odrzuca, a gra toczy się dalej bez czekania na niego, dopóki znów nie wykona ruchu.",
+      "phases": "Pakiet jest otwarty przez 30 sekund (90 dla pierwszego, by przeczytać katalog), odsłanianie trwa 15 sekund, a odrzucanie 45 sekund: każda faza kończy się, gdy tylko wszyscy gracze wykonają ruch.",
+      "title": "Czas"
+    },
+    "title": "Zasady"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "The bids are sealed: no one, not even the server, sees a bid before the auction of its lot closes.",
+      "lots": "The 52 cards are split into public lots: every player sees the cards of the others.",
+      "pigs": "The last ones are the pigs: they pay the prizes of the first three."
+    },
+    "rooms": "Create a room, or join one, to play with others.",
+    "summary": "A game of the manga Liar Game: 4 to 8 players bid their coins on lots of cards, then sell their discards to each other, to end with the best poker hand.",
+    "tagline": "Buy your poker hand at auction.",
+    "title": "Bid poker"
+  },
+  "rules": {
+    "change": {
+      "discard": "Then come 5 change sessions. Each player may discard cards, sealed too: the cards a player discards make a lot, in the order of its discards. The lots are auctioned the same way, and new cards come from the auctions only:",
+      "seller": "The coins go to the player who discarded the lot, who can not bid on it.",
+      "title": "The change sessions",
+      "unsold": "A lot nobody bids on goes back to the player who discarded it."
+    },
+    "dealing": {
+      "bank": "The coins go to the bank. A lot nobody bids on leaves the game.",
+      "catalogue": "The 52 cards are shuffled and split into 9 or 10 lots of 5 or 6 cards, the catalogue, shown to every player. Then each lot is auctioned in turn:",
+      "highest": "The highest bid wins the lot. On a tie, the bid made first wins.",
+      "sealed": "Every player bids at the same time, sealed: no one sees a bid before the bidding of the lot closes. A bid of 0 is no bid. A bid can not be changed.",
+      "title": "The dealing session"
+    },
+    "end": {
+      "hand": "The hand of a player is its best 5 cards, ranked as in poker, the high card included. A player with fewer than 5 cards has no hand.",
+      "pigs": "The last ones are the pigs: every player without a hand or, when every player has one, the players of the worst hand. There is always one pig at least, and each pig pays 150 coins.",
+      "prizes": "The 1st, the 2nd and the 3rd of the others win 100, 40 and 10 coins, multiplied by the number of pigs. Equal hands share the prizes of their places, in whole coins, the rest going to the bank. When every hand is equal, every player is a pig.",
+      "title": "The end"
+    },
+    "fair": {
+      "deck": "No one shuffles alone: each player gives a sealed random part, and the deck is shuffled from all of them, the same on every page.",
+      "sealed": "A bid is sealed: the page sends its hash with a random salt, then reveals it once the bidding closes. A bid revealed otherwise than sealed, or above the coins of its player, counts as no bid and is reported.",
+      "title": "Fair play"
+    },
+    "setup": {
+      "coins": "Each player starts with 300 coins, and owes 100 at the end of the game.",
+      "players": "4 to 8 players take the seats, then one of them starts the game: the seats stay taken until it is over.",
+      "title": "The table"
+    },
+    "summary": "Rules of the bid poker",
+    "times": {
+      "late": "A player who does not act in time bids or discards nothing, and the game goes on without waiting for it until it acts again.",
+      "phases": "A lot is open for 30 seconds (90 for the first, to read the catalogue), a reveal for 15 seconds and the discards for 45 seconds: each closes as soon as every player acted.",
+      "title": "The times"
+    },
+    "title": "Rules"
+  }
+}

@@ -5,6 +5,7 @@
     },
     "loadingPage": "Carregando a página…",
     "nav": {
+      "bidPoker": "Leilão",
       "chat": "Bate-papo",
       "chess": "Xadrez",
       "home": "Início",
@@ -36,6 +37,11 @@
     "yes": "Sim"
   },
   "home": {
+    "bidPoker": {
+      "action": "Jogar",
+      "description": "De 4 a 8 jogadores compram sua mão de pôquer em leilão, com lances lacrados: os últimos pagam os vencedores.",
+      "title": "Pôquer de leilão"
+    },
     "chat": {
       "action": "Conversar",
       "description": "Um bate-papo entre os participantes de uma sala, com as mensagens trocadas de ponto a ponto.",

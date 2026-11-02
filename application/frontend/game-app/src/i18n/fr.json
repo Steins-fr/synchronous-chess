@@ -5,6 +5,7 @@
     },
     "loadingPage": "Chargement de la page…",
     "nav": {
+      "bidPoker": "Enchères",
       "chat": "Tchat",
       "chess": "Échecs",
       "home": "Accueil",
@@ -36,6 +37,11 @@
     "yes": "Oui"
   },
   "home": {
+    "bidPoker": {
+      "action": "Jouer",
+      "description": "De 4 à 8 joueurs achètent leur main de poker aux enchères, sous pli scellé : les derniers paient les gagnants.",
+      "title": "Poker aux enchères"
+    },
     "chat": {
       "action": "Discuter",
       "description": "Un salon de discussion entre les participants d'une salle, leurs messages échangés de pair à pair.",

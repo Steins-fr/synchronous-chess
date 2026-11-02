@@ -5,6 +5,7 @@
     },
     "loadingPage": "Cargando la página…",
     "nav": {
+      "bidPoker": "Subasta",
       "chat": "Chat",
       "chess": "Ajedrez",
       "home": "Inicio",
@@ -36,6 +37,11 @@
     "yes": "Sí"
   },
   "home": {
+    "bidPoker": {
+      "action": "Jugar",
+      "description": "De 4 a 8 jugadores compran su mano de póker en subasta, con pujas selladas: los últimos pagan a los ganadores.",
+      "title": "Póker de subasta"
+    },
     "chat": {
       "action": "Chatear",
       "description": "Un chat entre los participantes de una sala, con sus mensajes enviados de igual a igual.",

@@ -5,6 +5,7 @@
     },
     "loadingPage": "Seite wird geladen…",
     "nav": {
+      "bidPoker": "Auktion",
       "chat": "Chat",
       "chess": "Schach",
       "home": "Start",
@@ -36,6 +37,11 @@
     "yes": "Ja"
   },
   "home": {
+    "bidPoker": {
+      "action": "Spielen",
+      "description": "4 bis 8 Spieler kaufen ihre Pokerhand auf einer Auktion, mit verdeckten Geboten: Die Letzten zahlen die Gewinner aus.",
+      "title": "Auktionspoker"
+    },
     "chat": {
       "action": "Chatten",
       "description": "Ein Chat zwischen den Teilnehmern eines Raums, ihre Nachrichten direkt von Peer zu Peer gesendet.",

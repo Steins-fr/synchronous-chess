@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Teklifler kapalıdır: lotun açık artırması kapanmadan hiç kimse, sunucu bile, bir teklifi göremez.",
+      "lots": "52 kart herkese açık lotlara bölünür: her oyuncu diğerlerinin kartlarını görür.",
+      "pigs": "Sonuncular domuzlardır: ilk üçün ödüllerini onlar öder."
+    },
+    "rooms": "Başkalarıyla oynamak için bir oda oluşturun ya da bir odaya katılın.",
+    "summary": "Liar Game mangasından bir oyun: 4 ila 8 oyuncu jetonlarıyla kart lotlarına teklif verir, ardından attıkları kartları birbirine satar; amaç en iyi poker eliyle bitirmektir.",
+    "tagline": "Poker elinizi açık artırmadan satın alın.",
+    "title": "Açık artırma pokeri"
+  },
+  "rules": {
+    "change": {
+      "discard": "Ardından 5 değişim turu gelir. Her oyuncu, yine kapalı olarak, kart atabilir: bir oyuncunun attığı kartlar, atılış sırasıyla bir lot oluşturur. Lotlar aynı şekilde açık artırmaya çıkar ve yeni kartlar yalnızca açık artırmalardan gelir:",
+      "seller": "Jetonlar lotu atan oyuncuya gider; bu oyuncu o lota teklif veremez.",
+      "title": "Değişim turları",
+      "unsold": "Kimsenin teklif vermediği bir lot, onu atan oyuncuya geri döner."
+    },
+    "dealing": {
+      "bank": "Jetonlar bankaya gider. Kimsenin teklif vermediği bir lot oyundan çıkar.",
+      "catalogue": "52 kart karıştırılır ve 5 ya da 6 kartlık 9 ya da 10 lota bölünür: her oyuncuya gösterilen katalog. Ardından her lot sırayla açık artırmaya çıkar:",
+      "highest": "Lotu en yüksek teklif kazanır. Eşitlikte önce verilen teklif kazanır.",
+      "sealed": "Her oyuncu aynı anda, kapalı olarak teklif verir: lotun teklifleri kapanmadan hiç kimse bir teklifi göremez. 0 teklif, teklif vermemek demektir. Bir teklif değiştirilemez.",
+      "title": "Dağıtım turu"
+    },
+    "end": {
+      "hand": "Bir oyuncunun eli, pokerdeki gibi sıralanan en iyi 5 kartıdır, yüksek kart dahil. 5'ten az kartı olan oyuncunun eli yoktur.",
+      "pigs": "Sonuncular domuzlardır: eli olmayan her oyuncu ya da her oyuncunun bir eli varsa en kötü ele sahip oyuncular. Her zaman en az bir domuz vardır ve her domuz 150 jeton öder.",
+      "prizes": "Diğerlerinden birinci, ikinci ve üçüncü olanlar, domuz sayısıyla çarpılmış 100, 40 ve 10 jeton kazanır. Eşit eller sıralarının ödüllerini tam jeton olarak paylaşır, artan bankaya gider. Tüm eller eşitse her oyuncu domuzdur.",
+      "title": "Oyunun sonu"
+    },
+    "fair": {
+      "deck": "Kimse tek başına karıştırmaz: her oyuncu kapalı, rastgele bir parça verir ve deste hepsinden karıştırılır; her sayfada aynı deste.",
+      "sealed": "Teklif kapalıdır: sayfa, rastgele bir tuzla birlikte teklifin özetini gönderir, teklifler kapanınca da teklifi açıklar. Kapalı hâlinden farklı açıklanan ya da oyuncusunun jetonlarını aşan bir teklif, teklif yok sayılır ve bildirilir.",
+      "title": "Dürüst oyun"
+    },
+    "setup": {
+      "coins": "Her oyuncu 300 jetonla başlar ve oyunun sonunda 100 jeton borçludur.",
+      "players": "4 ila 8 oyuncu yerlere oturur, ardından içlerinden biri oyunu başlatır: yerler oyun bitene kadar dolu kalır.",
+      "title": "Masa"
+    },
+    "summary": "Açık artırma pokerinin kuralları",
+    "times": {
+      "late": "Zamanında hamle yapmayan oyuncu hiç teklif vermemiş ya da hiç kart atmamış sayılır ve oyun, o oyuncu yeniden hamle yapana kadar onu beklemeden devam eder.",
+      "phases": "Bir lot 30 saniye (kataloğu okumak için ilki 90 saniye), bir açıklama 15 saniye ve kart atma 45 saniye açık kalır: her biri tüm oyuncular hamlesini yapar yapmaz kapanır.",
+      "title": "Süreler"
+    },
+    "title": "Kurallar"
+  }
+}

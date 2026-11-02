@@ -28,6 +28,17 @@
             <p class="muted-note">{{ t('roulette.description') }}</p>
             <span class="game-card-action">{{ t('roulette.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
+        <a [routerLink]="bidPokerPath" class="game-card" id="game-card-bid-poker">
+            <!-- The gavel of an auction: the lots of cards go to the highest bid -->
+            <span aria-hidden="true" class="game-card-glyph">
+                <svg class="size-18" fill="currentColor" viewBox="0 0 100 100">
+                    <path d="M42.5 9.3 L56.7 23.5 L25.5 54.7 L11.3 40.5 Z M40.8 33.2 L90.8 83.2 L85.2 88.8 L35.2 38.8 Z M8 84 H56 V94 H8 Z" />
+                </svg>
+            </span>
+            <h2 class="m-0 mat-title-large">{{ t('bidPoker.title') }}</h2>
+            <p class="muted-note">{{ t('bidPoker.description') }}</p>
+            <span class="game-card-action">{{ t('bidPoker.action') }} <mat-icon>arrow_forward</mat-icon></span>
+        </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->
             <span aria-hidden="true" class="game-card-visual bg-app-surface text-app-accent-text">

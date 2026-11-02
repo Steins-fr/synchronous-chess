@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Le offerte sono segrete: nessuno, nemmeno il server, vede un'offerta prima che si chiuda l'asta del suo lotto.",
+      "lots": "Le 52 carte sono divise in lotti pubblici: ogni giocatore vede le carte degli altri.",
+      "pigs": "Gli ultimi sono i maiali: pagano i premi dei primi tre."
+    },
+    "rooms": "Crea una stanza o entra in una per giocare con altri.",
+    "summary": "Un gioco del manga Liar Game: da 4 a 8 giocatori offrono le loro monete per dei lotti di carte, poi si vendono a vicenda le carte scartate, per finire con la migliore mano di poker.",
+    "tagline": "Compra la tua mano di poker all'asta.",
+    "title": "Poker all'asta"
+  },
+  "rules": {
+    "change": {
+      "discard": "Poi arrivano 5 sessioni di cambio. Ogni giocatore può scartare delle carte, anche qui in segreto: le carte scartate da un giocatore formano un lotto, nell'ordine in cui le ha scartate. I lotti vanno all'asta allo stesso modo, e le nuove carte arrivano solo dalle aste:",
+      "seller": "Le monete vanno al giocatore che ha scartato il lotto, che non può fare offerte su di esso.",
+      "title": "Le sessioni di cambio",
+      "unsold": "Un lotto senza offerte torna al giocatore che l'ha scartato."
+    },
+    "dealing": {
+      "bank": "Le monete vanno alla banca. Un lotto senza offerte esce dal gioco.",
+      "catalogue": "Le 52 carte vengono mescolate e divise in 9 o 10 lotti da 5 o 6 carte, il catalogo, mostrato a ogni giocatore. Poi ogni lotto va all'asta, uno dopo l'altro:",
+      "highest": "L'offerta più alta vince il lotto. In caso di parità, vince l'offerta fatta per prima.",
+      "sealed": "Tutti i giocatori fanno la loro offerta nello stesso momento, in segreto: nessuno vede un'offerta prima che si chiudano le offerte del lotto. Un'offerta di 0 non è un'offerta. Un'offerta non si può cambiare.",
+      "title": "La sessione di distribuzione"
+    },
+    "end": {
+      "hand": "La mano di un giocatore sono le sue 5 carte migliori, classificate come nel poker, carta alta compresa. Un giocatore con meno di 5 carte non ha una mano.",
+      "pigs": "Gli ultimi sono i maiali: ogni giocatore senza mano o, quando tutti i giocatori ne hanno una, i giocatori con la mano peggiore. C'è sempre almeno un maiale, e ogni maiale paga 150 monete.",
+      "prizes": "Il 1°, il 2° e il 3° degli altri vincono 100, 40 e 10 monete, moltiplicate per il numero di maiali. Le mani uguali si dividono i premi dei loro posti, in monete intere, e il resto va alla banca. Quando tutte le mani sono uguali, ogni giocatore è un maiale.",
+      "title": "La fine"
+    },
+    "fair": {
+      "deck": "Nessuno mescola da solo: ogni giocatore fornisce una parte casuale segreta, e il mazzo viene mescolato a partire da tutte, lo stesso su ogni pagina.",
+      "sealed": "Un'offerta è segreta: la pagina ne invia l'hash con un sale casuale, poi la rivela quando le offerte si chiudono. Un'offerta rivelata in modo diverso da quella segreta, o superiore alle monete del suo giocatore, non conta come offerta e viene segnalata.",
+      "title": "Gioco leale"
+    },
+    "setup": {
+      "coins": "Ogni giocatore inizia con 300 monete e ne deve 100 alla fine della partita.",
+      "players": "Da 4 a 8 giocatori prendono posto, poi uno di loro avvia la partita: i posti restano occupati fino alla sua fine.",
+      "title": "Il tavolo"
+    },
+    "summary": "Regole del poker all'asta",
+    "times": {
+      "late": "Un giocatore che non agisce in tempo non offre né scarta nulla, e la partita va avanti senza aspettarlo finché non agisce di nuovo.",
+      "phases": "Un lotto resta aperto 30 secondi (90 per il primo, per leggere il catalogo), una rivelazione 15 secondi e gli scarti 45 secondi: ciascuno si chiude appena tutti i giocatori hanno agito.",
+      "title": "I tempi"
+    },
+    "title": "Regole"
+  }
+}

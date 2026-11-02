@@ -5,6 +5,7 @@
     },
     "loadingPage": "Loading the page…",
     "nav": {
+      "bidPoker": "Bid poker",
       "chat": "Chat",
       "chess": "Chess",
       "home": "Home",
@@ -36,6 +37,11 @@
     "yes": "Yes"
   },
   "home": {
+    "bidPoker": {
+      "action": "Play",
+      "description": "From 4 to 8 players buy their poker hand at auction, their bids sealed: the last ones pay the winners.",
+      "title": "Bid poker"
+    },
     "chat": {
       "action": "Chat",
       "description": "A chat between the participants of a room, their messages sent peer to peer.",

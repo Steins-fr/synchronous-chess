@@ -5,6 +5,7 @@
     },
     "loadingPage": "Sayfa yükleniyor…",
     "nav": {
+      "bidPoker": "Açık artırma",
       "chat": "Sohbet",
       "chess": "Satranç",
       "home": "Ana sayfa",
@@ -36,6 +37,11 @@
     "yes": "Evet"
   },
   "home": {
+    "bidPoker": {
+      "action": "Oyna",
+      "description": "4 ila 8 oyuncu poker ellerini kapalı tekliflerle açık artırmadan satın alır: sonuncular kazananlara öder.",
+      "title": "Açık artırma pokeri"
+    },
     "chat": {
       "action": "Sohbet et",
       "description": "Bir odanın katılımcıları arasında, mesajları eşten eşe gönderilen bir sohbet.",

@@ -5,6 +5,7 @@
     },
     "loadingPage": "Caricamento della pagina…",
     "nav": {
+      "bidPoker": "Asta",
       "chat": "Chat",
       "chess": "Scacchi",
       "home": "Home",
@@ -36,6 +37,11 @@
     "yes": "Sì"
   },
   "home": {
+    "bidPoker": {
+      "action": "Gioca",
+      "description": "Da 4 a 8 giocatori comprano la loro mano di poker all'asta, con offerte segrete: gli ultimi pagano i vincitori.",
+      "title": "Poker all'asta"
+    },
     "chat": {
       "action": "Chatta",
       "description": "Una chat tra i partecipanti di una stanza, con i messaggi scambiati direttamente tra loro.",

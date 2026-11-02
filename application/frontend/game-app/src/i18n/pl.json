@@ -5,6 +5,7 @@
     },
     "loadingPage": "Ładowanie strony…",
     "nav": {
+      "bidPoker": "Licytacja",
       "chat": "Czat",
       "chess": "Szachy",
       "home": "Start",
@@ -36,6 +37,11 @@
     "yes": "Tak"
   },
   "home": {
+    "bidPoker": {
+      "action": "Graj",
+      "description": "Od 4 do 8 graczy kupuje swój układ pokerowy na licytacji, w tajnych ofertach: ostatni płacą zwycięzcom.",
+      "title": "Poker licytacyjny"
+    },
     "chat": {
       "action": "Rozmawiaj",
       "description": "Czat między uczestnikami pokoju, a ich wiadomości wysyłane bezpośrednio między nimi.",

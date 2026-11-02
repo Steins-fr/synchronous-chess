@@ -1,0 +1,51 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Die Gebote sind verdeckt: Niemand, nicht einmal der Server, sieht ein Gebot, bevor die Auktion seines Loses endet.",
+      "lots": "Die 52 Karten werden in öffentliche Lose aufgeteilt: Jeder Spieler sieht die Karten der anderen.",
+      "pigs": "Die Letzten sind die Schweine: Sie zahlen die Preise der ersten drei."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem bei, um mit anderen zu spielen.",
+    "summary": "Ein Spiel aus dem Manga Liar Game: 4 bis 8 Spieler bieten ihre Münzen auf Lose von Karten und verkaufen einander dann ihre abgeworfenen Karten, um am Ende die beste Pokerhand zu haben.",
+    "tagline": "Kaufe deine Pokerhand auf einer Auktion.",
+    "title": "Auktionspoker"
+  },
+  "rules": {
+    "change": {
+      "discard": "Dann folgen 5 Tauschrunden. Jeder Spieler darf Karten abwerfen, ebenfalls verdeckt: Die Karten, die ein Spieler abwirft, bilden ein Los, in der Reihenfolge, in der er sie abwirft. Die Lose werden auf dieselbe Weise versteigert, und neue Karten gibt es nur aus den Auktionen:",
+      "seller": "Die Münzen gehen an den Spieler, der das Los abgeworfen hat; er kann nicht darauf bieten.",
+      "title": "Die Tauschrunden",
+      "unsold": "Ein Los, auf das niemand bietet, geht an den Spieler zurück, der es abgeworfen hat."
+    },
+    "dealing": {
+      "bank": "Die Münzen gehen an die Bank. Ein Los, auf das niemand bietet, scheidet aus dem Spiel aus.",
+      "catalogue": "Die 52 Karten werden gemischt und in 9 oder 10 Lose zu 5 oder 6 Karten aufgeteilt, den Katalog, den jeder Spieler sieht. Dann wird jedes Los der Reihe nach versteigert:",
+      "highest": "Das höchste Gebot gewinnt das Los. Bei Gleichstand gewinnt das zuerst abgegebene Gebot.",
+      "sealed": "Alle Spieler bieten gleichzeitig und verdeckt: Niemand sieht ein Gebot, bevor das Bieten auf das Los endet. Ein Gebot von 0 ist kein Gebot. Ein Gebot kann nicht geändert werden.",
+      "title": "Die Verteilungsrunde"
+    },
+    "end": {
+      "hand": "Die Hand eines Spielers sind seine besten 5 Karten, gewertet wie beim Poker, die höchste Karte eingeschlossen. Ein Spieler mit weniger als 5 Karten hat keine Hand.",
+      "pigs": "Die Letzten sind die Schweine: jeder Spieler ohne Hand oder, wenn jeder Spieler eine hat, die Spieler mit der schlechtesten Hand. Es gibt immer mindestens ein Schwein, und jedes Schwein zahlt 150 Münzen.",
+      "prizes": "Der 1., der 2. und der 3. der Übrigen gewinnen 100, 40 und 10 Münzen, multipliziert mit der Anzahl der Schweine. Gleiche Hände teilen sich die Preise ihrer Ränge, in ganzen Münzen; der Rest geht an die Bank. Sind alle Hände gleich, ist jeder Spieler ein Schwein.",
+      "title": "Das Ende"
+    },
+    "fair": {
+      "deck": "Niemand mischt allein: Jeder Spieler gibt einen verdeckten Zufallsbeitrag, und das Blatt wird aus allen gemischt, auf jeder Seite gleich.",
+      "sealed": "Ein Gebot ist verdeckt: Die Seite sendet seinen Hash mit einem zufälligen Salt und deckt es auf, sobald das Bieten endet. Ein Gebot, das anders aufgedeckt wird, als es abgegeben wurde, oder das die Münzen seines Spielers übersteigt, gilt als kein Gebot und wird gemeldet.",
+      "title": "Faires Spiel"
+    },
+    "setup": {
+      "coins": "Jeder Spieler beginnt mit 300 Münzen und schuldet am Ende des Spiels 100.",
+      "players": "4 bis 8 Spieler nehmen die Plätze ein, dann startet einer von ihnen das Spiel: Die Plätze bleiben besetzt, bis es vorbei ist.",
+      "title": "Der Tisch"
+    },
+    "summary": "Regeln des Auktionspokers",
+    "times": {
+      "late": "Ein Spieler, der nicht rechtzeitig handelt, bietet nichts bzw. wirft nichts ab, und das Spiel wartet nicht mehr auf ihn, bis er wieder handelt.",
+      "phases": "Ein Los ist 30 Sekunden offen (das erste 90, um den Katalog zu lesen), ein Aufdecken 15 Sekunden und das Abwerfen 45 Sekunden: Jede Phase endet, sobald alle Spieler gehandelt haben.",
+      "title": "Die Zeiten"
+    },
+    "title": "Regeln"
+  }
+}
