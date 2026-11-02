@@ -43,4 +43,8 @@ describe('CryptoHelper', () => {
     test('sha256 should digest a text as hexadecimal', async () => {
         expect(await CryptoHelper.sha256('abc')).toEqual('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
     });
+
+    test('sha256Bytes should digest a text as bytes', async () => {
+        expect(CryptoHelper.toHex(await CryptoHelper.sha256Bytes('abc'))).toEqual('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    });
 });

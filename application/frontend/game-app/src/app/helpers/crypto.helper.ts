@@ -6,7 +6,12 @@ export class CryptoHelper {
 
     /** The SHA-256 digest of a text, as an hexadecimal string */
     public static async sha256(text: string): Promise<string> {
-        return CryptoHelper.toHex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))));
+        return CryptoHelper.toHex(await CryptoHelper.sha256Bytes(text));
+    }
+
+    /** The SHA-256 digest of a text, as bytes */
+    public static async sha256Bytes(text: string): Promise<Uint8Array> {
+        return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
     }
 
     /** Bytes as an hexadecimal string */
