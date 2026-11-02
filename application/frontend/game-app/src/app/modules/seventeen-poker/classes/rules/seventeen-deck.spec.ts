@@ -1,5 +1,5 @@
 import { CardRank, CardSuit, JOKER, PlayingCard } from '@app/modules/playing-cards/types/playing-card';
-import { SEVENTEEN_DECK, seventeenCard } from './seventeen-deck';
+import { SEVENTEEN_DECK, SEVENTEEN_RANKS, seventeenCard } from './seventeen-deck';
 import { describe, expect, test } from 'vitest';
 
 describe('SeventeenDeck', () => {
@@ -10,6 +10,12 @@ describe('SeventeenDeck', () => {
         expect(SEVENTEEN_DECK.filter((card: PlayingCard) => card !== JOKER && card.rank === CardRank.ACE)).toHaveLength(4);
         expect(SEVENTEEN_DECK.filter((card: PlayingCard) => card !== JOKER && card.suit === CardSuit.HEARTS)).toHaveLength(4);
         expect(SEVENTEEN_DECK.at(-1)).toEqual(JOKER);
+    });
+
+    test('should hold the jacks to the aces only', () => {
+        // Then
+        expect(SEVENTEEN_RANKS).toEqual([CardRank.JACK, CardRank.QUEEN, CardRank.KING, CardRank.ACE]);
+        expect(SEVENTEEN_DECK.every((card: PlayingCard) => card === JOKER || SEVENTEEN_RANKS.includes(card.rank))).toBe(true);
     });
 
     test('should give the card of a position', () => {
