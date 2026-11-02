@@ -28,7 +28,7 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 ## Overview
 
 A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess`,
-`poker` or `roulette`. Each chain orders its
+`poker`, `roulette` or `bid` (the Bid Poker). Each chain orders its
 blocks on its own, so a busy chat never delays the moves of the game. The chains share the WebRTC
 connections and the identity of the participants.
 
@@ -71,6 +71,7 @@ flowchart LR
 | `SeventeenPokerSession` | `modules/seventeen-poker/classes/game-sessions` | Seats the players, deals each hand with a mental deck, reports the illegal actions (see [Seventeen Poker session](seventeen-poker-session.md)) |
 | `Cylinder` | `modules/russian-roulette/classes/cylinder` | Loads, spins and fires a cylinder no participant sees, checks it at the end of the game (see [Russian roulette session](russian-roulette-session.md#the-cylinder)) |
 | `RussianRouletteSession` | `modules/russian-roulette/classes/game-sessions` | Seats the players, fires the chambers of the cylinder, reports the illegal moves (see [Russian roulette session](russian-roulette-session.md)) |
+| `BidPokerSession` | `modules/bid-poker/classes/game-sessions` | Seats the players, draws the deck, seals then reveals the bids and the discards, reports the cheats (see [Bid Poker session](bid-poker-session.md)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
 message is delivered to every participant, its sender included, once its block is added to the chain
@@ -367,6 +368,17 @@ player but its recipient, and opened by asking all of them. Once the game is ove
 all their keys and every participant checks the deck. See [Mental poker](mental-poker.md), and the
 Seventeen Poker, its first game, in [Seventeen Poker session](seventeen-poker-session.md).
 
+## Sealed bids: the auctions of the Bid Poker
+
+The Bid Poker auctions public lots of cards: only the bids and the discards are hidden, by the shared commit-reveal. Each
+player commits to its bid on the lot, or to its discards, with the id of the game, its index and a salt; once every
+player committed, or the time of the phase is over, the pages reveal them. The first commitment of a player counts, and
+the order of the commitments in the chain decides a tie. The deck is shuffled from the seed of a fair draw of every
+player. A value withheld, not revealed or revealed otherwise than committed, makes its player a pig at the end: the
+reveals come one after the other, and the last one could otherwise take its bid back once it read the others. A claim
+of a timeout is checked on the time of the chain: one coming before the time of its phase is void. See
+[Bid Poker session](bid-poker-session.md).
+
 ## Hidden bullets: the cylinder of the roulette
 
 The 24-shot Russian roulette hides the bullets each player loads, and the offset of the cylinder, from every
@@ -416,8 +428,8 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
 | `clockAhead` | A live block of the sequencer is received more than 5 seconds sooner, from its time, than the shortest delay of its first ones (5 over 30 seconds at least): its clock jumped ahead | the sequencer | no |
-| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange) or a move of the roulette (a pass, a shot) is against the rules | the player | yes |
-| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of the draw of the roulette its commitment | the player | yes |
+| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange), a move of the roulette (a pass, a shot), or a bid or a discard of the Bid Poker (above the coins of its player, on its own lot, a card not held) is against the rules | the player | yes |
+| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of a draw, or a bid or discards of the Bid Poker, its commitment | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
 | `invalidCardKey` | A key is malformed, does not give the card to its recipient (with two players), or is not the one disclosed at the end of the game | the player | a malformed key |
 | `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
@@ -471,7 +483,8 @@ their payload is trusted, and a payload making a handler throw is logged.
 
 The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
-messages through the `roulette` chain, the chat `chatMessage` through the `chat` chain.
+messages through the `roulette` chain, the Bid Poker its `BP_*` messages through the `bid` chain, the chat
+`chatMessage` through the `chat` chain.
 
 **The flood of the chat.** The sequencer orders every message of the chat: refusing the messages of an
 author over the rate, it would be reported for censoring them by the participants watching them. Each

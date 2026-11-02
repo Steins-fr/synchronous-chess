@@ -118,7 +118,8 @@ This is an Angular TypeScript project with the following characteristics:
 
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
-  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette) and `chat`. The rest is global, `home` included: it presents every game
+  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `cards` (the names
+  of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
