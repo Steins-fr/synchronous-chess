@@ -92,6 +92,7 @@
       "unsoldOut": "Lot {letter} : aucune enchère, sort du jeu"
     },
     "past": "{first} premier, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
+    "pastAllPigs": "Aucun gagnant, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
     "pastGames": "Parties jouées",
     "result": {
       "balance": "{balance, plural, one {# pièce} other {# pièces}} à la fin",

@@ -144,20 +144,27 @@ export class BidTableComponent implements OnDestroy {
     private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
     private readonly clockKey: Signal<string | null> = computed((): string | null =>
         this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** A player the game waits for is away: it gets more time, once */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => {
+    /** The players the game waits for who are away */
+    private readonly awaitedAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
         const away: ReadonlyArray<string> = this.session().awayPlayers();
-        return this.session().awaited().some((name: string) => away.includes(name));
+        return this.session().awaited().filter((name: string) => away.includes(name));
     });
+    /** A player the game waits for is away: it gets more time, once */
+    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.awaitedAway().length > 0);
+    /** The round and the step the clock runs for, from its start: a late tick of a phase closed acts on nothing */
+    private clocked: Readonly<{ round: string; step: number }> | null = null;
     /** The seconds left to the players the phase waits for */
     protected readonly timeLeft: Signal<number | null> = turnClock({
         running: () => this.clockKey() !== null,
-        times: () => ({
-            turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
-            awayTime: this.session().rules.awayTime,
-        }),
+        times: () => {
+            this.clocked = { round: this.roundKey(), step: this.session().step() };
+            return {
+                turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
+                awayTime: this.session().rules.awayTime,
+            };
+        },
         away: this.waitingAway,
-        timeOut: () => void this.timeOut(),
+        timeOut: () => this.timeOut(),
     });
     protected readonly clockLow: number = CLOCK_LOW;
 
@@ -180,18 +187,16 @@ export class BidTableComponent implements OnDestroy {
         if (this.myTurn() && left !== null && left <= CLOCK_LOW) {
             return { key: this.key(marker('table.status.hurry', undefined, 'bid')) };
         }
-        if (this.waitingAway()) {
-            return { key: this.key(marker('table.status.away', undefined, 'bid')), params: { names: session.awayPlayers().join(', ') } };
+        // The local player to act reads its own prompt
+        if (this.waitingAway() && !this.myTurn()) {
+            return { key: this.key(marker('table.status.away', undefined, 'bid')), params: { names: this.awaitedAway().join(', ') } };
         }
         return this.phaseStatus(game, names);
     });
 
-    /** What became of the latest lot of the session, until the next one is auctioned */
+    /** The lots of the session in progress, with what became of each: read once the game is drawn only */
     protected readonly lots: Signal<ReadonlyArray<Readonly<LotView>>> = computed((): ReadonlyArray<Readonly<LotView>> => {
-        const game: BidPokerGame | null = this.game();
-        if (game === null) {
-            return [];
-        }
+        const game: BidPokerGame = this.game() as BidPokerGame;
         const lot: Readonly<Lot> | null = game.lot();
         const outcomes: ReadonlyMap<number, Readonly<BidEvent>> = new Map(game.events()
             .filter((event: Readonly<BidEvent>) => event.session === game.session() && (event.kind === BidEventKind.SOLD || event.kind === BidEventKind.UNSOLD))
@@ -233,17 +238,15 @@ export class BidTableComponent implements OnDestroy {
         this.session().pastGames().map((played: PlayedBidGame, index: number): PastResult => {
             const result: BidPokerResult = played.result() as BidPokerResult;
             const names = (standings: ReadonlyArray<Readonly<Standing>>): string => standings.map((standing: Readonly<Standing>) => played.players()[standing.player]).join(', ');
+            const first: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.place === 1));
+            const pigs: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.pig));
             return {
                 number: index + 1,
                 label: { key: this.key(marker('table.game', undefined, 'bid')), params: { number: index + 1 } },
-                text: {
-                    key: this.key(marker('table.past', undefined, 'bid')),
-                    params: {
-                        first: names(result.standings.filter((standing: Readonly<Standing>) => standing.place === 1)),
-                        count: result.pigs,
-                        pigs: names(result.standings.filter((standing: Readonly<Standing>) => standing.pig)),
-                    },
-                },
+                // Every player a pig: nobody first
+                text: first === ''
+                    ? { key: this.key(marker('table.pastAllPigs', undefined, 'bid')), params: { count: result.pigs, pigs } }
+                    : { key: this.key(marker('table.past', undefined, 'bid')), params: { first, count: result.pigs, pigs } },
                 verification: null,
             };
         }).reverse());
@@ -324,22 +327,14 @@ export class BidTableComponent implements OnDestroy {
     }
 
     /**
-     * The time of the phase is over: the local player bids nothing or keeps its cards, then a player of the game claims
-     * the time of the others over, its claim ordered after its own commitment
+     * The time of the phase is over: a player of the game claims it, the local player included when late, which then acts
+     * no more until it bids or discards again. A late tick of the clock of a phase closed claims nothing
      */
-    private async timeOut(): Promise<void> {
+    private timeOut(): void {
         const session: BidPokerSession = this.session();
-        const me: number | null = session.myIndex();
-        // The other players late when the time is over: once the local player acted, the next phase may wait for all
-        const othersLate: boolean = me !== null && session.awaited().some((name: string) => name !== session.players()[me]);
 
-        if (session.canBid()) {
-            await session.bid(0);
-        } else if (session.canDiscard()) {
-            await session.discard([]);
-        }
-        if (othersLate) {
-            session.claimTimeout();
+        if (this.clocked?.round === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
+            session.claimTimeout(this.clocked.step);
         }
     }
 

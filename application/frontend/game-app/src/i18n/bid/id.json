@@ -92,6 +92,7 @@
       "unsoldOut": "Lot {letter}: tidak ditawar, keluar dari permainan"
     },
     "past": "{first} pertama, {count, plural, other {# babi}}: {pigs}",
+    "pastAllPigs": "Tanpa pemenang, {count, plural, other {# babi}}: {pigs}",
     "pastGames": "Permainan yang dimainkan",
     "result": {
       "balance": "{balance, plural, other {# koin}} di akhir",

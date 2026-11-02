@@ -111,11 +111,13 @@ test.describe('Bid poker', () => {
         const [alice, bob, carol, dave, eve] = await started(bidPoker);
         await Promise.all([alice, bob, carol, dave, eve].map((participant: RoomParticipant) => watchSteadiness(participant.page, STEADY)));
 
-        // Alice bids first, then Bob bids the same once her bid is sealed
+        // The players bid one after the other, each bid sealed before the next: Bob bids as Alice did
         await bid(alice, 10);
         await expect(table(eve).locator('#seat-0')).toContainText('Sealed');
         await bid(bob, 10);
+        await expect(table(eve).locator('#seat-1')).toContainText('Sealed');
         await bid(carol, null);
+        await expect(table(eve).locator('#seat-2')).toContainText('Sealed');
         await bid(dave, null);
 
         await expect(table(eve).locator('#catalogue')).toContainText('To alice for 10 coins');

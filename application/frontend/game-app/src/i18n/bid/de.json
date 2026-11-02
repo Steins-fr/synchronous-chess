@@ -92,6 +92,7 @@
       "unsoldOut": "Los {letter}: kein Gebot, aus dem Spiel"
     },
     "past": "{first} auf Platz 1, {count, plural, one {# Schwein} other {# Schweine}}: {pigs}",
+    "pastAllPigs": "Kein Sieger, {count, plural, one {# Schwein} other {# Schweine}}: {pigs}",
     "pastGames": "Gespielte Spiele",
     "result": {
       "balance": "{balance, plural, one {# Münze} other {# Münzen}} am Ende",

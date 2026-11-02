@@ -1,5 +1,8 @@
 <span class="font-medium">{{ name().key | transloco: name().params }} · <span class="muted-note">{{ seller().key | transloco: seller().params }}</span></span>
 <app-card-hand [cards]="cards()" />
-@if (outcome(); as text) {
-<span class="text-sm">{{ text.key | transloco: text.params }}</span>
-}
+<!-- The line of what became of the lot, kept before: a lot auctioned grows nothing -->
+<span class="min-h-lh text-sm">
+    @if (outcome(); as text) {
+    {{ text.key | transloco: text.params }}
+    }
+</span>

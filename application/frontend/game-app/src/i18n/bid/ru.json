@@ -92,6 +92,7 @@
       "unsoldOut": "Лот {letter}: ставок нет, выходит из игры"
     },
     "past": "{first} — первый, {count, plural, one {# свинья} few {# свиньи} many {# свиней} other {# свиньи}}: {pigs}",
+    "pastAllPigs": "Без победителя, {count, plural, one {# свинья} few {# свиньи} many {# свиней} other {# свиньи}}: {pigs}",
     "pastGames": "Сыгранные партии",
     "result": {
       "balance": "В конце: {balance, plural, one {# монета} few {# монеты} many {# монет} other {# монеты}}",

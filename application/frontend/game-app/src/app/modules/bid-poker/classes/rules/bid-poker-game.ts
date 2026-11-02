@@ -400,7 +400,9 @@ export class BidPokerGame {
             return this.opened({ ...cleared, phase: BidPokerPhase.DISCARDING, session: state.session + 1, lots: [], lotIndex: 0 });
         }
 
-        return { ...cleared, phase: BidPokerPhase.OVER, result: settle(state.holdings, state.coins, this.rules, state.withheld) };
+        // The bank gets the debts of the players, and the fines no prize paid
+        const result: BidPokerResult = settle(state.holdings, state.coins, this.rules, state.withheld);
+        return { ...cleared, phase: BidPokerPhase.OVER, result, bank: state.bank + this.players * this.rules.debt + result.unpaid };
     }
 
     /** A phase opening without any player to wait for (every one absent) is over at once */

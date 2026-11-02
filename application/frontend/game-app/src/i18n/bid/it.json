@@ -92,6 +92,7 @@
       "unsoldOut": "Lotto {letter}: nessuna offerta, esce dal gioco"
     },
     "past": "Primo: {first}, {count, plural, one {# maiale} other {# maiali}}: {pigs}",
+    "pastAllPigs": "Nessun vincitore, {count, plural, one {# maiale} other {# maiali}}: {pigs}",
     "pastGames": "Partite giocate",
     "result": {
       "balance": "{balance, plural, one {# moneta} other {# monete}} alla fine",

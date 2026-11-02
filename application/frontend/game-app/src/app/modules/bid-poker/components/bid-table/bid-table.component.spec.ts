@@ -300,12 +300,55 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
         expect(element().querySelectorAll('#seat-1 app-playing-card .outline-3')).toHaveLength(5);
         expect(play).toHaveBeenCalledWith(SoundEffect.GAME_LOST);
 
+        // The bid of the local player on the last lot no longer shows
+        expect(text('#actions')).toEqual('Play again');
+
         // When
         await click('Play again');
 
         // Then
         await until(() => status() === 'Start the game once every player is seated.');
         expect(fixture.componentInstance.pastResults().map(pastLine)).toEqual([expect.stringMatching(/^Game 1: (bob|carol) first, 2 pigs: alice, dave$/)]);
+    });
+
+    test('should tell a former game without a winner, every player a pig', async () => {
+        // Given
+        await started();
+
+        // When nobody buys a lot
+        for (let lot = 0; lot < 3; lot++) {
+            await click('No bid');
+            await othersBid([0, 0, 0]);
+            await until(() => session().game()?.committed().length === 0);
+        }
+        await until(() => status() === 'The game is over.');
+        await click('Play again');
+
+        // Then
+        await until(() => fixture.componentInstance.pastResults().length === 1);
+        expect(fixture.componentInstance.pastResults().map(pastLine)).toEqual(['Game 1: No winner, 4 pigs: alice, bob, carol, dave']);
+    });
+
+    test('should let the host free the first seat, its player away, every seat taken', async () => {
+        // Given the host watches every seat taken
+        hub.sequencer.set('alice');
+        await table();
+        const players: string[] = ['frank', 'grace', 'heidi', 'ivan'];
+        players.forEach((name: string) => {
+            const room: Room<BidPokerPayloads> = hub.room(name);
+            rooms.set(name, room);
+            others.set(name, new BidPokerSession(room, { rules: LIGHT }));
+        });
+        [...OTHERS, 'eve', ...players].forEach((name: string, seat: number) => of(name).takeSeat(seat));
+        await until(() => session().tableSeats.taken().length === 8);
+
+        // When
+        hub.leave(rooms.get('bob') as Room<BidPokerPayloads>);
+        await until(() => button('Free the seat', element().querySelector('#seat-0') as HTMLElement) !== undefined);
+        await click('Free the seat', element().querySelector('#seat-0') as HTMLElement);
+
+        // Then
+        await until(() => text('#seat-0').includes('Free seat'));
     });
 
     test('should send back the discards nobody bids on, and tell the discards revealed', async () => {
@@ -396,7 +439,7 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
             await fixture.whenStable();
         }
 
-        test('should hurry the local player, then bid nothing for it and claim the time of the others over', async () => {
+        test('should hurry the local player, then claim the time over, the local player late too', async () => {
             // Given
             await started();
             await othersBid([5]);
@@ -412,26 +455,31 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
             hub.time = LATER;
             await elapse(4);
 
-            // Then
-            await until(() => status() === 'Bid on lot B, sealed: 0 for no bid.');
-            expect(history()).toEqual(['Lot A: bob wins for 5 coins (bids: bob 5, alice 0)', 'carol, dave: no bid in time']);
+            // Then the local player, absent, bids again when it likes
+            await until(() => history().length === 2);
+            expect(history()).toEqual(['Lot A: bob wins for 5 coins (bids: bob 5)', 'alice, carol, dave: no bid in time']);
+            expect(status()).toEqual('Bid on lot B, sealed: 0 for no bid.');
+            expect(text('#seat-0')).toContain('Skipped');
         });
 
-        test('should bid nothing for the local player once its time is over, claiming nothing when no other player is late', async () => {
-            // Given
+        test('should claim nothing on a late tick of the clock of a phase closed', async () => {
+            // Given the clock of lot A
             await started();
+            const component = TestHelper.cast<{ timeOut(): void; clocked: unknown }>(fixture.componentInstance);
+            const clockOfLotA: unknown = component.clocked;
+            await click('No bid');
             await othersBid([0, 0, 0]);
-            await until(() => session().awaited().join() === 'alice');
+            await until(() => status() === 'Bid on lot B, sealed: 0 for no bid.');
 
-            // When
-            await elapse(LIGHT.catalogueTime + LIGHT.bidTime);
+            // When it ticks once lot B is auctioned, before its effect stops it
+            component.clocked = clockOfLotA;
+            component.timeOut();
 
             // Then
-            await until(() => status() === 'Bid on lot B, sealed: 0 for no bid.');
             expect(hub.types()).not.toContain(BPGameSessionType.TIMEOUT);
         });
 
-        test('should keep the cards of the local player once the time to discard is over', async () => {
+        test('should close the discards once their time is over, the local player late too', async () => {
             // Given
             hub.time = 0;
             await started();
@@ -441,10 +489,10 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
             hub.time = LATER;
             await elapse(LIGHT.discardTime);
 
-            // Then Bob and Carol, late, keep theirs
+            // Then the players late keep their cards
             await until(() => session().over());
             expect(history()[0]).toEqual('Change session 1: no card discarded');
-            expect(history()[1]).toEqual('bob, carol: no discard in time');
+            expect(history()[1]).toEqual('alice, bob, carol: no discard in time');
         });
 
         test('should claim again a little later, its claim too early on the time of the chain', async () => {
@@ -470,12 +518,14 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
         test('should wait longer for a player away', async () => {
             // Given
             await started();
-            await click('No bid');
 
             // When
             hub.leave(rooms.get('dave') as Room<BidPokerPayloads>);
 
-            // Then
+            // Then the local player to bid reads its own prompt, then the player away
+            await until(() => session().awayPlayers().length === 1);
+            expect(status()).toEqual('Bid on lot A, sealed: 0 for no bid.');
+            await click('No bid');
             await until(() => status() === 'Waiting for dave to come back…');
             expect(text('#seat-3')).toContain('s');
         });

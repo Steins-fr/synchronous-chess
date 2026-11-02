@@ -92,6 +92,7 @@
       "unsoldOut": "Lot {letter}: no bid, out of the game"
     },
     "past": "{first} first, {count, plural, one {# pig} other {# pigs}}: {pigs}",
+    "pastAllPigs": "No winner, {count, plural, one {# pig} other {# pigs}}: {pigs}",
     "pastGames": "Games played",
     "result": {
       "balance": "{balance, plural, one {# coin} other {# coins}} at the end",

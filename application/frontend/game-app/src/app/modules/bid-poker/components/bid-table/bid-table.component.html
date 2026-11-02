@@ -69,8 +69,9 @@
         }
     </div>
 
-    @if (lots().length > 0) {
-    <ul id="catalogue" class="grid gap-2 m-0 p-0 list-none grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]">
+    <!-- The catalogue of the session in progress, keeping its tallest height: a session without lots moves nothing -->
+    @if (currentGame) {
+    <ul id="catalogue" appSteadyHeight class="grid gap-2 m-0 p-0 list-none grid-cols-[repeat(auto-fill,minmax(11rem,1fr))]">
         @for (each of lots(); track each.index) {
         <li class="contents">
             <app-bid-lot [name]="each.name" [cards]="each.cards" [seller]="each.seller" [outcome]="each.outcome" [current]="each.current" />
@@ -88,13 +89,13 @@
             [canTake]="seats.canTake(view.seat)" [canRelease]="seats.canRelease(view.seat)"
             (take)="takeSeat(view.seat)" (release)="release(view.seat)" />
         }
-        <!-- The seat of the local player, or the free seat it may take: never one to free -->
+        <!-- The seat of the local player, else the first free seat; the first seat once every seat is taken, the host may free -->
         @let mine = bottomSeat();
         <app-bid-seat class="md:col-span-2 xl:col-span-4 [--app-card-width:4.5rem]"
             [seat]="mine.seat" [name]="mine.name" [coins]="mine.coins" [cards]="mine.cards" [awaited]="mine.awaited" [sealed]="mine.sealed"
             [absent]="mine.absent" [standing]="mine.standing" [highlighted]="mine.highlighted" [timeLeft]="mine.awaited ? left : null"
-            [canTake]="seats.canTake(mine.seat)" [canLeave]="seats.canLeave()"
+            [canTake]="seats.canTake(mine.seat)" [canLeave]="seats.canLeave()" [canRelease]="seats.canRelease(mine.seat)"
             [selectable]="currentSession.canDiscard()" [selected]="picked()" (selectedChange)="picked.set($event)"
-            (take)="takeSeat(mine.seat)" (leave)="leaveSeat()" />
+            (take)="takeSeat(mine.seat)" (leave)="leaveSeat()" (release)="release(mine.seat)" />
     </div>
 </section>

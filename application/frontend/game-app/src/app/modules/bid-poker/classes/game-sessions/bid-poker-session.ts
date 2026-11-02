@@ -130,10 +130,11 @@ export class BidPokerSession {
     });
 
     private readonly _seals = signal<ReadonlyMap<string, Readonly<Seal>>>(new Map());
-    /** The bid of the local player on the lot, sealed until the bidding closes */
+    /** The bid of the local player on the lot auctioned, sealed until the bidding closes */
     public readonly myBid: Signal<number | null> = computed((): number | null => {
         const game: BidPokerGame | null = this.game();
-        const seal: Readonly<Seal> | undefined = game === null ? undefined : this._seals().get(`${ game.session() }:${ game.lotIndex() }`);
+        const lot: Readonly<Lot> | null = game?.lot() ?? null;
+        const seal: Readonly<Seal> | undefined = lot === null ? undefined : this._seals().get(`${ (game as BidPokerGame).session() }:${ lot.index }`);
         return typeof seal?.value === 'number' ? seal.value : null;
     });
     /** The discards of the local player in the change session, sealed until the discarding closes */
@@ -242,10 +243,14 @@ export class BidPokerSession {
         await this.seal(`${ game.session() }:${ ROUND_OF_DISCARDS }`, cards, null);
     }
 
-    /** The time of the phase is over: the players it waits for act with no bid or no discard */
-    public claimTimeout(): void {
+    /**
+     * The time of the phase is over: the players it waits for act with no bid or no discard
+     *
+     * @param step the step of the phase whose time is over: a claim of a phase closed meanwhile is void
+     */
+    public claimTimeout(step: number = this.step()): void {
         this._sending.set(true);
-        this.room.transmitMessage(BPGameSessionType.TIMEOUT, { ...this.round(), step: this.step() });
+        this.room.transmitMessage(BPGameSessionType.TIMEOUT, { ...this.round(), step });
     }
 
     /** A player of the game over starts a new one */
@@ -480,7 +485,8 @@ export class BidPokerSession {
     /**
      * A player of the game tells the time of the phase is over, the first claim in the chain counting: a claim naming a
      * step past, or coming before the time of the phase on the time of the chain, is void. The draw of the deck over,
-     * its late players lose their seats and the game starts again; else they act with no bid or no discard
+     * its late players lose their seats and the seats open again, for a new attempt; else they act with no bid or no
+     * discard
      */
     private onTimeout(message: AppMessage<BPGameSessionType.TIMEOUT, BidTimeoutMessage>): void {
         // A room without the time of a chain can not tell a claim too early

@@ -285,6 +285,8 @@ describe('BidPokerGame', () => {
         expect(bidPoker.events().at(-1)).toEqual({ kind: BidEventKind.UNSOLD, session: 1, lot: 1, seller: 2 });
         expect(bidPoker.phase()).toEqual(BidPokerPhase.OVER);
         expect(bidPoker.awaited()).toEqual([]);
+        // The bank gets the coins of the dealing session, the debts, and the fines no prize paid
+        expect(bidPoker.bank()).toEqual(30 + 4 * RULES.debt + (bidPoker.result()?.unpaid as number));
         expect(bidPoker.result()?.standings.map(({ pig }) => pig)).toEqual([true, false, false, true]);
     });
 

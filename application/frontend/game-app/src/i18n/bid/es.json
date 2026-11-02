@@ -92,6 +92,7 @@
       "unsoldOut": "Lote {letter}: sin pujas, sale de la partida"
     },
     "past": "{first} primero, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
+    "pastAllPigs": "Sin ganador, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
     "pastGames": "Partidas jugadas",
     "result": {
       "balance": "{balance, plural, one {# moneda} other {# monedas}} al final",

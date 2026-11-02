@@ -92,6 +92,7 @@
       "unsoldOut": "Lote {letter}: sem licitações, sai do jogo"
     },
     "past": "{first} em primeiro, {count, plural, one {# porco} other {# porcos}}: {pigs}",
+    "pastAllPigs": "Sem vencedor, {count, plural, one {# porco} other {# porcos}}: {pigs}",
     "pastGames": "Partidas jogadas",
     "result": {
       "balance": "{balance, plural, one {# moeda} other {# moedas}} no fim",

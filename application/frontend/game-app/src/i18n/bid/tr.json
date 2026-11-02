@@ -92,6 +92,7 @@
       "unsoldOut": "Lot {letter}: teklif yok, oyundan çıktı"
     },
     "past": "{first} birinci, {count, plural, one {# domuz} other {# domuz}}: {pigs}",
+    "pastAllPigs": "Kazanan yok, {count, plural, one {# domuz} other {# domuz}}: {pigs}",
     "pastGames": "Oynanan oyunlar",
     "result": {
       "balance": "Sonunda {balance, plural, one {# jeton} other {# jeton}}",

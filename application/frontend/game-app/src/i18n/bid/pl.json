@@ -92,6 +92,7 @@
       "unsoldOut": "Pakiet {letter}: brak ofert, odpada z gry"
     },
     "past": "1. miejsce: {first}, {count, plural, one {# świnia} few {# świnie} many {# świń} other {# świni}}: {pigs}",
+    "pastAllPigs": "Bez zwycięzcy, {count, plural, one {# świnia} few {# świnie} many {# świń} other {# świni}}: {pigs}",
     "pastGames": "Rozegrane partie",
     "result": {
       "balance": "Na koniec: {balance, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",

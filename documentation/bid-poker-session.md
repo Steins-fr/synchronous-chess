@@ -61,7 +61,7 @@ The code lives in `application/frontend/game-app/src/app/modules/bid-poker`.
   2nd and 3rd of the others win 100, 40 and 10 coins multiplied by the number of pigs. Equal hands share the prizes of
   the places they cover, in whole coins: the rest, and a place without a player, go to the bank. All hands equal: every
   player is a pig. The balance of a player is its coins, minus its debt and its fine, plus its prize: the players and the
-  bank together keep every coin.
+  bank together keep every coin: at the end, the bank gets the debts and the fines no prize paid.
 
 ## The deck
 
@@ -81,7 +81,7 @@ No player shuffles alone (`FairDraw`):
 ## Sealed bids and discards
 
 A bid is the commitment `SHA-256(id:bid:index:session:lot:amount:salt)`, sent with `BP_commit`; the discards the
-commitment `SHA-256(id:discard:index:session:[cards]:salt)`, sent with `BP_commit` without a lot. The value and the salt
+commitment `SHA-256(id:discard:index:session:discard:[cards]:salt)`, sent with `BP_commit` without a lot. The value and the salt
 are kept in the tab (`SealedStore`, kind `bids`) before the commitment is sent, by commitment. Once every player the
 phase waits for committed, or its time is over, each page reveals the value of its player (`BP_reveal`, `BP_discard`).
 
@@ -138,23 +138,24 @@ hand, the coins at the end), the place of each player on its seat, its best 5 ca
 ## A new game
 
 Once the game is over, a seated player clicks `Play again`: the game joins the former games of the room (in the history,
-`Game 1: bob first, 2 pigs: alice, dave`), the seats stay open, and a seated player starts the next one. The new game has
+`Game 1: bob first, 2 pigs: alice, dave`, or `Game 1: No winner, 4 pigs: …` when every player is a pig), the seats stay open, and a seated player starts the next one. The new game has
 its own commitments and its own seals.
 
 ## The clock of a phase
 
 Each phase has its time, from when the page sees it (`turnClock`): 20 seconds for each step of the draw, 90 seconds for
 the first lot (60 to read the catalogue, 30 to bid), 30 for the other lots, 15 to reveal, 45 to discard. A player away
-gives the phase 15 seconds more, once. Once the time is over, the page of a player bids nothing or keeps its cards for
-it, then claims the time of the others over (`BP_timeout`, with the step it waited at): the first claim in the chain
-counts, a claim naming a step past is void.
+gives the phase 15 seconds more, once. Once the time is over, the page of a player claims it (`BP_timeout`, with the step
+its clock ran for, a late tick of the clock of a phase closed claiming nothing): the first claim in the chain counts, a
+claim naming a step past is void.
 
 - A claim coming before the time of the phase, on the time of the chain (the time of its block minus the time of the
   block opening the phase, 2 seconds of slack), is void: a page can not close a phase early to win a lot. Its page waits
   again for 5 seconds, then claims again.
-- The players late bid or discard nothing, and are **absent**: the game no longer waits for them, until they commit
-  again. A player who sealed a value and did not reveal it withheld it.
-- The draw timing out frees the seats of its late players, and the game starts again with a new attempt.
+- The players late, the local player included, bid or discard nothing, and are **absent**: the game no longer waits for
+  them, until they commit again. A player who sealed a value and did not reveal it withheld it.
+- The draw timing out frees the seats of its late players and opens the seats again: a seated player starts the game
+  again (a new attempt, with its own commitments) once 4 players are seated.
 
 ## Reloading the page
 
@@ -184,7 +185,8 @@ value sealed is lost: its player withholds it.
   cloth (`#auction`), then the standings once the game is over; the actions of the local player below it (`#actions`);
   the catalogue of the session (`#catalogue`); the seats (`#seat-0` to `#seat-7`), the one of the local player at the
   bottom, full width, its cards larger.
-- The status, the cloth and the actions keep their tallest height (`SteadyHeightDirective`): the page does not jump.
+- The status, the cloth, the actions and the catalogue keep their tallest height (`SteadyHeightDirective`), and a lot
+  keeps the line of its outcome: the page does not jump.
 - The sounds: a seat taken, the deck shuffled into the catalogue, the coins of a lot sold, the cards of a lot
   discarded, and the end of the game (won, lost as a pig, or ended without a prize). A page reloaded hears the changes
   from its first live message only.
@@ -212,6 +214,6 @@ value sealed is lost: its player withholds it.
   out), a reload keeping a sealed bid, a new game.
 - The table: `bid-table.component.spec.ts`, the clock on fake timers (`setInterval` and `performance` only); the seat,
   the lot, the texts of the history and the sounds have their own specs.
-- End to end: `e2e/bid-poker.e2e.ts`, a game to its end watched by a spectator with the chat and a new game (`SLOW`), a
-  tie by the order of the chain with the page keeping its place, a lot nobody bids on, a player reloading the page
-  during an auction.
+- End to end: `e2e/bid-poker.e2e.ts`, a game to its end watched by a spectator with the chat and a new game, a tie by the
+  order of the chain with the page keeping its place, a lot nobody bids on, a player reloading the page during an
+  auction. A game takes about 15 seconds: no scenario is `SLOW`.
