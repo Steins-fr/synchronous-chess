@@ -140,6 +140,24 @@ describe('BidPokerGame', () => {
             { kind: BidEventKind.MISSED, session: 0, lot: 0, phase: BidPokerPhase.REVEALING, reason: MissedReason.INVALID, players: [0] },
             { kind: BidEventKind.UNSOLD, session: 0, lot: 0, seller: null },
         ]);
+        expect(bidPoker.withheld()).toEqual([0]);
+    });
+
+    test('should make a pig at the end of a player who withheld a sealed value', () => {
+        // Given
+        const bidPoker: BidPokerGame = game();
+        [0, 1, 2, 3].forEach((player: number) => bidPoker.commitBid(player));
+        [1, 2, 3].forEach((player: number) => bidPoker.revealBid(player, 0));
+
+        // When player 0 does not reveal its bid, then buys the other lots
+        bidPoker.close();
+        auction(bidPoker, [10, 0, 0, 0]);
+        auction(bidPoker, [10, 0, 0, 0]);
+        discard(bidPoker, [[]]);
+
+        // Then
+        expect(bidPoker.phase()).toEqual(BidPokerPhase.OVER);
+        expect(bidPoker.result()?.standings[0]).toMatchObject({ pig: true, fine: RULES.pigFine });
     });
 
     test('should ignore the moves out of their phase, of no player, or sent again', () => {
@@ -213,6 +231,7 @@ describe('BidPokerGame', () => {
             expect.objectContaining({ kind: BidEventKind.SOLD, winner: 1, price: 50 }),
         ]);
         expect(bidPoker.absent()).toEqual([2, 3]);
+        expect(bidPoker.withheld()).toEqual([2, 3]);
     });
 
     test('should open the change session once every lot is auctioned, the players discarding at the same time', () => {
@@ -310,6 +329,7 @@ describe('BidPokerGame', () => {
         bidPoker.close();
 
         // Then
+        expect(bidPoker.withheld()).toEqual([1]);
         expect(bidPoker.events().slice(-2)).toEqual([
             { kind: BidEventKind.MISSED, session: 1, lot: null, phase: BidPokerPhase.DISCLOSING, reason: MissedReason.LATE, players: [1] },
             { kind: BidEventKind.DISCARDS, session: 1, player: 0, count: 1, lot: 0 },

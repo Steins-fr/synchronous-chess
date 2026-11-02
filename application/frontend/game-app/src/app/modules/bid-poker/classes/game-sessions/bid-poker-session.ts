@@ -156,7 +156,8 @@ export class BidPokerSession {
     /** Emits once, right before the first live message applies: the table shows the history at once */
     public readonly caughtUp: Observable<void> = this._caughtUp.asObservable();
 
-    private readonly commitments = new SealedCommitments<string>();
+    /** The commitments of the game in progress, by round */
+    private commitments = new SealedCommitments<string>();
     private seals?: SealedStore<Seal>;
     private parts?: SealedStore<string>;
     /** What the local player sent in this page, once: a reveal sent again after a reload is ignored by the others */
@@ -213,21 +214,12 @@ export class BidPokerSession {
         this.tableSeats.unseat(seat);
     }
 
-    /** The local player starts the game with the seated players, committing to its part of the draw of the deck */
-    public async start(): Promise<void> {
-        if (!this.canStart()) {
-            return;
+    /** The local player starts the game with the seated players: then each one commits to its part of the draw of the deck */
+    public start(): void {
+        if (this.canStart()) {
+            this._sending.set(true);
+            this.room.transmitMessage(BPGameSessionType.DRAW, { ...this.round(), players: this.players() });
         }
-
-        this._sending.set(true);
-        const played: PlayedBidGame = this._played();
-        const players: ReadonlyArray<string> = this.players();
-        const context: string = `${ [...this.tableSeats.taken().map((player: Readonly<SeatedPlayer>) => player.salt), played.index, played.attempt].join(':') }:draw`;
-        const part: string = FairDraw.drawPart();
-        this.partStore.save(context, part);
-        this.sent.add(`draw:${ context }`);
-        const commitment: string = await FairDraw.commitment(context, players.indexOf(this.room.localPlayer.name), part);
-        this.room.transmitMessage(BPGameSessionType.DRAW, { ...this.round(), players, commitment });
     }
 
     /** The local player bids on the lot, 0 for no bid: sealed until the bidding closes */
@@ -348,16 +340,11 @@ export class BidPokerSession {
         if (!this.isRound(message.payload)) {
             return;
         }
-        if (!this.started()) {
-            const seated: ReadonlyArray<Readonly<SeatedPlayer>> = this.tableSeats.taken();
-            const names: ReadonlyArray<string> = seated.map((player: Readonly<SeatedPlayer>) => player.name);
-            if (!Array.isArray(players) || players.join('\n') !== names.join('\n') || !names.includes(message.from) || names.length < this.rules.minPlayers) {
-                return;
-            }
-            this._played().open(seated);
+        if (players !== undefined) {
+            this.open(message.from, players);
+            return;
         }
-
-        if (this.game() !== null) {
+        if (!this.started() || this.game() !== null) {
             return;
         }
 
@@ -374,6 +361,16 @@ export class BidPokerSession {
             if (!this.room.isHistory(message)) {
                 this._catalogues.update((count: number) => count + 1);
             }
+        }
+    }
+
+    /** The game starts with the seated players, the ones the start names: its draw opens, with the salts of the players */
+    private open(from: string, players: unknown): void {
+        const seated: ReadonlyArray<Readonly<SeatedPlayer>> = this.tableSeats.taken();
+        const names: ReadonlyArray<string> = seated.map((player: Readonly<SeatedPlayer>) => player.name);
+
+        if (!this.started() && Array.isArray(players) && players.join('\n') === names.join('\n') && names.includes(from) && names.length >= this.rules.minPlayers) {
+            this._played().open(seated);
         }
     }
 
@@ -508,14 +505,19 @@ export class BidPokerSession {
         this._played.set(new PlayedBidGame(this._played().index, this._played().attempt + 1));
     }
 
-    /** A player of the game over starts a new one: the first request starts it, the others name a game started already */
+    /**
+     * A seated player starts a new game once the former one is over, its seats open: the first request starts it, the
+     * others name a game started already. The new game has its own commitments and seals
+     */
     private onRematch(from: string, game: number): void {
-        if (this.indexOf(from) === null || !this.over() || game !== this._pastGames().length + 1) {
+        if (this.tableSeats.seatOf(from) === null || !this.over() || game !== this._pastGames().length + 1) {
             return;
         }
 
         this._pastGames.update((games: ReadonlyArray<PlayedBidGame>) => [...games, this._played()]);
         this._played.set(new PlayedBidGame(game, 0));
+        this.commitments = new SealedCommitments<string>();
+        this._seals.set(new Map());
     }
 
     /**
@@ -563,7 +565,8 @@ export class BidPokerSession {
 
         if (waiting && draw.phase === DrawPhase.COMMITTING && !this.sent.has(`draw:${ context }`)) {
             this.sent.add(`draw:${ context }`);
-            const part: string = FairDraw.drawPart();
+            // A page reloaded before its commitment came back commits to the same part again: the first one counts
+            const part: string = this.partStore.get(context) ?? FairDraw.drawPart();
             this.partStore.save(context, part);
             this.room.transmitMessage(BPGameSessionType.DRAW, { ...this.round(), commitment: await FairDraw.commitment(context, me, part) });
         } else if (waiting && draw.phase === DrawPhase.REVEALING && !this.sent.has(`part:${ context }`)) {

@@ -140,7 +140,8 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
             await settled((session: BidPokerSession) => session.started());
             expect([of('bob').seatsOpen(), of('bob').inMatch(), of('eve').inMatch()]).toEqual([false, true, false]);
             await settled((session: BidPokerSession) => session.game() !== null);
-            expect(messagesOf(BPGameSessionType.DRAW)).toHaveLength(8);
+            // The start, then the commitment and the part of each player
+            expect(messagesOf(BPGameSessionType.DRAW)).toHaveLength(9);
             const lots: unknown = gameOf('eve').lots();
             sessions.forEach((session: BidPokerSession) => expect(session.game()?.lots()).toEqual(lots));
             expect(gameOf('eve').lots().map(({ cards }) => cards.length)).toEqual([5, 5, 5]);
@@ -566,12 +567,17 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
         expect(hub.reports).toEqual([]);
     });
 
-    test('should start a new game once the former one is over', async () => {
-        // Given
-        await started();
+    /** A game played to its end: the dealing session, then nobody discards */
+    async function played(): Promise<void> {
         await dealt();
         await Promise.all(['alice', 'bob', 'carol'].map((name: string) => of(name).discard([])));
         await settled((session: BidPokerSession) => session.over());
+    }
+
+    test('should play a new game once the former one is over, its bids and discards checked against its own commitments', async () => {
+        // Given
+        await started();
+        await played();
 
         // When
         of('eve').rematch();
@@ -581,7 +587,70 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
         // Then
         await settled((session: BidPokerSession) => session.pastGames().length === 1);
         expect([of('eve').started(), of('eve').played().index, of('eve').pastGames()[0].result()?.pigs]).toEqual([false, 1, 1]);
-        expect(of('alice').canStart()).toBe(true);
+        expect([of('alice').canStart(), of('bob').myBid(), of('alice').myDiscards()]).toEqual([true, null, null]);
+
+        // When
+        of('dave').start();
+        await settled((session: BidPokerSession) => session.game() !== null);
+        await auction([0, 3, 0, 0]);
+
+        // Then
+        expect(gameOf('eve').events()[0]).toMatchObject({ kind: BidEventKind.SOLD, winner: 1, price: 3 });
+        expect(hub.reports).toEqual([]);
+    });
+
+    test('should let the players seated once the game is over start a new one', async () => {
+        // Given
+        await started();
+        await played();
+
+        // When the players leave their seats, Eve sits
+        PLAYERS.forEach((name: string) => of(name).leaveSeat());
+        of('eve').takeSeat(0);
+        await settled((session: BidPokerSession) => session.tableSeats.taken().length === 1);
+        of('alice').rematch();
+        of('eve').rematch();
+
+        // Then
+        await settled((session: BidPokerSession) => session.pastGames().length === 1);
+        expect(of('eve').started()).toBe(false);
+    });
+
+    test('should make a pig at the end of a player who withheld its bid once it read the others', async () => {
+        // Given
+        await started({ dave: tampering(BPGameSessionType.REVEAL, (payload: object) => ({ ...payload, game: 9 })) });
+
+        // When the reveal of Dave never counts, then the time is over
+        await Promise.all([0, 0, 0, 50].map((amount: number, player: number) => of(PLAYERS[player]).bid(amount)));
+        await eventually(() => expect(messagesOf(BPGameSessionType.REVEAL)).toHaveLength(4));
+        claim('alice');
+
+        // Then
+        await settled((session: BidPokerSession) => session.game()?.withheld().join() === '3');
+        expect(gameOf('eve').events()[0]).toMatchObject({ kind: BidEventKind.MISSED, phase: BidPokerPhase.REVEALING, players: [3] });
+    });
+
+    test('should commit again to the random part of the draw it stored, its page reloaded before its commitment came back', async () => {
+        // Given
+        await seated();
+        hub.hold('dave');
+        of('alice').start();
+        await settled((session: BidPokerSession) => session.awaited().length === 1);
+
+        // When Dave reloads the page, his commitment still waiting for the chain
+        of('dave').destroy();
+        hub.close(rooms.get('dave') as Room<BidPokerPayloads>);
+        const reloaded: BidPokerSession = page('dave');
+        hub.replay(rooms.get('dave') as Room<BidPokerPayloads>);
+        await eventually(() => expect(hub.held).toHaveLength(2));
+        hub.release();
+
+        // Then both commitments are the same: the part revealed matches the first one
+        await settled((session: BidPokerSession) => session.game() !== null);
+        const [first, second] = messagesOf(BPGameSessionType.DRAW, 'dave');
+        expect(first.payload).toEqual(second.payload);
+        expect(reloaded.game()).not.toBeNull();
+        expect(hub.reports).toEqual([]);
     });
 
     test('should free the seat of a player away, before the game starts', async () => {

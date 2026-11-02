@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Personne ne mélange seul : chaque joueur donne une part aléatoire scellée, et le paquet est mélangé à partir de toutes ces parts, identique sur chaque page.",
       "sealed": "Une enchère est scellée : la page envoie son empreinte avec un sel aléatoire, puis la révèle une fois les enchères closes. Une enchère révélée différente de celle scellée, ou supérieure aux pièces de son joueur, ne compte pas et est signalée.",
-      "title": "Jeu honnête"
+      "title": "Jeu honnête",
+      "withheld": "Une enchère ou une défausse scellée et non révélée à temps, ou révélée autrement que scellée, ne compte pas, et son joueur finit cochon : personne ne reprend sa mise après avoir lu celles des autres."
     },
     "setup": {
       "coins": "Chaque joueur commence avec 300 pièces et en doit 100 à la fin de la partie.",

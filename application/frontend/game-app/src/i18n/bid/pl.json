@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Nikt nie tasuje sam: każdy gracz daje tajną losową część, a talia jest tasowana ze wszystkich części, tak samo na każdej stronie.",
       "sealed": "Oferta jest tajna: strona wysyła jej skrót z losową solą, a odsłania ją po zamknięciu licytacji. Oferta odsłonięta niezgodnie z wysłanym skrótem lub wyższa niż monety gracza liczy się jako brak oferty i zostaje zgłoszona.",
-      "title": "Uczciwa gra"
+      "title": "Uczciwa gra",
+      "withheld": "Zapieczętowana oferta lub odrzucone karty, nieujawnione na czas albo ujawnione inaczej niż zapieczętowane, nie liczą się, a ich gracz kończy jako świnia: nikt nie wycofa oferty po zobaczeniu cudzych."
     },
     "setup": {
       "coins": "Każdy gracz zaczyna z 300 monetami, a na koniec partii jest winien 100.",

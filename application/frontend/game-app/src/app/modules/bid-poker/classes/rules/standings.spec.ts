@@ -92,6 +92,19 @@ describe('settle', () => {
         expect([result.pigs, result.unpaid]).toEqual([4, 600]);
     });
 
+    test('should make pigs of the players who withheld a sealed value, whatever their hands', () => {
+        // When
+        const result: BidPokerResult = settle([ROYAL, FLUSH, PAIR, HIGH].map(ids), [300, 300, 300, 300], BID_POKER_RULES, [0]);
+
+        // Then
+        expect(result.standings.map(summary)).toEqual([
+            [null, true, 0, 150, 50],
+            [1, false, 100, 0, 300],
+            [2, false, 40, 0, 240],
+            [3, false, 10, 0, 210],
+        ]);
+    });
+
     test('should play the best 5 cards of more', () => {
         // When
         const result: BidPokerResult = standings([`${ FOUR } 3D 4H`, ROYAL, PAIR, HIGH]);

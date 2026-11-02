@@ -89,6 +89,11 @@ interface BidPokerState {
     readonly out: ReadonlyArray<number>;
     /** The players who let a phase close without acting: no longer awaited, until they commit again */
     readonly absent: ReadonlyArray<number>;
+    /**
+     * The players who sealed a bid or discards and did not reveal them, in time or as committed: withholding would let
+     * them take a value back once they read the others, so they are pigs at the end
+     */
+    readonly withheld: ReadonlyArray<number>;
     readonly events: ReadonlyArray<Readonly<BidEvent>>;
     /** Counts the moves of the game: a claim of a timeout names the step it waited at */
     readonly step: number;
@@ -124,6 +129,7 @@ export class BidPokerGame {
     public readonly holdings: Signal<ReadonlyArray<ReadonlyArray<number>>> = computed(() => this._state().holdings);
     public readonly out: Signal<ReadonlyArray<number>> = computed(() => this._state().out);
     public readonly absent: Signal<ReadonlyArray<number>> = computed(() => this._state().absent);
+    public readonly withheld: Signal<ReadonlyArray<number>> = computed(() => this._state().withheld);
     public readonly events: Signal<ReadonlyArray<Readonly<BidEvent>>> = computed(() => this._state().events);
     public readonly step: Signal<number> = computed(() => this._state().step);
     public readonly result: Signal<BidPokerResult | null> = computed(() => this._state().result);
@@ -218,16 +224,20 @@ export class BidPokerGame {
         return Applied.APPLIED;
     }
 
-    /** The reveal of a player did not match its commitment: it counts as none */
+    /** The reveal of a player did not match its commitment: it counts as none, its player withholding its value */
     public refuse(player: number): void {
         const state: Readonly<BidPokerState> = this._state();
 
         if (this.awaitsReveal(state, BidPokerPhase.REVEALING, player) || this.awaitsReveal(state, BidPokerPhase.DISCLOSING, player)) {
+            this._state.set({ ...state, withheld: [...state.withheld, player] });
             this.miss(player, MissedReason.INVALID);
         }
     }
 
-    /** The time of the phase is over: the players it waits for act with no bid or no discard, and are absent */
+    /**
+     * The time of the phase is over: the players it waits for act with no bid or no discard, and are absent. The ones who
+     * sealed a value and did not reveal it withheld it
+     */
     public close(): void {
         const state: Readonly<BidPokerState> = this._state();
         const late: ReadonlyArray<number> = this.awaitedIn(state);
@@ -236,11 +246,13 @@ export class BidPokerGame {
             return;
         }
 
-        const settled: number[] = [...state.settled, ...late.filter((player: number) => state.committed.includes(player))];
+        const sealed: ReadonlyArray<number> = late.filter((player: number) => state.committed.includes(player));
+        const revealing: boolean = state.phase === BidPokerPhase.REVEALING || state.phase === BidPokerPhase.DISCLOSING;
         this.move({
             ...state,
-            settled,
+            settled: [...state.settled, ...sealed],
             absent: [...state.absent, ...late],
+            withheld: revealing ? [...state.withheld, ...sealed] : state.withheld,
             events: [...state.events, this.missed(state, MissedReason.LATE, late)],
         });
     }
@@ -260,6 +272,7 @@ export class BidPokerGame {
             holdings: this.everyone().map(() => []),
             out: [],
             absent: [],
+            withheld: [],
             events: [],
             step: 0,
             result: null,
@@ -387,7 +400,7 @@ export class BidPokerGame {
             return this.opened({ ...cleared, phase: BidPokerPhase.DISCARDING, session: state.session + 1, lots: [], lotIndex: 0 });
         }
 
-        return { ...cleared, phase: BidPokerPhase.OVER, result: settle(state.holdings, state.coins, this.rules) };
+        return { ...cleared, phase: BidPokerPhase.OVER, result: settle(state.holdings, state.coins, this.rules, state.withheld) };
     }
 
     /** A phase opening without any player to wait for (every one absent) is over at once */

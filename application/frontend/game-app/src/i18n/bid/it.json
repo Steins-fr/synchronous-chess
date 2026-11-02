@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Nessuno mescola da solo: ogni giocatore fornisce una parte casuale segreta, e il mazzo viene mescolato a partire da tutte, lo stesso su ogni pagina.",
       "sealed": "Un'offerta è segreta: la pagina ne invia l'hash con un sale casuale, poi la rivela quando le offerte si chiudono. Un'offerta rivelata in modo diverso da quella segreta, o superiore alle monete del suo giocatore, non conta come offerta e viene segnalata.",
-      "title": "Gioco leale"
+      "title": "Gioco leale",
+      "withheld": "Un'offerta o uno scarto sigillati e non rivelati in tempo, o rivelati diversamente da come sigillati, non contano, e il loro giocatore finisce maiale: nessuno ritira un'offerta dopo aver letto quelle degli altri."
     },
     "setup": {
       "coins": "Ogni giocatore inizia con 300 monete e ne deve 100 alla fine della partita.",

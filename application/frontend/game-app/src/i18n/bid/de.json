@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Niemand mischt allein: Jeder Spieler gibt einen verdeckten Zufallsbeitrag, und das Blatt wird aus allen gemischt, auf jeder Seite gleich.",
       "sealed": "Ein Gebot ist verdeckt: Die Seite sendet seinen Hash mit einem zufälligen Salt und deckt es auf, sobald das Bieten endet. Ein Gebot, das anders aufgedeckt wird, als es abgegeben wurde, oder das die Münzen seines Spielers übersteigt, gilt als kein Gebot und wird gemeldet.",
-      "title": "Faires Spiel"
+      "title": "Faires Spiel",
+      "withheld": "Ein versiegeltes Gebot oder Abwurf, nicht rechtzeitig aufgedeckt oder anders als versiegelt aufgedeckt, zählt nicht, und sein Spieler ist am Ende ein Schwein: Niemand nimmt ein Gebot zurück, nachdem er die anderen gelesen hat."
     },
     "setup": {
       "coins": "Jeder Spieler beginnt mit 300 Münzen und schuldet am Ende des Spiels 100.",

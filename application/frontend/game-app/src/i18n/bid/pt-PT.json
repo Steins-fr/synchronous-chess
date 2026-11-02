@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Ninguém baralha sozinho: cada jogador dá uma parte aleatória fechada, e o baralho é baralhado a partir de todas elas, igual em todas as páginas.",
       "sealed": "Uma licitação é fechada: a página envia o seu hash com um sal aleatório e depois revela-a quando as licitações fecham. Uma licitação revelada de forma diferente da fechada, ou acima das moedas do seu jogador, conta como nenhuma licitação e é denunciada.",
-      "title": "Jogo limpo"
+      "title": "Jogo limpo",
+      "withheld": "Uma licitação ou descartes fechados e não revelados a tempo, ou revelados de outra forma que fechados, não contam, e o jogador acaba como porco: ninguém retira a sua licitação depois de ler as dos outros."
     },
     "setup": {
       "coins": "Cada jogador começa com 300 moedas e deve 100 no fim do jogo.",

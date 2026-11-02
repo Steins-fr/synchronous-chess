@@ -33,7 +33,8 @@
     "fair": {
       "deck": "No one shuffles alone: each player gives a sealed random part, and the deck is shuffled from all of them, the same on every page.",
       "sealed": "A bid is sealed: the page sends its hash with a random salt, then reveals it once the bidding closes. A bid revealed otherwise than sealed, or above the coins of its player, counts as no bid and is reported.",
-      "title": "Fair play"
+      "title": "Fair play",
+      "withheld": "A bid or discards sealed and not revealed in time, or revealed otherwise than sealed, count as none, and their player is a pig at the end: no one takes a value back once it read the others."
     },
     "setup": {
       "coins": "Each player starts with 300 coins, and owes 100 at the end of the game.",

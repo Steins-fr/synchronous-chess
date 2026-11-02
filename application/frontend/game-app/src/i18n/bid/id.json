@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Tidak ada yang mengocok sendirian: setiap pemain memberikan bagian acak yang tertutup, dan setumpuk kartu dikocok dari semuanya, sama di setiap halaman.",
       "sealed": "Tawaran bersifat tertutup: halaman mengirim hash-nya dengan salt acak, lalu mengungkapkannya setelah penawaran ditutup. Tawaran yang diungkapkan tidak sesuai dengan yang tertutup, atau melebihi koin pemiliknya, dihitung sebagai tidak menawar dan dilaporkan.",
-      "title": "Permainan jujur"
+      "title": "Permainan jujur",
+      "withheld": "Tawaran atau kartu buangan tersegel yang tidak dibuka tepat waktu, atau dibuka berbeda dari segelnya, tidak dihitung, dan pemainnya menjadi babi di akhir: tidak ada yang menarik tawaran setelah melihat tawaran yang lain."
     },
     "setup": {
       "coins": "Setiap pemain memulai dengan 300 koin, dan berutang 100 koin di akhir permainan.",

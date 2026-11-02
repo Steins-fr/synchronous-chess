@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Kimse tek başına karıştırmaz: her oyuncu kapalı, rastgele bir parça verir ve deste hepsinden karıştırılır; her sayfada aynı deste.",
       "sealed": "Teklif kapalıdır: sayfa, rastgele bir tuzla birlikte teklifin özetini gönderir, teklifler kapanınca da teklifi açıklar. Kapalı hâlinden farklı açıklanan ya da oyuncusunun jetonlarını aşan bir teklif, teklif yok sayılır ve bildirilir.",
-      "title": "Dürüst oyun"
+      "title": "Dürüst oyun",
+      "withheld": "Zamanında açılmayan ya da mühürlendiğinden farklı açılan mühürlü bir teklif veya atılan kartlar sayılmaz ve oyuncusu sonunda domuz olur: kimse diğerlerini gördükten sonra teklifini geri alamaz."
     },
     "setup": {
       "coins": "Her oyuncu 300 jetonla başlar ve oyunun sonunda 100 jeton borçludur.",

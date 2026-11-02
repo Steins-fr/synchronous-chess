@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Nadie baraja solo: cada jugador aporta una parte aleatoria sellada, y las cartas se barajan a partir de todas ellas, igual en todas las páginas.",
       "sealed": "Una puja es sellada: la página envía su hash con una sal aleatoria y luego la revela cuando se cierran las pujas. Una puja revelada distinta de la sellada, o superior a las monedas de su jugador, cuenta como si no hubiera puja y se señala.",
-      "title": "Juego limpio"
+      "title": "Juego limpio",
+      "withheld": "Una puja o unos descartes sellados y no revelados a tiempo, o revelados de otra forma que sellados, no cuentan, y su jugador acaba siendo cerdo: nadie retira su puja tras leer las de los demás."
     },
     "setup": {
       "coins": "Cada jugador empieza con 300 monedas y debe 100 al final de la partida.",

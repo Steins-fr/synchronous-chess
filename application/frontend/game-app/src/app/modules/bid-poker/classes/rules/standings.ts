@@ -27,14 +27,16 @@ export interface BidPokerResult {
 }
 
 /**
- * The end of the game. The pigs are the last place: every player without a hand (fewer than 5 cards) or, when every
- * player has one, the players of the worst hand. Every pig pays its fine, and the others share the prizes by place,
+ * The end of the game. The pigs are the last place: every player who withheld a sealed value, and every player without a
+ * hand (fewer than 5 cards); without any, the players of the worst hand. Every pig pays its fine, and the others share the prizes by place,
  * multiplied by the number of pigs: equal hands share the prizes of the places they cover, in whole coins.
  */
-export function settle(holdings: ReadonlyArray<ReadonlyArray<number>>, coins: ReadonlyArray<number>, rules: BidPokerRules): BidPokerResult {
+export function settle(
+    holdings: ReadonlyArray<ReadonlyArray<number>>, coins: ReadonlyArray<number>, rules: BidPokerRules, withheld: ReadonlyArray<number> = [],
+): BidPokerResult {
     const hands: ReadonlyArray<Readonly<BestHand> | null> = holdings.map((held: ReadonlyArray<number>) =>
         held.length < HAND_SIZE ? null : bestHand(held.map((id: number) => rules.deck[id])));
-    const pigs: ReadonlySet<number> = pigsOf(hands);
+    const pigs: ReadonlySet<number> = pigsOf(hands, withheld);
     const ranked: number[] = hands.map((_, player: number) => player).filter((player: number) => !pigs.has(player))
         .sort((one: number, other: number) => compareHands(handOf(hands, other), handOf(hands, one)));
     const places = new Map<number, { place: number; prize: number }>();
@@ -60,10 +62,13 @@ export function settle(holdings: ReadonlyArray<ReadonlyArray<number>>, coins: Re
     };
 }
 
-/** Every player without a hand, else the players of the worst hand: all of them when every hand is equal */
-function pigsOf(hands: ReadonlyArray<Readonly<BestHand> | null>): ReadonlySet<number> {
+/**
+ * Every player who withheld a sealed value or has no hand, else the players of the worst hand: all of them when every
+ * hand is equal
+ */
+function pigsOf(hands: ReadonlyArray<Readonly<BestHand> | null>, withheld: ReadonlyArray<number>): ReadonlySet<number> {
     const players: number[] = hands.map((_, player: number) => player);
-    const without: number[] = players.filter((player: number) => hands[player] === null);
+    const without: number[] = players.filter((player: number) => hands[player] === null || withheld.includes(player));
 
     if (without.length > 0) {
         return new Set(without);

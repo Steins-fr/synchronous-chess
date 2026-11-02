@@ -33,7 +33,8 @@
     "fair": {
       "deck": "Ninguém embaralha sozinho: cada jogador dá uma parte aleatória lacrada, e o baralho é embaralhado a partir de todas elas, o mesmo em todas as páginas.",
       "sealed": "Um lance é lacrado: a página envia o hash dele com um salt aleatório, depois o revela quando os lances se encerram. Um lance revelado diferente do lacrado, ou acima das moedas do seu jogador, conta como nenhum lance e é denunciado.",
-      "title": "Jogo limpo"
+      "title": "Jogo limpo",
+      "withheld": "Um lance ou descartes lacrados e não revelados a tempo, ou revelados de outro jeito que lacrados, não contam, e o jogador termina como porco: ninguém retira o lance depois de ler os dos outros."
     },
     "setup": {
       "coins": "Cada jogador começa com 300 moedas e deve 100 no fim da partida.",
