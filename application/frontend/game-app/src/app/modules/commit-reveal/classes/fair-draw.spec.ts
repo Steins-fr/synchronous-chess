@@ -22,7 +22,7 @@ describe('FairDraw', () => {
         expect(() => new FairDraw('ctx', players)).toThrow('A fair draw needs distinct players, one at least');
     });
 
-    test('should commit to the context, the seat and the part', async () => {
+    test('should commit to the context, the index of the player and the part', async () => {
         await expect(FairDraw.commitment('ctx', 0, 'p0')).resolves.toEqual(COMMITMENTS['a']);
         expect(FairDraw.drawPart()).toMatch(/^[0-9a-f]{32}$/);
     });

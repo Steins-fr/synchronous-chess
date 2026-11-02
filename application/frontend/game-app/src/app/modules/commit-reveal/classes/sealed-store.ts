@@ -37,7 +37,7 @@ export class SealedStore<T> {
     public remove(id: SealedId): void {
         const { [id]: removed, ...values } = this.read();
 
-        if (removed) {
+        if (removed !== undefined) {
             this.write(values);
         }
     }

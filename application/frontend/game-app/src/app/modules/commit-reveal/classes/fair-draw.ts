@@ -44,9 +44,14 @@ export class FairDraw {
         return drawSalt();
     }
 
-    /** The commitment of the player of a seat to its random part */
-    public static commitment(context: string, seat: number, part: string): Promise<string> {
-        return commitmentOf([context, seat, part], ':');
+    /**
+     * The commitment of a player to its random part
+     *
+     * @param index the index of the player among the players drawing, not its seat at the table: the seats of a table
+     * may be free between them
+     */
+    public static commitment(context: string, index: number, part: string): Promise<string> {
+        return commitmentOf([context, index, part], ':');
     }
 
     public get phase(): DrawPhase {

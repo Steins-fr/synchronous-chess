@@ -62,6 +62,18 @@ describe('SealedStore', () => {
         expect(setItemSpy).toHaveBeenCalledOnce();
     });
 
+    test('should remove a value read as false', () => {
+        // Given
+        const store = new SealedStore<number>('bids', 'room', 'a');
+        store.save(0, 0);
+
+        // When
+        store.remove(0);
+
+        // Then
+        expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:a')).toEqual('{}');
+    });
+
     test('should go on without the storage when it is blocked', () => {
         // Given
         const store = new SealedStore<Sealed>('turns', 'room', 'a', () => {

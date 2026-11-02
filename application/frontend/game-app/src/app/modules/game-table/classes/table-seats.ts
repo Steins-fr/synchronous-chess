@@ -1,5 +1,5 @@
 import { computed, Signal, signal } from '@angular/core';
-import { CryptoHelper } from '@app/helpers/crypto.helper';
+import { drawSalt, SALT_BYTES } from '@app/modules/commit-reveal/classes/commitment';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 
@@ -37,9 +37,8 @@ export interface TableSeatsOptions<Seat extends string, Unseat extends string> {
     readonly sending: Signal<boolean>;
 }
 
-/** The bytes of the salt of a player */
-const SALT_LENGTH: number = 16;
-const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_LENGTH }}$`);
+/** The salt of a player, as drawn */
+const SALT_PATTERN: RegExp = new RegExp(`^[0-9a-f]{${ 2 * SALT_BYTES }}$`);
 
 /**
  * The seats of a table, taken by the participants themselves while the game lets them. A participant has a single
@@ -115,7 +114,7 @@ export class TableSeats<Seat extends string, Unseat extends string> {
     }
 
     public takeSeat(seat: number): void {
-        this.seatRoom.transmitMessage(this.options.types.seat, { seat, salt: CryptoHelper.randomHex(SALT_LENGTH) });
+        this.seatRoom.transmitMessage(this.options.types.seat, { seat, salt: drawSalt() });
     }
 
     public leaveSeat(): void {
