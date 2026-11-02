@@ -5,9 +5,10 @@ import SynchronousChessOnlineGameSession, {
     RevealMessage,
     SCGameSessionType,
     SealedAction,
-    SealedActionKind
+    SealedActionKind,
+    StoredTurn
 } from './synchronous-chess-online-game-session';
-import { SealedTurnStore } from './sealed-turn-store';
+import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import { SessionConfiguration } from './synchronous-chess-game-session';
 import PromotionTurn from '../turns/promotion-turn';
 import SyncTurn from '../turns/sync-turn';
@@ -176,7 +177,7 @@ describe('SynchronousChessOnlineGameSession', () => {
         white.move(e2e4);
         black.move(e7e5);
         await vi.waitFor(() => expect(sessions.map(turnCount)).toEqual([1, 1, 1]));
-        new SealedTurnStore('room', 'a').save({ turn: 0, colors: [PieceColor.WHITE, PieceColor.BLACK], action: { kind: SealedActionKind.MOVE, move: d2d4 }, salt: 'previous game' });
+        new SealedStore<StoredTurn>('turns', 'room', 'a').save(0, { turn: 0, colors: [PieceColor.WHITE, PieceColor.BLACK], action: { kind: SealedActionKind.MOVE, move: d2d4 }, salt: 'previous game' });
 
         // When
         const reloaded: SynchronousChessOnlineGameSession = reloadWhite();
@@ -221,7 +222,7 @@ describe('SynchronousChessOnlineGameSession', () => {
         expect(black.board()).toEqual(reloaded.board());
         expect(spectator.board()).toEqual(reloaded.board());
         expect(hub.reports).toEqual([]);
-        expect(new SealedTurnStore('room', 'a').get(0)).toBeUndefined();
+        expect(new SealedStore<StoredTurn>('turns', 'room', 'a').get(0)).toBeUndefined();
     });
 
     test('should play a restored action once the game reaches its turn', async () => {
