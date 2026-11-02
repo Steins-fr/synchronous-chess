@@ -9,5 +9,8 @@ export const otherSeat = (seat: TableSeat): TableSeat => seat === TableSeat.ONE 
 /** A value for each seat, read by the seat */
 export type SeatPair<T> = readonly [T, T];
 
+/** The first two values, the ones of a table of two seats */
+export const toSeatPair = <T>(values: ReadonlyArray<T>): SeatPair<T> => [values[0], values[1]];
+
 /** The pair changed for a seat only */
 export const withSeat = <T>(pair: SeatPair<T>, seat: TableSeat, value: T): SeatPair<T> => seat === TableSeat.ONE ? [value, pair[1]] : [pair[0], value];

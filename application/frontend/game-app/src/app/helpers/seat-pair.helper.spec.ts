@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { otherSeat, SeatPair, TableSeat, withSeat } from './seat-pair.helper';
+import { otherSeat, SeatPair, TableSeat, toSeatPair, withSeat } from './seat-pair.helper';
 
 describe('seat pair helper', () => {
     test('should give the other seat', () => {
@@ -15,5 +15,9 @@ describe('seat pair helper', () => {
         expect(withSeat(pair, TableSeat.ONE, 'c')).toEqual(['c', 'b']);
         expect(withSeat(pair, TableSeat.TWO, 'c')).toEqual(['a', 'c']);
         expect(pair).toEqual(['a', 'b']);
+    });
+
+    test('should give the values of a table of two seats as a pair', () => {
+        expect(toSeatPair(['a', null])).toEqual(['a', null]);
     });
 });

@@ -18,9 +18,9 @@ describe('TableSeats', () => {
     let applied: Array<[string, string, boolean]>;
 
     /** A participant on the page of the table, applying the messages of the seats in the order of the chain */
-    function page(name: string): TableSeats<'seat', 'unseat'> {
+    function page(name: string, count: number = 2): TableSeats<'seat', 'unseat'> {
         const room: Room<Payloads> = hub.room(name);
-        const seats = new TableSeats(room, { types: { seat: 'seat', unseat: 'unseat' }, open, sending });
+        const seats = new TableSeats(room, { count, types: { seat: 'seat', unseat: 'unseat' }, open, sending });
         room.messenger('seat').subscribe((message) => applied.push([name, message.type, seats.onSeat(message)]));
         room.messenger('unseat').subscribe((message) => applied.push([name, message.type, seats.onUnseat(message)]));
         rooms.set(name, room);
@@ -53,7 +53,8 @@ describe('TableSeats', () => {
         expect([alice.mySeat(), bob.mySeat(), carol.mySeat()]).toEqual([TWO, ONE, null]);
         expect(carol.seatOf('alice')).toEqual(TWO);
         expect(carol.spectatorNumber()).toEqual(1);
-        expect([alice.bottomSeat(), alice.topSeat(), carol.bottomSeat(), carol.topSeat()]).toEqual([TWO, ONE, ONE, TWO]);
+        expect([alice.bottomSeat(), alice.seatOrder(), carol.bottomSeat(), carol.seatOrder()]).toEqual([TWO, [TWO, ONE], ONE, [ONE, TWO]]);
+        expect(carol.taken().map(({ name }) => name)).toEqual(['bob', 'alice']);
     });
 
     test('should count the seats taken live, not the seat asked again by its player, a seat left or freed, nor the history', () => {
@@ -94,7 +95,7 @@ describe('TableSeats', () => {
         // When
         alice.leaveSeat();
         rooms.get('alice')?.transmitMessage('seat', { seat: TWO, salt: 'short' });
-        rooms.get('alice')?.transmitMessage('seat', { seat: 2 as TableSeat, salt: 'a'.repeat(32) });
+        rooms.get('alice')?.transmitMessage('seat', { seat: 2, salt: 'a'.repeat(32) });
 
         // Then
         expect(alice.seats()).toEqual([null, null]);
@@ -128,7 +129,7 @@ describe('TableSeats', () => {
         // Then: Bob sees the table from the free seat
         expect([alice.canTake(TWO), bob.canTake(ONE), bob.canTake(TWO)]).toEqual([false, false, true]);
         expect([alice.canLeave(), bob.canLeave()]).toEqual([true, false]);
-        expect([bob.bottomSeat(), bob.topSeat()]).toEqual([TWO, ONE]);
+        expect([bob.bottomSeat(), bob.seatOrder()]).toEqual([TWO, [TWO, ONE]]);
 
         // When the seats close, then Alice leaves hers as they open again
         open.set(false);
@@ -225,7 +226,7 @@ describe('TableSeats', () => {
         const carol = page('carol');
 
         // When
-        rooms.get('carol')?.transmitMessage('unseat', { seat: 5 as TableSeat, name: undefined as unknown as string });
+        rooms.get('carol')?.transmitMessage('unseat', { seat: 5, name: undefined as unknown as string });
 
         // Then
         expect(carol.seats()).toEqual([null, null]);
@@ -258,5 +259,84 @@ describe('TableSeats', () => {
 
         // Then
         expect(alice.seats()).toEqual([null, null]);
+    });
+
+    describe('with 8 seats', () => {
+        test('should seat the players anywhere, the seated ones packed in the order of their seats', () => {
+            // Given
+            const alice = page('alice', 8);
+            const bob = page('bob', 8);
+            const carol = page('carol', 8);
+            const dave = page('dave', 8);
+
+            // When
+            alice.takeSeat(5);
+            bob.takeSeat(0);
+            carol.takeSeat(2);
+
+            // Then
+            expect(dave.seats()).toEqual(['bob', null, 'carol', null, null, 'alice', null, null]);
+            expect(dave.taken().map(({ name }) => name)).toEqual(['bob', 'carol', 'alice']);
+            expect(dave.spectatorNumber()).toEqual(1);
+            expect([dave.bottomSeat(), dave.canTake(1), dave.canTake(2)]).toEqual([1, true, false]);
+            expect(alice.seatOrder()).toEqual([5, 6, 7, 0, 1, 2, 3, 4]);
+
+            // When the seats close, a spectator sees the table from the first seat
+            open.set(false);
+
+            // Then
+            expect(dave.bottomSeat()).toEqual(0);
+        });
+
+        test('should see the table from the first seat when every seat is taken', () => {
+            // Given
+            const players = ['p0', 'p1', 'p2'].map((name: string) => page(name, 3));
+            const watcher = page('watcher', 3);
+
+            // When
+            players.forEach((player: TableSeats<'seat', 'unseat'>, seat: number) => player.takeSeat(seat));
+
+            // Then
+            expect(watcher.bottomSeat()).toEqual(0);
+        });
+
+        test.each([8, -1, 1.5, '1'])('should refuse the seat %s', (seat: number | string) => {
+            // Given
+            const alice = page('alice', 8);
+
+            // When
+            rooms.get('alice')?.transmitMessage('seat', { seat: seat as number, salt: 'a'.repeat(32) });
+
+            // Then
+            expect(alice.mySeat()).toBeNull();
+            expect(applied).toEqual([['alice', 'seat', false]]);
+        });
+
+        test('should let any other seated player, or the host, free the seat of a player away', () => {
+            // Given
+            hub.sequencer.set('host');
+            const alice = page('alice', 8);
+            const bob = page('bob', 8);
+            const carol = page('carol', 8);
+            const host = page('host', 8);
+            const dave = page('dave', 8);
+            alice.takeSeat(0);
+            bob.takeSeat(3);
+            carol.takeSeat(6);
+
+            // When
+            hub.leave(rooms.get('bob') as Room<Payloads>);
+
+            // Then
+            expect([alice.canRelease(3), carol.canRelease(3), host.canRelease(3), dave.canRelease(3), alice.canRelease(0)]).toEqual([true, true, true, false, false]);
+
+            // When a player frees its own seat, then another one frees it
+            rooms.get('bob')?.transmitMessage('unseat', { seat: 3, name: 'bob' });
+            carol.unseat(3);
+
+            // Then
+            expect(dave.seats()).toEqual(['alice', null, null, null, null, null, 'carol', null]);
+            expect(applied.filter(([name, type]) => name === 'dave' && type === 'unseat').map(([, , freed]) => freed)).toEqual([false, true]);
+        });
     });
 });

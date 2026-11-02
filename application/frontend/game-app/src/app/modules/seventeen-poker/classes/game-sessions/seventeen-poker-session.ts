@@ -16,7 +16,7 @@ import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { BetAction } from '../rules/betting-round';
 import { HAND_SIZE } from '../rules/hand-evaluator';
 import { DRAW_PILE, HandPhase, MatchResult, PokerHand, PokerMatch, PokerMatchRules } from '../rules/poker-match';
-import { otherSeat, PokerSeat, SeatPair, withSeat } from '../rules/poker-seat';
+import { otherSeat, PokerSeat, SeatPair, toSeatPair, withSeat } from '../rules/poker-seat';
 import { SEVENTEEN_DECK, seventeenCard } from '../rules/seventeen-deck';
 
 export enum SPGameSessionType {
@@ -163,12 +163,13 @@ export class SeventeenPokerSession {
 
     /** The seats of the table, open before the first hand of a match, and once it is over */
     public readonly tableSeats = new TableSeats(this.room, {
+        count: 2,
         types: { seat: SPGameSessionType.SEAT, unseat: SPGameSessionType.UNSEAT },
         open: (): boolean => this.seatsOpen(),
         sending: this.sending,
     });
     /** The players of each seat */
-    public readonly seats: Signal<SeatPair<string | null>> = this.tableSeats.seats;
+    public readonly seats: Signal<SeatPair<string | null>> = computed((): SeatPair<string | null> => toSeatPair(this.tableSeats.seats()));
     /** The seats taken live, out of the history of the room: each one is heard */
     public readonly seatsTaken: Signal<number> = this.tableSeats.seatsTaken;
     /** The players of the match, the ones of the seats until its first hand: the seats may change once it is over */

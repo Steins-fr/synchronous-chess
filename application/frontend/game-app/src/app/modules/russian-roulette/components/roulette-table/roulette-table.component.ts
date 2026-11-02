@@ -137,7 +137,7 @@ export class RouletteTableComponent implements OnDestroy {
 
     /** The seat at the bottom of the table: the one of the local player, the first one for a spectator */
     protected readonly bottomSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.bottomSeat());
-    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => this.session().tableSeats.topSeat());
+    protected readonly topSeat: Signal<RouletteSeat> = computed((): RouletteSeat => otherSeat(this.session().tableSeats.bottomSeat()));
 
     /** Whether each seat holds the player of the game: once it is over, another participant may take it */
     private readonly gameSeats: Signal<SeatPair<boolean>> = computed((): SeatPair<boolean> => {
