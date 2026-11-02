@@ -58,14 +58,12 @@ export class FairDraw {
 
     /** The players the draw waits for: to commit, then to reveal */
     public get waitingFor(): ReadonlyArray<string> {
-        switch (this.phase) {
-            case DrawPhase.COMMITTING:
-                return this.players.filter((player: string) => !this.commitments.has(player));
-            case DrawPhase.REVEALING:
-                return this.players.filter((player: string) => !this.parts.has(player));
-            case DrawPhase.DRAWN:
-                return [];
+        const phase: DrawPhase = this.phase;
+
+        if (phase === DrawPhase.COMMITTING) {
+            return this.players.filter((player: string) => !this.commitments.has(player));
         }
+        return phase === DrawPhase.REVEALING ? this.players.filter((player: string) => !this.parts.has(player)) : [];
     }
 
     public commit(player: string, commitment: unknown): DrawStep {
