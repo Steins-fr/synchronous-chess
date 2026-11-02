@@ -1,4 +1,5 @@
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { ExponentialElGamal } from '@app/modules/mental-poker/classes/exponential-elgamal';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -166,6 +167,26 @@ describe('Cylinder', { timeout: 30_000 }, () => {
         expect(c.cylinder.keys()).toEqual(2);
         expect(c.cylinder.bullets()).toEqual([]);
         expect(hub.reports).toEqual([]);
+    });
+
+    test.each([
+        { parts: ['one', 'two'], commitments: ['d8211269c7b052c5b43d636970c3be9537164a0996e8b799590aced2fe04ecae', '5a45f6f1671ecaa9a8cee0609e861135f5cd07688584de62d8c50a4600ceca6f'], first: 0 },
+        { parts: ['two', 'one'], commitments: ['1ffe612c8311d9d6c6861f5533cde4c1023028c1f59d6cc03a34a78e44b837ac', 'bbb40ac04a2a8dd1347f8575180ac92932f4e3e319712c9d27c4c0706a3bc6e0'], first: 1 },
+    ])('should draw the first shooter from the hash of the random parts of $parts, in the order of the seats', async ({ parts, commitments, first }) => {
+        // Given
+        const drawn: string[] = [...parts];
+        const randomHex = CryptoHelper.randomHex.bind(CryptoHelper);
+        vi.spyOn(CryptoHelper, 'randomHex').mockImplementation((byteLength: number) => byteLength === 16 ? drawn.shift() as string : randomHex(byteLength));
+        const [a, b, c] = table();
+
+        // When
+        await a.cylinder.load(LOADS['a']);
+        await b.cylinder.load(LOADS['b']);
+        await ready();
+
+        // Then
+        expect(messagesOf(CylinderMessageType.KEY).map((message: AppMessage) => (message.payload as { commitment: string }).commitment)).toEqual(commitments);
+        [a, b, c].forEach(({ cylinder }) => expect(cylinder.first()).toEqual(first));
     });
 
     test('should fire every chamber as loaded and turned, then be checked fair once both keys are disclosed', async () => {

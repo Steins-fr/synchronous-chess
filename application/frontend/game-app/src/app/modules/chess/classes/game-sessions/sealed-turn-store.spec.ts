@@ -34,6 +34,14 @@ describe('SealedTurnStore', () => {
         expect(new SealedTurnStore('other', 'a').get(0)).toBeUndefined();
     });
 
+    test('should keep the turns of a room and a player under one key of the session storage', () => {
+        // When
+        new SealedTurnStore('room', 'a').save(turn0);
+
+        // Then
+        expect(JSON.parse(sessionStorage.getItem('synchronous-chess:sealed-turns:room:a') as string)).toEqual({ 0: turn0 });
+    });
+
     test('should remove a turn once revealed', () => {
         // Given
         const store: SealedTurnStore = new SealedTurnStore('room', 'a');
