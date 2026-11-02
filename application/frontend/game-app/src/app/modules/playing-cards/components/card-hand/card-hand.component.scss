@@ -1,6 +1,6 @@
 // The fan: each card turns around a point below the hand, and drops with its distance to the middle. The cards overlap
 // by 40% of their width, more when the hand would not hold in its width (100cqi): its gaps share it, but a quarter of a
-// card on each side, where the outer cards turn
+// card on each side, where the outer cards turn. They pile up at most, never in the reverse order
 .hand-card {
     --lift: 0rem;
     --fan-angle: calc(var(--fan-offset) * var(--fan-scale));
@@ -9,7 +9,7 @@
     transition: transform var(--app-motion-fast) ease-out;
 
     &:not(:first-child) {
-        margin-left: min(calc(var(--app-card-width) * -0.4), calc((100cqi - var(--app-card-width) * 1.5) / var(--fan-gaps) - var(--app-card-width)));
+        margin-left: max(calc(var(--app-card-width) * -1), min(calc(var(--app-card-width) * -0.4), calc((100cqi - var(--app-card-width) * 1.5) / var(--fan-gaps) - var(--app-card-width))));
     }
 
     &.selected {

@@ -1,4 +1,4 @@
-import { CardRank, CardSuit, JOKER, PlayingCard, SuitedCard } from '@app/modules/playing-cards/types/playing-card';
+import { CardRank, CardSuit, FULL_DECK, JOKER, PlayingCard, SuitedCard } from '@app/modules/playing-cards/types/playing-card';
 
 /** The kinds of poker hands, from the lowest */
 export enum HandCategory {
@@ -48,8 +48,7 @@ interface Face {
 }
 
 /** The cards the joker can stand for: any card of the deck */
-const JOKER_FACES: ReadonlyArray<Face> = Object.values(CardSuit)
-    .flatMap((suit: CardSuit): Face[] => RANKS.map((rank: CardRank): Face => ({ value: rankValue(rank), suit })));
+const JOKER_FACES: ReadonlyArray<Face> = FULL_DECK.map((card: Readonly<SuitedCard>): Face => ({ value: rankValue(card.rank), suit: card.suit }));
 
 /** The category of the size of each group of cards, from the largest, five different ranks aside */
 const CATEGORY_OF_GROUPS: Readonly<Record<string, HandCategory>> = {

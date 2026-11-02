@@ -83,10 +83,12 @@ describe('PlayingCardComponent', () => {
         // Then
         expect(image().getAttribute('aria-label')).toEqual('Ten of hearts');
         expect(face()?.getAttribute('class')).toContain('fill-app-card-red');
-        Array.from(fixture.nativeElement.querySelectorAll('text'), (text: SVGTextElement) => {
-            expect(text.getAttribute('textLength')).toEqual('16');
-            expect(text.getAttribute('lengthAdjust')).toEqual('spacingAndGlyphs');
-        });
+        const corners: SVGTextElement[] = Array.from(fixture.nativeElement.querySelectorAll('text'));
+        expect(corners).toHaveLength(2);
+        for (const corner of corners) {
+            expect(corner.getAttribute('textLength')).toEqual('16');
+            expect(corner.getAttribute('lengthAdjust')).toEqual('spacingAndGlyphs');
+        }
     });
 
     test('should show the joker with its star', async () => {
