@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "Kombinasi seorang pemain adalah 5 kartu terbaiknya, diperingkat seperti dalam poker, termasuk high card. Pemain dengan kurang dari 5 kartu tidak memiliki kombinasi.",
-      "pigs": "Yang terakhir menjadi babi: setiap pemain tanpa kombinasi atau, jika setiap pemain memilikinya, para pemain dengan kombinasi terburuk. Selalu ada setidaknya satu babi, dan setiap babi membayar 150 koin.",
-      "prizes": "Peringkat ke-1, ke-2, dan ke-3 dari pemain lainnya memenangkan 100, 40, dan 10 koin, dikalikan jumlah babi. Kombinasi yang sama membagi hadiah peringkatnya, dalam koin utuh, dan sisanya masuk ke bank. Jika semua kombinasi sama, setiap pemain menjadi babi.",
+      "lastOnes": "Yang terakhir menjadi babi: setiap pemain tanpa kombinasi dan setiap pemain yang tidak membuka nilai tersegelnya; jika tidak ada, para pemain dengan kombinasi terburuk, setiap pemain jika semua kombinasi sama. Selalu ada setidaknya satu babi, dan setiap babi membayar 150 koin.",
+      "shares": "Peringkat ke-1, ke-2, dan ke-3 dari pemain lainnya memenangkan 100, 40, dan 10 koin, dikalikan jumlah babi. Kombinasi yang sama membagi hadiah peringkatnya, dalam koin utuh, dan sisanya masuk ke bank.",
       "title": "Akhir permainan"
     },
     "fair": {

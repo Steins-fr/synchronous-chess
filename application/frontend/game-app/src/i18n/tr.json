@@ -36,6 +36,9 @@
     "no": "Hayır",
     "yes": "Evet"
   },
+  "form": {
+    "unreadable": "Bir sayı girin"
+  },
   "home": {
     "bidPoker": {
       "action": "Oyna",

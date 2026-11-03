@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "Die Hand eines Spielers sind seine besten 5 Karten, gewertet wie beim Poker, die höchste Karte eingeschlossen. Ein Spieler mit weniger als 5 Karten hat keine Hand.",
-      "pigs": "Die Letzten sind die Schweine: jeder Spieler ohne Hand oder, wenn jeder Spieler eine hat, die Spieler mit der schlechtesten Hand. Es gibt immer mindestens ein Schwein, und jedes Schwein zahlt 150 Münzen.",
-      "prizes": "Der 1., der 2. und der 3. der Übrigen gewinnen 100, 40 und 10 Münzen, multipliziert mit der Anzahl der Schweine. Gleiche Hände teilen sich die Preise ihrer Ränge, in ganzen Münzen; der Rest geht an die Bank. Sind alle Hände gleich, ist jeder Spieler ein Schwein.",
+      "lastOnes": "Die Letzten sind die Schweine: jeder Spieler ohne Hand und jeder, der einen versiegelten Wert nicht aufgedeckt hat; gibt es keinen, die Spieler mit der schlechtesten Hand, jeder Spieler, wenn alle Hände gleich sind. Es gibt immer mindestens ein Schwein, und jedes Schwein zahlt 150 Münzen.",
+      "shares": "Der 1., der 2. und der 3. der Übrigen gewinnen 100, 40 und 10 Münzen, multipliziert mit der Anzahl der Schweine. Gleiche Hände teilen sich die Preise ihrer Ränge, in ganzen Münzen; der Rest geht an die Bank.",
       "title": "Das Ende"
     },
     "fair": {

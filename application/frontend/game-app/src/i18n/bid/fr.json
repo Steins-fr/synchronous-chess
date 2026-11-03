@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "La main d'un joueur est formée de ses 5 meilleures cartes, classée comme au poker, carte haute comprise. Un joueur qui a moins de 5 cartes n'a pas de main.",
-      "pigs": "Les derniers sont les cochons : chaque joueur sans main ou, quand chaque joueur en a une, les joueurs de la pire main. Il y a toujours au moins un cochon, et chaque cochon paie 150 pièces.",
-      "prizes": "Le 1er, le 2e et le 3e des autres joueurs gagnent 100, 40 et 10 pièces, multipliées par le nombre de cochons. Des mains égales se partagent les gains de leurs rangs, en pièces entières, le reste allant à la banque. Quand toutes les mains sont égales, chaque joueur est un cochon.",
+      "lastOnes": "Les derniers sont les cochons : chaque joueur sans main, et chaque joueur qui n'a pas révélé une valeur scellée ; sans aucun, les joueurs de la pire main, chaque joueur quand toutes les mains sont égales. Il y a toujours au moins un cochon, et chaque cochon paie 150 pièces.",
+      "shares": "Le 1er, le 2e et le 3e des autres joueurs gagnent 100, 40 et 10 pièces, multipliées par le nombre de cochons. Des mains égales se partagent les gains de leurs rangs, en pièces entières, le reste allant à la banque.",
       "title": "La fin"
     },
     "fair": {
@@ -92,7 +92,7 @@
       "unsoldBack": "Lot {letter} : aucune enchère, retour à {name}",
       "unsoldOut": "Lot {letter} : aucune enchère, sort du jeu"
     },
-    "past": "{first} premier, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
+    "past": "1re place : {first}, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
     "pastAllPigs": "Aucun gagnant, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
     "pastGames": "Parties jouées",
     "result": {

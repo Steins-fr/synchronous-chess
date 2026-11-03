@@ -36,6 +36,9 @@
     "no": "Tidak",
     "yes": "Ya"
   },
+  "form": {
+    "unreadable": "Masukkan angka"
+  },
   "home": {
     "bidPoker": {
       "action": "Main",

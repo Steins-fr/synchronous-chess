@@ -36,6 +36,9 @@
     "no": "Nein",
     "yes": "Ja"
   },
+  "form": {
+    "unreadable": "Gib eine Zahl ein"
+  },
   "home": {
     "bidPoker": {
       "action": "Spielen",

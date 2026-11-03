@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "A mão de um jogador são suas 5 melhores cartas, classificadas como no pôquer, carta alta incluída. Um jogador com menos de 5 cartas não tem mão.",
-      "pigs": "Os últimos são os porcos: todo jogador sem mão ou, quando todos têm uma, os jogadores da pior mão. Sempre há pelo menos um porco, e cada porco paga 150 moedas.",
-      "prizes": "O 1º, o 2º e o 3º dos outros ganham 100, 40 e 10 moedas, multiplicadas pelo número de porcos. Mãos iguais dividem os prêmios das suas posições, em moedas inteiras, e o resto vai para a banca. Quando todas as mãos são iguais, todos os jogadores são porcos.",
+      "lastOnes": "Os últimos são os porcos: todo jogador sem mão e todo jogador que não revelou um valor lacrado; sem nenhum, os jogadores da pior mão, todos os jogadores quando todas as mãos são iguais. Sempre há pelo menos um porco, e cada porco paga 150 moedas.",
+      "shares": "O 1º, o 2º e o 3º dos outros ganham 100, 40 e 10 moedas, multiplicadas pelo número de porcos. Mãos iguais dividem os prêmios das suas posições, em moedas inteiras, e o resto vai para a banca.",
       "title": "O fim"
     },
     "fair": {

@@ -10,7 +10,7 @@ import { NumberFieldComponent } from './number-field.component';
     template: '<app-number-field [field]="bidForm" label="Amount" />',
 })
 class HostComponent {
-    public readonly amount = signal<number>(5);
+    public readonly amount = signal<number | null>(5);
     public readonly bidForm = form(this.amount, (path) => {
         required(path, { message: 'bid.amount.required' });
         min(path, 0, { message: 'bid.amount.min' });
@@ -57,6 +57,16 @@ describe('NumberFieldComponent', () => {
 
         // Then
         expect(fixture.componentInstance.amount()).toEqual(42);
+    });
+
+    test('should tell a value the browser could not read', async () => {
+        // When letters are typed, the browser giving no value
+        Object.defineProperty(input(), 'validity', { configurable: true, value: { ...input().validity, badInput: true } });
+        await type('');
+
+        // Then
+        expect(fixture.nativeElement.querySelector('mat-error')?.textContent.trim()).toEqual('Enter a number');
+        expect(fixture.componentInstance.amount()).toEqual(5);
     });
 
     test('should translate the message of an error with the values of the error', async () => {

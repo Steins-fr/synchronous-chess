@@ -21,7 +21,8 @@ import { fieldError } from '@app/modules/form/field-error';
 export class NumberFieldComponent {
     /** Translated */
     public readonly label = input.required<string>();
-    public readonly field = input.required<FieldTree<number>>();
+    /** Its value is null while the field is empty */
+    public readonly field = input.required<FieldTree<number | null>>();
 
     /** The first error of the field, translated by the template */
     protected readonly error = computed<TranslatableText | undefined>(() => fieldError(this.field()));

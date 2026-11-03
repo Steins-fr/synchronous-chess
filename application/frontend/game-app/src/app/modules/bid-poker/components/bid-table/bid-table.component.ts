@@ -114,7 +114,8 @@ export class BidTableComponent implements OnDestroy {
     protected readonly picked: WritableSignal<ReadonlyArray<string>> = linkedSignal({ source: () => this.game()?.session(), computation: () => [] });
 
     /** The bid the local player types, 0 for each lot */
-    private readonly bidModel: WritableSignal<{ amount: number }> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ amount: 0 }) });
+    /** The amount is null while the field is empty */
+    private readonly bidModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ amount: 0 }) });
     protected readonly bidForm = form(this.bidModel, (path) => {
         required(path.amount, { message: this.key(marker('table.bid.required', undefined, 'bid')) });
         min(path.amount, 0, { message: this.key(marker('table.bid.min', undefined, 'bid')) });
@@ -302,7 +303,8 @@ export class BidTableComponent implements OnDestroy {
     }
 
     protected bid(): void {
-        void submit(this.bidForm, { action: () => this.session().bid(this.bidModel().amount).then(() => undefined) });
+        // Required: the amount of a valid form is a number
+        void submit(this.bidForm, { action: () => this.session().bid(this.bidModel().amount as number).then(() => undefined) });
     }
 
     protected noBid(): void {

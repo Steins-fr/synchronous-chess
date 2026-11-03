@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "Bir oyuncunun eli, pokerdeki gibi sıralanan en iyi 5 kartıdır, yüksek kart dahil. 5'ten az kartı olan oyuncunun eli yoktur.",
-      "pigs": "Sonuncular domuzlardır: eli olmayan her oyuncu ya da her oyuncunun bir eli varsa en kötü ele sahip oyuncular. Her zaman en az bir domuz vardır ve her domuz 150 jeton öder.",
-      "prizes": "Diğerlerinden birinci, ikinci ve üçüncü olanlar, domuz sayısıyla çarpılmış 100, 40 ve 10 jeton kazanır. Eşit eller sıralarının ödüllerini tam jeton olarak paylaşır, artan bankaya gider. Tüm eller eşitse her oyuncu domuzdur.",
+      "lastOnes": "Sonuncular domuzlardır: eli olmayan her oyuncu ve mühürlü bir değeri açmayan her oyuncu; hiç yoksa en kötü ele sahip oyuncular, tüm eller eşitse her oyuncu. Her zaman en az bir domuz vardır ve her domuz 150 jeton öder.",
+      "shares": "Diğerlerinden birinci, ikinci ve üçüncü olanlar, domuz sayısıyla çarpılmış 100, 40 ve 10 jeton kazanır. Eşit eller sıralarının ödüllerini tam jeton olarak paylaşır, artan bankaya gider.",
       "title": "Oyunun sonu"
     },
     "fair": {

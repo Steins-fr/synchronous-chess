@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "La mano de un jugador son sus 5 mejores cartas, clasificadas como en el póker, carta alta incluida. Un jugador con menos de 5 cartas no tiene mano.",
-      "pigs": "Los últimos son los cerdos: todo jugador sin mano o, si todos los jugadores tienen una, los jugadores con la peor mano. Siempre hay al menos un cerdo, y cada cerdo paga 150 monedas.",
-      "prizes": "El 1.º, el 2.º y el 3.º de los demás ganan 100, 40 y 10 monedas, multiplicadas por el número de cerdos. Las manos iguales se reparten los premios de sus posiciones, en monedas enteras, y el resto va a la banca. Si todas las manos son iguales, todos los jugadores son cerdos.",
+      "lastOnes": "Los últimos son los cerdos: todo jugador sin mano y todo jugador que no reveló un valor sellado; si no hay ninguno, los jugadores con la peor mano, todos los jugadores si todas las manos son iguales. Siempre hay al menos un cerdo, y cada cerdo paga 150 monedas.",
+      "shares": "El 1.º, el 2.º y el 3.º de los demás ganan 100, 40 y 10 monedas, multiplicadas por el número de cerdos. Las manos iguales se reparten los premios de sus posiciones, en monedas enteras, y el resto va a la banca.",
       "title": "El final"
     },
     "fair": {
@@ -92,7 +92,7 @@
       "unsoldBack": "Lote {letter}: sin pujas, vuelve a {name}",
       "unsoldOut": "Lote {letter}: sin pujas, sale de la partida"
     },
-    "past": "{first} primero, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
+    "past": "1.er puesto: {first}, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
     "pastAllPigs": "Sin ganador, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
     "pastGames": "Partidas jugadas",
     "result": {

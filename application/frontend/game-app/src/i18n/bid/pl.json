@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "Układ gracza to jego 5 najlepszych kart, ocenianych jak w pokerze, łącznie z wysoką kartą. Gracz, który ma mniej niż 5 kart, nie ma układu.",
-      "pigs": "Ostatni to świnie: każdy gracz bez układu, a gdy każdy gracz ma układ, gracze z najsłabszym układem. Zawsze jest co najmniej jedna świnia, a każda świnia płaci 150 monet.",
-      "prizes": "1., 2. i 3. spośród pozostałych wygrywają 100, 40 i 10 monet, pomnożone przez liczbę świń. Równe układy dzielą się nagrodami swoich miejsc, w całych monetach, a reszta trafia do banku. Gdy wszystkie układy są równe, każdy gracz jest świnią.",
+      "lastOnes": "Ostatni to świnie: każdy gracz bez układu i każdy, kto nie ujawnił zapieczętowanej wartości; gdy takich nie ma, gracze z najsłabszym układem, a gdy wszystkie układy są równe, każdy gracz. Zawsze jest co najmniej jedna świnia, a każda świnia płaci 150 monet.",
+      "shares": "1., 2. i 3. spośród pozostałych wygrywają 100, 40 i 10 monet, pomnożone przez liczbę świń. Równe układy dzielą się nagrodami swoich miejsc, w całych monetach, a reszta trafia do banku.",
       "title": "Koniec partii"
     },
     "fair": {

@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "La mano di un giocatore sono le sue 5 carte migliori, classificate come nel poker, carta alta compresa. Un giocatore con meno di 5 carte non ha una mano.",
-      "pigs": "Gli ultimi sono i maiali: ogni giocatore senza mano o, quando tutti i giocatori ne hanno una, i giocatori con la mano peggiore. C'è sempre almeno un maiale, e ogni maiale paga 150 monete.",
-      "prizes": "Il 1°, il 2° e il 3° degli altri vincono 100, 40 e 10 monete, moltiplicate per il numero di maiali. Le mani uguali si dividono i premi dei loro posti, in monete intere, e il resto va alla banca. Quando tutte le mani sono uguali, ogni giocatore è un maiale.",
+      "lastOnes": "Gli ultimi sono i maiali: ogni giocatore senza mano e ogni giocatore che non ha rivelato un valore sigillato; se non ce n'è nessuno, i giocatori con la mano peggiore, ogni giocatore quando tutte le mani sono uguali. C'è sempre almeno un maiale, e ogni maiale paga 150 monete.",
+      "shares": "Il 1°, il 2° e il 3° degli altri vincono 100, 40 e 10 monete, moltiplicate per il numero di maiali. Le mani uguali si dividono i premi dei loro posti, in monete intere, e il resto va alla banca.",
       "title": "La fine"
     },
     "fair": {

@@ -26,8 +26,8 @@
     },
     "end": {
       "hand": "The hand of a player is its best 5 cards, ranked as in poker, the high card included. A player with fewer than 5 cards has no hand.",
-      "pigs": "The last ones are the pigs: every player without a hand or, when every player has one, the players of the worst hand. There is always one pig at least, and each pig pays 150 coins.",
-      "prizes": "The 1st, the 2nd and the 3rd of the others win 100, 40 and 10 coins, multiplied by the number of pigs. Equal hands share the prizes of their places, in whole coins, the rest going to the bank. When every hand is equal, every player is a pig.",
+      "lastOnes": "The last ones are the pigs: every player without a hand, and every player who did not reveal a sealed value; without any, the players of the worst hand, every player when every hand is equal. There is always one pig at least, and each pig pays 150 coins.",
+      "shares": "The 1st, the 2nd and the 3rd of the others win 100, 40 and 10 coins, multiplied by the number of pigs. Equal hands share the prizes of their places, in whole coins, the rest going to the bank.",
       "title": "The end"
     },
     "fair": {
