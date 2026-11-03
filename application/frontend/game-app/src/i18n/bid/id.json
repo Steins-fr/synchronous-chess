@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Sesi pembagian} other {Sesi tukar {session} dari {total}}}",
     "spectators": "{count, plural, other {# penonton}}",
+    "standings": {
+      "caption": "Peringkat permainan",
+      "coins": "Koin",
+      "hand": "Kombinasi",
+      "place": "Peringkat",
+      "player": "Pemain"
+    },
     "status": {
       "away": "Menunggu {names} kembali…",
       "bid": "Tawar lot {letter} secara tertutup: 0 untuk tidak menawar.",

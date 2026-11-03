@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Sessione di distribuzione} other {Sessione di cambio {session} di {total}}}",
     "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "standings": {
+      "caption": "Classifica della partita",
+      "coins": "Monete",
+      "hand": "Mano",
+      "place": "Posto",
+      "player": "Giocatore"
+    },
     "status": {
       "away": "In attesa del ritorno di {names}…",
       "bid": "Offerta sigillata sul lotto {letter}: 0 per non offrire.",

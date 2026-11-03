@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Runda rozdania} other {Runda wymiany {session} z {total}}}",
     "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "standings": {
+      "caption": "Klasyfikacja gry",
+      "coins": "Monety",
+      "hand": "Układ",
+      "place": "Miejsce",
+      "player": "Gracz"
+    },
     "status": {
       "away": "Czekamy na powrót: {names}…",
       "bid": "Licytuj pakiet {letter}, w tajemnicy: 0 to brak oferty.",

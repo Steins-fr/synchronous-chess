@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Séance de distribution} other {Séance d'échange {session} sur {total}}}",
     "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "standings": {
+      "caption": "Classement de la partie",
+      "coins": "Pièces",
+      "hand": "Main",
+      "place": "Rang",
+      "player": "Joueur"
+    },
     "status": {
       "away": "En attente du retour de {names}…",
       "bid": "Enchérissez sur le lot {letter}, sous pli scellé : 0 pour ne pas enchérir.",

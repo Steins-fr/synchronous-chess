@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Dağıtım turu} other {Değişim turu {session}/{total}}}",
     "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "standings": {
+      "caption": "Oyunun sıralaması",
+      "coins": "Jeton",
+      "hand": "El",
+      "place": "Sıra",
+      "player": "Oyuncu"
+    },
     "status": {
       "away": "Geri dönüş bekleniyor: {names}…",
       "bid": "Lot {letter} için kapalı teklif verin: teklif yoksa 0.",

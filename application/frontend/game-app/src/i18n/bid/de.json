@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Verteilungsrunde} other {Tauschrunde {session} von {total}}}",
     "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "standings": {
+      "caption": "Wertung des Spiels",
+      "coins": "Münzen",
+      "hand": "Hand",
+      "place": "Platz",
+      "player": "Spieler"
+    },
     "status": {
       "away": "Warte auf die Rückkehr von {names}…",
       "bid": "Biete verdeckt auf Los {letter}: 0 für kein Gebot.",

@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Rodada de distribuição} other {Rodada de troca {session} de {total}}}",
     "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "caption": "Classificação da partida",
+      "coins": "Moedas",
+      "hand": "Mão",
+      "place": "Posição",
+      "player": "Jogador"
+    },
     "status": {
       "away": "Aguardando {names} voltar…",
       "bid": "Dê seu lance no lote {letter}, lacrado: 0 para nenhum lance.",

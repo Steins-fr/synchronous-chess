@@ -95,7 +95,7 @@ test.describe('Bid poker', () => {
 
         // Then every page shows the standings
         await expect(status(eve)).toHaveText('The game is over.');
-        await expect(table(eve).locator('#standings tr')).toHaveCount(4);
+        await expect(table(eve).locator('#standings tbody tr')).toHaveCount(4);
         await expect(table(eve).locator('#standings')).toContainText('Pig');
         await alice.sendMessage('well played');
         await eve.expectMessage('alice', 'well played');

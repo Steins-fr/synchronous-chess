@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Раунд раздачи} other {Раунд обмена {session} из {total}}}",
     "spectators": "{count, plural, one {# зритель} few {# зрителя} many {# зрителей} other {# зрителя}}",
+    "standings": {
+      "caption": "Итоги игры",
+      "coins": "Монеты",
+      "hand": "Комбинация",
+      "place": "Место",
+      "player": "Игрок"
+    },
     "status": {
       "away": "Ожидание возвращения: {names}…",
       "bid": "Сделайте закрытую ставку на лот {letter}: 0 — без ставки.",

@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Ronda de reparto} other {Ronda de cambio {session} de {total}}}",
     "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "caption": "Clasificación de la partida",
+      "coins": "Monedas",
+      "hand": "Mano",
+      "place": "Puesto",
+      "player": "Jugador"
+    },
     "status": {
       "away": "Esperando el regreso de {names}…",
       "bid": "Puja por el lote {letter}, sellada: 0 para no pujar.",

@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Dealing session} other {Change session {session} of {total}}}",
     "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "standings": {
+      "caption": "Standings of the game",
+      "coins": "Coins",
+      "hand": "Hand",
+      "place": "Place",
+      "player": "Player"
+    },
     "status": {
       "away": "Waiting for {names} to come back…",
       "bid": "Bid on lot {letter}, sealed: 0 for no bid.",

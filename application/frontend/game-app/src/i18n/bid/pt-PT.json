@@ -113,6 +113,13 @@
     },
     "session": "{session, select, 0 {Ronda de distribuição} other {Ronda de troca {session} de {total}}}",
     "spectators": "{count, plural, one {# espetador} other {# espetadores}}",
+    "standings": {
+      "caption": "Classificação do jogo",
+      "coins": "Moedas",
+      "hand": "Mão",
+      "place": "Posição",
+      "player": "Jogador"
+    },
     "status": {
       "away": "A aguardar o regresso de {names}…",
       "bid": "Licite no lote {letter}, em licitação fechada: 0 para não licitar.",
