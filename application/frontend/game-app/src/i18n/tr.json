@@ -5,6 +5,7 @@
     },
     "loadingPage": "Sayfa yükleniyor…",
     "nav": {
+      "bidPoker": "Açık artırma",
       "chat": "Sohbet",
       "chess": "Satranç",
       "home": "Ana sayfa",
@@ -25,8 +26,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",
@@ -35,7 +36,15 @@
     "no": "Hayır",
     "yes": "Evet"
   },
+  "form": {
+    "unreadable": "Bir sayı girin"
+  },
   "home": {
+    "bidPoker": {
+      "action": "Oyna",
+      "description": "4 ila 8 oyuncu poker ellerini kapalı tekliflerle açık artırmadan satın alır: sonuncular kazananlara öder.",
+      "title": "Açık artırma pokeri"
+    },
     "chat": {
       "action": "Sohbet et",
       "description": "Bir odanın katılımcıları arasında, mesajları eşten eşe gönderilen bir sohbet.",

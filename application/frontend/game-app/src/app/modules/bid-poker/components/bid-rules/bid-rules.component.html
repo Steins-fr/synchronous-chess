@@ -1,0 +1,51 @@
+<ng-container *transloco="let t; prefix: 'bid.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('setup.title') }}</h3>
+        <p class="my-2">{{ t('setup.players') }}</p>
+        <p class="my-2">{{ t('setup.coins') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('dealing.title') }}</h3>
+        <p class="my-2">{{ t('dealing.catalogue') }}</p>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('dealing.sealed') }}</li>
+            <li>{{ t('dealing.highest') }}</li>
+            <li>{{ t('dealing.bank') }}</li>
+        </ul>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('change.title') }}</h3>
+        <p class="my-2">{{ t('change.discard') }}</p>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('change.seller') }}</li>
+            <li>{{ t('change.unsold') }}</li>
+        </ul>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('end.title') }}</h3>
+        <p class="my-2">{{ t('end.hand') }}</p>
+        <p class="my-2">{{ t('end.lastOnes') }}</p>
+        <p class="my-2">{{ t('end.shares') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('times.title') }}</h3>
+        <p class="my-2">{{ t('times.phases') }}</p>
+        <p class="my-2">{{ t('times.late') }}</p>
+        <p class="my-2">{{ t('times.allLate') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.sealed') }}</p>
+        <p class="my-2">{{ t('fair.withheld') }}</p>
+        <p class="my-2">{{ t('fair.deck') }}</p>
+    </section>
+</ng-container>

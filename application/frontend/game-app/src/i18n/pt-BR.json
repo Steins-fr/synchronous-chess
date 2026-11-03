@@ -5,6 +5,7 @@
     },
     "loadingPage": "Carregando a página…",
     "nav": {
+      "bidPoker": "Leilão",
       "chat": "Bate-papo",
       "chess": "Xadrez",
       "home": "Início",
@@ -25,8 +26,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} other {}}) de {author} foi denunciada como trapaça por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} other {}}) de {author} foi denunciada como trapaça por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -35,7 +36,15 @@
     "no": "Não",
     "yes": "Sim"
   },
+  "form": {
+    "unreadable": "Digite um número"
+  },
   "home": {
+    "bidPoker": {
+      "action": "Jogar",
+      "description": "De 4 a 8 jogadores compram sua mão de pôquer em leilão, com lances lacrados: os últimos pagam os vencedores.",
+      "title": "Pôquer de leilão"
+    },
     "chat": {
       "action": "Conversar",
       "description": "Um bate-papo entre os participantes de uma sala, com as mensagens trocadas de ponto a ponto.",

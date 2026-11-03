@@ -66,6 +66,17 @@ import trRouletteTranslation from './i18n/roulette/tr.json';
 import idRouletteTranslation from './i18n/roulette/id.json';
 import plRouletteTranslation from './i18n/roulette/pl.json';
 import itRouletteTranslation from './i18n/roulette/it.json';
+import enBidTranslation from './i18n/bid/en.json';
+import frBidTranslation from './i18n/bid/fr.json';
+import esBidTranslation from './i18n/bid/es.json';
+import ptBRBidTranslation from './i18n/bid/pt-BR.json';
+import ptPTBidTranslation from './i18n/bid/pt-PT.json';
+import deBidTranslation from './i18n/bid/de.json';
+import ruBidTranslation from './i18n/bid/ru.json';
+import trBidTranslation from './i18n/bid/tr.json';
+import idBidTranslation from './i18n/bid/id.json';
+import plBidTranslation from './i18n/bid/pl.json';
+import itBidTranslation from './i18n/bid/it.json';
 import enCardsTranslation from './i18n/cards/en.json';
 import frCardsTranslation from './i18n/cards/fr.json';
 import esCardsTranslation from './i18n/cards/es.json';
@@ -135,6 +146,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'roulette/id': idRouletteTranslation,
     'roulette/pl': plRouletteTranslation,
     'roulette/it': itRouletteTranslation,
+    'bid/en': enBidTranslation,
+    'bid/fr': frBidTranslation,
+    'bid/es': esBidTranslation,
+    'bid/pt-BR': ptBRBidTranslation,
+    'bid/pt-PT': ptPTBidTranslation,
+    'bid/de': deBidTranslation,
+    'bid/ru': ruBidTranslation,
+    'bid/tr': trBidTranslation,
+    'bid/id': idBidTranslation,
+    'bid/pl': plBidTranslation,
+    'bid/it': itBidTranslation,
     'cards/en': enCardsTranslation,
     'cards/fr': frCardsTranslation,
     'cards/es': esCardsTranslation,

@@ -19,3 +19,8 @@ export function textFieldInput(root: ParentNode, label: string): HTMLInputElemen
 export function textAreaFieldInput(root: ParentNode, label: string): HTMLTextAreaElement {
     return labelledField(root, 'app-text-area-field', label).querySelector('textarea') as HTMLTextAreaElement;
 }
+
+/** The input of the number field of this label, found by the text of its label */
+export function numberFieldInput(root: ParentNode, label: string): HTMLInputElement {
+    return labelledField(root, 'app-number-field', label).querySelector('input') as HTMLInputElement;
+}

@@ -5,6 +5,7 @@
     },
     "loadingPage": "Memuat halaman…",
     "nav": {
+      "bidPoker": "Lelang",
       "chat": "Obrolan",
       "chess": "Catur",
       "home": "Beranda",
@@ -25,8 +26,8 @@
     "title": "Catur Serentak"
   },
   "cheat": {
-    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} other {}}) dari {author} dilaporkan curang oleh {reporters}",
-    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
+    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} other {}}) dari {author} dilaporkan curang oleh {reporters}",
+    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
   },
   "dialog": {
     "cancel": "Batal",
@@ -35,7 +36,15 @@
     "no": "Tidak",
     "yes": "Ya"
   },
+  "form": {
+    "unreadable": "Masukkan angka"
+  },
   "home": {
+    "bidPoker": {
+      "action": "Main",
+      "description": "4 hingga 8 pemain membeli kombinasi poker mereka lewat lelang dengan tawaran tertutup: yang terakhir membayar para pemenang.",
+      "title": "Poker lelang"
+    },
     "chat": {
       "action": "Mengobrol",
       "description": "Obrolan antarpeserta sebuah ruang, pesannya dikirim langsung dari peer ke peer.",

@@ -1,0 +1,140 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Le offerte sono segrete: nessuno, nemmeno il server, vede un'offerta prima che si chiuda l'asta del suo lotto.",
+      "lots": "Le 52 carte sono divise in lotti pubblici: ogni giocatore vede le carte degli altri.",
+      "pigs": "Gli ultimi sono i maiali: pagano i premi dei primi tre."
+    },
+    "rooms": "Crea una stanza o entra in una per giocare con altri.",
+    "summary": "Un gioco del manga Liar Game: da 4 a 8 giocatori offrono le loro monete per dei lotti di carte, poi si vendono a vicenda le carte scartate, per finire con la migliore mano di poker.",
+    "tagline": "Compra la tua mano di poker all'asta.",
+    "title": "Poker all'asta"
+  },
+  "rules": {
+    "change": {
+      "discard": "Poi arrivano 5 sessioni di cambio. Ogni giocatore può scartare delle carte, anche qui in segreto: le carte scartate da un giocatore formano un lotto, nell'ordine in cui le ha scartate. I lotti vanno all'asta allo stesso modo, e le nuove carte arrivano solo dalle aste:",
+      "seller": "Le monete vanno al giocatore che ha scartato il lotto, che non può fare offerte su di esso.",
+      "title": "Le sessioni di cambio",
+      "unsold": "Un lotto senza offerte torna al giocatore che l'ha scartato."
+    },
+    "dealing": {
+      "bank": "Le monete vanno alla banca. Un lotto senza offerte esce dal gioco.",
+      "catalogue": "Le 52 carte vengono mescolate e divise in 9 o 10 lotti da 5 o 6 carte, il catalogo, mostrato a ogni giocatore. Poi ogni lotto va all'asta, uno dopo l'altro:",
+      "highest": "L'offerta più alta vince il lotto. In caso di parità, vince l'offerta fatta per prima.",
+      "sealed": "Tutti i giocatori fanno la loro offerta nello stesso momento, in segreto: nessuno vede un'offerta prima che si chiudano le offerte del lotto. Un'offerta di 0 non è un'offerta. Un'offerta non si può cambiare.",
+      "title": "La sessione di distribuzione"
+    },
+    "end": {
+      "hand": "La mano di un giocatore sono le sue 5 carte migliori, classificate come nel poker, carta alta compresa. Un giocatore con meno di 5 carte non ha una mano.",
+      "lastOnes": "Gli ultimi sono i maiali: ogni giocatore senza mano e ogni giocatore che non ha rivelato un valore sigillato; se non ce n'è nessuno, i giocatori con la mano peggiore, ogni giocatore quando tutte le mani sono uguali. C'è sempre almeno un maiale, e ogni maiale paga 150 monete.",
+      "shares": "Il 1°, il 2° e il 3° degli altri vincono 100, 40 e 10 monete, moltiplicate per il numero di maiali. Le mani uguali si dividono i premi dei loro posti, in monete intere, e il resto va alla banca.",
+      "title": "La fine"
+    },
+    "fair": {
+      "deck": "Nessuno mescola da solo: ogni giocatore fornisce una parte casuale segreta, e il mazzo viene mescolato a partire da tutte, lo stesso su ogni pagina.",
+      "sealed": "Un'offerta è segreta: la pagina ne invia l'hash con un sale casuale, poi la rivela quando le offerte si chiudono. Un'offerta rivelata in modo diverso da quella segreta, o superiore alle monete del suo giocatore, non conta come offerta e viene segnalata.",
+      "title": "Gioco leale",
+      "withheld": "Un'offerta o uno scarto sigillati e non rivelati in tempo, o rivelati diversamente da come sigillati, non contano, e il loro giocatore finisce maiale: nessuno ritira un'offerta dopo aver letto quelle degli altri."
+    },
+    "setup": {
+      "coins": "Ogni giocatore inizia con 300 monete e ne deve 100 alla fine della partita.",
+      "players": "Da 4 a 8 giocatori prendono posto, poi uno di loro avvia la partita: i posti restano occupati fino alla sua fine.",
+      "title": "Il tavolo"
+    },
+    "summary": "Regole del poker all'asta",
+    "times": {
+      "allLate": "Quando tutti i giocatori che un lotto o gli scarti aspetterebbero sono saltati, la partita aspetta di nuovo tutti i giocatori invece di chiuderli subito.",
+      "late": "Un giocatore che non agisce in tempo non offre né scarta nulla, e la partita va avanti senza aspettarlo finché non agisce di nuovo.",
+      "phases": "Un lotto resta aperto 30 secondi (90 per il primo, per leggere il catalogo), una rivelazione 15 secondi e gli scarti 45 secondi: ciascuno si chiude appena tutti i giocatori hanno agito.",
+      "title": "I tempi"
+    },
+    "title": "Regole"
+  },
+  "table": {
+    "action": {
+      "rematch": "Gioca ancora",
+      "start": "Avvia la partita"
+    },
+    "bank": "Banco: {coins, plural, one {# moneta} other {# monete}}",
+    "bid": {
+      "integer": "Offri monete intere",
+      "label": "La tua offerta",
+      "max": "Al massimo {max, plural, one {la tua # moneta} other {le tue # monete}}",
+      "min": "Almeno {min, plural, one {# moneta} other {# monete}}",
+      "none": "Nessuna offerta",
+      "required": "Scrivi la tua offerta",
+      "sealed": "La tua offerta di {amount, plural, one {# moneta} other {# monete}} è sigillata",
+      "submit": "Offri"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Tieni le carte",
+      "submit": "Scarta {count, plural, one {# carta} other {# carte}}"
+    },
+    "game": "Partita {number}:",
+    "history": "Mosse della partita",
+    "lot": {
+      "back": "Invenduto: torna al venditore",
+      "bank": "dal banco",
+      "name": "Lotto {letter}",
+      "out": "Invenduto: esce dal gioco",
+      "seller": "da {name}",
+      "sold": "A {name} per {price, plural, one {# moneta} other {# monete}}"
+    },
+    "move": {
+      "discards": "Sessione di cambio {session}: {name} scarta {count, plural, one {# carta} other {# carte}}, lotto {letter}",
+      "illegal": "{names}: {phase, select, revealing {offerta superiore alle monete, nessuna offerta} other {scarto di una carta non posseduta, nessuno scarto}}",
+      "invalid": "{names}: rivelato diversamente da come sigillato, senza valore, maiale alla fine",
+      "late": "{names}: {phase, select, bidding {nessuna offerta in tempo} revealing {offerta non rivelata in tempo, maiale alla fine} discarding {nessuno scarto in tempo} other {scarti non rivelati in tempo, maiale alla fine}}",
+      "noDiscard": "Sessione di cambio {session}: nessuna carta scartata",
+      "sold": "Lotto {letter}: {name} vince per {price, plural, one {# moneta} other {# monete}} (offerte: {bids})",
+      "soldTie": "Lotto {letter}: {name} vince per {price, plural, one {# moneta} other {# monete}}, offerta prima di {tied} (offerte: {bids})",
+      "unsoldBack": "Lotto {letter}: nessuna offerta, torna a {name}",
+      "unsoldOut": "Lotto {letter}: nessuna offerta, esce dal gioco"
+    },
+    "past": "Primo: {first}, {count, plural, one {# maiale} other {# maiali}}: {pigs}",
+    "pastAllPigs": "Nessun vincitore, {count, plural, one {# maiale} other {# maiali}}: {pigs}",
+    "pastGames": "Partite giocate",
+    "result": {
+      "balance": "{balance, plural, one {# moneta} other {# monete}} alla fine",
+      "noHand": "Nessuna mano",
+      "pig": "Maiale",
+      "place": "{place}° posto"
+    },
+    "seat": {
+      "absent": "Saltato",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moneta} other {# monete}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "release": "Libera il posto",
+      "sealed": "Sigillato",
+      "take": "Siediti"
+    },
+    "session": "{session, select, 0 {Sessione di distribuzione} other {Sessione di cambio {session} di {total}}}",
+    "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "standings": {
+      "caption": "Classifica della partita",
+      "coins": "Monete",
+      "hand": "Mano",
+      "place": "Posto",
+      "player": "Giocatore"
+    },
+    "status": {
+      "away": "In attesa del ritorno di {names}…",
+      "bid": "Offerta sigillata sul lotto {letter}: 0 per non offrire.",
+      "bidding": "Lotto {letter} all'asta: in attesa di {names}.",
+      "discard": "Scegli le carte da scartare, nel loro ordine, o tieni le tue.",
+      "discarding": "I giocatori scartano: in attesa di {names}.",
+      "disclosing": "Gli scarti vengono rivelati…",
+      "drawing": "I giocatori mescolano il mazzo: in attesa di {names}.",
+      "hurry": "Sbrigati: il tempo sta per scadere!",
+      "over": "La partita è finita.",
+      "revealing": "Le offerte sul lotto {letter} vengono rivelate…",
+      "sealed": "Sigillato: in attesa di {names}.",
+      "seats": "{count, plural, one {# giocatore seduto} other {# giocatori seduti}}: la partita inizia con almeno {min}.",
+      "start": "Avvia la partita quando tutti i giocatori sono seduti.",
+      "waitingStart": "{count, plural, one {# giocatore seduto: in attesa che avvii la partita.} other {# giocatori seduti: in attesa che uno di loro avvii la partita.}}"
+    }
+  }
+}

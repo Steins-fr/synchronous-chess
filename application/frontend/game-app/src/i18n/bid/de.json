@@ -1,0 +1,140 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Die Gebote sind verdeckt: Niemand, nicht einmal der Server, sieht ein Gebot, bevor die Auktion seines Loses endet.",
+      "lots": "Die 52 Karten werden in öffentliche Lose aufgeteilt: Jeder Spieler sieht die Karten der anderen.",
+      "pigs": "Die Letzten sind die Schweine: Sie zahlen die Preise der ersten drei."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem bei, um mit anderen zu spielen.",
+    "summary": "Ein Spiel aus dem Manga Liar Game: 4 bis 8 Spieler bieten ihre Münzen auf Lose von Karten und verkaufen einander dann ihre abgeworfenen Karten, um am Ende die beste Pokerhand zu haben.",
+    "tagline": "Kaufe deine Pokerhand auf einer Auktion.",
+    "title": "Auktionspoker"
+  },
+  "rules": {
+    "change": {
+      "discard": "Dann folgen 5 Tauschrunden. Jeder Spieler darf Karten abwerfen, ebenfalls verdeckt: Die Karten, die ein Spieler abwirft, bilden ein Los, in der Reihenfolge, in der er sie abwirft. Die Lose werden auf dieselbe Weise versteigert, und neue Karten gibt es nur aus den Auktionen:",
+      "seller": "Die Münzen gehen an den Spieler, der das Los abgeworfen hat; er kann nicht darauf bieten.",
+      "title": "Die Tauschrunden",
+      "unsold": "Ein Los, auf das niemand bietet, geht an den Spieler zurück, der es abgeworfen hat."
+    },
+    "dealing": {
+      "bank": "Die Münzen gehen an die Bank. Ein Los, auf das niemand bietet, scheidet aus dem Spiel aus.",
+      "catalogue": "Die 52 Karten werden gemischt und in 9 oder 10 Lose zu 5 oder 6 Karten aufgeteilt, den Katalog, den jeder Spieler sieht. Dann wird jedes Los der Reihe nach versteigert:",
+      "highest": "Das höchste Gebot gewinnt das Los. Bei Gleichstand gewinnt das zuerst abgegebene Gebot.",
+      "sealed": "Alle Spieler bieten gleichzeitig und verdeckt: Niemand sieht ein Gebot, bevor das Bieten auf das Los endet. Ein Gebot von 0 ist kein Gebot. Ein Gebot kann nicht geändert werden.",
+      "title": "Die Verteilungsrunde"
+    },
+    "end": {
+      "hand": "Die Hand eines Spielers sind seine besten 5 Karten, gewertet wie beim Poker, die höchste Karte eingeschlossen. Ein Spieler mit weniger als 5 Karten hat keine Hand.",
+      "lastOnes": "Die Letzten sind die Schweine: jeder Spieler ohne Hand und jeder, der einen versiegelten Wert nicht aufgedeckt hat; gibt es keinen, die Spieler mit der schlechtesten Hand, jeder Spieler, wenn alle Hände gleich sind. Es gibt immer mindestens ein Schwein, und jedes Schwein zahlt 150 Münzen.",
+      "shares": "Der 1., der 2. und der 3. der Übrigen gewinnen 100, 40 und 10 Münzen, multipliziert mit der Anzahl der Schweine. Gleiche Hände teilen sich die Preise ihrer Ränge, in ganzen Münzen; der Rest geht an die Bank.",
+      "title": "Das Ende"
+    },
+    "fair": {
+      "deck": "Niemand mischt allein: Jeder Spieler gibt einen verdeckten Zufallsbeitrag, und das Blatt wird aus allen gemischt, auf jeder Seite gleich.",
+      "sealed": "Ein Gebot ist verdeckt: Die Seite sendet seinen Hash mit einem zufälligen Salt und deckt es auf, sobald das Bieten endet. Ein Gebot, das anders aufgedeckt wird, als es abgegeben wurde, oder das die Münzen seines Spielers übersteigt, gilt als kein Gebot und wird gemeldet.",
+      "title": "Faires Spiel",
+      "withheld": "Ein versiegeltes Gebot oder Abwurf, nicht rechtzeitig aufgedeckt oder anders als versiegelt aufgedeckt, zählt nicht, und sein Spieler ist am Ende ein Schwein: Niemand nimmt ein Gebot zurück, nachdem er die anderen gelesen hat."
+    },
+    "setup": {
+      "coins": "Jeder Spieler beginnt mit 300 Münzen und schuldet am Ende des Spiels 100.",
+      "players": "4 bis 8 Spieler nehmen die Plätze ein, dann startet einer von ihnen das Spiel: Die Plätze bleiben besetzt, bis es vorbei ist.",
+      "title": "Der Tisch"
+    },
+    "summary": "Regeln des Auktionspokers",
+    "times": {
+      "allLate": "Sind alle Spieler, auf die ein Los oder das Abwerfen warten würde, übersprungen, wartet das Spiel wieder auf alle Spieler, statt sofort zu enden.",
+      "late": "Ein Spieler, der nicht rechtzeitig handelt, bietet nichts bzw. wirft nichts ab, und das Spiel wartet nicht mehr auf ihn, bis er wieder handelt.",
+      "phases": "Ein Los ist 30 Sekunden offen (das erste 90, um den Katalog zu lesen), ein Aufdecken 15 Sekunden und das Abwerfen 45 Sekunden: Jede Phase endet, sobald alle Spieler gehandelt haben.",
+      "title": "Die Zeiten"
+    },
+    "title": "Regeln"
+  },
+  "table": {
+    "action": {
+      "rematch": "Nochmal spielen",
+      "start": "Spiel starten"
+    },
+    "bank": "Bank: {coins, plural, one {# Münze} other {# Münzen}}",
+    "bid": {
+      "integer": "Biete ganze Münzen",
+      "label": "Dein Gebot",
+      "max": "Höchstens deine {max, plural, one {# Münze} other {# Münzen}}",
+      "min": "Mindestens {min, plural, one {# Münze} other {# Münzen}}",
+      "none": "Kein Gebot",
+      "required": "Gib dein Gebot ein",
+      "sealed": "Dein Gebot von {amount, plural, one {# Münze} other {# Münzen}} ist verdeckt",
+      "submit": "Bieten"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Karten behalten",
+      "submit": "{count, plural, one {# Karte abwerfen} other {# Karten abwerfen}}"
+    },
+    "game": "Spiel {number}:",
+    "history": "Züge des Spiels",
+    "lot": {
+      "back": "Unverkauft: zurück an den Verkäufer",
+      "bank": "von der Bank",
+      "name": "Los {letter}",
+      "out": "Unverkauft: aus dem Spiel",
+      "seller": "von {name}",
+      "sold": "An {name} für {price, plural, one {# Münze} other {# Münzen}}"
+    },
+    "move": {
+      "discards": "Tauschrunde {session}: {name} wirft {count, plural, one {# Karte} other {# Karten}} ab, Los {letter}",
+      "illegal": "{names}: {phase, select, revealing {Gebot über die Münzen hinaus, kein Gebot} other {Abwurf einer nicht gehaltenen Karte, kein Abwurf}}",
+      "invalid": "{names}: anders aufgedeckt als abgegeben, zählt nicht, am Ende ein Schwein",
+      "late": "{names}: {phase, select, bidding {kein rechtzeitiges Gebot} revealing {Gebot nicht rechtzeitig aufgedeckt, am Ende ein Schwein} discarding {kein rechtzeitiger Abwurf} other {Abwurf nicht rechtzeitig aufgedeckt, am Ende ein Schwein}}",
+      "noDiscard": "Tauschrunde {session}: keine Karte abgeworfen",
+      "sold": "Los {letter}: {name} gewinnt für {price, plural, one {# Münze} other {# Münzen}} (Gebote: {bids})",
+      "soldTie": "Los {letter}: {name} gewinnt für {price, plural, one {# Münze} other {# Münzen}}, früher geboten als {tied} (Gebote: {bids})",
+      "unsoldBack": "Los {letter}: kein Gebot, zurück an {name}",
+      "unsoldOut": "Los {letter}: kein Gebot, aus dem Spiel"
+    },
+    "past": "{first} auf Platz 1, {count, plural, one {# Schwein} other {# Schweine}}: {pigs}",
+    "pastAllPigs": "Kein Sieger, {count, plural, one {# Schwein} other {# Schweine}}: {pigs}",
+    "pastGames": "Gespielte Spiele",
+    "result": {
+      "balance": "{balance, plural, one {# Münze} other {# Münzen}} am Ende",
+      "noHand": "Keine Hand",
+      "pig": "Schwein",
+      "place": "Platz {place}"
+    },
+    "seat": {
+      "absent": "Übersprungen",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# Münze} other {# Münzen}}",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "release": "Platz freigeben",
+      "sealed": "Verdeckt",
+      "take": "Hinsetzen"
+    },
+    "session": "{session, select, 0 {Verteilungsrunde} other {Tauschrunde {session} von {total}}}",
+    "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "standings": {
+      "caption": "Wertung des Spiels",
+      "coins": "Münzen",
+      "hand": "Hand",
+      "place": "Platz",
+      "player": "Spieler"
+    },
+    "status": {
+      "away": "Warte auf die Rückkehr von {names}…",
+      "bid": "Biete verdeckt auf Los {letter}: 0 für kein Gebot.",
+      "bidding": "Los {letter} wird versteigert: Warte auf {names}.",
+      "discard": "Wähle die Karten zum Abwerfen in ihrer Reihenfolge oder behalte deine.",
+      "discarding": "Die Spieler werfen ab: Warte auf {names}.",
+      "disclosing": "Die Abwürfe werden aufgedeckt…",
+      "drawing": "Die Spieler mischen das Blatt: Warte auf {names}.",
+      "hurry": "Beeil dich: Deine Zeit läuft ab!",
+      "over": "Das Spiel ist vorbei.",
+      "revealing": "Die Gebote auf Los {letter} werden aufgedeckt…",
+      "sealed": "Verdeckt: Warte auf {names}.",
+      "seats": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Das Spiel startet mit mindestens {min}.",
+      "start": "Starte das Spiel, sobald alle Spieler sitzen.",
+      "waitingStart": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Warte, bis einer von ihnen startet."
+    }
+  }
+}

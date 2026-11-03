@@ -1,0 +1,140 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Las pujas son selladas: nadie, ni siquiera el servidor, ve una puja antes de que se cierre la subasta de su lote.",
+      "lots": "Las 52 cartas se dividen en lotes públicos: cada jugador ve las cartas de los demás.",
+      "pigs": "Los últimos son los cerdos: pagan los premios de los tres primeros."
+    },
+    "rooms": "Crea una sala o únete a una para jugar con otros.",
+    "summary": "Un juego del manga Liar Game: de 4 a 8 jugadores pujan sus monedas por lotes de cartas y luego se venden sus descartes entre sí, para acabar con la mejor mano de póker.",
+    "tagline": "Compra tu mano de póker en subasta.",
+    "title": "Póker de subasta"
+  },
+  "rules": {
+    "change": {
+      "discard": "Luego vienen 5 rondas de cambio. Cada jugador puede descartar cartas, también en secreto: las cartas que descarta un jugador forman un lote, en el orden de sus descartes. Los lotes se subastan del mismo modo, y las cartas nuevas solo llegan de las subastas:",
+      "seller": "Las monedas van al jugador que descartó el lote, que no puede pujar por él.",
+      "title": "Las rondas de cambio",
+      "unsold": "Un lote por el que nadie puja vuelve al jugador que lo descartó."
+    },
+    "dealing": {
+      "bank": "Las monedas van a la banca. Un lote por el que nadie puja sale de la partida.",
+      "catalogue": "Las 52 cartas se barajan y se dividen en 9 o 10 lotes de 5 o 6 cartas, el catálogo, que se muestra a todos los jugadores. Luego cada lote sale a subasta por turno:",
+      "highest": "La puja más alta gana el lote. En caso de empate, gana la puja hecha primero.",
+      "sealed": "Todos los jugadores pujan a la vez, con pujas selladas: nadie ve una puja antes de que se cierren las pujas del lote. Una puja de 0 no es una puja. Una puja no se puede cambiar.",
+      "title": "La ronda de reparto"
+    },
+    "end": {
+      "hand": "La mano de un jugador son sus 5 mejores cartas, clasificadas como en el póker, carta alta incluida. Un jugador con menos de 5 cartas no tiene mano.",
+      "lastOnes": "Los últimos son los cerdos: todo jugador sin mano y todo jugador que no reveló un valor sellado; si no hay ninguno, los jugadores con la peor mano, todos los jugadores si todas las manos son iguales. Siempre hay al menos un cerdo, y cada cerdo paga 150 monedas.",
+      "shares": "El 1.º, el 2.º y el 3.º de los demás ganan 100, 40 y 10 monedas, multiplicadas por el número de cerdos. Las manos iguales se reparten los premios de sus posiciones, en monedas enteras, y el resto va a la banca.",
+      "title": "El final"
+    },
+    "fair": {
+      "deck": "Nadie baraja solo: cada jugador aporta una parte aleatoria sellada, y las cartas se barajan a partir de todas ellas, igual en todas las páginas.",
+      "sealed": "Una puja es sellada: la página envía su hash con una sal aleatoria y luego la revela cuando se cierran las pujas. Una puja revelada distinta de la sellada, o superior a las monedas de su jugador, cuenta como si no hubiera puja y se señala.",
+      "title": "Juego limpio",
+      "withheld": "Una puja o unos descartes sellados y no revelados a tiempo, o revelados de otra forma que sellados, no cuentan, y su jugador acaba siendo cerdo: nadie retira su puja tras leer las de los demás."
+    },
+    "setup": {
+      "coins": "Cada jugador empieza con 300 monedas y debe 100 al final de la partida.",
+      "players": "De 4 a 8 jugadores ocupan los puestos y luego uno de ellos empieza la partida: los puestos siguen ocupados hasta que termina.",
+      "title": "La mesa"
+    },
+    "summary": "Reglas del póker de subasta",
+    "times": {
+      "allLate": "Cuando todos los jugadores que esperaría un lote o los descartes están omitidos, la partida vuelve a esperar a todos los jugadores en lugar de cerrarlos al instante.",
+      "late": "Un jugador que no actúa a tiempo no puja ni descarta nada, y la partida sigue sin esperarlo hasta que vuelva a actuar.",
+      "phases": "Un lote está abierto 30 segundos (90 el primero, para leer el catálogo), una revelación 15 segundos y los descartes 45 segundos: cada uno se cierra en cuanto todos los jugadores han actuado.",
+      "title": "Los tiempos"
+    },
+    "title": "Reglas"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jugar otra vez",
+      "start": "Empezar la partida"
+    },
+    "bank": "Banca: {coins, plural, one {# moneda} other {# monedas}}",
+    "bid": {
+      "integer": "Puja monedas enteras",
+      "label": "Tu puja",
+      "max": "Como mucho tus {max, plural, one {# moneda} other {# monedas}}",
+      "min": "{min, plural, one {# moneda} other {# monedas}} como mínimo",
+      "none": "Sin puja",
+      "required": "Escribe tu puja",
+      "sealed": "Tu puja de {amount, plural, one {# moneda} other {# monedas}} está sellada",
+      "submit": "Pujar"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Conservar mis cartas",
+      "submit": "Descartar {count, plural, one {# carta} other {# cartas}}"
+    },
+    "game": "Partida {number}:",
+    "history": "Jugadas de la partida",
+    "lot": {
+      "back": "Sin vender: vuelve a su vendedor",
+      "bank": "de la banca",
+      "name": "Lote {letter}",
+      "out": "Sin vender: sale de la partida",
+      "seller": "de {name}",
+      "sold": "Para {name} por {price, plural, one {# moneda} other {# monedas}}"
+    },
+    "move": {
+      "discards": "Ronda de cambio {session}: {name} descarta {count, plural, one {# carta} other {# cartas}}, lote {letter}",
+      "illegal": "{names}: {phase, select, revealing {una puja superior a sus monedas, sin puja} other {un descarte de una carta que no tiene, sin descarte}}",
+      "invalid": "{names}: revelado distinto de lo sellado, sin valor, cerdo al final",
+      "late": "{names}: {phase, select, bidding {sin puja a tiempo} revealing {puja no revelada a tiempo, cerdo al final} discarding {sin descarte a tiempo} other {descartes no revelados a tiempo, cerdo al final}}",
+      "noDiscard": "Ronda de cambio {session}: ninguna carta descartada",
+      "sold": "Lote {letter}: {name} gana por {price, plural, one {# moneda} other {# monedas}} (pujas: {bids})",
+      "soldTie": "Lote {letter}: {name} gana por {price, plural, one {# moneda} other {# monedas}}, pujó antes que {tied} (pujas: {bids})",
+      "unsoldBack": "Lote {letter}: sin pujas, vuelve a {name}",
+      "unsoldOut": "Lote {letter}: sin pujas, sale de la partida"
+    },
+    "past": "1.er puesto: {first}, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
+    "pastAllPigs": "Sin ganador, {count, plural, one {# cerdo} other {# cerdos}}: {pigs}",
+    "pastGames": "Partidas jugadas",
+    "result": {
+      "balance": "{balance, plural, one {# moneda} other {# monedas}} al final",
+      "noHand": "Sin mano",
+      "pig": "Cerdo",
+      "place": "Posición {place}"
+    },
+    "seat": {
+      "absent": "Omitido",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moneda} other {# monedas}}",
+      "free": "Puesto libre",
+      "leave": "Dejar el puesto",
+      "release": "Liberar el puesto",
+      "sealed": "Sellado",
+      "take": "Sentarse"
+    },
+    "session": "{session, select, 0 {Ronda de reparto} other {Ronda de cambio {session} de {total}}}",
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "caption": "Clasificación de la partida",
+      "coins": "Monedas",
+      "hand": "Mano",
+      "place": "Puesto",
+      "player": "Jugador"
+    },
+    "status": {
+      "away": "Esperando el regreso de {names}…",
+      "bid": "Puja por el lote {letter}, sellada: 0 para no pujar.",
+      "bidding": "Lote {letter} en subasta: esperando a {names}.",
+      "discard": "Elige las cartas que descartas, en su orden, o quédate con las tuyas.",
+      "discarding": "Los jugadores descartan: esperando a {names}.",
+      "disclosing": "Se revelan los descartes…",
+      "drawing": "Los jugadores barajan las cartas: esperando a {names}.",
+      "hurry": "Date prisa: ¡se te acaba el tiempo!",
+      "over": "La partida ha terminado.",
+      "revealing": "Se revelan las pujas por el lote {letter}…",
+      "sealed": "Sellado: esperando a {names}.",
+      "seats": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: la partida empieza con {min} como mínimo.",
+      "start": "Empieza la partida cuando todos los jugadores estén sentados.",
+      "waitingStart": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: esperando a que uno de ellos la empiece."
+    }
+  }
+}

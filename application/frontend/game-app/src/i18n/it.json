@@ -5,6 +5,7 @@
     },
     "loadingPage": "Caricamento della pagina…",
     "nav": {
+      "bidPoker": "Asta",
       "chat": "Chat",
       "chess": "Scacchi",
       "home": "Home",
@@ -25,8 +26,8 @@
     "title": "Scacchi sincroni"
   },
   "cheat": {
-    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
-    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
   },
   "dialog": {
     "cancel": "Annulla",
@@ -35,7 +36,15 @@
     "no": "No",
     "yes": "Sì"
   },
+  "form": {
+    "unreadable": "Inserisci un numero"
+  },
   "home": {
+    "bidPoker": {
+      "action": "Gioca",
+      "description": "Da 4 a 8 giocatori comprano la loro mano di poker all'asta, con offerte segrete: gli ultimi pagano i vincitori.",
+      "title": "Poker all'asta"
+    },
     "chat": {
       "action": "Chatta",
       "description": "Una chat tra i partecipanti di una stanza, con i messaggi scambiati direttamente tra loro.",

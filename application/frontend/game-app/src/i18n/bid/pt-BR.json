@@ -1,0 +1,140 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Os lances são lacrados: ninguém, nem mesmo o servidor, vê um lance antes que o leilão do lote termine.",
+      "lots": "As 52 cartas são divididas em lotes públicos: cada jogador vê as cartas dos outros.",
+      "pigs": "Os últimos são os porcos: eles pagam os prêmios dos três primeiros."
+    },
+    "rooms": "Crie uma sala ou entre em uma, para jogar com outras pessoas.",
+    "summary": "Um jogo do mangá Liar Game: de 4 a 8 jogadores dão lances com suas moedas em lotes de cartas, depois vendem seus descartes uns aos outros, para terminar com a melhor mão de pôquer.",
+    "tagline": "Compre sua mão de pôquer em leilão.",
+    "title": "Pôquer de leilão"
+  },
+  "rules": {
+    "change": {
+      "discard": "Depois vêm 5 rodadas de troca. Cada jogador pode descartar cartas, também de forma lacrada: as cartas que um jogador descarta formam um lote, na ordem dos seus descartes. Os lotes vão a leilão da mesma forma, e as cartas novas vêm só dos leilões:",
+      "seller": "As moedas vão para o jogador que descartou o lote, que não pode dar lances nele.",
+      "title": "As rodadas de troca",
+      "unsold": "Um lote sem nenhum lance volta para o jogador que o descartou."
+    },
+    "dealing": {
+      "bank": "As moedas vão para a banca. Um lote sem nenhum lance sai do jogo.",
+      "catalogue": "As 52 cartas são embaralhadas e divididas em 9 ou 10 lotes de 5 ou 6 cartas, o catálogo, mostrado a todos os jogadores. Depois cada lote vai a leilão, um de cada vez:",
+      "highest": "O lance mais alto leva o lote. Em caso de empate, vence o lance dado primeiro.",
+      "sealed": "Todos os jogadores dão seus lances ao mesmo tempo, lacrados: ninguém vê um lance antes que os lances do lote se encerrem. Um lance de 0 não é um lance. Um lance não pode ser alterado.",
+      "title": "A rodada de distribuição"
+    },
+    "end": {
+      "hand": "A mão de um jogador são suas 5 melhores cartas, classificadas como no pôquer, carta alta incluída. Um jogador com menos de 5 cartas não tem mão.",
+      "lastOnes": "Os últimos são os porcos: todo jogador sem mão e todo jogador que não revelou um valor lacrado; sem nenhum, os jogadores da pior mão, todos os jogadores quando todas as mãos são iguais. Sempre há pelo menos um porco, e cada porco paga 150 moedas.",
+      "shares": "O 1º, o 2º e o 3º dos outros ganham 100, 40 e 10 moedas, multiplicadas pelo número de porcos. Mãos iguais dividem os prêmios das suas posições, em moedas inteiras, e o resto vai para a banca.",
+      "title": "O fim"
+    },
+    "fair": {
+      "deck": "Ninguém embaralha sozinho: cada jogador dá uma parte aleatória lacrada, e o baralho é embaralhado a partir de todas elas, o mesmo em todas as páginas.",
+      "sealed": "Um lance é lacrado: a página envia o hash dele com um salt aleatório, depois o revela quando os lances se encerram. Um lance revelado diferente do lacrado, ou acima das moedas do seu jogador, conta como nenhum lance e é denunciado.",
+      "title": "Jogo limpo",
+      "withheld": "Um lance ou descartes lacrados e não revelados a tempo, ou revelados de outro jeito que lacrados, não contam, e o jogador termina como porco: ninguém retira o lance depois de ler os dos outros."
+    },
+    "setup": {
+      "coins": "Cada jogador começa com 300 moedas e deve 100 no fim da partida.",
+      "players": "De 4 a 8 jogadores ocupam os lugares, depois um deles inicia a partida: os lugares ficam ocupados até o fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do pôquer de leilão",
+    "times": {
+      "allLate": "Quando todos os jogadores que um lote ou os descartes esperariam foram pulados, a partida volta a esperar por todos os jogadores em vez de encerrá-los na hora.",
+      "late": "Um jogador que não age a tempo não dá lance nem descarta nada, e a partida continua sem esperar por ele até que ele volte a agir.",
+      "phases": "Um lote fica aberto por 30 segundos (90 para o primeiro, para ler o catálogo), uma revelação por 15 segundos e os descartes por 45 segundos: cada um se encerra assim que todos os jogadores agiram.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar de novo",
+      "start": "Iniciar a partida"
+    },
+    "bank": "Banca: {coins, plural, one {# moeda} other {# moedas}}",
+    "bid": {
+      "integer": "Dê lances em moedas inteiras",
+      "label": "Seu lance",
+      "max": "No máximo {max, plural, one {sua # moeda} other {suas # moedas}}",
+      "min": "Pelo menos {min, plural, one {# moeda} other {# moedas}}",
+      "none": "Sem lance",
+      "required": "Digite seu lance",
+      "sealed": "Seu lance de {amount, plural, one {# moeda} other {# moedas}} está lacrado",
+      "submit": "Dar lance"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Manter minhas cartas",
+      "submit": "{count, plural, one {Descartar # carta} other {Descartar # cartas}}"
+    },
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "lot": {
+      "back": "Não vendido: volta ao seu vendedor",
+      "bank": "da banca",
+      "name": "Lote {letter}",
+      "out": "Não vendido: sai do jogo",
+      "seller": "de {name}",
+      "sold": "Para {name} por {price, plural, one {# moeda} other {# moedas}}"
+    },
+    "move": {
+      "discards": "Rodada de troca {session}: {name} descarta {count, plural, one {# carta} other {# cartas}}, lote {letter}",
+      "illegal": "{names}: {phase, select, revealing {um lance acima das moedas, nenhum lance} other {o descarte de uma carta que não tinha, nenhum descarte}}",
+      "invalid": "{names}: revelação diferente da lacrada, sem valor, porco no fim",
+      "late": "{names}: {phase, select, bidding {nenhum lance a tempo} revealing {lance não revelado a tempo, porco no fim} discarding {nenhum descarte a tempo} other {descartes não revelados a tempo, porco no fim}}",
+      "noDiscard": "Rodada de troca {session}: nenhuma carta descartada",
+      "sold": "Lote {letter}: {name} leva por {price, plural, one {# moeda} other {# moedas}} (lances: {bids})",
+      "soldTie": "Lote {letter}: {name} leva por {price, plural, one {# moeda} other {# moedas}}, lance dado antes de {tied} (lances: {bids})",
+      "unsoldBack": "Lote {letter}: nenhum lance, volta para {name}",
+      "unsoldOut": "Lote {letter}: nenhum lance, sai do jogo"
+    },
+    "past": "{first} em primeiro, {count, plural, one {# porco} other {# porcos}}: {pigs}",
+    "pastAllPigs": "Sem vencedor, {count, plural, one {# porco} other {# porcos}}: {pigs}",
+    "pastGames": "Partidas jogadas",
+    "result": {
+      "balance": "{balance, plural, one {# moeda} other {# moedas}} no fim",
+      "noHand": "Sem mão",
+      "pig": "Porco",
+      "place": "Posição {place}"
+    },
+    "seat": {
+      "absent": "Pulado",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# moeda} other {# moedas}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "release": "Liberar o lugar",
+      "sealed": "Lacrado",
+      "take": "Sentar"
+    },
+    "session": "{session, select, 0 {Rodada de distribuição} other {Rodada de troca {session} de {total}}}",
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "caption": "Classificação da partida",
+      "coins": "Moedas",
+      "hand": "Mão",
+      "place": "Posição",
+      "player": "Jogador"
+    },
+    "status": {
+      "away": "Aguardando {names} voltar…",
+      "bid": "Dê seu lance no lote {letter}, lacrado: 0 para nenhum lance.",
+      "bidding": "Lote {letter} em leilão: aguardando {names}.",
+      "discard": "Escolha as cartas a descartar, na ordem, ou mantenha as suas.",
+      "discarding": "Os jogadores descartam: aguardando {names}.",
+      "disclosing": "Os descartes são revelados…",
+      "drawing": "Os jogadores embaralham o baralho: aguardando {names}.",
+      "hurry": "Rápido: seu tempo está acabando!",
+      "over": "A partida terminou.",
+      "revealing": "Os lances do lote {letter} são revelados…",
+      "sealed": "Lacrado: aguardando {names}.",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa com pelo menos {min}.",
+      "start": "Inicie a partida quando todos os jogadores estiverem sentados.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: aguardando que um deles inicie."
+    }
+  }
+}

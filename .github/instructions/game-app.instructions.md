@@ -118,7 +118,8 @@ This is an Angular TypeScript project with the following characteristics:
 
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
-  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette) and `chat`. The rest is global, `home` included: it presents every game
+  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `cards` (the names
+  of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -285,6 +286,16 @@ Claude writes the translations of every new or changed key, into every language:
 | load (the bullets) | charger | cargar | carregar | carregar | laden | зарядить | doldurmak | mengisi | załadować | caricare |
 | bank | banque | banca | banca | banca | Bank | казна | banka | bank | bank | banco |
 | bankrupt (go) | faire faillite | caer en bancarrota | ir à falência | ir à falência | bankrott | банкрот | iflas etmek | bangkrut | bankrut | in bancarotta |
+| lot (of cards) | lot | lote | lote | lote | Los | лот | lot | lot | pakiet | lotto |
+| bid | enchère / enchérir | puja / pujar | lance / dar um lance | licitação / licitar | Gebot / bieten | ставка | teklif | tawaran | oferta / licytować | offerta |
+| auction | enchères | subasta | leilão | leilão | Auktion | аукцион | açık artırma | lelang | licytacja | asta |
+| catalogue (of the lots) | catalogue | catálogo | catálogo | catálogo | Katalog | каталог | katalog | katalog | katalog | catalogo |
+| dealing session | séance de distribution | ronda de reparto | rodada de distribuição | ronda de distribuição | Verteilungsrunde | раунд раздачи | dağıtım turu | sesi pembagian | runda rozdania | sessione di distribuzione |
+| change session | séance d'échange | ronda de cambio | rodada de troca | ronda de troca | Tauschrunde | раунд обмена | değişim turu | sesi tukar | runda wymiany | sessione di cambio |
+| discard | défausser | descartar | descartar | descartar | abwerfen | сбросить | atmak | membuang | odrzucić | scartare |
+| seller (of a lot) | vendeur | vendedor | vendedor | vendedor | Verkäufer | продавец | satıcı | penjual | sprzedawca | venditore |
+| pig (the last ones) | cochon | cerdo | porco | porco | Schwein | свинья | domuz | babi | świnia | maiale |
+| coin | pièce | moneda | moeda | moeda | Münze | монета | jeton | koin | moneta | moneta |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 

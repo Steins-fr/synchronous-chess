@@ -5,6 +5,7 @@
     },
     "loadingPage": "Cargando la página…",
     "nav": {
+      "bidPoker": "Subasta",
       "chat": "Chat",
       "chess": "Ajedrez",
       "home": "Inicio",
@@ -25,8 +26,8 @@
     "title": "Ajedrez sincrónico"
   },
   "cheat": {
-    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} other {}}) de {author} ha sido señalado como trampa por {reporters}",
-    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
+    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} other {}}) de {author} ha sido señalado como trampa por {reporters}",
+    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -35,7 +36,15 @@
     "no": "No",
     "yes": "Sí"
   },
+  "form": {
+    "unreadable": "Escribe un número"
+  },
   "home": {
+    "bidPoker": {
+      "action": "Jugar",
+      "description": "De 4 a 8 jugadores compran su mano de póker en subasta, con pujas selladas: los últimos pagan a los ganadores.",
+      "title": "Póker de subasta"
+    },
     "chat": {
       "action": "Chatear",
       "description": "Un chat entre los participantes de una sala, con sus mensajes enviados de igual a igual.",

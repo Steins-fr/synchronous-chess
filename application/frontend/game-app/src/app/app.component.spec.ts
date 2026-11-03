@@ -102,7 +102,7 @@ describe('AppComponent', () => {
 
     test('picking a language in the menu should translate the texts shown, without a reload', async () => {
         // Given
-        expect(navTexts()).toEqual(['Home', 'Chess', 'Poker', 'Roulette', 'Chat']);
+        expect(navTexts()).toEqual(['Home', 'Chess', 'Poker', 'Roulette', 'Bid poker', 'Chat']);
         await loadLanguageMenu();
         fixture.nativeElement.querySelector('#language-button').click();
         await fixture.whenStable();
@@ -113,7 +113,7 @@ describe('AppComponent', () => {
 
         // Then
         expect(TestBed.inject(LanguageService).language()).toBe(Language.FR);
-        expect(navTexts()).toEqual(['Accueil', 'Échecs', 'Poker', 'Roulette', 'Tchat']);
+        expect(navTexts()).toEqual(['Accueil', 'Échecs', 'Poker', 'Roulette', 'Enchères', 'Tchat']);
         expect(themeButton().getAttribute('aria-label')).toBe('Passer au thème sombre');
         expect(TestBed.inject(Title).getTitle()).toBe('Échecs synchrones');
         expect(document.documentElement.lang).toBe(Language.FR);

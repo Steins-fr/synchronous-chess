@@ -1,0 +1,140 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "Les enchères sont scellées : personne, pas même le serveur, n'en voit une avant que les enchères sur son lot soient closes.",
+      "lots": "Les 52 cartes sont réparties en lots publics : chaque joueur voit les cartes des autres.",
+      "pigs": "Les derniers sont les cochons : ils paient les gains des trois premiers."
+    },
+    "rooms": "Créez une salle, ou rejoignez-en une, pour jouer avec d'autres joueurs.",
+    "summary": "Un jeu du manga Liar Game : de 4 à 8 joueurs enchérissent avec leurs pièces sur des lots de cartes, puis se vendent leurs défausses, pour finir avec la meilleure main de poker.",
+    "tagline": "Achetez votre main de poker aux enchères.",
+    "title": "Poker aux enchères"
+  },
+  "rules": {
+    "change": {
+      "discard": "Viennent ensuite 5 séances d'échange. Chaque joueur peut défausser des cartes, sous pli scellé aussi : les cartes qu'un joueur défausse forment un lot, dans l'ordre de ses défausses. Les lots sont mis aux enchères de la même façon, et les nouvelles cartes ne viennent que des enchères :",
+      "seller": "Les pièces vont au joueur qui a défaussé le lot, qui ne peut pas enchérir dessus.",
+      "title": "Les séances d'échange",
+      "unsold": "Un lot sur lequel personne n'enchérit revient au joueur qui l'a défaussé."
+    },
+    "dealing": {
+      "bank": "Les pièces vont à la banque. Un lot sur lequel personne n'enchérit sort du jeu.",
+      "catalogue": "Les 52 cartes sont mélangées et réparties en 9 ou 10 lots de 5 ou 6 cartes, le catalogue, montré à chaque joueur. Puis chaque lot est mis aux enchères à son tour :",
+      "highest": "La plus haute enchère remporte le lot. En cas d'égalité, l'enchère faite en premier l'emporte.",
+      "sealed": "Tous les joueurs enchérissent en même temps, sous pli scellé : personne ne voit une enchère avant que les enchères sur le lot soient closes. Enchérir 0, c'est ne pas enchérir. Une enchère ne peut pas être modifiée.",
+      "title": "La séance de distribution"
+    },
+    "end": {
+      "hand": "La main d'un joueur est formée de ses 5 meilleures cartes, classée comme au poker, carte haute comprise. Un joueur qui a moins de 5 cartes n'a pas de main.",
+      "lastOnes": "Les derniers sont les cochons : chaque joueur sans main, et chaque joueur qui n'a pas révélé une valeur scellée ; sans aucun, les joueurs de la pire main, chaque joueur quand toutes les mains sont égales. Il y a toujours au moins un cochon, et chaque cochon paie 150 pièces.",
+      "shares": "Le 1er, le 2e et le 3e des autres joueurs gagnent 100, 40 et 10 pièces, multipliées par le nombre de cochons. Des mains égales se partagent les gains de leurs rangs, en pièces entières, le reste allant à la banque.",
+      "title": "La fin"
+    },
+    "fair": {
+      "deck": "Personne ne mélange seul : chaque joueur donne une part aléatoire scellée, et le paquet est mélangé à partir de toutes ces parts, identique sur chaque page.",
+      "sealed": "Une enchère est scellée : la page envoie son empreinte avec un sel aléatoire, puis la révèle une fois les enchères closes. Une enchère révélée différente de celle scellée, ou supérieure aux pièces de son joueur, ne compte pas et est signalée.",
+      "title": "Jeu honnête",
+      "withheld": "Une enchère ou une défausse scellée et non révélée à temps, ou révélée autrement que scellée, ne compte pas, et son joueur finit cochon : personne ne reprend sa mise après avoir lu celles des autres."
+    },
+    "setup": {
+      "coins": "Chaque joueur commence avec 300 pièces et en doit 100 à la fin de la partie.",
+      "players": "De 4 à 8 joueurs prennent les places, puis l'un d'eux lance la partie : les places restent prises jusqu'à sa fin.",
+      "title": "La table"
+    },
+    "summary": "Règles du poker aux enchères",
+    "times": {
+      "allLate": "Quand tous les joueurs qu'un lot ou les défausses attendraient sont absents, la partie attend de nouveau tous les joueurs au lieu de les fermer aussitôt.",
+      "late": "Un joueur qui n'agit pas à temps n'enchérit pas et ne défausse rien, et la partie continue sans l'attendre jusqu'à ce qu'il agisse de nouveau.",
+      "phases": "Un lot reste ouvert 30 secondes (90 pour le premier, le temps de lire le catalogue), la révélation des enchères 15 secondes et les défausses 45 secondes : chacun se ferme dès que tous les joueurs ont agi.",
+      "title": "Les délais"
+    },
+    "title": "Règles"
+  },
+  "table": {
+    "action": {
+      "rematch": "Rejouer",
+      "start": "Lancer la partie"
+    },
+    "bank": "Banque : {coins, plural, one {# pièce} other {# pièces}}",
+    "bid": {
+      "integer": "Enchérissez en pièces entières",
+      "label": "Votre enchère",
+      "max": "Vous n'avez que {max, plural, one {# pièce} other {# pièces}}",
+      "min": "{min, plural, one {# pièce} other {# pièces}} au moins",
+      "none": "Pas d'enchère",
+      "required": "Saisissez votre enchère",
+      "sealed": "Votre enchère de {amount, plural, one {# pièce} other {# pièces}} est scellée",
+      "submit": "Enchérir"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Garder mes cartes",
+      "submit": "Défausser {count, plural, one {# carte} other {# cartes}}"
+    },
+    "game": "Partie {number} :",
+    "history": "Coups de la partie",
+    "lot": {
+      "back": "Invendu : retour à son vendeur",
+      "bank": "de la banque",
+      "name": "Lot {letter}",
+      "out": "Invendu : sort du jeu",
+      "seller": "de {name}",
+      "sold": "À {name} pour {price, plural, one {# pièce} other {# pièces}}"
+    },
+    "move": {
+      "discards": "Séance d'échange {session} : {name} défausse {count, plural, one {# carte} other {# cartes}}, lot {letter}",
+      "illegal": "{names} : {phase, select, revealing {une enchère supérieure aux pièces, pas d'enchère} other {la défausse d'une carte non détenue, pas de défausse}}",
+      "invalid": "{names} : révélé autrement que scellé, ne compte pas, cochon à la fin",
+      "late": "{names} : {phase, select, bidding {pas d'enchère à temps} revealing {enchère non révélée à temps, cochon à la fin} discarding {pas de défausse à temps} other {défausses non révélées à temps, cochon à la fin}}",
+      "noDiscard": "Séance d'échange {session} : aucune carte défaussée",
+      "sold": "Lot {letter} : {name} l'emporte pour {price, plural, one {# pièce} other {# pièces}} (enchères : {bids})",
+      "soldTie": "Lot {letter} : {name} l'emporte pour {price, plural, one {# pièce} other {# pièces}}, enchère faite avant {tied} (enchères : {bids})",
+      "unsoldBack": "Lot {letter} : aucune enchère, retour à {name}",
+      "unsoldOut": "Lot {letter} : aucune enchère, sort du jeu"
+    },
+    "past": "1re place : {first}, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
+    "pastAllPigs": "Aucun gagnant, {count, plural, one {# cochon} other {# cochons}} : {pigs}",
+    "pastGames": "Parties jouées",
+    "result": {
+      "balance": "{balance, plural, one {# pièce} other {# pièces}} à la fin",
+      "noHand": "Pas de main",
+      "pig": "Cochon",
+      "place": "Rang {place}"
+    },
+    "seat": {
+      "absent": "Absent",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# pièce} other {# pièces}}",
+      "free": "Place libre",
+      "leave": "Quitter la place",
+      "release": "Libérer la place",
+      "sealed": "Scellé",
+      "take": "S'asseoir"
+    },
+    "session": "{session, select, 0 {Séance de distribution} other {Séance d'échange {session} sur {total}}}",
+    "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "standings": {
+      "caption": "Classement de la partie",
+      "coins": "Pièces",
+      "hand": "Main",
+      "place": "Rang",
+      "player": "Joueur"
+    },
+    "status": {
+      "away": "En attente du retour de {names}…",
+      "bid": "Enchérissez sur le lot {letter}, sous pli scellé : 0 pour ne pas enchérir.",
+      "bidding": "Lot {letter} aux enchères : en attente de {names}.",
+      "discard": "Choisissez les cartes à défausser, dans leur ordre, ou gardez les vôtres.",
+      "discarding": "Les joueurs défaussent : en attente de {names}.",
+      "disclosing": "Les défausses sont révélées…",
+      "drawing": "Les joueurs mélangent le paquet : en attente de {names}.",
+      "hurry": "Vite : votre temps s'écoule !",
+      "over": "La partie est terminée.",
+      "revealing": "Les enchères sur le lot {letter} sont révélées…",
+      "sealed": "Scellé : en attente de {names}.",
+      "seats": "{count, plural, one {# joueur assis} other {# joueurs assis}} : la partie commence à {min} au moins.",
+      "start": "Lancez la partie une fois tous les joueurs assis.",
+      "waitingStart": "{count, plural, one {# joueur assis} other {# joueurs assis}} : en attente que l'un d'eux lance la partie."
+    }
+  }
+}

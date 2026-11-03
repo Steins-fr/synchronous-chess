@@ -196,7 +196,7 @@ run by the CI.
 ### Testing a chess game
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
-  the Russian roulette page `/russian-roulette`: the home page only links to them. The sound lab `/sound-lab` plays
+  the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`: the home page only links to them. The sound lab `/sound-lab` plays
   every sound effect of the games, linked from nowhere.
 - Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
   `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
@@ -255,6 +255,23 @@ run by the CI.
   joins it once its shot is over.
 - While the seats are open, the seat of a player away shows `Free the seat` to the other player and to the host, a
   spectator included, as at poker.
+
+### Testing a Bid Poker game
+
+- The table has 8 seats, `#seat-0` to `#seat-7` of `app-bid-table`: each participant takes one with `Sit here`, then a
+  seated player clicks `Start the game` once 4 players are seated. The pages draw the deck by themselves, then the
+  catalogue of the lots shows (`#catalogue app-bid-lot`, 9 or 10 lots of 5 or 6 cards: read their sizes). See
+  `documentation/bid-poker-session.md`.
+- A player bids in the number field `Your bid` (role `spinbutton`), then `Bid`, or clicks `No bid`; its seat shows
+  `Sealed` to every page, its page `Your bid of 12 coins is sealed` (`#actions`). In a change session, a player clicks the
+  cards to discard in its seat (`#seat-n app-card-hand button`), then `Discard 2 cards`, or `Keep my cards`; a seller
+  does not bid on its own lot.
+- The `status` role (`<output>`) tells what the table waits for (`Lot A on auction: waiting for alice, bob.`), `#session`
+  the session, `#bank` the coins of the bank, `#auction h2` the lot auctioned, `#standings` the standings once the game is
+  over, then `Play again` starts a new one. The catalogue shows the session in progress only: read a lot sold in the
+  history of the room (`Lot A: bob wins for 12 coins (bids: …)`, the latest first).
+- A phase waits 90 seconds for the first lot, 30 for the others, 45 for the discards: every phase closes as soon as every
+  player acted, a full game takes about 15 seconds when every player acts.
 
 ### Cleanup after every browser test
 

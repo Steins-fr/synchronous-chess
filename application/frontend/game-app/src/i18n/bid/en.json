@@ -1,0 +1,140 @@
+{
+  "presentation": {
+    "points": {
+      "bids": "The bids are sealed: no one, not even the server, sees a bid before the auction of its lot closes.",
+      "lots": "The 52 cards are split into public lots: every player sees the cards of the others.",
+      "pigs": "The last ones are the pigs: they pay the prizes of the first three."
+    },
+    "rooms": "Create a room, or join one, to play with others.",
+    "summary": "A game of the manga Liar Game: 4 to 8 players bid their coins on lots of cards, then sell their discards to each other, to end with the best poker hand.",
+    "tagline": "Buy your poker hand at auction.",
+    "title": "Bid poker"
+  },
+  "rules": {
+    "change": {
+      "discard": "Then come 5 change sessions. Each player may discard cards, sealed too: the cards a player discards make a lot, in the order of its discards. The lots are auctioned the same way, and new cards come from the auctions only:",
+      "seller": "The coins go to the player who discarded the lot, who can not bid on it.",
+      "title": "The change sessions",
+      "unsold": "A lot nobody bids on goes back to the player who discarded it."
+    },
+    "dealing": {
+      "bank": "The coins go to the bank. A lot nobody bids on leaves the game.",
+      "catalogue": "The 52 cards are shuffled and split into 9 or 10 lots of 5 or 6 cards, the catalogue, shown to every player. Then each lot is auctioned in turn:",
+      "highest": "The highest bid wins the lot. On a tie, the bid made first wins.",
+      "sealed": "Every player bids at the same time, sealed: no one sees a bid before the bidding of the lot closes. A bid of 0 is no bid. A bid can not be changed.",
+      "title": "The dealing session"
+    },
+    "end": {
+      "hand": "The hand of a player is its best 5 cards, ranked as in poker, the high card included. A player with fewer than 5 cards has no hand.",
+      "lastOnes": "The last ones are the pigs: every player without a hand, and every player who did not reveal a sealed value; without any, the players of the worst hand, every player when every hand is equal. There is always one pig at least, and each pig pays 150 coins.",
+      "shares": "The 1st, the 2nd and the 3rd of the others win 100, 40 and 10 coins, multiplied by the number of pigs. Equal hands share the prizes of their places, in whole coins, the rest going to the bank.",
+      "title": "The end"
+    },
+    "fair": {
+      "deck": "No one shuffles alone: each player gives a sealed random part, and the deck is shuffled from all of them, the same on every page.",
+      "sealed": "A bid is sealed: the page sends its hash with a random salt, then reveals it once the bidding closes. A bid revealed otherwise than sealed, or above the coins of its player, counts as no bid and is reported.",
+      "title": "Fair play",
+      "withheld": "A bid or discards sealed and not revealed in time, or revealed otherwise than sealed, count as none, and their player is a pig at the end: no one takes a value back once it read the others."
+    },
+    "setup": {
+      "coins": "Each player starts with 300 coins, and owes 100 at the end of the game.",
+      "players": "4 to 8 players take the seats, then one of them starts the game: the seats stay taken until it is over.",
+      "title": "The table"
+    },
+    "summary": "Rules of the bid poker",
+    "times": {
+      "allLate": "When every player a lot or the discards would wait for is skipped, the game waits for every player again instead of closing them at once.",
+      "late": "A player who does not act in time bids or discards nothing, and the game goes on without waiting for it until it acts again.",
+      "phases": "A lot is open for 30 seconds (90 for the first, to read the catalogue), a reveal for 15 seconds and the discards for 45 seconds: each closes as soon as every player acted.",
+      "title": "The times"
+    },
+    "title": "Rules"
+  },
+  "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the game"
+    },
+    "bank": "Bank: {coins, plural, one {# coin} other {# coins}}",
+    "bid": {
+      "integer": "Bid whole coins",
+      "label": "Your bid",
+      "max": "At most your {max, plural, one {# coin} other {# coins}}",
+      "min": "{min, plural, one {# coin} other {# coins}} at least",
+      "none": "No bid",
+      "required": "Type your bid",
+      "sealed": "Your bid of {amount, plural, one {# coin} other {# coins}} is sealed",
+      "submit": "Bid"
+    },
+    "clock": "{seconds} s",
+    "discard": {
+      "keep": "Keep my cards",
+      "submit": "Discard {count, plural, one {# card} other {# cards}}"
+    },
+    "game": "Game {number}:",
+    "history": "Moves of the game",
+    "lot": {
+      "back": "Unsold: back to its seller",
+      "bank": "from the bank",
+      "name": "Lot {letter}",
+      "out": "Unsold: out of the game",
+      "seller": "from {name}",
+      "sold": "To {name} for {price, plural, one {# coin} other {# coins}}"
+    },
+    "move": {
+      "discards": "Change session {session}: {name} discards {count, plural, one {# card} other {# cards}}, lot {letter}",
+      "illegal": "{names}: {phase, select, revealing {a bid above the coins, no bid} other {a discard of a card not held, no discard}}",
+      "invalid": "{names}: revealed otherwise than sealed, no value, a pig at the end",
+      "late": "{names}: {phase, select, bidding {no bid in time} revealing {bid not revealed in time, a pig at the end} discarding {no discard in time} other {discards not revealed in time, a pig at the end}}",
+      "noDiscard": "Change session {session}: no card discarded",
+      "sold": "Lot {letter}: {name} wins for {price, plural, one {# coin} other {# coins}} (bids: {bids})",
+      "soldTie": "Lot {letter}: {name} wins for {price, plural, one {# coin} other {# coins}}, bid before {tied} (bids: {bids})",
+      "unsoldBack": "Lot {letter}: no bid, back to {name}",
+      "unsoldOut": "Lot {letter}: no bid, out of the game"
+    },
+    "past": "{first} first, {count, plural, one {# pig} other {# pigs}}: {pigs}",
+    "pastAllPigs": "No winner, {count, plural, one {# pig} other {# pigs}}: {pigs}",
+    "pastGames": "Games played",
+    "result": {
+      "balance": "{balance, plural, one {# coin} other {# coins}} at the end",
+      "noHand": "No hand",
+      "pig": "Pig",
+      "place": "Place {place}"
+    },
+    "seat": {
+      "absent": "Skipped",
+      "clock": "{seconds} s",
+      "coins": "{count, plural, one {# coin} other {# coins}}",
+      "free": "Free seat",
+      "leave": "Leave",
+      "release": "Free the seat",
+      "sealed": "Sealed",
+      "take": "Sit here"
+    },
+    "session": "{session, select, 0 {Dealing session} other {Change session {session} of {total}}}",
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "standings": {
+      "caption": "Standings of the game",
+      "coins": "Coins",
+      "hand": "Hand",
+      "place": "Place",
+      "player": "Player"
+    },
+    "status": {
+      "away": "Waiting for {names} to come back…",
+      "bid": "Bid on lot {letter}, sealed: 0 for no bid.",
+      "bidding": "Lot {letter} on auction: waiting for {names}.",
+      "discard": "Pick the cards to discard, in their order, or keep yours.",
+      "discarding": "The players discard: waiting for {names}.",
+      "disclosing": "The discards are revealed…",
+      "drawing": "The players shuffle the deck: waiting for {names}.",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The game is over.",
+      "revealing": "The bids on lot {letter} are revealed…",
+      "sealed": "Sealed: waiting for {names}.",
+      "seats": "{count, plural, one {# player seated} other {# players seated}}: the game starts with {min} at least.",
+      "start": "Start the game once every player is seated.",
+      "waitingStart": "{count, plural, one {# player seated} other {# players seated}}: waiting for one of them to start."
+    }
+  }
+}
