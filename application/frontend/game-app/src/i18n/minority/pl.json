@@ -55,5 +55,106 @@
       "sealed": "Każdy gracz, który jest jeszcze w grze, głosuje jednocześnie tak lub nie, w zapieczętowanym głosie: nikt nie widzi głosu, zanim wszyscy zagłosują. Nikt nie musi odpowiadać szczerze, a czat służy do umawiania się albo do zdrady.",
       "title": "Głosowanie"
     }
+  },
+  "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Odpadasz: śledź resztę gry i czat.",
+    "game": "Partia {number}:",
+    "history": "Ruchy partii",
+    "info": {
+      "question": "Pytanie {round} · {count, plural, one {# gracz w grze} few {# graczy w grze} many {# graczy w grze} other {# gracza w grze}}",
+      "round": "Runda {round} z {rounds}",
+      "stakes": "Pula nagród: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "variant": "{variant, select, elimination {Eliminacja} other {Wynik}} · głosowanie {seconds} s"
+    },
+    "move": {
+      "asked": "Pytanie {round}, zadane przez {name}: „{question}”",
+      "askerLate": "Pytanie {round}: {name} nie zadał pytania na czas, pyta inny gracz",
+      "eliminated": "Pytanie {round}: {yes} tak, {no} nie. Odpadają: {names}",
+      "illegal": "{names}: głos ani tak, ani nie",
+      "invalid": "{names}: głos ujawniony inaczej, niż został zapieczętowany",
+      "late": "{names}: brak głosu na czas",
+      "lateReveal": "{names}: głos nieujawniony na czas",
+      "noScore": "Runda {round}: {yes} tak, {no} nie. Nikt nie zdobywa punktów",
+      "scored": "Runda {round}: {yes} tak, {no} nie. Punkty: {points}",
+      "spared": "Pytanie {round}: {yes} tak, {no} nie. Nikt nie odpada: nowe pytanie"
+    },
+    "past": "{count, plural, one {Zwycięzca} few {Zwycięzcy} many {Zwycięzcy} other {Zwycięzcy}}: {winners}",
+    "pastGames": "Rozegrane partie",
+    "pastNoWinner": "Bez zwycięzcy",
+    "pastScore": "{winners} pierwsi z {points, plural, one {# punkt} few {# punkty} many {# punktów} other {# punktu}}",
+    "question": {
+      "label": "Twoje pytanie",
+      "link": "Bez linków i adresów e-mail w pytaniu",
+      "required": "Wpisz swoje pytanie",
+      "roundTitle": "Runda {round} z {rounds}, pyta {name}",
+      "submit": "Zadaj",
+      "text": "„{question}”",
+      "title": "Pytanie {round}, zadane przez {name}",
+      "tooLong": "Maksymalnie {maxLength, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "in": "Wciąż w grze",
+      "noWinner": "Bez zwycięzcy: wszyscy pozostali gracze odpadli",
+      "out": "Odpadł w pytaniu {round}",
+      "place": "Miejsce {place}",
+      "points": "{count, plural, one {# punkt} few {# punkty} many {# punktów} other {# punktu}}",
+      "winner": "Zwycięzca",
+      "winners": "{count, plural, one {Zwycięzca: {names}} few {Zwycięzcy: {names}} many {Zwycięzcy: {names}} other {Zwycięzcy: {names}}}"
+    },
+    "seat": {
+      "absent": "Pominięty",
+      "asks": "Pyta",
+      "eliminated": "Odpadł",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "points": "{count, plural, one {# punkt} few {# punkty} many {# punktów} other {# punktu}}",
+      "release": "Usuń z miejsca",
+      "sealed": "Zapieczętowano",
+      "take": "Usiądź",
+      "vote": "{vote, select, yes {Tak} other {Nie}}"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "standings": {
+      "balance": "Miliony",
+      "caption": "Klasyfikacja gry",
+      "outcome": "Wynik",
+      "place": "Miejsce",
+      "player": "Gracz"
+    },
+    "start": {
+      "elimination": "Eliminacja",
+      "minutes": "{count} min",
+      "score": "Wynik",
+      "seconds": "{count} s",
+      "variant": "Wariant",
+      "voteTime": "Czas na głosowanie"
+    },
+    "status": {
+      "ask": "Zadaj pytanie, na które odpowiada się tak lub nie.",
+      "asking": "{name} zadaje pytanie…",
+      "away": "Czekamy na powrót: {names}…",
+      "drawing": "Gracze losują, kto pyta: czekamy na {names}.",
+      "drawingAsker": "Losowanie gracza, który pyta…",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "revealing": "Głosy są ujawniane…",
+      "sealed": "Zapieczętowano: czekamy na {names}.",
+      "seats": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: partia wymaga co najmniej {min} graczy.",
+      "start": "Wybierz wariant i czas na głosowanie, a potem rozpocznij grę.",
+      "vote": "Zagłosuj tak lub nie, w tajemnicy.",
+      "voting": "Czekamy na głosy: {names}.",
+      "waitingStart": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: czekamy, aż jeden z nich rozpocznie partię."
+    },
+    "vote": {
+      "no": "Nie",
+      "sealed": "Twój głos, {vote, select, yes {tak} other {nie}}, jest zapieczętowany",
+      "yes": "Tak"
+    }
   }
 }

@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
+import { RoomHistoryComponent } from '@app/modules/room-layout/room-history/room-history.component';
 import { MatchPage } from '@app/modules/room-layout/leave-match.guard';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
@@ -10,12 +11,13 @@ import { chatBlockChains, ChatPayloads } from '@app/modules/chat-page/components
 import { minorityBlockChains, MinorityPayloads } from '../../classes/game-sessions/minority-messages';
 import { MinorityPresentationComponent } from '../../components/minority-presentation/minority-presentation.component';
 import { MinorityRulesComponent } from '../../components/minority-rules/minority-rules.component';
+import { MinorityTableComponent } from '../../components/minority-table/minority-table.component';
 
 /** The page of the Minority Game: its rooms, each one holding a table and the chat */
 @Component({
     selector: 'app-minority-game',
     templateUrl: './minority-game.html',
-    imports: [RoomLayoutComponent, MinorityPresentationComponent, MinorityRulesComponent, TranslocoPipe],
+    imports: [RoomLayoutComponent, RoomHistoryComponent, MinorityPresentationComponent, MinorityRulesComponent, MinorityTableComponent, TranslocoPipe],
     providers: [provideRooms()],
 })
 export class MinorityGame implements MatchPage {
@@ -24,4 +26,6 @@ export class MinorityGame implements MatchPage {
     protected readonly maxPlayer: number = 8;
     public readonly room = roomFromSetup<ChatPayloads & MinorityPayloads>(this.maxPlayer, mergeBlockChainRoutings(chatBlockChains, minorityBlockChains));
     public readonly leaveWarning: MatchLeaveWarning = inject(MatchLeaveWarning);
+    // By its reference: its history given to the panel of the room
+    protected readonly table = viewChild<MinorityTableComponent>('minorityTable');
 }

@@ -1,11 +1,17 @@
 <app-room-layout [dimContent]="false" [game]="game" [room]="room()">
     <app-minority-presentation roomPresentation />
-    @if (room()) {
+    @if (room(); as myRoom) {
+    <app-minority-table #minorityTable [room]="myRoom" />
     <details class="rules-details">
         <summary>{{ 'minority.rules.summary' | transloco }}</summary>
         <app-minority-rules [withTitle]="false" />
     </details>
     } @else {
     <app-minority-rules />
+    }
+    <!-- The history of the table, in the panel of the room -->
+    @if (table(); as table) {
+    <app-room-history [currentTitle]="'minority.table.history' | transloco" [current]="table.history()"
+        [pastTitle]="'minority.table.pastGames' | transloco" [past]="table.pastResults()" roomHistory />
     }
 </app-room-layout>

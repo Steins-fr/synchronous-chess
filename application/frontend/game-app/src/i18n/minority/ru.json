@@ -55,5 +55,106 @@
       "sealed": "Каждый оставшийся в игре игрок одновременно голосует «да» или «нет», запечатанно: никто не видит голос, пока не проголосуют все. Никто не обязан отвечать честно, а чат нужен, чтобы договориться или предать.",
       "title": "Голосование"
     }
+  },
+  "table": {
+    "action": {
+      "rematch": "Сыграть ещё",
+      "start": "Начать партию"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Вы выбыли: следите за остальной партией и чатом.",
+    "game": "Партия {number}:",
+    "history": "Ходы партии",
+    "info": {
+      "question": "Вопрос {round} · {count, plural, one {# игрок в игре} few {# игрока в игре} many {# игроков в игре} other {# игрока в игре}}",
+      "round": "Раунд {round} из {rounds}",
+      "stakes": "Призовой фонд: {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "variant": "{variant, select, elimination {На выбывание} other {На очки}} · голосование {seconds} с"
+    },
+    "move": {
+      "asked": "Вопрос {round} от {name}: «{question}»",
+      "askerLate": "Вопрос {round}: {name} не задал вопрос вовремя, спрашивает другой игрок",
+      "eliminated": "Вопрос {round}: {yes} «да», {no} «нет». Выбывают: {names}",
+      "illegal": "{names}: голос ни «да», ни «нет»",
+      "invalid": "{names}: голос раскрыт не так, как был запечатан",
+      "late": "{names}: не проголосовали вовремя",
+      "lateReveal": "{names}: голос не раскрыт вовремя",
+      "noScore": "Раунд {round}: {yes} «да», {no} «нет». Никто не получает очков",
+      "scored": "Раунд {round}: {yes} «да», {no} «нет». Очки: {points}",
+      "spared": "Вопрос {round}: {yes} «да», {no} «нет». Никто не выбывает: новый вопрос"
+    },
+    "past": "{count, plural, one {Победитель} few {Победители} many {Победители} other {Победители}}: {winners}",
+    "pastGames": "Сыгранные партии",
+    "pastNoWinner": "Без победителя",
+    "pastScore": "{winners} первые с {points, plural, one {# очко} few {# очка} many {# очков} other {# очка}}",
+    "question": {
+      "label": "Ваш вопрос",
+      "link": "Ссылки и адреса электронной почты в вопросе запрещены",
+      "required": "Введите ваш вопрос",
+      "roundTitle": "Раунд {round} из {rounds}, вопрос от {name}",
+      "submit": "Задать",
+      "text": "«{question}»",
+      "title": "Вопрос {round} от {name}",
+      "tooLong": "Не более {maxLength, plural, one {# символа} few {# символов} many {# символов} other {# символа}}"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "in": "В игре",
+      "noWinner": "Без победителя: все оставшиеся игроки выбыли",
+      "out": "Выбыл на вопросе {round}",
+      "place": "Место {place}",
+      "points": "{count, plural, one {# очко} few {# очка} many {# очков} other {# очка}}",
+      "winner": "Победитель",
+      "winners": "{count, plural, one {Победитель: {names}} few {Победители: {names}} many {Победители: {names}} other {Победители: {names}}}"
+    },
+    "seat": {
+      "absent": "Пропуск",
+      "asks": "Спрашивает",
+      "eliminated": "Выбыл",
+      "free": "Свободное место",
+      "leave": "Освободить место",
+      "points": "{count, plural, one {# очко} few {# очка} many {# очков} other {# очка}}",
+      "release": "Убрать с места",
+      "sealed": "Закрыто",
+      "take": "Сесть",
+      "vote": "{vote, select, yes {Да} other {Нет}}"
+    },
+    "spectators": "{count, plural, one {# зритель} few {# зрителя} many {# зрителей} other {# зрителя}}",
+    "standings": {
+      "balance": "Миллионы",
+      "caption": "Итоги игры",
+      "outcome": "Итог",
+      "place": "Место",
+      "player": "Игрок"
+    },
+    "start": {
+      "elimination": "На выбывание",
+      "minutes": "{count} мин",
+      "score": "На очки",
+      "seconds": "{count} с",
+      "variant": "Вариант",
+      "voteTime": "Время на голосование"
+    },
+    "status": {
+      "ask": "Задайте вопрос, на который отвечают «да» или «нет».",
+      "asking": "{name} задаёт вопрос…",
+      "away": "Ожидание возвращения: {names}…",
+      "drawing": "Игроки разыгрывают, кто спрашивает: ждём {names}.",
+      "drawingAsker": "Выбираем игрока, который спрашивает…",
+      "hurry": "Скорее: ваше время на исходе!",
+      "over": "Партия окончена.",
+      "revealing": "Голоса раскрываются…",
+      "sealed": "Закрыто, ожидание: {names}.",
+      "seats": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: партия начнётся, когда их будет не меньше {min}.",
+      "start": "Выберите вариант и время на голосование, затем начните партию.",
+      "vote": "Проголосуйте «да» или «нет», тайно.",
+      "voting": "Ждём голоса {names}.",
+      "waitingStart": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: ожидание, пока один из них начнёт партию."
+    },
+    "vote": {
+      "no": "Нет",
+      "sealed": "Ваш голос, {vote, select, yes {да} other {нет}}, запечатан",
+      "yes": "Да"
+    }
   }
 }

@@ -55,5 +55,106 @@
       "sealed": "Cada jogador ainda no jogo vota sim ou não ao mesmo tempo, lacrado: ninguém vê um voto antes de todos votarem. Ninguém precisa responder com sinceridade, e o bate-papo serve para combinar, ou para trair.",
       "title": "O voto"
     }
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar de novo",
+      "start": "Iniciar a partida"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Você foi eliminado: acompanhe o resto da partida e o bate-papo.",
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "info": {
+      "question": "Pergunta {round} · {count, plural, one {# jogador no jogo} other {# jogadores no jogo}}",
+      "round": "Rodada {round} de {rounds}",
+      "stakes": "Prêmio: {amount, plural, one {# milhão} other {# milhões}}",
+      "variant": "{variant, select, elimination {Eliminação} other {Pontuação}} · votos de {seconds} s"
+    },
+    "move": {
+      "asked": "Pergunta {round}, feita por {name}: “{question}”",
+      "askerLate": "Pergunta {round}: {name} não perguntou a tempo, outro jogador pergunta",
+      "eliminated": "Pergunta {round}: {yes} sim, {no} não. Eliminados: {names}",
+      "illegal": "{names}: um voto que não é sim nem não",
+      "invalid": "{names}: voto revelado de outro jeito que lacrado",
+      "late": "{names}: sem voto a tempo",
+      "lateReveal": "{names}: voto não revelado a tempo",
+      "noScore": "Rodada {round}: {yes} sim, {no} não. Ninguém marca pontos",
+      "scored": "Rodada {round}: {yes} sim, {no} não. Pontos: {points}",
+      "spared": "Pergunta {round}: {yes} sim, {no} não. Ninguém eliminado: uma nova pergunta"
+    },
+    "past": "{count, plural, one {Vencedor} other {Vencedores}}: {winners}",
+    "pastGames": "Partidas jogadas",
+    "pastNoWinner": "Nenhum vencedor",
+    "pastScore": "{winners} em primeiro com {points, plural, one {# ponto} other {# pontos}}",
+    "question": {
+      "label": "Sua pergunta",
+      "link": "Sem links nem endereços de e-mail em uma pergunta",
+      "required": "Digite sua pergunta",
+      "roundTitle": "Rodada {round} de {rounds}, pergunta de {name}",
+      "submit": "Perguntar",
+      "text": "“{question}”",
+      "title": "Pergunta {round}, feita por {name}",
+      "tooLong": "{maxLength, plural, one {# caractere} other {# caracteres}} no máximo"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# milhão} other {# milhões}}",
+      "in": "Ainda no jogo",
+      "noWinner": "Nenhum vencedor: todos os jogadores restantes foram eliminados",
+      "out": "Eliminado na pergunta {round}",
+      "place": "Posição {place}",
+      "points": "{count, plural, one {# ponto} other {# pontos}}",
+      "winner": "Vencedor",
+      "winners": "{count, plural, one {Vencedor: {names}} other {Vencedores: {names}}}"
+    },
+    "seat": {
+      "absent": "Pulado",
+      "asks": "Pergunta",
+      "eliminated": "Eliminado",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "points": "{count, plural, one {# ponto} other {# pontos}}",
+      "release": "Liberar o lugar",
+      "sealed": "Lacrado",
+      "take": "Sentar",
+      "vote": "{vote, select, yes {Sim} other {Não}}"
+    },
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "balance": "Milhões",
+      "caption": "Classificação da partida",
+      "outcome": "Resultado",
+      "place": "Posição",
+      "player": "Jogador"
+    },
+    "start": {
+      "elimination": "Eliminação",
+      "minutes": "{count} min",
+      "score": "Pontuação",
+      "seconds": "{count} s",
+      "variant": "Variante",
+      "voteTime": "Tempo para votar"
+    },
+    "status": {
+      "ask": "Faça uma pergunta respondida com sim ou não.",
+      "asking": "{name} faz uma pergunta…",
+      "away": "Aguardando {names} voltar…",
+      "drawing": "Os jogadores sorteiam quem pergunta: aguardando {names}.",
+      "drawingAsker": "Sorteando o jogador que pergunta…",
+      "hurry": "Rápido: seu tempo está acabando!",
+      "over": "A partida terminou.",
+      "revealing": "Os votos estão sendo revelados…",
+      "sealed": "Lacrado: aguardando {names}.",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa com pelo menos {min}.",
+      "start": "Escolha a variante e o tempo para votar, e comece a partida.",
+      "vote": "Vote sim ou não, em segredo.",
+      "voting": "Aguardando os votos de {names}.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: aguardando que um deles inicie."
+    },
+    "vote": {
+      "no": "Não",
+      "sealed": "Seu voto, {vote, select, yes {sim} other {não}}, está lacrado",
+      "yes": "Sim"
+    }
   }
 }

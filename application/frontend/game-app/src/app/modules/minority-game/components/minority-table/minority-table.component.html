@@ -1,0 +1,118 @@
+<section *transloco="let t; prefix: 'minority.table'" class="flex flex-col gap-4 py-4">
+    @let currentSession = session();
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        @for (line of info(); track line.id) {
+        <span [id]="line.id">{{ line.text.key | transloco: line.text.params }}</span>
+        }
+        <span class="ml-auto">{{ t('spectators', { count: currentSession.tableSeats.spectatorNumber() }) }}</span>
+    </div>
+
+    <div appSteadyHeight class="flex items-center gap-3">
+        <output class="table-status flex-1">{{ status().key | transloco: status().params }}</output>
+        @if (clock(); as left) {
+        <span id="vote-clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+        }
+    </div>
+
+    <!-- The question in progress, the count of the last vote, then the standings: each line keeps its place, empty -->
+    @let shown = question();
+    @let count = lastCountText();
+    <div id="question" appSteadyHeight class="flex flex-col items-center gap-2 p-4 rounded-2xl border border-app-border bg-app-surface-raised text-center">
+        <h2 class="m-0 min-h-lh mat-title-medium">
+            @if (shown) {
+            {{ shown.title.key | transloco: shown.title.params }}
+            }
+        </h2>
+        <p id="question-text" class="m-0 min-h-[2lh] text-lg font-medium break-words">
+            @if (shown?.text; as asked) {
+            {{ t('question.text', { question: asked }) }}
+            }
+        </p>
+        <p id="last-vote" class="m-0 min-h-lh muted-note">
+            @if (count) {
+            {{ count.key | transloco: count.params }}
+            }
+        </p>
+        @if (winners(); as winning) {
+        <p id="winners" class="m-0"><span class="badge badge-win">{{ winning.key | transloco: winning.params }}</span></p>
+        }
+        @if (standings().length > 0) {
+        <table id="standings" class="w-full max-w-xl text-left text-sm">
+            <caption class="sr-only">{{ t('standings.caption') }}</caption>
+            <thead>
+                <tr>
+                    <th class="py-1 pr-2 font-medium" scope="col">{{ t('standings.place') }}</th>
+                    <th class="py-1 pr-2 font-medium" scope="col">{{ t('standings.player') }}</th>
+                    <th class="py-1 pr-2 font-medium" scope="col">{{ t('standings.outcome') }}</th>
+                    @if (withStakes()) {
+                    <th class="py-1 text-right font-medium" scope="col">{{ t('standings.balance') }}</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (row of standings(); track $index) {
+                <tr>
+                    <td class="py-1 pr-2 font-bold">{{ row.place.key | transloco: row.place.params }}</td>
+                    <td class="py-1 pr-2">{{ row.name }}</td>
+                    <td class="py-1 pr-2">{{ row.detail.key | transloco: row.detail.params }}</td>
+                    @if (row.balance; as balance) {
+                    <td class="py-1 text-right tabular-nums">{{ balance.key | transloco: balance.params }}</td>
+                    }
+                </tr>
+                }
+            </tbody>
+        </table>
+        }
+    </div>
+
+    <div id="actions" appSteadyHeight class="flex flex-wrap items-start justify-center gap-3">
+        @if (currentSession.canStart()) {
+        <form class="flex flex-wrap items-end justify-center gap-4" (submit)="$event.preventDefault(); start()">
+            <app-choice-field [field]="setupForm.variant" [label]="t('start.variant')" [options]="variants" />
+            <app-choice-field [field]="setupForm.voteTime" [label]="t('start.voteTime')" [options]="voteTimes()" />
+            <button mat-flat-button type="submit">{{ t('action.start') }}</button>
+        </form>
+        }
+        @if (currentSession.canAsk()) {
+        <form class="flex w-full max-w-xl flex-wrap items-start justify-center gap-3" (submit)="$event.preventDefault(); ask()">
+            <app-text-field class="min-w-0 flex-1" [field]="questionForm.text" [label]="t('question.label')" />
+            <button class="mt-2" mat-flat-button type="submit">{{ t('question.submit') }}</button>
+        </form>
+        }
+        @if (currentSession.canVote()) {
+        <button mat-flat-button type="button" (click)="vote(votes.YES)">{{ t('vote.yes') }}</button>
+        <button mat-flat-button type="button" (click)="vote(votes.NO)">{{ t('vote.no') }}</button>
+        }
+        @let sealedVote = currentSession.myVote();
+        @if (sealedVote !== null) {
+        <p class="m-0 font-medium">{{ t('vote.sealed', { vote: sealedVote }) }}</p>
+        }
+        @if (currentSession.eliminated() && !currentSession.over()) {
+        <p class="m-0 muted-note">{{ t('eliminated') }}</p>
+        }
+        @if (canRematch()) {
+        <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+        }
+    </div>
+
+    @let seats = currentSession.tableSeats;
+    @let left = clock();
+    <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        @for (view of otherSeats(); track view.seat) {
+        <app-minority-seat
+            [seat]="view.seat" [name]="view.name" [awaited]="view.awaited" [sealed]="view.sealed" [absent]="view.absent" [asker]="view.asker"
+            [eliminated]="view.eliminated" [vote]="view.vote" [points]="view.points" [standing]="view.standing" [winning]="view.winning"
+            [clock]="view.awaited ? left : null" [clockLow]="clockLow()"
+            [canTake]="seats.canTake(view.seat)" [canRelease]="seats.canRelease(view.seat)"
+            (take)="takeSeat(view.seat)" (release)="release(view.seat)" />
+        }
+        <!-- The seat of the local player, else the first free seat; the first seat once every seat is taken, the host may free -->
+        @let mine = bottomSeat();
+        <app-minority-seat class="sm:col-span-2 lg:col-span-4"
+            [seat]="mine.seat" [name]="mine.name" [awaited]="mine.awaited" [sealed]="mine.sealed" [absent]="mine.absent" [asker]="mine.asker"
+            [eliminated]="mine.eliminated" [vote]="mine.vote" [points]="mine.points" [standing]="mine.standing" [winning]="mine.winning"
+            [clock]="mine.awaited ? left : null" [clockLow]="clockLow()"
+            [canTake]="seats.canTake(mine.seat)" [canLeave]="seats.canLeave()" [canRelease]="seats.canRelease(mine.seat)"
+            (take)="takeSeat(mine.seat)" (leave)="leaveSeat()" (release)="release(mine.seat)" />
+    </div>
+</section>

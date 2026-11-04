@@ -55,5 +55,106 @@
       "sealed": "Setiap pemain yang masih bertahan memberi suara ya atau tidak pada saat yang sama, tersegel: tidak ada yang melihat suara sebelum semua pemain memberi suara. Tidak ada yang wajib menjawab jujur, dan obrolan ada untuk bersepakat, atau berkhianat.",
       "title": "Pemberian suara"
     }
+  },
+  "table": {
+    "action": {
+      "rematch": "Main lagi",
+      "start": "Mulai permainan"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Anda tersingkir: ikuti sisa permainan dan obrolannya.",
+    "game": "Permainan {number}:",
+    "history": "Langkah permainan",
+    "info": {
+      "question": "Pertanyaan {round} · {count, plural, other {# pemain bertahan}}",
+      "round": "Ronde {round} dari {rounds}",
+      "stakes": "Hadiah: {amount, plural, other {# juta}}",
+      "variant": "{variant, select, elimination {Eliminasi} other {Skor}} · suara {seconds} dtk"
+    },
+    "move": {
+      "asked": "Pertanyaan {round}, diajukan oleh {name}: “{question}”",
+      "askerLate": "Pertanyaan {round}: {name} tidak bertanya tepat waktu, pemain lain yang bertanya",
+      "eliminated": "Pertanyaan {round}: {yes} ya, {no} tidak. Tersingkir: {names}",
+      "illegal": "{names}: suara yang bukan ya maupun tidak",
+      "invalid": "{names}: suara diungkap berbeda dari segelnya",
+      "late": "{names}: tidak memberi suara tepat waktu",
+      "lateReveal": "{names}: suara tidak diungkap tepat waktu",
+      "noScore": "Ronde {round}: {yes} ya, {no} tidak. Tidak ada yang mencetak poin",
+      "scored": "Ronde {round}: {yes} ya, {no} tidak. Poin: {points}",
+      "spared": "Pertanyaan {round}: {yes} ya, {no} tidak. Tidak ada yang tersingkir: pertanyaan baru"
+    },
+    "past": "{count, plural, other {Pemenang}}: {winners}",
+    "pastGames": "Permainan yang dimainkan",
+    "pastNoWinner": "Tanpa pemenang",
+    "pastScore": "{winners} pertama dengan {points, plural, other {# poin}}",
+    "question": {
+      "label": "Pertanyaan Anda",
+      "link": "Tautan dan alamat email tidak diizinkan dalam pertanyaan",
+      "required": "Ketik pertanyaan Anda",
+      "roundTitle": "Ronde {round} dari {rounds}, diajukan oleh {name}",
+      "submit": "Tanya",
+      "text": "“{question}”",
+      "title": "Pertanyaan {round}, diajukan oleh {name}",
+      "tooLong": "Maksimal {maxLength, plural, other {# karakter}}"
+    },
+    "result": {
+      "balance": "{balance, plural, other {# juta}}",
+      "in": "Masih bertahan",
+      "noWinner": "Tanpa pemenang: semua pemain yang tersisa tersingkir",
+      "out": "Tersingkir di pertanyaan {round}",
+      "place": "Peringkat {place}",
+      "points": "{count, plural, other {# poin}}",
+      "winner": "Pemenang",
+      "winners": "{count, plural, other {Pemenang: {names}}}"
+    },
+    "seat": {
+      "absent": "Dilewati",
+      "asks": "Bertanya",
+      "eliminated": "Tersingkir",
+      "free": "Kursi kosong",
+      "leave": "Tinggalkan kursi",
+      "points": "{count, plural, other {# poin}}",
+      "release": "Kosongkan kursi",
+      "sealed": "Tertutup",
+      "take": "Duduk",
+      "vote": "{vote, select, yes {Ya} other {Tidak}}"
+    },
+    "spectators": "{count, plural, other {# penonton}}",
+    "standings": {
+      "balance": "Juta",
+      "caption": "Peringkat permainan",
+      "outcome": "Hasil",
+      "place": "Peringkat",
+      "player": "Pemain"
+    },
+    "start": {
+      "elimination": "Eliminasi",
+      "minutes": "{count} mnt",
+      "score": "Skor",
+      "seconds": "{count} dtk",
+      "variant": "Varian",
+      "voteTime": "Waktu memberi suara"
+    },
+    "status": {
+      "ask": "Ajukan pertanyaan yang dijawab dengan ya atau tidak.",
+      "asking": "{name} mengajukan pertanyaan…",
+      "away": "Menunggu {names} kembali…",
+      "drawing": "Para pemain mengundi siapa yang bertanya: menunggu {names}.",
+      "drawingAsker": "Mengundi pemain yang bertanya…",
+      "hurry": "Cepat: waktu Anda hampir habis!",
+      "over": "Permainan selesai.",
+      "revealing": "Suara sedang diungkap…",
+      "sealed": "Tertutup: menunggu {names}.",
+      "seats": "{count, plural, other {# pemain duduk}}: permainan dimulai dengan paling sedikit {min} pemain.",
+      "start": "Pilih varian dan waktu memberi suara, lalu mulai permainan.",
+      "vote": "Berikan suara ya atau tidak, secara rahasia.",
+      "voting": "Menunggu suara {names}.",
+      "waitingStart": "{count, plural, other {# pemain duduk}}: menunggu salah satu dari mereka memulai."
+    },
+    "vote": {
+      "no": "Tidak",
+      "sealed": "Suara Anda, {vote, select, yes {ya} other {tidak}}, tersegel",
+      "yes": "Ya"
+    }
   }
 }

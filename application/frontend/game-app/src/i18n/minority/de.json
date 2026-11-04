@@ -55,5 +55,106 @@
       "sealed": "Jeder Spieler, der noch dabei ist, stimmt gleichzeitig mit Ja oder Nein ab, versiegelt: Niemand sieht eine Stimme, bevor alle abgestimmt haben. Niemand muss ehrlich antworten, und der Chat dient zum Absprechen oder zum Verraten.",
       "title": "Die Abstimmung"
     }
+  },
+  "table": {
+    "action": {
+      "rematch": "Nochmal spielen",
+      "start": "Spiel starten"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Du bist ausgeschieden: Verfolge den Rest der Partie und den Chat.",
+    "game": "Spiel {number}:",
+    "history": "Züge des Spiels",
+    "info": {
+      "question": "Frage {round} · {count, plural, one {# Spieler dabei} other {# Spieler dabei}}",
+      "round": "Durchgang {round} von {rounds}",
+      "stakes": "Preisgeld: {amount, plural, one {# Million} other {# Millionen}}",
+      "variant": "{variant, select, elimination {Ausscheidung} other {Punktestand}} · Abstimmungen von {seconds} s"
+    },
+    "move": {
+      "asked": "Frage {round}, gestellt von {name}: „{question}“",
+      "askerLate": "Frage {round}: {name} hat nicht rechtzeitig gefragt, ein anderer Spieler fragt",
+      "eliminated": "Frage {round}: {yes} Ja, {no} Nein. Ausgeschieden: {names}",
+      "illegal": "{names}: eine Stimme weder Ja noch Nein",
+      "invalid": "{names}: Stimme anders als versiegelt aufgedeckt",
+      "late": "{names}: keine Stimme rechtzeitig",
+      "lateReveal": "{names}: Stimme nicht rechtzeitig aufgedeckt",
+      "noScore": "Durchgang {round}: {yes} Ja, {no} Nein. Niemand punktet",
+      "scored": "Durchgang {round}: {yes} Ja, {no} Nein. Punkte: {points}",
+      "spared": "Frage {round}: {yes} Ja, {no} Nein. Niemand scheidet aus: eine neue Frage"
+    },
+    "past": "{count, plural, one {Gewinner} other {Gewinner}}: {winners}",
+    "pastGames": "Gespielte Spiele",
+    "pastNoWinner": "Kein Gewinner",
+    "pastScore": "{winners} vorn mit {points, plural, one {# Punkt} other {# Punkte}}",
+    "question": {
+      "label": "Deine Frage",
+      "link": "Keine Links oder E-Mail-Adressen in einer Frage",
+      "required": "Gib deine Frage ein",
+      "roundTitle": "Durchgang {round} von {rounds}, Frage von {name}",
+      "submit": "Fragen",
+      "text": "„{question}“",
+      "title": "Frage {round}, gestellt von {name}",
+      "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# Million} other {# Millionen}}",
+      "in": "Noch dabei",
+      "noWinner": "Kein Gewinner: Alle übrigen Spieler sind ausgeschieden",
+      "out": "Ausgeschieden bei Frage {round}",
+      "place": "Platz {place}",
+      "points": "{count, plural, one {# Punkt} other {# Punkte}}",
+      "winner": "Gewinner",
+      "winners": "{count, plural, one {Gewinner: {names}} other {Gewinner: {names}}}"
+    },
+    "seat": {
+      "absent": "Übersprungen",
+      "asks": "Fragt",
+      "eliminated": "Ausgeschieden",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "points": "{count, plural, one {# Punkt} other {# Punkte}}",
+      "release": "Platz freigeben",
+      "sealed": "Verdeckt",
+      "take": "Hinsetzen",
+      "vote": "{vote, select, yes {Ja} other {Nein}}"
+    },
+    "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "standings": {
+      "balance": "Millionen",
+      "caption": "Wertung des Spiels",
+      "outcome": "Ergebnis",
+      "place": "Platz",
+      "player": "Spieler"
+    },
+    "start": {
+      "elimination": "Ausscheidung",
+      "minutes": "{count} Min.",
+      "score": "Punktestand",
+      "seconds": "{count} s",
+      "variant": "Variante",
+      "voteTime": "Zeit zum Abstimmen"
+    },
+    "status": {
+      "ask": "Stell eine Frage, die mit Ja oder Nein beantwortet wird.",
+      "asking": "{name} stellt eine Frage…",
+      "away": "Warte auf die Rückkehr von {names}…",
+      "drawing": "Die Spieler losen aus, wer fragt: Warten auf {names}.",
+      "drawingAsker": "Der fragende Spieler wird ausgelost…",
+      "hurry": "Beeil dich: Deine Zeit läuft ab!",
+      "over": "Das Spiel ist vorbei.",
+      "revealing": "Die Stimmen werden aufgedeckt…",
+      "sealed": "Verdeckt: Warte auf {names}.",
+      "seats": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Das Spiel startet mit mindestens {min}.",
+      "start": "Wähle die Variante und die Zeit zum Abstimmen, dann starte die Partie.",
+      "vote": "Stimm mit Ja oder Nein ab, geheim.",
+      "voting": "Warten auf die Stimmen von {names}.",
+      "waitingStart": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Warte, bis einer von ihnen startet."
+    },
+    "vote": {
+      "no": "Nein",
+      "sealed": "Deine Stimme, {vote, select, yes {ja} other {nein}}, ist versiegelt",
+      "yes": "Ja"
+    }
   }
 }
