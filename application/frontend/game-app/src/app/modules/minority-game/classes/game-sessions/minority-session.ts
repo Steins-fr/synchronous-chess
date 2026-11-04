@@ -139,14 +139,15 @@ export class MinoritySession {
 
     private readonly _seals = signal<ReadonlyMap<string, Readonly<Seal>>>(new Map());
     /**
-     * The vote of the local player on the question, sealed until the vote closes. Once closed, the game counts it only
-     * when its commitment came in time: sent as the time ran out, it is no vote
+     * The vote of the local player on the question, sealed until the votes are revealed. Once the vote closed, the game
+     * counts it only when its commitment came in time: sent as the time ran out, it is no vote
      */
     public readonly myVote: Signal<Vote | null> = computed((): Vote | null => {
         const game: MinorityGameState | null = this.game();
         const me: number | null = this.myIndex();
+        const revealing: boolean = game?.phase() === MinorityPhase.REVEALING && me !== null && game.committed().includes(me);
 
-        if (game === null || (game.phase() !== MinorityPhase.VOTING && (me === null || !game.committed().includes(me)))) {
+        if (game === null || (game.phase() !== MinorityPhase.VOTING && !revealing)) {
             return null;
         }
         return this._seals().get(this.questionKey(game))?.vote ?? null;

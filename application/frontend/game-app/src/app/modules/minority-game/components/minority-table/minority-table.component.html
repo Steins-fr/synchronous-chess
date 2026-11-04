@@ -17,6 +17,7 @@
     <!-- The question in progress, the count of the last vote, then the standings: each line keeps its place, empty -->
     @let shown = question();
     @let count = lastCountText();
+    @if (game()) {
     <div id="question" appSteadyHeight class="flex flex-col items-center gap-2 p-4 rounded-2xl border border-app-border bg-app-surface-raised text-center">
         <h2 class="m-0 min-h-lh mat-title-medium">
             @if (shown) {
@@ -64,15 +65,18 @@
         </table>
         }
     </div>
+    }
+
+    <!-- The setup of the next game, apart from the actions of the game: their height holds the game only -->
+    @if (currentSession.canStart()) {
+    <form id="setup" class="flex flex-wrap items-end justify-center gap-4" (submit)="$event.preventDefault(); start()">
+        <app-choice-field [field]="setupForm.variant" [label]="t('start.variant')" [options]="variants" />
+        <app-choice-field [field]="setupForm.voteTime" [label]="t('start.voteTime')" [options]="voteTimes()" />
+        <button mat-flat-button type="submit">{{ t('action.start') }}</button>
+    </form>
+    }
 
     <div id="actions" appSteadyHeight class="flex flex-wrap items-start justify-center gap-3">
-        @if (currentSession.canStart()) {
-        <form class="flex flex-wrap items-end justify-center gap-4" (submit)="$event.preventDefault(); start()">
-            <app-choice-field [field]="setupForm.variant" [label]="t('start.variant')" [options]="variants" />
-            <app-choice-field [field]="setupForm.voteTime" [label]="t('start.voteTime')" [options]="voteTimes()" />
-            <button mat-flat-button type="submit">{{ t('action.start') }}</button>
-        </form>
-        }
         @if (currentSession.canAsk()) {
         <form class="flex w-full max-w-xl flex-wrap items-start justify-center gap-3" (submit)="$event.preventDefault(); ask()">
             <app-text-field class="min-w-0 flex-1" [field]="questionForm.text" [label]="t('question.label')" />
@@ -97,7 +101,7 @@
 
     @let seats = currentSession.tableSeats;
     @let left = clock();
-    <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-3 grid-cols-2 lg:grid-cols-4">
         @for (view of otherSeats(); track view.seat) {
         <app-minority-seat
             [seat]="view.seat" [name]="view.name" [awaited]="view.awaited" [sealed]="view.sealed" [absent]="view.absent" [asker]="view.asker"
@@ -108,7 +112,7 @@
         }
         <!-- The seat of the local player, else the first free seat; the first seat once every seat is taken, the host may free -->
         @let mine = bottomSeat();
-        <app-minority-seat class="sm:col-span-2 lg:col-span-4"
+        <app-minority-seat class="col-span-2 lg:col-span-4"
             [seat]="mine.seat" [name]="mine.name" [awaited]="mine.awaited" [sealed]="mine.sealed" [absent]="mine.absent" [asker]="mine.asker"
             [eliminated]="mine.eliminated" [vote]="mine.vote" [points]="mine.points" [standing]="mine.standing" [winning]="mine.winning"
             [clock]="mine.awaited ? left : null" [clockLow]="clockLow()"

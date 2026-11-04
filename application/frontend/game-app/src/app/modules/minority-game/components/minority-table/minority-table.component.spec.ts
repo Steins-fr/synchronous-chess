@@ -274,7 +274,8 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
         ]);
         expect(text('#seat-3')).toContain('Winner');
         expect(text('#seat-3')).toContain('No');
-        expect(text('#question h2')).toEqual('');
+        expect(text('#question h2')).toEqual('Question 1, asked by alice');
+        expect(text('#actions')).toEqual('Play again');
         expect(play).toHaveBeenCalledWith(SoundEffect.POKER_CARD_TURN);
         expect(play).toHaveBeenCalledWith(SoundEffect.GAME_LOST);
         expect(TestHelper.cast<{ inMatch(): boolean }>(fixture.componentInstance).inMatch()).toBe(false);

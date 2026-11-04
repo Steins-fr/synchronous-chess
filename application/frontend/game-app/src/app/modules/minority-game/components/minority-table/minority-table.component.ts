@@ -166,12 +166,12 @@ export class MinorityTableComponent implements OnDestroy {
         return last === null ? null : countText(last, this.session().players(), (this.game() as MinorityGameState).variant);
     });
 
-    /** The question in progress, none before the game nor once it is over */
+    /** The question in progress, the last one once the game is over */
     protected readonly question: Signal<Readonly<QuestionView> | null> = computed((): Readonly<QuestionView> | null => {
         const game: MinorityGameState | null = this.game();
         const asker: string | null = this.session().asker();
 
-        if (game === null || asker === null || this.session().over()) {
+        if (game === null || asker === null) {
             return null;
         }
         const params = { round: game.round() + 1, rounds: this.session().rules.rounds, name: asker };
