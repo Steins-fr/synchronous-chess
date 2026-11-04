@@ -242,13 +242,16 @@ export class MinoritySession {
             return;
         }
 
-        const key: string = this.questionKey(game);
+        // The question of the vote, fixed before the hash: a timeout applied meanwhile moves to the next question
+        const question: QuestionKey = { round: game.round(), ask: game.ask() };
+        const round: MinorityRound = this.round();
+        const key: string = keyOf(question);
         const salt: string = drawSalt();
         this._sending.set(true);
         this._seals.update((seals: ReadonlyMap<string, Readonly<Seal>>) => new Map([...seals, [key, { key, vote, salt }]]));
         const commitment: string = await commitmentOf(this.preimage(key, vote, salt, this.myIndex() as number), ':');
         this.sealStore.save(commitment, { key, vote, salt });
-        this.room.transmitMessage(MGGameSessionType.COMMIT, { ...this.round(), round: game.round(), ask: game.ask(), commitment });
+        this.room.transmitMessage(MGGameSessionType.COMMIT, { ...round, ...question, commitment });
     }
 
     /**
@@ -476,6 +479,7 @@ export class MinoritySession {
             && this.commitments.get(key, message.from) === await commitmentOf(this.preimage(key, typeof vote === 'string' ? vote : '', salt, player), ':');
         if (!matching) {
             this.room.reportCheat(message, CheatReason.INVALID_REVEAL);
+            this.revealed(message.from, key);
             game.refuse(player);
             return;
         }
@@ -486,7 +490,7 @@ export class MinoritySession {
         }
     }
 
-    /** A vote of the local player revealed in the chain: a reload does not need it anymore */
+    /** A vote of the local player revealed in the chain, refused or withheld: a reload does not need it anymore */
     private revealed(from: string, key: string): void {
         const commitment: string | undefined = this.commitments.get(key, from);
         if (from === this.room.localPlayer.name && commitment !== undefined) {
@@ -517,10 +521,15 @@ export class MinoritySession {
 
         const game: MinorityGameState | null = this.game();
         if (game !== null) {
+            if (game.phase() === MinorityPhase.REVEALING) {
+                this.revealed(this.room.localPlayer.name, this.questionKey(game));
+            }
             game.close();
             return;
         }
 
+        // The part of the local player of a draw over: a reload does not need it anymore
+        this.partStore.remove(this._played().drawContext);
         this.awaited().forEach((late: string) => this.tableSeats.free(this.tableSeats.seatOf(late) as number));
         this._played.set(new PlayedMinorityGame(this._played().index, this._played().attempt + 1));
     }

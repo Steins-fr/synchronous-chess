@@ -16,7 +16,8 @@ export interface HeardMinorityTable {
 
 /**
  * The sounds of a change of the table, from what the page last heard: a seat taken, a question asked, the votes
- * revealed, the local player eliminated, and the end of the game, won or lost for the local player, won for a spectator;
+ * revealed, the local player eliminated, and the end of the game, won or lost for the local player, won for a spectator
+ * (a draw when nobody won);
  * a player eliminated before the end heard its loss already
  */
 export function tableSounds(before: Readonly<HeardMinorityTable>, after: Readonly<HeardMinorityTable>, me: number | null): ReadonlyArray<OneShotSoundEffect> {
@@ -33,10 +34,18 @@ export function tableSounds(before: Readonly<HeardMinorityTable>, after: Readonl
         sounds.push(SoundEffect.POKER_CARD_TURN);
     }
     if (after.result !== null && before.result === null && !before.eliminated) {
-        sounds.push(me === null || after.result.winners.includes(me) ? SoundEffect.GAME_WON : SoundEffect.GAME_LOST);
+        sounds.push(endSound(after.result, me));
     } else if (after.result === null && after.eliminated && !before.eliminated) {
         sounds.push(SoundEffect.GAME_LOST);
     }
 
     return sounds;
+}
+
+/** The end of the game: won or lost for a player, won for a spectator, a draw when nobody won */
+function endSound(result: Readonly<MinorityResult>, me: number | null): OneShotSoundEffect {
+    if (me !== null) {
+        return result.winners.includes(me) ? SoundEffect.GAME_WON : SoundEffect.GAME_LOST;
+    }
+    return result.winners.length > 0 ? SoundEffect.GAME_WON : SoundEffect.GAME_DRAW;
 }

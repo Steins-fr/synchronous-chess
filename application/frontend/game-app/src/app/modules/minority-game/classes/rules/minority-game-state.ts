@@ -279,7 +279,7 @@ export class MinorityGameState {
                     events: [...state.events, { kind: MinorityEventKind.ASKER_LATE, round: state.round, asker: state.asker as number }],
                 };
                 this._state.set(without(state.alive, state.absent).length === 0
-                    ? this.counted({ ...told, late: state.alive })
+                    ? { ...this.counted({ ...told, late: state.alive }), asker: null }
                     : { ...told, ask: state.ask + 1, asker: null, step: state.step + 1 });
                 break;
             }

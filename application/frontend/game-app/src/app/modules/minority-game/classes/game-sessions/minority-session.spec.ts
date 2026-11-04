@@ -1,3 +1,4 @@
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { commitmentOf } from '@app/modules/commit-reveal/classes/commitment';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
@@ -380,6 +381,8 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
             expect(gameOf('eve').events()).toContainEqual({
                 kind: MinorityEventKind.MISSED, round: 0, phase: MinorityPhase.REVEALING, reason: MissedReason.INVALID, players: [2],
             });
+            // Refused, the vote of Carol leaves her tab
+            expect(sessionStorage.getItem('synchronous-chess:sealed-votes:room:carol')).toEqual('{}');
             expect(lastEvent()).toMatchObject({ outcome: VoteOutcome.MINORITY, eliminated: [0, 1, 2] });
         });
 
@@ -522,6 +525,32 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
             expect(gameOf('eve').absent()).toEqual([PLAYERS.indexOf(asker)]);
         });
 
+        test('should commit to the question voted, a timeout applied while the vote is sealed moving to the next one', async () => {
+            // Given
+            await started();
+            await asked();
+            await Promise.all(['alice', 'bob', 'carol'].map((name: string) => of(name).vote(YES)));
+            await settled((session: MinoritySession) => session.game()?.committed().length === 3);
+
+            // When Dave votes as the time runs out: the vote is over while his page hashes his vote
+            const sha256 = CryptoHelper.sha256.bind(CryptoHelper);
+            let hashed: () => void = () => undefined;
+            const hashing = new Promise<void>((resolve) => hashed = resolve);
+            vi.spyOn(CryptoHelper, 'sha256').mockImplementationOnce(async (text: string) => {
+                await hashing;
+                return sha256(text);
+            });
+            const voting: Promise<void> = of('dave').vote(NO);
+            claim('alice');
+            await settled((session: MinoritySession) => session.game()?.round() === 1);
+            hashed();
+            await voting;
+
+            // Then his commitment names the question he voted on: the next question ignores it
+            expect(messagesOf(MGGameSessionType.COMMIT, 'dave').map((message: AppMessage) => message.payload)).toMatchObject([{ round: 0, ask: 0 }]);
+            expect(gameOf('eve').committed()).toEqual([]);
+        });
+
         test('should void a claim coming before the time of the vote picked, its claimer waiting again', async () => {
             // Given
             hub.time = 1_000;
@@ -562,6 +591,8 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
                 kind: MinorityEventKind.MISSED, round: 0, phase: MinorityPhase.REVEALING, reason: MissedReason.LATE, players: [3],
             });
             expect(lastEvent()).toMatchObject({ outcome: VoteOutcome.MINORITY, eliminated: [0, 1, 3] });
+            // Withheld, the vote of Dave leaves his tab
+            expect(sessionStorage.getItem('synchronous-chess:sealed-votes:room:dave')).toEqual('{}');
         });
 
         test('should take a claim at once in a room without time', async () => {
@@ -629,6 +660,8 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
             await settled((session: MinoritySession) => !session.started());
             expect(of('eve').tableSeats.seats()).toEqual(['alice', 'bob', 'carol', null, null, null, null, null]);
             expect([of('eve').played().attempt, of('eve').setup()]).toEqual([1, null]);
+            // The draw over, the part of Alice leaves her tab
+            expect(sessionStorage.getItem('synchronous-chess:sealed-draws:room:alice')).toEqual('{}');
 
             // When the late part comes, then the game starts again
             hub.release();

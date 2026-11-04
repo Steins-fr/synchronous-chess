@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, untracked, WritableSignal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { form, maxLength, submit, validate } from '@angular/forms/signals';
+import { form, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { holdsLink } from '@app/modules/chat-page/components/chat/chat-link';
@@ -137,7 +137,10 @@ export class MinorityTableComponent implements OnDestroy {
     /** A question: too long, or holding a link or an e-mail address, it is refused, its error shown */
     protected readonly questionForm = form(this.questionModel, (path) => {
         requiredText(path.text, this.key(marker('table.question.required', undefined, 'minority')));
-        maxLength(path.text, QUESTION_MAX_LENGTH, { message: this.key(marker('table.question.tooLong', undefined, 'minority')) });
+        // Counted as the session sends it, without its spaces around
+        validate(path.text, ({ value }) => (value().trim().length > QUESTION_MAX_LENGTH
+            ? { kind: 'maxLength', maxLength: QUESTION_MAX_LENGTH, message: this.key(marker('table.question.tooLong', undefined, 'minority')) }
+            : undefined));
         validate(path.text, ({ value }) => (holdsLink(value())
             ? { kind: 'link', message: this.key(marker('table.question.link', undefined, 'minority')) }
             : undefined));
@@ -472,10 +475,21 @@ export class MinorityTableComponent implements OnDestroy {
                 }
                 return session.myVote() === null
                     ? { key: this.key(marker('table.status.voting', undefined, 'minority')), params: { names } }
-                    : { key: this.key(marker('table.status.sealed', undefined, 'minority')), params: { names } };
+                    : this.sealedStatus();
             default:
                 return { key: this.key(marker('table.status.revealing', undefined, 'minority')) };
         }
+    }
+
+    /**
+     * The vote of the local player sealed: the others it waits for, its own commitment still on its way to the chain not
+     * told. Once every other one is sealed, the votes are revealed next
+     */
+    private sealedStatus(): TranslatableText {
+        const others: ReadonlyArray<string> = this.session().awaited().filter((name: string) => name !== this.room().localPlayer.name);
+        return others.length === 0
+            ? { key: this.key(marker('table.status.revealing', undefined, 'minority')) }
+            : { key: this.key(marker('table.status.sealed', undefined, 'minority')), params: { names: others.join(', ') } };
     }
 
     private placeText(standing: Readonly<MinorityStanding>): TranslatableText {

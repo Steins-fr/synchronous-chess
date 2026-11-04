@@ -18,6 +18,7 @@ describe('tableSounds', () => {
         { name: 'the game won', after: { ...EMPTY, result: RESULT }, me: 1, sounds: [SoundEffect.GAME_WON] },
         { name: 'the game lost', after: { ...EMPTY, eliminated: true, result: RESULT }, me: 0, sounds: [SoundEffect.GAME_LOST] },
         { name: 'the game over for a spectator', after: { ...EMPTY, result: RESULT }, me: null, sounds: [SoundEffect.GAME_WON] },
+        { name: 'the game over without winner for a spectator', after: { ...EMPTY, result: { ...RESULT, winners: [] } }, me: null, sounds: [SoundEffect.GAME_DRAW] },
     ])('should play $name', ({ after, me, sounds }) => {
         expect(tableSounds(EMPTY, after, me)).toEqual(sounds);
     });

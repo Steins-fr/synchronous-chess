@@ -241,13 +241,21 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
         const play = vi.spyOn(TestBed.inject(SoundService), 'play');
         expect(TestHelper.cast<{ inMatch(): boolean }>(fixture.componentInstance).inMatch()).toBe(true);
 
-        // When
+        // When her commitment waits for the chain
+        hub.hold('alice');
         await click('Yes');
 
-        // Then
+        // Then the status waits for the others only
         await until(() => status() === 'Sealed: waiting for bob, carol, dave.');
+        expect(session().awaited()).toContain('alice');
+
+        // When the chain orders it
+        hub.release();
+
+        // Then
+        await until(() => text('#seat-0').includes('Sealed'));
+        expect(status()).toEqual('Sealed: waiting for bob, carol, dave.');
         expect(text('#actions')).toEqual('Your vote, yes, is sealed');
-        expect(text('#seat-0')).toContain('Sealed');
 
         // When the reveal of Dave waits
         hub.hold('dave');
@@ -287,6 +295,33 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
         await until(() => fixture.componentInstance.pastResults().length === 1);
         expect(pastLine(fixture.componentInstance.pastResults()[0])).toEqual('Game 1: Winner: dave');
         expect(status()).toEqual('Pick the variant and the time to vote, then start the game.');
+    });
+
+    test('should count the length of a question without its spaces around, and tell the votes revealed next once the others are sealed', async () => {
+        // Given
+        await started();
+
+        // When
+        await ask('a'.repeat(121));
+
+        // Then
+        expect(text('mat-error')).toEqual('120 characters at most');
+
+        // When
+        await ask(`  ${ 'a'.repeat(120) }  `);
+
+        // Then
+        await until(() => text('#question-text') === `“${ 'a'.repeat(120) }”`);
+
+        // When the others are sealed, the commitment of Alice waiting for the chain
+        await othersVote([YES, YES, NO]);
+        await until(() => session().game()?.committed().length === 3);
+        hub.hold('alice');
+        await click('No');
+
+        // Then
+        await until(() => status() === 'The votes are revealed…');
+        hub.release();
     });
 
     test('should tell a tie, then a new question of another player', async () => {

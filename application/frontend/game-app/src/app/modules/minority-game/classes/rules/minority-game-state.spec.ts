@@ -350,6 +350,7 @@ describe('MinorityGameState', () => {
             });
             expect(minority.phase()).toEqual(MinorityPhase.OVER);
             expect(minority.result()?.winners).toEqual([]);
+            expect([minority.asker(), minority.question()]).toEqual([null, null]);
         });
     });
 
