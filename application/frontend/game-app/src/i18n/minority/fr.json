@@ -31,8 +31,8 @@
       "title": "Une question"
     },
     "score": {
-      "absent": "Un joueur qui ne vote pas à temps ne marque rien pour la manche, et les votes ne l'attendent plus jusqu'à ce qu'il vote de nouveau.",
       "end": "Après les 10 manches, le plus haut total gagne, les totaux égaux partageant la place.",
+      "late": "Un joueur qui ne vote pas à temps ne marque rien pour la manche.",
       "points": "Chaque joueur de la minorité marque autant de points que la majorité a de votes : avec 7 oui et 3 non, chaque joueur qui a voté non marque 7.",
       "rounds": "Personne n'est éliminé : la partie dure 10 questions, ses manches.",
       "tie": "Une égalité, ou un vote unanime, ne rapporte rien : la manche compte quand même.",
@@ -45,7 +45,7 @@
     },
     "summary": "Règles du jeu de la minorité",
     "times": {
-      "away": "Un joueur absent est attendu 15 secondes de plus, une fois.",
+      "awayOnce": "Un joueur absent est attendu 15 secondes de plus, une fois ; en variante score, un vote n'attend plus davantage un joueur qui a manqué le vote précédent.",
       "phases": "Une question attend 60 secondes, un vote la durée choisie au départ, une révélation 15 secondes : chacun se ferme dès que tous les joueurs ont agi.",
       "title": "Les temps"
     },
@@ -69,7 +69,7 @@
       "question": "Question {round} · {count, plural, one {# joueur en lice} other {# joueurs en lice}}",
       "round": "Manche {round} sur {rounds}",
       "stakes": "Cagnotte : {amount, plural, one {# million} other {# millions}}",
-      "variant": "{variant, select, elimination {Élimination} other {Score}} · votes de {seconds} s"
+      "variantTime": "{variant, select, elimination {Élimination} other {Score}} · votes de {unit, select, minutes {{count} min} other {{count} s}}"
     },
     "move": {
       "asked": "Question {round}, posée par {name} : « {question} »",

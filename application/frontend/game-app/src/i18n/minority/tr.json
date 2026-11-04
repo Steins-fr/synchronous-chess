@@ -31,8 +31,8 @@
       "title": "Bir soru"
     },
     "score": {
-      "absent": "Zamanında oy vermeyen oyuncu o raunttan puan almaz ve yeniden oy verene kadar oylamalar onu beklemez.",
       "end": "10 rauntun sonunda en yüksek toplam kazanır, eşit toplamlar sırayı paylaşır.",
+      "late": "Zamanında oy vermeyen oyuncu o raunttan puan almaz.",
       "points": "Azınlıktaki her oyuncu, çoğunluğun oy sayısı kadar puan alır: 7 evet ve 3 hayır ile hayır oyu veren her oyuncu 7 puan alır.",
       "rounds": "Kimse elenmez: oyun 10 soru, yani 10 raunt sürer.",
       "tie": "Bir eşitlik ya da oybirliği puan getirmez: raunt yine de sayılır.",
@@ -45,7 +45,7 @@
     },
     "summary": "Azınlık oyununun kuralları",
     "times": {
-      "away": "Uzaktaki bir oyuncu bir kez 15 saniye daha beklenir.",
+      "awayOnce": "Uzaktaki bir oyuncu bir kez 15 saniye daha beklenir; skor varyantında, önceki oylamayı kaçıran bir oyuncu için oylamaya bu ek süre verilmez.",
       "phases": "Bir soru 60 saniye, bir oylama başlangıçta seçilen süre, bir açıklama 15 saniye bekler: her biri tüm oyuncular hamlesini yapar yapmaz kapanır.",
       "title": "Süreler"
     },
@@ -69,7 +69,7 @@
       "question": "Soru {round} · {count, plural, one {oyunda # oyuncu} other {oyunda # oyuncu}}",
       "round": "Raunt {round}/{rounds}",
       "stakes": "Ödül havuzu: {amount, plural, one {# milyon} other {# milyon}}",
-      "variant": "{variant, select, elimination {Eleme} other {Skor}} · {seconds} sn oylama"
+      "variantTime": "{variant, select, elimination {Eleme} other {Skor}} · {unit, select, minutes {{count} dk} other {{count} sn}} oylama"
     },
     "move": {
       "asked": "Soru {round}, soran {name}: “{question}”",

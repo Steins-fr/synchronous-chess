@@ -104,8 +104,13 @@ interface MinorityState {
     readonly scores: ReadonlyArray<number>;
     /** The question that eliminated each player, none for a player still in */
     readonly eliminatedAt: ReadonlyArray<number | null>;
-    /** The players who let a phase close without acting: not drawn to ask, nor awaited in the score variant, until they vote again */
+    /** The players who let a phase close without acting: not drawn to ask until they act again. Every vote waits for them still */
     readonly absent: ReadonlyArray<number>;
+    /**
+     * In the score variant, the players absent since a vote they missed, until they act again: their next votes missed
+     * are not told again, and a page gives no more time to a vote waiting for them away
+     */
+    readonly gone: ReadonlyArray<number>;
     readonly events: ReadonlyArray<Readonly<MinorityEvent>>;
     /** Counts the phases of the game: a claim of a timeout names the step it waited at */
     readonly step: number;
@@ -137,6 +142,7 @@ export class MinorityGameState {
     public readonly scores: Signal<ReadonlyArray<number>> = computed(() => this._state().scores);
     public readonly eliminatedAt: Signal<ReadonlyArray<number | null>> = computed(() => this._state().eliminatedAt);
     public readonly absent: Signal<ReadonlyArray<number>> = computed(() => this._state().absent);
+    public readonly gone: Signal<ReadonlyArray<number>> = computed(() => this._state().gone);
     public readonly events: Signal<ReadonlyArray<Readonly<MinorityEvent>>> = computed(() => this._state().events);
     public readonly step: Signal<number> = computed(() => this._state().step);
     public readonly result: Signal<MinorityResult | null> = computed(() => this._state().result);
@@ -213,6 +219,7 @@ export class MinorityGameState {
             phase: MinorityPhase.VOTING,
             question,
             absent: without(state.absent, [player]),
+            gone: without(state.gone, [player]),
             events: [...state.events, { kind: MinorityEventKind.ASKED, round: state.round, asker: player, question }],
             step: state.step + 1,
         });
@@ -230,7 +237,7 @@ export class MinorityGameState {
             return Applied.ILLEGAL;
         }
 
-        this.move({ ...state, committed: [...state.committed, player], absent: without(state.absent, [player]) });
+        this.move({ ...state, committed: [...state.committed, player], absent: without(state.absent, [player]), gone: without(state.gone, [player]) });
         return Applied.APPLIED;
     }
 
@@ -270,7 +277,8 @@ export class MinorityGameState {
             return;
         }
 
-        const absent: ReadonlyArray<number> = [...state.absent, ...late];
+        // A player absent already, awaited by a vote again, stays absent once
+        const absent: ReadonlyArray<number> = [...state.absent, ...without(late, state.absent)];
         switch (state.phase) {
             case MinorityPhase.ASKING: {
                 const told: MinorityState = {
@@ -283,9 +291,16 @@ export class MinorityGameState {
                     : { ...told, ask: state.ask + 1, asker: null, step: state.step + 1 });
                 break;
             }
-            case MinorityPhase.VOTING:
-                this.move({ ...state, late: [...state.late, ...late], absent, events: [...state.events, this.missed(state, MissedReason.LATE, late)] });
+            case MinorityPhase.VOTING: {
+                // A player gone misses its votes told once: only the score variant keeps it, a vote missed eliminating otherwise
+                const newlyLate: ReadonlyArray<number> = without(late, state.gone);
+                const gone: ReadonlyArray<number> = this.variant === MinorityVariant.SCORE ? [...state.gone, ...newlyLate] : state.gone;
+                const events: ReadonlyArray<Readonly<MinorityEvent>> = newlyLate.length === 0
+                    ? state.events
+                    : [...state.events, this.missed(state, MissedReason.LATE, newlyLate)];
+                this.move({ ...state, late: [...state.late, ...late], absent, gone, events });
                 break;
+            }
             default:
                 this.move({
                     ...state,
@@ -314,6 +329,7 @@ export class MinorityGameState {
             scores: this.everyone().map(() => 0),
             eliminatedAt: this.everyone().map(() => null),
             absent: [],
+            gone: [],
             events: [],
             step: 0,
             result: null,
@@ -337,8 +353,8 @@ export class MinorityGameState {
             case MinorityPhase.ASKING:
                 return state.asker === null ? [] : [state.asker];
             case MinorityPhase.VOTING:
-                // A vote missed eliminates in the elimination variant: the vote waits for the players absent too
-                return without(state.alive, [...state.committed, ...state.late, ...(this.variant === MinorityVariant.SCORE ? state.absent : [])]);
+                // Every vote waits for every player still in, absent ones too: a player back always gets the time to vote
+                return without(state.alive, [...state.committed, ...state.late]);
             case MinorityPhase.REVEALING:
                 return without(state.committed, state.settled);
             case MinorityPhase.OVER:

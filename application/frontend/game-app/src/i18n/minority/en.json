@@ -31,8 +31,8 @@
       "title": "A question"
     },
     "score": {
-      "absent": "A player who does not vote in time scores nothing for the round, and the votes no longer wait for it until it votes again.",
       "end": "After the 10 rounds, the highest total wins, equal totals sharing the place.",
+      "late": "A player who does not vote in time scores nothing for the round.",
       "points": "Each player of the minority scores as many points as the majority has votes: with 7 yes and 3 no, each player who voted no scores 7.",
       "rounds": "Nobody is eliminated: the game lasts 10 questions, its rounds.",
       "tie": "A tie, or a unanimous vote, scores nothing: the round counts all the same.",
@@ -45,7 +45,7 @@
     },
     "summary": "Rules of the minority game",
     "times": {
-      "away": "A player away is waited for 15 seconds more, once.",
+      "awayOnce": "A player away is waited for 15 seconds more, once; in the score variant, a vote no longer waits longer for a player who missed the vote before.",
       "phases": "A question waits 60 seconds, a vote the time picked at the start, a reveal 15 seconds: each one closes as soon as every player acted.",
       "title": "The times"
     },
@@ -69,7 +69,7 @@
       "question": "Question {round} · {count, plural, one {# player in} other {# players in}}",
       "round": "Round {round} of {rounds}",
       "stakes": "Prize pool: {amount, plural, one {# million} other {# million}}",
-      "variant": "{variant, select, elimination {Elimination} other {Score}} · votes of {seconds} s"
+      "variantTime": "{variant, select, elimination {Elimination} other {Score}} · votes of {unit, select, minutes {{count} min} other {{count} s}}"
     },
     "move": {
       "asked": "Question {round}, asked by {name}: “{question}”",

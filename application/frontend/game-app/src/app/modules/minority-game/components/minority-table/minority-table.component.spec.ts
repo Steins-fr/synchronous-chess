@@ -173,7 +173,7 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
         await until(() => session().game() !== null);
 
         // Then
-        expect([text('#round'), text('#variant'), text('#stakes')]).toEqual(['Question 1 · 4 players in', 'Elimination · votes of 60 s', 'Prize pool: 400 million']);
+        expect([text('#round'), text('#variant'), text('#stakes')]).toEqual(['Question 1 · 4 players in', 'Elimination · votes of 1 min', 'Prize pool: 400 million']);
     });
 
     test('should tell the players seated wait for one of them to start, and the players drawing who asks', async () => {
@@ -194,8 +194,8 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
     });
 
     test('should tell the asker is drawn, until it is', async () => {
-        // Given the draw of the asker waits
-        vi.mocked(SeededRandom.prototype.below).mockReturnValueOnce(new Promise(() => undefined));
+        // Given the draw of the asker waits, on every page
+        vi.mocked(SeededRandom.prototype.below).mockReturnValue(new Promise(() => undefined));
 
         // When
         await seated();
@@ -604,6 +604,71 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
             expect(status()).toEqual('Vote yes or no, sealed.');
             await click('Yes');
             await until(() => status() === 'Waiting for dave to come back…');
+        });
+
+        test('should wait longer for a player away during the draw', async () => {
+            // Given the draw waiting for Dave
+            await seated();
+            hub.hold('dave');
+            await click('Start the game');
+            await until(() => status() === 'The players draw who asks: waiting for dave.');
+
+            // When
+            hub.leave(rooms.get('dave') as Room<MinorityPayloads>);
+            await until(() => session().awayPlayers().length === 1);
+            await elapse(LIGHT.drawTime - 1);
+
+            // Then
+            expect(text('#vote-clock')).toEqual(`0:${ LIGHT.awayTime + 1 }`);
+        });
+
+        test('should wait longer for a player away late to ask, at the vote', async () => {
+            // Given Dave drawn to ask among the 4 players, on every page, then the first candidate; Dave away
+            vi.mocked(SeededRandom.prototype.below).mockImplementation((count: number) => Promise.resolve(count === 4 ? 3 : 0));
+            await seated();
+            await click('Start the game');
+            await until(() => status() === 'dave asks a question…');
+            hub.leave(rooms.get('dave') as Room<MinorityPayloads>);
+            await until(() => session().awayPlayers().length === 1);
+            hub.time = LATER;
+            await elapse(LIGHT.questionTime + LIGHT.awayTime);
+            await until(() => status() === 'Ask a question answered by yes or no.');
+
+            // When
+            await asked();
+            await click('Yes');
+            await othersVote([YES, NO]);
+            await elapse(LIGHT.defaultVoteTime - 1);
+
+            // Then
+            expect(text('#vote-clock')).toEqual(`0:${ LIGHT.awayTime + 1 }`);
+        });
+
+        test('should give no more time to a vote waiting for a player away already late, its seat skipped still', async () => {
+            // Given Dave away, late at the first vote of a score game
+            await started(['Variant', 'Score']);
+            await asked();
+            hub.leave(rooms.get('dave') as Room<MinorityPayloads>);
+            await until(() => session().awayPlayers().length === 1);
+            await click('Yes');
+            await othersVote([YES, NO]);
+            await elapse(LIGHT.defaultVoteTime - 1);
+            expect(text('#vote-clock')).toEqual(`0:${ LIGHT.awayTime + 1 }`);
+            hub.time = LATER;
+            await elapse(LIGHT.awayTime + 1);
+            await until(() => status() === 'bob asks a question…');
+            expect(text('#seat-3')).toContain('Skipped');
+
+            // When the second vote waits for Dave
+            of('bob').ask('Is it late?');
+            await until(() => status() === 'Vote yes or no, sealed.');
+            await click('Yes');
+            await othersVote([YES, NO]);
+            await elapse(LIGHT.defaultVoteTime - 1);
+
+            // Then
+            expect(text('#vote-clock')).toEqual('0:01');
+            expect(text('#seat-3')).toContain('Skipped');
         });
     });
 });

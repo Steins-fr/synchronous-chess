@@ -1,4 +1,4 @@
-import { holdsLink } from '@app/modules/chat-page/components/chat/chat-link';
+import { holdsLink } from '@app/helpers/link.helper';
 
 /** The longest question, in characters: a question answered by yes or no is short */
 export const QUESTION_MAX_LENGTH: number = 120;

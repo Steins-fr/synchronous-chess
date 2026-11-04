@@ -1,6 +1,7 @@
 import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { commitmentOf } from '@app/modules/commit-reveal/classes/commitment';
+import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -525,6 +526,29 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
             expect(gameOf('eve').absent()).toEqual([PLAYERS.indexOf(asker)]);
         });
 
+        test('should give no more time to the votes waiting for a player away gone since the vote it missed', async () => {
+            // Given Dave away during the first vote of a score game
+            await started(SCORE);
+            await asked();
+            await Promise.all(['alice', 'bob', 'carol'].map((name: string) => of(name).vote(YES)));
+            hub.leave(rooms.get('dave') as Room<MinorityPayloads>);
+            of('dave').destroy();
+            sessions.delete('dave');
+            await settled((session: MinoritySession) => session.awaitedAway().join() === 'dave');
+
+            // Then
+            expect(of('eve').extendingAway()).toEqual(['dave']);
+
+            // When the vote times out, then the next one opens
+            claim('alice');
+            await settled((session: MinoritySession) => session.game()?.round() === 1);
+            expect(of('eve').extendingAway()).toEqual([]);
+            await asked();
+
+            // Then
+            expect([of('eve').awaitedAway(), of('eve').extendingAway(), gameOf('eve').gone()]).toEqual([['dave'], [], [3]]);
+        });
+
         test('should commit to the question voted, a timeout applied while the vote is sealed moving to the next one', async () => {
             // Given
             await started();
@@ -546,9 +570,10 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
             hashed();
             await voting;
 
-            // Then his commitment names the question he voted on: the next question ignores it
+            // Then his commitment names the question he voted on: the next question ignores it, his page its seal
             expect(messagesOf(MGGameSessionType.COMMIT, 'dave').map((message: AppMessage) => message.payload)).toMatchObject([{ round: 0, ask: 0 }]);
             expect(gameOf('eve').committed()).toEqual([]);
+            await eventually(() => expect(sessionStorage.getItem('synchronous-chess:sealed-votes:room:dave')).toEqual('{}'));
         });
 
         test('should void a claim coming before the time of the vote picked, its claimer waiting again', async () => {
@@ -720,6 +745,74 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
         // Then
         expect(lastEvent()).toMatchObject({ outcome: VoteOutcome.MINORITY, eliminated: [0, 2, 3] });
         expect(hub.reports).toEqual([]);
+    });
+
+    test('should keep the seal of a commitment of the local player taken, delivered again', async () => {
+        // Given
+        await started();
+        await asked();
+        await of('bob').vote(NO);
+        await settled((session: MinoritySession) => session.game()?.committed().length === 1);
+        const sealed: string | null = sessionStorage.getItem('synchronous-chess:sealed-votes:room:bob');
+
+        // When
+        hub.replay(rooms.get('bob') as Room<MinorityPayloads>, messagesOf(MGGameSessionType.COMMIT, 'bob'));
+        await new Promise((resolve) => setTimeout(resolve));
+
+        // Then
+        expect(sealed).not.toEqual('{}');
+        expect(sessionStorage.getItem('synchronous-chess:sealed-votes:room:bob')).toEqual(sealed);
+    });
+
+    test('should clear the seals left once the game is over, a page reloaded in the next game keeping its vote', async () => {
+        // Given the seal of a commitment of Bob lost on its way
+        new SealedStore<unknown>('votes', 'room', 'bob').save('lost', { key: '0:0', vote: YES, salt: 'salt' });
+        await started();
+        await asked();
+
+        // When
+        await voted([YES, YES, YES, NO]);
+
+        // Then
+        await eventually(() => expect(sessionStorage.getItem('synchronous-chess:sealed-votes:room:bob')).toEqual('{}'));
+        const firstGame: number = hub.delivered.length;
+
+        // When Bob votes in the next game, then reloads the page, its history caught up in two parts: the first game over
+        ['eve', 'bob', 'carol'].forEach((name: string) => of(name).rematch());
+        await settled((session: MinoritySession) => session.pastGames().length === 1);
+        of('dave').start(ELIMINATION);
+        await asked();
+        await of('bob').vote(NO);
+        await settled((session: MinoritySession) => session.game()?.committed().length === 1);
+        of('bob').destroy();
+        hub.close(rooms.get('bob') as Room<MinorityPayloads>);
+        const reloaded: MinoritySession = page('bob');
+        hub.replay(rooms.get('bob') as Room<MinorityPayloads>, hub.delivered.slice(0, firstGame));
+        await eventually(() => expect(reloaded.over()).toBe(true));
+        hub.replay(rooms.get('bob') as Room<MinorityPayloads>, hub.delivered.slice(firstGame));
+
+        // Then
+        await eventually(() => expect([reloaded.played().index, reloaded.myVote()]).toEqual([1, NO]));
+    });
+
+    test('should clear the seals left of a game over in the history of a page reloaded once a new game starts', async () => {
+        // Given Bob reloading the page once the game is over, a seal of his left
+        await started();
+        await asked();
+        await voted([YES, YES, YES, NO]);
+        of('bob').destroy();
+        hub.close(rooms.get('bob') as Room<MinorityPayloads>);
+        const reloaded: MinoritySession = page('bob');
+        hub.replay(rooms.get('bob') as Room<MinorityPayloads>);
+        await eventually(() => expect(reloaded.over()).toBe(true));
+        new SealedStore<unknown>('votes', 'room', 'bob').save('lost', { key: '0:0', vote: YES, salt: 'salt' });
+
+        // When
+        ['eve', 'bob', 'carol'].forEach((name: string) => of(name).rematch());
+
+        // Then
+        await settled((session: MinoritySession) => session.pastGames().length === 1);
+        expect(sessionStorage.getItem('synchronous-chess:sealed-votes:room:bob')).toEqual('{}');
     });
 
     test('should play a new game once the former one is over, with its own setup and commitments', async () => {

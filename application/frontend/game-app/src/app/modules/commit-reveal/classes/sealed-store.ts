@@ -42,6 +42,13 @@ export class SealedStore<T> {
         }
     }
 
+    /** Removes every value: none is to reveal anymore */
+    public clear(): void {
+        if (Object.keys(this.read()).length > 0) {
+            this.write({});
+        }
+    }
+
     private read(): Readonly<Record<SealedId, Readonly<T>>> {
         try {
             return JSON.parse(this.storage().getItem(this.key) ?? '{}');

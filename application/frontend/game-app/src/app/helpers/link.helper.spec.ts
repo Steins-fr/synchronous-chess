@@ -1,4 +1,4 @@
-import { holdsLink } from './chat-link';
+import { holdsLink } from './link.helper';
 import { describe, expect, test } from 'vitest';
 
 describe('holdsLink', () => {

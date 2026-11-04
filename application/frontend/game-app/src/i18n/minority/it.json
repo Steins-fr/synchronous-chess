@@ -31,8 +31,8 @@
       "title": "Una domanda"
     },
     "score": {
-      "absent": "Un giocatore che non vota in tempo non fa punti nella manche, e i voti non lo aspettano più finché non vota di nuovo.",
       "end": "Dopo le 10 manche, vince il totale più alto, i totali uguali dividendo il posto.",
+      "late": "Un giocatore che non vota in tempo non fa punti nella manche.",
       "points": "Ogni giocatore della minoranza fa tanti punti quanti voti ha la maggioranza: con 7 sì e 3 no, ogni giocatore che ha votato no fa 7.",
       "rounds": "Nessuno viene eliminato: la partita dura 10 domande, le sue manche.",
       "tie": "Una parità, o un voto unanime, non dà punti: la manche conta lo stesso.",
@@ -45,7 +45,7 @@
     },
     "summary": "Regole del gioco della minoranza",
     "times": {
-      "away": "Un giocatore assente viene atteso 15 secondi in più, una volta.",
+      "awayOnce": "Un giocatore assente viene atteso 15 secondi in più, una volta; nella variante punteggio, un voto non attende più a lungo un giocatore che ha saltato il voto precedente.",
       "phases": "Una domanda attende 60 secondi, un voto il tempo scelto all'inizio, una rivelazione 15 secondi: ciascuno si chiude appena tutti i giocatori hanno agito.",
       "title": "I tempi"
     },
@@ -69,7 +69,7 @@
       "question": "Domanda {round} · {count, plural, one {# giocatore in gioco} other {# giocatori in gioco}}",
       "round": "Manche {round} di {rounds}",
       "stakes": "Montepremi: {amount, plural, one {# milione} other {# milioni}}",
-      "variant": "{variant, select, elimination {Eliminazione} other {Punteggio}} · voti di {seconds} s"
+      "variantTime": "{variant, select, elimination {Eliminazione} other {Punteggio}} · voti di {unit, select, minutes {{count} min} other {{count} s}}"
     },
     "move": {
       "asked": "Domanda {round}, fatta da {name}: «{question}»",

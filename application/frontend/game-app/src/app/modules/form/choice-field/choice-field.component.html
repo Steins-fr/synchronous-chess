@@ -1,8 +1,15 @@
-<fieldset class="m-0 p-0 border-0 min-w-0 flex flex-col gap-1">
+<fieldset class="m-0 p-0 border-0 min-w-0 flex flex-col">
     <legend [id]="legendId" class="p-0 mb-1 mat-label-large text-app-text-muted">{{ label() }}</legend>
-    <mat-button-toggle-group [attr.aria-labelledby]="legendId" [formField]="field()" hideSingleSelectionIndicator>
+    <mat-button-toggle-group [attr.aria-labelledby]="legendId" [attr.aria-invalid]="error() ? true : null"
+        [attr.aria-describedby]="error() ? errorId : null" [formField]="field()" hideSingleSelectionIndicator>
         @for (option of options(); track option.value) {
         <mat-button-toggle [value]="option.value">{{ option.label.key | transloco: option.label.params }}</mat-button-toggle>
         }
     </mat-button-toggle-group>
+    <!-- Once the field is touched and invalid: the message given by the rule of the schema, told by a screen reader -->
+    <div aria-live="polite">
+        @if (error(); as error) {
+        <mat-error [id]="errorId" class="mt-1 mat-body-small text-(--mat-sys-error)">{{ error.key | transloco: error.params }}</mat-error>
+        }
+    </div>
 </fieldset>

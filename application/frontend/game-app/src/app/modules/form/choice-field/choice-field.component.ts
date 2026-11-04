@@ -1,7 +1,9 @@
-import { Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { FieldTree, FormField } from '@angular/forms/signals';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatError } from '@angular/material/form-field';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { fieldError } from '@app/modules/form/field-error';
 import { TranslatableText } from '@app/types/translatable-text.type';
 
 /** An option of a choice field: its value, and the key of its label */
@@ -18,7 +20,7 @@ let nextId: number = 0;
  */
 @Component({
     selector: 'app-choice-field',
-    imports: [MatButtonToggleGroup, MatButtonToggle, FormField, TranslocoPipe],
+    imports: [MatButtonToggleGroup, MatButtonToggle, MatError, FormField, TranslocoPipe],
     templateUrl: './choice-field.component.html',
     host: {
         class: 'block',
@@ -31,4 +33,7 @@ export class ChoiceFieldComponent {
     public readonly options = input.required<ReadonlyArray<Readonly<ChoiceOption>>>();
 
     protected readonly legendId: string = `choice-field-${ ++nextId }`;
+    protected readonly errorId: string = `${ this.legendId }-error`;
+    /** The first error of the field once touched, translated by the template */
+    protected readonly error = computed<TranslatableText | undefined>(() => (this.field()().touched() ? fieldError(this.field()) : undefined));
 }

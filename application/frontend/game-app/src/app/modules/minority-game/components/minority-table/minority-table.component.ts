@@ -3,8 +3,8 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
-import { holdsLink } from '@app/modules/chat-page/components/chat/chat-link';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
+import { noLink } from '@app/modules/form/rules/no-link.rule';
 import { requiredText } from '@app/modules/form/rules/required-text.rule';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
@@ -40,6 +40,17 @@ export const MINORITY_SESSION_OPTIONS = new InjectionToken<MinoritySessionOption
 /** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
 const RETRY_TIME: number = 5;
 const SECONDS_PER_MINUTE: number = 60;
+
+/** The unit a time of a vote shows in, a select of its text */
+enum TimeUnit {
+    SECONDS = 'seconds',
+    MINUTES = 'minutes',
+}
+
+/** A time of a vote as the setup offers it: in seconds under a minute, else in minutes */
+function voteTimeOf(seconds: number): Readonly<{ unit: TimeUnit; count: number }> {
+    return seconds < SECONDS_PER_MINUTE ? { unit: TimeUnit.SECONDS, count: seconds } : { unit: TimeUnit.MINUTES, count: seconds / SECONDS_PER_MINUTE };
+}
 
 /** A seat of the table, as it shows */
 interface SeatView {
@@ -125,12 +136,15 @@ export class MinorityTableComponent implements OnDestroy {
         { value: MinorityVariant.SCORE, label: { key: this.key(marker('table.start.score', undefined, 'minority')) } },
     ];
     protected readonly voteTimes: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
-        this.session().rules.voteTimes.map((time: number): ChoiceOption => ({
-            value: String(time),
-            label: time < SECONDS_PER_MINUTE
-                ? { key: this.key(marker('table.start.seconds', undefined, 'minority')), params: { count: time } }
-                : { key: this.key(marker('table.start.minutes', undefined, 'minority')), params: { count: time / SECONDS_PER_MINUTE } },
-        })));
+        this.session().rules.voteTimes.map((seconds: number): ChoiceOption => {
+            const { unit, count } = voteTimeOf(seconds);
+            return {
+                value: String(seconds),
+                label: unit === TimeUnit.SECONDS
+                    ? { key: this.key(marker('table.start.seconds', undefined, 'minority')), params: { count } }
+                    : { key: this.key(marker('table.start.minutes', undefined, 'minority')), params: { count } },
+            };
+        }));
 
     /** The question the asker types, empty for each question */
     private readonly questionModel: WritableSignal<Readonly<{ text: string }>> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ text: '' }) });
@@ -141,9 +155,7 @@ export class MinorityTableComponent implements OnDestroy {
         validate(path.text, ({ value }) => (value().trim().length > QUESTION_MAX_LENGTH
             ? { kind: 'maxLength', maxLength: QUESTION_MAX_LENGTH, message: this.key(marker('table.question.tooLong', undefined, 'minority')) }
             : undefined));
-        validate(path.text, ({ value }) => (holdsLink(value())
-            ? { kind: 'link', message: this.key(marker('table.question.link', undefined, 'minority')) }
-            : undefined));
+        noLink(path.text, this.key(marker('table.question.link', undefined, 'minority')));
     }, { name: 'minority-question' });
 
     /** The seats, from the bottom one of the local player, a spectator seeing the table from the first free seat */
@@ -196,7 +208,7 @@ export class MinorityTableComponent implements OnDestroy {
         }
         const variant: InfoView = {
             id: 'variant',
-            text: { key: this.key(marker('table.info.variant', undefined, 'minority')), params: { variant: game.variant, seconds: game.setup.voteTime } },
+            text: { key: this.key(marker('table.info.variantTime', undefined, 'minority')), params: { variant: game.variant, ...voteTimeOf(game.setup.voteTime) } },
         };
         if (game.variant === MinorityVariant.SCORE) {
             const round: number = Math.min(game.round() + 1, this.session().rules.rounds);
@@ -251,13 +263,10 @@ export class MinorityTableComponent implements OnDestroy {
     private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
     private readonly clockKey: Signal<string | null> = computed((): string | null =>
         this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** The players the game waits for who are away */
-    private readonly awaitedAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const away: ReadonlyArray<string> = this.session().awayPlayers();
-        return this.session().awaited().filter((name: string) => away.includes(name));
-    });
-    /** A player the game waits for is away: it gets more time, once */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.awaitedAway().length > 0);
+    /** A player the game waits for is away */
+    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.session().awaitedAway().length > 0);
+    /** A player the game waits for is away, giving the phase more time, once */
+    private readonly extendedAway: Signal<boolean> = computed((): boolean => this.session().extendingAway().length > 0);
     /** The round the clock runs for, from its start: a late tick of a phase closed acts on nothing */
     private clocked: string | null = null;
     /** The seconds left to the players the phase waits for */
@@ -270,7 +279,7 @@ export class MinorityTableComponent implements OnDestroy {
                 awayTime: this.session().rules.awayTime,
             };
         },
-        away: this.waitingAway,
+        away: this.extendedAway,
         timeOut: () => this.timeOut(),
     });
     protected readonly clock: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
@@ -299,7 +308,7 @@ export class MinorityTableComponent implements OnDestroy {
         }
         // The local player to act reads its own prompt
         if (this.waitingAway() && !this.myTurn()) {
-            return { key: this.key(marker('table.status.away', undefined, 'minority')), params: { names: this.awaitedAway().join(', ') } };
+            return { key: this.key(marker('table.status.away', undefined, 'minority')), params: { names: this.session().awaitedAway().join(', ') } };
         }
         return this.phaseStatus(game, names);
     });

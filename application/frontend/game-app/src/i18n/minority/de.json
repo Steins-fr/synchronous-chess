@@ -31,8 +31,8 @@
       "title": "Eine Frage"
     },
     "score": {
-      "absent": "Wer nicht rechtzeitig abstimmt, bekommt in diesem Durchgang keine Punkte, und die Abstimmungen warten nicht mehr auf ihn, bis er wieder abstimmt.",
       "end": "Nach den 10 Durchgängen gewinnt die höchste Summe, gleiche Summen teilen sich den Rang.",
+      "late": "Wer nicht rechtzeitig abstimmt, bekommt in diesem Durchgang keine Punkte.",
       "points": "Jeder Spieler der Minderheit bekommt so viele Punkte, wie die Mehrheit Stimmen hat: Bei 7 Ja und 3 Nein bekommt jeder, der mit Nein gestimmt hat, 7.",
       "rounds": "Niemand scheidet aus: Die Partie dauert 10 Fragen, ihre Durchgänge.",
       "tie": "Ein Gleichstand oder eine einstimmige Abstimmung bringt keine Punkte: Der Durchgang zählt trotzdem.",
@@ -45,7 +45,7 @@
     },
     "summary": "Regeln des Minderheitsspiels",
     "times": {
-      "away": "Auf einen abwesenden Spieler wird einmal 15 Sekunden länger gewartet.",
+      "awayOnce": "Auf einen abwesenden Spieler wird einmal 15 Sekunden länger gewartet; in der Variante Punktestand wartet eine Abstimmung nicht länger auf einen Spieler, der die vorige verpasst hat.",
       "phases": "Eine Frage wartet 60 Sekunden, eine Abstimmung die beim Start gewählte Zeit, ein Aufdecken 15 Sekunden: Jede Phase endet, sobald alle Spieler gehandelt haben.",
       "title": "Die Zeiten"
     },
@@ -69,7 +69,7 @@
       "question": "Frage {round} · {count, plural, one {# Spieler dabei} other {# Spieler dabei}}",
       "round": "Durchgang {round} von {rounds}",
       "stakes": "Preisgeld: {amount, plural, one {# Million} other {# Millionen}}",
-      "variant": "{variant, select, elimination {Ausscheidung} other {Punktestand}} · Abstimmungen von {seconds} s"
+      "variantTime": "{variant, select, elimination {Ausscheidung} other {Punktestand}} · Abstimmungen von {unit, select, minutes {{count} Min.} other {{count} s}}"
     },
     "move": {
       "asked": "Frage {round}, gestellt von {name}: „{question}“",

@@ -31,8 +31,8 @@
       "title": "Uma pergunta"
     },
     "score": {
-      "absent": "Um jogador que não vote a tempo não marca nada na ronda, e os votos deixam de esperar por ele até que volte a votar.",
       "end": "Depois das 10 rondas, o maior total vence, e os totais iguais partilham a posição.",
+      "late": "Um jogador que não vote a tempo não marca nada na ronda.",
       "points": "Cada jogador da minoria marca tantos pontos quantos votos tem a maioria: com 7 sim e 3 não, cada jogador que votou não marca 7.",
       "rounds": "Ninguém é eliminado: a partida dura 10 perguntas, as suas rondas.",
       "tie": "Um empate, ou um voto unânime, não dá pontos: a ronda conta na mesma.",
@@ -45,7 +45,7 @@
     },
     "summary": "Regras do jogo da minoria",
     "times": {
-      "away": "Um jogador ausente é esperado mais 15 segundos, uma vez.",
+      "awayOnce": "Um jogador ausente é esperado mais 15 segundos, uma vez; na variante pontuação, um voto já não espera mais tempo por um jogador que falhou o voto anterior.",
       "phases": "Uma pergunta espera 60 segundos, um voto o tempo escolhido no início, uma revelação 15 segundos: cada um fecha assim que todos os jogadores tiverem agido.",
       "title": "Os tempos"
     },
@@ -69,7 +69,7 @@
       "question": "Pergunta {round} · {count, plural, one {# jogador em jogo} other {# jogadores em jogo}}",
       "round": "Ronda {round} de {rounds}",
       "stakes": "Prémio: {amount, plural, one {# milhão} other {# milhões}}",
-      "variant": "{variant, select, elimination {Eliminação} other {Pontuação}} · votos de {seconds} s"
+      "variantTime": "{variant, select, elimination {Eliminação} other {Pontuação}} · votos de {unit, select, minutes {{count} min} other {{count} s}}"
     },
     "move": {
       "asked": "Pergunta {round}, feita por {name}: “{question}”",

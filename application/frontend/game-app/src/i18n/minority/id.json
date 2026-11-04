@@ -31,8 +31,8 @@
       "title": "Sebuah pertanyaan"
     },
     "score": {
-      "absent": "Pemain yang tidak memberi suara tepat waktu tidak mencetak poin di ronde itu, dan pemberian suara tidak lagi menunggunya sampai ia memberi suara lagi.",
       "end": "Setelah 10 ronde, total tertinggi menang, total yang sama berbagi peringkat.",
+      "late": "Pemain yang tidak memberi suara tepat waktu tidak mencetak poin di ronde itu.",
       "points": "Setiap pemain minoritas mencetak poin sebanyak jumlah suara mayoritas: dengan 7 ya dan 3 tidak, setiap pemain yang memilih tidak mencetak 7.",
       "rounds": "Tidak ada yang tersingkir: permainan berlangsung 10 pertanyaan, yaitu ronde-rondenya.",
       "tie": "Hasil seri, atau suara bulat, tidak memberi poin: rondenya tetap dihitung.",
@@ -45,7 +45,7 @@
     },
     "summary": "Aturan permainan minoritas",
     "times": {
-      "away": "Pemain yang sedang pergi ditunggu 15 detik lebih lama, satu kali.",
+      "awayOnce": "Pemain yang sedang pergi ditunggu 15 detik lebih lama, satu kali; di varian skor, pemberian suara tidak lagi menunggu lebih lama pemain yang melewatkan pemberian suara sebelumnya.",
       "phases": "Sebuah pertanyaan menunggu 60 detik, pemberian suara selama waktu yang dipilih di awal, pengungkapan 15 detik: masing-masing ditutup begitu semua pemain bertindak.",
       "title": "Waktu"
     },
@@ -69,7 +69,7 @@
       "question": "Pertanyaan {round} · {count, plural, other {# pemain bertahan}}",
       "round": "Ronde {round} dari {rounds}",
       "stakes": "Hadiah: {amount, plural, other {# juta}}",
-      "variant": "{variant, select, elimination {Eliminasi} other {Skor}} · suara {seconds} dtk"
+      "variantTime": "{variant, select, elimination {Eliminasi} other {Skor}} · suara {unit, select, minutes {{count} mnt} other {{count} dtk}}"
     },
     "move": {
       "asked": "Pertanyaan {round}, diajukan oleh {name}: “{question}”",

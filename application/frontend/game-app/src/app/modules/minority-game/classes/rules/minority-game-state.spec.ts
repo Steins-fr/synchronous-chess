@@ -387,7 +387,7 @@ describe('MinorityGameState', () => {
             expect(minority.result()?.winners).toEqual([0, 1, 2, 3]);
         });
 
-        test('should score 0 to a player not voting in time, then absent and not awaited until it votes again', () => {
+        test('should score 0 to a player not voting in time, absent from the draw of the askers, but awaited by the next vote', () => {
             // Given
             const minority: MinorityGameState = game(4, MinorityVariant.SCORE);
             asked(minority, 0);
@@ -406,9 +406,67 @@ describe('MinorityGameState', () => {
             asked(minority, 1);
 
             // Then
-            expect(minority.awaited()).toEqual([0, 1, 2]);
+            expect(minority.awaited()).toEqual([0, 1, 2, 3]);
             expect(minority.commitVote(3)).toEqual(Applied.APPLIED);
             expect(minority.absent()).toEqual([]);
+            expect(minority.gone()).toEqual([]);
+        });
+
+        test('should keep a player absent once, missing a vote again, its miss told once, and score it 0 again', () => {
+            // Given player 3 absent, missing the first vote
+            const minority: MinorityGameState = game(4, MinorityVariant.SCORE);
+            asked(minority, 0);
+            [0, 1, 2].forEach((player: number) => minority.commitVote(player));
+            minority.close();
+            voted(minority, [YES, YES, NO]);
+            asked(minority, 1);
+            [0, 1, 2].forEach((player: number) => minority.commitVote(player));
+
+            // When
+            minority.close();
+            voted(minority, [NO, YES, YES]);
+
+            // Then
+            expect(minority.absent()).toEqual([3]);
+            expect(minority.gone()).toEqual([3]);
+            expect(minority.scores()).toEqual([2, 0, 2, 0]);
+            expect(minority.events().filter((event: Readonly<MinorityEvent>) => event.kind === MinorityEventKind.MISSED)
+                .map((event: Readonly<MinorityEvent>) => event.kind === MinorityEventKind.MISSED && [event.round, event.players]))
+                .toEqual([[0, [3]]]);
+        });
+
+        test('should tell a vote missed by a player absent since it asked late, or revealed late', () => {
+            // Given player 3 late to ask
+            const minority: MinorityGameState = game(4, MinorityVariant.SCORE);
+            minority.appoint(3);
+            minority.close();
+            asked(minority, 0);
+            [0, 1, 2].forEach((player: number) => minority.commitVote(player));
+
+            // When
+            minority.close();
+            voted(minority, [YES, YES, NO]);
+
+            // Then
+            expect(minority.absent()).toEqual([3]);
+            expect(minority.gone()).toEqual([3]);
+
+            // Given player 2 late to reveal
+            asked(minority, 1);
+            [0, 1, 2, 3].forEach((player: number) => minority.commitVote(player));
+            [0, 1, 3].forEach((player: number) => minority.revealVote(player, YES));
+            minority.close();
+            asked(minority, 0);
+            [0, 1, 3].forEach((player: number) => minority.commitVote(player));
+
+            // When
+            minority.close();
+
+            // Then
+            expect(minority.events().filter((event: Readonly<MinorityEvent>) => event.kind === MinorityEventKind.MISSED)
+                .map((event: Readonly<MinorityEvent>) => event.kind === MinorityEventKind.MISSED && [event.round, event.phase, event.players]))
+                .toEqual([[0, MinorityPhase.VOTING, [3]], [1, MinorityPhase.REVEALING, [2]], [2, MinorityPhase.VOTING, [2]]]);
+            expect(minority.gone()).toEqual([2]);
         });
 
         test('should draw the asker of the question before again when no other player is present', () => {

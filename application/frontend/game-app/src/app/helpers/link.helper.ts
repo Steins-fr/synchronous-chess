@@ -15,7 +15,7 @@ function isEmailAddress(word: string): boolean {
     return at > 0 && !domain.includes('@') && dot > 0 && domain.length - dot > 2;
 }
 
-/** Whether a text holds a link or an e-mail address, refused in the chat: no player sends the others away from the room */
+/** Whether a text holds a link or an e-mail address, refused in the chat and the questions: no player sends the others away from the room */
 export function holdsLink(text: string): boolean {
     return LINKS.some((link: RegExp) => link.test(text)) || text.split(/\s/u).some((word: string) => isEmailAddress(word));
 }

@@ -108,6 +108,20 @@ export class MinoritySession {
         }
         return game.awaited().map((player: number) => this.players()[player]);
     });
+    /** The players the game waits for who are away */
+    public readonly awaitedAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
+        const away: ReadonlyArray<string> = this.awayPlayers();
+        return this.awaited().filter((name: string) => away.includes(name));
+    });
+    /**
+     * The players away who give the phase more time, once: every one, but the players a vote waits for gone since the
+     * vote they missed, maybe for good (the score variant)
+     */
+    public readonly extendingAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
+        const game: MinorityGameState | null = this.game();
+        const gone: ReadonlySet<string> = new Set(game?.phase() === MinorityPhase.VOTING ? game.gone().map((player: number) => this.players()[player]) : []);
+        return this.awaitedAway().filter((name: string) => !gone.has(name));
+    });
     /** The asker of the question, once drawn */
     public readonly asker: Signal<string | null> = computed((): string | null => {
         const asker: number | null = this.game()?.asker() ?? null;
@@ -426,16 +440,28 @@ export class MinoritySession {
 
     /** A player commits to its vote: the first commitment counts */
     private onCommit(message: AppMessage<MGGameSessionType.COMMIT, MinorityCommitMessage>): void {
+        const applied: Applied = this.applyCommit(message);
+
+        // A commitment of the local player the game did not take, too late or a second one: its seal is of no use. The one
+        // taken, delivered again, keeps its seal
+        const { commitment } = message.payload;
+        if (applied !== Applied.APPLIED && message.from === this.room.localPlayer.name && this.commitments.get(keyOf(message.payload), message.from) !== commitment) {
+            this.sealStore.remove(commitment);
+        }
+    }
+
+    /** Applies the commitment to the game, which ignores one too late or a second one, and refuses one of a player out */
+    private applyCommit(message: AppMessage<MGGameSessionType.COMMIT, MinorityCommitMessage>): Applied {
         const game: MinorityGameState | null = this.game();
         const player: number | null = this.indexOf(message.from);
         const { commitment } = message.payload;
 
         if (game === null || player === null || !this.isQuestion(game, message.payload)) {
-            return;
+            return Applied.IGNORED;
         }
         if (!isCommitment(commitment)) {
             this.room.reportCheat(message, CheatReason.INVALID_MESSAGE);
-            return;
+            return Applied.ILLEGAL;
         }
 
         const key: string = this.questionKey(game);
@@ -447,6 +473,7 @@ export class MinoritySession {
             this.commitments.record(key, message.from, commitment);
             this.restore(message.from, commitment);
         }
+        return applied;
     }
 
     /**
@@ -547,6 +574,10 @@ export class MinoritySession {
         this._played.set(new PlayedMinorityGame(game, 0));
         this.commitments = new SealedCommitments<string>();
         this._seals.set(new Map());
+        // No vote of the new game is sealed yet: the seals left of a game over in the history of a page reloaded go
+        if (this.live) {
+            this.sealStore.clear();
+        }
     }
 
     /**
@@ -565,6 +596,11 @@ export class MinoritySession {
         if (game === null) {
             await this.actOnDraw(draw, me);
             return;
+        }
+        // The game over live, no vote is to reveal: the seal of a commitment lost on its way goes too. Not while the page
+        // catches up, a game over of the history before the game in progress
+        if (this.live && game.phase() === MinorityPhase.OVER) {
+            this.sealStore.clear();
         }
 
         if (game.phase() === MinorityPhase.REVEALING && game.awaited().includes(me)) {

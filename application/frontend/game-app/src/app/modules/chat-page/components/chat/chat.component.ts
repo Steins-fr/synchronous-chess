@@ -15,7 +15,7 @@ import {
     viewChild
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { form, maxLength, SchemaPath, submit, validate } from '@angular/forms/signals';
+import { form, maxLength, SchemaPath, submit } from '@angular/forms/signals';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatChip, MatChipSet } from '@angular/material/chips';
 import { MatIcon } from '@angular/material/icon';
@@ -23,6 +23,7 @@ import { MatDivider } from '@angular/material/divider';
 import { MatMenu, MatMenuContent, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
+import { noLink } from '@app/modules/form/rules/no-link.rule';
 import { TextAreaFieldComponent } from '@app/modules/form/text-area-field/text-area-field.component';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
@@ -35,12 +36,12 @@ import { DialogService } from '@app/services/dialog/dialog.service';
 import { LanguageService } from '@app/services/language/language.service';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { idGenerator } from '@app/helpers/id-generator.helper';
+import { holdsLink } from '@app/helpers/link.helper';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { SequencerClock } from '@app/services/room-manager/classes/room/block-room/block-chain/sequencer-clock';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { map, merge, Subscription, switchMap, timer } from 'rxjs';
-import { holdsLink } from './chat-link';
 import { admitChatMessage, CHAT_UNSENT_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from './chat-flood';
 import {
     ChatDecision,
@@ -137,9 +138,7 @@ const LATEST_TIME: number = 8.64e15;
 /** A message: a too long one, or one holding a link or an e-mail address, is refused, its error shown */
 function chatMessageRules(path: SchemaPath<string>): void {
     maxLength(path, CHAT_MESSAGE_MAX_LENGTH, { message: scopedKey(TranslationScope.CHAT, marker('composer.tooLong', undefined, 'chat')) });
-    validate(path, ({ value }) => (holdsLink(value())
-        ? { kind: 'link', message: scopedKey(TranslationScope.CHAT, marker('composer.link', undefined, 'chat')) }
-        : undefined));
+    noLink(path, scopedKey(TranslationScope.CHAT, marker('composer.link', undefined, 'chat')));
 }
 
 /**

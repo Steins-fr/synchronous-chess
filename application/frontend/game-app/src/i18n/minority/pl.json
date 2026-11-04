@@ -31,8 +31,8 @@
       "title": "Pytanie"
     },
     "score": {
-      "absent": "Gracz, który nie zagłosuje na czas, nie zdobywa punktów w tej rundzie, a głosowania nie czekają już na niego, dopóki znów nie zagłosuje.",
       "end": "Po 10 rundach wygrywa najwyższa suma, a równe sumy dzielą miejsce.",
+      "late": "Gracz, który nie zagłosuje na czas, nie zdobywa punktów w tej rundzie.",
       "points": "Każdy gracz mniejszości zdobywa tyle punktów, ile głosów ma większość: przy 7 tak i 3 nie każdy, kto głosował nie, zdobywa 7.",
       "rounds": "Nikt nie odpada: gra trwa 10 pytań, czyli jej rund.",
       "tie": "Równa liczba głosów albo jednogłośne głosowanie nie daje punktów: runda i tak się liczy.",
@@ -45,7 +45,7 @@
     },
     "summary": "Zasady gry mniejszości",
     "times": {
-      "away": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz.",
+      "awayOnce": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz; w wariancie wynik głosowanie nie czeka już dłużej na gracza, który opuścił poprzednie głosowanie.",
       "phases": "Pytanie czeka 60 sekund, głosowanie czas wybrany na początku, odsłanianie 15 sekund: każda faza kończy się, gdy tylko wszyscy gracze wykonają ruch.",
       "title": "Czas"
     },
@@ -69,7 +69,7 @@
       "question": "Pytanie {round} · {count, plural, one {# gracz w grze} few {# graczy w grze} many {# graczy w grze} other {# gracza w grze}}",
       "round": "Runda {round} z {rounds}",
       "stakes": "Pula nagród: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
-      "variant": "{variant, select, elimination {Eliminacja} other {Wynik}} · głosowanie {seconds} s"
+      "variantTime": "{variant, select, elimination {Eliminacja} other {Wynik}} · głosowanie {unit, select, minutes {{count} min} other {{count} s}}"
     },
     "move": {
       "asked": "Pytanie {round}, zadane przez {name}: „{question}”",

@@ -36,7 +36,7 @@ The code lives in `application/frontend/game-app/src/app/modules/minority-game`.
 | `isQuestionText` | `classes/rules/question.ts` | A question of the form the application sends: not blank, 120 characters at most, without link nor e-mail address |
 | `drawAsker` | `classes/rules/asker.ts` | The asker of a question, drawn from the seed of the game |
 | `settleElimination`, `settleScore` | `classes/rules/standings.ts` | The end of the game: the winners, the places, the points or the stakes won |
-| `MinorityGameState` | `classes/rules/minority-game-state.ts` | The game in signals: the phases, the asker, the votes, the eliminations, the scores, the absent players, the events |
+| `MinorityGameState` | `classes/rules/minority-game-state.ts` | The game in signals: the phases, the asker, the votes, the eliminations, the scores, the absent players and the gone ones, the events |
 | `PlayedMinorityGame` | `classes/game-sessions/played-minority-game.ts` | A game of the room: its players, its setup, the id of its secrets, the draw of its seed, then the game |
 | `MinoritySession` | `classes/game-sessions/minority-session.ts` | The games of the room: seats, the draw, the askers, the questions, the commitments and reveals, the timeouts |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed no player chose alone, and the draws every page makes alike from it |
@@ -93,7 +93,9 @@ every player left eliminated, or the round used up in the score variant.
 ## Sealed votes
 
 A vote is the commitment `SHA-256(id:vote:index:round:ask:vote:salt)`, sent with `MG_commit`. The vote and the salt are
-kept in the tab (`SealedStore`, kind `votes`) before the commitment is sent, by commitment. Once every player the vote
+kept in the tab (`SealedStore`, kind `votes`) before the commitment is sent, by commitment, until revealed, or until the
+chain refuses its commitment (too late, or a second one); the game over, the page clears its seals, a commitment lost
+on its way included. Once every player the vote
 waits for committed, or its time is over, each page reveals the vote of its player (`MG_reveal`).
 
 - No participant, the sequencer included, reads a vote before the vote closes: the commitment hides it.
@@ -131,7 +133,7 @@ spectator seeing it from the first free seat.
 
 Once every vote is revealed, or withheld, every page counts the votes revealed: `MINORITY` (one side has fewer votes),
 `TIE`, `UNANIMOUS`, or `NO_VOTE`. The history of the room tells each question (`Question 1, asked by bob: “…”`), the
-votes missed (`dave: no vote in time`), and the count, the eliminated players or the points of each one (`Question 1:
+votes missed (`dave: no vote in time`; in the score variant, once until its player acts again), and the count, the eliminated players or the points of each one (`Question 1:
 3 yes, 1 no. Eliminated: alice, bob, carol`, `Round 2: 3 yes, 1 no. Points: dave +3`). The seats show the votes revealed
 until the next vote opens.
 
@@ -158,8 +160,10 @@ seconds more, once. Once the time is over, the page of a player of the game, an 
 
 - A claim coming before the time of the phase, on the time of the chain (2 seconds of slack), is void: a page can not
   close a vote early. Its page waits again for 5 seconds, then claims again.
-- The players late are **absent**: not drawn to ask until they act again. In the score variant, the votes no longer wait
-  for them; in the elimination variant, the votes wait for every player still in, since a vote missed eliminates.
+- The players late are **absent**: not drawn to ask until they act again. Every vote waits for every player still in,
+  absent ones too: a player back always gets the time to vote, and a player gone makes each vote last its time. In the
+  score variant, a player away who missed the vote before gives it no more time (`gone`, until it acts again): the 15
+  seconds go to the other players away only.
 - The draw timing out frees the seats of its late players and opens the seats again.
 
 ## Reloading the page

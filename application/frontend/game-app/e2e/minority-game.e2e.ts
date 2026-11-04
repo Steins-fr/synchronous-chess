@@ -144,7 +144,7 @@ test.describe('Minority game', () => {
         test.setTimeout(120_000);
         const [alice, bob, carol, dave] = await started(minorityGame, ['alice', 'bob', 'carol'], 'dave', ['Score']);
         const players: RoomParticipant[] = [alice, bob, carol];
-        await expect(table(dave).locator('#variant')).toHaveText('Score · votes of 60 s');
+        await expect(table(dave).locator('#variant')).toHaveText('Score · votes of 1 min');
 
         // Carol alone votes no, scoring the 2 votes of the majority, but at the last round, unanimous
         for (let round = 1; round <= 10; round++) {
