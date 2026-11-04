@@ -1626,6 +1626,8 @@ describe('ChatComponent', () => {
             ['check_box', 'Hide offensive words', 'true'],
             ['check_box', 'remote', 'true'],
         ]);
+        // The players in a group named for a screen reader
+        expect(items[4].closest('fieldset')?.getAttribute('aria-label')).toEqual('Show the messages of');
         items[4].click();
         await fixture.whenStable();
 

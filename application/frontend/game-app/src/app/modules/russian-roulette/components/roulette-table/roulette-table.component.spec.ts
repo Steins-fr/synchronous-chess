@@ -373,7 +373,7 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         const bob: RussianRouletteSession = await started(SHORT);
         await aliceToAct(bob);
         await click(/^Pass/);
-        await until(() => status() === 'bob shoots or passes…');
+        await until(() => status() === 'bob shoots or passes…' && bob.myTurn());
         bob.shoot();
         await eventually(async () => {
             await fixture.whenStable();
@@ -442,8 +442,9 @@ describe('RouletteTableComponent', { timeout: 30_000 }, () => {
         // Then: the hammer, the click, no chips
         expect(played()).toEqual([SoundEffect.ROULETTE_COCK, SoundEffect.ROULETTE_CLICK]);
 
-        // When Bob passes
+        // When Bob passes, once his page knows it is his turn
         play.mockClear();
+        await until(() => bob.myTurn());
         bob.pass();
         await until(() => text('#last-move') === 'bob passes: 1 chip on the table.');
 
