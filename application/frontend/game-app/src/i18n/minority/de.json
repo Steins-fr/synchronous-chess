@@ -1,0 +1,160 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "In der Variante Ausscheidung scheidet die Mehrheit aus, bis 1 oder 2 Spieler übrig sind.",
+      "score": "In der Variante Punktestand scheidet niemand aus: Die Minderheit punktet, über 10 Durchgänge.",
+      "sealed": "Die Stimmen sind versiegelt: Niemand, nicht einmal der Server, sieht eine Stimme, bevor alle Spieler abgestimmt haben."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem bei, um mit anderen zu spielen.",
+    "summary": "Ein Spiel aus dem Manga Liar Game: 3 bis 8 Spieler beantworten eine Frage mit Ja oder Nein, und die Mehrheit verliert.",
+    "tagline": "Stimm mit den wenigsten.",
+    "title": "Minderheitsspiel"
+  },
+  "rules": {
+    "elimination": {
+      "end": "Die Partie ist vorbei, sobald 1 oder 2 Spieler übrig sind: Sie gewinnen. Zählt keine Stimme, scheiden alle übrigen Spieler aus, und niemand gewinnt.",
+      "late": "Wer nicht rechtzeitig abstimmt, scheidet aus.",
+      "majority": "Die Mehrheit scheidet aus: Ihre Spieler verfolgen den Rest der Partie als Zuschauer.",
+      "stakes": "Jeder Spieler bringt 100 Millionen mit, und die Gewinner teilen sich das Preisgeld.",
+      "tie": "Ein Gleichstand oder eine einstimmige Abstimmung lässt niemanden ausscheiden: Ein anderer Spieler stellt eine neue Frage.",
+      "title": "Die Variante Ausscheidung"
+    },
+    "fair": {
+      "draw": "Niemand bestimmt, wer die Fragen stellt: Jeder Spieler gibt am Start einen versiegelten Zufallsanteil, und wer fragt, wird aus allen Anteilen ausgelost, auf jeder Seite gleich.",
+      "sealed": "Eine Stimme ist versiegelt: Die Seite sendet ihren Hash mit einem zufälligen Salt und deckt sie auf, sobald alle Spieler abgestimmt haben. Eine anders als versiegelt aufgedeckte Stimme wird gemeldet.",
+      "title": "Fairness",
+      "withheld": "Eine versiegelte Stimme, die nicht rechtzeitig oder anders als versiegelt aufgedeckt wird, lässt ihren Spieler ausscheiden, oder kostet ihn in der Variante Punktestand so viele Punkte wie Spieler minus einer, das Höchste, was ein Durchgang gibt: Niemand nimmt eine Stimme zurück, nachdem er die anderen gelesen hat. Eine neu geladene Seite behält ihre Stimme, außer ihr Speicher ist blockiert."
+    },
+    "question": {
+      "asker": "Bei jeder Frage stellt ein ausgeloster Spieler eine Frage, die mit Ja oder Nein beantwortet wird: ein anderer Spieler als der, der die vorige Frage gestellt hat.",
+      "text": "Die Frage ist frei, höchstens 120 Zeichen lang, ohne Link und ohne E-Mail-Adresse. Wer nicht innerhalb von 60 Sekunden fragt, macht einem anderen Platz.",
+      "title": "Eine Frage"
+    },
+    "score": {
+      "end": "Nach den 10 Durchgängen gewinnt die höchste Summe, gleiche Summen teilen sich den Rang.",
+      "late": "Wer nicht rechtzeitig abstimmt, bekommt in diesem Durchgang keine Punkte.",
+      "points": "Jeder Spieler der Minderheit bekommt so viele Punkte, wie die Mehrheit Stimmen hat: Bei 7 Ja und 3 Nein bekommt jeder, der mit Nein gestimmt hat, 7.",
+      "rounds": "Niemand scheidet aus: Die Partie dauert 10 Fragen, ihre Durchgänge.",
+      "tie": "Ein Gleichstand oder eine einstimmige Abstimmung bringt keine Punkte: Der Durchgang zählt trotzdem.",
+      "title": "Die Variante Punktestand"
+    },
+    "setup": {
+      "players": "3 bis 8 Spieler nehmen die Plätze ein, dann startet einer von ihnen die Partie: Die Plätze bleiben besetzt, bis sie vorbei ist.",
+      "title": "Der Tisch",
+      "variants": "Wer die Partie startet, wählt ihre Variante, Ausscheidung oder Punktestand, und die Dauer einer Abstimmung, von 30 Sekunden bis 5 Minuten."
+    },
+    "summary": "Regeln des Minderheitsspiels",
+    "times": {
+      "awayOnce": "Auf einen abwesenden Spieler wird einmal 15 Sekunden länger gewartet; in der Variante Punktestand wartet eine Abstimmung nicht länger auf einen Spieler, der die vorige verpasst hat.",
+      "phases": "Eine Frage wartet 60 Sekunden, eine Abstimmung die beim Start gewählte Zeit, ein Aufdecken 15 Sekunden: Jede Phase endet, sobald alle Spieler gehandelt haben.",
+      "title": "Die Zeiten"
+    },
+    "title": "Regeln",
+    "vote": {
+      "reveal": "Dann werden die Stimmen allen aufgedeckt. Die Seite mit den wenigsten Stimmen ist die Minderheit, die andere die Mehrheit.",
+      "sealed": "Jeder Spieler, der noch dabei ist, stimmt gleichzeitig mit Ja oder Nein ab, versiegelt: Niemand sieht eine Stimme, bevor alle abgestimmt haben. Niemand muss ehrlich antworten, und der Chat dient zum Absprechen oder zum Verraten.",
+      "title": "Die Abstimmung"
+    }
+  },
+  "table": {
+    "action": {
+      "rematch": "Nochmal spielen",
+      "start": "Spiel starten"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Du bist ausgeschieden: Verfolge den Rest der Partie und den Chat.",
+    "game": "Spiel {number}:",
+    "history": "Züge des Spiels",
+    "info": {
+      "question": "Frage {round} · {count, plural, one {# Spieler dabei} other {# Spieler dabei}}",
+      "round": "Durchgang {round} von {rounds}",
+      "stakes": "Preisgeld: {amount, plural, one {# Million} other {# Millionen}}",
+      "variantTime": "{variant, select, elimination {Ausscheidung} other {Punktestand}} · Abstimmungen von {unit, select, minutes {{count} Min.} other {{count} s}}"
+    },
+    "move": {
+      "asked": "Frage {round}, gestellt von {name}: „{question}“",
+      "askerLate": "Frage {round}: {name} hat nicht rechtzeitig gefragt, ein anderer Spieler fragt",
+      "eliminated": "Frage {round}: {yes} Ja, {no} Nein. Ausgeschieden: {names}",
+      "illegal": "{names}: eine Stimme weder Ja noch Nein",
+      "invalid": "{names}: Stimme anders als versiegelt aufgedeckt",
+      "late": "{names}: keine Stimme rechtzeitig",
+      "lateReveal": "{names}: Stimme nicht rechtzeitig aufgedeckt",
+      "noScore": "Durchgang {round}: {yes} Ja, {no} Nein. Niemand punktet",
+      "scored": "Durchgang {round}: {yes} Ja, {no} Nein. Punkte: {points}",
+      "spared": "Frage {round}: {yes} Ja, {no} Nein. Niemand scheidet aus: eine neue Frage"
+    },
+    "past": "{count, plural, one {Gewinner} other {Gewinner}}: {winners}",
+    "pastGames": "Gespielte Spiele",
+    "pastNoWinner": "Kein Gewinner",
+    "pastScore": "Erster Platz, {points, plural, one {# Punkt} other {# Punkte}}: {winners}",
+    "question": {
+      "label": "Deine Frage",
+      "link": "Keine Links oder E-Mail-Adressen in einer Frage",
+      "required": "Gib deine Frage ein",
+      "roundTitle": "Durchgang {round} von {rounds}, Frage von {name}",
+      "submit": "Fragen",
+      "text": "„{question}“",
+      "title": "Frage {round}, gestellt von {name}",
+      "tooLong": "Höchstens {maxLength, plural, one {# Zeichen} other {# Zeichen}}"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# Million} other {# Millionen}}",
+      "in": "Noch dabei",
+      "noWinner": "Kein Gewinner: Alle übrigen Spieler sind ausgeschieden",
+      "out": "Ausgeschieden bei Frage {round}",
+      "place": "Platz {place}",
+      "points": "{count, plural, one {# Punkt} other {# Punkte}}",
+      "winner": "Gewinner",
+      "winners": "{count, plural, one {Gewinner: {names}} other {Gewinner: {names}}}"
+    },
+    "seat": {
+      "absent": "Übersprungen",
+      "asks": "Fragt",
+      "eliminated": "Ausgeschieden",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "points": "{count, plural, one {# Punkt} other {# Punkte}}",
+      "release": "Platz freigeben",
+      "sealed": "Verdeckt",
+      "take": "Hinsetzen",
+      "vote": "{vote, select, yes {Ja} other {Nein}}"
+    },
+    "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "standings": {
+      "balance": "Millionen",
+      "caption": "Wertung des Spiels",
+      "outcome": "Ergebnis",
+      "place": "Platz",
+      "player": "Spieler"
+    },
+    "start": {
+      "elimination": "Ausscheidung",
+      "minutes": "{count} Min.",
+      "score": "Punktestand",
+      "seconds": "{count} s",
+      "variant": "Variante",
+      "voteTime": "Zeit zum Abstimmen"
+    },
+    "status": {
+      "ask": "Stell eine Frage, die mit Ja oder Nein beantwortet wird.",
+      "asking": "{name} stellt eine Frage…",
+      "away": "Warte auf die Rückkehr von {names}…",
+      "drawing": "Die Spieler losen aus, wer fragt: Warten auf {names}.",
+      "drawingAsker": "Der fragende Spieler wird ausgelost…",
+      "hurry": "Beeil dich: Deine Zeit läuft ab!",
+      "over": "Das Spiel ist vorbei.",
+      "revealing": "Die Stimmen werden aufgedeckt…",
+      "sealed": "Verdeckt: Warte auf {names}.",
+      "seats": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Das Spiel startet mit mindestens {min}.",
+      "start": "Wähle die Variante und die Zeit zum Abstimmen, dann starte die Partie.",
+      "vote": "Stimm mit Ja oder Nein ab, geheim.",
+      "voting": "Warten auf die Stimmen von {names}.",
+      "waitingStart": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Warte, bis einer von ihnen startet."
+    },
+    "vote": {
+      "no": "Nein",
+      "sealed": "Deine Stimme, {vote, select, yes {ja} other {nein}}, ist versiegelt",
+      "yes": "Ja"
+    }
+  }
+}

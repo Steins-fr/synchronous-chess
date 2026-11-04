@@ -1,0 +1,160 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "In the elimination variant, the majority is eliminated, down to the last 1 or 2 players.",
+      "score": "In the score variant, nobody is eliminated: the minority scores, over 10 rounds.",
+      "sealed": "The votes are sealed: no one, not even the server, sees a vote before every player voted."
+    },
+    "rooms": "Create a room, or join one, to play with others.",
+    "summary": "A game of the manga Liar Game: 3 to 8 players answer a question by yes or no, and the majority loses.",
+    "tagline": "Vote with the fewest.",
+    "title": "Minority game"
+  },
+  "rules": {
+    "elimination": {
+      "end": "The game is over once 1 or 2 players are left: they win. When no vote counts, every player left is eliminated, and nobody wins.",
+      "late": "A player who does not vote in time is eliminated.",
+      "majority": "The majority is eliminated: its players follow the rest of the game as spectators.",
+      "stakes": "Each player brings 100 million, and the winners share the prize pool.",
+      "tie": "A tie, or a unanimous vote, eliminates nobody: another player asks a new question.",
+      "title": "The elimination variant"
+    },
+    "fair": {
+      "draw": "No one picks the askers: each player gives a sealed random part at the start, and the askers are drawn from all of them, the same on every page.",
+      "sealed": "A vote is sealed: the page sends its hash with a random salt, then reveals it once every player voted. A vote revealed otherwise than sealed is reported.",
+      "title": "Fair play",
+      "withheld": "A vote sealed and not revealed in time, or revealed otherwise than sealed, eliminates its player, or loses it as many points as players but one in the score variant, the most a round gives: no one takes a vote back once it read the others. A page reloaded keeps its vote, unless its storage is blocked."
+    },
+    "question": {
+      "asker": "For each question, a player drawn at random asks a question answered by yes or no: another player than the one who asked the question before.",
+      "text": "The question is free, 120 characters at most, without link nor e-mail address. A player who does not ask within 60 seconds gives way to another one.",
+      "title": "A question"
+    },
+    "score": {
+      "end": "After the 10 rounds, the highest total wins, equal totals sharing the place.",
+      "late": "A player who does not vote in time scores nothing for the round.",
+      "points": "Each player of the minority scores as many points as the majority has votes: with 7 yes and 3 no, each player who voted no scores 7.",
+      "rounds": "Nobody is eliminated: the game lasts 10 questions, its rounds.",
+      "tie": "A tie, or a unanimous vote, scores nothing: the round counts all the same.",
+      "title": "The score variant"
+    },
+    "setup": {
+      "players": "3 to 8 players take the seats, then one of them starts the game: the seats stay taken until it is over.",
+      "title": "The table",
+      "variants": "The player who starts the game picks its variant, elimination or score, and the time of a vote, from 30 seconds to 5 minutes."
+    },
+    "summary": "Rules of the minority game",
+    "times": {
+      "awayOnce": "A player away is waited for 15 seconds more, once; in the score variant, a vote no longer waits longer for a player who missed the vote before.",
+      "phases": "A question waits 60 seconds, a vote the time picked at the start, a reveal 15 seconds: each one closes as soon as every player acted.",
+      "title": "The times"
+    },
+    "title": "Rules",
+    "vote": {
+      "reveal": "The votes are then revealed to everyone. The side with the fewest votes is the minority, the other one the majority.",
+      "sealed": "Every player still in votes yes or no at the same time, sealed: no one sees a vote before every player voted. Nobody has to answer honestly, and the chat is there to agree, or to betray.",
+      "title": "The vote"
+    }
+  },
+  "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the game"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "You are eliminated: follow the rest of the game and the chat.",
+    "game": "Game {number}:",
+    "history": "Moves of the game",
+    "info": {
+      "question": "Question {round} · {count, plural, one {# player in} other {# players in}}",
+      "round": "Round {round} of {rounds}",
+      "stakes": "Prize pool: {amount, plural, one {# million} other {# million}}",
+      "variantTime": "{variant, select, elimination {Elimination} other {Score}} · votes of {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "move": {
+      "asked": "Question {round}, asked by {name}: “{question}”",
+      "askerLate": "Question {round}: {name} did not ask in time, another player asks",
+      "eliminated": "Question {round}: {yes} yes, {no} no. Eliminated: {names}",
+      "illegal": "{names}: a vote neither yes nor no",
+      "invalid": "{names}: vote revealed otherwise than sealed",
+      "late": "{names}: no vote in time",
+      "lateReveal": "{names}: vote not revealed in time",
+      "noScore": "Round {round}: {yes} yes, {no} no. Nobody scores",
+      "scored": "Round {round}: {yes} yes, {no} no. Points: {points}",
+      "spared": "Question {round}: {yes} yes, {no} no. Nobody eliminated: a new question"
+    },
+    "past": "{count, plural, one {Winner} other {Winners}}: {winners}",
+    "pastGames": "Games played",
+    "pastNoWinner": "No winner",
+    "pastScore": "First place, {points, plural, one {# point} other {# points}}: {winners}",
+    "question": {
+      "label": "Your question",
+      "link": "No link nor e-mail address in a question",
+      "required": "Type your question",
+      "roundTitle": "Round {round} of {rounds}, asked by {name}",
+      "submit": "Ask",
+      "text": "“{question}”",
+      "title": "Question {round}, asked by {name}",
+      "tooLong": "{maxLength, plural, one {# character} other {# characters}} at most"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# million} other {# million}}",
+      "in": "Still in",
+      "noWinner": "No winner: every player left was eliminated",
+      "out": "Out at question {round}",
+      "place": "Place {place}",
+      "points": "{count, plural, one {# point} other {# points}}",
+      "winner": "Winner",
+      "winners": "{count, plural, one {Winner: {names}} other {Winners: {names}}}"
+    },
+    "seat": {
+      "absent": "Skipped",
+      "asks": "Asks",
+      "eliminated": "Eliminated",
+      "free": "Free seat",
+      "leave": "Leave",
+      "points": "{count, plural, one {# point} other {# points}}",
+      "release": "Free the seat",
+      "sealed": "Sealed",
+      "take": "Sit here",
+      "vote": "{vote, select, yes {Yes} other {No}}"
+    },
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "standings": {
+      "balance": "Millions",
+      "caption": "Standings of the game",
+      "outcome": "Outcome",
+      "place": "Place",
+      "player": "Player"
+    },
+    "start": {
+      "elimination": "Elimination",
+      "minutes": "{count} min",
+      "score": "Score",
+      "seconds": "{count} s",
+      "variant": "Variant",
+      "voteTime": "Time to vote"
+    },
+    "status": {
+      "ask": "Ask a question answered by yes or no.",
+      "asking": "{name} asks a question…",
+      "away": "Waiting for {names} to come back…",
+      "drawing": "The players draw who asks: waiting for {names}.",
+      "drawingAsker": "Drawing the player who asks…",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The game is over.",
+      "revealing": "The votes are revealed…",
+      "sealed": "Sealed: waiting for {names}.",
+      "seats": "{count, plural, one {# player seated} other {# players seated}}: the game starts with {min} at least.",
+      "start": "Pick the variant and the time to vote, then start the game.",
+      "vote": "Vote yes or no, sealed.",
+      "voting": "Waiting for the votes of {names}.",
+      "waitingStart": "{count, plural, one {# player seated} other {# players seated}}: waiting for one of them to start."
+    },
+    "vote": {
+      "no": "No",
+      "sealed": "Your vote, {vote, select, yes {yes} other {no}}, is sealed",
+      "yes": "Yes"
+    }
+  }
+}

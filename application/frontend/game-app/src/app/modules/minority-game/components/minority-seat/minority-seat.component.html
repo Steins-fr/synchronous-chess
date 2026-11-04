@@ -1,0 +1,36 @@
+<ng-container *transloco="let t; prefix: 'minority.table.seat'">
+    <span class="min-w-0 truncate font-medium" [class.opacity-50]="eliminated()">{{ name() ?? t('free') }}</span>
+    @if (asker()) {
+    <span class="badge badge-draw">{{ t('asks') }}</span>
+    }
+    @if (eliminated()) {
+    <span class="badge badge-draw">{{ t('eliminated') }}</span>
+    }
+    @if (vote(); as cast) {
+    <span class="badge badge-draw">{{ t('vote', { vote: cast }) }}</span>
+    }
+    @if (points() !== null) {
+    <span class="muted-note text-sm">{{ t('points', { count: points() }) }}</span>
+    }
+    @if (sealed()) {
+    <span class="badge badge-draw">{{ t('sealed') }}</span>
+    }
+    @if (absent()) {
+    <span class="badge badge-draw">{{ t('absent') }}</span>
+    }
+    @if (standing(); as text) {
+    <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">{{ text.key | transloco: text.params }}</span>
+    }
+    @if (clock(); as left) {
+    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+    }
+    @if (canTake()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>
+    }
+    @if (canLeave()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+    }
+    @if (canRelease()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="release.emit()">{{ t('release') }}</button>
+    }
+</ng-container>

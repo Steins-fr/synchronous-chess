@@ -1,0 +1,160 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "Eleme varyantında çoğunluk elenir, son 1 ya da 2 oyuncu kalana kadar.",
+      "score": "Skor varyantında kimse elenmez: azınlık 10 raunt boyunca puan toplar.",
+      "sealed": "Oylar mühürlüdür: kimse, sunucu bile, tüm oyuncular oy vermeden bir oyu göremez."
+    },
+    "rooms": "Başkalarıyla oynamak için bir oda oluşturun ya da bir odaya katılın.",
+    "summary": "Liar Game mangasından bir oyun: 3 ila 8 oyuncu bir soruyu evet ya da hayır diye yanıtlar ve çoğunluk kaybeder.",
+    "tagline": "En az olanlarla oy verin.",
+    "title": "Azınlık oyunu"
+  },
+  "rules": {
+    "elimination": {
+      "end": "Oyun 1 ya da 2 oyuncu kaldığında biter: onlar kazanır. Hiçbir oy sayılmazsa kalan tüm oyuncular elenir ve kimse kazanmaz.",
+      "late": "Zamanında oy vermeyen oyuncu elenir.",
+      "majority": "Çoğunluk elenir: oyuncuları oyunun geri kalanını izleyici olarak takip eder.",
+      "stakes": "Her oyuncu 100 milyon getirir ve kazananlar ödül havuzunu paylaşır.",
+      "tie": "Bir eşitlik ya da oybirliği kimseyi elemez: başka bir oyuncu yeni bir soru sorar.",
+      "title": "Eleme varyantı"
+    },
+    "fair": {
+      "draw": "Soruları kimin soracağını kimse seçmez: her oyuncu başlangıçta mühürlü bir rastgele parça verir ve soru soranlar tüm parçalardan, her sayfada aynı şekilde çekilir.",
+      "sealed": "Bir oy mühürlüdür: sayfa, rastgele bir tuzla özetini gönderir, ardından tüm oyuncular oy verince oyu açıklar. Mühürlendiğinden farklı açıklanan bir oy bildirilir.",
+      "title": "Adil oyun",
+      "withheld": "Zamanında açılmayan ya da mühürlendiğinden farklı açılan mühürlü bir oy, oyuncusunu eler, skor varyantında ise ona oyuncu sayısının bir eksiği kadar puan kaybettirir, bir rauntun verebileceği en yüksek puan: kimse diğerlerini gördükten sonra oyunu geri alamaz. Yeniden yüklenen bir sayfa, depolaması engellenmedikçe oyunu korur."
+    },
+    "question": {
+      "asker": "Her soruda rastgele seçilen bir oyuncu evet ya da hayır diye yanıtlanan bir soru sorar: bir önceki soruyu soran oyuncudan farklı biri.",
+      "text": "Soru serbesttir, en fazla 120 karakter, bağlantı ve e-posta adresi olmadan. 60 saniye içinde soru sormayan oyuncu sırayı başkasına bırakır.",
+      "title": "Bir soru"
+    },
+    "score": {
+      "end": "10 rauntun sonunda en yüksek toplam kazanır, eşit toplamlar sırayı paylaşır.",
+      "late": "Zamanında oy vermeyen oyuncu o raunttan puan almaz.",
+      "points": "Azınlıktaki her oyuncu, çoğunluğun oy sayısı kadar puan alır: 7 evet ve 3 hayır ile hayır oyu veren her oyuncu 7 puan alır.",
+      "rounds": "Kimse elenmez: oyun 10 soru, yani 10 raunt sürer.",
+      "tie": "Bir eşitlik ya da oybirliği puan getirmez: raunt yine de sayılır.",
+      "title": "Skor varyantı"
+    },
+    "setup": {
+      "players": "3 ila 8 oyuncu yerlerini alır, sonra içlerinden biri oyunu başlatır: yerler oyun bitene kadar dolu kalır.",
+      "title": "Masa",
+      "variants": "Oyunu başlatan oyuncu varyantını, eleme ya da skor, ve bir oylamanın süresini, 30 saniyeden 5 dakikaya kadar seçer."
+    },
+    "summary": "Azınlık oyununun kuralları",
+    "times": {
+      "awayOnce": "Uzaktaki bir oyuncu bir kez 15 saniye daha beklenir; skor varyantında, önceki oylamayı kaçıran bir oyuncu için oylamaya bu ek süre verilmez.",
+      "phases": "Bir soru 60 saniye, bir oylama başlangıçta seçilen süre, bir açıklama 15 saniye bekler: her biri tüm oyuncular hamlesini yapar yapmaz kapanır.",
+      "title": "Süreler"
+    },
+    "title": "Kurallar",
+    "vote": {
+      "reveal": "Ardından oylar herkese açıklanır. En az oyu alan taraf azınlık, diğeri çoğunluktur.",
+      "sealed": "Oyunda kalan her oyuncu aynı anda evet ya da hayır oyu verir, mühürlü: herkes oy vermeden kimse bir oyu göremez. Kimse dürüst yanıt vermek zorunda değildir ve sohbet anlaşmak ya da ihanet etmek içindir.",
+      "title": "Oylama"
+    }
+  },
+  "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Oyunu başlat"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Elendiniz: oyunun geri kalanını ve sohbeti takip edin.",
+    "game": "Oyun {number}:",
+    "history": "Oyunun hamleleri",
+    "info": {
+      "question": "Soru {round} · {count, plural, one {oyunda # oyuncu} other {oyunda # oyuncu}}",
+      "round": "Raunt {round}/{rounds}",
+      "stakes": "Ödül havuzu: {amount, plural, one {# milyon} other {# milyon}}",
+      "variantTime": "{variant, select, elimination {Eleme} other {Skor}} · {unit, select, minutes {{count} dk} other {{count} sn}} oylama"
+    },
+    "move": {
+      "asked": "Soru {round}, soran {name}: “{question}”",
+      "askerLate": "Soru {round}: {name} zamanında sormadı, başka bir oyuncu soruyor",
+      "eliminated": "Soru {round}: {yes} evet, {no} hayır. Elenenler: {names}",
+      "illegal": "{names}: ne evet ne hayır olan bir oy",
+      "invalid": "{names}: oy mühürlendiğinden farklı açıklandı",
+      "late": "{names}: zamanında oy yok",
+      "lateReveal": "{names}: oy zamanında açıklanmadı",
+      "noScore": "Raunt {round}: {yes} evet, {no} hayır. Kimse puan almadı",
+      "scored": "Raunt {round}: {yes} evet, {no} hayır. Puanlar: {points}",
+      "spared": "Soru {round}: {yes} evet, {no} hayır. Kimse elenmedi: yeni bir soru"
+    },
+    "past": "{count, plural, one {Kazanan} other {Kazananlar}}: {winners}",
+    "pastGames": "Oynanan oyunlar",
+    "pastNoWinner": "Kazanan yok",
+    "pastScore": "Birinci sıra, {points, plural, one {# puan} other {# puan}}: {winners}",
+    "question": {
+      "label": "Sorunuz",
+      "link": "Soruda bağlantı ve e-posta adresi kullanılamaz",
+      "required": "Sorunuzu yazın",
+      "roundTitle": "Raunt {round}/{rounds}, soran {name}",
+      "submit": "Sor",
+      "text": "“{question}”",
+      "title": "Soru {round}, soran {name}",
+      "tooLong": "En fazla {maxLength, plural, one {# karakter} other {# karakter}}"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# milyon} other {# milyon}}",
+      "in": "Hâlâ oyunda",
+      "noWinner": "Kazanan yok: kalan tüm oyuncular elendi",
+      "out": "{round}. soruda elendi",
+      "place": "{place}. sıra",
+      "points": "{count, plural, one {# puan} other {# puan}}",
+      "winner": "Kazanan",
+      "winners": "{count, plural, one {Kazanan: {names}} other {Kazananlar: {names}}}"
+    },
+    "seat": {
+      "absent": "Atlandı",
+      "asks": "Soruyor",
+      "eliminated": "Elendi",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "points": "{count, plural, one {# puan} other {# puan}}",
+      "release": "Yeri boşalt",
+      "sealed": "Kapalı",
+      "take": "Otur",
+      "vote": "{vote, select, yes {Evet} other {Hayır}}"
+    },
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "standings": {
+      "balance": "Milyon",
+      "caption": "Oyunun sıralaması",
+      "outcome": "Sonuç",
+      "place": "Sıra",
+      "player": "Oyuncu"
+    },
+    "start": {
+      "elimination": "Eleme",
+      "minutes": "{count} dk",
+      "score": "Skor",
+      "seconds": "{count} sn",
+      "variant": "Varyant",
+      "voteTime": "Oylama süresi"
+    },
+    "status": {
+      "ask": "Evet ya da hayır diye yanıtlanan bir soru sorun.",
+      "asking": "{name} bir soru soruyor…",
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "drawing": "Oyuncular kimin soracağını çekiyor: {names} bekleniyor.",
+      "drawingAsker": "Soruyu soracak oyuncu çekiliyor…",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Oyun bitti.",
+      "revealing": "Oylar açıklanıyor…",
+      "sealed": "Kapalı olarak verildi, beklenenler: {names}.",
+      "seats": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: oyun en az {min} oyuncuyla başlar.",
+      "start": "Varyantı ve oylama süresini seçin, ardından oyunu başlatın.",
+      "vote": "Gizlice evet ya da hayır oyu verin.",
+      "voting": "{names} oylarını bekliyoruz.",
+      "waitingStart": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: içlerinden birinin başlatması bekleniyor."
+    },
+    "vote": {
+      "no": "Hayır",
+      "sealed": "Oyunuz, {vote, select, yes {evet} other {hayır}}, mühürlendi",
+      "yes": "Evet"
+    }
+  }
+}

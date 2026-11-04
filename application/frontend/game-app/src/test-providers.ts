@@ -77,6 +77,17 @@ import trBidTranslation from './i18n/bid/tr.json';
 import idBidTranslation from './i18n/bid/id.json';
 import plBidTranslation from './i18n/bid/pl.json';
 import itBidTranslation from './i18n/bid/it.json';
+import enMinorityTranslation from './i18n/minority/en.json';
+import frMinorityTranslation from './i18n/minority/fr.json';
+import esMinorityTranslation from './i18n/minority/es.json';
+import ptBRMinorityTranslation from './i18n/minority/pt-BR.json';
+import ptPTMinorityTranslation from './i18n/minority/pt-PT.json';
+import deMinorityTranslation from './i18n/minority/de.json';
+import ruMinorityTranslation from './i18n/minority/ru.json';
+import trMinorityTranslation from './i18n/minority/tr.json';
+import idMinorityTranslation from './i18n/minority/id.json';
+import plMinorityTranslation from './i18n/minority/pl.json';
+import itMinorityTranslation from './i18n/minority/it.json';
 import enCardsTranslation from './i18n/cards/en.json';
 import frCardsTranslation from './i18n/cards/fr.json';
 import esCardsTranslation from './i18n/cards/es.json';
@@ -157,6 +168,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'bid/id': idBidTranslation,
     'bid/pl': plBidTranslation,
     'bid/it': itBidTranslation,
+    'minority/en': enMinorityTranslation,
+    'minority/fr': frMinorityTranslation,
+    'minority/es': esMinorityTranslation,
+    'minority/pt-BR': ptBRMinorityTranslation,
+    'minority/pt-PT': ptPTMinorityTranslation,
+    'minority/de': deMinorityTranslation,
+    'minority/ru': ruMinorityTranslation,
+    'minority/tr': trMinorityTranslation,
+    'minority/id': idMinorityTranslation,
+    'minority/pl': plMinorityTranslation,
+    'minority/it': itMinorityTranslation,
     'cards/en': enCardsTranslation,
     'cards/fr': frCardsTranslation,
     'cards/es': esCardsTranslation,

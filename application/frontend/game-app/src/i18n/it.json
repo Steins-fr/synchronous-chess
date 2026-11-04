@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Scacchi",
       "home": "Home",
+      "minorityGame": "Minoranza",
       "poker": "Poker",
       "roulette": "Roulette"
     },
@@ -26,8 +27,8 @@
     "title": "Scacchi sincroni"
   },
   "cheat": {
-    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
-    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
   },
   "dialog": {
     "cancel": "Annulla",
@@ -56,6 +57,11 @@
       "title": "Scacchi sincroni"
     },
     "intro": "Crea una stanza o entra in una delle stanze aperte: i giocatori si collegano direttamente tra loro.",
+    "minorityGame": {
+      "action": "Gioca",
+      "description": "Da 3 a 8 giocatori votano sì o no, in segreto: la maggioranza perde, eliminata o superata ai punti.",
+      "title": "Gioco della minoranza"
+    },
     "poker": {
       "action": "Gioca",
       "description": "Poker in due con un mazzo di 17 carte che nessuno distribuisce: i giocatori lo mescolano insieme, cifrato.",

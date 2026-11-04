@@ -9,6 +9,7 @@
       "chat": "Bate-papo",
       "chess": "Xadrez",
       "home": "Início",
+      "minorityGame": "Minoria",
       "poker": "Pôquer",
       "roulette": "Roleta"
     },
@@ -26,8 +27,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} other {}}) de {author} foi denunciada como trapaça por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} minority {jogo da minoria} other {}}) de {author} foi denunciada como trapaça por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} minority {jogo da minoria} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -56,6 +57,11 @@
       "title": "Xadrez sincronizado"
     },
     "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores se conectam diretamente entre si.",
+    "minorityGame": {
+      "action": "Jogar",
+      "description": "De 3 a 8 jogadores votam sim ou não, em segredo: a maioria perde, eliminada ou superada nos pontos.",
+      "title": "Jogo da minoria"
+    },
     "poker": {
       "action": "Jogar",
       "description": "Pôquer a dois com um baralho de 17 cartas que ninguém distribui: os jogadores o embaralham juntos, criptografado.",

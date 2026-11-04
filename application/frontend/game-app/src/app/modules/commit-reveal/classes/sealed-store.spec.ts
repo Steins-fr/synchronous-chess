@@ -62,6 +62,23 @@ describe('SealedStore', () => {
         expect(setItemSpy).toHaveBeenCalledOnce();
     });
 
+    test('should remove every value', () => {
+        // Given
+        const store = new SealedStore<Sealed>('turns', 'room', 'a');
+        store.save(0, value0);
+        store.save(1, value1);
+
+        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+
+        // When
+        store.clear();
+        store.clear();
+
+        // Then
+        expect([store.get(0), store.get(1)]).toEqual([undefined, undefined]);
+        expect(setItemSpy).toHaveBeenCalledOnce();
+    });
+
     test('should remove a value read as false', () => {
         // Given
         const store = new SealedStore<number>('bids', 'room', 'a');

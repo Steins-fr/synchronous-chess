@@ -1,0 +1,160 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "Na variante eliminação, a maioria é eliminada, até restarem 1 ou 2 jogadores.",
+      "score": "Na variante pontuação, ninguém é eliminado: a minoria marca pontos, em 10 rodadas.",
+      "sealed": "Os votos são lacrados: ninguém, nem mesmo o servidor, vê um voto antes de todos os jogadores votarem."
+    },
+    "rooms": "Crie uma sala ou entre em uma, para jogar com outras pessoas.",
+    "summary": "Um jogo do mangá Liar Game: de 3 a 8 jogadores respondem a uma pergunta com sim ou não, e a maioria perde.",
+    "tagline": "Vote com os poucos.",
+    "title": "Jogo da minoria"
+  },
+  "rules": {
+    "elimination": {
+      "end": "A partida termina quando restam 1 ou 2 jogadores: eles vencem. Quando nenhum voto conta, todos os jogadores restantes são eliminados, e ninguém vence.",
+      "late": "Um jogador que não vota a tempo é eliminado.",
+      "majority": "A maioria é eliminada: seus jogadores acompanham o resto da partida como espectadores.",
+      "stakes": "Cada jogador traz 100 milhões, e os vencedores dividem o prêmio.",
+      "tie": "Um empate, ou um voto unânime, não elimina ninguém: outro jogador faz uma nova pergunta.",
+      "title": "A variante eliminação"
+    },
+    "fair": {
+      "draw": "Ninguém escolhe quem faz as perguntas: cada jogador dá uma parte aleatória lacrada no início, e quem pergunta é sorteado a partir de todas elas, igual em cada página.",
+      "sealed": "Um voto é lacrado: a página envia seu hash com um sal aleatório, e o revela quando todos os jogadores votaram. Um voto revelado de outro jeito que lacrado é denunciado.",
+      "title": "Jogo limpo",
+      "withheld": "Um voto lacrado e não revelado a tempo, ou revelado de outro jeito que lacrado, elimina o jogador, ou tira dele tantos pontos quantos jogadores menos um na variante pontuação, o máximo que uma rodada dá: ninguém retira o voto depois de ler os dos outros. Uma página recarregada mantém o voto, a não ser que o armazenamento esteja bloqueado."
+    },
+    "question": {
+      "asker": "A cada pergunta, um jogador sorteado faz uma pergunta respondida com sim ou não: outro jogador que não aquele que fez a pergunta anterior.",
+      "text": "A pergunta é livre, com no máximo 120 caracteres, sem link nem endereço de e-mail. Um jogador que não pergunta em 60 segundos dá a vez a outro.",
+      "title": "Uma pergunta"
+    },
+    "score": {
+      "end": "Depois das 10 rodadas, o maior total vence, e os totais iguais dividem a posição.",
+      "late": "Um jogador que não vota a tempo não marca nada na rodada.",
+      "points": "Cada jogador da minoria marca tantos pontos quantos votos tem a maioria: com 7 sim e 3 não, cada jogador que votou não marca 7.",
+      "rounds": "Ninguém é eliminado: a partida dura 10 perguntas, as suas rodadas.",
+      "tie": "Um empate, ou um voto unânime, não dá pontos: a rodada conta mesmo assim.",
+      "title": "A variante pontuação"
+    },
+    "setup": {
+      "players": "De 3 a 8 jogadores ocupam os lugares, e um deles começa a partida: os lugares ficam ocupados até ela terminar.",
+      "title": "A mesa",
+      "variants": "O jogador que começa a partida escolhe a variante, eliminação ou pontuação, e a duração de um voto, de 30 segundos a 5 minutos."
+    },
+    "summary": "Regras do jogo da minoria",
+    "times": {
+      "awayOnce": "Um jogador ausente é esperado 15 segundos a mais, uma vez; na variante pontuação, um voto não espera mais tempo por um jogador que perdeu o voto anterior.",
+      "phases": "Uma pergunta espera 60 segundos, um voto o tempo escolhido no início, uma revelação 15 segundos: cada um se encerra assim que todos os jogadores agiram.",
+      "title": "Os tempos"
+    },
+    "title": "Regras",
+    "vote": {
+      "reveal": "Depois, os votos são revelados a todos. O lado com menos votos é a minoria, o outro a maioria.",
+      "sealed": "Cada jogador ainda no jogo vota sim ou não ao mesmo tempo, lacrado: ninguém vê um voto antes de todos votarem. Ninguém precisa responder com sinceridade, e o bate-papo serve para combinar, ou para trair.",
+      "title": "O voto"
+    }
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar de novo",
+      "start": "Iniciar a partida"
+    },
+    "clock": "{minutes}:{seconds}",
+    "eliminated": "Você foi eliminado: acompanhe o resto da partida e o bate-papo.",
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "info": {
+      "question": "Pergunta {round} · {count, plural, one {# jogador no jogo} other {# jogadores no jogo}}",
+      "round": "Rodada {round} de {rounds}",
+      "stakes": "Prêmio: {amount, plural, one {# milhão} other {# milhões}}",
+      "variantTime": "{variant, select, elimination {Eliminação} other {Pontuação}} · votos de {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "move": {
+      "asked": "Pergunta {round}, feita por {name}: “{question}”",
+      "askerLate": "Pergunta {round}: {name} não perguntou a tempo, outro jogador pergunta",
+      "eliminated": "Pergunta {round}: {yes} sim, {no} não. Eliminados: {names}",
+      "illegal": "{names}: um voto que não é sim nem não",
+      "invalid": "{names}: voto revelado de outro jeito que lacrado",
+      "late": "{names}: sem voto a tempo",
+      "lateReveal": "{names}: voto não revelado a tempo",
+      "noScore": "Rodada {round}: {yes} sim, {no} não. Ninguém marca pontos",
+      "scored": "Rodada {round}: {yes} sim, {no} não. Pontos: {points}",
+      "spared": "Pergunta {round}: {yes} sim, {no} não. Ninguém eliminado: uma nova pergunta"
+    },
+    "past": "{count, plural, one {Vencedor} other {Vencedores}}: {winners}",
+    "pastGames": "Partidas jogadas",
+    "pastNoWinner": "Nenhum vencedor",
+    "pastScore": "Primeiro lugar, {points, plural, one {# ponto} other {# pontos}}: {winners}",
+    "question": {
+      "label": "Sua pergunta",
+      "link": "Sem links nem endereços de e-mail em uma pergunta",
+      "required": "Digite sua pergunta",
+      "roundTitle": "Rodada {round} de {rounds}, pergunta de {name}",
+      "submit": "Perguntar",
+      "text": "“{question}”",
+      "title": "Pergunta {round}, feita por {name}",
+      "tooLong": "{maxLength, plural, one {# caractere} other {# caracteres}} no máximo"
+    },
+    "result": {
+      "balance": "{balance, plural, one {# milhão} other {# milhões}}",
+      "in": "Ainda no jogo",
+      "noWinner": "Nenhum vencedor: todos os jogadores restantes foram eliminados",
+      "out": "Eliminado na pergunta {round}",
+      "place": "Posição {place}",
+      "points": "{count, plural, one {# ponto} other {# pontos}}",
+      "winner": "Vencedor",
+      "winners": "{count, plural, one {Vencedor: {names}} other {Vencedores: {names}}}"
+    },
+    "seat": {
+      "absent": "Pulado",
+      "asks": "Pergunta",
+      "eliminated": "Eliminado",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "points": "{count, plural, one {# ponto} other {# pontos}}",
+      "release": "Liberar o lugar",
+      "sealed": "Lacrado",
+      "take": "Sentar",
+      "vote": "{vote, select, yes {Sim} other {Não}}"
+    },
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "balance": "Milhões",
+      "caption": "Classificação da partida",
+      "outcome": "Resultado",
+      "place": "Posição",
+      "player": "Jogador"
+    },
+    "start": {
+      "elimination": "Eliminação",
+      "minutes": "{count} min",
+      "score": "Pontuação",
+      "seconds": "{count} s",
+      "variant": "Variante",
+      "voteTime": "Tempo para votar"
+    },
+    "status": {
+      "ask": "Faça uma pergunta respondida com sim ou não.",
+      "asking": "{name} faz uma pergunta…",
+      "away": "Aguardando {names} voltar…",
+      "drawing": "Os jogadores sorteiam quem pergunta: aguardando {names}.",
+      "drawingAsker": "Sorteando o jogador que pergunta…",
+      "hurry": "Rápido: seu tempo está acabando!",
+      "over": "A partida terminou.",
+      "revealing": "Os votos estão sendo revelados…",
+      "sealed": "Lacrado: aguardando {names}.",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa com pelo menos {min}.",
+      "start": "Escolha a variante e o tempo para votar, e comece a partida.",
+      "vote": "Vote sim ou não, em segredo.",
+      "voting": "Aguardando os votos de {names}.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: aguardando que um deles inicie."
+    },
+    "vote": {
+      "no": "Não",
+      "sealed": "Seu voto, {vote, select, yes {sim} other {não}}, está lacrado",
+      "yes": "Sim"
+    }
+  }
+}

@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Chess",
       "home": "Home",
+      "minorityGame": "Minority",
       "poker": "Poker",
       "roulette": "Roulette"
     },
@@ -26,8 +27,8 @@
     "title": "Synchronous Chess"
   },
   "cheat": {
-    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} other {}}) from {author} is reported as cheating by {reporters}",
-    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
+    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} minority {minority game} other {}}) from {author} is reported as cheating by {reporters}",
+    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} minority {minority game} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
   },
   "dialog": {
     "cancel": "Cancel",
@@ -56,6 +57,11 @@
       "title": "Synchronous chess"
     },
     "intro": "Create a room, or join one of the open rooms: the players connect directly to each other.",
+    "minorityGame": {
+      "action": "Play",
+      "description": "3 to 8 players vote yes or no, sealed: the majority loses, eliminated or outscored.",
+      "title": "Minority game"
+    },
     "poker": {
       "action": "Play",
       "description": "Heads-up poker with a deck of 17 cards that no one deals: the players shuffle it together, encrypted.",

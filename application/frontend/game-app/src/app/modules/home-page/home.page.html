@@ -39,6 +39,20 @@
             <p class="muted-note">{{ t('bidPoker.description') }}</p>
             <span class="game-card-action">{{ t('bidPoker.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
+        <a [routerLink]="minorityGamePath" class="game-card" id="game-card-minority-game">
+            <!-- Three votes of the majority against the lone vote of the minority, which wins -->
+            <span aria-hidden="true" class="game-card-glyph">
+                <svg class="size-18" fill="currentColor" viewBox="0 0 100 100">
+                    <circle cx="22" cy="30" r="11" />
+                    <circle cx="22" cy="70" r="11" />
+                    <circle cx="44" cy="50" r="11" />
+                    <circle cx="80" cy="50" r="15" />
+                </svg>
+            </span>
+            <h2 class="m-0 mat-title-large">{{ t('minorityGame.title') }}</h2>
+            <p class="muted-note">{{ t('minorityGame.description') }}</p>
+            <span class="game-card-action">{{ t('minorityGame.action') }} <mat-icon>arrow_forward</mat-icon></span>
+        </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->
             <span aria-hidden="true" class="game-card-visual bg-app-surface text-app-accent-text">
