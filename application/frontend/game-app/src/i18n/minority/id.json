@@ -1,0 +1,59 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "Dalam varian eliminasi, mayoritas tersingkir, hingga tersisa 1 atau 2 pemain terakhir.",
+      "score": "Dalam varian skor, tidak ada yang tersingkir: minoritas mencetak poin, selama 10 ronde.",
+      "sealed": "Suara tersegel: tidak ada yang, bahkan server, melihat sebuah suara sebelum semua pemain memberi suara."
+    },
+    "rooms": "Buat ruang, atau bergabunglah ke salah satu ruang, untuk bermain dengan pemain lain.",
+    "summary": "Sebuah permainan dari manga Liar Game: 3 sampai 8 pemain menjawab sebuah pertanyaan dengan ya atau tidak, dan mayoritas kalah.",
+    "tagline": "Berikan suara bersama yang paling sedikit.",
+    "title": "Permainan minoritas"
+  },
+  "rules": {
+    "elimination": {
+      "end": "Permainan selesai begitu tersisa 1 atau 2 pemain: mereka menang. Jika tidak ada suara yang dihitung, semua pemain yang tersisa tersingkir, dan tidak ada yang menang.",
+      "late": "Pemain yang tidak memberi suara tepat waktu tersingkir.",
+      "majority": "Mayoritas tersingkir: pemainnya mengikuti sisa permainan sebagai penonton.",
+      "stakes": "Setiap pemain membawa 100 juta, dan para pemenang membagi hadiahnya.",
+      "tie": "Hasil seri, atau suara bulat, tidak menyingkirkan siapa pun: pemain lain mengajukan pertanyaan baru.",
+      "title": "Varian eliminasi"
+    },
+    "fair": {
+      "draw": "Tidak ada yang memilih siapa yang bertanya: setiap pemain memberi bagian acak tersegel di awal, dan penanya diundi dari semua bagian itu, sama di setiap halaman.",
+      "sealed": "Suara tersegel: halaman mengirim hash-nya dengan salt acak, lalu mengungkapkannya setelah semua pemain memberi suara. Suara yang diungkap berbeda dari segelnya dilaporkan.",
+      "title": "Permainan adil",
+      "withheld": "Suara tersegel yang tidak diungkap tepat waktu, atau diungkap berbeda dari segelnya, menyingkirkan pemainnya, atau mengurangi poinnya sebanyak jumlah pemain dikurangi satu dalam varian skor, nilai terbesar yang diberikan satu ronde: tidak ada yang menarik suaranya setelah melihat suara yang lain. Halaman yang dimuat ulang tetap menyimpan suaranya, kecuali penyimpanannya diblokir."
+    },
+    "question": {
+      "asker": "Untuk setiap pertanyaan, seorang pemain yang diundi mengajukan pertanyaan yang dijawab dengan ya atau tidak: pemain lain selain yang mengajukan pertanyaan sebelumnya.",
+      "text": "Pertanyaannya bebas, paling banyak 120 karakter, tanpa tautan maupun alamat e-mail. Pemain yang tidak bertanya dalam 60 detik digantikan pemain lain.",
+      "title": "Sebuah pertanyaan"
+    },
+    "score": {
+      "end": "Setelah 10 ronde, total tertinggi menang, total yang sama berbagi peringkat.",
+      "late": "Pemain yang tidak memberi suara tepat waktu tidak mencetak poin di ronde itu.",
+      "points": "Setiap pemain minoritas mencetak poin sebanyak jumlah suara mayoritas: dengan 7 ya dan 3 tidak, setiap pemain yang memilih tidak mencetak 7.",
+      "rounds": "Tidak ada yang tersingkir: permainan berlangsung 10 pertanyaan, yaitu ronde-rondenya.",
+      "tie": "Hasil seri, atau suara bulat, tidak memberi poin: rondenya tetap dihitung.",
+      "title": "Varian skor"
+    },
+    "setup": {
+      "players": "3 sampai 8 pemain menempati kursi, lalu salah satu dari mereka memulai permainan: kursi tetap terisi sampai permainan selesai.",
+      "title": "Meja",
+      "variants": "Pemain yang memulai permainan memilih variannya, eliminasi atau skor, dan durasi pemberian suara, dari 30 detik hingga 5 menit."
+    },
+    "summary": "Aturan permainan minoritas",
+    "times": {
+      "away": "Pemain yang sedang pergi ditunggu 15 detik lebih lama, satu kali.",
+      "phases": "Sebuah pertanyaan menunggu 60 detik, pemberian suara selama waktu yang dipilih di awal, pengungkapan 15 detik: masing-masing ditutup begitu semua pemain bertindak.",
+      "title": "Waktu"
+    },
+    "title": "Aturan",
+    "vote": {
+      "reveal": "Lalu suara diungkapkan kepada semua. Pihak dengan suara paling sedikit adalah minoritas, yang lain mayoritas.",
+      "sealed": "Setiap pemain yang masih bertahan memberi suara ya atau tidak pada saat yang sama, tersegel: tidak ada yang melihat suara sebelum semua pemain memberi suara. Tidak ada yang wajib menjawab jujur, dan obrolan ada untuk bersepakat, atau berkhianat.",
+      "title": "Pemberian suara"
+    }
+  }
+}

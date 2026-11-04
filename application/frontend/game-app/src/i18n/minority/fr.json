@@ -1,0 +1,59 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "Dans la variante élimination, la majorité est éliminée, jusqu'aux 1 ou 2 derniers joueurs.",
+      "score": "Dans la variante score, personne n'est éliminé : la minorité marque des points, en 10 manches.",
+      "sealed": "Les votes sont scellés : personne, pas même le serveur, ne voit un vote avant que tous les joueurs aient voté."
+    },
+    "rooms": "Créez une salle, ou rejoignez-en une, pour jouer avec d'autres joueurs.",
+    "summary": "Un jeu du manga Liar Game : de 3 à 8 joueurs répondent à une question par oui ou non, et la majorité perd.",
+    "tagline": "Votez avec le plus petit nombre.",
+    "title": "Jeu de la minorité"
+  },
+  "rules": {
+    "elimination": {
+      "end": "La partie est finie dès qu'il reste 1 ou 2 joueurs : ils gagnent. Quand aucun vote ne compte, tous les joueurs restants sont éliminés, et personne ne gagne.",
+      "late": "Un joueur qui ne vote pas à temps est éliminé.",
+      "majority": "La majorité est éliminée : ses joueurs suivent la suite de la partie en spectateurs.",
+      "stakes": "Chaque joueur apporte 100 millions, et les gagnants se partagent la cagnotte.",
+      "tie": "Une égalité, ou un vote unanime, n'élimine personne : un autre joueur pose une nouvelle question.",
+      "title": "La variante élimination"
+    },
+    "fair": {
+      "draw": "Personne ne choisit qui pose les questions : chaque joueur donne une part aléatoire scellée au départ, et ceux qui posent les questions sont tirés de toutes ces parts, de la même façon sur chaque page.",
+      "sealed": "Un vote est scellé : la page envoie son empreinte avec un sel aléatoire, puis le révèle une fois que tous les joueurs ont voté. Un vote révélé autrement que scellé est signalé.",
+      "title": "Jeu loyal",
+      "withheld": "Un vote scellé et non révélé à temps, ou révélé autrement que scellé, élimine son joueur, ou lui fait perdre autant de points que de joueurs moins un dans la variante score, le plus qu'une manche rapporte : personne ne reprend son vote après avoir lu ceux des autres. Une page rechargée garde son vote, sauf si son stockage est bloqué."
+    },
+    "question": {
+      "asker": "À chaque question, un joueur tiré au sort pose une question à laquelle on répond par oui ou non : un autre joueur que celui qui a posé la question précédente.",
+      "text": "La question est libre, de 120 caractères au plus, sans lien ni adresse e-mail. Un joueur qui ne pose pas sa question en 60 secondes laisse la place à un autre.",
+      "title": "Une question"
+    },
+    "score": {
+      "end": "Après les 10 manches, le plus haut total gagne, les totaux égaux partageant la place.",
+      "late": "Un joueur qui ne vote pas à temps ne marque rien pour la manche.",
+      "points": "Chaque joueur de la minorité marque autant de points que la majorité a de votes : avec 7 oui et 3 non, chaque joueur qui a voté non marque 7.",
+      "rounds": "Personne n'est éliminé : la partie dure 10 questions, ses manches.",
+      "tie": "Une égalité, ou un vote unanime, ne rapporte rien : la manche compte quand même.",
+      "title": "La variante score"
+    },
+    "setup": {
+      "players": "De 3 à 8 joueurs prennent les places, puis l'un d'eux lance la partie : les places restent prises jusqu'à sa fin.",
+      "title": "La table",
+      "variants": "Le joueur qui lance la partie choisit sa variante, élimination ou score, et la durée d'un vote, de 30 secondes à 5 minutes."
+    },
+    "summary": "Règles du jeu de la minorité",
+    "times": {
+      "away": "Un joueur absent est attendu 15 secondes de plus, une fois.",
+      "phases": "Une question attend 60 secondes, un vote la durée choisie au départ, une révélation 15 secondes : chacun se ferme dès que tous les joueurs ont agi.",
+      "title": "Les temps"
+    },
+    "title": "Règles",
+    "vote": {
+      "reveal": "Les votes sont ensuite révélés à tous. Le camp qui a le moins de votes est la minorité, l'autre la majorité.",
+      "sealed": "Chaque joueur encore en lice vote oui ou non en même temps, en secret : personne ne voit un vote avant que tous les joueurs aient voté. Personne n'est tenu de répondre sincèrement, et le tchat sert à s'entendre, ou à trahir.",
+      "title": "Le vote"
+    }
+  }
+}

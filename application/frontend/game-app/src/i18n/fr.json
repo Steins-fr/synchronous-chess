@@ -9,6 +9,7 @@
       "chat": "Tchat",
       "chess": "Échecs",
       "home": "Accueil",
+      "minorityGame": "Minorité",
       "poker": "Poker",
       "roulette": "Roulette"
     },
@@ -56,6 +57,11 @@
       "title": "Échecs synchrones"
     },
     "intro": "Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.",
+    "minorityGame": {
+      "action": "Jouer",
+      "description": "De 3 à 8 joueurs votent oui ou non, en secret : la majorité perd, éliminée ou distancée au score.",
+      "title": "Jeu de la minorité"
+    },
     "poker": {
       "action": "Jouer",
       "description": "Un poker à deux avec un paquet de 17 cartes que personne ne distribue : les joueurs le mélangent ensemble, chiffré.",

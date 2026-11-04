@@ -1,0 +1,58 @@
+<ng-container *transloco="let t; prefix: 'minority.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('setup.title') }}</h3>
+        <p class="my-2">{{ t('setup.players') }}</p>
+        <p class="my-2">{{ t('setup.variants') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('question.title') }}</h3>
+        <p class="my-2">{{ t('question.asker') }}</p>
+        <p class="my-2">{{ t('question.text') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('vote.title') }}</h3>
+        <p class="my-2">{{ t('vote.sealed') }}</p>
+        <p class="my-2">{{ t('vote.reveal') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('elimination.title') }}</h3>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('elimination.majority') }}</li>
+            <li>{{ t('elimination.tie') }}</li>
+            <li>{{ t('elimination.late') }}</li>
+        </ul>
+        <p class="my-2">{{ t('elimination.end') }}</p>
+        <p class="my-2">{{ t('elimination.stakes') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('score.title') }}</h3>
+        <p class="my-2">{{ t('score.rounds') }}</p>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('score.points') }}</li>
+            <li>{{ t('score.tie') }}</li>
+            <li>{{ t('score.late') }}</li>
+        </ul>
+        <p class="my-2">{{ t('score.end') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('times.title') }}</h3>
+        <p class="my-2">{{ t('times.phases') }}</p>
+        <p class="my-2">{{ t('times.away') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.sealed') }}</p>
+        <p class="my-2">{{ t('fair.withheld') }}</p>
+        <p class="my-2">{{ t('fair.draw') }}</p>
+    </section>
+</ng-container>

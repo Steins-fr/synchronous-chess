@@ -118,8 +118,8 @@ This is an Angular TypeScript project with the following characteristics:
 
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
-  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `cards` (the names
-  of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
+  `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `minority` (the Minority
+  Game), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -296,6 +296,21 @@ Claude writes the translations of every new or changed key, into every language:
 | seller (of a lot) | vendeur | vendedor | vendedor | vendedor | Verkäufer | продавец | satıcı | penjual | sprzedawca | venditore |
 | pig (the last ones) | cochon | cerdo | porco | porco | Schwein | свинья | domuz | babi | świnia | maiale |
 | coin | pièce | moneda | moeda | moeda | Münze | монета | jeton | koin | moneta | moneta |
+| question | question | pregunta | pergunta | pergunta | Frage | вопрос | soru | pertanyaan | pytanie | domanda |
+| ask (a question) | poser | hacer | fazer | fazer | stellen | задать | sormak | mengajukan | zadać | fare |
+| vote | vote / voter | voto / votar | voto / votar | voto / votar | Stimme / abstimmen | голос / голосовать | oy / oy vermek | suara / memberi suara | głos / głosować | voto / votare |
+| yes / no (a vote) | oui / non | sí / no | sim / não | sim / não | Ja / Nein | да / нет | evet / hayır | ya / tidak | tak / nie | sì / no |
+| majority | majorité | mayoría | maioria | maioria | Mehrheit | большинство | çoğunluk | mayoritas | większość | maggioranza |
+| minority | minorité | minoría | minoria | minoria | Minderheit | меньшинство | azınlık | minoritas | mniejszość | minoranza |
+| tie (of a vote) | égalité | empate | empate | empate | Gleichstand | равенство голосов | eşitlik | seri | równa liczba głosów | parità |
+| unanimous (vote) | unanime | unánime | unânime | unânime | einstimmig | единогласный | oybirliği | bulat | jednogłośny | unanime |
+| eliminated | éliminé | eliminado | eliminado | eliminado | ausgeschieden | выбывший | elenmiş | tersingkir | wyeliminowany | eliminato |
+| elimination (the variant) | élimination | eliminación | eliminação | eliminação | Ausscheidung | на выбывание | eleme | eliminasi | eliminacja | eliminazione |
+| score (the variant) / points | score / points | puntuación / puntos | pontuação / pontos | pontuação / pontos | Punktestand / Punkte | на очки / очки | skor / puan | skor / poin | wynik / punkty | punteggio / punti |
+| round (of the score variant) | manche | ronda | rodada | ronda | Durchgang | раунд | raunt | ronde | runda | manche |
+| variant | variante | variante | variante | variante | Variante | вариант | varyant | varian | wariant | variante |
+| prize pool | cagnotte | premio | prêmio | prémio | Preisgeld | призовой фонд | ödül havuzu | hadiah | pula nagród | montepremi |
+| million | million | millón | milhão | milhão | Million | миллион | milyon | juta | milion | milione |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 

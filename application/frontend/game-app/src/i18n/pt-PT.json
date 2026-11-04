@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Xadrez",
       "home": "Início",
+      "minorityGame": "Minoria",
       "poker": "Póquer",
       "roulette": "Roleta"
     },
@@ -56,6 +57,11 @@
       "title": "Xadrez sincronizado"
     },
     "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores ligam-se diretamente entre si.",
+    "minorityGame": {
+      "action": "Jogar",
+      "description": "De 3 a 8 jogadores votam sim ou não, em segredo: a maioria perde, eliminada ou ultrapassada nos pontos.",
+      "title": "Jogo da minoria"
+    },
     "poker": {
       "action": "Jogar",
       "description": "Póquer a dois com um baralho de 17 cartas que ninguém distribui: os jogadores baralham-no juntos, cifrado.",

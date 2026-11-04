@@ -9,6 +9,7 @@
       "chat": "Czat",
       "chess": "Szachy",
       "home": "Start",
+      "minorityGame": "Mniejszość",
       "poker": "Poker",
       "roulette": "Ruletka"
     },
@@ -56,6 +57,11 @@
       "title": "Szachy synchroniczne"
     },
     "intro": "Utwórz pokój albo dołącz do jednego z otwartych pokojów: gracze łączą się ze sobą bezpośrednio.",
+    "minorityGame": {
+      "action": "Graj",
+      "description": "Od 3 do 8 graczy głosuje w tajemnicy tak lub nie: większość przegrywa, wyeliminowana albo pokonana na punkty.",
+      "title": "Gra mniejszości"
+    },
     "poker": {
       "action": "Graj",
       "description": "Poker we dwoje z talią 17 kart, której nikt nie rozdaje: gracze tasują ją razem, zaszyfrowaną.",

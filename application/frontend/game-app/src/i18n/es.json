@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Ajedrez",
       "home": "Inicio",
+      "minorityGame": "Minoría",
       "poker": "Póquer",
       "roulette": "Ruleta"
     },
@@ -56,6 +57,11 @@
       "title": "Ajedrez sincrónico"
     },
     "intro": "Crea una sala o únete a una de las salas abiertas: los jugadores se conectan directamente entre sí.",
+    "minorityGame": {
+      "action": "Jugar",
+      "description": "De 3 a 8 jugadores votan sí o no, en secreto: la mayoría pierde, eliminada o superada en puntos.",
+      "title": "Juego de la minoría"
+    },
     "poker": {
       "action": "Jugar",
       "description": "Póquer para dos con una baraja de 17 cartas que nadie reparte: los jugadores la barajan juntos, cifrada.",

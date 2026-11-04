@@ -9,6 +9,7 @@
       "chat": "Sohbet",
       "chess": "Satranç",
       "home": "Ana sayfa",
+      "minorityGame": "Azınlık",
       "poker": "Poker",
       "roulette": "Rulet"
     },
@@ -56,6 +57,11 @@
       "title": "Eşzamanlı satranç"
     },
     "intro": "Bir oda oluşturun ya da açık odalardan birine katılın: oyuncular birbirine doğrudan bağlanır.",
+    "minorityGame": {
+      "action": "Oyna",
+      "description": "3 ila 8 oyuncu gizlice evet ya da hayır oyu verir: çoğunluk kaybeder, elenir ya da puanda geride kalır.",
+      "title": "Azınlık oyunu"
+    },
     "poker": {
       "action": "Oyna",
       "description": "Kimsenin dağıtmadığı 17 kartlık bir desteyle iki kişilik poker: oyuncular desteyi şifreli olarak birlikte karıştırır.",

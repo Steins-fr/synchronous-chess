@@ -1,0 +1,11 @@
+<app-room-layout [dimContent]="false" [game]="game" [room]="room()">
+    <app-minority-presentation roomPresentation />
+    @if (room()) {
+    <details class="rules-details">
+        <summary>{{ 'minority.rules.summary' | transloco }}</summary>
+        <app-minority-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-minority-rules />
+    }
+</app-room-layout>

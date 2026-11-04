@@ -9,6 +9,7 @@
       "chat": "Obrolan",
       "chess": "Catur",
       "home": "Beranda",
+      "minorityGame": "Minoritas",
       "poker": "Poker",
       "roulette": "Rulet"
     },
@@ -56,6 +57,11 @@
       "title": "Catur serentak"
     },
     "intro": "Buat ruang, atau bergabunglah ke salah satu ruang terbuka: para pemain terhubung langsung satu sama lain.",
+    "minorityGame": {
+      "action": "Main",
+      "description": "3 sampai 8 pemain memberi suara ya atau tidak secara rahasia: mayoritas kalah, tersingkir atau kalah skor.",
+      "title": "Permainan minoritas"
+    },
     "poker": {
       "action": "Main",
       "description": "Poker berdua dengan setumpuk 17 kartu yang tidak dibagikan siapa pun: para pemain mengocoknya bersama dalam keadaan terenkripsi.",

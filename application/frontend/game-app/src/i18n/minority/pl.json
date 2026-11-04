@@ -1,0 +1,59 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "W wariancie eliminacja większość odpada, aż zostanie 1 lub 2 graczy.",
+      "score": "W wariancie wynik nikt nie odpada: mniejszość zdobywa punkty, przez 10 rund.",
+      "sealed": "Głosy są zapieczętowane: nikt, nawet serwer, nie widzi głosu, zanim wszyscy gracze zagłosują."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z mangi Liar Game: od 3 do 8 graczy odpowiada na pytanie tak lub nie, a większość przegrywa.",
+    "tagline": "Głosuj z najmniej licznymi.",
+    "title": "Gra mniejszości"
+  },
+  "rules": {
+    "elimination": {
+      "end": "Gra kończy się, gdy zostanie 1 lub 2 graczy: oni wygrywają. Gdy żaden głos się nie liczy, wszyscy pozostali gracze odpadają i nikt nie wygrywa.",
+      "late": "Gracz, który nie zagłosuje na czas, odpada.",
+      "majority": "Większość odpada: jej gracze śledzą resztę gry jako widzowie.",
+      "stakes": "Każdy gracz wnosi 100 milionów, a zwycięzcy dzielą się pulą nagród.",
+      "tie": "Równa liczba głosów albo jednogłośne głosowanie nikogo nie eliminuje: inny gracz zadaje nowe pytanie.",
+      "title": "Wariant eliminacja"
+    },
+    "fair": {
+      "draw": "Nikt nie wybiera, kto zadaje pytania: każdy gracz daje na początku zapieczętowaną losową część, a pytający są losowani ze wszystkich części, tak samo na każdej stronie.",
+      "sealed": "Głos jest zapieczętowany: strona wysyła jego skrót z losową solą, a potem ujawnia go, gdy wszyscy gracze zagłosują. Głos ujawniony inaczej, niż został zapieczętowany, jest zgłaszany.",
+      "title": "Uczciwa gra",
+      "withheld": "Zapieczętowany głos, nieujawniony na czas albo ujawniony inaczej, niż został zapieczętowany, eliminuje swojego gracza, a w wariancie wynik odbiera mu tyle punktów, ilu jest graczy minus jeden, najwięcej, ile daje runda: nikt nie wycofa głosu po zobaczeniu cudzych. Przeładowana strona zachowuje swój głos, chyba że jej pamięć jest zablokowana."
+    },
+    "question": {
+      "asker": "Przy każdym pytaniu wylosowany gracz zadaje pytanie, na które odpowiada się tak lub nie: inny gracz niż ten, który zadał poprzednie pytanie.",
+      "text": "Pytanie jest dowolne, ma najwyżej 120 znaków, bez linku i adresu e-mail. Gracz, który nie zada pytania w ciągu 60 sekund, ustępuje miejsca innemu.",
+      "title": "Pytanie"
+    },
+    "score": {
+      "end": "Po 10 rundach wygrywa najwyższa suma, a równe sumy dzielą miejsce.",
+      "late": "Gracz, który nie zagłosuje na czas, nie zdobywa punktów w tej rundzie.",
+      "points": "Każdy gracz mniejszości zdobywa tyle punktów, ile głosów ma większość: przy 7 tak i 3 nie każdy, kto głosował nie, zdobywa 7.",
+      "rounds": "Nikt nie odpada: gra trwa 10 pytań, czyli jej rund.",
+      "tie": "Równa liczba głosów albo jednogłośne głosowanie nie daje punktów: runda i tak się liczy.",
+      "title": "Wariant wynik"
+    },
+    "setup": {
+      "players": "Od 3 do 8 graczy zajmuje miejsca, potem jeden z nich rozpoczyna grę: miejsca pozostają zajęte do jej końca.",
+      "title": "Stół",
+      "variants": "Gracz, który rozpoczyna grę, wybiera jej wariant, eliminacja lub wynik, oraz czas głosowania, od 30 sekund do 5 minut."
+    },
+    "summary": "Zasady gry mniejszości",
+    "times": {
+      "away": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz.",
+      "phases": "Pytanie czeka 60 sekund, głosowanie czas wybrany na początku, odsłanianie 15 sekund: każda faza kończy się, gdy tylko wszyscy gracze wykonają ruch.",
+      "title": "Czas"
+    },
+    "title": "Zasady",
+    "vote": {
+      "reveal": "Potem głosy są ujawniane wszystkim. Strona z najmniejszą liczbą głosów to mniejszość, druga to większość.",
+      "sealed": "Każdy gracz, który jest jeszcze w grze, głosuje jednocześnie tak lub nie, w zapieczętowanym głosie: nikt nie widzi głosu, zanim wszyscy zagłosują. Nikt nie musi odpowiadać szczerze, a czat służy do umawiania się albo do zdrady.",
+      "title": "Głosowanie"
+    }
+  }
+}

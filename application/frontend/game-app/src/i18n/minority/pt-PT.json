@@ -1,0 +1,59 @@
+{
+  "presentation": {
+    "points": {
+      "elimination": "Na variante eliminação, a maioria é eliminada, até restarem 1 ou 2 jogadores.",
+      "score": "Na variante pontuação, ninguém é eliminado: a minoria marca pontos, em 10 rondas.",
+      "sealed": "Os votos são fechados: ninguém, nem sequer o servidor, vê um voto antes de todos os jogadores votarem."
+    },
+    "rooms": "Crie uma sala, ou entre numa, para jogar com outros.",
+    "summary": "Um jogo da manga Liar Game: de 3 a 8 jogadores respondem a uma pergunta com sim ou não, e a maioria perde.",
+    "tagline": "Vote com os poucos.",
+    "title": "Jogo da minoria"
+  },
+  "rules": {
+    "elimination": {
+      "end": "A partida termina quando restam 1 ou 2 jogadores: são eles que vencem. Quando nenhum voto conta, todos os jogadores restantes são eliminados, e ninguém vence.",
+      "late": "Um jogador que não vote a tempo é eliminado.",
+      "majority": "A maioria é eliminada: os seus jogadores acompanham o resto da partida como espetadores.",
+      "stakes": "Cada jogador traz 100 milhões, e os vencedores dividem o prémio.",
+      "tie": "Um empate, ou um voto unânime, não elimina ninguém: outro jogador faz uma nova pergunta.",
+      "title": "A variante eliminação"
+    },
+    "fair": {
+      "draw": "Ninguém escolhe quem faz as perguntas: cada jogador dá uma parte aleatória fechada no início, e quem pergunta é sorteado a partir de todas elas, igual em cada página.",
+      "sealed": "Um voto é fechado: a página envia o seu hash com um sal aleatório, e revela-o quando todos os jogadores tiverem votado. Um voto revelado de outra forma que fechado é denunciado.",
+      "title": "Jogo limpo",
+      "withheld": "Um voto fechado e não revelado a tempo, ou revelado de outra forma que fechado, elimina o jogador, ou retira-lhe tantos pontos quantos jogadores menos um na variante pontuação, o máximo que uma ronda dá: ninguém retira o seu voto depois de ler os dos outros. Uma página recarregada mantém o seu voto, a não ser que o armazenamento esteja bloqueado."
+    },
+    "question": {
+      "asker": "A cada pergunta, um jogador sorteado faz uma pergunta respondida com sim ou não: outro jogador que não aquele que fez a pergunta anterior.",
+      "text": "A pergunta é livre, com 120 caracteres no máximo, sem ligação nem endereço de e-mail. Um jogador que não pergunte em 60 segundos dá a vez a outro.",
+      "title": "Uma pergunta"
+    },
+    "score": {
+      "end": "Depois das 10 rondas, o maior total vence, e os totais iguais partilham a posição.",
+      "late": "Um jogador que não vote a tempo não marca nada na ronda.",
+      "points": "Cada jogador da minoria marca tantos pontos quantos votos tem a maioria: com 7 sim e 3 não, cada jogador que votou não marca 7.",
+      "rounds": "Ninguém é eliminado: a partida dura 10 perguntas, as suas rondas.",
+      "tie": "Um empate, ou um voto unânime, não dá pontos: a ronda conta na mesma.",
+      "title": "A variante pontuação"
+    },
+    "setup": {
+      "players": "De 3 a 8 jogadores ocupam os lugares, e um deles começa a partida: os lugares ficam ocupados até ela terminar.",
+      "title": "A mesa",
+      "variants": "O jogador que começa a partida escolhe a variante, eliminação ou pontuação, e a duração de um voto, de 30 segundos a 5 minutos."
+    },
+    "summary": "Regras do jogo da minoria",
+    "times": {
+      "away": "Um jogador ausente é esperado mais 15 segundos, uma vez.",
+      "phases": "Uma pergunta espera 60 segundos, um voto o tempo escolhido no início, uma revelação 15 segundos: cada um fecha assim que todos os jogadores tiverem agido.",
+      "title": "Os tempos"
+    },
+    "title": "Regras",
+    "vote": {
+      "reveal": "Depois, os votos são revelados a todos. O lado com menos votos é a minoria, o outro a maioria.",
+      "sealed": "Cada jogador ainda em jogo vota sim ou não ao mesmo tempo, fechado: ninguém vê um voto antes de todos votarem. Ninguém tem de responder com sinceridade, e o chat serve para combinar, ou para trair.",
+      "title": "O voto"
+    }
+  }
+}

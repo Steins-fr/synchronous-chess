@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Schach",
       "home": "Start",
+      "minorityGame": "Minderheit",
       "poker": "Poker",
       "roulette": "Roulette"
     },
@@ -56,6 +57,11 @@
       "title": "Synchrones Schach"
     },
     "intro": "Erstelle einen Raum oder tritt einem der offenen Räume bei: Die Spieler verbinden sich direkt miteinander.",
+    "minorityGame": {
+      "action": "Spielen",
+      "description": "3 bis 8 Spieler stimmen geheim mit Ja oder Nein ab: Die Mehrheit verliert, sie scheidet aus oder wird nach Punkten geschlagen.",
+      "title": "Minderheitsspiel"
+    },
     "poker": {
       "action": "Spielen",
       "description": "Poker zu zweit mit einem Blatt aus 17 Karten, das niemand austeilt: Die Spieler mischen es gemeinsam, verschlüsselt.",
