@@ -138,7 +138,9 @@ run by the CI.
 - Run one scenario with `npx playwright test -g "<part of its name>"`.
 - Two suites: `npm run e2e:fast` runs the quick scenarios, `npm run e2e:slow` the ones tagged `SLOW` (`@slow`,
   `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing
-  out after 15 seconds, the room handed over, the moves of a poker hand or its next deal timing out after 45 seconds, 30 more for a player away. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
+  out after 15 seconds, the room handed over, the moves of a poker hand or its next deal timing out after 45 seconds, 30
+  more for a player away, a vote of the Minority Game timing out after 30 seconds, its score variant played over 10
+  rounds. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
 
@@ -196,7 +198,7 @@ run by the CI.
 ### Testing a chess game
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
-  the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`: the home page only links to them. The sound lab `/sound-lab` plays
+  the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`, the Minority Game page `/minority-game`: the home page only links to them. The sound lab `/sound-lab` plays
   every sound effect of the games, linked from nowhere.
 - Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
   `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
@@ -272,6 +274,21 @@ run by the CI.
   history of the room (`Lot A: bob wins for 12 coins (bids: …)`, the latest first).
 - A phase waits 90 seconds for the first lot, 30 for the others, 45 for the discards: every phase closes as soon as every
   player acted, a full game takes about 15 seconds when every player acts.
+
+### Testing a Minority Game
+
+- The table has 8 seats, `#seat-0` to `#seat-7` of `app-minority-table`: each participant takes one with `Sit here`, then a
+  seated player picks the variant (`Elimination`, `Score`) and the time to vote (`30 s` to `5 min`), radio buttons of
+  `#setup`, and clicks `Start the game` once 3 players are seated. The pages draw the seed by themselves, then the asker
+  drawn (`bob asks a question…` in the `status` role) types in the textbox `Your question`, then `Ask`. See
+  `documentation/minority-game-session.md`.
+- A player still in votes with `Yes` or `No`; its seat shows `Sealed` to every page, its page `Your vote, yes, is sealed`
+  (`#actions`). An eliminated player reads `You are eliminated: follow the rest of the game and the chat.` there.
+- `#round`, `#variant` and `#stakes` tell what the game is at, `#question-text` the question, `#last-vote` the count of the
+  question before (`Question 1: 3 yes, 1 no. Eliminated: alice, bob, carol`), `#winners` and `#standings` the end, then
+  `Play again` starts a new one. The asker is drawn: read it from the status of a spectator.
+- A question waits 60 seconds, a vote the time picked, a reveal 15 seconds: every phase closes as soon as every player
+  acted, a question takes a few seconds when every player acts.
 
 ### Cleanup after every browser test
 

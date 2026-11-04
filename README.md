@@ -41,6 +41,12 @@ The poker of the manga *Liar Game* for 4 to 8 players, bought at auction: 300 co
 
 No one reads a bid before the auction of its lot closes, not even the server: each page sends the hash of its bid, then reveals it once every player bid. No one shuffles the deck alone: each player gives a sealed random part. See [Bid Poker session](documentation/bid-poker-session.md).
 
+### Minority Game demo
+
+The Minority Game of the manga *Liar Game* for 3 to 8 players: a player drawn asks a question answered by yes or no, every player votes, sealed, and the majority loses. Each player takes a seat with `Sit here`, then one of them picks the variant and the time of a vote and clicks `Start the game`. In the elimination variant, the majority is eliminated down to the last 1 or 2 players, who share the stakes; in the score variant, nobody is eliminated and each player of the minority scores the votes of the majority, over 10 rounds. The chat is where alliances are made, and betrayed.
+
+No one reads a vote before every player voted, not even the server: each page sends the hash of its vote, then reveals it once every player voted. No one picks the askers: they are drawn from a sealed random part of each player. See [Minority Game session](documentation/minority-game-session.md).
+
 ### Chat demo
 
 A simple chat demo with ping displayed between peers. For the moment, you have to click on the send button for sending the message. The `Enter` key is not supported.
@@ -92,17 +98,18 @@ The API is composed of 4 lambdas for managing websocket connection, disconnectio
 ### **Frontend**
 ---
 
-The synchronous chess board game, the Seventeen Poker, the 24-shot Russian roulette and the Bid Poker, with chat.
+The synchronous chess board game, the Seventeen Poker, the 24-shot Russian roulette, the Bid Poker and the Minority Game, with chat.
 
 The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
 which the other participants watch for cheats. The moves stay hidden until both players are committed, the
-cards of the poker until their showdown, the bullets of the roulette until their chamber fires, and the bids of the Bid
-Poker until their auction closes.
+cards of the poker until their showdown, the bullets of the roulette until their chamber fires, the bids of the Bid
+Poker until their auction closes, and the votes of the Minority Game until every player voted.
 See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md),
 [Chess game session](documentation/chess-game-session.md), [Mental poker](documentation/mental-poker.md),
 [Seventeen Poker session](documentation/seventeen-poker-session.md),
-[Russian roulette session](documentation/russian-roulette-session.md) and
-[Bid Poker session](documentation/bid-poker-session.md).
+[Russian roulette session](documentation/russian-roulette-session.md),
+[Bid Poker session](documentation/bid-poker-session.md) and
+[Minority Game session](documentation/minority-game-session.md).
 
 **Required**: Backend API (its websocket API and its HTTP API).
 
@@ -123,7 +130,7 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 - connection_id: Websocket connection id of the host;
 - host_player: Player name of the host;
 - max_player: Maximum of player that can join the room;
-- game: The game of the room, chess, seventeen-poker, russian-roulette, bid-poker or chat;
+- game: The game of the room, chess, seventeen-poker, russian-roulette, bid-poker, minority-game or chat;
 - created_at, name_key: The date of its creation and its id in lower case, to list and search the rooms, unique: the ids differ whatever their case;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.
