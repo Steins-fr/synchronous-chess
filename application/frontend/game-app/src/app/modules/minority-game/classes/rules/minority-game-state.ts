@@ -259,7 +259,8 @@ export class MinorityGameState {
 
     /**
      * The time of the phase is over, and the players it waits for are absent: a late asker gives way to another one, a
-     * late voter did not vote, a late reveal withheld its vote
+     * late voter did not vote, a late reveal withheld its vote. An asker late once every player still in was absent
+     * leaves nobody to ask: the question counts no vote, and the game goes on to its end
      */
     public close(): void {
         const state: Readonly<MinorityState> = this._state();
@@ -271,16 +272,17 @@ export class MinorityGameState {
 
         const absent: ReadonlyArray<number> = [...state.absent, ...late];
         switch (state.phase) {
-            case MinorityPhase.ASKING:
-                this._state.set({
+            case MinorityPhase.ASKING: {
+                const told: MinorityState = {
                     ...state,
-                    ask: state.ask + 1,
-                    asker: null,
                     absent,
                     events: [...state.events, { kind: MinorityEventKind.ASKER_LATE, round: state.round, asker: state.asker as number }],
-                    step: state.step + 1,
-                });
+                };
+                this._state.set(without(state.alive, state.absent).length === 0
+                    ? this.counted({ ...told, late: state.alive })
+                    : { ...told, ask: state.ask + 1, asker: null, step: state.step + 1 });
                 break;
+            }
             case MinorityPhase.VOTING:
                 this.move({ ...state, late: [...state.late, ...late], absent, events: [...state.events, this.missed(state, MissedReason.LATE, late)] });
                 break;
@@ -447,7 +449,7 @@ export class MinorityGameState {
         points: ReadonlyArray<Readonly<RoundPoints>>,
     ): MinorityEvent {
         return {
-            kind: MinorityEventKind.COUNTED, round: state.round, asker: state.asker as number, question: state.question as string,
+            kind: MinorityEventKind.COUNTED, round: state.round, asker: state.asker as number, question: state.question ?? '',
             votes, outcome, eliminated, points,
         };
     }

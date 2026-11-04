@@ -366,12 +366,23 @@ export class MinorityTableComponent implements OnDestroy {
     }
 
     protected start(): void {
-        const { variant, voteTime } = this.setupModel();
-        this.session().start({ variant: variant as MinorityVariant, voteTime: Number(voteTime) });
+        void submit(this.setupForm, {
+            action: () => {
+                const { variant, voteTime } = this.setupModel();
+                return Promise.resolve(this.session().start({ variant: variant as MinorityVariant, voteTime: Number(voteTime) }));
+            },
+        });
     }
 
+    /** The question asked, the form is untouched again: the next question of the player shows no error before it types */
     protected ask(): void {
-        void submit(this.questionForm, { action: () => Promise.resolve(this.session().ask(this.questionModel().text)) });
+        void submit(this.questionForm, {
+            action: () => {
+                this.session().ask(this.questionModel().text);
+                this.questionForm().reset();
+                return Promise.resolve();
+            },
+        });
     }
 
     protected vote(vote: Vote): void {
@@ -420,7 +431,8 @@ export class MinorityTableComponent implements OnDestroy {
             name,
             awaited: name !== null && session.awaited().includes(name),
             sealed: playing !== null && playingGame.phase() === MinorityPhase.VOTING && playingGame.committed().includes(playing),
-            absent: playing !== null && playingGame.absent().includes(playing),
+            // Out of the game, a player is no longer awaited: its absence tells nothing more
+            absent: playing !== null && playingGame.alive().includes(playing) && playingGame.absent().includes(playing),
             asker: playing !== null && playingGame.asker() === playing && playingGame.phase() !== MinorityPhase.OVER,
             eliminated: playing !== null && playingGame.eliminated().includes(playing),
             vote: vote?.vote ?? null,

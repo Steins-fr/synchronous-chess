@@ -31,8 +31,8 @@
       "title": "Una domanda"
     },
     "score": {
+      "absent": "Un giocatore che non vota in tempo non fa punti nella manche, e i voti non lo aspettano più finché non vota di nuovo.",
       "end": "Dopo le 10 manche, vince il totale più alto, i totali uguali dividendo il posto.",
-      "late": "Un giocatore che non vota in tempo non fa punti nella manche.",
       "points": "Ogni giocatore della minoranza fa tanti punti quanti voti ha la maggioranza: con 7 sì e 3 no, ogni giocatore che ha votato no fa 7.",
       "rounds": "Nessuno viene eliminato: la partita dura 10 domande, le sue manche.",
       "tie": "Una parità, o un voto unanime, non dà punti: la manche conta lo stesso.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Vincitore} other {Vincitori}}: {winners}",
     "pastGames": "Partite giocate",
     "pastNoWinner": "Nessun vincitore",
-    "pastScore": "{winners} primo con {points, plural, one {# punto} other {# punti}}",
+    "pastScore": "Primo posto, {points, plural, one {# punto} other {# punti}}: {winners}",
     "question": {
       "label": "La tua domanda",
       "link": "Niente link né indirizzi e-mail in una domanda",

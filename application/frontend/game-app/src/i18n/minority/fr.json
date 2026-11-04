@@ -31,8 +31,8 @@
       "title": "Une question"
     },
     "score": {
+      "absent": "Un joueur qui ne vote pas à temps ne marque rien pour la manche, et les votes ne l'attendent plus jusqu'à ce qu'il vote de nouveau.",
       "end": "Après les 10 manches, le plus haut total gagne, les totaux égaux partageant la place.",
-      "late": "Un joueur qui ne vote pas à temps ne marque rien pour la manche.",
       "points": "Chaque joueur de la minorité marque autant de points que la majorité a de votes : avec 7 oui et 3 non, chaque joueur qui a voté non marque 7.",
       "rounds": "Personne n'est éliminé : la partie dure 10 questions, ses manches.",
       "tie": "Une égalité, ou un vote unanime, ne rapporte rien : la manche compte quand même.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Gagnant} other {Gagnants}} : {winners}",
     "pastGames": "Parties jouées",
     "pastNoWinner": "Aucun gagnant",
-    "pastScore": "{winners} premier avec {points, plural, one {# point} other {# points}}",
+    "pastScore": "Première place, {points, plural, one {# point} other {# points}} : {winners}",
     "question": {
       "label": "Votre question",
       "link": "Pas de lien ni d'adresse e-mail dans une question",

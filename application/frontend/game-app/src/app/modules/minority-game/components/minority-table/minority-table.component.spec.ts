@@ -312,6 +312,15 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
         await until(() => text('#question-text') === '“Is it late?”');
         expect(text('#last-vote')).toEqual('');
         expect(seat(1)).toEqual('bob Asks 1:00');
+
+        // When another tie gives the question back to Alice
+        await click('No');
+        await othersVote([YES, NO, YES]);
+
+        // Then her form is new, without an error before she types
+        await until(() => status() === 'Ask a question answered by yes or no.');
+        expect(textFieldInput(element(), 'Your question').value).toEqual('');
+        expect(element().querySelector('mat-error')).toBeNull();
     });
 
     test('should make the local player eliminated a spectator of the rest of the game', async () => {
@@ -330,6 +339,7 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
         await until(() => session().eliminated());
         expect(text('#actions')).toEqual('You are eliminated: follow the rest of the game and the chat.');
         expect(text('#seat-0')).toContain('Eliminated');
+        expect(text('#seat-0')).not.toContain('Skipped');
         expect(element().querySelector('#seat-0 .opacity-50')).not.toBeNull();
         expect(text('#round')).toEqual('Question 2 · 3 players in');
         expect(play).toHaveBeenCalledWith(SoundEffect.GAME_LOST);
@@ -378,7 +388,7 @@ describe('MinorityTableComponent', { timeout: 30_000 }, () => {
 
         // Then
         await until(() => fixture.componentInstance.pastResults().length === 1);
-        expect(pastLine(fixture.componentInstance.pastResults()[0])).toEqual('Game 1: dave first with 3 points');
+        expect(pastLine(fixture.componentInstance.pastResults()[0])).toEqual('Game 1: First place, 3 points: dave');
     });
 
     test('should let the host free the first seat, its player away, every seat taken', async () => {

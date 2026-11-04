@@ -326,7 +326,7 @@ describe('MinorityGameState', () => {
             expect(minority.awaited()).toEqual([0, 1, 2, 3]);
         });
 
-        test('should draw among every player still in once all are absent', () => {
+        test('should draw among every player still in once all are absent, then end the game when that asker is late too', () => {
             // Given
             const minority: MinorityGameState = game(3);
 
@@ -339,6 +339,17 @@ describe('MinorityGameState', () => {
             // Then
             expect(minority.absent()).toEqual([0, 1, 2]);
             expect(minority.askerDraw()).toEqual({ round: 0, ask: 3, candidates: [0, 1, 2] });
+
+            // When nobody is there to ask
+            minority.appoint(1);
+            minority.close();
+
+            // Then the question counts no vote: every player left is eliminated
+            expect(lastEvent(minority)).toEqual({
+                kind: MinorityEventKind.COUNTED, round: 0, asker: 1, question: '', votes: [], outcome: VoteOutcome.NO_VOTE, eliminated: [0, 1, 2], points: [],
+            });
+            expect(minority.phase()).toEqual(MinorityPhase.OVER);
+            expect(minority.result()?.winners).toEqual([]);
         });
     });
 
@@ -435,9 +446,9 @@ describe('MinorityGameState', () => {
             expect(minority.scores()).toEqual([0, 0, -4, -4, -4]);
         });
 
-        test('should not count the question of an asker late as a round', () => {
+        test('should not count the question of an asker late as a round, but when every player is absent', () => {
             // Given
-            const minority: MinorityGameState = game(4, MinorityVariant.SCORE);
+            const minority: MinorityGameState = game(3, MinorityVariant.SCORE);
             minority.appoint(2);
 
             // When
@@ -445,6 +456,17 @@ describe('MinorityGameState', () => {
 
             // Then
             expect([minority.round(), minority.ask()]).toEqual([0, 1]);
+
+            // When the two others are late too, then the asker drawn among every player
+            [0, 1, 2].forEach((player: number) => {
+                minority.appoint(player);
+                minority.close();
+            });
+
+            // Then the round is over, nobody scoring
+            expect([minority.round(), minority.ask(), minority.phase()]).toEqual([1, 0, MinorityPhase.ASKING]);
+            expect(lastEvent(minority)).toMatchObject({ outcome: VoteOutcome.NO_VOTE, points: [] });
+            expect(minority.scores()).toEqual([0, 0, 0]);
         });
 
         test('should end after its rounds, the highest total winning, equal totals sharing the place', () => {

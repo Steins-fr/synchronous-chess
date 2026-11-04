@@ -31,8 +31,8 @@
       "title": "Uma pergunta"
     },
     "score": {
+      "absent": "Um jogador que não vota a tempo não marca nada na rodada, e os votos deixam de esperar por ele até que vote de novo.",
       "end": "Depois das 10 rodadas, o maior total vence, e os totais iguais dividem a posição.",
-      "late": "Um jogador que não vota a tempo não marca nada na rodada.",
       "points": "Cada jogador da minoria marca tantos pontos quantos votos tem a maioria: com 7 sim e 3 não, cada jogador que votou não marca 7.",
       "rounds": "Ninguém é eliminado: a partida dura 10 perguntas, as suas rodadas.",
       "tie": "Um empate, ou um voto unânime, não dá pontos: a rodada conta mesmo assim.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Vencedor} other {Vencedores}}: {winners}",
     "pastGames": "Partidas jogadas",
     "pastNoWinner": "Nenhum vencedor",
-    "pastScore": "{winners} em primeiro com {points, plural, one {# ponto} other {# pontos}}",
+    "pastScore": "Primeiro lugar, {points, plural, one {# ponto} other {# pontos}}: {winners}",
     "question": {
       "label": "Sua pergunta",
       "link": "Sem links nem endereços de e-mail em uma pergunta",

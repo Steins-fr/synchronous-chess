@@ -31,8 +31,8 @@
       "title": "Sebuah pertanyaan"
     },
     "score": {
+      "absent": "Pemain yang tidak memberi suara tepat waktu tidak mencetak poin di ronde itu, dan pemberian suara tidak lagi menunggunya sampai ia memberi suara lagi.",
       "end": "Setelah 10 ronde, total tertinggi menang, total yang sama berbagi peringkat.",
-      "late": "Pemain yang tidak memberi suara tepat waktu tidak mencetak poin di ronde itu.",
       "points": "Setiap pemain minoritas mencetak poin sebanyak jumlah suara mayoritas: dengan 7 ya dan 3 tidak, setiap pemain yang memilih tidak mencetak 7.",
       "rounds": "Tidak ada yang tersingkir: permainan berlangsung 10 pertanyaan, yaitu ronde-rondenya.",
       "tie": "Hasil seri, atau suara bulat, tidak memberi poin: rondenya tetap dihitung.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, other {Pemenang}}: {winners}",
     "pastGames": "Permainan yang dimainkan",
     "pastNoWinner": "Tanpa pemenang",
-    "pastScore": "{winners} pertama dengan {points, plural, other {# poin}}",
+    "pastScore": "Peringkat pertama, {points, plural, other {# poin}}: {winners}",
     "question": {
       "label": "Pertanyaan Anda",
       "link": "Tautan dan alamat email tidak diizinkan dalam pertanyaan",

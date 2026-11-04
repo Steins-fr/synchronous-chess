@@ -31,8 +31,8 @@
       "title": "A question"
     },
     "score": {
+      "absent": "A player who does not vote in time scores nothing for the round, and the votes no longer wait for it until it votes again.",
       "end": "After the 10 rounds, the highest total wins, equal totals sharing the place.",
-      "late": "A player who does not vote in time scores nothing for the round.",
       "points": "Each player of the minority scores as many points as the majority has votes: with 7 yes and 3 no, each player who voted no scores 7.",
       "rounds": "Nobody is eliminated: the game lasts 10 questions, its rounds.",
       "tie": "A tie, or a unanimous vote, scores nothing: the round counts all the same.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Winner} other {Winners}}: {winners}",
     "pastGames": "Games played",
     "pastNoWinner": "No winner",
-    "pastScore": "{winners} first with {points, plural, one {# point} other {# points}}",
+    "pastScore": "First place, {points, plural, one {# point} other {# points}}: {winners}",
     "question": {
       "label": "Your question",
       "link": "No link nor e-mail address in a question",

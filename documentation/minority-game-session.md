@@ -86,7 +86,9 @@ The asker types its question and clicks `Ask` (`MG_question`). The form and ever
 than 120 characters, or holding a link or an e-mail address, as the chat does: one sent around the form is reported
 (`invalidMessage`), and the asker stays awaited. A question of another player than the asker is reported (`illegalMove`).
 The question shows its offensive words masked while the setting of the chat hides them. An asker who does not ask in 60
-seconds is absent, and another player is drawn for the same question (`ask` + 1): it uses up no round.
+seconds is absent, and another player is drawn for the same question (`ask` + 1): it uses up no round. An asker late
+once every player still in was absent leaves nobody to ask: the question counts no vote, so the game always ends,
+every player left eliminated, or the round used up in the score variant.
 
 ## Sealed votes
 
@@ -143,7 +145,7 @@ sharing a place, and the millions won or lost; or the points of each player.
 ## A new game
 
 Once the game is over, a seated player, an eliminated one included, clicks `Play again`: the game joins the former games
-of the room (in the history, `Game 1: Winner: dave`, `Game 1: dave first with 3 points`, `Game 1: No winner`), the seats
+of the room (in the history, `Game 1: Winner: dave`, `Game 1: First place, 3 points: dave`, `Game 1: No winner`), the seats
 stay open, and a seated player starts the next one with a setup of its own. The new game has its own commitments and
 its own seals.
 
@@ -196,8 +198,9 @@ session storage, a vote sealed is lost: its player withholds it.
 ## Limits
 
 - **The last reveal.** The last player to reveal reads the other votes first, and may withhold its own to change the
-  count: it always loses by it, eliminated or losing the most a round gives, but players agreeing together may still
-  sacrifice one of them.
+  count. In the score variant it always loses by it, the most a round gives. In the elimination variant, a player of
+  the majority side is eliminated anyway: withholding costs it nothing more, and may save the others of its side, a
+  tie, or even reverse the count. Players agreeing together may sacrifice one of them that way.
 - **The askers can be foreseen.** Every asker is drawn from the seed: once the seed is known, the askers of every
   question are. The last player to reveal its part of the draw reads the seed first, and may withhold its part to time
   the draw out.

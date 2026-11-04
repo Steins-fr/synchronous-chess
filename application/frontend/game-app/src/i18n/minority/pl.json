@@ -31,8 +31,8 @@
       "title": "Pytanie"
     },
     "score": {
+      "absent": "Gracz, który nie zagłosuje na czas, nie zdobywa punktów w tej rundzie, a głosowania nie czekają już na niego, dopóki znów nie zagłosuje.",
       "end": "Po 10 rundach wygrywa najwyższa suma, a równe sumy dzielą miejsce.",
-      "late": "Gracz, który nie zagłosuje na czas, nie zdobywa punktów w tej rundzie.",
       "points": "Każdy gracz mniejszości zdobywa tyle punktów, ile głosów ma większość: przy 7 tak i 3 nie każdy, kto głosował nie, zdobywa 7.",
       "rounds": "Nikt nie odpada: gra trwa 10 pytań, czyli jej rund.",
       "tie": "Równa liczba głosów albo jednogłośne głosowanie nie daje punktów: runda i tak się liczy.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Zwycięzca} few {Zwycięzcy} many {Zwycięzcy} other {Zwycięzcy}}: {winners}",
     "pastGames": "Rozegrane partie",
     "pastNoWinner": "Bez zwycięzcy",
-    "pastScore": "{winners} pierwsi z {points, plural, one {# punkt} few {# punkty} many {# punktów} other {# punktu}}",
+    "pastScore": "Pierwsze miejsce, {points, plural, one {# punkt} few {# punkty} many {# punktów} other {# punktu}}: {winners}",
     "question": {
       "label": "Twoje pytanie",
       "link": "Bez linków i adresów e-mail w pytaniu",

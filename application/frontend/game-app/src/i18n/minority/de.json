@@ -31,8 +31,8 @@
       "title": "Eine Frage"
     },
     "score": {
+      "absent": "Wer nicht rechtzeitig abstimmt, bekommt in diesem Durchgang keine Punkte, und die Abstimmungen warten nicht mehr auf ihn, bis er wieder abstimmt.",
       "end": "Nach den 10 Durchgängen gewinnt die höchste Summe, gleiche Summen teilen sich den Rang.",
-      "late": "Wer nicht rechtzeitig abstimmt, bekommt in diesem Durchgang keine Punkte.",
       "points": "Jeder Spieler der Minderheit bekommt so viele Punkte, wie die Mehrheit Stimmen hat: Bei 7 Ja und 3 Nein bekommt jeder, der mit Nein gestimmt hat, 7.",
       "rounds": "Niemand scheidet aus: Die Partie dauert 10 Fragen, ihre Durchgänge.",
       "tie": "Ein Gleichstand oder eine einstimmige Abstimmung bringt keine Punkte: Der Durchgang zählt trotzdem.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Gewinner} other {Gewinner}}: {winners}",
     "pastGames": "Gespielte Spiele",
     "pastNoWinner": "Kein Gewinner",
-    "pastScore": "{winners} vorn mit {points, plural, one {# Punkt} other {# Punkte}}",
+    "pastScore": "Erster Platz, {points, plural, one {# Punkt} other {# Punkte}}: {winners}",
     "question": {
       "label": "Deine Frage",
       "link": "Keine Links oder E-Mail-Adressen in einer Frage",

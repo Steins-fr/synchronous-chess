@@ -31,8 +31,8 @@
       "title": "Una pregunta"
     },
     "score": {
+      "absent": "Un jugador que no vota a tiempo no suma nada en la ronda, y los votos ya no lo esperan hasta que vuelva a votar.",
       "end": "Tras las 10 rondas, gana el total más alto, y los totales iguales comparten el puesto.",
-      "late": "Un jugador que no vota a tiempo no suma nada en la ronda.",
       "points": "Cada jugador de la minoría suma tantos puntos como votos tiene la mayoría: con 7 sí y 3 no, cada jugador que votó no suma 7.",
       "rounds": "Nadie queda eliminado: la partida dura 10 preguntas, sus rondas.",
       "tie": "Un empate, o un voto unánime, no da puntos: la ronda cuenta igualmente.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Ganador} other {Ganadores}}: {winners}",
     "pastGames": "Partidas jugadas",
     "pastNoWinner": "Ningún ganador",
-    "pastScore": "{winners} primero con {points, plural, one {# punto} other {# puntos}}",
+    "pastScore": "Primer puesto, {points, plural, one {# punto} other {# puntos}}: {winners}",
     "question": {
       "label": "Tu pregunta",
       "link": "Sin enlaces ni correos electrónicos en una pregunta",

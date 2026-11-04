@@ -161,7 +161,7 @@ test.describe('Minority game', () => {
         await expect(table(dave).locator('#winners')).toHaveText('Winner: carol');
         await expect(table(dave).locator('#standings tbody tr').first()).toContainText('18 points');
         await table(alice).getByRole('button', { name: 'Play again' }).click();
-        await expect(dave.pastLines().first()).toHaveText('Game 1: carol first with 18 points');
+        await expect(dave.pastLines().first()).toHaveText('Game 1: First place, 18 points: carol');
     });
 
     test('keeps the vote sealed of a player reloading the page', async ({ minorityGame }) => {

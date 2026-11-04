@@ -31,8 +31,8 @@
       "title": "Bir soru"
     },
     "score": {
+      "absent": "Zamanında oy vermeyen oyuncu o raunttan puan almaz ve yeniden oy verene kadar oylamalar onu beklemez.",
       "end": "10 rauntun sonunda en yüksek toplam kazanır, eşit toplamlar sırayı paylaşır.",
-      "late": "Zamanında oy vermeyen oyuncu o raunttan puan almaz.",
       "points": "Azınlıktaki her oyuncu, çoğunluğun oy sayısı kadar puan alır: 7 evet ve 3 hayır ile hayır oyu veren her oyuncu 7 puan alır.",
       "rounds": "Kimse elenmez: oyun 10 soru, yani 10 raunt sürer.",
       "tie": "Bir eşitlik ya da oybirliği puan getirmez: raunt yine de sayılır.",
@@ -86,7 +86,7 @@
     "past": "{count, plural, one {Kazanan} other {Kazananlar}}: {winners}",
     "pastGames": "Oynanan oyunlar",
     "pastNoWinner": "Kazanan yok",
-    "pastScore": "{winners} {points, plural, one {# puan} other {# puan}} ile birinci",
+    "pastScore": "Birinci sıra, {points, plural, one {# puan} other {# puan}}: {winners}",
     "question": {
       "label": "Sorunuz",
       "link": "Soruda bağlantı ve e-posta adresi kullanılamaz",
