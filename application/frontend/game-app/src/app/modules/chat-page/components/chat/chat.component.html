@@ -99,7 +99,7 @@
         </button>
         @if (otherPlayers().length > 0) {
         <mat-divider />
-        <div [attr.aria-label]="t('options.shownMessages')" role="group">
+        <fieldset [attr.aria-label]="t('options.shownMessages')" class="m-0 min-w-0 border-0 p-0">
             <p aria-hidden="true" class="muted-note px-4 pt-2 text-xs">{{ t('options.shownMessages') }}</p>
             @for (player of otherPlayers(); track player.name) {
             <button (click)="toggleAuthor(player.name)" [attr.aria-checked]="!hiddenAuthors().has(player.name)" mat-menu-item role="menuitemcheckbox">
@@ -107,7 +107,7 @@
                 <span>{{ player.name }}</span>
             </button>
             }
-        </div>
+        </fieldset>
         }
     </mat-menu>
 
