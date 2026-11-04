@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { textAreaFieldInput, textFieldInput } from './text-field.helper';
+import { choiceFieldOption, textAreaFieldInput, textFieldInput } from './text-field.helper';
 
 describe('textFieldInput', () => {
     const root: HTMLElement = document.createElement('div');
@@ -19,5 +19,22 @@ describe('textFieldInput', () => {
     test('should fail without a text field of this label', () => {
         expect(() => textFieldInput(root, 'Password')).toThrow('No text field labelled \'Password\'');
         expect(() => textAreaFieldInput(root, 'Player name')).toThrow('No text field labelled \'Player name\'');
+    });
+});
+
+describe('choiceFieldOption', () => {
+    const root: HTMLElement = document.createElement('div');
+    root.innerHTML = `
+        <app-choice-field><legend>Variant</legend><button id="elimination"> Elimination </button><button id="score">Score</button></app-choice-field>
+        <app-choice-field><legend>Time</legend><button id="short">30 s</button></app-choice-field>`;
+
+    test('should find the button of an option by the label of its field and its text', () => {
+        expect(choiceFieldOption(root, 'Variant', 'Elimination').id).toEqual('elimination');
+        expect(choiceFieldOption(root, 'Time', '30 s').id).toEqual('short');
+    });
+
+    test('should fail without a choice field of this label, or without this option', () => {
+        expect(() => choiceFieldOption(root, 'Speed', 'Score')).toThrow('No option \'Score\' of a choice field labelled \'Speed\'');
+        expect(() => choiceFieldOption(root, 'Time', 'Score')).toThrow('No option \'Score\' of a choice field labelled \'Time\'');
     });
 });
