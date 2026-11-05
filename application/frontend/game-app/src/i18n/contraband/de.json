@@ -77,9 +77,128 @@
     "title": "Regeln"
   },
   "table": {
+    "action": {
+      "rematch": "Nochmal spielen",
+      "start": "Spiel starten"
+    },
+    "call": {
+      "check": "Kontrollieren",
+      "pass": "Durchlassen"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Zoll von Durchgang {number}: {smuggler} und {inspector}",
       "team": "{team, select, north {Nordland} other {Südland}}"
+    },
+    "customs": {
+      "inspector": "Inspektor: {name}",
+      "smuggler": "Schmuggler: {name}"
+    },
+    "doubt": {
+      "integer": "Bezweifle ganze Millionen",
+      "label": "Zweifel (Millionen)",
+      "max": "Höchstens {max, plural, one {# Million} other {# Millionen}}",
+      "min": "Mindestens {min, plural, one {# Million} other {# Millionen}}",
+      "required": "Gib den Betrag ein, den du bezweifelst",
+      "submit": "Zweifeln"
+    },
+    "history": "Durchgänge der Partie",
+    "info": {
+      "crossing": "Durchgang {number} von {games}",
+      "variant": "{variant, select, classic {Klassisch} other {Goldrausch}} · Zoll von {minutes} Min."
+    },
+    "match": "Partie {number}:",
+    "move": {
+      "emptyDoubt": "Durchgang {number}: {inspector} bezweifelt {doubt, plural, one {# Million} other {# Millionen}} bei einem leeren Koffer und zahlt {smuggler} {indemnity, plural, one {# Million} other {# Millionen}}",
+      "ironChecked": "Durchgang {number}: {inspector} kontrolliert einen Eisenbarren und zahlt {smuggler} {indemnity, plural, one {# Million} other {# Millionen}}",
+      "packLate": "Durchgang {number}: {smuggler} packt keinen Koffer rechtzeitig, nichts bewegt sich",
+      "passed": "Durchgang {number}: {inspector} lässt {smuggler} durch, {amount, plural, one {# Million} other {# Millionen}} geschmuggelt",
+      "seized": "Durchgang {number}: {inspector} {call, select, check {kontrolliert} other {bezweifelt {doubt, plural, one {# Million} other {# Millionen}}}} und beschlagnahmt {amount, plural, one {# Million} other {# Millionen}} von {smuggler}",
+      "slipped": "Durchgang {number}: {inspector} bezweifelt {doubt, plural, one {# Million} other {# Millionen}}, {smuggler} schmuggelt {amount, plural, one {# Million} other {# Millionen}} und erhält {indemnity, plural, one {# Million} other {# Millionen}}",
+      "withheld": "Durchgang {number}: Der Koffer von {smuggler} {reason, select, late {wird nicht rechtzeitig aufgedeckt} invalid {wird anders aufgedeckt als versiegelt} other {verstößt gegen die Regeln}}, {inspector} beschlagnahmt {amount, plural, one {# Million} other {# Millionen}}"
+    },
+    "pack": {
+      "gold": "Goldbarren",
+      "integer": "Ganze Millionen",
+      "iron": "Eisenbarren",
+      "label": "Koffer (Millionen)",
+      "max": "Höchstens {max, plural, one {# Million} other {# Millionen}}",
+      "min": "Mindestens {min, plural, one {# Million} other {# Millionen}}",
+      "required": "Gib das Geld deines Koffers ein",
+      "submit": "Koffer packen"
+    },
+    "pastGames": "Gespielte Partien",
+    "result": {
+      "tie": "Gleichstand: Jeder Spieler behält seinen Saldo",
+      "winner": "{team, select, north {Das Nordland} other {Das Südland}} gewinnt mit {amount, plural, one {# Million} other {# Millionen}} Vorsprung"
+    },
+    "sealed": {
+      "amount": "Dein Koffer enthält {amount, plural, one {# Million} other {# Millionen}}, versiegelt",
+      "gold": "Dein Koffer enthält einen Goldbarren, versiegelt",
+      "iron": "Dein Koffer enthält einen Eisenbarren, versiegelt"
+    },
+    "seat": {
+      "absent": "Verspätet",
+      "account": "Konto: {amount, plural, one {# Million} other {# Millionen}}",
+      "atm": "Geldautomat: {amount, plural, one {# Million} other {# Millionen}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# Million} other {# Millionen}}} minus {−{amount, plural, one {# Million} other {# Millionen}}} other {0 Millionen}}",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "release": "Platz freigeben",
+      "role": "{role, select, smuggler {Schmuggler} other {Inspektor}}",
+      "take": "Hinsetzen"
+    },
+    "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Wertung der Partie, in Millionen",
+      "country": "Land",
+      "indemnities": "Entschädigungen",
+      "player": "Spieler",
+      "seized": "Beschlagnahmt",
+      "share": "Feindliche Automaten",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Geschmuggelt",
+      "team": "{team, select, north {Nord} other {Süd}}"
+    },
+    "start": {
+      "classic": "Klassisch",
+      "customsTime": "Zoll",
+      "gameCount": "{count, plural, one {# Durchgang} other {# Durchgänge}}",
+      "games": "Durchgänge",
+      "goldRush": "Goldrausch",
+      "minutes": "{count} Min.",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "Warte auf die Rückkehr von {names}…",
+      "call": "{variant, select, classic {Lass durch oder bezweifle einen Betrag.} other {Lass durch oder kontrolliere den Koffer.}}",
+      "customs": "{inspector} prüft den Koffer von {smuggler}…",
+      "drawing": "Die Spieler losen die Paare aus: Warte auf {names}.",
+      "hurry": "Beeil dich: Deine Zeit läuft ab!",
+      "over": "Die Partie ist vorbei.",
+      "pack": "Pack deinen Koffer: Er bleibt bis zur Ansage versiegelt.",
+      "packing": "{name} packt einen Koffer…",
+      "revealing": "Der Koffer wird aufgedeckt…",
+      "sealing": "Dein Koffer ist versiegelt: Der Zoll öffnet…",
+      "seats": "Nordland: {north}, Südland: {south}. Die Partie braucht in beiden gleich viele Spieler, mindestens {min}.",
+      "start": "Wähle die Variante, den Zoll und die Durchgänge, dann starte.",
+      "waitingStart": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Warte, bis einer von ihnen startet."
+    },
+    "team": {
+      "atms": "Geldautomaten: {amount, plural, one {# Million} other {# Millionen}}",
+      "name": "{team, select, north {Nordland} other {Südland}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# Million} other {# Millionen}}",
+      "empty": "Leer",
+      "gold": "Goldbarren",
+      "iron": "Eisenbarren",
+      "none": "Kein Koffer",
+      "packing": "Wird gepackt…",
+      "sealed": "Versiegelt",
+      "withheld": "Nicht aufgedeckt"
     }
   }
 }

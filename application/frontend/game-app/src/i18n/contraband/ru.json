@@ -77,9 +77,128 @@
     "title": "Правила"
   },
   "table": {
+    "action": {
+      "rematch": "Сыграть ещё",
+      "start": "Начать партию"
+    },
+    "call": {
+      "check": "Досмотреть",
+      "pass": "Пропустить"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Таможня раунда {number}: {smuggler} и {inspector}",
       "team": "{team, select, north {Северная страна} other {Южная страна}}"
+    },
+    "customs": {
+      "inspector": "Инспектор: {name}",
+      "smuggler": "Контрабандист: {name}"
+    },
+    "doubt": {
+      "integer": "Только целые миллионы",
+      "label": "Сомнение (миллионы)",
+      "max": "Не больше {max, plural, one {# миллиона} few {# миллионов} many {# миллионов} other {# миллиона}}",
+      "min": "Не меньше {min, plural, one {# миллиона} few {# миллионов} many {# миллионов} other {# миллиона}}",
+      "required": "Введите сумму сомнения",
+      "submit": "Сомнение"
+    },
+    "history": "Раунды партии",
+    "info": {
+      "crossing": "Раунд {number} из {games}",
+      "variant": "{variant, select, classic {Классический} other {«Золотая лихорадка»}} · таможня {minutes} мин"
+    },
+    "match": "Партия {number}:",
+    "move": {
+      "emptyDoubt": "Раунд {number}: чемодан пуст, {inspector} объявил сомнение на {doubt, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}} и платит {smuggler} {indemnity, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "ironChecked": "Раунд {number}: {inspector} досматривает железный слиток и платит {smuggler} {indemnity, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "packLate": "Раунд {number}: чемодан {smuggler} не собран вовремя, ничего не меняется",
+      "passed": "Раунд {number}: {inspector} пропускает {smuggler}, провезено: {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "seized": "Раунд {number}: {inspector} {call, select, check {досматривает чемодан} other {объявляет сомнение на {doubt, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}}} и конфискует у {smuggler} {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "slipped": "Раунд {number}: {inspector} объявляет сомнение на {doubt, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}, {smuggler} провозит {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}} и получает {indemnity, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "withheld": "Раунд {number}: чемодан {smuggler} {reason, select, late {не раскрыт вовремя} invalid {раскрыт не так, как запечатан} other {нарушает правила}}, {inspector} конфискует {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}"
+    },
+    "pack": {
+      "gold": "Золотой слиток",
+      "integer": "Только целые миллионы",
+      "iron": "Железный слиток",
+      "label": "Чемодан (миллионы)",
+      "max": "Не больше {max, plural, one {# миллиона} few {# миллионов} many {# миллионов} other {# миллиона}}",
+      "min": "Не меньше {min, plural, one {# миллиона} few {# миллионов} many {# миллионов} other {# миллиона}}",
+      "required": "Введите сумму в чемодане",
+      "submit": "Собрать чемодан"
+    },
+    "pastGames": "Сыгранные партии",
+    "result": {
+      "tie": "Ничья: каждый игрок сохраняет свой баланс",
+      "winner": "{team, select, north {Северная страна} other {Южная страна}} побеждает с перевесом в {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}"
+    },
+    "sealed": {
+      "amount": "В вашем чемодане {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}, он запечатан",
+      "gold": "В вашем чемодане золотой слиток, он запечатан",
+      "iron": "В вашем чемодане железный слиток, он запечатан"
+    },
+    "seat": {
+      "absent": "Опоздание",
+      "account": "Счёт: {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "atm": "Банкомат: {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} minus {−{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} other {0 миллионов}}",
+      "free": "Свободное место",
+      "leave": "Освободить место",
+      "release": "Убрать с места",
+      "role": "{role, select, smuggler {Контрабандист} other {Инспектор}}",
+      "take": "Сесть"
+    },
+    "spectators": "{count, plural, one {# зритель} few {# зрителя} many {# зрителей} other {# зрителя}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} few {#} many {#} other {#}}",
+      "balance": "Баланс",
+      "caption": "Итоги партии, в миллионах",
+      "country": "Страна",
+      "indemnities": "Компенсации",
+      "player": "Игрок",
+      "seized": "Конфисковано",
+      "share": "Банкоматы врага",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} few {#} many {#} other {#}}} minus {−{amount, plural, one {#} few {#} many {#} other {#}}} other {0}}",
+      "smuggled": "Провезено",
+      "team": "{team, select, north {Север} other {Юг}}"
+    },
+    "start": {
+      "classic": "Классический",
+      "customsTime": "Таможня",
+      "gameCount": "{count, plural, one {# раунд} few {# раунда} many {# раундов} other {# раунда}}",
+      "games": "Раунды",
+      "goldRush": "«Золотая лихорадка»",
+      "minutes": "{count} мин",
+      "variant": "Вариант"
+    },
+    "status": {
+      "away": "Ожидание возвращения: {names}…",
+      "call": "{variant, select, classic {Пропустите или объявите сомнение на сумму.} other {Пропустите или досмотрите чемодан.}}",
+      "customs": "{inspector} проверяет чемодан {smuggler}…",
+      "drawing": "Игроки тянут жребий пар: ожидание {names}.",
+      "hurry": "Скорее: ваше время на исходе!",
+      "over": "Партия окончена.",
+      "pack": "Соберите чемодан: он останется запечатанным до объявления.",
+      "packing": "{name} собирает чемодан…",
+      "revealing": "Чемодан раскрывается…",
+      "sealing": "Ваш чемодан запечатан: таможня открывается…",
+      "seats": "Северная страна: {north}, Южная страна: {south}. В каждой нужно одинаковое число игроков, не меньше {min}.",
+      "start": "Выберите вариант, таможню и число раундов, затем начните.",
+      "waitingStart": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: ожидание, пока один из них начнёт партию."
+    },
+    "team": {
+      "atms": "Банкоматы: {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "name": "{team, select, north {Северная страна} other {Южная страна}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "empty": "Пусто",
+      "gold": "Золотой слиток",
+      "iron": "Железный слиток",
+      "none": "Нет чемодана",
+      "packing": "Собирается…",
+      "sealed": "Запечатан",
+      "withheld": "Не раскрыт"
     }
   }
 }

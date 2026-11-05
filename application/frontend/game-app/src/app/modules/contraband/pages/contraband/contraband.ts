@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
+import { RoomHistoryComponent } from '@app/modules/room-layout/room-history/room-history.component';
 import { MatchPage } from '@app/modules/room-layout/leave-match.guard';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
@@ -11,12 +12,13 @@ import { privateBlockChains, PrivatePayloads } from '@app/modules/private-conver
 import { contrabandBlockChains, ContrabandPayloads } from '../../classes/game-sessions/contraband-messages';
 import { ContrabandPresentationComponent } from '../../components/contraband-presentation/contraband-presentation.component';
 import { ContrabandRulesComponent } from '../../components/contraband-rules/contraband-rules.component';
+import { ContrabandTableComponent } from '../../components/contraband-table/contraband-table.component';
 
 /** The page of the Contraband: its rooms, each one holding a table, the chat and the private conversations of the match */
 @Component({
     selector: 'app-contraband',
     templateUrl: './contraband.html',
-    imports: [RoomLayoutComponent, ContrabandPresentationComponent, ContrabandRulesComponent, TranslocoPipe],
+    imports: [RoomLayoutComponent, RoomHistoryComponent, ContrabandPresentationComponent, ContrabandRulesComponent, ContrabandTableComponent, TranslocoPipe],
     providers: [provideRooms()],
 })
 export class Contraband implements MatchPage {
@@ -28,4 +30,6 @@ export class Contraband implements MatchPage {
         mergeBlockChainRoutings(mergeBlockChainRoutings(chatBlockChains, privateBlockChains), contrabandBlockChains),
     );
     public readonly leaveWarning: MatchLeaveWarning = inject(MatchLeaveWarning);
+    // By its reference: its history and its private conversations given to the panel of the room
+    protected readonly table = viewChild<ContrabandTableComponent>('contrabandTable');
 }

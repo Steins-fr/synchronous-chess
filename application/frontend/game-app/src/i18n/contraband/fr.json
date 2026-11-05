@@ -77,9 +77,128 @@
     "title": "Règles"
   },
   "table": {
+    "action": {
+      "rematch": "Rejouer",
+      "start": "Lancer la partie"
+    },
+    "call": {
+      "check": "Contrôler",
+      "pass": "Laisser passer"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Douane de la manche {number} : {smuggler} et {inspector}",
       "team": "{team, select, north {Pays du Nord} other {Pays du Sud}}"
+    },
+    "customs": {
+      "inspector": "Inspecteur : {name}",
+      "smuggler": "Passeur : {name}"
+    },
+    "doubt": {
+      "integer": "Doutez de millions entiers",
+      "label": "Doute (millions)",
+      "max": "Au plus {max, plural, one {# million} other {# millions}}",
+      "min": "{min, plural, one {# million} other {# millions}} au moins",
+      "required": "Saisissez la somme dont vous doutez",
+      "submit": "Douter"
+    },
+    "history": "Manches de la partie",
+    "info": {
+      "crossing": "Manche {number} sur {games}",
+      "variant": "{variant, select, classic {Classique} other {Ruée vers l'or}} · douane de {minutes} min"
+    },
+    "match": "Partie {number} :",
+    "move": {
+      "emptyDoubt": "Manche {number} : {inspector} doute de {doubt, plural, one {# million} other {# millions}} sur une malle vide, et paie {indemnity, plural, one {# million} other {# millions}} à {smuggler}",
+      "ironChecked": "Manche {number} : {inspector} contrôle un lingot de fer, et paie {indemnity, plural, one {# million} other {# millions}} à {smuggler}",
+      "packLate": "Manche {number} : {smuggler} ne fait pas sa malle à temps, rien ne bouge",
+      "passed": "Manche {number} : {inspector} laisse passer {smuggler}, {amount, plural, one {# million passé} other {# millions passés}}",
+      "seized": "Manche {number} : {inspector} {call, select, check {contrôle} other {doute de {doubt, plural, one {# million} other {# millions}}}} et saisit {amount, plural, one {# million} other {# millions}} à {smuggler}",
+      "slipped": "Manche {number} : {inspector} doute de {doubt, plural, one {# million} other {# millions}}, {smuggler} passe {amount, plural, one {# million} other {# millions}} et reçoit {indemnity, plural, one {# million} other {# millions}}",
+      "withheld": "Manche {number} : la malle de {smuggler} {reason, select, late {n'est pas révélée à temps} invalid {est révélée autrement que scellée} other {enfreint les règles}}, {inspector} saisit {amount, plural, one {# million} other {# millions}}"
+    },
+    "pack": {
+      "gold": "Lingot d'or",
+      "integer": "Des millions entiers",
+      "iron": "Lingot de fer",
+      "label": "Malle (millions)",
+      "max": "Au plus {max, plural, one {# million} other {# millions}}",
+      "min": "{min, plural, one {# million} other {# millions}} au moins",
+      "required": "Saisissez l'argent de votre malle",
+      "submit": "Remplir la malle"
+    },
+    "pastGames": "Parties jouées",
+    "result": {
+      "tie": "Égalité : chaque joueur garde son solde",
+      "winner": "{team, select, north {Le pays du Nord} other {Le pays du Sud}} gagne de {amount, plural, one {# million} other {# millions}}"
+    },
+    "sealed": {
+      "amount": "Votre malle contient {amount, plural, one {# million} other {# millions}}, scellée",
+      "gold": "Votre malle contient un lingot d'or, scellée",
+      "iron": "Votre malle contient un lingot de fer, scellée"
+    },
+    "seat": {
+      "absent": "En retard",
+      "account": "Compte : {amount, plural, one {# million} other {# millions}}",
+      "atm": "Distributeur : {amount, plural, one {# million} other {# millions}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# million} other {# millions}}} minus {−{amount, plural, one {# million} other {# millions}}} other {0 million}}",
+      "free": "Place libre",
+      "leave": "Quitter la place",
+      "release": "Libérer la place",
+      "role": "{role, select, smuggler {Passeur} other {Inspecteur}}",
+      "take": "S'asseoir"
+    },
+    "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Solde",
+      "caption": "Classement de la partie, en millions",
+      "country": "Pays",
+      "indemnities": "Indemnités",
+      "player": "Joueur",
+      "seized": "Saisi",
+      "share": "Distributeurs ennemis",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Passé",
+      "team": "{team, select, north {Nord} other {Sud}}"
+    },
+    "start": {
+      "classic": "Classique",
+      "customsTime": "Douane",
+      "gameCount": "{count, plural, one {# manche} other {# manches}}",
+      "games": "Manches",
+      "goldRush": "Ruée vers l'or",
+      "minutes": "{count} min",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "En attente du retour de {names}…",
+      "call": "{variant, select, classic {Laissez passer, ou doutez d'une somme.} other {Laissez passer, ou contrôlez la malle.}}",
+      "customs": "{inspector} inspecte la malle de {smuggler}…",
+      "drawing": "Les joueurs tirent les paires : en attente de {names}.",
+      "hurry": "Vite : votre temps s'écoule !",
+      "over": "La partie est terminée.",
+      "pack": "Remplissez votre malle : elle reste scellée jusqu'à l'annonce.",
+      "packing": "{name} remplit une malle…",
+      "revealing": "La malle est révélée…",
+      "sealing": "Votre malle est scellée : la douane ouvre…",
+      "seats": "Pays du Nord : {north}, pays du Sud : {south}. La partie demande autant de joueurs dans chacun, {min} au moins.",
+      "start": "Choisissez la variante, la douane et les manches, puis lancez.",
+      "waitingStart": "{count, plural, one {# joueur assis} other {# joueurs assis}} : en attente que l'un d'eux lance la partie."
+    },
+    "team": {
+      "atms": "Distributeurs : {amount, plural, one {# million} other {# millions}}",
+      "name": "{team, select, north {Pays du Nord} other {Pays du Sud}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# million} other {# millions}}",
+      "empty": "Vide",
+      "gold": "Lingot d'or",
+      "iron": "Lingot de fer",
+      "none": "Pas de malle",
+      "packing": "En préparation…",
+      "sealed": "Scellée",
+      "withheld": "Non révélée"
     }
   }
 }

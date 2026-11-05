@@ -77,9 +77,128 @@
     "title": "Rules"
   },
   "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the game"
+    },
+    "call": {
+      "check": "Check",
+      "pass": "Pass"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Customs of game {number}: {smuggler} and {inspector}",
       "team": "{team, select, north {Northern country} other {Southern country}}"
+    },
+    "customs": {
+      "inspector": "Inspector: {name}",
+      "smuggler": "Smuggler: {name}"
+    },
+    "doubt": {
+      "integer": "Doubt whole millions",
+      "label": "Doubt (millions)",
+      "max": "At most {max, plural, one {# million} other {# million}}",
+      "min": "{min, plural, one {# million} other {# million}} at least",
+      "required": "Type the amount you doubt",
+      "submit": "Doubt"
+    },
+    "history": "Games of the match",
+    "info": {
+      "crossing": "Game {number} of {games}",
+      "variant": "{variant, select, classic {Classic} other {Gold Rush}} · customs of {minutes} min"
+    },
+    "match": "Match {number}:",
+    "move": {
+      "emptyDoubt": "Game {number}: {inspector} doubts {doubt, plural, one {# million} other {# million}} of an empty trunk, and pays {smuggler} {indemnity, plural, one {# million} other {# million}}",
+      "ironChecked": "Game {number}: {inspector} checks an iron bar, and pays {smuggler} {indemnity, plural, one {# million} other {# million}}",
+      "packLate": "Game {number}: {smuggler} packs no trunk in time, nothing moves",
+      "passed": "Game {number}: {inspector} lets {smuggler} pass, {amount, plural, one {# million} other {# million}} smuggled",
+      "seized": "Game {number}: {inspector} {call, select, check {checks} other {doubts {doubt, plural, one {# million} other {# million}}}} and seizes {amount, plural, one {# million} other {# million}} from {smuggler}",
+      "slipped": "Game {number}: {inspector} doubts {doubt, plural, one {# million} other {# million}}, {smuggler} smuggles {amount, plural, one {# million} other {# million}} and receives {indemnity, plural, one {# million} other {# million}}",
+      "withheld": "Game {number}: the trunk of {smuggler} {reason, select, late {is not revealed in time} invalid {is revealed otherwise than sealed} other {breaks the rules}}, {inspector} seizes {amount, plural, one {# million} other {# million}}"
+    },
+    "pack": {
+      "gold": "Gold bar",
+      "integer": "Pack whole millions",
+      "iron": "Iron bar",
+      "label": "Trunk (millions)",
+      "max": "At most {max, plural, one {# million} other {# million}}",
+      "min": "{min, plural, one {# million} other {# million}} at least",
+      "required": "Type the money of your trunk",
+      "submit": "Pack the trunk"
+    },
+    "pastGames": "Matches played",
+    "result": {
+      "tie": "A tie: each player keeps its balance",
+      "winner": "{team, select, north {The Northern country} other {The Southern country}} wins by {amount, plural, one {# million} other {# million}}"
+    },
+    "sealed": {
+      "amount": "Your trunk holds {amount, plural, one {# million} other {# million}}, sealed",
+      "gold": "Your trunk holds a gold bar, sealed",
+      "iron": "Your trunk holds an iron bar, sealed"
+    },
+    "seat": {
+      "absent": "Late",
+      "account": "Account: {amount, plural, one {# million} other {# million}}",
+      "atm": "ATM: {amount, plural, one {# million} other {# million}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# million} other {# million}}} minus {−{amount, plural, one {# million} other {# million}}} other {0 million}}",
+      "free": "Free seat",
+      "leave": "Leave",
+      "release": "Free the seat",
+      "role": "{role, select, smuggler {Smuggler} other {Inspector}}",
+      "take": "Sit here"
+    },
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Balance",
+      "caption": "Standings of the match, in millions",
+      "country": "Country",
+      "indemnities": "Indemnities",
+      "player": "Player",
+      "seized": "Seized",
+      "share": "Enemy ATMs",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Smuggled",
+      "team": "{team, select, north {North} other {South}}"
+    },
+    "start": {
+      "classic": "Classic",
+      "customsTime": "Customs",
+      "gameCount": "{count, plural, one {# game} other {# games}}",
+      "games": "Games",
+      "goldRush": "Gold Rush",
+      "minutes": "{count} min",
+      "variant": "Variant"
+    },
+    "status": {
+      "away": "Waiting for {names} to come back…",
+      "call": "{variant, select, classic {Pass, or doubt an amount.} other {Pass, or check the trunk.}}",
+      "customs": "{inspector} inspects the trunk of {smuggler}…",
+      "drawing": "The players draw the pairs: waiting for {names}.",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The match is over.",
+      "pack": "Pack your trunk: it stays sealed until the call.",
+      "packing": "{name} packs a trunk…",
+      "revealing": "The trunk is revealed…",
+      "sealing": "Your trunk is sealed: the customs open…",
+      "seats": "Northern country: {north}, Southern country: {south}. The match needs as many players in each, {min} at least.",
+      "start": "Pick the variant, the customs and the games, then start.",
+      "waitingStart": "{count, plural, one {# player seated} other {# players seated}}: waiting for one of them to start."
+    },
+    "team": {
+      "atms": "ATMs: {amount, plural, one {# million} other {# million}}",
+      "name": "{team, select, north {Northern country} other {Southern country}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# million} other {# million}}",
+      "empty": "Empty",
+      "gold": "Gold bar",
+      "iron": "Iron bar",
+      "none": "No trunk",
+      "packing": "Packing…",
+      "sealed": "Sealed",
+      "withheld": "Not revealed"
     }
   }
 }

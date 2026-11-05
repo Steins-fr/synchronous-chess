@@ -77,9 +77,128 @@
     "title": "Zasady"
   },
   "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "call": {
+      "check": "Skontroluj",
+      "pass": "Przepuść"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Kontrola celna rundy {number}: {smuggler} i {inspector}",
       "team": "{team, select, north {Kraj Północy} other {Kraj Południa}}"
+    },
+    "customs": {
+      "inspector": "Inspektor: {name}",
+      "smuggler": "Przemytnik: {name}"
+    },
+    "doubt": {
+      "integer": "Wątp w pełnych milionach",
+      "label": "Wątpienie (miliony)",
+      "max": "Najwyżej {max, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "min": "Co najmniej {min, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "required": "Wpisz kwotę, w którą wątpisz",
+      "submit": "Wątpię"
+    },
+    "history": "Rundy partii",
+    "info": {
+      "crossing": "Runda {number} z {games}",
+      "variant": "{variant, select, classic {Klasyczny} other {Gorączka złota}} · kontrola celna {minutes} min"
+    },
+    "match": "Partia {number}:",
+    "move": {
+      "emptyDoubt": "Runda {number}: walizka jest pusta, {inspector} ogłasza wątpienie na {doubt, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}} i płaci {smuggler} {indemnity, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "ironChecked": "Runda {number}: {inspector} kontroluje sztabkę żelaza i płaci {smuggler} {indemnity, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "packLate": "Runda {number}: {smuggler} nie pakuje walizki na czas, nic się nie zmienia",
+      "passed": "Runda {number}: {inspector} przepuszcza {smuggler}, przemycono: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "seized": "Runda {number}: {inspector} {call, select, check {kontroluje walizkę} other {ogłasza wątpienie na {doubt, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}}} i konfiskuje {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}} z walizki {smuggler}",
+      "slipped": "Runda {number}: {inspector} ogłasza wątpienie na {doubt, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, {smuggler} przemyca {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}} i otrzymuje {indemnity, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "withheld": "Runda {number}: walizka {smuggler} {reason, select, late {nie zostaje odkryta na czas} invalid {zostaje odkryta inaczej, niż ją zapieczętowano} other {łamie zasady}}, {inspector} konfiskuje {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}"
+    },
+    "pack": {
+      "gold": "Sztabka złota",
+      "integer": "Tylko pełne miliony",
+      "iron": "Sztabka żelaza",
+      "label": "Walizka (miliony)",
+      "max": "Najwyżej {max, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "min": "Co najmniej {min, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "required": "Wpisz pieniądze w walizce",
+      "submit": "Spakuj walizkę"
+    },
+    "pastGames": "Rozegrane partie",
+    "result": {
+      "tie": "Remis: każdy gracz zachowuje swoje saldo",
+      "winner": "{team, select, north {Kraj Północy} other {Kraj Południa}} wygrywa przewagą {amount, plural, one {# miliona} few {# milionów} many {# milionów} other {# miliona}}"
+    },
+    "sealed": {
+      "amount": "Twoja walizka zawiera {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, zapieczętowana",
+      "gold": "Twoja walizka zawiera sztabkę złota, zapieczętowana",
+      "iron": "Twoja walizka zawiera sztabkę żelaza, zapieczętowana"
+    },
+    "seat": {
+      "absent": "Spóźnienie",
+      "account": "Konto: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "atm": "Bankomat: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "release": "Usuń z miejsca",
+      "role": "{role, select, smuggler {Przemytnik} other {Inspektor}}",
+      "take": "Usiądź"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} few {#} many {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Klasyfikacja partii, w milionach",
+      "country": "Kraj",
+      "indemnities": "Odszkodowania",
+      "player": "Gracz",
+      "seized": "Skonfiskowano",
+      "share": "Bankomaty wroga",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} few {#} many {#} other {#}}} minus {−{amount, plural, one {#} few {#} many {#} other {#}}} other {0}}",
+      "smuggled": "Przemycono",
+      "team": "{team, select, north {Północ} other {Południe}}"
+    },
+    "start": {
+      "classic": "Klasyczny",
+      "customsTime": "Kontrola celna",
+      "gameCount": "{count, plural, one {# runda} few {# rundy} many {# rund} other {# rundy}}",
+      "games": "Rundy",
+      "goldRush": "Gorączka złota",
+      "minutes": "{count} min",
+      "variant": "Wariant"
+    },
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "call": "{variant, select, classic {Przepuść albo wątp w kwotę.} other {Przepuść albo skontroluj walizkę.}}",
+      "customs": "{inspector} sprawdza walizkę {smuggler}…",
+      "drawing": "Gracze losują pary: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "pack": "Spakuj walizkę: pozostanie zapieczętowana do ogłoszenia.",
+      "packing": "{name} pakuje walizkę…",
+      "revealing": "Walizka zostaje odkryta…",
+      "sealing": "Twoja walizka jest zapieczętowana: kontrola celna się otwiera…",
+      "seats": "Kraj Północy: {north}, Kraj Południa: {south}. Partia wymaga tylu samo graczy w każdym, co najmniej {min}.",
+      "start": "Wybierz wariant, kontrolę celną i rundy, potem zacznij.",
+      "waitingStart": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: czekamy, aż jeden z nich rozpocznie partię."
+    },
+    "team": {
+      "atms": "Bankomaty: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "name": "{team, select, north {Kraj Północy} other {Kraj Południa}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "empty": "Pusta",
+      "gold": "Sztabka złota",
+      "iron": "Sztabka żelaza",
+      "none": "Brak walizki",
+      "packing": "Pakowanie…",
+      "sealed": "Zapieczętowana",
+      "withheld": "Nie odkryto"
     }
   }
 }

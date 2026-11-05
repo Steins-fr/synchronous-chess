@@ -14,8 +14,11 @@ import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http'
 import { TestRequest } from '@angular/common/http/testing';
 import { TestHelper } from '@testing/test.helper';
 import { RoomGame } from '@protocol/room-game.enum';
+import { By } from '@angular/platform-browser';
+import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { contrabandBlockChains } from '../../classes/game-sessions/contraband-messages';
+import { ContrabandTableComponent } from '../../components/contraband-table/contraband-table.component';
 import { Contraband } from './contraband';
 
 describe('Contraband', () => {
@@ -23,6 +26,9 @@ describe('Contraband', () => {
     let roomManagerService: RoomManagerService;
     let room: Room<object>;
     let games: Array<string | null>;
+
+    /** The private conversations the page gives to the panel of the room */
+    const conversations = (): unknown => (fixture.debugElement.query(By.directive(RoomLayoutComponent)).componentInstance as RoomLayoutComponent).conversations();
 
     beforeEach(async () => {
         Element.prototype.scrollTo ??= (): void => undefined;
@@ -52,9 +58,11 @@ describe('Contraband', () => {
         expect(fixture.nativeElement.querySelector('app-contraband-presentation')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-contraband-rules h2')?.textContent).toEqual('Rules');
         expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-contraband-table')).toBeNull();
+        expect(conversations()).toBeUndefined();
     });
 
-    test('should build a room of the game holding the chat and the private conversations, of 8 participants at most', async () => {
+    test('should build a room of the game holding its table, the chat and the private conversations, of 8 participants at most', async () => {
         // Given
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
@@ -73,9 +81,16 @@ describe('Contraband', () => {
             expect.any(AbortSignal),
         );
         expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();
+        // The history of the table beside the game too, out of the page, and the private conversations of the room
+        expect(fixture.nativeElement.querySelector('#room-history app-room-history')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#page-content app-room-history')).toBeNull();
+        const table: ContrabandTableComponent = fixture.debugElement.query(By.directive(ContrabandTableComponent)).componentInstance;
+        expect(conversations()).toBe(table.conversations());
         expect(fixture.nativeElement.querySelector('app-contraband-presentation')).toBeNull();
-        // The rules are folded, without their own title
+        // The rules are folded below the table, without their own title
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-contraband-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-contraband-rules h2')).toBeNull();
+        const order: string[] = Array.from(fixture.nativeElement.querySelector('#page-content').children, (child: Element) => child.tagName.toLowerCase());
+        expect(order).toEqual(['app-contraband-table', 'details']);
     });
 });

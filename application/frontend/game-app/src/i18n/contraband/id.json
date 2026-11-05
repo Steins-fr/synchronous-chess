@@ -77,9 +77,128 @@
     "title": "Aturan"
   },
   "table": {
+    "action": {
+      "rematch": "Main lagi",
+      "start": "Mulai permainan"
+    },
+    "call": {
+      "check": "Periksa",
+      "pass": "Loloskan"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Pabean ronde {number}: {smuggler} dan {inspector}",
       "team": "{team, select, north {Negara Utara} other {Negara Selatan}}"
+    },
+    "customs": {
+      "inspector": "Inspektur: {name}",
+      "smuggler": "Penyelundup: {name}"
+    },
+    "doubt": {
+      "integer": "Ragukan dalam juta utuh",
+      "label": "Keraguan (juta)",
+      "max": "Paling banyak {max, plural, other {# juta}}",
+      "min": "Paling sedikit {min, plural, other {# juta}}",
+      "required": "Ketik jumlah yang Anda ragukan",
+      "submit": "Ragukan"
+    },
+    "history": "Ronde pertandingan",
+    "info": {
+      "crossing": "Ronde {number} dari {games}",
+      "variant": "{variant, select, classic {Klasik} other {Demam emas}} · pabean {minutes} mnt"
+    },
+    "match": "Pertandingan {number}:",
+    "move": {
+      "emptyDoubt": "Ronde {number}: {inspector} meragukan {doubt, plural, other {# juta}} pada koper kosong, dan membayar {smuggler} {indemnity, plural, other {# juta}}",
+      "ironChecked": "Ronde {number}: {inspector} memeriksa batangan besi, dan membayar {smuggler} {indemnity, plural, other {# juta}}",
+      "packLate": "Ronde {number}: {smuggler} tidak mengisi koper tepat waktu, tidak ada yang berpindah",
+      "passed": "Ronde {number}: {inspector} meloloskan {smuggler}, {amount, plural, other {# juta}} diselundupkan",
+      "seized": "Ronde {number}: {inspector} {call, select, check {memeriksa} other {meragukan {doubt, plural, other {# juta}}}} dan menyita {amount, plural, other {# juta}} dari {smuggler}",
+      "slipped": "Ronde {number}: {inspector} meragukan {doubt, plural, other {# juta}}, {smuggler} menyelundupkan {amount, plural, other {# juta}} dan menerima {indemnity, plural, other {# juta}}",
+      "withheld": "Ronde {number}: koper {smuggler} {reason, select, late {tidak dibuka tepat waktu} invalid {dibuka berbeda dari yang disegel} other {melanggar aturan}}, {inspector} menyita {amount, plural, other {# juta}}"
+    },
+    "pack": {
+      "gold": "Batangan emas",
+      "integer": "Juta utuh saja",
+      "iron": "Batangan besi",
+      "label": "Koper (juta)",
+      "max": "Paling banyak {max, plural, other {# juta}}",
+      "min": "Paling sedikit {min, plural, other {# juta}}",
+      "required": "Ketik uang koper Anda",
+      "submit": "Isi koper"
+    },
+    "pastGames": "Pertandingan yang dimainkan",
+    "result": {
+      "tie": "Seri: setiap pemain mempertahankan saldonya",
+      "winner": "{team, select, north {Negara Utara} other {Negara Selatan}} menang dengan selisih {amount, plural, other {# juta}}"
+    },
+    "sealed": {
+      "amount": "Koper Anda berisi {amount, plural, other {# juta}}, tersegel",
+      "gold": "Koper Anda berisi batangan emas, tersegel",
+      "iron": "Koper Anda berisi batangan besi, tersegel"
+    },
+    "seat": {
+      "absent": "Terlambat",
+      "account": "Rekening: {amount, plural, other {# juta}}",
+      "atm": "ATM: {amount, plural, other {# juta}}",
+      "balance": "{sign, select, plus {+{amount, plural, other {# juta}}} minus {−{amount, plural, other {# juta}}} other {0 juta}}",
+      "free": "Kursi kosong",
+      "leave": "Tinggalkan kursi",
+      "release": "Kosongkan kursi",
+      "role": "{role, select, smuggler {Penyelundup} other {Inspektur}}",
+      "take": "Duduk"
+    },
+    "spectators": "{count, plural, other {# penonton}}",
+    "standings": {
+      "amount": "{amount, plural, other {#}}",
+      "balance": "Saldo",
+      "caption": "Peringkat pertandingan, dalam juta",
+      "country": "Negara",
+      "indemnities": "Ganti rugi",
+      "player": "Pemain",
+      "seized": "Disita",
+      "share": "ATM musuh",
+      "signed": "{sign, select, plus {+{amount, plural, other {#}}} minus {−{amount, plural, other {#}}} other {0}}",
+      "smuggled": "Diselundupkan",
+      "team": "{team, select, north {Utara} other {Selatan}}"
+    },
+    "start": {
+      "classic": "Klasik",
+      "customsTime": "Pabean",
+      "gameCount": "{count, plural, other {# ronde}}",
+      "games": "Ronde",
+      "goldRush": "Demam emas",
+      "minutes": "{count} mnt",
+      "variant": "Varian"
+    },
+    "status": {
+      "away": "Menunggu {names} kembali…",
+      "call": "{variant, select, classic {Loloskan, atau ragukan suatu jumlah.} other {Loloskan, atau periksa koper.}}",
+      "customs": "{inspector} menginspeksi koper {smuggler}…",
+      "drawing": "Para pemain mengundi pasangan: menunggu {names}.",
+      "hurry": "Cepat: waktu Anda hampir habis!",
+      "over": "Pertandingan selesai.",
+      "pack": "Isi koper Anda: koper tetap tersegel hingga pengumuman.",
+      "packing": "{name} mengisi koper…",
+      "revealing": "Koper dibuka…",
+      "sealing": "Koper Anda tersegel: pabean dibuka…",
+      "seats": "Negara Utara: {north}, Negara Selatan: {south}. Pertandingan butuh jumlah pemain yang sama di tiap negara, paling sedikit {min}.",
+      "start": "Pilih varian, pabean, dan ronde, lalu mulai.",
+      "waitingStart": "{count, plural, other {# pemain duduk}}: menunggu salah satu dari mereka memulai."
+    },
+    "team": {
+      "atms": "ATM: {amount, plural, other {# juta}}",
+      "name": "{team, select, north {Negara Utara} other {Negara Selatan}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, other {# juta}}",
+      "empty": "Kosong",
+      "gold": "Batangan emas",
+      "iron": "Batangan besi",
+      "none": "Tanpa koper",
+      "packing": "Sedang diisi…",
+      "sealed": "Tersegel",
+      "withheld": "Tidak dibuka"
     }
   }
 }

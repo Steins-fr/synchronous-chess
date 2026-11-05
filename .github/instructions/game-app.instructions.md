@@ -329,6 +329,7 @@ Claude writes the translations of every new or changed key, into every language:
 | iron bar | lingot de fer | lingote de hierro | barra de ferro | barra de ferro | Eisenbarren | железный слиток | demir külçe | batangan besi | sztabka żelaza | lingotto di ferro |
 | indemnity | indemnité | indemnización | indenização | indemnização | Entschädigung | компенсация | tazminat | ganti rugi | odszkodowanie | indennizzo |
 | seize | saisir | confiscar | confiscar | apreender | beschlagnahmen | конфисковать | el koymak | menyita | skonfiskować | sequestrare |
+| balance (of a player, at the end) | solde | saldo | saldo | saldo | Saldo | баланс | bakiye | saldo | saldo | saldo |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 

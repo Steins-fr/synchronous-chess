@@ -77,9 +77,128 @@
     "title": "Kurallar"
   },
   "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Oyunu başlat"
+    },
+    "call": {
+      "check": "Kontrol et",
+      "pass": "Geçir"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "{number}. raunt gümrüğü: {smuggler} ve {inspector}",
       "team": "{team, select, north {Kuzey ülkesi} other {Güney ülkesi}}"
+    },
+    "customs": {
+      "inspector": "Müfettiş: {name}",
+      "smuggler": "Kaçakçı: {name}"
+    },
+    "doubt": {
+      "integer": "Tam milyonlarla şüphelenin",
+      "label": "Şüphe (milyon)",
+      "max": "En fazla {max, plural, one {# milyon} other {# milyon}}",
+      "min": "En az {min, plural, one {# milyon} other {# milyon}}",
+      "required": "Şüphelendiğiniz miktarı yazın",
+      "submit": "Şüphe"
+    },
+    "history": "Maçın rauntları",
+    "info": {
+      "crossing": "Raunt {number} / {games}",
+      "variant": "{variant, select, classic {Klasik} other {Altına hücum}} · {minutes} dk gümrük"
+    },
+    "match": "Maç {number}:",
+    "move": {
+      "emptyDoubt": "Raunt {number}: {inspector} boş bir bavul için şüphe olarak {doubt, plural, one {# milyon} other {# milyon}} açıklar ve {smuggler} oyuncusuna {indemnity, plural, one {# milyon} other {# milyon}} öder",
+      "ironChecked": "Raunt {number}: {inspector} bir demir külçeyi kontrol eder ve {smuggler} oyuncusuna {indemnity, plural, one {# milyon} other {# milyon}} öder",
+      "packLate": "Raunt {number}: {smuggler} bavulunu zamanında hazırlamaz, hiçbir şey değişmez",
+      "passed": "Raunt {number}: {inspector}, {smuggler} oyuncusunu geçirir, kaçırılan: {amount, plural, one {# milyon} other {# milyon}}",
+      "seized": "Raunt {number}: {inspector} {call, select, check {kontrol eder} other {şüphe olarak {doubt, plural, one {# milyon} other {# milyon}} açıklar}} ve {smuggler} oyuncusunun {amount, plural, one {# milyonuna} other {# milyonuna}} el koyar",
+      "slipped": "Raunt {number}: {inspector} şüphe olarak {doubt, plural, one {# milyon} other {# milyon}} açıklar, {smuggler} {amount, plural, one {# milyon} other {# milyon}} kaçırır ve {indemnity, plural, one {# milyon} other {# milyon}} alır",
+      "withheld": "Raunt {number}: {smuggler} oyuncusunun bavulu {reason, select, late {zamanında açılmaz} invalid {mühürlendiğinden farklı açılır} other {kurallara aykırı}}, {inspector} {amount, plural, one {# milyona} other {# milyona}} el koyar"
+    },
+    "pack": {
+      "gold": "Altın külçe",
+      "integer": "Tam milyonlar girin",
+      "iron": "Demir külçe",
+      "label": "Bavul (milyon)",
+      "max": "En fazla {max, plural, one {# milyon} other {# milyon}}",
+      "min": "En az {min, plural, one {# milyon} other {# milyon}}",
+      "required": "Bavulunuzdaki parayı yazın",
+      "submit": "Bavulu hazırla"
+    },
+    "pastGames": "Oynanan maçlar",
+    "result": {
+      "tie": "Eşitlik: her oyuncu bakiyesini korur",
+      "winner": "{team, select, north {Kuzey ülkesi} other {Güney ülkesi}} {amount, plural, one {# milyon} other {# milyon}} farkla kazanır"
+    },
+    "sealed": {
+      "amount": "Bavulunuzda {amount, plural, one {# milyon} other {# milyon}} var, mühürlü",
+      "gold": "Bavulunuzda bir altın külçe var, mühürlü",
+      "iron": "Bavulunuzda bir demir külçe var, mühürlü"
+    },
+    "seat": {
+      "absent": "Gecikti",
+      "account": "Hesap: {amount, plural, one {# milyon} other {# milyon}}",
+      "atm": "ATM: {amount, plural, one {# milyon} other {# milyon}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "release": "Yeri boşalt",
+      "role": "{role, select, smuggler {Kaçakçı} other {Müfettiş}}",
+      "take": "Otur"
+    },
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Bakiye",
+      "caption": "Maçın sıralaması, milyon olarak",
+      "country": "Ülke",
+      "indemnities": "Tazminatlar",
+      "player": "Oyuncu",
+      "seized": "El konan",
+      "share": "Düşman ATM'leri",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Kaçırılan",
+      "team": "{team, select, north {Kuzey} other {Güney}}"
+    },
+    "start": {
+      "classic": "Klasik",
+      "customsTime": "Gümrük",
+      "gameCount": "{count, plural, one {# raunt} other {# raunt}}",
+      "games": "Rauntlar",
+      "goldRush": "Altına hücum",
+      "minutes": "{count} dk",
+      "variant": "Varyant"
+    },
+    "status": {
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "call": "{variant, select, classic {Geçirin ya da bir miktardan şüphelenin.} other {Geçirin ya da bavulu kontrol edin.}}",
+      "customs": "{inspector}, {smuggler} oyuncusunun bavulunu inceliyor…",
+      "drawing": "Oyuncular eşleşmeleri çekiyor, bekleniyor: {names}.",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Maç bitti.",
+      "pack": "Bavulunuzu hazırlayın: açıklamaya kadar mühürlü kalır.",
+      "packing": "{name} bir bavul hazırlıyor…",
+      "revealing": "Bavul açılıyor…",
+      "sealing": "Bavulunuz mühürlendi: gümrük açılıyor…",
+      "seats": "Kuzey ülkesi: {north}, Güney ülkesi: {south}. Maç her ülkede eşit sayıda, en az {min} oyuncu ister.",
+      "start": "Varyantı, gümrüğü ve rauntları seçin, sonra başlatın.",
+      "waitingStart": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: içlerinden birinin başlatması bekleniyor."
+    },
+    "team": {
+      "atms": "ATM'ler: {amount, plural, one {# milyon} other {# milyon}}",
+      "name": "{team, select, north {Kuzey ülkesi} other {Güney ülkesi}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# milyon} other {# milyon}}",
+      "empty": "Boş",
+      "gold": "Altın külçe",
+      "iron": "Demir külçe",
+      "none": "Bavul yok",
+      "packing": "Hazırlanıyor…",
+      "sealed": "Mühürlü",
+      "withheld": "Açılmadı"
     }
   }
 }

@@ -1,0 +1,33 @@
+<ng-container *transloco="let t; prefix: 'contraband.table.seat'">
+    <span class="min-w-0 truncate font-medium">{{ name() ?? t('free') }}</span>
+    @if (role(); as part) {
+    <span class="badge badge-draw">{{ t('role', { role: part }) }}</span>
+    }
+    @if (absent()) {
+    <span class="badge badge-draw">{{ t('absent') }}</span>
+    }
+    @if (balance(); as text) {
+    <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">{{ text.key | transloco: text.params }}</span>
+    }
+    @if (clock(); as left) {
+    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+    }
+    @if (canTake()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>
+    }
+    @if (canLeave()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+    }
+    @if (canRelease()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="release.emit()">{{ t('release') }}</button>
+    }
+    @let money = atm();
+    @if (money !== null) {
+    <!-- The money of the player: its ATM in chips, its account of the third country, where the chips moved fly -->
+    <span class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <app-chip-stack [amount]="money" />
+        <span class="muted-note">{{ t('atm', { amount: money }) }}</span>
+        <span #accountView class="font-medium">{{ t('account', { amount: account() }) }}</span>
+    </span>
+    }
+</ng-container>

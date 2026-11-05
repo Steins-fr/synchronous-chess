@@ -77,9 +77,128 @@
     "title": "Regras"
   },
   "table": {
+    "action": {
+      "rematch": "Jogar outra vez",
+      "start": "Iniciar a partida"
+    },
+    "call": {
+      "check": "Revistar",
+      "pass": "Deixar passar"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Alfândega da ronda {number}: {smuggler} e {inspector}",
       "team": "{team, select, north {País do Norte} other {País do Sul}}"
+    },
+    "customs": {
+      "inspector": "Inspetor: {name}",
+      "smuggler": "Contrabandista: {name}"
+    },
+    "doubt": {
+      "integer": "Duvide de milhões inteiros",
+      "label": "Dúvida (milhões)",
+      "max": "No máximo {max, plural, one {# milhão} other {# milhões}}",
+      "min": "Pelo menos {min, plural, one {# milhão} other {# milhões}}",
+      "required": "Introduza a quantia de que duvida",
+      "submit": "Duvidar"
+    },
+    "history": "Rondas da partida",
+    "info": {
+      "crossing": "Ronda {number} de {games}",
+      "variant": "{variant, select, classic {Clássica} other {Corrida ao ouro}} · alfândega de {minutes} min"
+    },
+    "match": "Partida {number}:",
+    "move": {
+      "emptyDoubt": "Ronda {number}: {inspector} duvida de {doubt, plural, one {# milhão} other {# milhões}} numa mala vazia e paga {indemnity, plural, one {# milhão} other {# milhões}} a {smuggler}",
+      "ironChecked": "Ronda {number}: {inspector} revista uma barra de ferro e paga {indemnity, plural, one {# milhão} other {# milhões}} a {smuggler}",
+      "packLate": "Ronda {number}: {smuggler} não faz a mala a tempo, nada se move",
+      "passed": "Ronda {number}: {inspector} deixa passar {smuggler}, {amount, plural, one {# milhão passado} other {# milhões passados}}",
+      "seized": "Ronda {number}: {inspector} {call, select, check {revista} other {duvida de {doubt, plural, one {# milhão} other {# milhões}}}} e apreende {amount, plural, one {# milhão} other {# milhões}} a {smuggler}",
+      "slipped": "Ronda {number}: {inspector} duvida de {doubt, plural, one {# milhão} other {# milhões}}, {smuggler} passa {amount, plural, one {# milhão} other {# milhões}} e recebe {indemnity, plural, one {# milhão} other {# milhões}}",
+      "withheld": "Ronda {number}: a mala de {smuggler} {reason, select, late {não é revelada a tempo} invalid {é revelada diferente de como foi fechada} other {infringe as regras}}, {inspector} apreende {amount, plural, one {# milhão} other {# milhões}}"
+    },
+    "pack": {
+      "gold": "Barra de ouro",
+      "integer": "Milhões inteiros",
+      "iron": "Barra de ferro",
+      "label": "Mala (milhões)",
+      "max": "No máximo {max, plural, one {# milhão} other {# milhões}}",
+      "min": "Pelo menos {min, plural, one {# milhão} other {# milhões}}",
+      "required": "Introduza o dinheiro da sua mala",
+      "submit": "Fazer a mala"
+    },
+    "pastGames": "Partidas jogadas",
+    "result": {
+      "tie": "Empate: cada jogador mantém o seu saldo",
+      "winner": "{team, select, north {O país do Norte} other {O país do Sul}} vence por {amount, plural, one {# milhão} other {# milhões}}"
+    },
+    "sealed": {
+      "amount": "A sua mala leva {amount, plural, one {# milhão} other {# milhões}}, fechada",
+      "gold": "A sua mala leva uma barra de ouro, fechada",
+      "iron": "A sua mala leva uma barra de ferro, fechada"
+    },
+    "seat": {
+      "absent": "Atrasado",
+      "account": "Conta: {amount, plural, one {# milhão} other {# milhões}}",
+      "atm": "Multibanco: {amount, plural, one {# milhão} other {# milhões}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhão}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "release": "Libertar o lugar",
+      "role": "{role, select, smuggler {Contrabandista} other {Inspetor}}",
+      "take": "Sentar-se"
+    },
+    "spectators": "{count, plural, one {# espetador} other {# espetadores}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Classificação da partida, em milhões",
+      "country": "País",
+      "indemnities": "Indemnizações",
+      "player": "Jogador",
+      "seized": "Apreendido",
+      "share": "Multibancos inimigos",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Passado",
+      "team": "{team, select, north {Norte} other {Sul}}"
+    },
+    "start": {
+      "classic": "Clássica",
+      "customsTime": "Alfândega",
+      "gameCount": "{count, plural, one {# ronda} other {# rondas}}",
+      "games": "Rondas",
+      "goldRush": "Corrida ao ouro",
+      "minutes": "{count} min",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "A aguardar o regresso de {names}…",
+      "call": "{variant, select, classic {Deixe passar ou duvide de uma quantia.} other {Deixe passar ou reviste a mala.}}",
+      "customs": "{inspector} inspeciona a mala de {smuggler}…",
+      "drawing": "Os jogadores sorteiam os pares: a aguardar {names}.",
+      "hurry": "Depressa: o seu tempo está a acabar!",
+      "over": "A partida terminou.",
+      "pack": "Faça a sua mala: fica fechada até ao anúncio.",
+      "packing": "{name} faz uma mala…",
+      "revealing": "A mala é revelada…",
+      "sealing": "A sua mala está fechada: a alfândega abre…",
+      "seats": "País do Norte: {north}, país do Sul: {south}. A partida precisa de tantos jogadores em cada um, {min} pelo menos.",
+      "start": "Escolha a variante, a alfândega e as rondas, e inicie.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a aguardar que um deles inicie a partida."
+    },
+    "team": {
+      "atms": "Multibancos: {amount, plural, one {# milhão} other {# milhões}}",
+      "name": "{team, select, north {País do Norte} other {País do Sul}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# milhão} other {# milhões}}",
+      "empty": "Vazia",
+      "gold": "Barra de ouro",
+      "iron": "Barra de ferro",
+      "none": "Sem mala",
+      "packing": "A preparar…",
+      "sealed": "Fechada",
+      "withheld": "Não revelada"
     }
   }
 }

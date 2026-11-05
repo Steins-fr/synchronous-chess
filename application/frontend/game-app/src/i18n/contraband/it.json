@@ -77,9 +77,128 @@
     "title": "Regole"
   },
   "table": {
+    "action": {
+      "rematch": "Gioca ancora",
+      "start": "Avvia la partita"
+    },
+    "call": {
+      "check": "Controlla",
+      "pass": "Lascia passare"
+    },
+    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Dogana della manche {number}: {smuggler} e {inspector}",
       "team": "{team, select, north {Paese del Nord} other {Paese del Sud}}"
+    },
+    "customs": {
+      "inspector": "Ispettore: {name}",
+      "smuggler": "Contrabbandiere: {name}"
+    },
+    "doubt": {
+      "integer": "Dubita in milioni interi",
+      "label": "Dubbio (milioni)",
+      "max": "Al massimo {max, plural, one {# milione} other {# milioni}}",
+      "min": "Almeno {min, plural, one {# milione} other {# milioni}}",
+      "required": "Scrivi la somma di cui dubiti",
+      "submit": "Dubito"
+    },
+    "history": "Manche della partita",
+    "info": {
+      "crossing": "Manche {number} di {games}",
+      "variant": "{variant, select, classic {Classica} other {Corsa all'oro}} · dogana di {minutes} min"
+    },
+    "match": "Partita {number}:",
+    "move": {
+      "emptyDoubt": "Manche {number}: {inspector} dubita di {doubt, plural, one {# milione} other {# milioni}} su una valigia vuota, e paga {indemnity, plural, one {# milione} other {# milioni}} a {smuggler}",
+      "ironChecked": "Manche {number}: {inspector} controlla un lingotto di ferro, e paga {indemnity, plural, one {# milione} other {# milioni}} a {smuggler}",
+      "packLate": "Manche {number}: {smuggler} non prepara la valigia in tempo, non si muove nulla",
+      "passed": "Manche {number}: {inspector} lascia passare {smuggler}, {amount, plural, one {# milione contrabbandato} other {# milioni contrabbandati}}",
+      "seized": "Manche {number}: {inspector} {call, select, check {controlla} other {dubita di {doubt, plural, one {# milione} other {# milioni}}}} e sequestra {amount, plural, one {# milione} other {# milioni}} a {smuggler}",
+      "slipped": "Manche {number}: {inspector} dubita di {doubt, plural, one {# milione} other {# milioni}}, {smuggler} contrabbanda {amount, plural, one {# milione} other {# milioni}} e riceve {indemnity, plural, one {# milione} other {# milioni}}",
+      "withheld": "Manche {number}: la valigia di {smuggler} {reason, select, late {non è rivelata in tempo} invalid {è rivelata diversamente da come è stata sigillata} other {viola le regole}}, {inspector} sequestra {amount, plural, one {# milione} other {# milioni}}"
+    },
+    "pack": {
+      "gold": "Lingotto d'oro",
+      "integer": "Solo milioni interi",
+      "iron": "Lingotto di ferro",
+      "label": "Valigia (milioni)",
+      "max": "Al massimo {max, plural, one {# milione} other {# milioni}}",
+      "min": "Almeno {min, plural, one {# milione} other {# milioni}}",
+      "required": "Scrivi il denaro della tua valigia",
+      "submit": "Prepara la valigia"
+    },
+    "pastGames": "Partite giocate",
+    "result": {
+      "tie": "Parità: ogni giocatore tiene il suo saldo",
+      "winner": "{team, select, north {Il paese del Nord} other {Il paese del Sud}} vince di {amount, plural, one {# milione} other {# milioni}}"
+    },
+    "sealed": {
+      "amount": "La tua valigia contiene {amount, plural, one {# milione} other {# milioni}}, sigillata",
+      "gold": "La tua valigia contiene un lingotto d'oro, sigillata",
+      "iron": "La tua valigia contiene un lingotto di ferro, sigillata"
+    },
+    "seat": {
+      "absent": "In ritardo",
+      "account": "Conto: {amount, plural, one {# milione} other {# milioni}}",
+      "atm": "Bancomat: {amount, plural, one {# milione} other {# milioni}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# milione} other {# milioni}}} minus {−{amount, plural, one {# milione} other {# milioni}}} other {0 milioni}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "release": "Libera il posto",
+      "role": "{role, select, smuggler {Contrabbandiere} other {Ispettore}}",
+      "take": "Siediti"
+    },
+    "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Classifica della partita, in milioni",
+      "country": "Paese",
+      "indemnities": "Indennizzi",
+      "player": "Giocatore",
+      "seized": "Sequestrato",
+      "share": "Bancomat nemici",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Contrabbandato",
+      "team": "{team, select, north {Nord} other {Sud}}"
+    },
+    "start": {
+      "classic": "Classica",
+      "customsTime": "Dogana",
+      "gameCount": "{count, plural, one {# manche} other {# manche}}",
+      "games": "Manche",
+      "goldRush": "Corsa all'oro",
+      "minutes": "{count} min",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "In attesa del ritorno di {names}…",
+      "call": "{variant, select, classic {Lascia passare, o dubita di una somma.} other {Lascia passare, o controlla la valigia.}}",
+      "customs": "{inspector} ispeziona la valigia di {smuggler}…",
+      "drawing": "I giocatori sorteggiano le coppie: in attesa di {names}.",
+      "hurry": "Sbrigati: il tempo sta per scadere!",
+      "over": "La partita è finita.",
+      "pack": "Prepara la tua valigia: resta sigillata fino all'annuncio.",
+      "packing": "{name} prepara una valigia…",
+      "revealing": "La valigia viene rivelata…",
+      "sealing": "La tua valigia è sigillata: la dogana si apre…",
+      "seats": "Paese del Nord: {north}, paese del Sud: {south}. La partita richiede tanti giocatori in ciascuno, almeno {min}.",
+      "start": "Scegli la variante, la dogana e le manche, poi avvia.",
+      "waitingStart": "{count, plural, one {# giocatore seduto: in attesa che avvii la partita.} other {# giocatori seduti: in attesa che uno di loro avvii la partita.}}"
+    },
+    "team": {
+      "atms": "Bancomat: {amount, plural, one {# milione} other {# milioni}}",
+      "name": "{team, select, north {Paese del Nord} other {Paese del Sud}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# milione} other {# milioni}}",
+      "empty": "Vuota",
+      "gold": "Lingotto d'oro",
+      "iron": "Lingotto di ferro",
+      "none": "Nessuna valigia",
+      "packing": "In preparazione…",
+      "sealed": "Sigillata",
+      "withheld": "Non rivelata"
     }
   }
 }

@@ -1,0 +1,141 @@
+<section *transloco="let t; prefix: 'contraband.table'" #tableSection class="relative flex flex-col gap-4 py-4">
+    @let currentSession = session();
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        @if (info(); as shown) {
+        <span id="crossing">{{ shown.crossing.key | transloco: shown.crossing.params }}</span>
+        <span id="variant">{{ shown.variant.key | transloco: shown.variant.params }}</span>
+        }
+        <span class="ml-auto">{{ t('spectators', { count: currentSession.tableSeats.spectatorNumber() }) }}</span>
+    </div>
+
+    <div appSteadyHeight class="flex items-center gap-3">
+        <output class="table-status flex-1">{{ status().key | transloco: status().params }}</output>
+        @if (clock(); as left) {
+        <span id="clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+        }
+    </div>
+
+    <!-- The customs of the game in progress, its trunk, the game over last, then the standings: each line keeps its place -->
+    @if (game()) {
+    @let last = lastCrossingText();
+    @let shownTrunk = trunk();
+    <div id="customs" appSteadyHeight class="flex flex-col items-center gap-2 p-4 rounded-2xl border border-app-border bg-app-surface-raised text-center">
+        <p class="m-0 flex flex-wrap justify-center gap-x-4">
+            <span id="smuggler">{{ t('customs.smuggler', { name: currentSession.smuggler() }) }}</span>
+            <span id="inspector">{{ t('customs.inspector', { name: currentSession.inspector() }) }}</span>
+        </p>
+        <p id="trunk" class="m-0 flex items-center gap-2 text-lg font-medium">
+            <app-chip-stack [amount]="shownTrunk.amount" />
+            <span>{{ shownTrunk.text.key | transloco: shownTrunk.text.params }}</span>
+        </p>
+        <p id="last-crossing" class="m-0 min-h-[2lh] muted-note">
+            @if (last) {
+            {{ last.key | transloco: last.params }}
+            }
+        </p>
+        @if (winners(); as winning) {
+        <p id="winners" class="m-0"><span class="badge badge-win">{{ winning.key | transloco: winning.params }}</span></p>
+        }
+        @if (standings().length > 0) {
+        <div class="w-full overflow-x-auto">
+            <table id="standings" class="mx-auto text-left text-sm">
+                <caption class="sr-only">{{ t('standings.caption') }}</caption>
+                <thead>
+                    <tr>
+                        <th class="py-1 pr-3 font-medium" scope="col">{{ t('standings.player') }}</th>
+                        <th class="py-1 pr-3 font-medium" scope="col">{{ t('standings.country') }}</th>
+                        <th class="py-1 pr-3 text-right font-medium" scope="col">{{ t('standings.smuggled') }}</th>
+                        <th class="py-1 pr-3 text-right font-medium" scope="col">{{ t('standings.seized') }}</th>
+                        <th class="py-1 pr-3 text-right font-medium" scope="col">{{ t('standings.indemnities') }}</th>
+                        <th class="py-1 pr-3 text-right font-medium" scope="col">{{ t('standings.share') }}</th>
+                        <th class="py-1 text-right font-medium" scope="col">{{ t('standings.balance') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (row of standings(); track row.name) {
+                    <tr>
+                        <td class="py-1 pr-3">{{ row.name }}</td>
+                        <td class="py-1 pr-3">{{ t('standings.team', { team: row.team }) }}</td>
+                        <td class="py-1 pr-3 text-right tabular-nums">{{ t('standings.amount', { amount: row.smuggled }) }}</td>
+                        <td class="py-1 pr-3 text-right tabular-nums">{{ t('standings.amount', { amount: row.seized }) }}</td>
+                        <td class="py-1 pr-3 text-right tabular-nums">{{ row.indemnities.key | transloco: row.indemnities.params }}</td>
+                        <td class="py-1 pr-3 text-right tabular-nums">{{ t('standings.amount', { amount: row.share }) }}</td>
+                        <td class="py-1 text-right font-bold tabular-nums">{{ row.balance.key | transloco: row.balance.params }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- The setup of the next match, apart from the actions of the game: their height holds the game only -->
+    @if (currentSession.canStart()) {
+    <form id="setup" class="flex flex-wrap items-end justify-center gap-4" (submit)="$event.preventDefault(); start()">
+        <app-choice-field [field]="setupForm.variant" [label]="t('start.variant')" [options]="variantOptions" />
+        <app-choice-field [field]="setupForm.customsTime" [label]="t('start.customsTime')" [options]="customsTimes()" />
+        <app-choice-field [field]="setupForm.games" [label]="t('start.games')" [options]="gameCounts()" />
+        <button mat-flat-button type="submit">{{ t('action.start') }}</button>
+    </form>
+    }
+
+    @let variant = game()?.variant;
+    <div id="actions" appSteadyHeight class="flex flex-wrap items-start justify-center gap-3">
+        @if (currentSession.canPack()) {
+        @if (variant === variants.CLASSIC) {
+        <!-- Validated by the form: the browser would show its own message for an amount out of its bounds -->
+        <form class="flex flex-wrap items-start justify-center gap-3" (submit)="$event.preventDefault(); pack()" novalidate>
+            <app-number-field class="w-48" [field]="packForm.amount" [label]="t('pack.label')" />
+            <button class="mt-2" mat-flat-button type="submit">{{ t('pack.submit') }}</button>
+        </form>
+        } @else {
+        <button mat-flat-button type="button" [disabled]="noGold()" (click)="packBar(true)">{{ t('pack.gold') }}</button>
+        <button mat-flat-button type="button" (click)="packBar(false)">{{ t('pack.iron') }}</button>
+        }
+        }
+        @if (currentSession.canCall()) {
+        <button class="mt-2" mat-flat-button type="button" (click)="pass()">{{ t('call.pass') }}</button>
+        @if (variant === variants.CLASSIC) {
+        <form class="flex flex-wrap items-start justify-center gap-3" (submit)="$event.preventDefault(); doubt()" novalidate>
+            <app-number-field class="w-48" [field]="doubtForm.amount" [label]="t('doubt.label')" />
+            <button class="mt-2" mat-flat-button type="submit">{{ t('doubt.submit') }}</button>
+        </form>
+        } @else {
+        <button class="mt-2" mat-flat-button type="button" (click)="check()">{{ t('call.check') }}</button>
+        }
+        }
+        @if (sealed(); as trunkSealed) {
+        <p class="m-0 font-medium">{{ trunkSealed.key | transloco: trunkSealed.params }}</p>
+        }
+        @if (canRematch()) {
+        <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+        }
+    </div>
+
+    <!-- The country of the other players above, the one of the local player below: the North below for a spectator -->
+    @let seats = currentSession.tableSeats;
+    @let left = clock();
+    @for (country of teams(); track country.team) {
+    <div [id]="'team-' + country.team" class="flex flex-col gap-2">
+        <h2 class="m-0 flex flex-wrap items-baseline gap-x-3 mat-title-medium">
+            {{ t('team.name', { team: country.team }) }}
+            @if (country.atms !== null) {
+            <span class="muted-note text-sm">{{ t('team.atms', { amount: country.atms }) }}</span>
+            }
+        </h2>
+        <div class="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            @for (view of country.seats; track view.seat) {
+            <app-contraband-seat #seatView
+                [seat]="view.seat" [name]="view.name" [awaited]="view.awaited" [absent]="view.absent" [role]="view.role"
+                [atm]="view.atm" [account]="view.account" [balance]="view.balance" [winning]="view.winning"
+                [clock]="view.awaited ? left : null" [clockLow]="clockLow()"
+                [canTake]="seats.canTake(view.seat)" [canLeave]="seats.mySeat() === view.seat && seats.canLeave()" [canRelease]="seats.canRelease(view.seat)"
+                (take)="takeSeat(view.seat)" (leave)="leaveSeat()" (release)="release(view.seat)" />
+            }
+        </div>
+    </div>
+    }
+
+    <app-chip-flights #chipFlights />
+</section>
