@@ -113,6 +113,7 @@
       "ironChecked": "Game {number}: {inspector} checks an iron bar, and pays {smuggler} {indemnity, plural, one {# million} other {# million}}",
       "packLate": "Game {number}: {smuggler} packs no trunk in time, nothing moves",
       "passed": "Game {number}: {inspector} lets {smuggler} pass, {amount, plural, one {# million} other {# million}} smuggled",
+      "passedLate": "Game {number}: {inspector} does not call in time and lets {smuggler} pass, {amount, plural, one {# million} other {# million}} smuggled",
       "seized": "Game {number}: {inspector} {call, select, check {checks} other {doubts {doubt, plural, one {# million} other {# million}}}} and seizes {amount, plural, one {# million} other {# million}} from {smuggler}",
       "slipped": "Game {number}: {inspector} doubts {doubt, plural, one {# million} other {# million}}, {smuggler} smuggles {amount, plural, one {# million} other {# million}} and receives {indemnity, plural, one {# million} other {# million}}",
       "withheld": "Game {number}: the trunk of {smuggler} {reason, select, late {is not revealed in time} invalid {is revealed otherwise than sealed} other {breaks the rules}}, {inspector} seizes {amount, plural, one {# million} other {# million}}"

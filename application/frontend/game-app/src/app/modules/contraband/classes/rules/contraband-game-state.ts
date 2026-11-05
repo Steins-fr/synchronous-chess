@@ -2,7 +2,7 @@ import { computed, Signal, signal } from '@angular/core';
 import { Call, CallKind, ContrabandRules, ContrabandSetup, ContrabandVariant, isTrunk } from './contraband-rules';
 import { Movement, settleCall, withheldMovement } from './customs';
 import { Crossing } from './schedule';
-import { ContrabandResult, Ledger, settleContraband } from './standings';
+import { accountOf, ContrabandResult, Ledger, settleContraband } from './standings';
 
 export enum ContrabandPhase {
     /** The smuggler seals its trunk */
@@ -37,11 +37,11 @@ export type ContrabandEvent =
     | { readonly kind: ContrabandEventKind.PACKED | ContrabandEventKind.PACK_LATE; readonly crossing: number; readonly smuggler: number;
         readonly inspector: number }
     | { readonly kind: ContrabandEventKind.CALLED; readonly crossing: number; readonly smuggler: number; readonly inspector: number;
-        readonly call: Call;
-        /** The inspector did not call in time: the trunk passes */
-        readonly late: boolean }
+        readonly call: Call }
     | { readonly kind: ContrabandEventKind.SETTLED; readonly crossing: number; readonly smuggler: number; readonly inspector: number;
         readonly call: Call;
+        /** The inspector did not call in time: its pass was no choice of its own */
+        readonly lateCall: boolean;
         /** The money of the trunk revealed, none for a trunk withheld */
         readonly contents: number | null;
         readonly movement: Movement;
@@ -63,6 +63,8 @@ interface ContrabandState {
     readonly crossing: number;
     /** The call of the inspector, once called */
     readonly call: Call | null;
+    /** The inspector did not call in time: its call is a pass */
+    readonly lateCall: boolean;
     /** The money of each player, in the order of their seats */
     readonly ledgers: ReadonlyArray<Readonly<Ledger>>;
     /** The players who let a phase close without acting: a page gives no more time to a phase waiting for them away, until they act again */
@@ -90,13 +92,12 @@ export class ContrabandGameState {
     public readonly inspector: Signal<number> = computed(() => this.schedule[this._state().crossing].inspector);
     /** The call of the inspector in the game, once called */
     public readonly inspectorCall: Signal<Call | null> = computed(() => this._state().call);
-    public readonly ledgers: Signal<ReadonlyArray<Readonly<Ledger>>> = computed(() => this._state().ledgers);
     /** The money left in the ATM of each player */
     public readonly atms: Signal<ReadonlyArray<number>> = computed((): ReadonlyArray<number> =>
         this._state().ledgers.map((ledger: Readonly<Ledger>) => ledger.atm));
     /** The money on the account of each player in the third country */
     public readonly accounts: Signal<ReadonlyArray<number>> = computed((): ReadonlyArray<number> =>
-        this._state().ledgers.map((ledger: Readonly<Ledger>) => this.rules.account + ledger.smuggled + ledger.seized + ledger.indemnities));
+        this._state().ledgers.map((ledger: Readonly<Ledger>) => accountOf(this.rules, ledger)));
     public readonly absent: Signal<ReadonlyArray<number>> = computed(() => this._state().absent);
     public readonly events: Signal<ReadonlyArray<Readonly<ContrabandEvent>>> = computed(() => this._state().events);
     public readonly step: Signal<number> = computed(() => this._state().step);
@@ -230,6 +231,7 @@ export class ContrabandGameState {
             phase: ContrabandPhase.PACKING,
             crossing: 0,
             call: null,
+            lateCall: false,
             ledgers: Array.from({ length: this.players }, (): Ledger => ({ atm: this.rules.atm, smuggled: 0, seized: 0, indemnities: 0 })),
             absent: [],
             events: [],
@@ -268,7 +270,8 @@ export class ContrabandGameState {
             ...state,
             phase: ContrabandPhase.REVEALING,
             call,
-            events: [...state.events, { kind: ContrabandEventKind.CALLED, ...this.duel(state), call, late }],
+            lateCall: late,
+            events: [...state.events, { kind: ContrabandEventKind.CALLED, ...this.duel(state), call }],
             step: state.step + 1,
         };
     }
@@ -298,7 +301,7 @@ export class ContrabandGameState {
             ...state,
             ledgers,
             events: [...state.events, {
-                kind: ContrabandEventKind.SETTLED, ...this.duel(state), call: state.call as Call, contents, movement, reason,
+                kind: ContrabandEventKind.SETTLED, ...this.duel(state), call: state.call as Call, lateCall: state.lateCall, contents, movement, reason,
             }],
         });
     }
@@ -310,11 +313,12 @@ export class ContrabandGameState {
                 ...state,
                 phase: ContrabandPhase.OVER,
                 call: null,
+                lateCall: false,
                 result: settleContraband(this.rules, this.north, state.ledgers),
                 step: state.step + 1,
             };
         }
-        return { ...state, phase: ContrabandPhase.PACKING, crossing: state.crossing + 1, call: null, step: state.step + 1 };
+        return { ...state, phase: ContrabandPhase.PACKING, crossing: state.crossing + 1, call: null, lateCall: false, step: state.step + 1 };
     }
 }
 

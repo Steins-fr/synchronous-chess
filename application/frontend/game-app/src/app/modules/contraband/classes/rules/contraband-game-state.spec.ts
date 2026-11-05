@@ -46,10 +46,6 @@ describe('ContrabandGameState', () => {
         expect(contraband.phaseTime()).toEqual(CONTRABAND_RULES.packingTime);
         expect(contraband.atms()).toEqual([300, 300]);
         expect(contraband.accounts()).toEqual([100, 100]);
-        expect(contraband.ledgers()).toEqual([
-            { atm: 300, smuggled: 0, seized: 0, indemnities: 0 },
-            { atm: 300, smuggled: 0, seized: 0, indemnities: 0 },
-        ]);
         expect([contraband.inspectorCall(), contraband.result()]).toEqual([null, null]);
         expect([contraband.absent(), contraband.events()]).toEqual([[], []]);
     });
@@ -72,14 +68,14 @@ describe('ContrabandGameState', () => {
         expect([contraband.phase(), contraband.step(), contraband.awaited()]).toEqual([ContrabandPhase.REVEALING, 2, [0]]);
         expect(contraband.phaseTime()).toEqual(CONTRABAND_RULES.revealTime);
         expect(contraband.inspectorCall()).toEqual(doubt(30));
-        expect(lastEvent(contraband)).toEqual({ kind: ContrabandEventKind.CALLED, crossing: 0, smuggler: 0, inspector: 1, call: doubt(30), late: false });
+        expect(lastEvent(contraband)).toEqual({ kind: ContrabandEventKind.CALLED, crossing: 0, smuggler: 0, inspector: 1, call: doubt(30) });
 
         // When
         expect(contraband.reveal(0, 40)).toEqual(Applied.APPLIED);
 
         // Then
         expect(lastEvent(contraband)).toEqual({
-            kind: ContrabandEventKind.SETTLED, crossing: 0, smuggler: 0, inspector: 1, call: doubt(30), contents: 40,
+            kind: ContrabandEventKind.SETTLED, crossing: 0, smuggler: 0, inspector: 1, call: doubt(30), lateCall: false, contents: 40,
             movement: movement(CustomsOutcome.SLIPPED, { smuggled: 40, indemnity: 15 }), reason: null,
         });
         expect([contraband.phase(), contraband.crossing(), contraband.step()]).toEqual([ContrabandPhase.PACKING, 1, 3]);
@@ -132,16 +128,15 @@ describe('ContrabandGameState', () => {
         expect(contraband.events().filter((event: Readonly<ContrabandEvent>) => event.kind === ContrabandEventKind.SETTLED)
             .map((event: Readonly<ContrabandEvent>) => event.kind === ContrabandEventKind.SETTLED && event.movement.outcome))
             .toEqual([CustomsOutcome.PASSED, CustomsOutcome.EMPTY_DOUBT, CustomsOutcome.SEIZED, CustomsOutcome.SLIPPED]);
-        expect(contraband.ledgers()).toEqual([
-            { atm: 200, smuggled: 40, seized: 0, indemnities: -20 },
-            { atm: 200, smuggled: 100, seized: 60, indemnities: 20 },
-        ]);
+        expect(contraband.atms()).toEqual([200, 200]);
         expect(contraband.accounts()).toEqual([120, 280]);
         expect([contraband.phase(), contraband.crossing(), contraband.step()]).toEqual([ContrabandPhase.OVER, 3, 12]);
         expect([contraband.awaited(), contraband.inspectorCall()]).toEqual([[], null]);
         expect(contraband.result()?.winner).toEqual(Team.SOUTH);
         expect(contraband.result()?.totals).toEqual({ [Team.NORTH]: -80, [Team.SOUTH]: 80 });
         expect(contraband.result()?.standings.map((standing: Readonly<ContrabandStanding>) => standing.balance)).toEqual([-80, 80]);
+        expect(contraband.result()?.standings.map(({ smuggled, seized, indemnities }: Readonly<ContrabandStanding>) => [smuggled, seized, indemnities]))
+            .toEqual([[40, 0, -20], [100, 60, 20]]);
         expect(contraband.close()).toEqual(Applied.IGNORED);
         expect(contraband.pack(1)).toEqual(Applied.IGNORED);
     });
@@ -206,15 +201,22 @@ describe('ContrabandGameState', () => {
             expect(contraband.close()).toEqual(Applied.APPLIED);
 
             // Then
-            expect(lastEvent(contraband)).toEqual({ kind: ContrabandEventKind.CALLED, crossing: 0, smuggler: 0, inspector: 1, call: PASS, late: true });
+            expect(lastEvent(contraband)).toEqual({ kind: ContrabandEventKind.CALLED, crossing: 0, smuggler: 0, inspector: 1, call: PASS });
             expect([contraband.phase(), contraband.step(), contraband.absent()]).toEqual([ContrabandPhase.REVEALING, 2, [1]]);
 
             // When
             contraband.reveal(0, 40);
 
-            // Then
+            // Then the pass told as late
+            expect(lastEvent(contraband)).toMatchObject({ kind: ContrabandEventKind.SETTLED, call: PASS, lateCall: true, movement: { outcome: CustomsOutcome.PASSED } });
             expect(contraband.atms()).toEqual([260, 300]);
             expect(contraband.accounts()).toEqual([140, 100]);
+
+            // When the inspector of the next game passes in time
+            crossed(contraband, 10, PASS);
+
+            // Then
+            expect(lastEvent(contraband)).toMatchObject({ kind: ContrabandEventKind.SETTLED, call: PASS, lateCall: false });
         });
 
         test('should seize the most a trunk holds when revealed late, the smuggler absent, the call aside', () => {
@@ -228,7 +230,7 @@ describe('ContrabandGameState', () => {
 
             // Then
             expect(lastEvent(contraband)).toEqual({
-                kind: ContrabandEventKind.SETTLED, crossing: 0, smuggler: 0, inspector: 1, call: doubt(10), contents: null,
+                kind: ContrabandEventKind.SETTLED, crossing: 0, smuggler: 0, inspector: 1, call: doubt(10), lateCall: false, contents: null,
                 movement: movement(CustomsOutcome.WITHHELD, { seized: 100 }), reason: WithheldReason.LATE,
             });
             expect(contraband.absent()).toEqual([0]);

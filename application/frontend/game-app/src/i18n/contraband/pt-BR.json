@@ -113,6 +113,7 @@
       "ironChecked": "Rodada {number}: {inspector} revista uma barra de ferro e paga {indemnity, plural, one {# milhão} other {# milhões}} a {smuggler}",
       "packLate": "Rodada {number}: {smuggler} não arruma a mala a tempo, nada se move",
       "passed": "Rodada {number}: {inspector} deixa {smuggler} passar, {amount, plural, one {# milhão passado} other {# milhões passados}}",
+      "passedLate": "Rodada {number}: {inspector} não anuncia a tempo e deixa {smuggler} passar, {amount, plural, one {# milhão passado} other {# milhões passados}}",
       "seized": "Rodada {number}: {inspector} {call, select, check {revista} other {duvida de {doubt, plural, one {# milhão} other {# milhões}}}} e confisca {amount, plural, one {# milhão} other {# milhões}} de {smuggler}",
       "slipped": "Rodada {number}: {inspector} duvida de {doubt, plural, one {# milhão} other {# milhões}}, {smuggler} passa {amount, plural, one {# milhão} other {# milhões}} e recebe {indemnity, plural, one {# milhão} other {# milhões}}",
       "withheld": "Rodada {number}: a mala de {smuggler} {reason, select, late {não é revelada a tempo} invalid {é revelada diferente de como foi lacrada} other {viola as regras}}, {inspector} confisca {amount, plural, one {# milhão} other {# milhões}}"

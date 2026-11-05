@@ -9,7 +9,7 @@ import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
-import { middle } from '@app/modules/game-table/helpers/table-point.helper';
+import { middle, TablePoint } from '@app/modules/game-table/helpers/table-point.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { chipsOf } from '@app/modules/playing-cards/types/chip';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
@@ -35,7 +35,7 @@ import { PlayedContrabandGame } from '../../classes/game-sessions/played-contrab
 import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { CallKind, ContrabandVariant, Team, teamOf, trunkLimit } from '../../classes/rules/contraband-rules';
 import { ContrabandResult, ContrabandStanding } from '../../classes/rules/standings';
-import { clockText, CrossingEvent, eventText, millions, SettledEvent, signed, trunkText } from '../../helpers/contraband-texts.helper';
+import { clockText, CrossingEvent, eventText, SettledEvent, signed, trunkText } from '../../helpers/contraband-texts.helper';
 import { HeardContrabandTable, tableSounds } from '../../helpers/table-sound.helper';
 import { ContrabandSeatComponent, CustomsRole } from '../contraband-seat/contraband-seat.component';
 
@@ -76,6 +76,13 @@ interface StandingView {
     readonly indemnities: TranslatableText;
     readonly share: number;
     readonly balance: TranslatableText;
+}
+
+/** Chips a trunk revealed moved, from and to their places on the table: none for a player gone from its seat */
+interface MovedChips {
+    readonly amount: number;
+    readonly from: TablePoint | null;
+    readonly to: TablePoint | null;
 }
 
 /** The trunk of the game in progress, the last one once the match is over */
@@ -256,7 +263,7 @@ export class ContrabandTableComponent implements OnDestroy {
             smuggled: standing.smuggled,
             seized: standing.seized,
             indemnities: { key: this.key(marker('table.standings.signed', undefined, 'contraband')), params: signed(standing.indemnities) },
-            share: millions(standing.share),
+            share: standing.share,
             balance: { key: this.key(marker('table.standings.signed', undefined, 'contraband')), params: signed(standing.balance) },
         }));
     });
@@ -510,7 +517,7 @@ export class ContrabandTableComponent implements OnDestroy {
             absent: playingGame.absent().includes(playing),
             role: this.roleOf(playingGame, playing),
             atm: playingGame.atms()[playing],
-            account: millions(playingGame.accounts()[playing]),
+            account: playingGame.accounts()[playing],
             balance: standing === undefined ? null : { key: this.key(marker('table.seat.balance', undefined, 'contraband')), params: signed(standing.balance) },
             winning: standing !== undefined && result?.winner === standing.team,
         };
@@ -575,37 +582,42 @@ export class ContrabandTableComponent implements OnDestroy {
     /**
      * The chips a trunk revealed moved: the money smuggled from the trunk to the account of the smuggler, seized to the
      * account of the inspector, the indemnity from the account of the inspector to the one of the smuggler. Half a
-     * million makes no chip
+     * million makes no chip. A player of the last game may leave its seat as the match is over, before the table shows
+     * it: its chips have no account to fly to
      */
-    private flightsOf(event: Readonly<SettledEvent>): ReadonlyArray<ChipFlight> {
+    private flightsOf(event: Readonly<SettledEvent>): ReadonlyArray<Readonly<MovedChips>> {
         const table: HTMLElement = this.tableView().nativeElement;
         const origin: DOMRect = table.getBoundingClientRect();
+        const place = (element: Element | null): TablePoint | null => element === null ? null : middle(element.getBoundingClientRect(), origin);
         // The trunk shows while the match is played
-        const trunk: DOMRect = (table.querySelector('#trunk') as HTMLElement).getBoundingClientRect();
-        const smuggler: DOMRect = this.accountOf(event.smuggler).getBoundingClientRect();
-        const inspector: DOMRect = this.accountOf(event.inspector).getBoundingClientRect();
+        const trunk: TablePoint | null = place(table.querySelector('#trunk'));
+        const smuggler: TablePoint | null = place(this.accountOf(event.smuggler));
+        const inspector: TablePoint | null = place(this.accountOf(event.inspector));
         const { smuggled, seized, indemnity } = event.movement;
 
         return [
-            { amount: smuggled, from: middle(trunk, origin), to: middle(smuggler, origin) },
-            { amount: seized, from: middle(trunk, origin), to: middle(inspector, origin) },
-            { amount: indemnity, from: middle(inspector, origin), to: middle(smuggler, origin) },
-        ].filter((flight: ChipFlight) => chipsOf(flight.amount).length > 0);
+            { amount: smuggled, from: trunk, to: smuggler },
+            { amount: seized, from: trunk, to: inspector },
+            { amount: indemnity, from: inspector, to: smuggler },
+        ].filter((moved: Readonly<MovedChips>) => chipsOf(moved.amount).length > 0);
     }
 
-    /** The account of a player of the match, on its seat */
-    private accountOf(player: number): HTMLElement {
+    /** The account of a player of the match, on its seat: none once it left its seat */
+    private accountOf(player: number): HTMLElement | null {
         const seat: number | null = this.session().tableSeats.seatOf(this.session().players()[player]);
-        return (this.seatViews().find((view: ContrabandSeatComponent) => view.seat() === seat) as ContrabandSeatComponent).accountPlace();
+        return this.seatViews().find((view: ContrabandSeatComponent) => view.seat() === seat)?.accountPlace() ?? null;
     }
 
-    /** The chips fly, heard as they start. A hidden page runs no animation: it hears the chips moved, at once */
-    private launch(flights: ReadonlyArray<ChipFlight>): void {
-        if (flights.length === 0) {
+    /**
+     * The chips fly, heard as they start, but those of a player gone from its seat. A hidden page runs no animation: it
+     * hears the chips moved, at once
+     */
+    private launch(moved: ReadonlyArray<Readonly<MovedChips>>): void {
+        if (moved.length === 0) {
             return;
         }
         if (this.pageVisibility.visible()) {
-            this.chipFlights().launch(flights);
+            this.chipFlights().launch(moved.filter((chips: Readonly<MovedChips>): chips is ChipFlight => chips.from !== null && chips.to !== null));
         }
         this.soundService.play(SoundEffect.CHIPS);
     }

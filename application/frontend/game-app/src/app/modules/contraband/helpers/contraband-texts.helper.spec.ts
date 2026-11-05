@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { ContrabandEventKind, WithheldReason } from '../classes/rules/contraband-game-state';
 import { Call, CallKind, ContrabandVariant } from '../classes/rules/contraband-rules';
 import { CustomsOutcome, Movement } from '../classes/rules/customs';
-import { clockText, CrossingEvent, eventText, millions, SettledEvent, Sign, signed, trunkText } from './contraband-texts.helper';
+import { clockText, CrossingEvent, eventText, SettledEvent, Sign, signed, trunkText } from './contraband-texts.helper';
 
 const NAMES: ReadonlyArray<string> = ['alice', 'bob', 'carol', 'dave'];
 const PASS: Call = { kind: CallKind.PASS };
@@ -11,13 +11,14 @@ const CHECK: Call = { kind: CallKind.CHECK };
 const doubt = (amount: number): Call => ({ kind: CallKind.DOUBT, amount });
 const moved = (outcome: CustomsOutcome, smuggled: number, seized: number, indemnity: number): Movement =>
     ({ outcome, smuggled, seized, indemnity, fromAtm: smuggled + seized });
-const settled = (call: Call, contents: number | null, movement: Movement, reason: WithheldReason | null = null): SettledEvent =>
-    ({ kind: ContrabandEventKind.SETTLED, crossing: 2, smuggler: 1, inspector: 3, call, contents, movement, reason });
+const settled = (call: Call, contents: number | null, movement: Movement, reason: WithheldReason | null = null, lateCall: boolean = false): SettledEvent =>
+    ({ kind: ContrabandEventKind.SETTLED, crossing: 2, smuggler: 1, inspector: 3, call, lateCall, contents, movement, reason });
 
 describe('eventText', () => {
     test.each<[CrossingEvent, string]>([
         [{ kind: ContrabandEventKind.PACK_LATE, crossing: 0, smuggler: 0, inspector: 2 }, 'Game 1: alice packs no trunk in time, nothing moves'],
         [settled(PASS, 40, moved(CustomsOutcome.PASSED, 40, 0, 0)), 'Game 3: dave lets bob pass, 40 million smuggled'],
+        [settled(PASS, 40, moved(CustomsOutcome.PASSED, 40, 0, 0), null, true), 'Game 3: dave does not call in time and lets bob pass, 40 million smuggled'],
         [settled(doubt(7), 0, moved(CustomsOutcome.EMPTY_DOUBT, 0, 0, 3.5)), 'Game 3: dave doubts 7 million of an empty trunk, and pays bob 3.5 million'],
         [settled(doubt(50), 40, moved(CustomsOutcome.SEIZED, 0, 40, 0)), 'Game 3: dave doubts 50 million and seizes 40 million from bob'],
         [settled(CHECK, 100, moved(CustomsOutcome.SEIZED, 0, 100, 0)), 'Game 3: dave checks and seizes 100 million from bob'],
@@ -43,12 +44,8 @@ describe('trunkText', () => {
     });
 });
 
-describe('millions and signed', () => {
-    test('should round millions to the hundredth', () => {
-        expect([millions(100 / 3), millions(-200 / 3), millions(12.5)]).toEqual([33.33, -66.67, 12.5]);
-    });
-
-    test.each([[75, Sign.PLUS, 75], [-12.5, Sign.MINUS, 12.5], [0.001, Sign.ZERO, 0], [-100 / 3, Sign.MINUS, 33.33]])(
+describe('signed', () => {
+    test.each([[75, Sign.PLUS, 75], [-12.5, Sign.MINUS, 12.5], [0, Sign.ZERO, 0], [-33.33, Sign.MINUS, 33.33]])(
         'should tell %d by its sign and its amount', (amount: number, sign: Sign, absolute: number) => {
             expect(signed(amount)).toEqual({ sign, amount: absolute });
         });

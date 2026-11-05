@@ -113,6 +113,7 @@
       "ironChecked": "Raunt {number}: {inspector} bir demir külçeyi kontrol eder ve {smuggler} oyuncusuna {indemnity, plural, one {# milyon} other {# milyon}} öder",
       "packLate": "Raunt {number}: {smuggler} bavulunu zamanında hazırlamaz, hiçbir şey değişmez",
       "passed": "Raunt {number}: {inspector}, {smuggler} oyuncusunu geçirir, kaçırılan: {amount, plural, one {# milyon} other {# milyon}}",
+      "passedLate": "Raunt {number}: {inspector} zamanında karar açıklamaz ve {smuggler} oyuncusunu geçirir, kaçırılan: {amount, plural, one {# milyon} other {# milyon}}",
       "seized": "Raunt {number}: {inspector} {call, select, check {kontrol eder} other {şüphe olarak {doubt, plural, one {# milyon} other {# milyon}} açıklar}} ve {smuggler} oyuncusunun {amount, plural, one {# milyonuna} other {# milyonuna}} el koyar",
       "slipped": "Raunt {number}: {inspector} şüphe olarak {doubt, plural, one {# milyon} other {# milyon}} açıklar, {smuggler} {amount, plural, one {# milyon} other {# milyon}} kaçırır ve {indemnity, plural, one {# milyon} other {# milyon}} alır",
       "withheld": "Raunt {number}: {smuggler} oyuncusunun bavulu {reason, select, late {zamanında açılmaz} invalid {mühürlendiğinden farklı açılır} other {kurallara aykırı}}, {inspector} {amount, plural, one {# milyona} other {# milyona}} el koyar"

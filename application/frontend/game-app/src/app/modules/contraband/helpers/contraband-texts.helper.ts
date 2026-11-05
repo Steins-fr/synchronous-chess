@@ -20,18 +20,15 @@ export enum Sign {
 
 const key = (text: string): string => scopedKey(TranslationScope.CONTRABAND, text);
 
-/** Millions rounded to the hundredth, as the texts write them: a share of 3 players */
-export function millions(amount: number): number {
-    return Math.round(amount * 100) / 100;
-}
-
-/** An amount of millions as the texts read it: its sign apart, the amount without it */
+/**
+ * An amount of millions as the texts read it: its sign apart, the amount without it. The amounts come rounded: halves,
+ * or the balances of the standings, rounded to the hundredth
+ */
 export function signed(amount: number): Readonly<{ sign: Sign; amount: number }> {
-    const rounded: number = millions(amount);
-    if (rounded === 0) {
+    if (amount === 0) {
         return { sign: Sign.ZERO, amount: 0 };
     }
-    return rounded > 0 ? { sign: Sign.PLUS, amount: rounded } : { sign: Sign.MINUS, amount: -rounded };
+    return amount > 0 ? { sign: Sign.PLUS, amount } : { sign: Sign.MINUS, amount: -amount };
 }
 
 /** A line of the history of the match: a game over, its players named, what its trunk held and the money it moved */
@@ -46,7 +43,10 @@ export function eventText(event: Readonly<CrossingEvent>, names: ReadonlyArray<s
     const doubt: number = event.call.kind === CallKind.DOUBT ? event.call.amount : 0;
     switch (outcome) {
         case CustomsOutcome.PASSED:
-            return { key: key(marker('table.move.passed', undefined, 'contraband')), params: { ...params, amount: smuggled } };
+            // An inspector late passes: the history does not tell it as its choice
+            return event.lateCall
+                ? { key: key(marker('table.move.passedLate', undefined, 'contraband')), params: { ...params, amount: smuggled } }
+                : { key: key(marker('table.move.passed', undefined, 'contraband')), params: { ...params, amount: smuggled } };
         case CustomsOutcome.EMPTY_DOUBT:
             return { key: key(marker('table.move.emptyDoubt', undefined, 'contraband')), params: { ...params, doubt, indemnity } };
         case CustomsOutcome.SEIZED:

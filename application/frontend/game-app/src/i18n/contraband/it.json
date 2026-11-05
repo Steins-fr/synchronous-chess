@@ -113,6 +113,7 @@
       "ironChecked": "Manche {number}: {inspector} controlla un lingotto di ferro, e paga {indemnity, plural, one {# milione} other {# milioni}} a {smuggler}",
       "packLate": "Manche {number}: {smuggler} non prepara la valigia in tempo, non si muove nulla",
       "passed": "Manche {number}: {inspector} lascia passare {smuggler}, {amount, plural, one {# milione contrabbandato} other {# milioni contrabbandati}}",
+      "passedLate": "Manche {number}: {inspector} non annuncia in tempo e lascia passare {smuggler}, {amount, plural, one {# milione contrabbandato} other {# milioni contrabbandati}}",
       "seized": "Manche {number}: {inspector} {call, select, check {controlla} other {dubita di {doubt, plural, one {# milione} other {# milioni}}}} e sequestra {amount, plural, one {# milione} other {# milioni}} a {smuggler}",
       "slipped": "Manche {number}: {inspector} dubita di {doubt, plural, one {# milione} other {# milioni}}, {smuggler} contrabbanda {amount, plural, one {# milione} other {# milioni}} e riceve {indemnity, plural, one {# milione} other {# milioni}}",
       "withheld": "Manche {number}: la valigia di {smuggler} {reason, select, late {non è rivelata in tempo} invalid {è rivelata diversamente da come è stata sigillata} other {viola le regole}}, {inspector} sequestra {amount, plural, one {# milione} other {# milioni}}"

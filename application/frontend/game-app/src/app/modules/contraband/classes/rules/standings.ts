@@ -39,6 +39,11 @@ export interface ContrabandResult {
 const sum = (amounts: ReadonlyArray<number>): number => amounts.reduce((total: number, amount: number) => total + amount, 0);
 const hundredths = (amount: number): number => Math.round(amount * 100) / 100;
 
+/** The money on the account of a player in the third country: the one it starts with, and what it earned or paid since */
+export function accountOf(rules: ContrabandRules, ledger: Readonly<Ledger>): number {
+    return rules.account + ledger.smuggled + ledger.seized + ledger.indemnities;
+}
+
 /**
  * The end of the match: the money left in the ATMs of a country goes to the other one, shared alike between its
  * players. Each player then holds its account, its share, and owes its debt; the country of the highest total wins.
@@ -53,9 +58,8 @@ export function settleContraband(rules: ContrabandRules, north: number, ledgers:
     const teamLedgers = (team: Team): ReadonlyArray<Readonly<Ledger>> => ledgers.filter((_, player: number) => teamOf(player, north) === team);
     const left = (team: Team): number => sum(teamLedgers(team).map((ledger: Readonly<Ledger>) => ledger.atm));
     const other = (team: Team): Team => team === Team.NORTH ? Team.SOUTH : Team.NORTH;
-    const earned = (ledger: Readonly<Ledger>): number => ledger.smuggled + ledger.seized + ledger.indemnities;
     const total = (team: Team): number =>
-        sum(teamLedgers(team).map((ledger: Readonly<Ledger>) => earned(ledger))) + left(other(team)) + teamLedgers(team).length * (rules.account - rules.debt);
+        sum(teamLedgers(team).map((ledger: Readonly<Ledger>) => accountOf(rules, ledger))) + left(other(team)) - teamLedgers(team).length * rules.debt;
 
     const standings: ContrabandStanding[] = ledgers.map((ledger: Readonly<Ledger>, player: number): ContrabandStanding => {
         const team: Team = teamOf(player, north);
@@ -68,7 +72,7 @@ export function settleContraband(rules: ContrabandRules, north: number, ledgers:
             seized: ledger.seized,
             indemnities: ledger.indemnities,
             share: hundredths(share),
-            balance: hundredths(earned(ledger) + share + rules.account - rules.debt),
+            balance: hundredths(accountOf(rules, ledger) + share - rules.debt),
         };
     });
     const totals: Record<Team, number> = { [Team.NORTH]: total(Team.NORTH), [Team.SOUTH]: total(Team.SOUTH) };

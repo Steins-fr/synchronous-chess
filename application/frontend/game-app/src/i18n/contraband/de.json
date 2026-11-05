@@ -113,6 +113,7 @@
       "ironChecked": "Durchgang {number}: {inspector} kontrolliert einen Eisenbarren und zahlt {smuggler} {indemnity, plural, one {# Million} other {# Millionen}}",
       "packLate": "Durchgang {number}: {smuggler} packt keinen Koffer rechtzeitig, nichts bewegt sich",
       "passed": "Durchgang {number}: {inspector} lässt {smuggler} durch, {amount, plural, one {# Million} other {# Millionen}} geschmuggelt",
+      "passedLate": "Durchgang {number}: {inspector} sagt nicht rechtzeitig an und lässt {smuggler} durch, {amount, plural, one {# Million} other {# Millionen}} geschmuggelt",
       "seized": "Durchgang {number}: {inspector} {call, select, check {kontrolliert} other {bezweifelt {doubt, plural, one {# Million} other {# Millionen}}}} und beschlagnahmt {amount, plural, one {# Million} other {# Millionen}} von {smuggler}",
       "slipped": "Durchgang {number}: {inspector} bezweifelt {doubt, plural, one {# Million} other {# Millionen}}, {smuggler} schmuggelt {amount, plural, one {# Million} other {# Millionen}} und erhält {indemnity, plural, one {# Million} other {# Millionen}}",
       "withheld": "Durchgang {number}: Der Koffer von {smuggler} {reason, select, late {wird nicht rechtzeitig aufgedeckt} invalid {wird anders aufgedeckt als versiegelt} other {verstößt gegen die Regeln}}, {inspector} beschlagnahmt {amount, plural, one {# Million} other {# Millionen}}"

@@ -608,8 +608,8 @@ describe('ContrabandSession', { timeout: 30_000 }, () => {
 
             // Then
             await settled((session: ContrabandSession) => settledGames(session) === 1);
-            expect(gameOf('eve').events()).toContainEqual(expect.objectContaining({ kind: ContrabandEventKind.CALLED, call: PASS, late: true }));
-            expect(lastEvent()).toMatchObject({ contents: 10, movement: { outcome: CustomsOutcome.PASSED } });
+            expect(gameOf('eve').events()).toContainEqual(expect.objectContaining({ kind: ContrabandEventKind.CALLED, call: PASS }));
+            expect(lastEvent()).toMatchObject({ lateCall: true, contents: 10, movement: { outcome: CustomsOutcome.PASSED } });
         });
 
         test('should void a claim coming before the time of the packing, its claimer waiting again', async () => {

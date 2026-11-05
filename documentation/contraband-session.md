@@ -118,7 +118,8 @@ A game is three phases, each one waiting for one player:
 2. **Customs** (`CUSTOMS`, the time picked). The private conversation of the smuggler and the inspector opens: anyone
    may say anything, true or false. The inspector calls (`CB_call`): `Pass`, `Doubt` with its amount, or `Check`. A call
    the variant does not offer is reported (`invalidMessage`), the inspector still awaited; a call of another player is
-   reported (`illegalMove`). An inspector late passes the trunk.
+   reported (`illegalMove`). An inspector late passes the trunk: the history tells it apart from a pass
+   (`Game 1: bob does not call in time and lets alice pass, 40 million smuggled`).
 3. **Reveal** (`REVEALING`, 15 seconds). The page of the smuggler reveals the trunk by itself (`CB_reveal`), and the money
    moves: the history tells the game (`Game 1: bob doubts 30 million, alice smuggles 40 million and receives 15
    million`).

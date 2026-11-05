@@ -15,7 +15,7 @@ import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CBGameSessionType, ContrabandPayloads } from '../../classes/game-sessions/contraband-messages';
 import { ContrabandSession } from '../../classes/game-sessions/contraband-session';
-import { ContrabandPhase } from '../../classes/rules/contraband-game-state';
+import { Applied, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { Call, CallKind, CONTRABAND_RULES, ContrabandRules, ContrabandVariant } from '../../classes/rules/contraband-rules';
 import { CONTRABAND_SESSION_OPTIONS, ContrabandTableComponent } from './contraband-table.component';
 
@@ -553,6 +553,40 @@ describe('ContrabandTableComponent', { timeout: 30_000 }, () => {
         expect(launch).not.toHaveBeenCalled();
     });
 
+    test('should hear the chips of the last game, without their flight, its smuggler gone from its seat before the table shows it', async () => {
+        // Given the last game of the match, Dave smuggling 10 million
+        await started();
+        await click('Pack the trunk');
+        await until(() => phase() === ContrabandPhase.CUSTOMS);
+        await calledBy('carol', PASS);
+        await packedBy('carol', 0);
+        await click('Pass');
+        await until(() => session().game()?.crossing() === 2);
+        await packedBy('bob', 0);
+        await calledBy('dave', PASS);
+        await packedBy('dave', 10);
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+        const launch = vi.spyOn(flights(), 'launch');
+        // Dave leaves his seat as the match is over, in the same turn as his reveal
+        const game: ContrabandGameState = session().game() as ContrabandGameState;
+        const reveal: ContrabandGameState['reveal'] = game.reveal.bind(game);
+        vi.spyOn(game, 'reveal').mockImplementation((player: number, contents: unknown): Applied => {
+            const applied: Applied = reveal(player, contents);
+            session().tableSeats.free(5);
+            return applied;
+        });
+
+        // When
+        await calledBy('bob', PASS);
+
+        // Then
+        await until(() => session().over());
+        expect(text('#seat-5')).not.toContain('dave');
+        expect(text('#last-crossing')).toEqual('Game 4: bob lets dave pass, 10 million smuggled');
+        expect(launch).toHaveBeenCalledWith([]);
+        expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS);
+    });
+
     test('should hear the seats taken and the customs open, nothing while catching up', async () => {
         // Given
         await table();
@@ -685,7 +719,7 @@ describe('ContrabandTableComponent', { timeout: 30_000 }, () => {
             await elapse(LIGHT.awayTime + 1);
             await until(() => phase() === ContrabandPhase.PACKING);
             expect(text('#seat-4')).toContain('Late');
-            expect(text('#last-crossing')).toEqual('Game 1: carol lets alice pass, 0 million smuggled');
+            expect(text('#last-crossing')).toEqual('Game 1: carol does not call in time and lets alice pass, 0 million smuggled');
 
             // Then the packing of Carol, absent, gets no more time
             await elapse(LIGHT.packingTime - 1);
