@@ -279,11 +279,18 @@ export class PrivateConversationsComponent {
 
         const lines: ReadonlyArray<Readonly<PrivateLine>> | undefined = views.find((view: Readonly<PrivateConversationView>) => view.id === shown)?.lines;
         if (lines !== undefined) {
-            const last: number = Math.max(0, ...lines.map((line: Readonly<PrivateLine>) => lineId(line)));
-            this.seen.update((seen: ReadonlyMap<string, number>) => new Map(seen).set(shown as string, last));
-            const shownLine: string = `${ shown }:${ last }`;
-            this.scrollPending ||= shownLine !== this.shownLine;
-            this.shownLine = shownLine;
+            this.show(shown as string, lines);
         }
+    }
+
+    /** The lines of the conversation shown are read: the log scrolls down to a new last one */
+    private show(shown: string, lines: ReadonlyArray<Readonly<PrivateLine>>): void {
+        const last: number = Math.max(0, ...lines.map((line: Readonly<PrivateLine>) => lineId(line)));
+        if (this.seen().get(shown) !== last) {
+            this.seen.update((seen: ReadonlyMap<string, number>) => new Map(seen).set(shown, last));
+        }
+        const shownLine: string = `${ shown }:${ last }`;
+        this.scrollPending ||= shownLine !== this.shownLine;
+        this.shownLine = shownLine;
     }
 }

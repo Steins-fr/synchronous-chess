@@ -72,7 +72,10 @@ export class RoomLayoutComponent {
     public readonly room = input<Room<ChatPayloads>>();
     /** The chat of the room opens beside the game, from the bar of the room: the page of the chat shows it itself */
     public readonly sideChat = input<boolean>(true);
-    /** The private conversations of the room, the same for its life: the panel offers them to their members */
+    /**
+     * The private conversations of the room, the same instance for its life: the panel keeps what it read of it, and
+     * offers them to their members
+     */
     public readonly conversations = input<PrivateConversations>();
 
     private readonly roomSetupService = inject(RoomSetupService);
@@ -159,6 +162,13 @@ export class RoomLayoutComponent {
         effect(() => {
             if (this.room() === undefined) {
                 untracked(() => this.besidePanel.set(this.chatBeside() ? RoomPanel.CHAT : null));
+            }
+        });
+
+        // No private conversation left for the local player, a spectator of the next game: their panel closes with its button
+        effect(() => {
+            if (!this.hasPrivate() && untracked(() => this.panel()) === RoomPanel.PRIVATE) {
+                untracked(() => this.togglePanel(RoomPanel.PRIVATE, false));
             }
         });
 

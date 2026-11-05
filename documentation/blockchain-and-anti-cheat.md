@@ -448,9 +448,11 @@ members only.
 - A page publishes the key of its player once it is a member of a conversation declared, unless the latest key of its
   player on the chain is already this one: a spectator publishes none, and a page reloaded publishes again once it
   caught up, only when the latest key in the name of its player is not its own (a key lost, or one forged in its name).
-- The latest key a participant published is its current one: the messages sent to it are encrypted for it. A key
-  appended live in the name of a participant away from the room (not in `room.players()` when it applies) is ignored:
-  unknown to the room once it left, its entry is not checked, and the sequencer may have forged it. A key
+  A key the chain does not send back within 15 seconds (lost at a change of sequencer) is published again.
+- The latest key a participant published is its current one: the messages sent to it are encrypted for it. Every page
+  records every key, to check the messages naming it the same everywhere; but a key appended live in the name of a
+  participant away from this page (not in its `room.players()` when it applies) does not replace the current one it
+  had: unknown to the room once it left, its entry is not checked, and the sequencer may have forged it. A key
   published again is not counted again; a participant publishing a 17th key (`MAX_KEYS_PER_PARTICIPANT`, a few lost
   storages, not a flood of keys), a key malformed or a point off the curve is reported. A key published by another
   participant than its own is of no use to it: the part of a recipient is read with a key it published itself.
@@ -496,7 +498,9 @@ The messages apply one after the other, in the order of the chain, a key before 
    seconds is hidden, the conversation telling it once.
 2. **Every page, once the conversation is declared**: its sender and each recipient are its members. A message of a
    conversation not declared yet waits: the `private` chain of a page reloaded may replay before the chain of the game,
-   which declares it. The messages waiting are judged in the order of the chain once the declaration applies.
+   which declares it. The messages waiting are judged in the order of the chain once the declaration applies; a page
+   keeps 256 of them at most (`WAITING_MAX`), the oldest dropped first, and not the ones hidden by the rate of their
+   author: a conversation made up is never declared.
 3. **The recipients alone** decrypt their part, then check its text as the chat does (`isChatText`: not blank, 1000
    characters at most, no link nor e-mail address). A part encrypted for an older key of its recipient, or no part at
    all (it was away), shows a notice of a message unreadable, not reported. A message sent again shows once, by its
@@ -510,7 +514,7 @@ others can not read it to check.
 
 - A message gets a part for each member present in the room (`room.players()`), for its current key, and for its
   sender. A member away gets none: a sequencer forging a key in its name, once it is forgotten, reads nothing. Back, it
-  sees the message unreadable, and the next ones are encrypted for its own key, the forged one ignored.
+  sees the message unreadable, and the next ones are encrypted for its own key, the forged one never current.
 - The composer waits until each member present, its player included, has a key on the chain (`Preparing the
   encryption…`): a sequencer withholding a key is reported for censoring it (`censoredEntry`). It waits as the one of the
   chat too, every conversation counted together: 3 messages in 10 seconds, 5 messages not sent back. A message shows at
@@ -655,7 +659,9 @@ one again. The network packing the messages of an honest player on the chain nev
   - **No moderation**: the host can not mute a member in its conversations; removing it from the room stops its
     messages.
   - **A key lost makes the history unreadable** to its player: the messages encrypted for it, its own copies included,
-    show unreadable after a reload without its storage.
+    show unreadable after a reload without its storage. A new key a page receives while it sees its participant away
+    (its link cut for a moment) does not become current there: the messages it sends show unreadable to that
+    participant, until it publishes its key again.
   - **A conversation closed is closed in the composer only**: a modified client may still write in it, and its members
     read it. The messages are not filtered by the time of the game, which another chain orders.
 - The app is in development: the message format changes freely, all the participants run the same

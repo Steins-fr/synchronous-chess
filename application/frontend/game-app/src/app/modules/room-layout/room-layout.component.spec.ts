@@ -507,6 +507,23 @@ describe('RoomLayoutComponent', () => {
                 expect(privateToggle()?.getAttribute('aria-expanded')).toEqual('false');
             });
 
+            test('should close the private conversations once the local player has none left', async () => {
+                // Given
+                await showRoom();
+                await declare();
+                privateToggle()?.click();
+                await fixture.whenStable();
+                expect(privatePanel().hidden).toEqual(false);
+
+                // When: a spectator of the next game
+                conversations.mine.set([]);
+                await fixture.whenStable();
+
+                // Then: with its button
+                expect(privateToggle()).toBeNull();
+                expect(sidenav().opened).toEqual(false);
+            });
+
             test('should offer the private conversations on a page holding its chat itself', async () => {
                 // Given
                 fixture.componentRef.setInput('sideChat', false);

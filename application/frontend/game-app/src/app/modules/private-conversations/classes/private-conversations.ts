@@ -29,6 +29,8 @@ import {
 
 /** The keys a participant may publish, a key published again not counted: a few lost storages, not a flood of keys */
 export const MAX_KEYS_PER_PARTICIPANT: number = 16;
+/** The messages of conversations not declared yet a page keeps, the oldest dropped first: ids made up never are */
+export const WAITING_MAX: number = 256;
 
 export enum PrivateLineKind {
     MESSAGE = 'message',
@@ -331,19 +333,22 @@ export class PrivateConversations {
         if (!this.destroyed && this.currentKeys().get(me) !== own.id) {
             this.keySent = true;
             this.room.transmitMessage(PrivateMessengerType.KEY, { key: own.key });
+            // Lost on its way, at a change of sequencer: published again, unless it came back meanwhile
+            this.subscription.add(timer(SEND_TIMEOUT).subscribe(() => {
+                this.keySent = false;
+                this.enqueue(() => Promise.resolve());
+            }));
         }
     }
 
     /**
      * A key published: the latest one of its participant from then. A key published again by its participant is not
      * counted again; a key of another participant published by one is of no use to it, the parts of a recipient being
-     * read with the keys it published. A key appended live in the name of a participant away is ignored: unknown to the
-     * room once it left, the sequencer may have forged it, and its pages would not check the signature
+     * read with the keys it published. Every page records every key, to check the messages naming it the same
+     * everywhere; a key appended live in the name of a participant away from this page does not replace its current
+     * one: unknown to the room once it left, the sequencer may have forged it, its pages not checking the signature
      */
     private async onKey(message: KeyMessage, live: boolean): Promise<void> {
-        if (live && !this.room.players().some((player: Readonly<Player>) => player.name === message.from)) {
-            return;
-        }
         const payload: unknown = message.payload;
         if (!isPrivateKeyPayload(payload)) {
             this.reportInvalid(message);
@@ -365,7 +370,10 @@ export class PrivateConversations {
 
         this.published.set(message.from, [...keys.filter((key: string) => key !== id), id]);
         this.importedKeys.set(id, imported);
-        this.currentKeys.update((current: ReadonlyMap<string, string>) => new Map(current).set(message.from, id));
+        const away: boolean = live && !this.room.players().some((player: Readonly<Player>) => player.name === message.from);
+        if (!away || !this.currentKeys().has(message.from)) {
+            this.currentKeys.update((current: ReadonlyMap<string, string>) => new Map(current).set(message.from, id));
+        }
         if (message.from === this.room.localPlayer.name && id !== this.ownKeyId()) {
             // Another key in its name, an older one replayed or a forged one: the local player publishes its own again
             this.keySent = false;
@@ -401,8 +409,10 @@ export class PrivateConversations {
         const received: ReceivedEnvelope = { message, envelope, admitted: admission.shown, notice: admission.notice, live, time: time ?? Date.now() };
         if (this.appliedMembers.has(envelope.conversation)) {
             await this.judge(received);
-        } else {
+        } else if (received.admitted || received.notice) {
+            // Hidden by the rate of its author, it would not show: the messages waiting for a conversation are bounded
             this.waiting.push(received);
+            this.waiting.splice(0, Math.max(0, this.waiting.length - WAITING_MAX));
         }
     }
 

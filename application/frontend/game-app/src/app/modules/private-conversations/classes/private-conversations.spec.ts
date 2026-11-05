@@ -11,7 +11,7 @@ import { TestHelper } from '@testing/test.helper';
 import { IDBFactory } from 'fake-indexeddb';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PrivateConversation } from './private-conversation';
-import { MAX_KEYS_PER_PARTICIPANT, PrivateComposerWait, PrivateConversations, PrivateLine, PrivateLineKind } from './private-conversations';
+import { MAX_KEYS_PER_PARTICIPANT, WAITING_MAX, PrivateComposerWait, PrivateConversations, PrivateLine, PrivateLineKind } from './private-conversations';
 import { exportAgreementKey, importAgreementKey, keyIdOf, pairKey, seal } from './private-crypto';
 import { PrivateEnvelope, PrivateKeyPayload, PrivateMessengerType, PrivatePayloads, PrivatePublicKey, SealedPart } from './private-messages';
 
@@ -315,6 +315,87 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         const carolPublic: PrivatePublicKey = (await storedKey('carol')).key;
         await eventually(() => expect(latestKey('carol')).toEqual(carolPublic));
         expect(hub.reports).toEqual([]);
+    });
+
+    test('should check the messages naming a key appended while its author was away the same as every page, its first key current', async () => {
+        // Given: Carol away, a key appended in her name, and a first key of Dave, away from the pages
+        pagesOf(['alice', 'bob', 'carol'], [TRIO]);
+        await ready('alice', TRIO.id);
+        await ready('bob', TRIO.id);
+        await ready('carol', TRIO.id);
+        await applied();
+        hub.leave(rooms.get('carol') as Room<PrivatePayloads>);
+        const forged: PrivatePublicKey = await exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey);
+        hub.send({ from: 'carol', type: PrivateMessengerType.KEY, payload: { key: forged } });
+        const daveKey: PrivatePublicKey = await exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey);
+        hub.send({ from: 'dave', type: PrivateMessengerType.KEY, payload: { key: daveKey } });
+        await applied();
+
+        // When: a message naming the key appended in her name
+        sendEnvelope('alice', await sealed('alice', TRIO.id, 'to her latest key', ['alice', 'bob', 'carol']));
+
+        // Then: checked, not reported, though no page takes that key for hers
+        await eventually(() => expect(linesOf('bob', TRIO.id)).toEqual(['alice: to her latest key']));
+        expect(hub.reports).toEqual([]);
+        const currentOf = (name: string): ReadonlyMap<string, string> =>
+            TestHelper.cast<{ readonly currentKeys: () => ReadonlyMap<string, string> }>(of(name)).currentKeys();
+        expect(currentOf('bob').get('carol')).toEqual((await storedKey('carol')).id);
+        expect(currentOf('bob').get('dave')).toEqual(await keyIdOf(daveKey));
+    });
+
+    test('should publish its key again when the chain did not send it back in time', async () => {
+        // Given: the key of Alice lost on its way
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+        hub.hold('alice');
+        pagesOf(['alice', 'bob']);
+        await eventually(() => expect(messagesOf(PrivateMessengerType.KEY, 'bob')).toHaveLength(1));
+        await eventually(() => expect(hub.held).toHaveLength(1));
+        hub.held.splice(0);
+        hub.release();
+
+        // When
+        vi.advanceTimersByTime(SEND_TIMEOUT);
+
+        // Then
+        await ready('alice');
+        await applied();
+        expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(1);
+
+        // When: sent back in time, it is not published again
+        vi.advanceTimersByTime(SEND_TIMEOUT);
+        await applied();
+
+        // Then
+        expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(1);
+    });
+
+    test('should keep a bounded number of messages waiting for their conversation, not the ones hidden by the rate', async () => {
+        // Given: Bob sending to a conversation Alice has not declared yet
+        page('alice').declare([SIDE]);
+        page('bob').declare(CONVERSATIONS);
+        await eventually(() => expect(messagesOf(PrivateMessengerType.KEY)).toHaveLength(2));
+        await applied();
+        hub.time = 1000;
+        const burst: PrivateEnvelope[] = await Promise.all(Array.from({ length: CHAT_RATE_LIMIT + 2 }, (_: unknown, index: number) =>
+            sealed('bob', TEAM.id, `burst ${ index }`, ['alice', 'bob'])));
+        burst.forEach((envelope: PrivateEnvelope) => sendEnvelope('bob', envelope));
+        const calm: PrivateEnvelope[] = [];
+        for (let index = 0; index <= WAITING_MAX; index++) {
+            hub.time += 2 * CHAT_RATE_WINDOW;
+            const envelope: PrivateEnvelope = await sealed('bob', TEAM.id, `calm ${ index }`, ['alice', 'bob']);
+            calm.push(envelope);
+            sendEnvelope('bob', envelope);
+        }
+        await applied();
+
+        // When
+        of('alice').declare(CONVERSATIONS);
+        await applied();
+
+        // Then: of the burst, the messages shown and the notice of the flood waited, the oldest ones dropped first
+        const expected: string[] = Array.from({ length: WAITING_MAX }, (_: unknown, index: number) => `bob: calm ${ index + 1 }`);
+        await eventually(() => expect(linesOf('alice')).toEqual(expected));
+        expect(calm).toHaveLength(WAITING_MAX + 1);
     });
 
     test('should read its messages again after a reload, its key kept', async () => {
