@@ -8,6 +8,7 @@
       "bidPoker": "Bid poker",
       "chat": "Chat",
       "chess": "Chess",
+      "contraband": "Contraband",
       "home": "Home",
       "minorityGame": "Minority",
       "poker": "Poker",
@@ -27,8 +28,8 @@
     "title": "Synchronous Chess"
   },
   "cheat": {
-    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} minority {minority game} private {private conversation} other {}}) from {author} is reported as cheating by {reporters}",
-    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} minority {minority game} private {private conversation} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
+    "flagged": "Message {index} ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} minority {minority game} private {private conversation} contraband {contraband} other {}}) from {author} is reported as cheating by {reporters}",
+    "ignored": "A message ({chain, select, chess {chess} chat {chat} poker {poker} roulette {roulette} bid {bid poker} minority {minority game} private {private conversation} contraband {contraband} other {}}) from {author} is ignored by {sequencer}, reported by {reporters}"
   },
   "dialog": {
     "cancel": "Cancel",
@@ -55,6 +56,11 @@
       "action": "Play",
       "description": "Chess where both players move at the same time: each one picks a move without knowing the other's.",
       "title": "Synchronous chess"
+    },
+    "contraband": {
+      "action": "Play",
+      "description": "2 to 8 players in two countries smuggle money past each other's customs, their trunks sealed: let it pass, or doubt.",
+      "title": "Contraband"
     },
     "intro": "Create a room, or join one of the open rooms: the players connect directly to each other.",
     "minorityGame": {

@@ -1,0 +1,205 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Each country plots in a private conversation, and each smuggler talks with its inspector at the customs, encrypted.",
+      "sealed": "The trunks are sealed: no one, not even the server, reads a trunk before the inspector calls.",
+      "variants": "In the Classic variant, a trunk holds any amount up to 100 million; in the Gold Rush, a gold bar or an iron bar."
+    },
+    "rooms": "Create a room, or join one, to play with others.",
+    "summary": "A game of the manga Liar Game: two countries of 1 to 4 players each, the North and the South, smuggle money through the customs of the other one, and the richer country wins.",
+    "tagline": "Smuggle your money past the enemy customs.",
+    "title": "Contraband"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Doubt on an empty trunk: the inspector pays the smuggler half the amount doubted.",
+      "halves": "Half millions exist: doubting 7 million of an empty trunk pays the smuggler 3.5 million.",
+      "pass": "Pass: the money of the trunk goes to the account of the smuggler.",
+      "seized": "Doubt of the amount of the trunk or more: the inspector seizes the money of the trunk, on its own account.",
+      "slipped": "Doubt of less than the trunk holds: the money goes to the account of the smuggler, and the inspector pays it half the amount doubted.",
+      "title": "The Classic variant",
+      "trunk": "The trunk holds from 0 to 100 million, never more than the ATM holds. The inspector calls Pass, or Doubt with an amount from 1 to 100 million."
+    },
+    "conversations": {
+      "countries": "The players of a country, 2 or more, share a private conversation for the whole match.",
+      "customs": "Each game opens a conversation between its smuggler and its inspector, for the time of its customs: closed, it stays readable.",
+      "private": "They are encrypted on the pages of their members, the only ones to read them: the other participants and the server see who writes and when, never what. A spectator has none.",
+      "title": "The conversations"
+    },
+    "crossing": {
+      "customs": "The customs open: a private conversation between the smuggler and the inspector, for the time picked. Anyone may say anything, true or false. Then the inspector calls.",
+      "packing": "The smuggler packs its trunk within 60 seconds, from the money of its ATM, then seals it.",
+      "reveal": "Once the call is made, the page of the smuggler reveals the trunk by itself, and the money moves.",
+      "title": "A game"
+    },
+    "end": {
+      "atms": "After the last game, the money left in the ATMs of a country goes to the other country, shared equally between its players.",
+      "balance": "The balance of a player adds to its account of 100 million what it smuggled, the indemnities it received less the ones it paid, what it seized and its share of the enemy ATMs, then takes off the 400 million it owes.",
+      "title": "The end of the match",
+      "winner": "The country with the highest total wins. A tie is possible: each player keeps its balance all the same."
+    },
+    "fair": {
+      "draw": "No one picks the pairs: each player gives a sealed random part at the start, and the pairs are drawn from all of them, the same on every page.",
+      "sealed": "A trunk is sealed: the page of the smuggler sends its hash with a random salt, then reveals it once the inspector called. No one, not even the server, reads a trunk before the call.",
+      "title": "Fair play",
+      "withheld": "A trunk not revealed in time, revealed otherwise than sealed, or out of the rules is seized at the most: 100 million in the Classic variant, or the whole ATM below that; a gold bar in the Gold Rush, or nothing from an empty ATM. Withholding a trunk never pays. A page reloaded keeps its trunk, unless its storage is blocked."
+    },
+    "goldRush": {
+      "goldChecked": "A gold bar checked: the inspector seizes it, 100 million on its own account.",
+      "goldPassed": "A gold bar passed: 100 million go to the account of the smuggler.",
+      "ironChecked": "An iron bar checked: the inspector pays 100 million to the smuggler.",
+      "ironPassed": "An iron bar passed: nothing moves.",
+      "title": "The Gold Rush variant",
+      "trunk": "The trunk holds a gold bar, 100 million taken from the ATM, or an iron bar, worth nothing: a gold bar needs 100 million in the ATM. The inspector calls Pass or Check."
+    },
+    "money": {
+      "goal": "Only the money of the third country counts: smuggle yours there, and seize the money the other country smuggles.",
+      "start": "Each player starts with 300 million in an ATM of its country and 100 million on an account in a third country, and owes 400 million at the end of the match.",
+      "title": "The money"
+    },
+    "pairs": {
+      "drawn": "In each game, a smuggler of one country crosses the customs held by an inspector of the other one. The pairs are drawn: each player of the North faces a player of the South, smuggler in one game, then inspector in the next one, the roles swapped.",
+      "title": "The pairs",
+      "turns": "The countries smuggle by turns, as many times each, until the number of games picked: with 3 players against 3, some players smuggle once more than others."
+    },
+    "setup": {
+      "players": "The table has 8 seats, 4 for the Northern country and 4 for the Southern country. The match starts once both countries hold as many players, from 1 against 1 up to 4 against 4: the other participants are spectators.",
+      "settings": "The player who starts the match picks its variant, Classic or Gold Rush, the time of the customs, 1, 2 or 5 minutes, and its number of games, 10, 20 or 30: the seats stay taken until it is over.",
+      "title": "The table"
+    },
+    "summary": "Rules of the contraband",
+    "times": {
+      "away": "A player away is waited for 15 seconds more; once it missed its time, no longer, until it plays again.",
+      "late": "A smuggler who does not pack in time leaves its trunk empty, and nothing moves. An inspector who does not call in time passes.",
+      "phases": "The packing waits 60 seconds, the customs the time picked at the start, the reveal 15 seconds: each one closes as soon as its player acted.",
+      "title": "The times"
+    },
+    "title": "Rules"
+  },
+  "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the game"
+    },
+    "call": {
+      "check": "Check",
+      "pass": "Pass"
+    },
+    "clock": "{minutes}:{seconds}",
+    "conversation": {
+      "customs": "Customs of game {number}: {smuggler} and {inspector}",
+      "team": "{team, select, north {Northern country} other {Southern country}}"
+    },
+    "customs": {
+      "inspector": "Inspector: {name}",
+      "smuggler": "Smuggler: {name}"
+    },
+    "doubt": {
+      "integer": "Doubt whole millions",
+      "label": "Doubt (millions)",
+      "max": "At most {max, plural, one {# million} other {# million}}",
+      "min": "{min, plural, one {# million} other {# million}} at least",
+      "required": "Type the amount you doubt",
+      "submit": "Doubt"
+    },
+    "history": "Games of the match",
+    "info": {
+      "crossing": "Game {number} of {games}",
+      "variant": "{variant, select, classic {Classic} other {Gold Rush}} · customs of {minutes} min"
+    },
+    "match": "Match {number}:",
+    "move": {
+      "emptyDoubt": "Game {number}: {inspector} doubts {doubt, plural, one {# million} other {# million}} of an empty trunk, and pays {smuggler} {indemnity, plural, one {# million} other {# million}}",
+      "ironChecked": "Game {number}: {inspector} checks an iron bar, and pays {smuggler} {indemnity, plural, one {# million} other {# million}}",
+      "packLate": "Game {number}: {smuggler} packs no trunk in time, nothing moves",
+      "passed": "Game {number}: {inspector} lets {smuggler} pass, {amount, plural, one {# million} other {# million}} smuggled",
+      "passedLate": "Game {number}: {inspector} does not call in time and lets {smuggler} pass, {amount, plural, one {# million} other {# million}} smuggled",
+      "seized": "Game {number}: {inspector} {call, select, check {checks} other {doubts {doubt, plural, one {# million} other {# million}}}} and seizes {amount, plural, one {# million} other {# million}} from {smuggler}",
+      "slipped": "Game {number}: {inspector} doubts {doubt, plural, one {# million} other {# million}}, {smuggler} smuggles {amount, plural, one {# million} other {# million}} and receives {indemnity, plural, one {# million} other {# million}}",
+      "withheld": "Game {number}: the trunk of {smuggler} {reason, select, late {is not revealed in time} invalid {is revealed otherwise than sealed} other {breaks the rules}}, {inspector} seizes {amount, plural, one {# million} other {# million}}"
+    },
+    "pack": {
+      "gold": "Gold bar",
+      "integer": "Pack whole millions",
+      "iron": "Iron bar",
+      "label": "Trunk (millions)",
+      "max": "At most {max, plural, one {# million} other {# million}}",
+      "min": "{min, plural, one {# million} other {# million}} at least",
+      "required": "Type the money of your trunk",
+      "submit": "Pack the trunk"
+    },
+    "pastGames": "Matches played",
+    "result": {
+      "tie": "A tie: each player keeps its balance",
+      "winner": "{team, select, north {The Northern country} other {The Southern country}} wins by {amount, plural, one {# million} other {# million}}"
+    },
+    "sealed": {
+      "amount": "Your trunk holds {amount, plural, one {# million} other {# million}}, sealed",
+      "gold": "Your trunk holds a gold bar, sealed",
+      "iron": "Your trunk holds an iron bar, sealed"
+    },
+    "seat": {
+      "absent": "Late",
+      "account": "Account: {amount, plural, one {# million} other {# million}}",
+      "atm": "ATM: {amount, plural, one {# million} other {# million}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# million} other {# million}}} minus {−{amount, plural, one {# million} other {# million}}} other {0 million}}",
+      "free": "Free seat",
+      "leave": "Leave",
+      "release": "Free the seat",
+      "role": "{role, select, smuggler {Smuggler} other {Inspector}}",
+      "take": "Sit here"
+    },
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Balance",
+      "caption": "Standings of the match, in millions",
+      "country": "Country",
+      "indemnities": "Indemnities",
+      "player": "Player",
+      "seized": "Seized",
+      "share": "Enemy ATMs",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Smuggled",
+      "team": "{team, select, north {North} other {South}}"
+    },
+    "start": {
+      "classic": "Classic",
+      "customsTime": "Customs",
+      "gameCount": "{count, plural, one {# game} other {# games}}",
+      "games": "Games",
+      "goldRush": "Gold Rush",
+      "minutes": "{count} min",
+      "variant": "Variant"
+    },
+    "status": {
+      "away": "Waiting for {names} to come back…",
+      "call": "{variant, select, classic {Pass, or doubt an amount.} other {Pass, or check the trunk.}}",
+      "customs": "{inspector} inspects the trunk of {smuggler}…",
+      "drawing": "The players draw the pairs: waiting for {names}.",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The match is over.",
+      "pack": "Pack your trunk: it stays sealed until the call.",
+      "packing": "{name} packs a trunk…",
+      "revealing": "The trunk is revealed…",
+      "sealing": "Your trunk is sealed: the customs open…",
+      "seats": "Northern country: {north}, Southern country: {south}. The match needs as many players in each, {min} at least.",
+      "start": "Pick the variant, the customs and the games, then start.",
+      "waitingStart": "{count, plural, one {# player seated} other {# players seated}}: waiting for one of them to start."
+    },
+    "team": {
+      "atms": "ATMs: {amount, plural, one {# million} other {# million}}",
+      "name": "{team, select, north {Northern country} other {Southern country}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# million} other {# million}}",
+      "empty": "Empty",
+      "gold": "Gold bar",
+      "iron": "Iron bar",
+      "none": "No trunk",
+      "packing": "Packing…",
+      "sealed": "Sealed",
+      "withheld": "Not revealed"
+    }
+  }
+}

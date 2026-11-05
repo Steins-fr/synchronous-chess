@@ -8,6 +8,7 @@
       "bidPoker": "Açık artırma",
       "chat": "Sohbet",
       "chess": "Satranç",
+      "contraband": "Kaçakçılık",
       "home": "Ana sayfa",
       "minorityGame": "Azınlık",
       "poker": "Poker",
@@ -27,8 +28,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",
@@ -55,6 +56,11 @@
       "action": "Oyna",
       "description": "İki oyuncunun aynı anda oynadığı satranç: her biri, diğerininkini bilmeden hamlesini seçer.",
       "title": "Eşzamanlı satranç"
+    },
+    "contraband": {
+      "action": "Oyna",
+      "description": "İki ülkeden 2 ila 8 oyuncu, mühürlü bavullarla birbirlerinin gümrüğünden para kaçırır: geçirmek ya da şüphelenmek.",
+      "title": "Kaçakçılık"
     },
     "intro": "Bir oda oluşturun ya da açık odalardan birine katılın: oyuncular birbirine doğrudan bağlanır.",
     "minorityGame": {

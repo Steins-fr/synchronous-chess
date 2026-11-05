@@ -1,0 +1,205 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Cada país conspira en una conversación privada, y cada contrabandista habla con su inspector en la aduana, todo cifrado.",
+      "sealed": "Las maletas están selladas: nadie, ni siquiera el servidor, lee una maleta antes de que el inspector anuncie.",
+      "variants": "En la variante clásica, una maleta lleva cualquier suma hasta 100 millones; en la Fiebre del oro, un lingote de oro o un lingote de hierro."
+    },
+    "rooms": "Crea una sala o únete a una para jugar con otros.",
+    "summary": "Un juego del manga Liar Game: dos países de 1 a 4 jugadores cada uno, el Norte y el Sur, pasan dinero por la aduana del otro, y gana el país más rico.",
+    "tagline": "Pasa tu dinero ante las narices de la aduana enemiga.",
+    "title": "Contrabando"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Dudar de una maleta vacía: el inspector paga al contrabandista la mitad de la suma dudada.",
+      "halves": "Existen los medios millones: dudar de 7 millones ante una maleta vacía le da 3,5 millones al contrabandista.",
+      "pass": "Dejar pasar: el dinero de la maleta va a la cuenta del contrabandista.",
+      "seized": "Dudar de la suma de la maleta o más: el inspector confisca el dinero de la maleta, en su propia cuenta.",
+      "slipped": "Dudar de menos de lo que lleva la maleta: el dinero va a la cuenta del contrabandista, y el inspector le paga la mitad de la suma dudada.",
+      "title": "La variante clásica",
+      "trunk": "La maleta lleva de 0 a 100 millones, nunca más de lo que tiene el cajero. El inspector anuncia Dejar pasar, o Dudar con una suma de 1 a 100 millones."
+    },
+    "conversations": {
+      "countries": "Los jugadores de un país, a partir de 2, comparten una conversación privada durante toda la partida.",
+      "customs": "Cada ronda abre una conversación entre su contrabandista y su inspector, mientras dura su aduana: cerrada, sigue siendo legible.",
+      "private": "Se cifran en las páginas de sus miembros, los únicos que las leen: los demás participantes y el servidor ven quién escribe y cuándo, nunca qué. Un espectador no tiene ninguna.",
+      "title": "Las conversaciones"
+    },
+    "crossing": {
+      "customs": "Se abre la aduana: una conversación privada entre el contrabandista y el inspector, durante el tiempo elegido. Cada uno puede decir cualquier cosa, verdadera o falsa. Luego el inspector anuncia.",
+      "packing": "El contrabandista llena su maleta en 60 segundos, con el dinero de su cajero, y luego la sella.",
+      "reveal": "Hecho el anuncio, la página del contrabandista revela la maleta por sí sola, y el dinero se mueve.",
+      "title": "Una ronda"
+    },
+    "end": {
+      "atms": "Tras la última ronda, el dinero que queda en los cajeros de un país va al otro país, repartido a partes iguales entre sus jugadores.",
+      "balance": "El saldo de un jugador suma a su cuenta de 100 millones lo que pasó, las indemnizaciones recibidas menos las pagadas, lo que confiscó y su parte de los cajeros enemigos, y luego resta los 400 millones que debe.",
+      "title": "El final de la partida",
+      "winner": "Gana el país con el mayor total. El empate es posible: cada jugador conserva su saldo de todos modos."
+    },
+    "fair": {
+      "draw": "Nadie elige las parejas: cada jugador da una parte aleatoria sellada al inicio, y las parejas se sortean a partir de todas ellas, igual en cada página.",
+      "sealed": "Una maleta está sellada: la página del contrabandista envía su hash con una sal aleatoria, y la revela cuando el inspector ha anunciado. Nadie, ni siquiera el servidor, lee una maleta antes del anuncio.",
+      "title": "Juego limpio",
+      "withheld": "Una maleta no revelada a tiempo, revelada de otra forma que sellada o fuera de las reglas se confisca al máximo: 100 millones en la variante clásica, o todo el cajero por debajo de eso; un lingote de oro en la Fiebre del oro, o nada de un cajero vacío. Retener una maleta nunca compensa. Una página recargada conserva su maleta, salvo si su almacenamiento está bloqueado."
+    },
+    "goldRush": {
+      "goldChecked": "Un lingote de oro registrado: el inspector lo confisca, 100 millones en su propia cuenta.",
+      "goldPassed": "Un lingote de oro pasado: 100 millones van a la cuenta del contrabandista.",
+      "ironChecked": "Un lingote de hierro registrado: el inspector paga 100 millones al contrabandista.",
+      "ironPassed": "Un lingote de hierro pasado: nada se mueve.",
+      "title": "La variante Fiebre del oro",
+      "trunk": "La maleta lleva un lingote de oro, 100 millones sacados del cajero, o un lingote de hierro, que no vale nada: un lingote de oro requiere 100 millones en el cajero. El inspector anuncia Dejar pasar o Registrar."
+    },
+    "money": {
+      "goal": "Solo cuenta el dinero del tercer país: pasa allí el tuyo y confisca el que pasa el otro país.",
+      "start": "Cada jugador empieza con 300 millones en un cajero de su país y 100 millones en una cuenta en un tercer país, y debe 400 millones al final de la partida.",
+      "title": "El dinero"
+    },
+    "pairs": {
+      "drawn": "En cada ronda, un contrabandista de un país cruza la aduana de un inspector del otro. Las parejas se sortean: cada jugador del Norte se enfrenta a un jugador del Sur, contrabandista en una ronda e inspector en la siguiente, con los papeles invertidos.",
+      "title": "Las parejas",
+      "turns": "Los países pasan por turnos, las mismas veces cada uno, hasta el número de rondas elegido: con 3 contra 3, algunos jugadores pasan una vez más que otros."
+    },
+    "setup": {
+      "players": "La mesa tiene 8 puestos, 4 para el país del Norte y 4 para el país del Sur. La partida empieza cuando ambos países tienen tantos jugadores como el otro, de 1 contra 1 a 4 contra 4: los demás participantes son espectadores.",
+      "settings": "El jugador que inicia la partida elige su variante, clásica o Fiebre del oro, la duración de la aduana, 1, 2 o 5 minutos, y su número de rondas, 10, 20 o 30: los puestos siguen ocupados hasta el final.",
+      "title": "La mesa"
+    },
+    "summary": "Reglas del contrabando",
+    "times": {
+      "away": "A un jugador ausente se le esperan 15 segundos más; tras perder su tiempo, ya no, hasta que vuelva a jugar.",
+      "late": "Un contrabandista que no llena su maleta a tiempo la deja vacía, y nada se mueve. Un inspector que no anuncia a tiempo deja pasar.",
+      "phases": "El llenado espera 60 segundos, la aduana el tiempo elegido al inicio, la revelación 15 segundos: cada fase se cierra en cuanto su jugador actúa.",
+      "title": "Los tiempos"
+    },
+    "title": "Reglas"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jugar otra vez",
+      "start": "Empezar la partida"
+    },
+    "call": {
+      "check": "Registrar",
+      "pass": "Dejar pasar"
+    },
+    "clock": "{minutes}:{seconds}",
+    "conversation": {
+      "customs": "Aduana de la ronda {number}: {smuggler} y {inspector}",
+      "team": "{team, select, north {País del Norte} other {País del Sur}}"
+    },
+    "customs": {
+      "inspector": "Inspector: {name}",
+      "smuggler": "Contrabandista: {name}"
+    },
+    "doubt": {
+      "integer": "Duda de millones enteros",
+      "label": "Duda (millones)",
+      "max": "Como mucho {max, plural, one {# millón} other {# millones}}",
+      "min": "{min, plural, one {# millón} other {# millones}} como mínimo",
+      "required": "Escribe la suma de la que dudas",
+      "submit": "Dudar"
+    },
+    "history": "Rondas de la partida",
+    "info": {
+      "crossing": "Ronda {number} de {games}",
+      "variant": "{variant, select, classic {Clásica} other {Fiebre del oro}} · aduana de {minutes} min"
+    },
+    "match": "Partida {number}:",
+    "move": {
+      "emptyDoubt": "Ronda {number}: {inspector} duda de {doubt, plural, one {# millón} other {# millones}} en una maleta vacía, y paga {indemnity, plural, one {# millón} other {# millones}} a {smuggler}",
+      "ironChecked": "Ronda {number}: {inspector} registra un lingote de hierro, y paga {indemnity, plural, one {# millón} other {# millones}} a {smuggler}",
+      "packLate": "Ronda {number}: {smuggler} no prepara su maleta a tiempo, nada se mueve",
+      "passed": "Ronda {number}: {inspector} deja pasar a {smuggler}, {amount, plural, one {# millón pasado} other {# millones pasados}}",
+      "passedLate": "Ronda {number}: {inspector} no anuncia a tiempo y deja pasar a {smuggler}, {amount, plural, one {# millón pasado} other {# millones pasados}}",
+      "seized": "Ronda {number}: {inspector} {call, select, check {registra} other {duda de {doubt, plural, one {# millón} other {# millones}}}} y confisca {amount, plural, one {# millón} other {# millones}} a {smuggler}",
+      "slipped": "Ronda {number}: {inspector} duda de {doubt, plural, one {# millón} other {# millones}}, {smuggler} pasa {amount, plural, one {# millón} other {# millones}} y recibe {indemnity, plural, one {# millón} other {# millones}}",
+      "withheld": "Ronda {number}: la maleta de {smuggler} {reason, select, late {no se revela a tiempo} invalid {se revela distinta de como se selló} other {incumple las reglas}}, {inspector} confisca {amount, plural, one {# millón} other {# millones}}"
+    },
+    "pack": {
+      "gold": "Lingote de oro",
+      "integer": "Millones enteros",
+      "iron": "Lingote de hierro",
+      "label": "Maleta (millones)",
+      "max": "Como mucho {max, plural, one {# millón} other {# millones}}",
+      "min": "{min, plural, one {# millón} other {# millones}} como mínimo",
+      "required": "Escribe el dinero de tu maleta",
+      "submit": "Preparar la maleta"
+    },
+    "pastGames": "Partidas jugadas",
+    "result": {
+      "tie": "Empate: cada jugador conserva su saldo",
+      "winner": "{team, select, north {El país del Norte} other {El país del Sur}} gana por {amount, plural, one {# millón} other {# millones}}"
+    },
+    "sealed": {
+      "amount": "Tu maleta lleva {amount, plural, one {# millón} other {# millones}}, sellada",
+      "gold": "Tu maleta lleva un lingote de oro, sellada",
+      "iron": "Tu maleta lleva un lingote de hierro, sellada"
+    },
+    "seat": {
+      "absent": "Tarde",
+      "account": "Cuenta: {amount, plural, one {# millón} other {# millones}}",
+      "atm": "Cajero: {amount, plural, one {# millón} other {# millones}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# millón} other {# millones}}} minus {−{amount, plural, one {# millón} other {# millones}}} other {0 millones}}",
+      "free": "Puesto libre",
+      "leave": "Dejar el puesto",
+      "release": "Liberar el puesto",
+      "role": "{role, select, smuggler {Contrabandista} other {Inspector}}",
+      "take": "Sentarse"
+    },
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Clasificación de la partida, en millones",
+      "country": "País",
+      "indemnities": "Indemnizaciones",
+      "player": "Jugador",
+      "seized": "Confiscado",
+      "share": "Cajeros enemigos",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Pasado",
+      "team": "{team, select, north {Norte} other {Sur}}"
+    },
+    "start": {
+      "classic": "Clásica",
+      "customsTime": "Aduana",
+      "gameCount": "{count, plural, one {# ronda} other {# rondas}}",
+      "games": "Rondas",
+      "goldRush": "Fiebre del oro",
+      "minutes": "{count} min",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "Esperando el regreso de {names}…",
+      "call": "{variant, select, classic {Deja pasar, o duda de una suma.} other {Deja pasar, o registra la maleta.}}",
+      "customs": "{inspector} inspecciona la maleta de {smuggler}…",
+      "drawing": "Los jugadores sortean las parejas: esperando a {names}.",
+      "hurry": "Date prisa: ¡se te acaba el tiempo!",
+      "over": "La partida ha terminado.",
+      "pack": "Prepara tu maleta: queda sellada hasta el anuncio.",
+      "packing": "{name} prepara una maleta…",
+      "revealing": "Se revela la maleta…",
+      "sealing": "Tu maleta está sellada: la aduana se abre…",
+      "seats": "País del Norte: {north}, país del Sur: {south}. La partida necesita tantos jugadores en cada uno, {min} como mínimo.",
+      "start": "Elige la variante, la aduana y las rondas, y empieza.",
+      "waitingStart": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: esperando a que uno de ellos la empiece."
+    },
+    "team": {
+      "atms": "Cajeros: {amount, plural, one {# millón} other {# millones}}",
+      "name": "{team, select, north {País del Norte} other {País del Sur}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# millón} other {# millones}}",
+      "empty": "Vacía",
+      "gold": "Lingote de oro",
+      "iron": "Lingote de hierro",
+      "none": "Sin maleta",
+      "packing": "En preparación…",
+      "sealed": "Sellada",
+      "withheld": "No revelada"
+    }
+  }
+}

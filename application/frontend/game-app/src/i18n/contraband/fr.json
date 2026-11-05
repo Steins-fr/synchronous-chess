@@ -1,0 +1,205 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Chaque pays complote dans une conversation privée, et chaque passeur discute avec son inspecteur à la douane, le tout chiffré.",
+      "sealed": "Les malles sont scellées : personne, pas même le serveur, ne lit une malle avant l'annonce de l'inspecteur.",
+      "variants": "En variante classique, une malle contient n'importe quelle somme jusqu'à 100 millions ; en Ruée vers l'or, un lingot d'or ou un lingot de fer."
+    },
+    "rooms": "Créez une salle, ou rejoignez-en une, pour jouer avec d'autres joueurs.",
+    "summary": "Un jeu du manga Liar Game : deux pays de 1 à 4 joueurs chacun, le Nord et le Sud, font passer de l'argent par la douane de l'autre, et le pays le plus riche gagne.",
+    "tagline": "Faites passer votre argent à la barbe de la douane ennemie.",
+    "title": "Contrebande"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Douter d'une malle vide : l'inspecteur paie au passeur la moitié de la somme annoncée.",
+      "halves": "Les demi-millions existent : douter de 7 millions face à une malle vide rapporte 3,5 millions au passeur.",
+      "pass": "Laisser passer : l'argent de la malle va sur le compte du passeur.",
+      "seized": "Douter de la somme de la malle ou plus : l'inspecteur saisit l'argent de la malle, sur son propre compte.",
+      "slipped": "Douter de moins que la malle : l'argent va sur le compte du passeur, et l'inspecteur lui paie la moitié de la somme annoncée.",
+      "title": "La variante classique",
+      "trunk": "La malle contient de 0 à 100 millions, jamais plus que le distributeur. L'inspecteur annonce Laisser passer, ou Douter avec une somme de 1 à 100 millions."
+    },
+    "conversations": {
+      "countries": "Les joueurs d'un pays, à partir de 2, partagent une conversation privée pendant toute la partie.",
+      "customs": "Chaque manche ouvre une conversation entre son passeur et son inspecteur, le temps de sa douane : fermée, elle reste lisible.",
+      "private": "Elles sont chiffrées sur les pages de leurs membres, seuls à les lire : les autres participants et le serveur voient qui écrit et quand, jamais quoi. Un spectateur n'en a aucune.",
+      "title": "Les conversations"
+    },
+    "crossing": {
+      "customs": "La douane s'ouvre : une conversation privée entre le passeur et l'inspecteur, pour la durée choisie. Chacun peut tout dire, vrai ou faux. Puis l'inspecteur annonce.",
+      "packing": "Le passeur remplit sa malle en 60 secondes, avec l'argent de son distributeur, puis la scelle.",
+      "reveal": "L'annonce faite, la page du passeur révèle la malle d'elle-même, et l'argent bouge.",
+      "title": "Une manche"
+    },
+    "end": {
+      "atms": "Après la dernière manche, l'argent resté dans les distributeurs d'un pays va à l'autre pays, partagé à parts égales entre ses joueurs.",
+      "balance": "Le solde d'un joueur ajoute à son compte de 100 millions ce qu'il a fait passer, les indemnités reçues moins celles payées, ce qu'il a saisi et sa part des distributeurs ennemis, puis retire les 400 millions qu'il doit.",
+      "title": "La fin de la partie",
+      "winner": "Le pays au plus grand total gagne. L'égalité est possible : chaque joueur garde son solde malgré tout."
+    },
+    "fair": {
+      "draw": "Personne ne choisit les paires : chaque joueur donne une part aléatoire scellée au départ, et les paires sont tirées de toutes ces parts, de la même façon sur chaque page.",
+      "sealed": "Une malle est scellée : la page du passeur envoie son empreinte avec un sel aléatoire, puis la révèle une fois l'annonce de l'inspecteur faite. Personne, pas même le serveur, ne lit une malle avant l'annonce.",
+      "title": "Jeu loyal",
+      "withheld": "Une malle non révélée à temps, révélée autrement que scellée, ou hors des règles est saisie au maximum : 100 millions en variante classique, ou tout le distributeur en dessous ; un lingot d'or en Ruée vers l'or, ou rien d'un distributeur vide. Retenir une malle ne rapporte jamais. Une page rechargée garde sa malle, sauf si son stockage est bloqué."
+    },
+    "goldRush": {
+      "goldChecked": "Un lingot d'or contrôlé : l'inspecteur le saisit, 100 millions sur son propre compte.",
+      "goldPassed": "Un lingot d'or passé : 100 millions vont sur le compte du passeur.",
+      "ironChecked": "Un lingot de fer contrôlé : l'inspecteur paie 100 millions au passeur.",
+      "ironPassed": "Un lingot de fer passé : rien ne bouge.",
+      "title": "La variante Ruée vers l'or",
+      "trunk": "La malle contient un lingot d'or, 100 millions pris dans le distributeur, ou un lingot de fer, qui ne vaut rien : un lingot d'or demande 100 millions dans le distributeur. L'inspecteur annonce Laisser passer ou Contrôler."
+    },
+    "money": {
+      "goal": "Seul l'argent du pays tiers compte : faites-y passer le vôtre, et saisissez celui que l'autre pays fait passer.",
+      "start": "Chaque joueur part avec 300 millions dans un distributeur de son pays et 100 millions sur un compte dans un pays tiers, et doit 400 millions à la fin de la partie.",
+      "title": "L'argent"
+    },
+    "pairs": {
+      "drawn": "À chaque manche, un passeur d'un pays franchit la douane tenue par un inspecteur de l'autre. Les paires sont tirées au sort : chaque joueur du Nord affronte un joueur du Sud, passeur dans une manche, puis inspecteur dans la suivante, les rôles inversés.",
+      "title": "Les paires",
+      "turns": "Les pays passent à tour de rôle, autant de fois chacun, jusqu'au nombre de manches choisi : à 3 contre 3, certains joueurs passent une fois de plus que d'autres."
+    },
+    "setup": {
+      "players": "La table compte 8 places, 4 pour le pays du Nord et 4 pour le pays du Sud. La partie commence quand les deux pays comptent autant de joueurs, de 1 contre 1 à 4 contre 4 : les autres participants sont spectateurs.",
+      "settings": "Le joueur qui lance la partie choisit sa variante, classique ou Ruée vers l'or, la durée de la douane, 1, 2 ou 5 minutes, et son nombre de manches, 10, 20 ou 30 : les places restent prises jusqu'à la fin.",
+      "title": "La table"
+    },
+    "summary": "Règles de la contrebande",
+    "times": {
+      "away": "Un joueur absent est attendu 15 secondes de plus ; une fois son temps manqué, plus du tout, jusqu'à ce qu'il rejoue.",
+      "late": "Un passeur qui ne remplit pas sa malle à temps la laisse vide, et rien ne bouge. Un inspecteur qui n'annonce pas à temps laisse passer.",
+      "phases": "Le remplissage attend 60 secondes, la douane la durée choisie au départ, la révélation 15 secondes : chacun se clôt dès que son joueur a agi.",
+      "title": "Les temps"
+    },
+    "title": "Règles"
+  },
+  "table": {
+    "action": {
+      "rematch": "Rejouer",
+      "start": "Lancer la partie"
+    },
+    "call": {
+      "check": "Contrôler",
+      "pass": "Laisser passer"
+    },
+    "clock": "{minutes}:{seconds}",
+    "conversation": {
+      "customs": "Douane de la manche {number} : {smuggler} et {inspector}",
+      "team": "{team, select, north {Pays du Nord} other {Pays du Sud}}"
+    },
+    "customs": {
+      "inspector": "Inspecteur : {name}",
+      "smuggler": "Passeur : {name}"
+    },
+    "doubt": {
+      "integer": "Doutez de millions entiers",
+      "label": "Doute (millions)",
+      "max": "Au plus {max, plural, one {# million} other {# millions}}",
+      "min": "{min, plural, one {# million} other {# millions}} au moins",
+      "required": "Saisissez la somme dont vous doutez",
+      "submit": "Douter"
+    },
+    "history": "Manches de la partie",
+    "info": {
+      "crossing": "Manche {number} sur {games}",
+      "variant": "{variant, select, classic {Classique} other {Ruée vers l'or}} · douane de {minutes} min"
+    },
+    "match": "Partie {number} :",
+    "move": {
+      "emptyDoubt": "Manche {number} : {inspector} doute de {doubt, plural, one {# million} other {# millions}} sur une malle vide, et paie {indemnity, plural, one {# million} other {# millions}} à {smuggler}",
+      "ironChecked": "Manche {number} : {inspector} contrôle un lingot de fer, et paie {indemnity, plural, one {# million} other {# millions}} à {smuggler}",
+      "packLate": "Manche {number} : {smuggler} ne fait pas sa malle à temps, rien ne bouge",
+      "passed": "Manche {number} : {inspector} laisse passer {smuggler}, {amount, plural, one {# million passé} other {# millions passés}}",
+      "passedLate": "Manche {number} : {inspector} n'annonce pas à temps et laisse passer {smuggler}, {amount, plural, one {# million passé} other {# millions passés}}",
+      "seized": "Manche {number} : {inspector} {call, select, check {contrôle} other {doute de {doubt, plural, one {# million} other {# millions}}}} et saisit {amount, plural, one {# million} other {# millions}} à {smuggler}",
+      "slipped": "Manche {number} : {inspector} doute de {doubt, plural, one {# million} other {# millions}}, {smuggler} passe {amount, plural, one {# million} other {# millions}} et reçoit {indemnity, plural, one {# million} other {# millions}}",
+      "withheld": "Manche {number} : la malle de {smuggler} {reason, select, late {n'est pas révélée à temps} invalid {est révélée autrement que scellée} other {enfreint les règles}}, {inspector} saisit {amount, plural, one {# million} other {# millions}}"
+    },
+    "pack": {
+      "gold": "Lingot d'or",
+      "integer": "Des millions entiers",
+      "iron": "Lingot de fer",
+      "label": "Malle (millions)",
+      "max": "Au plus {max, plural, one {# million} other {# millions}}",
+      "min": "{min, plural, one {# million} other {# millions}} au moins",
+      "required": "Saisissez l'argent de votre malle",
+      "submit": "Remplir la malle"
+    },
+    "pastGames": "Parties jouées",
+    "result": {
+      "tie": "Égalité : chaque joueur garde son solde",
+      "winner": "{team, select, north {Le pays du Nord} other {Le pays du Sud}} gagne de {amount, plural, one {# million} other {# millions}}"
+    },
+    "sealed": {
+      "amount": "Votre malle contient {amount, plural, one {# million} other {# millions}}, scellée",
+      "gold": "Votre malle contient un lingot d'or, scellée",
+      "iron": "Votre malle contient un lingot de fer, scellée"
+    },
+    "seat": {
+      "absent": "En retard",
+      "account": "Compte : {amount, plural, one {# million} other {# millions}}",
+      "atm": "Distributeur : {amount, plural, one {# million} other {# millions}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# million} other {# millions}}} minus {−{amount, plural, one {# million} other {# millions}}} other {0 million}}",
+      "free": "Place libre",
+      "leave": "Quitter la place",
+      "release": "Libérer la place",
+      "role": "{role, select, smuggler {Passeur} other {Inspecteur}}",
+      "take": "S'asseoir"
+    },
+    "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Solde",
+      "caption": "Classement de la partie, en millions",
+      "country": "Pays",
+      "indemnities": "Indemnités",
+      "player": "Joueur",
+      "seized": "Saisi",
+      "share": "Distributeurs ennemis",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Passé",
+      "team": "{team, select, north {Nord} other {Sud}}"
+    },
+    "start": {
+      "classic": "Classique",
+      "customsTime": "Douane",
+      "gameCount": "{count, plural, one {# manche} other {# manches}}",
+      "games": "Manches",
+      "goldRush": "Ruée vers l'or",
+      "minutes": "{count} min",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "En attente du retour de {names}…",
+      "call": "{variant, select, classic {Laissez passer, ou doutez d'une somme.} other {Laissez passer, ou contrôlez la malle.}}",
+      "customs": "{inspector} inspecte la malle de {smuggler}…",
+      "drawing": "Les joueurs tirent les paires : en attente de {names}.",
+      "hurry": "Vite : votre temps s'écoule !",
+      "over": "La partie est terminée.",
+      "pack": "Remplissez votre malle : elle reste scellée jusqu'à l'annonce.",
+      "packing": "{name} remplit une malle…",
+      "revealing": "La malle est révélée…",
+      "sealing": "Votre malle est scellée : la douane ouvre…",
+      "seats": "Pays du Nord : {north}, pays du Sud : {south}. La partie demande autant de joueurs dans chacun, {min} au moins.",
+      "start": "Choisissez la variante, la douane et les manches, puis lancez.",
+      "waitingStart": "{count, plural, one {# joueur assis} other {# joueurs assis}} : en attente que l'un d'eux lance la partie."
+    },
+    "team": {
+      "atms": "Distributeurs : {amount, plural, one {# million} other {# millions}}",
+      "name": "{team, select, north {Pays du Nord} other {Pays du Sud}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# million} other {# millions}}",
+      "empty": "Vide",
+      "gold": "Lingot d'or",
+      "iron": "Lingot de fer",
+      "none": "Pas de malle",
+      "packing": "En préparation…",
+      "sealed": "Scellée",
+      "withheld": "Non révélée"
+    }
+  }
+}

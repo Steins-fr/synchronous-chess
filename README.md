@@ -47,6 +47,12 @@ The Minority Game of the manga *Liar Game* for 3 to 8 players: a player drawn as
 
 No one reads a vote before every player voted, not even the server: each page sends the hash of its vote, then reveals it once every player voted. No one picks the askers: they are drawn from a sealed random part of each player. See [Minority Game session](documentation/minority-game-session.md).
 
+### Contraband demo
+
+The Contraband of the manga *Liar Game*: two countries of 1 to 4 players, the North and the South, smuggle their money across the customs of the other one. Each player starts with 300 million in an ATM of its country and 100 million on an account in a third country, and owes 400 million at the end. Each participant takes a seat of a country with `Sit here`, then one of them picks the variant, the time of the customs and the number of games, and clicks `Start the game` once both countries hold as many players. In each game, a smuggler packs a trunk, sealed, and an inspector of the other country calls: in the Classic variant, a trunk holds up to 100 million, and the inspector passes it or doubts an amount, seizing the trunk when it doubted enough, else paying half of its doubt; in the Gold Rush, a trunk holds a gold bar or an iron bar, and the inspector passes it or checks it. At the end, the money left in the ATMs of a country goes to the other one, and the richer country wins. Each country plots in a private conversation, and each smuggler talks with its inspector at the customs, encrypted: the other participants, the server included, never read them.
+
+No one reads a trunk before the call, not even the server: the page of the smuggler sends the hash of its trunk, then reveals it once the inspector called, and a trunk withheld is seized at the most it could hold. No one picks the pairs: they are drawn from a sealed random part of each player. See [Contraband session](documentation/contraband-session.md).
+
 ### Chat demo
 
 A simple chat demo with ping displayed between peers. For the moment, you have to click on the send button for sending the message. The `Enter` key is not supported.
@@ -98,18 +104,20 @@ The API is composed of 4 lambdas for managing websocket connection, disconnectio
 ### **Frontend**
 ---
 
-The synchronous chess board game, the Seventeen Poker, the 24-shot Russian roulette, the Bid Poker and the Minority Game, with chat.
+The synchronous chess board game, the Seventeen Poker, the 24-shot Russian roulette, the Bid Poker, the Minority Game and the Contraband, with chat.
 
 The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
 which the other participants watch for cheats. The moves stay hidden until both players are committed, the
 cards of the poker until their showdown, the bullets of the roulette until their chamber fires, the bids of the Bid
-Poker until their auction closes, and the votes of the Minority Game until every player voted.
+Poker until their auction closes, the votes of the Minority Game until every player voted, and the trunks of the
+Contraband until their inspector called; the private conversations of the Contraband are encrypted end to end.
 See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md),
 [Chess game session](documentation/chess-game-session.md), [Mental poker](documentation/mental-poker.md),
 [Seventeen Poker session](documentation/seventeen-poker-session.md),
 [Russian roulette session](documentation/russian-roulette-session.md),
-[Bid Poker session](documentation/bid-poker-session.md) and
-[Minority Game session](documentation/minority-game-session.md).
+[Bid Poker session](documentation/bid-poker-session.md),
+[Minority Game session](documentation/minority-game-session.md) and
+[Contraband session](documentation/contraband-session.md).
 
 **Required**: Backend API (its websocket API and its HTTP API).
 
@@ -130,7 +138,7 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 - connection_id: Websocket connection id of the host;
 - host_player: Player name of the host;
 - max_player: Maximum of player that can join the room;
-- game: The game of the room, chess, seventeen-poker, russian-roulette, bid-poker, minority-game or chat;
+- game: The game of the room, chess, seventeen-poker, russian-roulette, bid-poker, minority-game, contraband or chat;
 - created_at, name_key: The date of its creation and its id in lower case, to list and search the rooms, unique: the ids differ whatever their case;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.

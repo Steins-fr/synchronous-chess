@@ -18,6 +18,9 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 - [Changing the sequencer](#changing-the-sequencer)
 - [Hidden moves: commit then reveal](#hidden-moves-commit-then-reveal)
 - [Hidden cards: mental poker](#hidden-cards-mental-poker)
+- [Sealed bids: the auctions of the Bid Poker](#sealed-bids-the-auctions-of-the-bid-poker)
+- [Sealed votes: the Minority Game](#sealed-votes-the-minority-game)
+- [Sealed trunks: Contraband](#sealed-trunks-contraband)
 - [Hidden bullets: the cylinder of the roulette](#hidden-bullets-the-cylinder-of-the-roulette)
 - [A fair draw](#a-fair-draw)
 - [Private conversations](#private-conversations)
@@ -29,8 +32,8 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 ## Overview
 
 A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess`,
-`poker`, `roulette`, `bid` (the Bid Poker) or `minority` (the Minority Game), and `private` for a game
-declaring private conversations (see [Private conversations](#private-conversations)). Each chain orders its
+`poker`, `roulette`, `bid` (the Bid Poker), `minority` (the Minority Game) or `contraband`, and `private` for a game
+declaring private conversations, the Contraband (see [Private conversations](#private-conversations)). Each chain orders its
 blocks on its own, so a busy chat never delays the moves of the game. The chains share the WebRTC
 connections and the identity of the participants.
 
@@ -75,6 +78,7 @@ flowchart LR
 | `RussianRouletteSession` | `modules/russian-roulette/classes/game-sessions` | Seats the players, fires the chambers of the cylinder, reports the illegal moves (see [Russian roulette session](russian-roulette-session.md)) |
 | `BidPokerSession` | `modules/bid-poker/classes/game-sessions` | Seats the players, draws the deck, seals then reveals the bids and the discards, reports the cheats (see [Bid Poker session](bid-poker-session.md)) |
 | `MinoritySession` | `modules/minority-game/classes/game-sessions` | Seats the players, draws the askers, seals then reveals the votes, reports the cheats (see [Minority Game session](minority-game-session.md)) |
+| `ContrabandSession` | `modules/contraband/classes/game-sessions` | Seats the players in their countries, draws the pairs, seals then reveals the trunks, takes the calls, reports the cheats, gives the private conversations of the match (see [Contraband session](contraband-session.md)) |
 | `PrivateConversations` | `modules/private-conversations/classes` | Publishes the key of agreement of the player, encrypts its messages to each member of a conversation the game declares, checks, reads and reports the messages of the conversations (see [Private conversations](#private-conversations)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
@@ -399,6 +403,18 @@ e-mail address). A vote withheld, not revealed or revealed otherwise than commit
 the most a round gives in the score variant: the last one to reveal could otherwise change the count once it read the
 others. A claim of a timeout is checked on the time of the chain. See [Minority Game session](minority-game-session.md).
 
+## Sealed trunks: Contraband
+
+The Contraband hides the trunks only, by the shared commit-reveal: in each game, the smuggler commits to the money of its
+trunk with the id of the match, its index, the index of the game and a salt; the inspector calls, then the page of the
+smuggler reveals the trunk, and the call settles the money. No participant, the sequencer and the inspector included,
+reads a trunk before the call. The pairs of the games are drawn from the seed of a fair draw of every player, alike on
+every page. The smuggler reveals after the call: a trunk withheld, not revealed in time, revealed otherwise than
+committed or out of the rules, is seized at the most it could hold, so withholding never pays. The reveal waits 15
+seconds, more than the watch of the censorship: a sequencer holding the reveal of a smuggler is caught first. A claim
+of a timeout is checked on the time of the chain. The countries and the pairs of each game talk in the
+[private conversations](#private-conversations) the game declares. See [Contraband session](contraband-session.md).
+
 ## Hidden bullets: the cylinder of the roulette
 
 The 24-shot Russian roulette hides the bullets each player loads, and the offset of the cylinder, from every
@@ -489,7 +505,8 @@ The longest message of the chat, encrypted, is a part of 4120 base64 characters:
 fixed: declaring an id again with other members throws. `open` drives the composer and the notice of a conversation
 closed only: a message received while it is closed still shows (see the [limits](#trust-model-and-limits)). The page of
 the game merges `privateBlockChains` into its routing, and gives the instance to the layout of the room
-(`app-room-layout`, `[conversations]`). No page declares one yet.
+(`app-room-layout`, `[conversations]`). The Contraband declares one for each country of 2 players or more, and one for
+the customs of each game, between its smuggler and its inspector (see [Contraband session](contraband-session.md#private-conversations)).
 
 ### Checking the messages
 
@@ -553,8 +570,8 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
 | `clockAhead` | A live block of the sequencer is received more than 5 seconds sooner, from its time, than the shortest delay of its first ones (5 over 30 seconds at least): its clock jumped ahead | the sequencer | no |
-| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange), a move of the roulette (a pass, a shot), a bid or a discard of the Bid Poker (above the coins of its player, on its own lot, a card not held), or a question or a vote of the Minority Game (a question of another player than the asker, a vote of a player eliminated, a vote neither yes nor no) is against the rules | the player | yes |
-| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of a draw, a bid or discards of the Bid Poker, or a vote of the Minority Game, its commitment | the player | yes |
+| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange), a move of the roulette (a pass, a shot), a bid or a discard of the Bid Poker (above the coins of its player, on its own lot, a card not held), a question or a vote of the Minority Game (a question of another player than the asker, a vote of a player eliminated, a vote neither yes nor no), or a move of the Contraband (a trunk committed by another player than the smuggler, a call by another player than the inspector, a trunk out of the rules) is against the rules | the player | yes |
+| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of a draw, a bid or discards of the Bid Poker, a vote of the Minority Game, or a trunk of the Contraband, its commitment | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
 | `invalidCardKey` | A key is malformed, does not give the card to its recipient (with two players), or is not the one disclosed at the end of the game | the player | a malformed key |
 | `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
@@ -609,7 +626,7 @@ their payload is trusted, and a payload making a handler throw is logged.
 The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
 messages through the `roulette` chain, the Bid Poker its `BP_*` messages through the `bid` chain, the Minority Game its `MG_*` messages through the `minority`
-chain, the chat
+chain, the Contraband its `CB_*` messages through the `contraband` chain, the chat
 `chatMessage` through the `chat` chain, the private conversations `PV_key` (`{ key }`, the public key of agreement of
 its sender) and `PV_message` (`{ conversation, id, key, parts }`, see [A message and its parts](#a-message-and-its-parts))
 through the `private` chain.

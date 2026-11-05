@@ -9,6 +9,8 @@ export enum TranslationScope {
     BID = 'bid',
     /** The Minority Game */
     MINORITY = 'minority',
+    /** The Contraband */
+    CONTRABAND = 'contraband',
     /** The names of the playing cards, shared by the card games */
     CARDS = 'cards',
 }

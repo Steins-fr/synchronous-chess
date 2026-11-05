@@ -1,0 +1,38 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "121e6277-f36e-462b-aa7a-3f6337dce83b",
+  "prevIds": [
+    "921f4b60-e593-4ca9-9690-50e306a99707"
+  ],
+  "footprints": [
+    {
+      "statementType": "alter_check",
+      "statementTarget": [
+        "table",
+        "public",
+        "rooms"
+      ],
+      "writes": [
+        "s|ck|public.rooms.rooms_game"
+      ],
+      "reads": [
+        "n|tbl|public.rooms",
+        "n|sch|public",
+        "n|col|public.rooms.game",
+        "e|col|public.rooms.game"
+      ],
+      "sqlHash": "98e1641c6b8fda19"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"rooms\",\"rooms_game\"]",
+      "set": {
+        "value": "\"game\" IN ('chess', 'chat', 'seventeen-poker', 'russian-roulette', 'bid-poker', 'minority-game', 'contraband')"
+      }
+    }
+  ]
+}

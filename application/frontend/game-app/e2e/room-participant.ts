@@ -319,6 +319,47 @@ export class RoomParticipant {
         return this.page.locator('#history-past li');
     }
 
+    /** Opens the private conversations of the player in the panel of the room, unless they show already */
+    public async openPrivate(): Promise<void> {
+        const toggle: Locator = this.page.locator('#room-private-toggle');
+        if (await toggle.getAttribute('aria-expanded') !== 'true') {
+            await toggle.click();
+        }
+        await expect(this.page.locator('#room-private')).toBeVisible();
+    }
+
+    /** The tabs of the private conversations of the player, by their titles */
+    public privateTabs(): Locator {
+        return this.page.locator('#room-private').getByRole('tab');
+    }
+
+    /**
+     * Shows the private conversation of the title given, the panel opened: once its tab shows selected, the composer
+     * holds its draft (a text typed before would go to the draft of the conversation shown before)
+     */
+    public async selectPrivate(title: string): Promise<void> {
+        await this.openPrivate();
+        const tab: Locator = this.privateTabs().filter({ hasText: title });
+        await tab.click();
+        await expect(tab).toHaveAttribute('aria-selected', 'true');
+    }
+
+    /**
+     * Sends a message to the private conversation of the title given: once every member present published its key, the
+     * composer sends it encrypted to each of them
+     */
+    public async sendPrivate(title: string, text: string): Promise<void> {
+        await this.selectPrivate(title);
+        const panel: Locator = this.page.locator('#room-private');
+        await panel.getByRole('textbox').fill(text);
+        await panel.getByRole('button', { name: 'Send privately' }).click();
+    }
+
+    /** The messages of the private conversation shown, with their author */
+    public privateLines(): Locator {
+        return this.page.locator('#private-log .chat-bubble');
+    }
+
     public async sendMessage(text: string): Promise<void> {
         await this.page.getByRole('textbox', { name: 'Type your message' }).fill(text);
         await this.page.getByRole('button', { name: 'Send' }).click();

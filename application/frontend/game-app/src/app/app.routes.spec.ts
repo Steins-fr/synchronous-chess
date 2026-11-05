@@ -3,6 +3,7 @@ import { Route } from '@angular/router';
 import { provideTranslocoScope } from '@jsverse/transloco';
 import { BidPoker } from '@app/modules/bid-poker/pages/bid-poker/bid-poker';
 import { ChatPage } from '@app/modules/chat-page/chat.page';
+import { Contraband } from '@app/modules/contraband/pages/contraband/contraband';
 import { SynchronousChess } from '@app/modules/chess/pages/synchronous-chess/synchronous-chess';
 import { HomePage } from '@app/modules/home-page/home.page';
 import { MinorityGame } from '@app/modules/minority-game/pages/minority-game/minority-game';
@@ -13,7 +14,7 @@ import { TranslationScope } from '@app/services/language/enums/translation-scope
 import { leaveMatchGuard } from '@app/modules/room-layout/leave-match.guard';
 import { translationScopesGuard } from '@app/services/language/translation-scopes.guard';
 import { describe, expect, test } from 'vitest';
-import { bidPokerPath, chatPath, chessPath, homePath, minorityGamePath, pokerPath, roulettePath, routes, soundLabPath } from './app.routes';
+import { bidPokerPath, chatPath, chessPath, contrabandPath, homePath, minorityGamePath, pokerPath, roulettePath, routes, soundLabPath } from './app.routes';
 
 describe('routes', () => {
     async function loadedComponent(path: string): Promise<unknown> {
@@ -29,6 +30,7 @@ describe('routes', () => {
         [roulettePath, [translationScopesGuard]],
         [bidPokerPath, [translationScopesGuard]],
         [minorityGamePath, [translationScopesGuard]],
+        [contrabandPath, [translationScopesGuard]],
         [soundLabPath, undefined],
     ])('the route \'%s\' should show once the translations of its games are loaded, without waiting for the APIs', (path: string, guards: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.canActivate).toEqual(guards);
@@ -42,6 +44,7 @@ describe('routes', () => {
         [roulettePath, [leaveMatchGuard]],
         [bidPokerPath, [leaveMatchGuard]],
         [minorityGamePath, [leaveMatchGuard]],
+        [contrabandPath, [leaveMatchGuard]],
     ])('the route \'%s\' should ask to confirm leaving a match its player plays', (path: string, guards: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.canDeactivate).toEqual(guards);
     });
@@ -54,6 +57,7 @@ describe('routes', () => {
         [roulettePath, [provideTranslocoScope(TranslationScope.ROULETTE, TranslationScope.CHAT)]],
         [bidPokerPath, [provideTranslocoScope(TranslationScope.BID, TranslationScope.CARDS, TranslationScope.CHAT)]],
         [minorityGamePath, [provideTranslocoScope(TranslationScope.MINORITY, TranslationScope.CHAT)]],
+        [contrabandPath, [provideTranslocoScope(TranslationScope.CONTRABAND, TranslationScope.CHAT)]],
         [soundLabPath, undefined],
     ])('the route \'%s\' should provide the translations of the games it holds', (path: string, providers: unknown) => {
         expect(routes.find((candidate: Route) => candidate.path === path)?.providers).toEqual(providers);
@@ -67,6 +71,7 @@ describe('routes', () => {
         [roulettePath, RussianRoulette],
         [bidPokerPath, BidPoker],
         [minorityGamePath, MinorityGame],
+        [contrabandPath, Contraband],
         [soundLabPath, SoundLabPage],
     ])('the route \'%s\' should load its page on demand', async (path: string, page: Type<unknown>) => {
         // When

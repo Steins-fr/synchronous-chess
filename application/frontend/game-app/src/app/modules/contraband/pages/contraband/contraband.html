@@ -1,0 +1,17 @@
+<app-room-layout [conversations]="table()?.conversations()" [dimContent]="false" [game]="game" [room]="room()">
+    <app-contraband-presentation roomPresentation />
+    @if (room(); as myRoom) {
+    <app-contraband-table #contrabandTable [room]="myRoom" />
+    <details class="rules-details">
+        <summary>{{ 'contraband.rules.summary' | transloco }}</summary>
+        <app-contraband-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-contraband-rules />
+    }
+    <!-- The history of the table, in the panel of the room -->
+    @if (table(); as table) {
+    <app-room-history [currentTitle]="'contraband.table.history' | transloco" [current]="table.history()"
+        [pastTitle]="'contraband.table.pastGames' | transloco" [past]="table.pastResults()" roomHistory />
+    }
+</app-room-layout>

@@ -1,0 +1,205 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Każdy kraj spiskuje w prywatnej rozmowie, a każdy przemytnik rozmawia ze swoim inspektorem na kontroli celnej, wszystko zaszyfrowane.",
+      "sealed": "Walizki są zapieczętowane: nikt, nawet serwer, nie widzi zawartości walizki, zanim inspektor ogłosi decyzję.",
+      "variants": "W wariancie klasycznym walizka mieści dowolną kwotę do 100 milionów; w Gorączce złota sztabkę złota albo sztabkę żelaza."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z mangi Liar Game: dwa kraje po 1 do 4 graczy, Północ i Południe, przemycają pieniądze przez kontrolę celną drugiego kraju, a wygrywa bogatszy kraj.",
+    "tagline": "Przemyć swoje pieniądze pod nosem wrogiej kontroli celnej.",
+    "title": "Przemyt"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Wątpienie wobec pustej walizki: inspektor płaci przemytnikowi połowę kwoty, w którą wątpił.",
+      "halves": "Istnieją pół miliony: wątpienie na 7 milionów wobec pustej walizki daje przemytnikowi 3,5 miliona.",
+      "pass": "Przepuść: pieniądze z walizki trafiają na konto przemytnika.",
+      "seized": "Wątpienie na kwotę walizki lub więcej: inspektor konfiskuje pieniądze z walizki na własne konto.",
+      "slipped": "Wątpienie na mniej, niż jest w walizce: pieniądze trafiają na konto przemytnika, a inspektor płaci mu połowę kwoty, w którą wątpił.",
+      "title": "Wariant klasyczny",
+      "trunk": "Walizka mieści od 0 do 100 milionów, nigdy więcej, niż jest w bankomacie. Inspektor ogłasza Przepuść albo Wątpię z kwotą od 1 do 100 milionów."
+    },
+    "conversations": {
+      "countries": "Gracze jednego kraju, jeśli jest ich co najmniej 2, dzielą prywatną rozmowę przez całą partię.",
+      "customs": "Każda runda otwiera rozmowę między jej przemytnikiem a inspektorem na czas kontroli celnej: zamknięta, nadal jest czytelna.",
+      "private": "Są szyfrowane na stronach ich członków, jedynych, którzy je czytają: pozostali uczestnicy i serwer widzą, kto i kiedy pisze, nigdy co. Widz nie ma żadnej.",
+      "title": "Rozmowy"
+    },
+    "crossing": {
+      "customs": "Kontrola celna się otwiera: prywatna rozmowa przemytnika z inspektorem, na wybrany czas. Każdy może mówić wszystko, prawdę lub kłamstwo. Potem inspektor ogłasza decyzję.",
+      "packing": "Przemytnik w 60 sekund pakuje walizkę pieniędzmi ze swojego bankomatu, a potem ją pieczętuje.",
+      "reveal": "Po decyzji strona przemytnika sama ujawnia walizkę, a pieniądze się przemieszczają.",
+      "title": "Runda"
+    },
+    "end": {
+      "atms": "Po ostatniej rundzie pieniądze pozostałe w bankomatach kraju przechodzą do drugiego kraju, dzielone po równo między jego graczy.",
+      "balance": "Saldo gracza dodaje do jego konta ze 100 milionami to, co przemycił, otrzymane odszkodowania minus zapłacone, to, co skonfiskował, i jego udział we wrogich bankomatach, a następnie odejmuje 400 milionów, które jest winien.",
+      "title": "Koniec partii",
+      "winner": "Wygrywa kraj z najwyższą sumą. Remis jest możliwy: każdy gracz i tak zachowuje swoje saldo."
+    },
+    "fair": {
+      "draw": "Nikt nie wybiera par: każdy gracz daje na początku zapieczętowaną losową część, a pary są losowane ze wszystkich części, tak samo na każdej stronie.",
+      "sealed": "Walizka jest zapieczętowana: strona przemytnika wysyła jej skrót z losową solą, a ujawnia ją po decyzji inspektora. Nikt, nawet serwer, nie widzi zawartości walizki przed decyzją.",
+      "title": "Uczciwa gra",
+      "withheld": "Walizka nieujawniona na czas, ujawniona inaczej, niż została zapieczętowana, lub niezgodnie z zasadami jest konfiskowana w najwyższej wysokości: 100 milionów w wariancie klasycznym albo cały bankomat, jeśli ma mniej; sztabka złota w Gorączce złota albo nic z pustego bankomatu. Zatajenie walizki nigdy się nie opłaca. Przeładowana strona zachowuje swoją walizkę, chyba że jej pamięć jest zablokowana."
+    },
+    "goldRush": {
+      "goldChecked": "Skontrolowana sztabka złota: inspektor ją konfiskuje, 100 milionów na własne konto.",
+      "goldPassed": "Przepuszczona sztabka złota: 100 milionów trafia na konto przemytnika.",
+      "ironChecked": "Skontrolowana sztabka żelaza: inspektor płaci przemytnikowi 100 milionów.",
+      "ironPassed": "Przepuszczona sztabka żelaza: nic się nie przemieszcza.",
+      "title": "Wariant Gorączka złota",
+      "trunk": "Walizka zawiera sztabkę złota, 100 milionów wziętych z bankomatu, albo bezwartościową sztabkę żelaza: sztabka złota wymaga 100 milionów w bankomacie. Inspektor ogłasza Przepuść albo Skontroluj."
+    },
+    "money": {
+      "goal": "Liczą się tylko pieniądze w kraju trzecim: przemyć tam swoje i skonfiskuj te, które przemyca drugi kraj.",
+      "start": "Każdy gracz zaczyna z 300 milionami w bankomacie swojego kraju i 100 milionami na koncie w kraju trzecim, a na koniec partii jest winien 400 milionów.",
+      "title": "Pieniądze"
+    },
+    "pairs": {
+      "drawn": "W każdej rundzie przemytnik jednego kraju przechodzi przez kontrolę celną inspektora drugiego. Pary są losowane: każdy gracz Północy mierzy się z graczem Południa, jako przemytnik w jednej rundzie, a jako inspektor w następnej, z zamienionymi rolami.",
+      "title": "Pary",
+      "turns": "Kraje przemycają na zmianę, tyle samo razy, aż do wybranej liczby rund: przy 3 na 3 niektórzy gracze przemycają raz więcej niż inni."
+    },
+    "setup": {
+      "players": "Stół ma 8 miejsc, 4 dla kraju Północy i 4 dla kraju Południa. Partia zaczyna się, gdy oba kraje mają tylu samo graczy, od 1 na 1 do 4 na 4: pozostali uczestnicy są widzami.",
+      "settings": "Gracz, który rozpoczyna partię, wybiera jej wariant, klasyczny albo Gorączkę złota, czas kontroli celnej, 1, 2 lub 5 minut, oraz liczbę rund, 10, 20 lub 30: miejsca pozostają zajęte do końca.",
+      "title": "Stół"
+    },
+    "summary": "Zasady przemytu",
+    "times": {
+      "away": "Na nieobecnego gracza czeka się 15 sekund dłużej; gdy przegapi swój czas, już nie, dopóki znów nie zagra.",
+      "late": "Przemytnik, który nie spakuje walizki na czas, zostawia ją pustą i nic się nie przemieszcza. Inspektor, który nie ogłosi decyzji na czas, przepuszcza.",
+      "phases": "Pakowanie czeka 60 sekund, kontrola celna czas wybrany na początku, ujawnienie 15 sekund: każda faza kończy się, gdy tylko jej gracz wykona ruch.",
+      "title": "Czas"
+    },
+    "title": "Zasady"
+  },
+  "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "call": {
+      "check": "Skontroluj",
+      "pass": "Przepuść"
+    },
+    "clock": "{minutes}:{seconds}",
+    "conversation": {
+      "customs": "Kontrola celna rundy {number}: {smuggler} i {inspector}",
+      "team": "{team, select, north {Kraj Północy} other {Kraj Południa}}"
+    },
+    "customs": {
+      "inspector": "Inspektor: {name}",
+      "smuggler": "Przemytnik: {name}"
+    },
+    "doubt": {
+      "integer": "Wątp w pełnych milionach",
+      "label": "Wątpienie (miliony)",
+      "max": "Najwyżej {max, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "min": "Co najmniej {min, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "required": "Wpisz kwotę, w którą wątpisz",
+      "submit": "Wątpię"
+    },
+    "history": "Rundy partii",
+    "info": {
+      "crossing": "Runda {number} z {games}",
+      "variant": "{variant, select, classic {Klasyczny} other {Gorączka złota}} · kontrola celna {minutes} min"
+    },
+    "match": "Partia {number}:",
+    "move": {
+      "emptyDoubt": "Runda {number}: walizka jest pusta, {inspector} ogłasza wątpienie na {doubt, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}} i płaci {smuggler} {indemnity, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "ironChecked": "Runda {number}: {inspector} kontroluje sztabkę żelaza i płaci {smuggler} {indemnity, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "packLate": "Runda {number}: {smuggler} nie pakuje walizki na czas, nic się nie zmienia",
+      "passed": "Runda {number}: {inspector} przepuszcza {smuggler}, przemycono: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "passedLate": "Runda {number}: {inspector} nie ogłasza decyzji na czas i przepuszcza {smuggler}, przemycono: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "seized": "Runda {number}: {inspector} {call, select, check {kontroluje walizkę} other {ogłasza wątpienie na {doubt, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}}} i konfiskuje {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}} z walizki {smuggler}",
+      "slipped": "Runda {number}: {inspector} ogłasza wątpienie na {doubt, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, {smuggler} przemyca {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}} i otrzymuje {indemnity, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "withheld": "Runda {number}: walizka {smuggler} {reason, select, late {nie zostaje odkryta na czas} invalid {zostaje odkryta inaczej, niż ją zapieczętowano} other {łamie zasady}}, {inspector} konfiskuje {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}"
+    },
+    "pack": {
+      "gold": "Sztabka złota",
+      "integer": "Tylko pełne miliony",
+      "iron": "Sztabka żelaza",
+      "label": "Walizka (miliony)",
+      "max": "Najwyżej {max, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "min": "Co najmniej {min, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "required": "Wpisz pieniądze w walizce",
+      "submit": "Spakuj walizkę"
+    },
+    "pastGames": "Rozegrane partie",
+    "result": {
+      "tie": "Remis: każdy gracz zachowuje swoje saldo",
+      "winner": "{team, select, north {Kraj Północy} other {Kraj Południa}} wygrywa przewagą {amount, plural, one {# miliona} few {# milionów} many {# milionów} other {# miliona}}"
+    },
+    "sealed": {
+      "amount": "Twoja walizka zawiera {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, zapieczętowana",
+      "gold": "Twoja walizka zawiera sztabkę złota, zapieczętowana",
+      "iron": "Twoja walizka zawiera sztabkę żelaza, zapieczętowana"
+    },
+    "seat": {
+      "absent": "Spóźnienie",
+      "account": "Konto: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "atm": "Bankomat: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "release": "Usuń z miejsca",
+      "role": "{role, select, smuggler {Przemytnik} other {Inspektor}}",
+      "take": "Usiądź"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} few {#} many {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Klasyfikacja partii, w milionach",
+      "country": "Kraj",
+      "indemnities": "Odszkodowania",
+      "player": "Gracz",
+      "seized": "Skonfiskowano",
+      "share": "Bankomaty wroga",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} few {#} many {#} other {#}}} minus {−{amount, plural, one {#} few {#} many {#} other {#}}} other {0}}",
+      "smuggled": "Przemycono",
+      "team": "{team, select, north {Północ} other {Południe}}"
+    },
+    "start": {
+      "classic": "Klasyczny",
+      "customsTime": "Kontrola celna",
+      "gameCount": "{count, plural, one {# runda} few {# rundy} many {# rund} other {# rundy}}",
+      "games": "Rundy",
+      "goldRush": "Gorączka złota",
+      "minutes": "{count} min",
+      "variant": "Wariant"
+    },
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "call": "{variant, select, classic {Przepuść albo wątp w kwotę.} other {Przepuść albo skontroluj walizkę.}}",
+      "customs": "{inspector} sprawdza walizkę {smuggler}…",
+      "drawing": "Gracze losują pary: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "pack": "Spakuj walizkę: pozostanie zapieczętowana do ogłoszenia.",
+      "packing": "{name} pakuje walizkę…",
+      "revealing": "Walizka zostaje odkryta…",
+      "sealing": "Twoja walizka jest zapieczętowana: kontrola celna się otwiera…",
+      "seats": "Kraj Północy: {north}, Kraj Południa: {south}. Partia wymaga tylu samo graczy w każdym, co najmniej {min}.",
+      "start": "Wybierz wariant, kontrolę celną i rundy, potem zacznij.",
+      "waitingStart": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: czekamy, aż jeden z nich rozpocznie partię."
+    },
+    "team": {
+      "atms": "Bankomaty: {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "name": "{team, select, north {Kraj Północy} other {Kraj Południa}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "empty": "Pusta",
+      "gold": "Sztabka złota",
+      "iron": "Sztabka żelaza",
+      "none": "Brak walizki",
+      "packing": "Pakowanie…",
+      "sealed": "Zapieczętowana",
+      "withheld": "Nie odkryto"
+    }
+  }
+}

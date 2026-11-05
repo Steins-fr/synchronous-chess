@@ -8,6 +8,7 @@
       "bidPoker": "Licytacja",
       "chat": "Czat",
       "chess": "Szachy",
+      "contraband": "Przemyt",
       "home": "Start",
       "minorityGame": "Mniejszość",
       "poker": "Poker",
@@ -27,8 +28,8 @@
     "title": "Szachy synchroniczne"
   },
   "cheat": {
-    "flagged": "Wiadomość {index} ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} private {rozmowa prywatna} other {}}) od {author} została zgłoszona jako oszustwo przez: {reporters}",
-    "ignored": "Wiadomość ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} private {rozmowa prywatna} other {}}) od {author} jest pomijana przez {sequencer}, zgłoszona przez: {reporters}"
+    "flagged": "Wiadomość {index} ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} private {rozmowa prywatna} contraband {przemyt} other {}}) od {author} została zgłoszona jako oszustwo przez: {reporters}",
+    "ignored": "Wiadomość ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} private {rozmowa prywatna} contraband {przemyt} other {}}) od {author} jest pomijana przez {sequencer}, zgłoszona przez: {reporters}"
   },
   "dialog": {
     "cancel": "Anuluj",
@@ -55,6 +56,11 @@
       "action": "Graj",
       "description": "Szachy, w których obaj gracze grają jednocześnie: każdy wybiera ruch, nie znając ruchu drugiego.",
       "title": "Szachy synchroniczne"
+    },
+    "contraband": {
+      "action": "Graj",
+      "description": "Od 2 do 8 graczy z dwóch krajów przemyca pieniądze przez kontrolę celną przeciwnika w zapieczętowanych walizkach: przepuścić czy wątpić?",
+      "title": "Przemyt"
     },
     "intro": "Utwórz pokój albo dołącz do jednego z otwartych pokojów: gracze łączą się ze sobą bezpośrednio.",
     "minorityGame": {

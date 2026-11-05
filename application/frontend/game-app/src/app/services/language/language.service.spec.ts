@@ -191,7 +191,8 @@ describe('LanguageService', () => {
         expect(load).toHaveBeenNthCalledWith(5, `${ TranslationScope.ROULETTE }/${ Language.FR }`);
         expect(load).toHaveBeenNthCalledWith(6, `${ TranslationScope.BID }/${ Language.FR }`);
         expect(load).toHaveBeenNthCalledWith(7, `${ TranslationScope.MINORITY }/${ Language.FR }`);
-        expect(load).toHaveBeenNthCalledWith(8, `${ TranslationScope.CARDS }/${ Language.FR }`);
+        expect(load).toHaveBeenNthCalledWith(8, `${ TranslationScope.CONTRABAND }/${ Language.FR }`);
+        expect(load).toHaveBeenNthCalledWith(9, `${ TranslationScope.CARDS }/${ Language.FR }`);
         expect(service.language()).toBe(Language.FR);
     });
 

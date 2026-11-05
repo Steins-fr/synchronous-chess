@@ -88,6 +88,17 @@ import trMinorityTranslation from './i18n/minority/tr.json';
 import idMinorityTranslation from './i18n/minority/id.json';
 import plMinorityTranslation from './i18n/minority/pl.json';
 import itMinorityTranslation from './i18n/minority/it.json';
+import enContrabandTranslation from './i18n/contraband/en.json';
+import frContrabandTranslation from './i18n/contraband/fr.json';
+import esContrabandTranslation from './i18n/contraband/es.json';
+import ptBRContrabandTranslation from './i18n/contraband/pt-BR.json';
+import ptPTContrabandTranslation from './i18n/contraband/pt-PT.json';
+import deContrabandTranslation from './i18n/contraband/de.json';
+import ruContrabandTranslation from './i18n/contraband/ru.json';
+import trContrabandTranslation from './i18n/contraband/tr.json';
+import idContrabandTranslation from './i18n/contraband/id.json';
+import plContrabandTranslation from './i18n/contraband/pl.json';
+import itContrabandTranslation from './i18n/contraband/it.json';
 import enCardsTranslation from './i18n/cards/en.json';
 import frCardsTranslation from './i18n/cards/fr.json';
 import esCardsTranslation from './i18n/cards/es.json';
@@ -179,6 +190,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'minority/id': idMinorityTranslation,
     'minority/pl': plMinorityTranslation,
     'minority/it': itMinorityTranslation,
+    'contraband/en': enContrabandTranslation,
+    'contraband/fr': frContrabandTranslation,
+    'contraband/es': esContrabandTranslation,
+    'contraband/pt-BR': ptBRContrabandTranslation,
+    'contraband/pt-PT': ptPTContrabandTranslation,
+    'contraband/de': deContrabandTranslation,
+    'contraband/ru': ruContrabandTranslation,
+    'contraband/tr': trContrabandTranslation,
+    'contraband/id': idContrabandTranslation,
+    'contraband/pl': plContrabandTranslation,
+    'contraband/it': itContrabandTranslation,
     'cards/en': enCardsTranslation,
     'cards/fr': frCardsTranslation,
     'cards/es': esCardsTranslation,

@@ -53,6 +53,17 @@
             <p class="muted-note">{{ t('minorityGame.description') }}</p>
             <span class="game-card-action">{{ t('minorityGame.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
+        <a [routerLink]="contrabandPath" class="game-card" id="game-card-contraband">
+            <!-- The trunk of a smuggler, its lid shut and locked -->
+            <span aria-hidden="true" class="game-card-glyph">
+                <svg class="size-18" fill="currentColor" fill-rule="evenodd" viewBox="0 0 100 100">
+                    <path d="M36 28 V16 a4 4 0 0 1 4 -4 H60 a4 4 0 0 1 4 4 V28 H57 V19 H43 V28 Z M8 34 a6 6 0 0 1 6 -6 H86 a6 6 0 0 1 6 6 V82 a6 6 0 0 1 -6 6 H14 a6 6 0 0 1 -6 -6 Z M8 46 H42 V50 H8 Z M58 46 H92 V50 H58 Z M42 38 H58 V60 H42 Z M46 42 H54 V56 H46 Z" />
+                </svg>
+            </span>
+            <h2 class="m-0 mat-title-large">{{ t('contraband.title') }}</h2>
+            <p class="muted-note">{{ t('contraband.description') }}</p>
+            <span class="game-card-action">{{ t('contraband.action') }} <mat-icon>arrow_forward</mat-icon></span>
+        </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->
             <span aria-hidden="true" class="game-card-visual bg-app-surface text-app-accent-text">

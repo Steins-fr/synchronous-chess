@@ -1,0 +1,205 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Jedes Land schmiedet Pläne in einer privaten Unterhaltung, und jeder Schmuggler spricht am Zoll mit seinem Inspektor, alles verschlüsselt.",
+      "sealed": "Die Koffer sind versiegelt: Niemand, nicht einmal der Server, liest einen Koffer, bevor der Inspektor ansagt.",
+      "variants": "In der klassischen Variante enthält ein Koffer jeden Betrag bis 100 Millionen; im Goldrausch einen Goldbarren oder einen Eisenbarren."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem bei, um mit anderen zu spielen.",
+    "summary": "Ein Spiel aus dem Manga Liar Game: Zwei Länder mit je 1 bis 4 Spielern, der Norden und der Süden, schmuggeln Geld durch den Zoll des anderen, und das reichere Land gewinnt.",
+    "tagline": "Schmuggle dein Geld am feindlichen Zoll vorbei.",
+    "title": "Schmuggel"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Zweifel an einem leeren Koffer: Der Inspektor zahlt dem Schmuggler die Hälfte des bezweifelten Betrags.",
+      "halves": "Halbe Millionen gibt es: 7 Millionen bei einem leeren Koffer zu bezweifeln, bringt dem Schmuggler 3,5 Millionen.",
+      "pass": "Durchlassen: Das Geld des Koffers geht auf das Konto des Schmugglers.",
+      "seized": "Zweifel am Betrag des Koffers oder mehr: Der Inspektor beschlagnahmt das Geld des Koffers, auf sein eigenes Konto.",
+      "slipped": "Zweifel an weniger, als der Koffer enthält: Das Geld geht auf das Konto des Schmugglers, und der Inspektor zahlt ihm die Hälfte des bezweifelten Betrags.",
+      "title": "Die klassische Variante",
+      "trunk": "Der Koffer enthält 0 bis 100 Millionen, nie mehr, als der Geldautomat hat. Der Inspektor sagt Durchlassen an, oder Zweifeln mit einem Betrag von 1 bis 100 Millionen."
+    },
+    "conversations": {
+      "countries": "Die Spieler eines Landes, ab 2, teilen sich während der ganzen Partie eine private Unterhaltung.",
+      "customs": "Jeder Durchgang öffnet eine Unterhaltung zwischen seinem Schmuggler und seinem Inspektor, für die Zeit seines Zolls: Geschlossen bleibt sie lesbar.",
+      "private": "Sie werden auf den Seiten ihrer Mitglieder verschlüsselt, die sie als Einzige lesen: Die anderen Teilnehmer und der Server sehen, wer wann schreibt, nie was. Ein Zuschauer hat keine.",
+      "title": "Die Unterhaltungen"
+    },
+    "crossing": {
+      "customs": "Der Zoll öffnet: eine private Unterhaltung zwischen dem Schmuggler und dem Inspektor, für die gewählte Zeit. Jeder darf alles sagen, wahr oder falsch. Dann sagt der Inspektor an.",
+      "packing": "Der Schmuggler packt seinen Koffer binnen 60 Sekunden mit dem Geld seines Geldautomaten und versiegelt ihn dann.",
+      "reveal": "Nach der Ansage deckt die Seite des Schmugglers den Koffer von selbst auf, und das Geld wandert.",
+      "title": "Ein Durchgang"
+    },
+    "end": {
+      "atms": "Nach dem letzten Durchgang geht das Geld, das in den Geldautomaten eines Landes übrig ist, an das andere Land, zu gleichen Teilen unter seinen Spielern.",
+      "balance": "Der Saldo eines Spielers addiert zu seinem Konto von 100 Millionen, was er geschmuggelt hat, die erhaltenen Entschädigungen abzüglich der gezahlten, was er beschlagnahmt hat, und seinen Anteil an den feindlichen Geldautomaten, und zieht dann die 400 Millionen ab, die er schuldet.",
+      "title": "Das Ende der Partie",
+      "winner": "Das Land mit der höchsten Summe gewinnt. Ein Gleichstand ist möglich: Jeder Spieler behält trotzdem seinen Saldo."
+    },
+    "fair": {
+      "draw": "Niemand wählt die Paare: Jeder Spieler gibt am Start einen versiegelten Zufallsanteil, und die Paare werden aus allen Anteilen ausgelost, auf jeder Seite gleich.",
+      "sealed": "Ein Koffer ist versiegelt: Die Seite des Schmugglers sendet seinen Hash mit einem zufälligen Salt und deckt ihn auf, sobald der Inspektor angesagt hat. Niemand, nicht einmal der Server, liest einen Koffer vor der Ansage.",
+      "title": "Fairness",
+      "withheld": "Ein Koffer, der nicht rechtzeitig, anders als versiegelt oder regelwidrig aufgedeckt wird, wird höchstmöglich beschlagnahmt: 100 Millionen in der klassischen Variante, oder der ganze Geldautomat, wenn er weniger hat; ein Goldbarren im Goldrausch, oder nichts aus einem leeren Geldautomaten. Einen Koffer zurückzuhalten, lohnt sich nie. Eine neu geladene Seite behält ihren Koffer, außer ihr Speicher ist blockiert."
+    },
+    "goldRush": {
+      "goldChecked": "Ein Goldbarren kontrolliert: Der Inspektor beschlagnahmt ihn, 100 Millionen auf sein eigenes Konto.",
+      "goldPassed": "Ein Goldbarren durchgelassen: 100 Millionen gehen auf das Konto des Schmugglers.",
+      "ironChecked": "Ein Eisenbarren kontrolliert: Der Inspektor zahlt dem Schmuggler 100 Millionen.",
+      "ironPassed": "Ein Eisenbarren durchgelassen: Nichts bewegt sich.",
+      "title": "Die Variante Goldrausch",
+      "trunk": "Der Koffer enthält einen Goldbarren, 100 Millionen aus dem Geldautomaten, oder einen Eisenbarren, der nichts wert ist: Ein Goldbarren braucht 100 Millionen im Geldautomaten. Der Inspektor sagt Durchlassen oder Kontrollieren an."
+    },
+    "money": {
+      "goal": "Nur das Geld im Drittland zählt: Schmuggle deines dorthin und beschlagnahme das, was das andere Land schmuggelt.",
+      "start": "Jeder Spieler beginnt mit 300 Millionen in einem Geldautomaten seines Landes und 100 Millionen auf einem Konto in einem Drittland und schuldet am Ende der Partie 400 Millionen.",
+      "title": "Das Geld"
+    },
+    "pairs": {
+      "drawn": "In jedem Durchgang passiert ein Schmuggler eines Landes den Zoll eines Inspektors des anderen. Die Paare werden ausgelost: Jeder Spieler des Nordens trifft auf einen Spieler des Südens, als Schmuggler in einem Durchgang, als Inspektor im nächsten, die Rollen getauscht.",
+      "title": "Die Paare",
+      "turns": "Die Länder schmuggeln abwechselnd, jedes gleich oft, bis zur gewählten Zahl der Durchgänge: Bei 3 gegen 3 schmuggeln manche Spieler einmal mehr als andere."
+    },
+    "setup": {
+      "players": "Der Tisch hat 8 Plätze, 4 für das Nordland und 4 für das Südland. Die Partie beginnt, sobald beide Länder gleich viele Spieler haben, von 1 gegen 1 bis 4 gegen 4: Die anderen Teilnehmer sind Zuschauer.",
+      "settings": "Der Spieler, der die Partie startet, wählt ihre Variante, klassisch oder Goldrausch, die Zeit des Zolls, 1, 2 oder 5 Minuten, und die Zahl ihrer Durchgänge, 10, 20 oder 30: Die Plätze bleiben bis zum Ende besetzt.",
+      "title": "Der Tisch"
+    },
+    "summary": "Regeln des Schmuggels",
+    "times": {
+      "away": "Auf einen abwesenden Spieler wird 15 Sekunden länger gewartet; hat er seine Zeit verpasst, nicht mehr, bis er wieder spielt.",
+      "late": "Ein Schmuggler, der nicht rechtzeitig packt, lässt seinen Koffer leer, und nichts bewegt sich. Ein Inspektor, der nicht rechtzeitig ansagt, lässt durch.",
+      "phases": "Das Packen wartet 60 Sekunden, der Zoll die am Start gewählte Zeit, das Aufdecken 15 Sekunden: Jede Phase endet, sobald ihr Spieler gehandelt hat.",
+      "title": "Die Zeiten"
+    },
+    "title": "Regeln"
+  },
+  "table": {
+    "action": {
+      "rematch": "Nochmal spielen",
+      "start": "Spiel starten"
+    },
+    "call": {
+      "check": "Kontrollieren",
+      "pass": "Durchlassen"
+    },
+    "clock": "{minutes}:{seconds}",
+    "conversation": {
+      "customs": "Zoll von Durchgang {number}: {smuggler} und {inspector}",
+      "team": "{team, select, north {Nordland} other {Südland}}"
+    },
+    "customs": {
+      "inspector": "Inspektor: {name}",
+      "smuggler": "Schmuggler: {name}"
+    },
+    "doubt": {
+      "integer": "Bezweifle ganze Millionen",
+      "label": "Zweifel (Millionen)",
+      "max": "Höchstens {max, plural, one {# Million} other {# Millionen}}",
+      "min": "Mindestens {min, plural, one {# Million} other {# Millionen}}",
+      "required": "Gib den Betrag ein, den du bezweifelst",
+      "submit": "Zweifeln"
+    },
+    "history": "Durchgänge der Partie",
+    "info": {
+      "crossing": "Durchgang {number} von {games}",
+      "variant": "{variant, select, classic {Klassisch} other {Goldrausch}} · Zoll von {minutes} Min."
+    },
+    "match": "Partie {number}:",
+    "move": {
+      "emptyDoubt": "Durchgang {number}: {inspector} bezweifelt {doubt, plural, one {# Million} other {# Millionen}} bei einem leeren Koffer und zahlt {smuggler} {indemnity, plural, one {# Million} other {# Millionen}}",
+      "ironChecked": "Durchgang {number}: {inspector} kontrolliert einen Eisenbarren und zahlt {smuggler} {indemnity, plural, one {# Million} other {# Millionen}}",
+      "packLate": "Durchgang {number}: {smuggler} packt keinen Koffer rechtzeitig, nichts bewegt sich",
+      "passed": "Durchgang {number}: {inspector} lässt {smuggler} durch, {amount, plural, one {# Million} other {# Millionen}} geschmuggelt",
+      "passedLate": "Durchgang {number}: {inspector} sagt nicht rechtzeitig an und lässt {smuggler} durch, {amount, plural, one {# Million} other {# Millionen}} geschmuggelt",
+      "seized": "Durchgang {number}: {inspector} {call, select, check {kontrolliert} other {bezweifelt {doubt, plural, one {# Million} other {# Millionen}}}} und beschlagnahmt {amount, plural, one {# Million} other {# Millionen}} von {smuggler}",
+      "slipped": "Durchgang {number}: {inspector} bezweifelt {doubt, plural, one {# Million} other {# Millionen}}, {smuggler} schmuggelt {amount, plural, one {# Million} other {# Millionen}} und erhält {indemnity, plural, one {# Million} other {# Millionen}}",
+      "withheld": "Durchgang {number}: Der Koffer von {smuggler} {reason, select, late {wird nicht rechtzeitig aufgedeckt} invalid {wird anders aufgedeckt als versiegelt} other {verstößt gegen die Regeln}}, {inspector} beschlagnahmt {amount, plural, one {# Million} other {# Millionen}}"
+    },
+    "pack": {
+      "gold": "Goldbarren",
+      "integer": "Ganze Millionen",
+      "iron": "Eisenbarren",
+      "label": "Koffer (Millionen)",
+      "max": "Höchstens {max, plural, one {# Million} other {# Millionen}}",
+      "min": "Mindestens {min, plural, one {# Million} other {# Millionen}}",
+      "required": "Gib das Geld deines Koffers ein",
+      "submit": "Koffer packen"
+    },
+    "pastGames": "Gespielte Partien",
+    "result": {
+      "tie": "Gleichstand: Jeder Spieler behält seinen Saldo",
+      "winner": "{team, select, north {Das Nordland} other {Das Südland}} gewinnt mit {amount, plural, one {# Million} other {# Millionen}} Vorsprung"
+    },
+    "sealed": {
+      "amount": "Dein Koffer enthält {amount, plural, one {# Million} other {# Millionen}}, versiegelt",
+      "gold": "Dein Koffer enthält einen Goldbarren, versiegelt",
+      "iron": "Dein Koffer enthält einen Eisenbarren, versiegelt"
+    },
+    "seat": {
+      "absent": "Verspätet",
+      "account": "Konto: {amount, plural, one {# Million} other {# Millionen}}",
+      "atm": "Geldautomat: {amount, plural, one {# Million} other {# Millionen}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# Million} other {# Millionen}}} minus {−{amount, plural, one {# Million} other {# Millionen}}} other {0 Millionen}}",
+      "free": "Freier Platz",
+      "leave": "Platz verlassen",
+      "release": "Platz freigeben",
+      "role": "{role, select, smuggler {Schmuggler} other {Inspektor}}",
+      "take": "Hinsetzen"
+    },
+    "spectators": "{count, plural, one {# Zuschauer} other {# Zuschauer}}",
+    "standings": {
+      "amount": "{amount, plural, one {#} other {#}}",
+      "balance": "Saldo",
+      "caption": "Wertung der Partie, in Millionen",
+      "country": "Land",
+      "indemnities": "Entschädigungen",
+      "player": "Spieler",
+      "seized": "Beschlagnahmt",
+      "share": "Feindliche Automaten",
+      "signed": "{sign, select, plus {+{amount, plural, one {#} other {#}}} minus {−{amount, plural, one {#} other {#}}} other {0}}",
+      "smuggled": "Geschmuggelt",
+      "team": "{team, select, north {Nord} other {Süd}}"
+    },
+    "start": {
+      "classic": "Klassisch",
+      "customsTime": "Zoll",
+      "gameCount": "{count, plural, one {# Durchgang} other {# Durchgänge}}",
+      "games": "Durchgänge",
+      "goldRush": "Goldrausch",
+      "minutes": "{count} Min.",
+      "variant": "Variante"
+    },
+    "status": {
+      "away": "Warte auf die Rückkehr von {names}…",
+      "call": "{variant, select, classic {Lass durch oder bezweifle einen Betrag.} other {Lass durch oder kontrolliere den Koffer.}}",
+      "customs": "{inspector} prüft den Koffer von {smuggler}…",
+      "drawing": "Die Spieler losen die Paare aus: Warte auf {names}.",
+      "hurry": "Beeil dich: Deine Zeit läuft ab!",
+      "over": "Die Partie ist vorbei.",
+      "pack": "Pack deinen Koffer: Er bleibt bis zur Ansage versiegelt.",
+      "packing": "{name} packt einen Koffer…",
+      "revealing": "Der Koffer wird aufgedeckt…",
+      "sealing": "Dein Koffer ist versiegelt: Der Zoll öffnet…",
+      "seats": "Nordland: {north}, Südland: {south}. Die Partie braucht in beiden gleich viele Spieler, mindestens {min}.",
+      "start": "Wähle die Variante, den Zoll und die Durchgänge, dann starte.",
+      "waitingStart": "{count, plural, one {# Spieler sitzt} other {# Spieler sitzen}}: Warte, bis einer von ihnen startet."
+    },
+    "team": {
+      "atms": "Geldautomaten: {amount, plural, one {# Million} other {# Millionen}}",
+      "name": "{team, select, north {Nordland} other {Südland}}"
+    },
+    "trunk": {
+      "amount": "{amount, plural, one {# Million} other {# Millionen}}",
+      "empty": "Leer",
+      "gold": "Goldbarren",
+      "iron": "Eisenbarren",
+      "none": "Kein Koffer",
+      "packing": "Wird gepackt…",
+      "sealed": "Versiegelt",
+      "withheld": "Nicht aufgedeckt"
+    }
+  }
+}

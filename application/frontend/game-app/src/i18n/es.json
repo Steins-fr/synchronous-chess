@@ -8,6 +8,7 @@
       "bidPoker": "Subasta",
       "chat": "Chat",
       "chess": "Ajedrez",
+      "contraband": "Contrabando",
       "home": "Inicio",
       "minorityGame": "Minoría",
       "poker": "Póquer",
@@ -27,8 +28,8 @@
     "title": "Ajedrez sincrónico"
   },
   "cheat": {
-    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} other {}}) de {author} ha sido señalado como trampa por {reporters}",
-    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
+    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} other {}}) de {author} ha sido señalado como trampa por {reporters}",
+    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -55,6 +56,11 @@
       "action": "Jugar",
       "description": "El ajedrez en el que ambos jugadores juegan a la vez: cada uno elige su jugada sin conocer la del otro.",
       "title": "Ajedrez sincrónico"
+    },
+    "contraband": {
+      "action": "Jugar",
+      "description": "De 2 a 8 jugadores, en dos países, pasan dinero por la aduana del otro, con sus maletas selladas: dejar pasar, o dudar.",
+      "title": "Contrabando"
     },
     "intro": "Crea una sala o únete a una de las salas abiertas: los jugadores se conectan directamente entre sí.",
     "minorityGame": {
