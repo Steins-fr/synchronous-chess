@@ -140,7 +140,8 @@ run by the CI.
   `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing
   out after 15 seconds, the room handed over, the moves of a poker hand or its next deal timing out after 45 seconds, 30
   more for a player away, a vote of the Minority Game timing out after 30 seconds, its score variant played over 10
-  rounds. Tag a new scenario lasting 20 seconds or more. `npm run e2e` runs both.
+  rounds, a trunk of the Contraband not revealed, claimed after 15 seconds and 15 more for a player away. Tag a new
+  scenario lasting 20 seconds or more. `npm run e2e` runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
 
@@ -169,10 +170,11 @@ run by the CI.
   `historyLines()` and `pastLines()` of `e2e/room-participant.ts`. `#history-close` closes it.
 - The private conversations a game declares (`PrivateConversations`, see `documentation/blockchain-and-anti-cheat.md`)
   are a third content of the panel (`#room-private`), shown by the button `#room-private-toggle` (`Private`, the unread
-  messages on its badge) to their members only: no page declares one yet, so it shows once a game does. A tab per
+  messages on its badge) to their members only: the Contraband declares them, a spectator has none. A tab per
   conversation (`#private-conversation-<id>`, the open ones first), its log `#private-log` (the bubbles of the chat,
   `#private-closed` once closed), its composer `#private-send-form` / `#private-send` (`Message to bob, carol`), one draft
-  per conversation; `#private-close` closes it.
+  per conversation; `#private-close` closes it. `openPrivate()`, `privateTabs()`, `selectPrivate(title)`,
+  `sendPrivate(title, text)` (`Send privately`) and `privateLines()` of `e2e/room-participant.ts` drive them.
 - A message is a bubble of `#chat-log` (`.chat-bubble`), its author in a hidden text first (`alice: hello`). Enter
   sends it, Shift+Enter starts a new line; the options of the chat (`#chat-options`) hide the arrivals and departures,
   the times, a player's messages, mask the offensive words (`Hide offensive words`, on by default: `f***`), or turn
@@ -204,8 +206,9 @@ run by the CI.
 ### Testing a chess game
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
-  the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`, the Minority Game page `/minority-game`: the home page only links to them. The sound lab `/sound-lab` plays
-  every sound effect of the games, linked from nowhere.
+  the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`, the Minority Game page `/minority-game`,
+  the Contraband page `/contraband`: the home page only links to them. The sound lab `/sound-lab` plays every sound
+  effect of the games, linked from nowhere.
 - Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
   `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
@@ -295,6 +298,30 @@ run by the CI.
   `Play again` starts a new one. The asker is drawn: read it from the status of a spectator.
 - A question waits 60 seconds, a vote the time picked, a reveal 15 seconds: every phase closes as soon as every player
   acted, a question takes a few seconds when every player acts.
+
+### Testing a Contraband game
+
+- The table has 8 seats of `app-contraband-table`, `#seat-0` to `#seat-3` of the Northern country (`#team-north`),
+  `#seat-4` to `#seat-7` of the Southern one (`#team-south`): each participant takes one with `Sit here`, then a seated
+  player picks the variant (`Classic`, `Gold Rush`), the customs (`1 min` to `5 min`) and the games (`10 games` to
+  `30 games`), radio buttons of `#setup`, and clicks `Start the game` once both countries hold as many players, from 1
+  against 1. The pages draw the pairs by themselves. See `documentation/contraband-session.md`.
+- The pair of each game is drawn: read it from `#smuggler` and `#inspector` (`Smuggler: alice`) of a spectator once
+  `#crossing` shows the game (`Game 1 of 10`) and its status ends with `packs a trunk…`. The North smuggles the first
+  game, then the countries by turns.
+- The smuggler fills the number field `Trunk (millions)` (role `spinbutton`), then `Pack the trunk`, or clicks `Gold bar`
+  (disabled under 100 million in its ATM) or `Iron bar`; its page reads `Your trunk holds 40 million, sealed` (`#actions`),
+  `#trunk` shows `Sealed` to the others. The inspector clicks `Pass`, fills `Doubt (millions)` then `Doubt`, or clicks
+  `Check`; the page of the smuggler reveals the trunk by itself.
+- The `status` role (`<output>`) tells what the table waits for (`bob inspects the trunk of alice…`), `#last-crossing` the
+  game over last (`Game 1: bob doubts 30 million, alice smuggles 40 million and receives 15 million`), as the history of
+  the room, the seats the ATM and the account of each player (`ATM: 260 million`, `Account: 155 million`, `Late` for a
+  player who missed its time), `#winners` and `#standings` the end (`The Northern country wins by 150 million`), then
+  `Play again` starts a new match.
+- The private conversations: `Northern country` and `Southern country` for a country of 2 players or more, `Customs of
+  game 1: alice and bob` for the smuggler and the inspector of a game, closed once called.
+- A trunk waits 60 seconds, the customs the time picked, a reveal 15 seconds: every phase closes as soon as its player
+  acted, a match of 10 games takes about 10 seconds when every player acts.
 
 ### Cleanup after every browser test
 
