@@ -24,7 +24,6 @@ import { MatMenu, MatMenuContent, MatMenuItem, MatMenuTrigger } from '@angular/m
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { noLink } from '@app/modules/form/rules/no-link.rule';
-import { TextAreaFieldComponent } from '@app/modules/form/text-area-field/text-area-field.component';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { WebRtcPlayer } from '@app/services/room-manager/classes/player/web-rtc-player';
@@ -54,6 +53,7 @@ import {
     MuteMinutes,
     NO_MODERATION
 } from './chat-moderation';
+import { ChatComposerComponent } from './chat-composer/chat-composer.component';
 import { ChatParticipantComponent } from './chat-participant/chat-participant.component';
 import { ChatEntryKind, ChatMessage, ChatMessageComponent, ChatMessageState } from './chat-message/chat-message.component';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
@@ -136,7 +136,7 @@ export const CHAT_MESSAGE_MAX_LENGTH: number = 1000;
 // The farthest time from 1970 a date holds, in milliseconds: beyond, formatting it throws
 const LATEST_TIME: number = 8.64e15;
 /** A message: a too long one, or one holding a link or an e-mail address, is refused, its error shown */
-function chatMessageRules(path: SchemaPath<string>): void {
+export function chatMessageRules(path: SchemaPath<string>): void {
     maxLength(path, CHAT_MESSAGE_MAX_LENGTH, { message: scopedKey(TranslationScope.CHAT, marker('composer.tooLong', undefined, 'chat')) });
     noLink(path, scopedKey(TranslationScope.CHAT, marker('composer.link', undefined, 'chat')));
 }
@@ -159,19 +159,18 @@ function isLeftOut(entry: Readonly<ChatEntry>, hiddenAuthors: ReadonlySet<string
 }
 
 const MINUTE: number = 60 * 1000;
-// A pause longer than this starts a new group of messages, its time shown again
-const GROUP_PAUSE: number = 5 * 60 * 1000;
+/** A pause longer than this starts a new group of messages, its time shown again */
+export const GROUP_PAUSE: number = 5 * 60 * 1000;
 // The log is at its bottom closer than this, in pixels: the new messages keep it there
 const BOTTOM_MARGIN: number = 24;
-// A message sent and not received back from the room after this delay failed: it may be sent again
-const SEND_TIMEOUT: number = 15 * 1000;
-// Safari ends the composition of a text before the keydown of the Enter confirming it, which no longer tells it composes
-const COMPOSITION_END_DELAY: number = 100;
+/** A message sent and not received back from the room after this delay failed: it may be sent again */
+export const SEND_TIMEOUT: number = 15 * 1000;
 
 @Component({
     selector: 'app-chat',
     templateUrl: './chat.component.html',
     imports: [
+        ChatComposerComponent,
         ChatParticipantComponent,
         ChatMessageComponent,
         MatChip,
@@ -184,7 +183,6 @@ const COMPOSITION_END_DELAY: number = 100;
         MatMenuItem,
         MatMenuTrigger,
         MatDivider,
-        TextAreaFieldComponent,
         TranslocoDirective,
         TranslocoPipe,
     ],
@@ -338,7 +336,6 @@ export class ChatComponent {
     private flood: ChatFlood = NO_FLOOD;
     /** The authors reported for an invalid message: their first one only, the same on every page, rather than a report per message */
     private readonly invalidAuthors = new Set<string>();
-    private compositionEndedAt: number = Number.NEGATIVE_INFINITY;
     // Where the log scrolls once rendered: to its bottom, or to the divider of the new messages
     private scrollTarget: 'bottom' | 'unread' | undefined;
     // The room shown, the players seen in it, and the ones who left it: back, they arrive again
@@ -458,23 +455,6 @@ export class ChatComponent {
         }
         this.entries.update((entries: ReadonlyArray<Readonly<ChatEntry>>) => entries.filter((entry: Readonly<ChatEntry>) => entry !== failed));
         this.transmit(failed.text, failed.messageId);
-    }
-
-    protected onCompositionEnd(event: CompositionEvent): void {
-        this.compositionEndedAt = event.timeStamp;
-    }
-
-    /** Enter sends the message, or a new line by the setting: Shift starts a new line, Ctrl or Cmd sends */
-    protected onComposerKey(event: KeyboardEvent): void {
-        // A key typing an accent or an ideogram belongs to the text being composed, the Enter confirming it included
-        const composing: boolean = event.isComposing || event.timeStamp - this.compositionEndedAt < COMPOSITION_END_DELAY;
-        if (event.key !== 'Enter' || composing || event.shiftKey) {
-            return;
-        }
-        if (event.ctrlKey || event.metaKey || this.preferences.enterSends.on()) {
-            event.preventDefault();
-            this.send();
-        }
     }
 
     protected onScroll(): void {
