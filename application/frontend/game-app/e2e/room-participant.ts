@@ -333,10 +333,15 @@ export class RoomParticipant {
         return this.page.locator('#room-private').getByRole('tab');
     }
 
-    /** Shows the private conversation of the title given, the panel opened */
+    /**
+     * Shows the private conversation of the title given, the panel opened: once its tab shows selected, the composer
+     * holds its draft (a text typed before would go to the draft of the conversation shown before)
+     */
     public async selectPrivate(title: string): Promise<void> {
         await this.openPrivate();
-        await this.privateTabs().filter({ hasText: title }).click();
+        const tab: Locator = this.privateTabs().filter({ hasText: title });
+        await tab.click();
+        await expect(tab).toHaveAttribute('aria-selected', 'true');
     }
 
     /**
