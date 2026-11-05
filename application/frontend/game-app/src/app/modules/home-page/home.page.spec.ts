@@ -16,6 +16,7 @@ describe('HomePage', () => {
                 { path: 'russian-roulette', component: GamePage },
                 { path: 'bid-poker', component: GamePage },
                 { path: 'minority-game', component: GamePage },
+                { path: 'contraband', component: GamePage },
                 { path: 'simple-chat', component: GamePage },
             ])],
         });
@@ -30,6 +31,7 @@ describe('HomePage', () => {
         ['roulette', 'Russian roulette', 'Play', '/russian-roulette'],
         ['bid-poker', 'Bid poker', 'Play', '/bid-poker'],
         ['minority-game', 'Minority game', 'Play', '/minority-game'],
+        ['contraband', 'Contraband', 'Play', '/contraband'],
         ['chat', 'Chat', 'Chat', '/simple-chat'],
     ])('should present the %s in a card leading to its page', async (game: string, title: string, action: string, path: string) => {
         // Given

@@ -8,6 +8,7 @@
       "bidPoker": "Leilão",
       "chat": "Bate-papo",
       "chess": "Xadrez",
+      "contraband": "Contrabando",
       "home": "Início",
       "minorityGame": "Minoria",
       "poker": "Pôquer",
@@ -55,6 +56,11 @@
       "action": "Jogar",
       "description": "O xadrez em que os dois jogadores jogam ao mesmo tempo: cada um escolhe seu lance sem conhecer o do outro.",
       "title": "Xadrez sincronizado"
+    },
+    "contraband": {
+      "action": "Jogar",
+      "description": "De 2 a 8 jogadores, em dois países, passam dinheiro pela alfândega do outro, com as malas lacradas: deixar passar, ou duvidar.",
+      "title": "Contrabando"
     },
     "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores se conectam diretamente entre si.",
     "minorityGame": {

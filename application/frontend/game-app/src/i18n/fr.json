@@ -8,6 +8,7 @@
       "bidPoker": "Enchères",
       "chat": "Tchat",
       "chess": "Échecs",
+      "contraband": "Contrebande",
       "home": "Accueil",
       "minorityGame": "Minorité",
       "poker": "Poker",
@@ -55,6 +56,11 @@
       "action": "Jouer",
       "description": "Les échecs où les deux joueurs jouent en même temps : chacun choisit son coup sans connaître celui de l'autre.",
       "title": "Échecs synchrones"
+    },
+    "contraband": {
+      "action": "Jouer",
+      "description": "De 2 à 8 joueurs, en deux pays, font passer de l'argent par la douane de l'autre pays, leurs malles scellées : laisser passer, ou douter.",
+      "title": "Contrebande"
     },
     "intro": "Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.",
     "minorityGame": {

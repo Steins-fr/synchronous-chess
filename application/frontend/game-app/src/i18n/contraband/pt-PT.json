@@ -1,0 +1,85 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Cada país conspira numa conversa privada, e cada contrabandista fala com o seu inspetor na alfândega, tudo encriptado.",
+      "sealed": "As malas são fechadas: ninguém, nem sequer o servidor, lê uma mala antes de o inspetor anunciar.",
+      "variants": "Na variante clássica, uma mala leva qualquer quantia até 100 milhões; na Corrida ao ouro, uma barra de ouro ou uma barra de ferro."
+    },
+    "rooms": "Crie uma sala, ou entre numa, para jogar com outros.",
+    "summary": "Um jogo da manga Liar Game: dois países de 1 a 4 jogadores cada, o Norte e o Sul, passam dinheiro pela alfândega do outro, e o país mais rico ganha.",
+    "tagline": "Passe o seu dinheiro nas barbas da alfândega inimiga.",
+    "title": "Contrabando"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Duvidar de uma mala vazia: o inspetor paga ao contrabandista metade da quantia duvidada.",
+      "halves": "Os meios milhões existem: duvidar de 7 milhões perante uma mala vazia rende 3,5 milhões ao contrabandista.",
+      "pass": "Deixar passar: o dinheiro da mala vai para a conta do contrabandista.",
+      "seized": "Duvidar da quantia da mala ou mais: o inspetor apreende o dinheiro da mala, para a sua própria conta.",
+      "slipped": "Duvidar de menos do que a mala leva: o dinheiro vai para a conta do contrabandista, e o inspetor paga-lhe metade da quantia duvidada.",
+      "title": "A variante clássica",
+      "trunk": "A mala leva de 0 a 100 milhões, nunca mais do que o multibanco tem. O inspetor anuncia Deixar passar, ou Duvidar com uma quantia de 1 a 100 milhões."
+    },
+    "conversations": {
+      "countries": "Os jogadores de um país, a partir de 2, partilham uma conversa privada durante toda a partida.",
+      "customs": "Cada ronda abre uma conversa entre o seu contrabandista e o seu inspetor, enquanto dura a sua alfândega: fechada, continua legível.",
+      "private": "São encriptadas nas páginas dos seus membros, os únicos que as leem: os restantes participantes e o servidor veem quem escreve e quando, nunca o quê. Um espetador não tem nenhuma.",
+      "title": "As conversas"
+    },
+    "crossing": {
+      "customs": "A alfândega abre: uma conversa privada entre o contrabandista e o inspetor, durante o tempo escolhido. Cada um pode dizer tudo, verdadeiro ou falso. Depois o inspetor anuncia.",
+      "packing": "O contrabandista enche a mala em 60 segundos, com o dinheiro do seu multibanco, e depois fecha-a.",
+      "reveal": "Feito o anúncio, a página do contrabandista revela a mala sozinha, e o dinheiro move-se.",
+      "title": "Uma ronda"
+    },
+    "end": {
+      "atms": "Depois da última ronda, o dinheiro que resta nos multibancos de um país vai para o outro país, repartido em partes iguais pelos seus jogadores.",
+      "balance": "O saldo de um jogador soma à sua conta de 100 milhões o que passou, as indemnizações recebidas menos as pagas, o que apreendeu e a sua parte dos multibancos inimigos, e depois retira os 400 milhões que deve.",
+      "title": "O fim da partida",
+      "winner": "Ganha o país com o maior total. O empate é possível: cada jogador mantém o seu saldo na mesma."
+    },
+    "fair": {
+      "draw": "Ninguém escolhe os pares: cada jogador dá uma parte aleatória fechada no início, e os pares são sorteados a partir de todas elas, igual em cada página.",
+      "sealed": "Uma mala é fechada: a página do contrabandista envia o seu hash com um sal aleatório, e revela-a quando o inspetor tiver anunciado. Ninguém, nem sequer o servidor, lê uma mala antes do anúncio.",
+      "title": "Jogo limpo",
+      "withheld": "Uma mala não revelada a tempo, revelada de outra forma que fechada ou fora das regras é apreendida ao máximo: 100 milhões na variante clássica, ou todo o multibanco abaixo disso; uma barra de ouro na Corrida ao ouro, ou nada de um multibanco vazio. Reter uma mala nunca compensa. Uma página recarregada mantém a sua mala, a não ser que o armazenamento esteja bloqueado."
+    },
+    "goldRush": {
+      "goldChecked": "Uma barra de ouro revistada: o inspetor apreende-a, 100 milhões para a sua própria conta.",
+      "goldPassed": "Uma barra de ouro passada: 100 milhões vão para a conta do contrabandista.",
+      "ironChecked": "Uma barra de ferro revistada: o inspetor paga 100 milhões ao contrabandista.",
+      "ironPassed": "Uma barra de ferro passada: nada se move.",
+      "title": "A variante Corrida ao ouro",
+      "trunk": "A mala leva uma barra de ouro, 100 milhões tirados do multibanco, ou uma barra de ferro, que não vale nada: uma barra de ouro exige 100 milhões no multibanco. O inspetor anuncia Deixar passar ou Revistar."
+    },
+    "money": {
+      "goal": "Só conta o dinheiro do país terceiro: passe para lá o seu e apreenda o que o outro país passa.",
+      "start": "Cada jogador começa com 300 milhões num multibanco do seu país e 100 milhões numa conta num país terceiro, e deve 400 milhões no fim da partida.",
+      "title": "O dinheiro"
+    },
+    "pairs": {
+      "drawn": "Em cada ronda, um contrabandista de um país atravessa a alfândega de um inspetor do outro. Os pares são sorteados: cada jogador do Norte defronta um jogador do Sul, contrabandista numa ronda e inspetor na seguinte, com os papéis trocados.",
+      "title": "Os pares",
+      "turns": "Os países passam à vez, o mesmo número de vezes cada um, até ao número de rondas escolhido: em 3 contra 3, alguns jogadores passam uma vez mais do que outros."
+    },
+    "setup": {
+      "players": "A mesa tem 8 lugares, 4 para o país do Norte e 4 para o país do Sul. A partida começa quando os dois países têm o mesmo número de jogadores, de 1 contra 1 a 4 contra 4: os restantes participantes são espetadores.",
+      "settings": "O jogador que inicia a partida escolhe a variante, clássica ou Corrida ao ouro, a duração da alfândega, 1, 2 ou 5 minutos, e o número de rondas, 10, 20 ou 30: os lugares ficam ocupados até ao fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do contrabando",
+    "times": {
+      "away": "Um jogador ausente é esperado mais 15 segundos; depois de falhar o seu tempo, já não, até voltar a jogar.",
+      "late": "Um contrabandista que não enche a mala a tempo deixa-a vazia, e nada se move. Um inspetor que não anuncia a tempo deixa passar.",
+      "phases": "O enchimento espera 60 segundos, a alfândega o tempo escolhido no início, a revelação 15 segundos: cada fase fecha assim que o seu jogador age.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  },
+  "table": {
+    "conversation": {
+      "customs": "Alfândega da ronda {number}: {smuggler} e {inspector}",
+      "team": "{team, select, north {País do Norte} other {País do Sul}}"
+    }
+  }
+}

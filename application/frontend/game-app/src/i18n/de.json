@@ -8,6 +8,7 @@
       "bidPoker": "Auktion",
       "chat": "Chat",
       "chess": "Schach",
+      "contraband": "Schmuggel",
       "home": "Start",
       "minorityGame": "Minderheit",
       "poker": "Poker",
@@ -55,6 +56,11 @@
       "action": "Spielen",
       "description": "Schach, bei dem beide Spieler gleichzeitig ziehen: Jeder wählt seinen Zug, ohne den des anderen zu kennen.",
       "title": "Synchrones Schach"
+    },
+    "contraband": {
+      "action": "Spielen",
+      "description": "2 bis 8 Spieler in zwei Ländern schmuggeln Geld durch den Zoll des anderen, ihre Koffer versiegelt: durchlassen oder zweifeln.",
+      "title": "Schmuggel"
     },
     "intro": "Erstelle einen Raum oder tritt einem der offenen Räume bei: Die Spieler verbinden sich direkt miteinander.",
     "minorityGame": {

@@ -1,0 +1,85 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Cada país conspira em uma conversa privada, e cada contrabandista conversa com seu inspetor na alfândega, tudo criptografado.",
+      "sealed": "As malas são lacradas: ninguém, nem mesmo o servidor, lê uma mala antes de o inspetor anunciar.",
+      "variants": "Na variante clássica, uma mala leva qualquer quantia até 100 milhões; na Corrida do ouro, uma barra de ouro ou uma barra de ferro."
+    },
+    "rooms": "Crie uma sala ou entre em uma, para jogar com outras pessoas.",
+    "summary": "Um jogo do mangá Liar Game: dois países de 1 a 4 jogadores cada, o Norte e o Sul, passam dinheiro pela alfândega do outro, e o país mais rico vence.",
+    "tagline": "Passe seu dinheiro debaixo do nariz da alfândega inimiga.",
+    "title": "Contrabando"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Duvidar de uma mala vazia: o inspetor paga ao contrabandista metade da quantia duvidada.",
+      "halves": "Meios milhões existem: duvidar de 7 milhões diante de uma mala vazia rende 3,5 milhões ao contrabandista.",
+      "pass": "Deixar passar: o dinheiro da mala vai para a conta do contrabandista.",
+      "seized": "Duvidar da quantia da mala ou mais: o inspetor confisca o dinheiro da mala, na própria conta.",
+      "slipped": "Duvidar de menos do que a mala leva: o dinheiro vai para a conta do contrabandista, e o inspetor paga a ele metade da quantia duvidada.",
+      "title": "A variante clássica",
+      "trunk": "A mala leva de 0 a 100 milhões, nunca mais do que o caixa eletrônico tem. O inspetor anuncia Deixar passar, ou Duvidar com uma quantia de 1 a 100 milhões."
+    },
+    "conversations": {
+      "countries": "Os jogadores de um país, a partir de 2, compartilham uma conversa privada durante toda a partida.",
+      "customs": "Cada rodada abre uma conversa entre seu contrabandista e seu inspetor, enquanto dura sua alfândega: fechada, ela continua legível.",
+      "private": "Elas são criptografadas nas páginas de seus membros, os únicos que as leem: os outros participantes e o servidor veem quem escreve e quando, nunca o quê. Um espectador não tem nenhuma.",
+      "title": "As conversas"
+    },
+    "crossing": {
+      "customs": "A alfândega abre: uma conversa privada entre o contrabandista e o inspetor, pelo tempo escolhido. Cada um pode dizer qualquer coisa, verdadeira ou falsa. Depois o inspetor anuncia.",
+      "packing": "O contrabandista enche a mala em 60 segundos, com o dinheiro do seu caixa eletrônico, e depois a lacra.",
+      "reveal": "Feito o anúncio, a página do contrabandista revela a mala sozinha, e o dinheiro se move.",
+      "title": "Uma rodada"
+    },
+    "end": {
+      "atms": "Depois da última rodada, o dinheiro que sobra nos caixas eletrônicos de um país vai para o outro país, dividido igualmente entre seus jogadores.",
+      "balance": "O saldo de um jogador soma à sua conta de 100 milhões o que ele passou, as indenizações recebidas menos as pagas, o que confiscou e sua parte dos caixas eletrônicos inimigos, e depois tira os 400 milhões que ele deve.",
+      "title": "O fim da partida",
+      "winner": "Vence o país com o maior total. O empate é possível: cada jogador mantém seu saldo mesmo assim."
+    },
+    "fair": {
+      "draw": "Ninguém escolhe as duplas: cada jogador dá uma parte aleatória lacrada no início, e as duplas são sorteadas a partir de todas elas, igual em cada página.",
+      "sealed": "Uma mala é lacrada: a página do contrabandista envia seu hash com um sal aleatório, e a revela quando o inspetor anunciou. Ninguém, nem mesmo o servidor, lê uma mala antes do anúncio.",
+      "title": "Jogo limpo",
+      "withheld": "Uma mala não revelada a tempo, revelada de outro jeito que lacrada ou fora das regras é confiscada ao máximo: 100 milhões na variante clássica, ou todo o caixa eletrônico abaixo disso; uma barra de ouro na Corrida do ouro, ou nada de um caixa eletrônico vazio. Reter uma mala nunca compensa. Uma página recarregada mantém a mala, a não ser que o armazenamento esteja bloqueado."
+    },
+    "goldRush": {
+      "goldChecked": "Uma barra de ouro revistada: o inspetor a confisca, 100 milhões na própria conta.",
+      "goldPassed": "Uma barra de ouro passada: 100 milhões vão para a conta do contrabandista.",
+      "ironChecked": "Uma barra de ferro revistada: o inspetor paga 100 milhões ao contrabandista.",
+      "ironPassed": "Uma barra de ferro passada: nada se move.",
+      "title": "A variante Corrida do ouro",
+      "trunk": "A mala leva uma barra de ouro, 100 milhões tirados do caixa eletrônico, ou uma barra de ferro, que não vale nada: uma barra de ouro exige 100 milhões no caixa eletrônico. O inspetor anuncia Deixar passar ou Revistar."
+    },
+    "money": {
+      "goal": "Só conta o dinheiro do terceiro país: passe o seu para lá e confisque o que o outro país passa.",
+      "start": "Cada jogador começa com 300 milhões em um caixa eletrônico do seu país e 100 milhões em uma conta em um terceiro país, e deve 400 milhões no fim da partida.",
+      "title": "O dinheiro"
+    },
+    "pairs": {
+      "drawn": "Em cada rodada, um contrabandista de um país atravessa a alfândega de um inspetor do outro. As duplas são sorteadas: cada jogador do Norte enfrenta um jogador do Sul, contrabandista em uma rodada e inspetor na seguinte, com os papéis trocados.",
+      "title": "As duplas",
+      "turns": "Os países passam por turnos, o mesmo número de vezes cada um, até o número de rodadas escolhido: em 3 contra 3, alguns jogadores passam uma vez a mais que outros."
+    },
+    "setup": {
+      "players": "A mesa tem 8 lugares, 4 para o país do Norte e 4 para o país do Sul. A partida começa quando os dois países têm o mesmo número de jogadores, de 1 contra 1 a 4 contra 4: os outros participantes são espectadores.",
+      "settings": "O jogador que inicia a partida escolhe a variante, clássica ou Corrida do ouro, a duração da alfândega, 1, 2 ou 5 minutos, e o número de rodadas, 10, 20 ou 30: os lugares ficam ocupados até o fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do contrabando",
+    "times": {
+      "away": "Um jogador ausente é esperado 15 segundos a mais; depois de perder seu tempo, não mais, até jogar de novo.",
+      "late": "Um contrabandista que não enche a mala a tempo a deixa vazia, e nada se move. Um inspetor que não anuncia a tempo deixa passar.",
+      "phases": "O enchimento espera 60 segundos, a alfândega o tempo escolhido no início, a revelação 15 segundos: cada fase fecha assim que seu jogador age.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  },
+  "table": {
+    "conversation": {
+      "customs": "Alfândega da rodada {number}: {smuggler} e {inspector}",
+      "team": "{team, select, north {País do Norte} other {País do Sul}}"
+    }
+  }
+}

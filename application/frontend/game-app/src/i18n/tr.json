@@ -8,6 +8,7 @@
       "bidPoker": "Açık artırma",
       "chat": "Sohbet",
       "chess": "Satranç",
+      "contraband": "Kaçakçılık",
       "home": "Ana sayfa",
       "minorityGame": "Azınlık",
       "poker": "Poker",
@@ -55,6 +56,11 @@
       "action": "Oyna",
       "description": "İki oyuncunun aynı anda oynadığı satranç: her biri, diğerininkini bilmeden hamlesini seçer.",
       "title": "Eşzamanlı satranç"
+    },
+    "contraband": {
+      "action": "Oyna",
+      "description": "İki ülkeden 2 ila 8 oyuncu, mühürlü bavullarla birbirlerinin gümrüğünden para kaçırır: geçirmek ya da şüphelenmek.",
+      "title": "Kaçakçılık"
     },
     "intro": "Bir oda oluşturun ya da açık odalardan birine katılın: oyuncular birbirine doğrudan bağlanır.",
     "minorityGame": {

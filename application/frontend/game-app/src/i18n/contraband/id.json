@@ -1,0 +1,85 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Setiap negara bersekongkol dalam percakapan privat, dan setiap penyelundup berbicara dengan inspekturnya di pabean, semuanya terenkripsi.",
+      "sealed": "Koper tersegel: tidak ada yang, bahkan server, membaca isi koper sebelum inspektur mengumumkan keputusannya.",
+      "variants": "Dalam varian klasik, koper berisi jumlah berapa pun hingga 100 juta; dalam Demam emas, batangan emas atau batangan besi."
+    },
+    "rooms": "Buat ruang, atau bergabunglah ke salah satu ruang, untuk bermain dengan pemain lain.",
+    "summary": "Sebuah permainan dari manga Liar Game: dua negara berisi 1 sampai 4 pemain, Utara dan Selatan, menyelundupkan uang melalui pabean negara lain, dan negara yang lebih kaya menang.",
+    "tagline": "Selundupkan uang Anda melewati pabean musuh.",
+    "title": "Penyelundupan"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Meragukan koper kosong: inspektur membayar penyelundup setengah dari jumlah yang diragukan.",
+      "halves": "Setengah juta itu ada: meragukan 7 juta pada koper kosong memberi penyelundup 3,5 juta.",
+      "pass": "Loloskan: uang di koper masuk ke rekening penyelundup.",
+      "seized": "Meragukan jumlah isi koper atau lebih: inspektur menyita uang di koper ke rekeningnya sendiri.",
+      "slipped": "Meragukan kurang dari isi koper: uang masuk ke rekening penyelundup, dan inspektur membayarnya setengah dari jumlah yang diragukan.",
+      "title": "Varian klasik",
+      "trunk": "Koper berisi 0 sampai 100 juta, tidak pernah lebih dari isi ATM. Inspektur mengumumkan Loloskan, atau Ragukan dengan jumlah 1 sampai 100 juta."
+    },
+    "conversations": {
+      "countries": "Para pemain satu negara, jika 2 orang atau lebih, berbagi percakapan privat selama seluruh pertandingan.",
+      "customs": "Setiap ronde membuka percakapan antara penyelundup dan inspekturnya selama pabeannya: setelah ditutup, percakapan tetap dapat dibaca.",
+      "private": "Percakapan dienkripsi di halaman para anggotanya, satu-satunya yang dapat membacanya: peserta lain dan server melihat siapa yang menulis dan kapan, tidak pernah isinya. Penonton tidak memiliki percakapan.",
+      "title": "Percakapan"
+    },
+    "crossing": {
+      "customs": "Pabean dibuka: percakapan privat antara penyelundup dan inspektur, selama waktu yang dipilih. Siapa pun boleh mengatakan apa saja, benar atau bohong. Lalu inspektur mengumumkan keputusannya.",
+      "packing": "Penyelundup mengisi kopernya dalam 60 detik dengan uang dari ATM-nya, lalu menyegelnya.",
+      "reveal": "Setelah keputusan diumumkan, halaman penyelundup membuka koper dengan sendirinya, dan uang berpindah.",
+      "title": "Satu ronde"
+    },
+    "end": {
+      "atms": "Setelah ronde terakhir, uang yang tersisa di ATM suatu negara berpindah ke negara lain, dibagi rata di antara para pemainnya.",
+      "balance": "Saldo seorang pemain menambahkan ke rekeningnya yang berisi 100 juta apa yang ia selundupkan, ganti rugi yang diterima dikurangi yang dibayar, apa yang ia sita, dan bagiannya dari ATM musuh, lalu mengurangi 400 juta yang ia utang.",
+      "title": "Akhir pertandingan",
+      "winner": "Negara dengan total tertinggi menang. Hasil seri mungkin terjadi: setiap pemain tetap menyimpan saldonya."
+    },
+    "fair": {
+      "draw": "Tidak ada yang memilih pasangan: setiap pemain memberi bagian acak tersegel di awal, dan pasangan diundi dari semua bagian itu, sama di setiap halaman.",
+      "sealed": "Koper tersegel: halaman penyelundup mengirim hash-nya dengan salt acak, lalu membukanya setelah inspektur mengumumkan keputusannya. Tidak ada yang, bahkan server, membaca isi koper sebelum keputusan.",
+      "title": "Permainan adil",
+      "withheld": "Koper yang tidak dibuka tepat waktu, dibuka berbeda dari segelnya, atau melanggar aturan disita semaksimal mungkin: 100 juta di varian klasik, atau seluruh ATM jika isinya kurang; batangan emas di Demam emas, atau tidak ada apa-apa dari ATM kosong. Menahan koper tidak pernah menguntungkan. Halaman yang dimuat ulang tetap menyimpan kopernya, kecuali penyimpanannya diblokir."
+    },
+    "goldRush": {
+      "goldChecked": "Batangan emas diperiksa: inspektur menyitanya, 100 juta ke rekeningnya sendiri.",
+      "goldPassed": "Batangan emas lolos: 100 juta masuk ke rekening penyelundup.",
+      "ironChecked": "Batangan besi diperiksa: inspektur membayar 100 juta kepada penyelundup.",
+      "ironPassed": "Batangan besi lolos: tidak ada yang berpindah.",
+      "title": "Varian Demam emas",
+      "trunk": "Koper berisi batangan emas, 100 juta yang diambil dari ATM, atau batangan besi yang tidak bernilai: batangan emas memerlukan 100 juta di ATM. Inspektur mengumumkan Loloskan atau Periksa."
+    },
+    "money": {
+      "goal": "Hanya uang di negara ketiga yang dihitung: selundupkan uang Anda ke sana, dan sita uang yang diselundupkan negara lain.",
+      "start": "Setiap pemain memulai dengan 300 juta di ATM negaranya dan 100 juta di rekening di negara ketiga, dan berutang 400 juta di akhir pertandingan.",
+      "title": "Uang"
+    },
+    "pairs": {
+      "drawn": "Di setiap ronde, seorang penyelundup dari satu negara melewati pabean yang dijaga inspektur dari negara lain. Pasangan diundi: setiap pemain Utara berhadapan dengan seorang pemain Selatan, sebagai penyelundup di satu ronde, lalu inspektur di ronde berikutnya, dengan peran bertukar.",
+      "title": "Pasangan",
+      "turns": "Negara-negara menyelundup bergiliran, sama banyak, hingga jumlah ronde yang dipilih: pada 3 lawan 3, beberapa pemain menyelundup sekali lebih banyak daripada yang lain."
+    },
+    "setup": {
+      "players": "Meja memiliki 8 kursi, 4 untuk negara Utara dan 4 untuk negara Selatan. Pertandingan dimulai setelah kedua negara memiliki jumlah pemain yang sama, dari 1 lawan 1 hingga 4 lawan 4: peserta lain menjadi penonton.",
+      "settings": "Pemain yang memulai pertandingan memilih variannya, klasik atau Demam emas, waktu pabean, 1, 2, atau 5 menit, dan jumlah ronde, 10, 20, atau 30: kursi tetap terisi sampai selesai.",
+      "title": "Meja"
+    },
+    "summary": "Aturan penyelundupan",
+    "times": {
+      "away": "Pemain yang sedang pergi ditunggu 15 detik lebih lama; setelah melewatkan waktunya, tidak lagi, sampai ia bermain lagi.",
+      "late": "Penyelundup yang tidak mengisi kopernya tepat waktu membiarkannya kosong, dan tidak ada yang berpindah. Inspektur yang tidak mengumumkan tepat waktu dianggap meloloskan.",
+      "phases": "Pengisian menunggu 60 detik, pabean waktu yang dipilih di awal, pembukaan 15 detik: setiap fase ditutup begitu pemainnya bertindak.",
+      "title": "Waktu"
+    },
+    "title": "Aturan"
+  },
+  "table": {
+    "conversation": {
+      "customs": "Pabean ronde {number}: {smuggler} dan {inspector}",
+      "team": "{team, select, north {Negara Utara} other {Negara Selatan}}"
+    }
+  }
+}

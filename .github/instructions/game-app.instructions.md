@@ -119,7 +119,7 @@ This is an Angular TypeScript project with the following characteristics:
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
   `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `minority` (the Minority
-  Game), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
+  Game), `contraband` (the Contraband), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -312,6 +312,23 @@ Claude writes the translations of every new or changed key, into every language:
 | variant | variante | variante | variante | variante | Variante | вариант | varyant | varian | wariant | variante |
 | prize pool | cagnotte | premio | prêmio | prémio | Preisgeld | призовой фонд | ödül havuzu | hadiah | pula nagród | montepremi |
 | million | million | millón | milhão | milhão | Million | миллион | milyon | juta | milion | milione |
+| smuggler | passeur | contrabandista | contrabandista | contrabandista | Schmuggler | контрабандист | kaçakçı | penyelundup | przemytnik | contrabbandiere |
+| inspector | inspecteur | inspector | inspetor | inspetor | Inspektor | инспектор | müfettiş | inspektur | inspektor | ispettore |
+| customs | douane | aduana | alfândega | alfândega | Zoll | таможня | gümrük | pabean | kontrola celna | dogana |
+| trunk | malle | maleta | mala | mala | Koffer | чемодан | bavul | koper | walizka | valigia |
+| ATM | distributeur | cajero | caixa eletrônico | multibanco | Geldautomat | банкомат | ATM | ATM | bankomat | bancomat |
+| account (in the third country) | compte | cuenta | conta | conta | Konto | счёт | hesap | rekening | konto | conto |
+| third country | pays tiers | tercer país | terceiro país | país terceiro | Drittland | третья страна | üçüncü ülke | negara ketiga | kraj trzeci | paese terzo |
+| Northern / Southern country | pays du Nord / du Sud | país del Norte / del Sur | país do Norte / do Sul | país do Norte / do Sul | Nordland / Südland | Северная / Южная страна | Kuzey / Güney ülkesi | negara Utara / Selatan | kraj Północy / Południa | paese del Nord / del Sud |
+| game (of Contraband, one smuggler at the customs) | manche | ronda | rodada | ronda | Durchgang | раунд | raunt | ronde | runda | manche |
+| Classic / Gold Rush (the variants) | classique / Ruée vers l'or | clásica / Fiebre del oro | clássica / Corrida do ouro | clássica / Corrida ao ouro | klassisch / Goldrausch | классический / «Золотая лихорадка» | klasik / Altına hücum | klasik / Demam emas | klasyczny / Gorączka złota | classica / Corsa all'oro |
+| pass (the call) | laisser passer | dejar pasar | deixar passar | deixar passar | durchlassen | пропустить | geçirmek | loloskan | przepuścić | lasciar passare |
+| doubt (the call) | douter | dudar / duda | duvidar | duvidar | zweifeln / Zweifel | сомнение | şüphe / şüphelenmek | ragukan | wątpić / wątpienie | dubitare / dubbio |
+| check (Gold Rush) | contrôler | registrar | revistar | revistar | kontrollieren | досмотреть | kontrol etmek | periksa | skontrolować | controllare |
+| gold bar | lingot d'or | lingote de oro | barra de ouro | barra de ouro | Goldbarren | золотой слиток | altın külçe | batangan emas | sztabka złota | lingotto d'oro |
+| iron bar | lingot de fer | lingote de hierro | barra de ferro | barra de ferro | Eisenbarren | железный слиток | demir külçe | batangan besi | sztabka żelaza | lingotto di ferro |
+| indemnity | indemnité | indemnización | indenização | indemnização | Entschädigung | компенсация | tazminat | ganti rugi | odszkodowanie | indennizzo |
+| seize | saisir | confiscar | confiscar | apreender | beschlagnahmen | конфисковать | el koymak | menyita | skonfiskować | sequestrare |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
 

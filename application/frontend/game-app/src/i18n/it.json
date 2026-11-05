@@ -8,6 +8,7 @@
       "bidPoker": "Asta",
       "chat": "Chat",
       "chess": "Scacchi",
+      "contraband": "Contrabbando",
       "home": "Home",
       "minorityGame": "Minoranza",
       "poker": "Poker",
@@ -55,6 +56,11 @@
       "action": "Gioca",
       "description": "Gli scacchi in cui entrambi i giocatori muovono nello stesso momento: ciascuno sceglie la propria mossa senza conoscere quella dell'altro.",
       "title": "Scacchi sincroni"
+    },
+    "contraband": {
+      "action": "Gioca",
+      "description": "Da 2 a 8 giocatori di due paesi contrabbandano denaro attraverso la dogana dell'altro, con le valigie sigillate: lasciar passare, o dubitare.",
+      "title": "Contrabbando"
     },
     "intro": "Crea una stanza o entra in una delle stanze aperte: i giocatori si collegano direttamente tra loro.",
     "minorityGame": {

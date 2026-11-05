@@ -1,0 +1,85 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Her ülke özel bir konuşmada plan kurar ve her kaçakçı gümrükte müfettişiyle konuşur, hepsi şifreli.",
+      "sealed": "Bavullar mühürlüdür: kimse, sunucu bile, müfettiş kararını açıklamadan bir bavulun içini göremez.",
+      "variants": "Klasik varyantta bavul 100 milyona kadar herhangi bir miktar taşır; Altına hücum varyantında bir altın külçe ya da bir demir külçe."
+    },
+    "rooms": "Başkalarıyla oynamak için bir oda oluşturun ya da bir odaya katılın.",
+    "summary": "Liar Game mangasından bir oyun: her biri 1 ila 4 oyunculu iki ülke, Kuzey ve Güney, diğerinin gümrüğünden para kaçırır ve daha zengin ülke kazanır.",
+    "tagline": "Paranızı düşman gümrüğünün gözü önünden kaçırın.",
+    "title": "Kaçakçılık"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Boş bir bavula şüphe: müfettiş kaçakçıya şüphelendiği miktarın yarısını öder.",
+      "halves": "Yarım milyonlar vardır: boş bir bavula 7 milyonluk şüphe kaçakçıya 3,5 milyon kazandırır.",
+      "pass": "Geçir: bavuldaki para kaçakçının hesabına gider.",
+      "seized": "Bavuldaki miktar ya da daha fazlası için şüphe: müfettiş bavuldaki paraya kendi hesabına el koyar.",
+      "slipped": "Bavuldakinden az bir şüphe: para kaçakçının hesabına gider ve müfettiş ona şüphelendiği miktarın yarısını öder.",
+      "title": "Klasik varyant",
+      "trunk": "Bavulda 0 ila 100 milyon olur, asla ATM'dekinden fazla değil. Müfettiş Geçir ya da 1 ila 100 milyonluk bir miktarla Şüphe açıklar."
+    },
+    "conversations": {
+      "countries": "Bir ülkenin oyuncuları, 2 ya da daha fazlaysa, maç boyunca özel bir konuşmayı paylaşır.",
+      "customs": "Her raunt, kaçakçısı ile müfettişi arasında, gümrüğü süresince bir konuşma açar: kapandığında okunmaya devam eder.",
+      "private": "Konuşmalar üyelerinin sayfalarında şifrelenir ve onları yalnızca üyeler okur: diğer katılımcılar ve sunucu kimin ne zaman yazdığını görür, ne yazdığını asla. İzleyicilerin hiç konuşması yoktur.",
+      "title": "Konuşmalar"
+    },
+    "crossing": {
+      "customs": "Gümrük açılır: kaçakçı ile müfettiş arasında, seçilen süre boyunca özel bir konuşma. Herkes her şeyi söyleyebilir, doğru ya da yanlış. Sonra müfettiş kararını açıklar.",
+      "packing": "Kaçakçı 60 saniye içinde bavulunu ATM'sindeki parayla doldurur, sonra mühürler.",
+      "reveal": "Karar açıklanınca kaçakçının sayfası bavulu kendiliğinden açar ve para yer değiştirir.",
+      "title": "Bir raunt"
+    },
+    "end": {
+      "atms": "Son rauntun ardından bir ülkenin ATM'lerinde kalan para diğer ülkeye geçer ve oyuncuları arasında eşit paylaşılır.",
+      "balance": "Bir oyuncunun bakiyesi, 100 milyonluk hesabına kaçırdığı parayı, aldığı tazminatlardan ödediklerini düşünce kalanı, el koyduğu parayı ve düşman ATM'lerinden payını ekler, sonra borçlu olduğu 400 milyonu düşer.",
+      "title": "Maçın sonu",
+      "winner": "En yüksek toplama sahip ülke kazanır. Eşitlik mümkündür: her oyuncu yine de bakiyesini korur."
+    },
+    "fair": {
+      "draw": "Eşleşmeleri kimse seçmez: her oyuncu başlangıçta mühürlü bir rastgele parça verir ve eşleşmeler tüm parçalardan, her sayfada aynı şekilde çekilir.",
+      "sealed": "Bavul mühürlüdür: kaçakçının sayfası rastgele bir tuzla özetini gönderir, müfettiş kararını açıklayınca bavulu açar. Kimse, sunucu bile, karardan önce bir bavulun içini göremez.",
+      "title": "Adil oyun",
+      "withheld": "Zamanında açılmayan, mühürlendiğinden farklı açılan ya da kurallara aykırı bir bavula en yüksek miktarda el konur: klasik varyantta 100 milyon ya da daha azı varsa ATM'nin tamamı; Altına hücum varyantında bir altın külçe ya da boş bir ATM'den hiçbir şey. Bir bavulu saklamak asla kazandırmaz. Yeniden yüklenen bir sayfa, depolaması engellenmedikçe bavulunu korur."
+    },
+    "goldRush": {
+      "goldChecked": "Kontrol edilen altın külçe: müfettiş ona el koyar, kendi hesabına 100 milyon.",
+      "goldPassed": "Geçirilen altın külçe: 100 milyon kaçakçının hesabına gider.",
+      "ironChecked": "Kontrol edilen demir külçe: müfettiş kaçakçıya 100 milyon öder.",
+      "ironPassed": "Geçirilen demir külçe: hiçbir şey yer değiştirmez.",
+      "title": "Altına hücum varyantı",
+      "trunk": "Bavulda ATM'den alınan 100 milyonluk bir altın külçe ya da hiçbir değeri olmayan bir demir külçe olur: altın külçe için ATM'de 100 milyon gerekir. Müfettiş Geçir ya da Kontrol et açıklar."
+    },
+    "money": {
+      "goal": "Yalnızca üçüncü ülkedeki para sayılır: kendi paranızı oraya kaçırın, diğer ülkenin kaçırdığına el koyun.",
+      "start": "Her oyuncu kendi ülkesindeki bir ATM'de 300 milyon ve üçüncü bir ülkedeki hesapta 100 milyonla başlar ve maçın sonunda 400 milyon borçludur.",
+      "title": "Para"
+    },
+    "pairs": {
+      "drawn": "Her rauntta bir ülkenin kaçakçısı, diğer ülkenin bir müfettişinin tuttuğu gümrükten geçer. Eşleşmeler çekilişle belirlenir: Kuzey'in her oyuncusu Güney'den bir oyuncuyla karşılaşır, bir rauntta kaçakçı, sonrakinde müfettiş olarak, roller değişerek.",
+      "title": "Eşleşmeler",
+      "turns": "Ülkeler sırayla, her biri eşit sayıda, seçilen raunt sayısına kadar para kaçırır: 3'e 3'te bazı oyuncular diğerlerinden bir kez fazla kaçırır."
+    },
+    "setup": {
+      "players": "Masada 8 yer vardır: 4'ü Kuzey ülkesi, 4'ü Güney ülkesi için. Maç, iki ülkede eşit sayıda oyuncu olunca başlar, 1'e 1'den 4'e 4'e kadar: diğer katılımcılar izleyicidir.",
+      "settings": "Maçı başlatan oyuncu varyantı, klasik ya da Altına hücum, gümrük süresini, 1, 2 ya da 5 dakika, ve raunt sayısını, 10, 20 ya da 30, seçer: yerler maç bitene kadar dolu kalır.",
+      "title": "Masa"
+    },
+    "summary": "Kaçakçılık kuralları",
+    "times": {
+      "away": "Uzaktaki bir oyuncu 15 saniye daha beklenir; süresini kaçırdıktan sonra, yeniden oynayana kadar artık beklenmez.",
+      "late": "Bavulunu zamanında doldurmayan kaçakçının bavulu boş kalır ve hiçbir şey yer değiştirmez. Zamanında karar açıklamayan müfettiş geçirmiş sayılır.",
+      "phases": "Doldurma 60 saniye, gümrük başta seçilen süre, açma 15 saniye bekler: her aşama, oyuncusu hamlesini yapar yapmaz kapanır.",
+      "title": "Süreler"
+    },
+    "title": "Kurallar"
+  },
+  "table": {
+    "conversation": {
+      "customs": "{number}. raunt gümrüğü: {smuggler} ve {inspector}",
+      "team": "{team, select, north {Kuzey ülkesi} other {Güney ülkesi}}"
+    }
+  }
+}

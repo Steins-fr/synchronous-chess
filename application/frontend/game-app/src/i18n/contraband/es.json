@@ -1,0 +1,85 @@
+{
+  "presentation": {
+    "points": {
+      "private": "Cada país conspira en una conversación privada, y cada contrabandista habla con su inspector en la aduana, todo cifrado.",
+      "sealed": "Las maletas están selladas: nadie, ni siquiera el servidor, lee una maleta antes de que el inspector anuncie.",
+      "variants": "En la variante clásica, una maleta lleva cualquier suma hasta 100 millones; en la Fiebre del oro, un lingote de oro o un lingote de hierro."
+    },
+    "rooms": "Crea una sala o únete a una para jugar con otros.",
+    "summary": "Un juego del manga Liar Game: dos países de 1 a 4 jugadores cada uno, el Norte y el Sur, pasan dinero por la aduana del otro, y gana el país más rico.",
+    "tagline": "Pasa tu dinero ante las narices de la aduana enemiga.",
+    "title": "Contrabando"
+  },
+  "rules": {
+    "classic": {
+      "empty": "Dudar de una maleta vacía: el inspector paga al contrabandista la mitad de la suma dudada.",
+      "halves": "Existen los medios millones: dudar de 7 millones ante una maleta vacía le da 3,5 millones al contrabandista.",
+      "pass": "Dejar pasar: el dinero de la maleta va a la cuenta del contrabandista.",
+      "seized": "Dudar de la suma de la maleta o más: el inspector confisca el dinero de la maleta, en su propia cuenta.",
+      "slipped": "Dudar de menos de lo que lleva la maleta: el dinero va a la cuenta del contrabandista, y el inspector le paga la mitad de la suma dudada.",
+      "title": "La variante clásica",
+      "trunk": "La maleta lleva de 0 a 100 millones, nunca más de lo que tiene el cajero. El inspector anuncia Dejar pasar, o Dudar con una suma de 1 a 100 millones."
+    },
+    "conversations": {
+      "countries": "Los jugadores de un país, a partir de 2, comparten una conversación privada durante toda la partida.",
+      "customs": "Cada ronda abre una conversación entre su contrabandista y su inspector, mientras dura su aduana: cerrada, sigue siendo legible.",
+      "private": "Se cifran en las páginas de sus miembros, los únicos que las leen: los demás participantes y el servidor ven quién escribe y cuándo, nunca qué. Un espectador no tiene ninguna.",
+      "title": "Las conversaciones"
+    },
+    "crossing": {
+      "customs": "Se abre la aduana: una conversación privada entre el contrabandista y el inspector, durante el tiempo elegido. Cada uno puede decir cualquier cosa, verdadera o falsa. Luego el inspector anuncia.",
+      "packing": "El contrabandista llena su maleta en 60 segundos, con el dinero de su cajero, y luego la sella.",
+      "reveal": "Hecho el anuncio, la página del contrabandista revela la maleta por sí sola, y el dinero se mueve.",
+      "title": "Una ronda"
+    },
+    "end": {
+      "atms": "Tras la última ronda, el dinero que queda en los cajeros de un país va al otro país, repartido a partes iguales entre sus jugadores.",
+      "balance": "El saldo de un jugador suma a su cuenta de 100 millones lo que pasó, las indemnizaciones recibidas menos las pagadas, lo que confiscó y su parte de los cajeros enemigos, y luego resta los 400 millones que debe.",
+      "title": "El final de la partida",
+      "winner": "Gana el país con el mayor total. El empate es posible: cada jugador conserva su saldo de todos modos."
+    },
+    "fair": {
+      "draw": "Nadie elige las parejas: cada jugador da una parte aleatoria sellada al inicio, y las parejas se sortean a partir de todas ellas, igual en cada página.",
+      "sealed": "Una maleta está sellada: la página del contrabandista envía su hash con una sal aleatoria, y la revela cuando el inspector ha anunciado. Nadie, ni siquiera el servidor, lee una maleta antes del anuncio.",
+      "title": "Juego limpio",
+      "withheld": "Una maleta no revelada a tiempo, revelada de otra forma que sellada o fuera de las reglas se confisca al máximo: 100 millones en la variante clásica, o todo el cajero por debajo de eso; un lingote de oro en la Fiebre del oro, o nada de un cajero vacío. Retener una maleta nunca compensa. Una página recargada conserva su maleta, salvo si su almacenamiento está bloqueado."
+    },
+    "goldRush": {
+      "goldChecked": "Un lingote de oro registrado: el inspector lo confisca, 100 millones en su propia cuenta.",
+      "goldPassed": "Un lingote de oro pasado: 100 millones van a la cuenta del contrabandista.",
+      "ironChecked": "Un lingote de hierro registrado: el inspector paga 100 millones al contrabandista.",
+      "ironPassed": "Un lingote de hierro pasado: nada se mueve.",
+      "title": "La variante Fiebre del oro",
+      "trunk": "La maleta lleva un lingote de oro, 100 millones sacados del cajero, o un lingote de hierro, que no vale nada: un lingote de oro requiere 100 millones en el cajero. El inspector anuncia Dejar pasar o Registrar."
+    },
+    "money": {
+      "goal": "Solo cuenta el dinero del tercer país: pasa allí el tuyo y confisca el que pasa el otro país.",
+      "start": "Cada jugador empieza con 300 millones en un cajero de su país y 100 millones en una cuenta en un tercer país, y debe 400 millones al final de la partida.",
+      "title": "El dinero"
+    },
+    "pairs": {
+      "drawn": "En cada ronda, un contrabandista de un país cruza la aduana de un inspector del otro. Las parejas se sortean: cada jugador del Norte se enfrenta a un jugador del Sur, contrabandista en una ronda e inspector en la siguiente, con los papeles invertidos.",
+      "title": "Las parejas",
+      "turns": "Los países pasan por turnos, las mismas veces cada uno, hasta el número de rondas elegido: con 3 contra 3, algunos jugadores pasan una vez más que otros."
+    },
+    "setup": {
+      "players": "La mesa tiene 8 puestos, 4 para el país del Norte y 4 para el país del Sur. La partida empieza cuando ambos países tienen tantos jugadores como el otro, de 1 contra 1 a 4 contra 4: los demás participantes son espectadores.",
+      "settings": "El jugador que inicia la partida elige su variante, clásica o Fiebre del oro, la duración de la aduana, 1, 2 o 5 minutos, y su número de rondas, 10, 20 o 30: los puestos siguen ocupados hasta el final.",
+      "title": "La mesa"
+    },
+    "summary": "Reglas del contrabando",
+    "times": {
+      "away": "A un jugador ausente se le esperan 15 segundos más; tras perder su tiempo, ya no, hasta que vuelva a jugar.",
+      "late": "Un contrabandista que no llena su maleta a tiempo la deja vacía, y nada se mueve. Un inspector que no anuncia a tiempo deja pasar.",
+      "phases": "El llenado espera 60 segundos, la aduana el tiempo elegido al inicio, la revelación 15 segundos: cada fase se cierra en cuanto su jugador actúa.",
+      "title": "Los tiempos"
+    },
+    "title": "Reglas"
+  },
+  "table": {
+    "conversation": {
+      "customs": "Aduana de la ronda {number}: {smuggler} y {inspector}",
+      "team": "{team, select, north {País del Norte} other {País del Sur}}"
+    }
+  }
+}

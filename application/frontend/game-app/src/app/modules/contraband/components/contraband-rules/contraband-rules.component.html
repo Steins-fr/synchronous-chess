@@ -1,0 +1,81 @@
+<ng-container *transloco="let t; prefix: 'contraband.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('setup.title') }}</h3>
+        <p class="my-2">{{ t('setup.players') }}</p>
+        <p class="my-2">{{ t('setup.settings') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('money.title') }}</h3>
+        <p class="my-2">{{ t('money.start') }}</p>
+        <p class="my-2">{{ t('money.goal') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('pairs.title') }}</h3>
+        <p class="my-2">{{ t('pairs.drawn') }}</p>
+        <p class="my-2">{{ t('pairs.turns') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('crossing.title') }}</h3>
+        <p class="my-2">{{ t('crossing.packing') }}</p>
+        <p class="my-2">{{ t('crossing.customs') }}</p>
+        <p class="my-2">{{ t('crossing.reveal') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('classic.title') }}</h3>
+        <p class="my-2">{{ t('classic.trunk') }}</p>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('classic.pass') }}</li>
+            <li>{{ t('classic.empty') }}</li>
+            <li>{{ t('classic.seized') }}</li>
+            <li>{{ t('classic.slipped') }}</li>
+        </ul>
+        <p class="my-2">{{ t('classic.halves') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('goldRush.title') }}</h3>
+        <p class="my-2">{{ t('goldRush.trunk') }}</p>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('goldRush.goldPassed') }}</li>
+            <li>{{ t('goldRush.ironPassed') }}</li>
+            <li>{{ t('goldRush.goldChecked') }}</li>
+            <li>{{ t('goldRush.ironChecked') }}</li>
+        </ul>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('end.title') }}</h3>
+        <p class="my-2">{{ t('end.atms') }}</p>
+        <p class="my-2">{{ t('end.balance') }}</p>
+        <p class="my-2">{{ t('end.winner') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('conversations.title') }}</h3>
+        <p class="my-2">{{ t('conversations.countries') }}</p>
+        <p class="my-2">{{ t('conversations.customs') }}</p>
+        <p class="my-2">{{ t('conversations.private') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('times.title') }}</h3>
+        <p class="my-2">{{ t('times.phases') }}</p>
+        <p class="my-2">{{ t('times.late') }}</p>
+        <p class="my-2">{{ t('times.away') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.sealed') }}</p>
+        <p class="my-2">{{ t('fair.withheld') }}</p>
+        <p class="my-2">{{ t('fair.draw') }}</p>
+    </section>
+</ng-container>

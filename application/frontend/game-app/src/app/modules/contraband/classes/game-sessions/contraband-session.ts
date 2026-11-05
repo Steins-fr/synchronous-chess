@@ -6,9 +6,12 @@ import { SealedCommitments } from '@app/modules/commit-reveal/classes/sealed-com
 import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import { SeatedPlayer, TableSeats } from '@app/modules/game-table/classes/table-seats';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
+import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { scopedKey } from '@app/services/language/scoped-key';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { Applied, ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../rules/contraband-game-state';
 import { Call, CONTRABAND_RULES, ContrabandRules, ContrabandSetup, isCall, isSetup, isTrunk, Team, teamOf } from '../rules/contraband-rules';
@@ -41,8 +44,8 @@ const DRAW_STEPS: number = 2;
  */
 const CLAIM_SLACK: number = 2;
 /** The keys of the titles of the conversations of a match, in the scope of the game */
-const TEAM_TITLE: string = 'contraband.table.conversation.team';
-const CUSTOMS_TITLE: string = 'contraband.table.conversation.customs';
+const TEAM_TITLE: string = scopedKey(TranslationScope.CONTRABAND, marker('table.conversation.team', undefined, 'contraband'));
+const CUSTOMS_TITLE: string = scopedKey(TranslationScope.CONTRABAND, marker('table.conversation.customs', undefined, 'contraband'));
 
 /**
  * The Contraband in a room. The participants take the seats themselves, the seats 0 to 3 of the North, the others of the

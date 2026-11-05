@@ -8,6 +8,7 @@
       "bidPoker": "Licytacja",
       "chat": "Czat",
       "chess": "Szachy",
+      "contraband": "Przemyt",
       "home": "Start",
       "minorityGame": "Mniejszość",
       "poker": "Poker",
@@ -55,6 +56,11 @@
       "action": "Graj",
       "description": "Szachy, w których obaj gracze grają jednocześnie: każdy wybiera ruch, nie znając ruchu drugiego.",
       "title": "Szachy synchroniczne"
+    },
+    "contraband": {
+      "action": "Graj",
+      "description": "Od 2 do 8 graczy z dwóch krajów przemyca pieniądze przez kontrolę celną przeciwnika w zapieczętowanych walizkach: przepuścić czy wątpić?",
+      "title": "Przemyt"
     },
     "intro": "Utwórz pokój albo dołącz do jednego z otwartych pokojów: gracze łączą się ze sobą bezpośrednio.",
     "minorityGame": {

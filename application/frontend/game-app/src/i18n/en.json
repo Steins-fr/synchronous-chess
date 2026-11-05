@@ -8,6 +8,7 @@
       "bidPoker": "Bid poker",
       "chat": "Chat",
       "chess": "Chess",
+      "contraband": "Contraband",
       "home": "Home",
       "minorityGame": "Minority",
       "poker": "Poker",
@@ -55,6 +56,11 @@
       "action": "Play",
       "description": "Chess where both players move at the same time: each one picks a move without knowing the other's.",
       "title": "Synchronous chess"
+    },
+    "contraband": {
+      "action": "Play",
+      "description": "2 to 8 players in two countries smuggle money past each other's customs, their trunks sealed: let it pass, or doubt.",
+      "title": "Contraband"
     },
     "intro": "Create a room, or join one of the open rooms: the players connect directly to each other.",
     "minorityGame": {
