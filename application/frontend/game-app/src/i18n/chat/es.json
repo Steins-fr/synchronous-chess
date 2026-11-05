@@ -65,5 +65,21 @@
     "hidden": "Mensajes ocultos"
   },
   "ping": "ping {ping}",
+  "private": {
+    "close": "Cerrar las conversaciones privadas",
+    "closed": "Esta conversación está cerrada: aún puedes leerla",
+    "composer": {
+      "closed": "La conversación está cerrada: no admite más mensajes",
+      "preparing": "Preparando el cifrado…"
+    },
+    "empty": "Aún no hay mensajes",
+    "message": "Mensaje para {names}",
+    "none": "Ninguna conversación privada por ahora",
+    "send": "Enviar en privado",
+    "tabClosed": "Cerrada",
+    "title": "Conversaciones privadas",
+    "unreadable": "Un mensaje de {name} no se puede leer en este navegador",
+    "unreadableSelf": "Uno de tus mensajes no se puede leer en este navegador"
+  },
   "send": "Enviar"
 }

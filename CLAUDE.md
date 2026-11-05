@@ -167,6 +167,12 @@ run by the CI.
 - The history of a game lists the moves of the game in progress (`#history-current li`, the latest first) and, for the
   poker and the roulette, the past matches or games of the room (`#history-past li`): `openHistory()`,
   `historyLines()` and `pastLines()` of `e2e/room-participant.ts`. `#history-close` closes it.
+- The private conversations a game declares (`PrivateConversations`, see `documentation/blockchain-and-anti-cheat.md`)
+  are a third content of the panel (`#room-private`), shown by the button `#room-private-toggle` (`Private`, the unread
+  messages on its badge) to their members only: no page declares one yet, so it shows once a game does. A tab per
+  conversation (`#private-conversation-<id>`, the open ones first), its log `#private-log` (the bubbles of the chat,
+  `#private-closed` once closed), its composer `#private-send-form` / `#private-send` (`Message to bob, carol`), one draft
+  per conversation; `#private-close` closes it.
 - A message is a bubble of `#chat-log` (`.chat-bubble`), its author in a hidden text first (`alice: hello`). Enter
   sends it, Shift+Enter starts a new line; the options of the chat (`#chat-options`) hide the arrivals and departures,
   the times, a player's messages, mask the offensive words (`Hide offensive words`, on by default: `f***`), or turn

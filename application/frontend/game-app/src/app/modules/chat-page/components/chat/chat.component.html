@@ -70,15 +70,8 @@
         }
     </div>
 
-    <!-- Aligned at their top: the hint or the error of the field showing, Send stays in place -->
-    @let hint = composerHint();
-    <div class="flex items-start gap-1 border-t border-app-border p-2" id="send-form">
-        <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onComposerKey($event)" [field]="messageForm" [hint]="hint ? (hint.key | transloco: hint.params) : undefined"
-            [label]="t('message')" class="flex-1" />
-        <button (click)="send()" [attr.aria-label]="t('send')" [disabled]="isBlank() || isWaiting() || isHeldBack() || isMuted()" [title]="t('send')" class="mt-2" id="send" mat-icon-button type="button">
-            <mat-icon>send</mat-icon>
-        </button>
-    </div>
+    <app-chat-composer (send)="send()" [disabled]="isBlank() || isWaiting() || isHeldBack() || isMuted()" [field]="messageForm" [hint]="composerHint()"
+        [label]="t('message')" [sendLabel]="t('send')" />
 
     <mat-menu #options="matMenu" xPosition="before">
         <button (click)="preferences.arrivals.set(!preferences.arrivals.on())" [attr.aria-checked]="preferences.arrivals.on()" mat-menu-item role="menuitemcheckbox">

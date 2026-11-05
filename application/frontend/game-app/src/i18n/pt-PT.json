@@ -27,8 +27,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} other {}}) de {author} foi denunciada como batota por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} other {}}) de {author} foi denunciada como batota por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -79,6 +79,7 @@
       "chat": "Chat",
       "history": "Histórico",
       "leave": "Sair",
+      "private": "Privado",
       "room": "Sala {roomName}",
       "unread": "{count, plural, one {# mensagem não lida} other {# mensagens não lidas}}"
     },

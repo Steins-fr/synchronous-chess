@@ -27,8 +27,8 @@
     "title": "Catur Serentak"
   },
   "cheat": {
-    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} other {}}) dari {author} dilaporkan curang oleh {reporters}",
-    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
+    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} private {percakapan privat} other {}}) dari {author} dilaporkan curang oleh {reporters}",
+    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} private {percakapan privat} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
   },
   "dialog": {
     "cancel": "Batal",
@@ -79,6 +79,7 @@
       "chat": "Obrolan",
       "history": "Riwayat",
       "leave": "Keluar",
+      "private": "Privat",
       "room": "Ruang {roomName}",
       "unread": "{count, plural, other {# pesan belum dibaca}}"
     },

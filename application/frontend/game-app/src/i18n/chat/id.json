@@ -65,5 +65,21 @@
     "hidden": "Pesan disembunyikan"
   },
   "ping": "ping {ping}",
+  "private": {
+    "close": "Tutup percakapan privat",
+    "closed": "Percakapan ini ditutup: masih dapat dibaca",
+    "composer": {
+      "closed": "Percakapan ditutup: tidak ada pesan lagi",
+      "preparing": "Menyiapkan enkripsi…"
+    },
+    "empty": "Belum ada pesan",
+    "message": "Pesan untuk {names}",
+    "none": "Belum ada percakapan privat",
+    "send": "Kirim secara privat",
+    "tabClosed": "Ditutup",
+    "title": "Percakapan privat",
+    "unreadable": "Pesan dari {name} tidak dapat dibaca di browser ini",
+    "unreadableSelf": "Salah satu pesan Anda tidak dapat dibaca di browser ini"
+  },
   "send": "Kirim"
 }

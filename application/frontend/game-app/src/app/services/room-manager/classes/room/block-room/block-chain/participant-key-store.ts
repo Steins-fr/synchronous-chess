@@ -1,18 +1,25 @@
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
-import { keyPairAlgorithm } from './block-chain.constants';
+import { agreementAlgorithm, keyPairAlgorithm } from './block-chain.constants';
 
 /**
- * Keeps the key pair of each player name in the browser: a player reloading the page keeps its identity,
- * so the blocks it signed before stay verifiable by the other players.
- * The private key is not extractable, it can only be used to sign.
+ * Keeps the key pairs of each player name in the browser: a player reloading the page keeps its identity,
+ * so the blocks it signed before stay verifiable by the other players, and its key of agreement,
+ * so it still reads the private messages sent to it.
+ * The private keys are not extractable, they can only be used to sign or to derive the keys shared with the others.
  */
 export class ParticipantKeyStore {
     private static readonly DATABASE: string = 'synchronous-chess';
     private static readonly STORE: string = 'participant-keys';
+    /** The key of agreement of a player is stored under an array key, never equal to the name keeping its identity */
+    private static readonly AGREEMENT: string = 'agreement';
 
     public static async generateKeyPair(): Promise<CryptoKeyPair> {
         // The public key of a pair is always extractable, to be sent to the other players
         return await crypto.subtle.generateKey(keyPairAlgorithm, false, ['sign', 'verify']);
+    }
+
+    public static async generateAgreementKeyPair(): Promise<CryptoKeyPair> {
+        return await crypto.subtle.generateKey(agreementAlgorithm, false, ['deriveBits']);
     }
 
     /**
@@ -22,30 +29,43 @@ export class ParticipantKeyStore {
 
     /** The stored key pair of the player, created on its first use */
     public async keyPairOf(playerName: string): Promise<CryptoKeyPair> {
+        return await this.pairOf(playerName, ParticipantKeyStore.generateKeyPair, 'The key pair can not be stored, a reload will change the identity of the player');
+    }
+
+    /** The stored key pair of agreement of the player, created on its first use */
+    public async agreementKeyPairOf(playerName: string): Promise<CryptoKeyPair> {
+        return await this.pairOf(
+            [ParticipantKeyStore.AGREEMENT, playerName],
+            ParticipantKeyStore.generateAgreementKeyPair,
+            'The key pair of agreement can not be stored, a reload will make the private messages unreadable'
+        );
+    }
+
+    private async pairOf(storageKey: IDBValidKey, generate: () => Promise<CryptoKeyPair>, warning: string): Promise<CryptoKeyPair> {
         try {
             // Created outside the transaction, which would end during the key generation
-            return await this.stored(playerName) ?? await this.storeOnce(playerName, await ParticipantKeyStore.generateKeyPair());
+            return await this.stored(storageKey) ?? await this.storeOnce(storageKey, await generate());
         } catch (error: unknown) {
-            // Private browsing or blocked site data: the identity only lasts until the page is reloaded
-            TimedLogger.warn('The key pair can not be stored, a reload will change the identity of the player', error);
-            return await ParticipantKeyStore.generateKeyPair();
+            // Private browsing or blocked site data: the pair only lasts until the page is reloaded
+            TimedLogger.warn(warning, error);
+            return await generate();
         }
     }
 
-    private async stored(playerName: string): Promise<CryptoKeyPair | undefined> {
-        return await this.inStore('readonly', async (store: IDBObjectStore) => await ParticipantKeyStore.result<CryptoKeyPair | undefined>(store.get(playerName)));
+    private async stored(storageKey: IDBValidKey): Promise<CryptoKeyPair | undefined> {
+        return await this.inStore('readonly', async (store: IDBObjectStore) => await ParticipantKeyStore.result<CryptoKeyPair | undefined>(store.get(storageKey)));
     }
 
     /** In a single transaction, so that two pages of the same player end up with the same key pair */
-    private async storeOnce(playerName: string, keyPair: CryptoKeyPair): Promise<CryptoKeyPair> {
+    private async storeOnce(storageKey: IDBValidKey, keyPair: CryptoKeyPair): Promise<CryptoKeyPair> {
         return await this.inStore('readwrite', async (store: IDBObjectStore) => {
-            const stored: CryptoKeyPair | undefined = await ParticipantKeyStore.result<CryptoKeyPair | undefined>(store.get(playerName));
+            const stored: CryptoKeyPair | undefined = await ParticipantKeyStore.result<CryptoKeyPair | undefined>(store.get(storageKey));
 
             if (stored) {
                 return stored;
             }
 
-            await ParticipantKeyStore.result(store.add(keyPair, playerName));
+            await ParticipantKeyStore.result(store.add(keyPair, storageKey));
             return keyPair;
         });
     }

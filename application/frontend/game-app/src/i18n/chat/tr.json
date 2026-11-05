@@ -65,5 +65,21 @@
     "hidden": "Mesajlar gizlendi"
   },
   "ping": "ping {ping}",
+  "private": {
+    "close": "Özel konuşmaları kapat",
+    "closed": "Bu konuşma kapandı: okunmaya devam edilebilir",
+    "composer": {
+      "closed": "Konuşma kapandı: artık mesaj gönderilemez",
+      "preparing": "Şifreleme hazırlanıyor…"
+    },
+    "empty": "Henüz mesaj yok",
+    "message": "{names} için mesaj",
+    "none": "Şimdilik özel konuşma yok",
+    "send": "Özel gönder",
+    "tabClosed": "Kapalı",
+    "title": "Özel konuşmalar",
+    "unreadable": "{name} kişisinin bir mesajı bu tarayıcıda okunamıyor",
+    "unreadableSelf": "Mesajlarınızdan biri bu tarayıcıda okunamıyor"
+  },
   "send": "Gönder"
 }

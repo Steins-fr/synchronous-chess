@@ -19,6 +19,32 @@ export class CryptoHelper {
         return Array.from(bytes, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
     }
 
+    /** Bytes in base64 */
+    public static toBase64(bytes: Uint8Array): string {
+        return btoa(Array.from(bytes, (byte: number) => String.fromCodePoint(byte)).join(''));
+    }
+
+    /**
+     * The bytes of a text in base64
+     * @throws Error when the text is not the base64 of bytes, written as {@link toBase64} writes it
+     */
+    public static fromBase64(text: string): Uint8Array {
+        let bytes: Uint8Array;
+
+        try {
+            bytes = Uint8Array.from(atob(text), (character: string) => character.codePointAt(0) as number);
+        } catch (error: unknown) {
+            throw new Error('Invalid base64', { cause: error });
+        }
+
+        // atob accepts spaces, a missing padding and unused bits: a single encoding of each bytes is accepted
+        if (CryptoHelper.toBase64(bytes) !== text) {
+            throw new Error('Invalid base64');
+        }
+
+        return bytes;
+    }
+
     /**
      * A random integer from 0 to an excluded bound, with no bias: the draws beyond the bound are drawn again
      * @param bound greater than 0

@@ -27,8 +27,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",
@@ -79,6 +79,7 @@
       "chat": "Sohbet",
       "history": "Geçmiş",
       "leave": "Ayrıl",
+      "private": "Özel",
       "room": "Oda {roomName}",
       "unread": "{count, plural, one {# okunmamış mesaj} other {# okunmamış mesaj}}"
     },

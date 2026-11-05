@@ -6,6 +6,13 @@ import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/r
 import { TestHelper } from '@testing/test.helper';
 import { filter, Subject } from 'rxjs';
 
+interface HubRoom {
+    readonly messages: Subject<AppMessage>;
+    readonly history: Set<AppMessage>;
+    readonly departed: Subject<string>;
+    readonly added: Subject<Player>;
+}
+
 /**
  * The rooms of the participants of a chain: every message transmitted reaches every room, in one order, as the
  * sequencer orders them
@@ -16,8 +23,10 @@ export class RoomHub<M extends object> {
     public readonly reports: Array<[string, AppMessage, CheatReason]> = [];
     /** The participants each one excluded, as `[page, player]` */
     public readonly excluded: Array<[string, string]> = [];
-    /** The messages of each room, the ones replayed to it, its history, and the departures it sees */
-    private readonly rooms = new Map<Room<M>, { readonly messages: Subject<AppMessage>; readonly history: Set<AppMessage>; readonly departed: Subject<string> }>();
+    /** The messages of each room, the ones replayed to it, its history, the departures and the arrivals it sees */
+    private readonly rooms = new Map<Room<M>, HubRoom>();
+    /** The rooms of the participants away, with the count of the messages delivered when they left */
+    private readonly away = new Map<Room<M>, { readonly hubRoom: HubRoom; readonly delivered: number }>();
     private readonly players = signal<ReadonlyArray<Readonly<Player>>>([]);
     private readonly queue: AppMessage[] = [];
     private delivering: boolean = false;
@@ -38,12 +47,14 @@ export class RoomHub<M extends object> {
         const messages = new Subject<AppMessage>();
         const history = new Set<AppMessage>();
         const departed = new Subject<string>();
+        const added = new Subject<Player>();
         const room: Room<M> = TestHelper.cast<Room<M>>({
             localPlayer: { name },
             roomName: 'room',
             players: this.players,
             queue: signal<ReadonlyArray<string>>([]).asReadonly(),
             departed$: departed.asObservable(),
+            playerAdded$: added.asObservable(),
             exclude: (player: string) => this.excluded.push([name, player]),
             messenger: (type: string) => messages.pipe(filter((message: AppMessage) => message.type === type)),
             transmitMessage: (type: string, payload: unknown) => this.transmit(tamper({ from: name, type, payload })),
@@ -53,7 +64,7 @@ export class RoomHub<M extends object> {
             sequencedAt: (message: AppMessage) => this.stamps.get(message)?.time,
             sequencedBy: (message: AppMessage) => this.stamps.get(message)?.sequencer,
         });
-        this.rooms.set(room, { messages, history, departed });
+        this.rooms.set(room, { messages, history, departed, added });
         this.players.update((players) => players.some((player) => player.name === name) ? players : [...players, TestHelper.cast<Player>({ name })]);
         return room;
     }
@@ -65,9 +76,29 @@ export class RoomHub<M extends object> {
 
     /** The participant leaves the room: its page closed, the others no longer see it, and agree it left */
     public leave(room: Room<M>): void {
+        this.away.set(room, { hubRoom: this.rooms.get(room) as HubRoom, delivered: this.delivered.length });
         this.close(room);
         this.players.update((players) => players.filter((player) => player.name !== room.localPlayer.name));
         this.rooms.forEach(({ departed }) => departed.next(room.localPlayer.name));
+    }
+
+    /**
+     * The participant who left connects again, its page kept, without reload: it receives the messages it missed, then
+     * each side sees the other one added
+     */
+    public back(room: Room<M>): void {
+        const { hubRoom, delivered } = this.away.get(room) as { readonly hubRoom: HubRoom; readonly delivered: number };
+        const player: Player = TestHelper.cast<Player>({ name: room.localPlayer.name });
+        this.away.delete(room);
+        this.rooms.set(room, hubRoom);
+        this.delivered.slice(delivered).forEach((message: AppMessage) => hubRoom.messages.next(message));
+        this.players().forEach((other) => hubRoom.added.next(TestHelper.cast<Player>(other)));
+        this.rooms.forEach(({ added }, other: Room<M>) => {
+            if (other !== room) {
+                added.next(player);
+            }
+        });
+        this.players.update((players) => [...players, player]);
     }
 
     /** The messages of the participant wait until released */

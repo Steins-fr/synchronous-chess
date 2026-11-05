@@ -1,0 +1,10 @@
+<!-- Aligned at their top: the hint or the error of the field showing, Send stays in place -->
+@let shownHint = hint();
+<div [id]="formId()" class="flex items-start gap-1 border-t border-app-border p-2">
+    <app-text-area-field (compositionend)="onCompositionEnd($event)" (keydown)="onKey($event)" [field]="field()"
+        [hint]="shownHint ? (shownHint.key | transloco: shownHint.params) : undefined" [label]="label()" class="flex-1" />
+    <button (click)="send.emit()" [attr.aria-label]="sendLabel()" [disabled]="disabled()" [id]="sendId()" [title]="sendLabel()" class="mt-2" mat-icon-button
+        type="button">
+        <mat-icon>send</mat-icon>
+    </button>
+</div>
