@@ -8,6 +8,8 @@ export enum BlockChainName {
     BID_POKER = 'bid',
     /** The Minority Game */
     MINORITY = 'minority',
+    /** The Contraband */
+    CONTRABAND = 'contraband',
     /** The private conversations of a game, encrypted to their members */
     PRIVATE = 'private',
 }
