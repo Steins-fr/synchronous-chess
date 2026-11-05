@@ -133,8 +133,8 @@ interface ChatLine {
 
 /** The longest message, in characters */
 export const CHAT_MESSAGE_MAX_LENGTH: number = 1000;
-// The farthest time from 1970 a date holds, in milliseconds: beyond, formatting it throws
-const LATEST_TIME: number = 8.64e15;
+/** The farthest time from 1970 a date holds, in milliseconds: beyond, formatting it throws */
+export const LATEST_TIME: number = 8.64e15;
 /** A message: a too long one, or one holding a link or an e-mail address, is refused, its error shown */
 export function chatMessageRules(path: SchemaPath<string>): void {
     maxLength(path, CHAT_MESSAGE_MAX_LENGTH, { message: scopedKey(TranslationScope.CHAT, marker('composer.tooLong', undefined, 'chat')) });

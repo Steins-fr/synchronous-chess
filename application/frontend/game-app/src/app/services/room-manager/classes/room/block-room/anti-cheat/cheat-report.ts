@@ -31,7 +31,10 @@ export enum CheatReason {
     INVALID_SPIN = 'invalidSpin',
     /** Detected by the application: a share of a chamber, or of the key of a cylinder, not made with the key of its player */
     INVALID_SHARE = 'invalidShare',
-    /** Detected by the application: a message not of the form the application sends (a message of the chat) */
+    /**
+     * Detected by the application: a message not of the form the application sends. A message of the chat, or of a private
+     * conversation: its envelope and its keys checked by every page alike, its text by its recipients only, who alone read it
+     */
     INVALID_MESSAGE = 'invalidMessage',
 }
 
