@@ -147,9 +147,15 @@ export class PrivateConversations {
     private readonly ownMessages = computed<ReadonlyArray<Readonly<ChatMessage>>>(() => [...this.lines().values()].flat()
         .filter((line: Readonly<PrivateLine>): line is PrivateMessageLine => line.kind === PrivateLineKind.MESSAGE && line.message.isSelf)
         .map((line: PrivateMessageLine) => line.message));
-    /** Too many messages of the local player the room did not send back yet: the composer waits until it does */
-    public readonly heldBack: Signal<boolean> = computed<boolean>(() => this.ownMessages()
-        .filter((message: Readonly<ChatMessage>) => message.state !== ChatMessageState.SENT).length >= CHAT_UNSENT_LIMIT);
+    /**
+     * Too many messages of the local player the room did not send back yet, in the conversations open, where they may be
+     * sent again: the composer waits until it does
+     */
+    public readonly heldBack: Signal<boolean> = computed<boolean>(() => this.mine()
+        .filter((conversation: Readonly<PrivateConversationView>) => conversation.open)
+        .flatMap((conversation: Readonly<PrivateConversationView>) => conversation.lines)
+        .filter((line: Readonly<PrivateLine>) => line.kind === PrivateLineKind.MESSAGE && line.message.isSelf && line.message.state !== ChatMessageState.SENT)
+        .length >= CHAT_UNSENT_LIMIT);
 
     /** The keys each participant published, the latest last */
     private readonly published = new Map<string, ReadonlyArray<string>>();
@@ -170,6 +176,13 @@ export class PrivateConversations {
     private flood: ChatFlood = NO_FLOOD;
     private ownKeyPair?: Promise<OwnKey>;
     private keySent: boolean = false;
+    /** The key of the local player came back on the chain since it published it, counted or not */
+    private keyReturned: boolean = false;
+    /** The older keys of the local player a part named: its key published again once for each, a page not having it */
+    private readonly staleKeys = new Set<string>();
+    private keyAsked: boolean = false;
+    /** The keys appended live in the name of a participant away, not counted in its limit: bounded apart */
+    private readonly awayKeys = new Map<string, number>();
     private destroyed: boolean = false;
     private readonly subscription: Subscription;
     private readonly ids: Generator<number, never> = idGenerator();
@@ -330,13 +343,17 @@ export class PrivateConversations {
             return;
         }
         const own: OwnKey = await this.ownKey();
-        if (!this.destroyed && this.currentKeys().get(me) !== own.id) {
+        if (!this.destroyed && (this.keyAsked || this.currentKeys().get(me) !== own.id)) {
             this.keySent = true;
+            this.keyAsked = false;
+            this.keyReturned = false;
             this.room.transmitMessage(PrivateMessengerType.KEY, { key: own.key });
-            // Lost on its way, at a change of sequencer: published again, unless it came back meanwhile
+            // Lost on its way, at a change of sequencer: published again, unless it came back meanwhile, refused included
             this.subscription.add(timer(SEND_TIMEOUT).subscribe(() => {
-                this.keySent = false;
-                this.enqueue(() => Promise.resolve());
+                if (!this.keyReturned) {
+                    this.keySent = false;
+                    this.enqueue(() => Promise.resolve());
+                }
             }));
         }
     }
@@ -362,22 +379,51 @@ export class PrivateConversations {
             return;
         }
         const id: string = await keyIdOf(payload.key);
+        const mine: boolean = message.from === this.room.localPlayer.name;
+        // Its own key read before any key in its name is told apart
+        const own: string | undefined = mine ? (await this.ownKey()).id : undefined;
+        if (mine && id === own) {
+            this.keyReturned = true;
+        }
         const keys: ReadonlyArray<string> = this.published.get(message.from) ?? [];
-        if (!keys.includes(id) && keys.length >= MAX_KEYS_PER_PARTICIPANT) {
-            this.reportInvalid(message);
+        // In the name of the local player, another key than its own is an older one, or forged: not counted on its page
+        const away: boolean = mine
+            ? id !== own
+            : live && !this.room.players().some((player: Readonly<Player>) => player.name === message.from);
+        if (!keys.includes(id) && !this.counted(message, away)) {
             return;
         }
 
         this.published.set(message.from, [...keys.filter((key: string) => key !== id), id]);
         this.importedKeys.set(id, imported);
-        const away: boolean = live && !this.room.players().some((player: Readonly<Player>) => player.name === message.from);
         if (!away || !this.currentKeys().has(message.from)) {
             this.currentKeys.update((current: ReadonlyMap<string, string>) => new Map(current).set(message.from, id));
         }
-        if (message.from === this.room.localPlayer.name && id !== this.ownKeyId()) {
+        if (mine && id !== own) {
             // Another key in its name, an older one replayed or a forged one: the local player publishes its own again
             this.keySent = false;
+            this.keyAsked = true;
         }
+    }
+
+    /**
+     * Counts a new key of its participant, false when refused: past its limit, reported; appended while it was away,
+     * forged maybe, bounded apart without report, its own key not to be refused for it
+     */
+    private counted(message: KeyMessage, away: boolean): boolean {
+        const awayCount: number = this.awayKeys.get(message.from) ?? 0;
+        if (away) {
+            if (awayCount >= MAX_KEYS_PER_PARTICIPANT) {
+                return false;
+            }
+            this.awayKeys.set(message.from, awayCount + 1);
+            return true;
+        }
+        if ((this.published.get(message.from)?.length ?? 0) - awayCount >= MAX_KEYS_PER_PARTICIPANT) {
+            this.reportInvalid(message);
+            return false;
+        }
+        return true;
     }
 
     private isPublishedBy(participant: string, keyId: string): boolean {
@@ -467,6 +513,12 @@ export class PrivateConversations {
             return;
         }
         const part: Readonly<SealedPart> | undefined = envelope.parts.find((mine: Readonly<SealedPart>) => mine.to === this.room.localPlayer.name);
+        if (part !== undefined && part.key !== own.id && received.live && !this.staleKeys.has(part.key)) {
+            // Encrypted for an older key of the local player, the sender not having its current one: published again
+            this.staleKeys.add(part.key);
+            this.keyAsked = true;
+            this.keySent = false;
+        }
         if (part?.key !== own.id) {
             this.seen.add(seenKey);
             this.addLine(conversation, { kind: PrivateLineKind.UNREADABLE, id: this.ids.next().value, name: message.from, at: received.time, live: received.live });

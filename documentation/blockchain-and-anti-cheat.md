@@ -446,15 +446,19 @@ members only.
   the four fields of its point, `{ kty, crv, x, y }`, without the `ext` and `key_ops` the export adds. Its id is the
   SHA-256 of these fields, the same on every page.
 - A page publishes the key of its player once it is a member of a conversation declared, unless the latest key of its
-  player on the chain is already this one: a spectator publishes none, and a page reloaded publishes again once it
-  caught up, only when the latest key in the name of its player is not its own (a key lost, or one forged in its name).
-  A key the chain does not send back within 15 seconds (lost at a change of sequencer) is published again.
+  player on the chain is already this one: a spectator publishes none. It publishes its key again when another key
+  shows in the name of its player (an older one, after its storage was lost, or a forged one), and when a part sent to
+  it names an older key of its player (a page that did not take the new one), once for each older key. A page reloaded
+  may publish the same key again while it catches up: a key published again is not counted. A key the chain does not
+  send back within 15 seconds (lost at a change of sequencer) is published again; one sent back but refused is not.
 - The latest key a participant published is its current one: the messages sent to it are encrypted for it. Every page
   records every key, to check the messages naming it the same everywhere; but a key appended live in the name of a
   participant away from this page (not in its `room.players()` when it applies) does not replace the current one it
   had: unknown to the room once it left, its entry is not checked, and the sequencer may have forged it. A key
   published again is not counted again; a participant publishing a 17th key (`MAX_KEYS_PER_PARTICIPANT`, a few lost
-  storages, not a flood of keys), a key malformed or a point off the curve is reported. A key published by another
+  storages, not a flood of keys), a key malformed or a point off the curve is reported. The keys appended live in the
+  name of a participant away, and on its own page the keys in its name other than its own, are not counted: forged,
+  they would make its own key refused. They are bounded apart, 16 at most, the next ones ignored without report. A key published by another
   participant than its own is of no use to it: the part of a recipient is read with a key it published itself.
 
 ### A message and its parts
@@ -506,8 +510,9 @@ The messages apply one after the other, in the order of the chain, a key before 
    all (it was away), shows a notice of a message unreadable, not reported. A message sent again shows once, by its
    author and its id.
 
-A message failing the first two levels, or a key failing, is reported `invalidMessage` by every page alike, the first
-one of each author only. A text failing the third level is reported by its recipient, the first one of each author: the
+A message failing the first level, or a key failing, is reported `invalidMessage` by every page alike, the first one of
+each author only. A message failing the second level is reported by the pages that judge it: a page declaring the
+conversation late judges the messages it kept waiting only. A text failing the third level is reported by its recipient, the first one of each author: the
 others can not read it to check.
 
 ### Sending
@@ -526,7 +531,7 @@ others can not read it to check.
 ### A key changed, a page reloaded
 
 - **Reloaded**, a page keeps its key pair (IndexedDB), replays the chain, reads its own copies and the parts sent to it
-  again, and does not publish its key again, unless the latest key in its name is not its own.
+  again; it publishes its key again only while it catches up, or when another key shows in its name.
 - **A key lost** (storage cleared, another browser, private browsing): the page publishes a new key, which becomes the
   current one of its player. The messages encrypted for the older key, sent before the others applied the new one
   included, show unreadable to it; the next ones are readable.
@@ -660,8 +665,8 @@ one again. The network packing the messages of an honest player on the chain nev
     messages.
   - **A key lost makes the history unreadable** to its player: the messages encrypted for it, its own copies included,
     show unreadable after a reload without its storage. A new key a page receives while it sees its participant away
-    (its link cut for a moment) does not become current there: the messages it sends show unreadable to that
-    participant, until it publishes its key again.
+    (its link cut for a moment) does not become current there: the first message it sends shows unreadable to that
+    participant, whose page then publishes its key again.
   - **A conversation closed is closed in the composer only**: a modified client may still write in it, and its members
     read it. The messages are not filtered by the time of the game, which another chain orders.
 - The app is in development: the message format changes freely, all the participants run the same

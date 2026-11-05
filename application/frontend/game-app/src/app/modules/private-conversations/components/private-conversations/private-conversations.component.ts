@@ -180,8 +180,8 @@ export class PrivateConversationsComponent {
     /** A failed message is sent again while the composer waits for its messages unsent only */
     protected readonly retryDisabled = computed<boolean>(() => this.wait() !== undefined && this.wait() !== PrivateComposerWait.UNSENT);
 
-    // The latest line received, of every conversation: the ones after it are new
-    private latestId: number = 0;
+    // The latest line received, of every conversation: the ones after it are new, none of the ones there at first
+    private latestId: number | undefined;
     // The latest line of the conversation shown: a new one scrolls the log to its bottom
     private shownLine: string | undefined;
     private scrollPending: boolean = false;
@@ -256,7 +256,8 @@ export class PrivateConversationsComponent {
     }
 
     private receive(views: ReadonlyArray<Readonly<PrivateConversationView>>, shown: string | undefined): void {
-        const latestId: number = this.latestId;
+        const latestId: number = this.latestId ?? Number.POSITIVE_INFINITY;
+        this.latestId ??= 0;
         let received: boolean = false;
         let unseen: number = 0;
         for (const view of views) {

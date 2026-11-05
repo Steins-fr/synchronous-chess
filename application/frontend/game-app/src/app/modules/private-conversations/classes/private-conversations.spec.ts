@@ -91,6 +91,11 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
     }
 
     /** A participant without page publishes its stored key, as a cheating client would */
+    /** The current key of each participant, as the page of the player encrypts for it */
+    function currentOf(name: string): ReadonlyMap<string, string> {
+        return TestHelper.cast<{ readonly currentKeys: () => ReadonlyMap<string, string> }>(of(name)).currentKeys();
+    }
+
     /** A participant present in the room without the page of the conversations, its messages sent by the spec */
     function present(name: string): void {
         if (!rooms.has(name)) {
@@ -337,10 +342,100 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         // Then: checked, not reported, though no page takes that key for hers
         await eventually(() => expect(linesOf('bob', TRIO.id)).toEqual(['alice: to her latest key']));
         expect(hub.reports).toEqual([]);
-        const currentOf = (name: string): ReadonlyMap<string, string> =>
-            TestHelper.cast<{ readonly currentKeys: () => ReadonlyMap<string, string> }>(of(name)).currentKeys();
         expect(currentOf('bob').get('carol')).toEqual((await storedKey('carol')).id);
         expect(currentOf('bob').get('dave')).toEqual(await keyIdOf(daveKey));
+    });
+
+    test('should publish its key again when a part names an older one of its, a page not having taken the new one', async () => {
+        // Given: Bob away, then back with another key, applied by Alice while she saw him away
+        pagesOf(['alice', 'bob']);
+        await ready('alice');
+        await ready('bob');
+        await applied();
+        of('bob').destroy();
+        hub.leave(rooms.get('bob') as Room<PrivatePayloads>);
+        const lostStorage = new ParticipantKeyStore(new IDBFactory());
+        const newKey: PrivatePublicKey = await exportAgreementKey((await lostStorage.agreementKeyPairOf('bob')).publicKey);
+        hub.send({ from: 'bob', type: PrivateMessengerType.KEY, payload: { key: newKey } });
+        await applied();
+        // His page catching up publishes his key again, seeing his former one: lost on its way
+        hub.hold('bob');
+        rooms.delete('bob');
+        page('bob', lostStorage);
+        hub.replay(rooms.get('bob') as Room<PrivatePayloads>);
+        of('bob').declare(CONVERSATIONS);
+        await eventually(() => expect(hub.held).toHaveLength(1));
+        hub.held.splice(0);
+        hub.release();
+        await applied();
+        expect(currentOf('alice').get('bob')).not.toEqual(await keyIdOf(newKey));
+        expect(messagesOf(PrivateMessengerType.KEY, 'bob')).toHaveLength(2);
+
+        // When
+        of('alice').send(TEAM.id, 'for your former key');
+
+        // Then: unreadable to him, his key published again, then taken
+        await eventually(() => expect(linesOf('bob')).toEqual(['unreadable alice']));
+        await eventually(() => expect(messagesOf(PrivateMessengerType.KEY, 'bob')).toHaveLength(3));
+        await applied();
+        expect(currentOf('alice').get('bob')).toEqual(await keyIdOf(newKey));
+
+        // When
+        await ready('alice');
+        of('alice').send(TEAM.id, 'for your key');
+
+        // Then
+        await eventually(() => expect(linesOf('bob')).toEqual(['unreadable alice', 'alice: for your key']));
+        expect(messagesOf(PrivateMessengerType.KEY, 'bob')).toHaveLength(3);
+        expect(hub.reports).toEqual([]);
+    });
+
+    test('should not count in its limit the keys appended in the name of a participant away, bounded apart', async () => {
+        // Given: Carol away, more keys than her limit appended in her name
+        pagesOf(['alice', 'bob', 'carol'], [TRIO]);
+        await ready('alice', TRIO.id);
+        await ready('carol', TRIO.id);
+        await applied();
+        hub.leave(rooms.get('carol') as Room<PrivatePayloads>);
+        const forged: PrivatePublicKey[] = await Promise.all(Array.from({ length: MAX_KEYS_PER_PARTICIPANT + 1 }, async () =>
+            exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey)));
+        forged.forEach((key: PrivatePublicKey) => hub.send({ from: 'carol', type: PrivateMessengerType.KEY, payload: { key } }));
+        await applied();
+
+        // When: back, her page kept, then another key of hers
+        hub.back(rooms.get('carol') as Room<PrivatePayloads>);
+        await applied();
+        const another: PrivatePublicKey = await exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey);
+        hub.send({ from: 'carol', type: PrivateMessengerType.KEY, payload: { key: another } });
+        await applied();
+
+        // Then: taken by every page, none reported
+        const anotherId: string = await keyIdOf(another);
+        expect(currentOf('alice').get('carol')).toEqual(anotherId);
+        expect(currentOf('bob').get('carol')).toEqual(anotherId);
+        expect(hub.reports).toEqual([]);
+    });
+
+    test('should not publish again a key the chain sent back, refused', async () => {
+        // Given: the keys of Alice over her limit already
+        vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+        page('alice');
+        pagesOf(['bob']);
+        const keys: PrivatePublicKey[] = await Promise.all(Array.from({ length: MAX_KEYS_PER_PARTICIPANT }, async () =>
+            exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey)));
+        keys.forEach((key: PrivatePublicKey) => hub.send({ from: 'alice', type: PrivateMessengerType.KEY, payload: { key } }));
+        await applied();
+
+        // When
+        of('alice').declare(CONVERSATIONS);
+        await eventually(() => expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(MAX_KEYS_PER_PARTICIPANT + 1));
+        await applied();
+        vi.advanceTimersByTime(SEND_TIMEOUT);
+        await applied();
+
+        // Then: refused, and not published again
+        expect(hub.reported()).toContain(`bob ${ INVALID } alice`);
+        expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(MAX_KEYS_PER_PARTICIPANT + 1);
     });
 
     test('should publish its key again when the chain did not send it back in time', async () => {
@@ -730,6 +825,31 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
             await eventually(() => expect(linesOf('bob')).toHaveLength(CHAT_UNSENT_LIMIT));
         });
 
+        test('should not hold back the composer for the messages unsent of a conversation closed, sent again nowhere', async () => {
+            // Given
+            pagesOf(['alice', 'bob']);
+            await ready('alice');
+            await applied();
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+            hub.hold('alice');
+            for (let index = 0; index < CHAT_SEND_LIMIT; index++) {
+                of('alice').send(TEAM.id, `first ${ index }`);
+            }
+            vi.advanceTimersByTime(SEND_TIMEOUT);
+            for (let index = CHAT_SEND_LIMIT; index < CHAT_UNSENT_LIMIT; index++) {
+                of('alice').send(TEAM.id, `then ${ index }`);
+            }
+            expect(of('alice').heldBack()).toBe(true);
+
+            // When
+            of('alice').declare([{ ...TEAM, open: false }, SIDE]);
+
+            // Then
+            expect(of('alice').heldBack()).toBe(false);
+            expect(of('alice').composerWait(SIDE.id, Date.now())).toBeUndefined();
+            vi.useRealTimers();
+        });
+
         test('should send nothing once destroyed while the message is encrypted', async () => {
             // Given
             pagesOf(['alice', 'bob']);
@@ -791,7 +911,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         });
 
         test('should apply nothing once destroyed while reading the messages waiting for their conversation', async () => {
-            // Given: the key pair of Alice read late, the messages of Bob waiting for their conversation
+            // Given: the key pair of Alice read late, the messages of Bob waiting for their conversation, none for her key
             let release: () => void = () => undefined;
             const held = new Promise<void>((resolve: () => void) => {
                 release = resolve;
@@ -801,10 +921,9 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
                 return new ParticipantKeyStore(factory).agreementKeyPairOf(name);
             });
             const alice: PrivateConversations = page('alice', TestHelper.cast<ParticipantKeyStore>({ agreementKeyPairOf }));
-            await publish('alice');
             await publish('bob');
-            sendEnvelope('bob', await sealed('bob', TEAM.id, 'see example.com', ['alice', 'bob']));
-            sendEnvelope('bob', await sealed('bob', TEAM.id, 'hello', ['alice', 'bob']));
+            sendEnvelope('bob', await sealed('bob', TEAM.id, 'see example.com', ['bob']));
+            sendEnvelope('bob', await sealed('bob', TEAM.id, 'hello', ['bob']));
             await applied();
             alice.declare([TEAM]);
             await eventually(() => expect(agreementKeyPairOf).toHaveBeenCalledWith('alice'));

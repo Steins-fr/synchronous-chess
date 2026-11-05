@@ -133,6 +133,25 @@ describe('PrivateConversationsComponent', () => {
         expect(fixture.componentInstance.closes()).toEqual(1);
     });
 
+    test('should not ring for the messages there before the panel', async () => {
+        // Given: a panel created closed, for conversations holding a message received already
+        const conversations = new PrivateConversationsMock();
+        conversations.mine.set([
+            privateConversation('team', ['alice', 'bob'], [privateMessage('bob', 'before')]),
+        ]);
+        const other: ComponentFixture<HostComponent> = TestBed.createComponent(HostComponent);
+        other.componentInstance.conversations.set(conversations.conversations);
+        other.componentInstance.open.set(false);
+
+        // When
+        await other.whenStable();
+
+        // Then
+        const panel: PrivateConversationsComponent = other.debugElement.children[0].componentInstance;
+        expect(panel.unreadReceived()).toEqual(0);
+        expect(play).not.toHaveBeenCalled();
+    });
+
     test('should show a tab per conversation, the open ones first, the latest declared first, then the closed ones', async () => {
         // When
         await show(
