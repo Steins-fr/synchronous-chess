@@ -79,6 +79,7 @@
       "chat": "Chat",
       "history": "Verlauf",
       "leave": "Verlassen",
+      "private": "Privat",
       "room": "Raum {roomName}",
       "unread": "{count, plural, one {# ungelesene Nachricht} other {# ungelesene Nachrichten}}"
     },

@@ -1,5 +1,22 @@
 
-import { afterNextRender, Component, computed, contentChild, DestroyRef, DOCUMENT, effect, ElementRef, inject, Injector, input, linkedSignal, signal, untracked, viewChild } from '@angular/core';
+import {
+    afterNextRender,
+    Component,
+    computed,
+    contentChild,
+    DestroyRef,
+    DOCUMENT,
+    effect,
+    ElementRef,
+    inject,
+    Injector,
+    input,
+    linkedSignal,
+    Signal,
+    signal,
+    untracked,
+    viewChild
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatBadge } from '@angular/material/badge';
 import { MatButton, MatIconButton } from '@angular/material/button';
@@ -10,6 +27,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ChatComponent, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { WebrtcDebugButtonComponent } from '@app/modules/debug/webrtc-debug-button/webrtc-debug-button.component';
 import { WEBRTC_DEBUG } from '@app/modules/debug/webrtc-debug.token';
+import { PrivateConversations } from '@app/modules/private-conversations/classes/private-conversations';
+import { PrivateConversationsComponent } from '@app/modules/private-conversations/components/private-conversations/private-conversations.component';
 import { RoomSetupComponent } from '@app/modules/room-setup/room-setup.component';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -26,6 +45,7 @@ const PANEL_HISTORY_STATE: string = 'roomPanel';
 export enum RoomPanel {
     CHAT = 'chat',
     HISTORY = 'history',
+    PRIVATE = 'private',
 }
 
 @Component({
@@ -33,7 +53,7 @@ export enum RoomPanel {
     templateUrl: './room-layout.component.html',
     styleUrls: ['./room-layout.component.scss'],
     imports: [
-        RoomSetupComponent, ChatComponent, WebrtcDebugButtonComponent, MatSidenavContainer, MatSidenavContent, MatSidenav, MatButton, MatIconButton,
+        RoomSetupComponent, ChatComponent, PrivateConversationsComponent, WebrtcDebugButtonComponent, MatSidenavContainer, MatSidenavContent, MatSidenav, MatButton, MatIconButton,
         MatIcon, MatBadge, TranslocoPipe,
     ],
     host: {
@@ -52,6 +72,8 @@ export class RoomLayoutComponent {
     public readonly room = input<Room<ChatPayloads>>();
     /** The chat of the room opens beside the game, from the bar of the room: the page of the chat shows it itself */
     public readonly sideChat = input<boolean>(true);
+    /** The private conversations of the room, the same for its life: the panel offers them to their members */
+    public readonly conversations = input<PrivateConversations>();
 
     private readonly roomSetupService = inject(RoomSetupService);
     private readonly preferences = inject(ChatPreferencesService);
@@ -68,13 +90,13 @@ export class RoomLayoutComponent {
     protected readonly panels = RoomPanel;
     /** The history the page gives, beside its game: the panel offers it */
     protected readonly history = contentChild(RoomHistoryComponent);
-    // Beside the game, the chat as the user left it, which another tab may change, the history closed until opened: never
-    // remembered, nor closed by another tab
+    // Beside the game, the chat as the user left it, which another tab may change, the history and the private
+    // conversations closed until opened: never remembered, nor closed by another tab
     private readonly besidePanel = linkedSignal<boolean, RoomPanel | null>({
         source: (): boolean => this.chatBeside(),
         computation: (on: boolean, previous?: { value: RoomPanel | null }): RoomPanel | null => {
-            if (previous?.value === RoomPanel.HISTORY) {
-                return RoomPanel.HISTORY;
+            if (previous?.value === RoomPanel.HISTORY || previous?.value === RoomPanel.PRIVATE) {
+                return previous.value;
             }
             return on ? RoomPanel.CHAT : null;
         },
@@ -90,10 +112,16 @@ export class RoomLayoutComponent {
     });
     protected readonly chatOpen = computed<boolean>(() => this.panel() === RoomPanel.CHAT);
     protected readonly historyOpen = computed<boolean>(() => this.panel() === RoomPanel.HISTORY);
+    protected readonly privateOpen = computed<boolean>(() => this.panel() === RoomPanel.PRIVATE);
+    /** The local player is a member of a private conversation: a spectator has none */
+    protected readonly hasPrivate = computed<boolean>(() => (this.conversations()?.mine().length ?? 0) > 0);
 
     private readonly chat = viewChild(ChatComponent);
     private readonly chatButton = viewChild<string, ElementRef<HTMLElement>>('chatButton', { read: ElementRef });
     protected readonly unread = computed<number>(() => this.chat()?.unread() ?? 0);
+    private readonly privateTalk = viewChild(PrivateConversationsComponent);
+    private readonly privateButton = viewChild<string, ElementRef<HTMLElement>>('privateButton', { read: ElementRef });
+    protected readonly privateUnread = computed<number>(() => this.privateTalk()?.unread() ?? 0);
     // The panel opened over the game pushed an entry to the browser history, which the back gesture removes
     private panelInHistory: boolean = false;
 
@@ -135,14 +163,8 @@ export class RoomLayoutComponent {
         });
 
         // A new message unread: the button of the chat pulses, not for the unread messages of a player shown again
-        let received: number = 0;
-        effect(() => {
-            const count: number = this.chat()?.unreadReceived() ?? 0;
-            if (count > received) {
-                this.pulse();
-            }
-            received = count;
-        });
+        this.pulseOnReceived(() => this.chat()?.unreadReceived() ?? 0, this.chatButton);
+        this.pulseOnReceived(() => this.privateTalk()?.unreadReceived() ?? 0, this.privateButton);
     }
 
     /** Shows a content of the panel, which another one shown gives way to, or closes it */
@@ -189,8 +211,19 @@ export class RoomLayoutComponent {
         return this.sideChat() && this.preferences.panelOpen.on();
     }
 
-    private pulse(): void {
-        const button: HTMLElement | undefined = this.chatButton()?.nativeElement;
+    /** The button pulses at each new message unread its panel counts */
+    private pulseOnReceived(received: () => number, button: Signal<ElementRef<HTMLElement> | undefined>): void {
+        let counted: number = 0;
+        effect(() => {
+            const count: number = received();
+            if (count > counted) {
+                this.pulse(untracked(button)?.nativeElement);
+            }
+            counted = count;
+        });
+    }
+
+    private pulse(button: HTMLElement | undefined): void {
         // The duration of the motions of the app: none when the user reduces them
         const duration: number = Number.parseFloat(this.window.getComputedStyle(this.window.document.documentElement).getPropertyValue('--app-motion-fast')) || 0;
         button?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration, easing: 'ease-out' });

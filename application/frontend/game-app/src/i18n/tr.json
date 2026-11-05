@@ -79,6 +79,7 @@
       "chat": "Sohbet",
       "history": "Geçmiş",
       "leave": "Ayrıl",
+      "private": "Özel",
       "room": "Oda {roomName}",
       "unread": "{count, plural, one {# okunmamış mesaj} other {# okunmamış mesaj}}"
     },

@@ -65,5 +65,21 @@
     "hidden": "Nachrichten ausgeblendet"
   },
   "ping": "Ping {ping}",
+  "private": {
+    "close": "Private Unterhaltungen schließen",
+    "closed": "Diese Unterhaltung ist geschlossen: du kannst sie weiter lesen",
+    "composer": {
+      "closed": "Die Unterhaltung ist geschlossen: keine Nachrichten mehr",
+      "preparing": "Verschlüsselung wird vorbereitet…"
+    },
+    "empty": "Noch keine Nachrichten",
+    "message": "Nachricht an {names}",
+    "none": "Derzeit keine private Unterhaltung",
+    "send": "Privat senden",
+    "tabClosed": "Geschlossen",
+    "title": "Private Unterhaltungen",
+    "unreadable": "Eine Nachricht von {name} ist in diesem Browser nicht lesbar",
+    "unreadableSelf": "Eine deiner Nachrichten ist in diesem Browser nicht lesbar"
+  },
   "send": "Senden"
 }

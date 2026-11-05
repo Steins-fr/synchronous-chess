@@ -1,0 +1,57 @@
+<section *transloco="let t; prefix: 'chat'" class="flex min-h-0 flex-1 flex-col" id="private-conversations">
+    <header class="panel-header">
+        <h2 class="m-0 flex-1 mat-title-medium">{{ t('private.title') }}</h2>
+        <button (click)="closed.emit()" [attr.aria-label]="t('private.close')" [title]="t('private.close')" id="private-close" mat-icon-button type="button">
+            <mat-icon>close</mat-icon>
+        </button>
+    </header>
+
+    @if (tabs().length > 0) {
+    <!-- The tabs on a line, scrolled sideways once they overflow -->
+    <div [attr.aria-label]="t('private.title')" class="flex gap-2 overflow-x-auto border-b border-app-border px-3 py-2" role="tablist">
+        @for (tab of tabs(); track tab.view.id) {
+        <button (click)="select(tab.view.id)" [attr.aria-selected]="tab.view.id === selected()" [id]="'private-conversation-' + tab.view.id"
+            aria-controls="private-log" class="flex shrink-0 cursor-pointer items-center gap-1 rounded-2xl border border-app-border bg-app-surface px-3 py-1 text-sm text-app-text aria-selected:border-app-accent-text aria-selected:text-app-accent-text"
+            role="tab" type="button">
+            <span>{{ tab.view.title.key | transloco: tab.view.title.params }}</span>
+            @if (!tab.view.open) {
+            <mat-icon aria-hidden="true" class="size-4! text-base! text-app-text-muted">lock_clock</mat-icon>
+            <span class="sr-only">{{ t('private.tabClosed') }}</span>
+            }
+            @if (tab.unread > 0) {
+            <span aria-hidden="true" class="badge bg-app-accent text-app-on-color">{{ tab.unread }}</span>
+            <span class="sr-only">{{ 'rooms.bar.unread' | transloco: { count: tab.unread } }}</span>
+            }
+        </button>
+        }
+    </div>
+    }
+
+    <div #log [attr.aria-label]="t('private.title')" class="flex flex-1 flex-col overflow-y-auto px-3 pb-3" id="private-log" role="log">
+        @if (view(); as view) {
+        @for (line of lines(); track line.id) {
+        @if (line.message; as message) {
+        <app-chat-message (retry)="retry(message)" [message]="message" [retryDisabled]="retryDisabled()" [startsGroup]="line.startsGroup" [time]="line.time" />
+        } @else if (line.notice; as notice) {
+        @if (notice.kind === lineKinds.FLOOD) {
+        <p class="chat-notice">{{ notice.name === localName() ? t('log.floodingSelf') : t('log.flooding', { name: notice.name }) }}</p>
+        } @else {
+        <p class="chat-notice">{{ notice.name === localName() ? t('private.unreadableSelf') : t('private.unreadable', { name: notice.name }) }}</p>
+        }
+        }
+        } @empty {
+        <p class="muted-note m-auto text-center text-sm">{{ t('private.empty') }}</p>
+        }
+        @if (!view.open) {
+        <p class="chat-notice" id="private-closed">{{ t('private.closed') }}</p>
+        }
+        } @else {
+        <p class="muted-note m-auto text-center text-sm">{{ t('private.none') }}</p>
+        }
+    </div>
+
+    @if (view()) {
+    <app-chat-composer (send)="send()" [disabled]="isBlank() || wait() !== undefined" [field]="messageForm" [hint]="hint()"
+        [label]="t('private.message', { names: recipients() })" [sendLabel]="t('private.send')" formId="private-send-form" sendId="private-send" />
+    }
+</section>

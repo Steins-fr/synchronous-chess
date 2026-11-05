@@ -65,5 +65,21 @@
     "hidden": "Messages masqués"
   },
   "ping": "ping {ping}",
+  "private": {
+    "close": "Fermer les conversations privées",
+    "closed": "Cette conversation est fermée : elle reste lisible",
+    "composer": {
+      "closed": "La conversation est fermée : plus aucun message",
+      "preparing": "Préparation du chiffrement…"
+    },
+    "empty": "Aucun message pour l’instant",
+    "message": "Message à {names}",
+    "none": "Aucune conversation privée pour l’instant",
+    "send": "Envoyer en privé",
+    "tabClosed": "Fermée",
+    "title": "Conversations privées",
+    "unreadable": "Un message de {name} est illisible dans ce navigateur",
+    "unreadableSelf": "Un de vos messages est illisible dans ce navigateur"
+  },
   "send": "Envoyer"
 }

@@ -65,5 +65,21 @@
     "hidden": "Wiadomości ukryte"
   },
   "ping": "ping {ping}",
+  "private": {
+    "close": "Zamknij rozmowy prywatne",
+    "closed": "Ta rozmowa jest zamknięta: nadal możesz ją czytać",
+    "composer": {
+      "closed": "Rozmowa jest zamknięta: nie można już pisać",
+      "preparing": "Przygotowywanie szyfrowania…"
+    },
+    "empty": "Brak wiadomości",
+    "message": "Wiadomość do {names}",
+    "none": "Na razie brak rozmów prywatnych",
+    "send": "Wyślij prywatnie",
+    "tabClosed": "Zamknięta",
+    "title": "Rozmowy prywatne",
+    "unreadable": "Wiadomości od {name} nie można odczytać w tej przeglądarce",
+    "unreadableSelf": "Jednej z twoich wiadomości nie można odczytać w tej przeglądarce"
+  },
   "send": "Wyślij"
 }

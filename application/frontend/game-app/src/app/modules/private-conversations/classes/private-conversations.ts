@@ -188,6 +188,11 @@ export class PrivateConversations {
             });
     }
 
+    /** The local player, a member of the conversations of mine */
+    public get localName(): string {
+        return this.room.localPlayer.name;
+    }
+
     /**
      * Declares the conversations of the game, replacing the ones declared before. The messages of a conversation the
      * page does not know yet wait for it: the private chain of a page reloaded may replay before the chain of the game

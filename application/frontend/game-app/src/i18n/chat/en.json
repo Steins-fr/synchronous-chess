@@ -65,5 +65,21 @@
     "hidden": "Messages hidden"
   },
   "ping": "ping {ping}",
+  "private": {
+    "close": "Close the private conversations",
+    "closed": "This conversation is closed: it can still be read",
+    "composer": {
+      "closed": "The conversation is closed: no more messages",
+      "preparing": "Preparing the encryption…"
+    },
+    "empty": "No messages yet",
+    "message": "Message to {names}",
+    "none": "No private conversation for now",
+    "send": "Send privately",
+    "tabClosed": "Closed",
+    "title": "Private conversations",
+    "unreadable": "A message from {name} cannot be read in this browser",
+    "unreadableSelf": "One of your messages cannot be read in this browser"
+  },
   "send": "Send"
 }

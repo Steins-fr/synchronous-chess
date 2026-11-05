@@ -5,6 +5,7 @@ import { MATERIAL_ANIMATIONS } from '@angular/material/core';
 import { MatSidenav } from '@angular/material/sidenav';
 import { By } from '@angular/platform-browser';
 import { Router } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { RoomLayoutComponent, RoomPanel } from './room-layout.component';
 import { ChatMessengerType, ChatPayloads } from '@app/modules/chat-page/components/chat/chat.component';
 import { WebrtcDebugButtonComponent } from '@app/modules/debug/webrtc-debug-button/webrtc-debug-button.component';
@@ -17,6 +18,7 @@ import MessageOriginType from '@app/services/room-manager/classes/webrtc/message
 import RoomSetupService from '@app/services/room-setup/room-setup.service';
 import { RoomGame } from '@protocol/room-game.enum';
 import { answerOpenRooms, TEST_HTTP_API_SERVER } from '@testing/open-rooms.http';
+import { privateConversation, PrivateConversationsMock, privateMessage } from '@testing/private-conversations.mock';
 import { RoomNetworkMock } from '@testing/room-network.mock';
 import { TestHelper } from '@testing/test.helper';
 import { of } from 'rxjs';
@@ -428,11 +430,131 @@ describe('RoomLayoutComponent', () => {
             expect(query('mat-sidenav')).toBeNull();
 
             // When: no button to pulse
-            fixture.componentInstance['pulse']();
+            fixture.componentInstance['pulse'](undefined);
 
             // Then: nothing unread without a chat
             expect(toggle()).toBeNull();
             expect(fixture.componentInstance['unread']()).toEqual(0);
+        });
+
+        describe('with private conversations', () => {
+            let conversations: PrivateConversationsMock;
+
+            function privateToggle(): HTMLButtonElement | null {
+                return query('#room-private-toggle');
+            }
+
+            function privatePanel(): HTMLElement {
+                return query('#room-private') as HTMLElement;
+            }
+
+            async function declare(): Promise<void> {
+                conversations.mine.set([privateConversation('team', ['alice', 'bob'])]);
+                await fixture.whenStable();
+            }
+
+            beforeEach(() => {
+                TestBed.inject(TranslocoService).setTranslationKey('test.team', 'Team');
+                conversations = new PrivateConversationsMock();
+                fixture.componentRef.setInput('conversations', conversations.conversations);
+            });
+
+            test('should offer the private conversations to their members only, in a third content of the panel', async () => {
+                // When: a spectator
+                await showRoom();
+
+                // Then
+                expect(privateToggle()).toBeNull();
+                expect(privatePanel().hidden).toEqual(true);
+                expect(query('#room-chat')?.hidden).toEqual(false);
+
+                // When: a member
+                await declare();
+
+                // Then
+                expect(privateToggle()?.textContent).toContain('Private');
+                expect(privateToggle()?.getAttribute('aria-controls')).toEqual('room-private');
+                expect(privateToggle()?.getAttribute('aria-expanded')).toEqual('false');
+
+                // When
+                privateToggle()?.click();
+                await fixture.whenStable();
+
+                // Then: in place of the chat, still open for the user
+                expect(sidenav().opened).toEqual(true);
+                expect(privatePanel().hidden).toEqual(false);
+                expect(privatePanel().querySelector('#private-conversations h2')?.textContent).toEqual('Private conversations');
+                expect(query('#room-chat')?.hidden).toEqual(true);
+                expect(privateToggle()?.getAttribute('aria-expanded')).toEqual('true');
+                expect(toggle().getAttribute('aria-expanded')).toEqual('false');
+                expect(preferences.panelOpen.on()).toEqual(true);
+
+                // When: another tab closes its chat
+                localStorage.setItem(ChatPreferencesService.panelKey, 'off');
+                dispatchEvent(new StorageEvent('storage', { key: ChatPreferencesService.panelKey, storageArea: localStorage }));
+                await fixture.whenStable();
+
+                // Then: kept beside the game
+                expect(sidenav().opened).toEqual(true);
+                expect(privatePanel().hidden).toEqual(false);
+
+                // When: closed by its own button
+                (query('#private-close') as HTMLButtonElement).click();
+                await fixture.whenStable();
+
+                // Then
+                expect(sidenav().opened).toEqual(false);
+                expect(privateToggle()?.getAttribute('aria-expanded')).toEqual('false');
+            });
+
+            test('should offer the private conversations on a page holding its chat itself', async () => {
+                // Given
+                fixture.componentRef.setInput('sideChat', false);
+                await declare();
+
+                // When
+                await showRoom();
+
+                // Then: the panel closed rather than empty
+                expect(toggle()).toBeNull();
+                expect(sidenav().opened).toEqual(false);
+
+                // When
+                privateToggle()?.click();
+                await fixture.whenStable();
+
+                // Then
+                expect(sidenav().opened).toEqual(true);
+                expect(privatePanel().hidden).toEqual(false);
+            });
+
+            test('should count the unread private messages on their button, which pulses', async () => {
+                // Given
+                preferences.panelOpen.set(false);
+                await declare();
+                await showRoom();
+                const animate = vi.fn();
+                (privateToggle() as HTMLButtonElement).animate = animate;
+                toggle().animate = vi.fn();
+
+                // When
+                conversations.mine.set([privateConversation('team', ['alice', 'bob'], [privateMessage('bob', 'hello')])]);
+                await fixture.whenStable();
+
+                // Then
+                expect(privateToggle()?.querySelector('.mat-badge-content')?.textContent).toEqual('1');
+                expect(toggle().querySelector('.mat-badge-content')?.textContent).toEqual('0');
+                expect(animate).toHaveBeenCalledOnce();
+                expect(toggle().animate).not.toHaveBeenCalled();
+
+                // When
+                privateToggle()?.click();
+                await fixture.whenStable();
+
+                // Then
+                expect(privateToggle()?.classList).toContain('mat-badge-hidden');
+                expect(animate).toHaveBeenCalledOnce();
+            });
         });
 
         describe('with a history', () => {

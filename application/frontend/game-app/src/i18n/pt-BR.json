@@ -79,6 +79,7 @@
       "chat": "Bate-papo",
       "history": "Histórico",
       "leave": "Sair",
+      "private": "Privado",
       "room": "Sala {roomName}",
       "unread": "{count, plural, one {# mensagem não lida} other {# mensagens não lidas}}"
     },

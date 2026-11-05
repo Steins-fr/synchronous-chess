@@ -79,6 +79,7 @@
       "chat": "Chat",
       "history": "Historial",
       "leave": "Salir",
+      "private": "Privado",
       "room": "Sala {roomName}",
       "unread": "{count, plural, one {# mensaje sin leer} other {# mensajes sin leer}}"
     },

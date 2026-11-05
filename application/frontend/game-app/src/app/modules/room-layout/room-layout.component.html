@@ -17,6 +17,15 @@
                         <span class="max-sm:sr-only">{{ 'rooms.bar.chat' | transloco }}</span>
                     </button>
                     }
+                    @if (hasPrivate()) {
+                    <button
+                        #privateButton (click)="togglePanel(panels.PRIVATE, !privateOpen())" [attr.aria-expanded]="privateOpen()"
+                        [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: privateUnread() }" [matBadgeHidden]="privateUnread() === 0" [matBadge]="privateUnread()"
+                        aria-controls="room-private" id="room-private-toggle" mat-button type="button">
+                        <mat-icon>lock</mat-icon>
+                        <span class="max-sm:sr-only">{{ 'rooms.bar.private' | transloco }}</span>
+                    </button>
+                    }
                     @if (history()) {
                     <button
                         (click)="togglePanel(panels.HISTORY, !historyOpen())" [attr.aria-expanded]="historyOpen()" aria-controls="room-history" id="room-history-toggle"
@@ -53,14 +62,19 @@
             }
         </div>
     </mat-sidenav-content>
-    @if ((sideChat() || history()) && room(); as room) {
-    <!-- Beside the game, Escape typed in the panel does not close it: over the game, it does. Its contents stay while hidden: the chat counts its messages, the history follows the match -->
+    @if ((sideChat() || history() || conversations()) && room(); as room) {
+    <!-- Beside the game, Escape typed in the panel does not close it: over the game, it does. Its contents stay while hidden: the chat and the private conversations count their messages, the history follows the match -->
     <mat-sidenav
         (openedChange)="onPanelOpenedChange($event)" [disableClose]="wide()" [mode]="wide() ? 'side' : 'over'" [opened]="panel() !== null"
         id="room-panel" position="end">
         @if (sideChat()) {
         <div [hidden]="shownPanel() !== panels.CHAT" class="h-full" id="room-chat">
             <app-chat (closed)="togglePanel(panels.CHAT, false)" [closable]="true" [open]="chatOpen()" [room]="room" class="h-full" />
+        </div>
+        }
+        @if (conversations(); as conversations) {
+        <div [hidden]="shownPanel() !== panels.PRIVATE" class="h-full" id="room-private">
+            <app-private-conversations (closed)="togglePanel(panels.PRIVATE, false)" [conversations]="conversations" [open]="privateOpen()" class="h-full" />
         </div>
         }
         @if (history()) {

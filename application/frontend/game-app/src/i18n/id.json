@@ -79,6 +79,7 @@
       "chat": "Obrolan",
       "history": "Riwayat",
       "leave": "Keluar",
+      "private": "Privat",
       "room": "Ruang {roomName}",
       "unread": "{count, plural, other {# pesan belum dibaca}}"
     },

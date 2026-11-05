@@ -79,6 +79,7 @@
       "chat": "Chat",
       "history": "Cronologia",
       "leave": "Esci",
+      "private": "Privato",
       "room": "Stanza {roomName}",
       "unread": "{count, plural, one {# messaggio non letto} other {# messaggi non letti}}"
     },

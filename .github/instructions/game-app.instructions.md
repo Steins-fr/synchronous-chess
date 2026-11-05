@@ -226,6 +226,7 @@ Claude writes the translations of every new or changed key, into every language:
 | seat | place | puesto | lugar | lugar | Platz | место | yer | kursi | miejsce | posto |
 | password | mot de passe | contraseña | senha | palavra-passe | Passwort | пароль | şifre | kata sandi | hasło | password |
 | chat | tchat | chat | bate-papo | chat | Chat | чат | sohbet | obrolan | czat | chat |
+| private conversation | conversation privée | conversación privada | conversa privada | conversa privada | private Unterhaltung | приватная переписка | özel konuşma | percakapan privat | rozmowa prywatna | conversazione privata |
 | unread (message) | non lu | sin leer | não lida | não lida | ungelesen | непрочитанное | okunmamış | belum dibaca | nieprzeczytana | non letto |
 | hide (a player's messages) | masquer | ocultar | ocultar | ocultar | ausblenden | скрыть | gizlemek | sembunyikan | ukryć | nascondere |
 | mute (a participant) | rendre muet | silenciar | silenciar | silenciar | stummschalten | заглушить | sustur | bisukan | wycisz | silenzia |
