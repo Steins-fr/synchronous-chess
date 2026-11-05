@@ -186,8 +186,10 @@ player away (`Free the seat`, `CB_unseat`). The country of a player is the one o
 seated (`Northern country: 1, Southern country: 2. The match needs as many players in each, 1 at least.`) until they
 are balanced.
 
-The table shows the countries as two rows of 4 seats, the country of the local player at the bottom, the North at the
-bottom for a spectator, each one with the total of its ATMs.
+The table shows the countries as two rows of 4 seats, the country of the local player at the bottom; for a spectator,
+the one of the first free seat while the seats are open, else the North. Each one shows the total of the ATMs of its
+players of the match. Once it is over, a player of the match seated in the other country for the next one shows its
+money in neither: its ATM stays in the total of its country of the match.
 
 ## The settlement
 

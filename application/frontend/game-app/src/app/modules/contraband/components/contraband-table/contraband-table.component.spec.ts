@@ -390,6 +390,18 @@ describe('ContrabandTableComponent', { timeout: 30_000 }, () => {
         // Then
         await until(() => text('#seat-2').startsWith('eve'));
         expect(text('#seat-2')).not.toContain('ATM');
+        const totals: ReadonlyArray<string> = [text('#team-north h2'), text('#team-south h2')];
+
+        // When Bob, of the North, sits in the South for the next match
+        of('bob').leaveSeat();
+        await until(() => !text('#seat-1').startsWith('bob'));
+        of('bob').takeSeat(6);
+
+        // Then his money stays out of the South, his ATM in the total of the North
+        await until(() => text('#seat-6').startsWith('bob'));
+        expect(text('#seat-6')).not.toContain('ATM');
+        expect(seat(6).querySelector('.badge-win')).toBeNull();
+        expect([text('#team-north h2'), text('#team-south h2')]).toEqual(totals);
 
         // When
         await click('Play again');
@@ -397,7 +409,7 @@ describe('ContrabandTableComponent', { timeout: 30_000 }, () => {
         // Then
         await until(() => fixture.componentInstance.pastResults().length === 1);
         expect(pastLine(fixture.componentInstance.pastResults()[0])).toEqual('Match 1: The Northern country wins by 310 million');
-        expect(status()).toEqual('Northern country: 3, Southern country: 2. The match needs as many players in each, 1 at least.');
+        expect(status()).toEqual('Northern country: 2, Southern country: 3. The match needs as many players in each, 1 at least.');
         expect(element().querySelector('#customs')).toBeNull();
         expect(conversations()).toEqual([]);
     });

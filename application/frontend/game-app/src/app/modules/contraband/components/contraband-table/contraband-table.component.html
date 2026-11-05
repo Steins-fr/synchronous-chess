@@ -113,7 +113,7 @@
         }
     </div>
 
-    <!-- The country of the other players above, the one of the local player below: the North below for a spectator -->
+    <!-- The country of the other players above, the one of the local player below: for a spectator, the one of the first free seat while the seats are open, else the North -->
     @let seats = currentSession.tableSeats;
     @let left = clock();
     @for (country of teams(); track country.team) {

@@ -172,7 +172,10 @@ export class ContrabandTableComponent implements OnDestroy {
     /** The local player, packing, has no gold bar left */
     protected readonly noGold: Signal<boolean> = computed((): boolean => (this.session().myAtm() as number) < this.session().rules.goldBar);
 
-    /** The seats of each country, the one of the local player at the bottom, the North at the bottom for a spectator */
+    /**
+     * The seats of each country, the one of the local player at the bottom; for a spectator, the one of the first free seat
+     * while the seats are open, else the North
+     */
     protected readonly teams: Signal<ReadonlyArray<Readonly<TeamView>>> = computed((): ReadonlyArray<Readonly<TeamView>> => {
         const session: ContrabandSession = this.session();
         const bottom: Team = teamOf(session.tableSeats.bottomSeat(), session.rules.teamSeats);
@@ -482,15 +485,17 @@ export class ContrabandTableComponent implements OnDestroy {
         const first: number = team === Team.NORTH ? 0 : session.rules.teamSeats;
         const seats: ReadonlyArray<Readonly<SeatView>> = session.tableSeats.seats().slice(first, first + session.rules.teamSeats)
             .map((name: string | null, index: number) => this.seatView(first + index, name));
-        const atms: ReadonlyArray<number> = seats.map((seat: Readonly<SeatView>) => seat.atm).filter((atm: number | null): atm is number => atm !== null);
-        return { team, atms: game === null ? null : atms.reduce((total: number, atm: number) => total + atm, 0), seats };
+        // The ATMs of the players of the match in the country, wherever they sit once it is over
+        const atms: ReadonlyArray<number> | undefined = game?.atms().filter((_, player: number) => teamOf(player, session.north()) === team);
+        return { team, atms: atms?.reduce((total: number, atm: number) => total + atm, 0) ?? null, seats };
     }
 
     private seatView(seat: number, name: string | null): SeatView {
         const session: ContrabandSession = this.session();
         const game: ContrabandGameState | null = this.game();
-        const player: number | null = name === null || game === null ? null : session.players().indexOf(name);
-        const playing: number | null = player === -1 ? null : player;
+        const player: number = name === null || game === null ? -1 : session.players().indexOf(name);
+        // A player of the match over, seated in the other country for the next one, shows its money in its country only
+        const playing: number | null = player === -1 || teamOf(player, session.north()) !== teamOf(seat, session.rules.teamSeats) ? null : player;
 
         if (playing === null) {
             return { seat, name, awaited: name !== null && session.awaited().includes(name), absent: false, role: null, atm: null, account: null, balance: null, winning: false };
