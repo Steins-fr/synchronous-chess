@@ -446,9 +446,11 @@ members only.
   the four fields of its point, `{ kty, crv, x, y }`, without the `ext` and `key_ops` the export adds. Its id is the
   SHA-256 of these fields, the same on every page.
 - A page publishes the key of its player once it is a member of a conversation declared, unless the latest key of its
-  player on the chain is already this one: a spectator publishes none, and a page reloaded publishes again only once
-  it caught up, when its key changed.
+  player on the chain is already this one: a spectator publishes none, and a page reloaded publishes again once it
+  caught up, only when the latest key in the name of its player is not its own (a key lost, or one forged in its name).
 - The latest key a participant published is its current one: the messages sent to it are encrypted for it. A key
+  appended live in the name of a participant away from the room (not in `room.players()` when it applies) is ignored:
+  unknown to the room once it left, its entry is not checked, and the sequencer may have forged it. A key
   published again is not counted again; a participant publishing a 17th key (`MAX_KEYS_PER_PARTICIPANT`, a few lost
   storages, not a flood of keys), a key malformed or a point off the curve is reported. A key published by another
   participant than its own is of no use to it: the part of a recipient is read with a key it published itself.
@@ -508,7 +510,7 @@ others can not read it to check.
 
 - A message gets a part for each member present in the room (`room.players()`), for its current key, and for its
   sender. A member away gets none: a sequencer forging a key in its name, once it is forgotten, reads nothing. Back, it
-  sees the message unreadable.
+  sees the message unreadable, and the next ones are encrypted for its own key, the forged one ignored.
 - The composer waits until each member present, its player included, has a key on the chain (`Preparing the
   encryption…`): a sequencer withholding a key is reported for censoring it (`censoredEntry`). It waits as the one of the
   chat too, every conversation counted together: 3 messages in 10 seconds, 5 messages not sent back. A message shows at
@@ -520,7 +522,7 @@ others can not read it to check.
 ### A key changed, a page reloaded
 
 - **Reloaded**, a page keeps its key pair (IndexedDB), replays the chain, reads its own copies and the parts sent to it
-  again, and does not publish its key again.
+  again, and does not publish its key again, unless the latest key in its name is not its own.
 - **A key lost** (storage cleared, another browser, private browsing): the page publishes a new key, which becomes the
   current one of its player. The messages encrypted for the older key, sent before the others applied the new one
   included, show unreadable to it; the next ones are readable.
@@ -646,7 +648,10 @@ one again. The network packing the messages of an honest player on the chain nev
     A false report is a flag naming its author, nothing more.
   - **A departed member can be impersonated**, as on every chain: once it is forgotten, 60 seconds after it left, the
     sequencer may append a key or a message in its name, which the participants can not check. It reads nothing sent
-    while the member is away, who gets no part, but the messages forged in its name read as its own.
+    while the member is away, who gets no part, nor once it is back on the pages that saw the forged key live. A page
+    joining while the member is away replays that key as history and takes it, until the member back publishes its
+    own again (its page sees the key in its name): a message sent meanwhile can be read by the sequencer. The messages
+    forged in its name read as its own.
   - **No moderation**: the host can not mute a member in its conversations; removing it from the room stops its
     messages.
   - **A key lost makes the history unreadable** to its player: the messages encrypted for it, its own copies included,

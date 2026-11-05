@@ -95,4 +95,28 @@ describe('RoomHub', () => {
         expect(a.players().map((player) => player.name)).toEqual(['a', 'b']);
         expect(a.queue()).toEqual([]);
     });
+
+    test('should bring a participant back without reload: the messages it missed, then each side seeing the other added', () => {
+        // Given
+        const hub = new RoomHub<{ ping: number }>();
+        const a = hub.room('a');
+        const b = hub.room('b');
+        const received: number[] = [];
+        const arrivals: string[] = [];
+        a.playerAdded$.subscribe((player) => arrivals.push(`a sees ${ player.name }`));
+        b.playerAdded$.subscribe((player) => arrivals.push(`b sees ${ player.name }`));
+        b.messenger('ping').subscribe((message: AppMessage) => received.push(message.payload as number));
+        a.transmitMessage('ping', 1);
+        hub.leave(b);
+        a.transmitMessage('ping', 2);
+
+        // When
+        hub.back(b);
+        a.transmitMessage('ping', 3);
+
+        // Then
+        expect(received).toEqual([1, 2, 3]);
+        expect(arrivals).toEqual(['b sees a', 'a sees b']);
+        expect(a.players().map((player) => player.name)).toEqual(['a', 'b']);
+    });
 });

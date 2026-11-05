@@ -183,7 +183,7 @@ export class PrivateConversations {
             .subscribe((message: PrivateMessage) => {
                 const live: boolean = !room.isHistory(message);
                 this.enqueue(() => logHandlingFailure(message, message.type === PrivateMessengerType.KEY
-                    ? this.onKey(message)
+                    ? this.onKey(message, live)
                     : this.onEnvelope(message, live)));
             });
     }
@@ -337,9 +337,13 @@ export class PrivateConversations {
     /**
      * A key published: the latest one of its participant from then. A key published again by its participant is not
      * counted again; a key of another participant published by one is of no use to it, the parts of a recipient being
-     * read with the keys it published
+     * read with the keys it published. A key appended live in the name of a participant away is ignored: unknown to the
+     * room once it left, the sequencer may have forged it, and its pages would not check the signature
      */
-    private async onKey(message: KeyMessage): Promise<void> {
+    private async onKey(message: KeyMessage, live: boolean): Promise<void> {
+        if (live && !this.room.players().some((player: Readonly<Player>) => player.name === message.from)) {
+            return;
+        }
         const payload: unknown = message.payload;
         if (!isPrivateKeyPayload(payload)) {
             this.reportInvalid(message);
@@ -362,6 +366,10 @@ export class PrivateConversations {
         this.published.set(message.from, [...keys.filter((key: string) => key !== id), id]);
         this.importedKeys.set(id, imported);
         this.currentKeys.update((current: ReadonlyMap<string, string>) => new Map(current).set(message.from, id));
+        if (message.from === this.room.localPlayer.name && id !== this.ownKeyId()) {
+            // Another key in its name, an older one replayed or a forged one: the local player publishes its own again
+            this.keySent = false;
+        }
     }
 
     private isPublishedBy(participant: string, keyId: string): boolean {
@@ -404,6 +412,9 @@ export class PrivateConversations {
             this.appliedMembers.has(received.envelope.conversation));
         this.waiting.splice(0, this.waiting.length, ...this.waiting.filter((received: ReceivedEnvelope) => !declared.includes(received)));
         for (const received of declared) {
+            if (this.destroyed) {
+                return;
+            }
             // eslint-disable-next-line no-await-in-loop -- the messages of a conversation show in the order of the chain
             await this.judge(received);
         }
@@ -426,12 +437,13 @@ export class PrivateConversations {
     private async read(received: ReceivedEnvelope): Promise<void> {
         const { message, envelope } = received;
         const conversation: string = envelope.conversation;
+        // Counted first, a message sent again included: the first one hidden tells the flood of its author
+        if (received.notice) {
+            this.addLine(conversation, { kind: PrivateLineKind.FLOOD, id: this.ids.next().value, name: message.from, at: received.time, live: received.live });
+        }
         const seenKey: string = JSON.stringify([message.from, envelope.id]);
         if (this.seen.has(seenKey)) {
             return;
-        }
-        if (received.notice) {
-            this.addLine(conversation, { kind: PrivateLineKind.FLOOD, id: this.ids.next().value, name: message.from, at: received.time, live: received.live });
         }
         const sent: PrivateMessageLine | undefined = message.from === this.room.localPlayer.name ? this.ownLine(conversation, envelope.id) : undefined;
         if (!received.admitted) {
@@ -441,6 +453,9 @@ export class PrivateConversations {
         }
 
         const own: OwnKey = await this.ownKey();
+        if (this.destroyed) {
+            return;
+        }
         const part: Readonly<SealedPart> | undefined = envelope.parts.find((mine: Readonly<SealedPart>) => mine.to === this.room.localPlayer.name);
         if (part?.key !== own.id) {
             this.seen.add(seenKey);
@@ -456,6 +471,9 @@ export class PrivateConversations {
         }
 
         const text: PrivateText | undefined = await this.decrypt(envelope, part, message.from);
+        if (this.destroyed) {
+            return;
+        }
         this.seen.add(seenKey);
         // The recipient alone tells its text invalid: the others can not check it
         if (text === undefined || !isChatText({ id: envelope.id, text: text.text, at: text.at })) {

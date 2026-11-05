@@ -91,7 +91,15 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
     }
 
     /** A participant without page publishes its stored key, as a cheating client would */
+    /** A participant present in the room without the page of the conversations, its messages sent by the spec */
+    function present(name: string): void {
+        if (!rooms.has(name)) {
+            hub.room(name);
+        }
+    }
+
     async function publish(name: string): Promise<void> {
+        present(name);
         hub.send({ from: name, type: PrivateMessengerType.KEY, payload: { key: (await storedKey(name)).key } });
     }
 
@@ -273,6 +281,42 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         expect(hub.reports).toEqual([]);
     });
 
+    test('should ignore a key appended in the name of a member away, encrypting for its own key once it is back', async () => {
+        // Given: Carol away, her page kept, a key forged in her name meanwhile
+        pagesOf(['alice', 'bob', 'carol'], [TRIO]);
+        await ready('alice', TRIO.id);
+        await ready('bob', TRIO.id);
+        await ready('carol', TRIO.id);
+        await applied();
+        const carolKey: string = (await storedKey('carol')).id;
+        const carol: Room<PrivatePayloads> = rooms.get('carol') as Room<PrivatePayloads>;
+        hub.leave(carol);
+        const forged: PrivatePublicKey = await exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey);
+        hub.send({ from: 'carol', type: PrivateMessengerType.KEY, payload: { key: forged } });
+        await applied();
+
+        // When: back without reload, before her page publishes its key again
+        hub.hold('carol');
+        hub.back(carol);
+        await applied();
+        of('bob').send(TRIO.id, 'welcome back');
+
+        // Then
+        await eventually(() => expect(envelopes('bob')).toHaveLength(1));
+        expect(envelopes('bob')[0].parts.find((part: SealedPart) => part.to === 'carol')?.key).toEqual(carolKey);
+        expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(1);
+        expect(messagesOf(PrivateMessengerType.KEY, 'bob')).toHaveLength(1);
+
+        // When: her page saw the forged key in her name, and publishes her own again
+        hub.release();
+
+        // Then
+        await eventually(() => expect(linesOf('carol', TRIO.id)).toEqual(['bob: welcome back']));
+        const carolPublic: PrivatePublicKey = (await storedKey('carol')).key;
+        await eventually(() => expect(latestKey('carol')).toEqual(carolPublic));
+        expect(hub.reports).toEqual([]);
+    });
+
     test('should read its messages again after a reload, its key kept', async () => {
         // Given
         pagesOf(['alice', 'bob']);
@@ -319,6 +363,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         pagesOf(['alice', 'eve']);
         const keys: PrivatePublicKey[] = await Promise.all(Array.from({ length: MAX_KEYS_PER_PARTICIPANT + 1 }, async () =>
             exportAgreementKey((await ParticipantKeyStore.generateAgreementKeyPair()).publicKey)));
+        present('mallory');
         const sendKey = (key: PrivatePublicKey): void => hub.send({ from: 'mallory', type: PrivateMessengerType.KEY, payload: { key } });
 
         // When
@@ -344,6 +389,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
     ])('should report a key %s, once', async (_: string, payload: unknown) => {
         // Given
         pagesOf(['alice', 'eve']);
+        present('mallory');
 
         // When
         hub.send({ from: 'mallory', type: PrivateMessengerType.KEY, payload });
@@ -451,6 +497,28 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         // Then
         expect(linesOf('alice')).toEqual([...shown, 'flood bob', 'bob: calm again']);
         expect(hub.reports).toEqual([]);
+    });
+
+    test('should tell the flood of an author once its first message hidden is one sent again', async () => {
+        // Given
+        pagesOf(['alice', 'bob']);
+        await ready('alice');
+        await ready('bob');
+        hub.time = 1000;
+        const flood: PrivateEnvelope[] = await Promise.all(Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) =>
+            sealed('bob', TEAM.id, `message ${ index }`, ['alice', 'bob'])));
+        const hidden: PrivateEnvelope = await sealed('bob', TEAM.id, 'hidden', ['alice', 'bob']);
+        flood.forEach((envelope: PrivateEnvelope) => sendEnvelope('bob', envelope));
+
+        // When
+        sendEnvelope('bob', flood[0]);
+        sendEnvelope('bob', hidden);
+        await applied();
+
+        // Then
+        const shown: string[] = flood.map((_: PrivateEnvelope, index: number) => `bob: message ${ index }`);
+        expect(linesOf('alice')).toEqual([...shown, 'flood bob']);
+        expect(linesOf('bob')).toEqual([...shown, 'flood bob']);
     });
 
     test('should drop its own message hidden for its rate', async () => {
@@ -639,6 +707,63 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
 
             // Then
             expect(linesOf('alice')).toEqual([]);
+        });
+
+        test('should apply nothing once destroyed while reading the messages waiting for their conversation', async () => {
+            // Given: the key pair of Alice read late, the messages of Bob waiting for their conversation
+            let release: () => void = () => undefined;
+            const held = new Promise<void>((resolve: () => void) => {
+                release = resolve;
+            });
+            const agreementKeyPairOf = vi.fn(async (name: string): Promise<CryptoKeyPair> => {
+                await held;
+                return new ParticipantKeyStore(factory).agreementKeyPairOf(name);
+            });
+            const alice: PrivateConversations = page('alice', TestHelper.cast<ParticipantKeyStore>({ agreementKeyPairOf }));
+            await publish('alice');
+            await publish('bob');
+            sendEnvelope('bob', await sealed('bob', TEAM.id, 'see example.com', ['alice', 'bob']));
+            sendEnvelope('bob', await sealed('bob', TEAM.id, 'hello', ['alice', 'bob']));
+            await applied();
+            alice.declare([TEAM]);
+            await eventually(() => expect(agreementKeyPairOf).toHaveBeenCalledWith('alice'));
+
+            // When
+            alice.destroy();
+            release();
+            await applied();
+
+            // Then
+            expect(linesOf('alice')).toEqual([]);
+            expect(hub.reports).toEqual([]);
+        });
+
+        test('should apply nothing once destroyed while decrypting a message', async () => {
+            // Given
+            pagesOf(['alice']);
+            await publish('bob');
+            await eventually(() => expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(1));
+            await applied();
+            let release: () => void = () => undefined;
+            const held = new Promise<void>((resolve: () => void) => {
+                release = resolve;
+            });
+            const decrypt: SubtleCrypto['decrypt'] = crypto.subtle.decrypt.bind(crypto.subtle);
+            const decrypting = vi.spyOn(crypto.subtle, 'decrypt').mockImplementation(async (...args: Parameters<SubtleCrypto['decrypt']>) => {
+                await held;
+                return decrypt(...args);
+            });
+            sendEnvelope('bob', await sealed('bob', TEAM.id, 'see example.com', ['alice', 'bob']));
+            await eventually(() => expect(decrypting).toHaveBeenCalled());
+
+            // When
+            of('alice').destroy();
+            release();
+            await applied();
+
+            // Then
+            expect(linesOf('alice')).toEqual([]);
+            expect(hub.reports).toEqual([]);
         });
 
         test('should publish no key once destroyed while reading it', async () => {
