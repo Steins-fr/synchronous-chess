@@ -40,6 +40,32 @@ describe('CryptoHelper', () => {
         expect(CryptoHelper.randomHex(3)).toEqual('000fff');
     });
 
+    test('toBase64 should write bytes in base64, fromBase64 read them back', () => {
+        // Given
+        const bytes = new Uint8Array([0, 1, 127, 128, 254, 255]);
+
+        // When
+        const text: string = CryptoHelper.toBase64(bytes);
+
+        // Then
+        expect(text).toEqual('AAF/gP7/');
+        expect(CryptoHelper.fromBase64(text)).toEqual(bytes);
+        expect(CryptoHelper.toBase64(new Uint8Array([97]))).toEqual('YQ==');
+        expect(CryptoHelper.fromBase64('YQ==')).toEqual(new Uint8Array([97]));
+        expect(CryptoHelper.fromBase64('')).toEqual(new Uint8Array([]));
+    });
+
+    test.each([
+        ['a character out of base64', 'YQ=!'],
+        ['a wrong length', 'YQ=== '],
+        ['a missing padding', 'YQ'],
+        ['spaces', 'Y Q = ='],
+        ['unused bits', 'YR=='],
+        ['base64url', 'AAF_gP7_'],
+    ])('fromBase64 should throw on %s', (_case: string, text: string) => {
+        expect(() => CryptoHelper.fromBase64(text)).toThrow('Invalid base64');
+    });
+
     test('sha256 should digest a text as hexadecimal', async () => {
         expect(await CryptoHelper.sha256('abc')).toEqual('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
     });

@@ -3,6 +3,12 @@ export const keyPairAlgorithm: EcKeyImportParams = {
     namedCurve: 'P-384'
 };
 
+/** The key pair of each player agreeing on the keys of its private conversations with the others */
+export const agreementAlgorithm: EcKeyGenParams = {
+    name: 'ECDH',
+    namedCurve: 'P-384'
+};
+
 export const signatureAlgorithm: RsaHashedImportParams = {
     name: 'ECDSA',
     hash: {

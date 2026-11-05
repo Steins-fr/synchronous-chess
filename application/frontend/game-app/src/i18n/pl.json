@@ -27,8 +27,8 @@
     "title": "Szachy synchroniczne"
   },
   "cheat": {
-    "flagged": "Wiadomość {index} ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} other {}}) od {author} została zgłoszona jako oszustwo przez: {reporters}",
-    "ignored": "Wiadomość ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} other {}}) od {author} jest pomijana przez {sequencer}, zgłoszona przez: {reporters}"
+    "flagged": "Wiadomość {index} ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} private {rozmowa prywatna} other {}}) od {author} została zgłoszona jako oszustwo przez: {reporters}",
+    "ignored": "Wiadomość ({chain, select, chess {szachy} chat {czat} poker {poker} roulette {ruletka} bid {poker licytacyjny} minority {gra mniejszości} private {rozmowa prywatna} other {}}) od {author} jest pomijana przez {sequencer}, zgłoszona przez: {reporters}"
   },
   "dialog": {
     "cancel": "Anuluj",
