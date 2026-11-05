@@ -20,6 +20,7 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 - [Hidden cards: mental poker](#hidden-cards-mental-poker)
 - [Hidden bullets: the cylinder of the roulette](#hidden-bullets-the-cylinder-of-the-roulette)
 - [A fair draw](#a-fair-draw)
+- [Private conversations](#private-conversations)
 - [Anti-cheat](#anti-cheat)
 - [Messages](#messages)
 - [Trust model and limits](#trust-model-and-limits)
@@ -28,7 +29,8 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 ## Overview
 
 A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess`,
-`poker`, `roulette`, `bid` (the Bid Poker) or `minority` (the Minority Game). Each chain orders its
+`poker`, `roulette`, `bid` (the Bid Poker) or `minority` (the Minority Game), and `private` for a game
+declaring private conversations (see [Private conversations](#private-conversations)). Each chain orders its
 blocks on its own, so a busy chat never delays the moves of the game. The chains share the WebRTC
 connections and the identity of the participants.
 
@@ -62,7 +64,7 @@ flowchart LR
 | `SequencedBlockChain` | `block-chain/sequenced-block-chain.ts` | Submits, orders, receives, checks and delivers the blocks of one chain, watches the sequencer |
 | `Chain` | `block-chain/chain.ts` | The list of blocks, hashing and signing |
 | `ParticipantRegistry` | `block-chain/participant-registry.ts` | Exchanges the public keys, shared by all the chains |
-| `ParticipantKeyStore` | `block-chain/participant-key-store.ts` | Keeps the key pair of the player in the browser |
+| `ParticipantKeyStore` | `block-chain/participant-key-store.ts` | Keeps the key pair of the player in the browser, and its key pair of agreement, which encrypts its private conversations |
 | `AntiCheat` | `anti-cheat/anti-cheat.ts` | Collects the cheat reports into flags, names the accusers of a sequencer |
 | `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
 | `SealedStore`, `SealedCommitments` | `modules/commit-reveal/classes` | Keep the hidden values of a player across the reloads of the page, and the first commitment of each player for each round (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
@@ -73,6 +75,7 @@ flowchart LR
 | `RussianRouletteSession` | `modules/russian-roulette/classes/game-sessions` | Seats the players, fires the chambers of the cylinder, reports the illegal moves (see [Russian roulette session](russian-roulette-session.md)) |
 | `BidPokerSession` | `modules/bid-poker/classes/game-sessions` | Seats the players, draws the deck, seals then reveals the bids and the discards, reports the cheats (see [Bid Poker session](bid-poker-session.md)) |
 | `MinoritySession` | `modules/minority-game/classes/game-sessions` | Seats the players, draws the askers, seals then reveals the votes, reports the cheats (see [Minority Game session](minority-game-session.md)) |
+| `PrivateConversations` | `modules/private-conversations/classes` | Publishes the key of agreement of the player, encrypts its messages to each member of a conversation the game declares, checks, reads and reports the messages of the conversations (see [Private conversations](#private-conversations)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
 message is delivered to every participant, its sender included, once its block is added to the chain
@@ -95,6 +98,12 @@ Each player has an **ECDSA P-384 key pair**, which signs its messages.
   lost its stored key signs with a new one, and its older blocks stay verifiable.
 - **Departed participants** are kept 60 seconds, the time for the blocks they wrote to reach everyone,
   then forgotten. A participant who leaves before any of its keys is known is forgotten at once.
+- **Key of agreement.** A player member of a [private conversation](#private-conversations) has a second key
+  pair, ECDH on P-384, which encrypts its messages and reads the ones sent to it. `ParticipantKeyStore` keeps it in
+  the same store, under the key `['agreement', name]`, apart from the identity of the name: its private key is not
+  extractable either, it can only derive bits. It is not exchanged by `ParticipantRegistry`: the player publishes it
+  on the `private` chain, signed by its identity. Without storage, the page uses a key pair of its own and warns that
+  a reload will make its private messages unreadable.
 
 ## Blocks and signatures
 
@@ -422,6 +431,100 @@ again a value not below the bound, so no value is likelier than another; `shuffl
 item. Its specs pin its draws: a change of the bytes, of their order or of the shuffle, which would change every deck,
 can not go unnoticed.
 
+## Private conversations
+
+A game may give some of its players conversations of their own, a team or two players facing each other: the other
+participants, the sequencer included, see who writes to whom and when, never what. `PrivateConversations`
+(`modules/private-conversations`) runs them on a chain of their own, `private`: its blocks are signed, ordered and
+watched as on every chain, so the conversations never delay the moves of the game, and each text is encrypted end to
+end, for each of its recipients. The room shows them in a third panel, beside the chat and the history, to their
+members only.
+
+### The keys on the chain
+
+- Each member publishes the public key of its [key pair of agreement](#identity-of-the-participants) in a `PV_key`:
+  the four fields of its point, `{ kty, crv, x, y }`, without the `ext` and `key_ops` the export adds. Its id is the
+  SHA-256 of these fields, the same on every page.
+- A page publishes the key of its player once it is a member of a conversation declared, unless the latest key of its
+  player on the chain is already this one: a spectator publishes none, and a page reloaded publishes again only once
+  it caught up, when its key changed.
+- The latest key a participant published is its current one: the messages sent to it are encrypted for it. A key
+  published again is not counted again; a participant publishing a 17th key (`MAX_KEYS_PER_PARTICIPANT`, a few lost
+  storages, not a flood of keys), a key malformed or a point off the curve is reported. A key published by another
+  participant than its own is of no use to it: the part of a recipient is read with a key it published itself.
+
+### A message and its parts
+
+A `PV_message` is an envelope `{ conversation, id, key, parts }`: the id of the conversation, the id of the message (a
+UUID, the same when it is sent again), the id of the key of its sender, and **a part for each recipient**, its sender
+included, who reads its own messages again after a reload. A part is `{ to, key, iv, data }`: the recipient, the id of
+its key, then the initialization vector and the text encrypted with its tag, in base64. The functions of
+`private-crypto.ts` are pure:
+
+- **The key of a pair.** The bits of ECDH (384) between the private key of one participant and the public key of the
+  other go through HKDF-SHA-384 into a key of AES-GCM 256, the same for both of them. Its info is the version of the
+  format, the room and the ids of both keys, sorted; its salt is zero, as RFC 5869 gives when there is none: the bits of
+  ECDH are already secret, and both sides derive the key apart. A participant shares a key with itself for its own copy.
+- **The AAD** of a part binds it to the version, the room, the conversation, the id of the message, the sender and the id
+  of its key, the recipient and the id of its key: copied elsewhere, a part does not decrypt.
+- **The text encrypted** is `${at}\n${text}`, the time its sender wrote it by its clock and its text, padded as ISO/IEC
+  7816-4 does (a byte `0x80`, then zeros) to a multiple of 256 bytes: two short texts have the same size, the length of a
+  message showing to the nearest block only. Each part draws an initialization vector of 12 bytes.
+
+The longest message of the chat, encrypted, is a part of 4120 base64 characters: a message to 8 members holds in about
+34 000 characters, under the 64 000 of a response catching up.
+
+### What a game declares
+
+`declare(list)` **replaces** the conversations: each one is `{ id, members, title, open }`. Its id
+(`^[a-z0-9][a-z0-9-]{0,63}$`) is unique in the room, the game and its attempt prefixing it, and its 1 to 8 members are
+fixed: declaring an id again with other members throws. `open` drives the composer and the notice of a conversation
+closed only: a message received while it is closed still shows (see the [limits](#trust-model-and-limits)). The page of
+the game merges `privateBlockChains` into its routing, and gives the instance to the layout of the room
+(`app-room-layout`, `[conversations]`). No page declares one yet.
+
+### Checking the messages
+
+The messages apply one after the other, in the order of the chain, a key before the messages using it. Three levels:
+
+1. **Every page, on the `private` chain alone**: the form of the envelope (`isPrivateEnvelope`: its fields and none
+   other, 1 to 8 parts to distinct recipients, each no longer than the longest message encrypted), the keys it names,
+   published by its sender and by each recipient, and its sender among its recipients. Then the rate of its author, as
+   for the chat (see [The flood of the chat](#messages)): on the times of the chain, an author over 8 messages in 10
+   seconds is hidden, the conversation telling it once.
+2. **Every page, once the conversation is declared**: its sender and each recipient are its members. A message of a
+   conversation not declared yet waits: the `private` chain of a page reloaded may replay before the chain of the game,
+   which declares it. The messages waiting are judged in the order of the chain once the declaration applies.
+3. **The recipients alone** decrypt their part, then check its text as the chat does (`isChatText`: not blank, 1000
+   characters at most, no link nor e-mail address). A part encrypted for an older key of its recipient, or no part at
+   all (it was away), shows a notice of a message unreadable, not reported. A message sent again shows once, by its
+   author and its id.
+
+A message failing the first two levels, or a key failing, is reported `invalidMessage` by every page alike, the first
+one of each author only. A text failing the third level is reported by its recipient, the first one of each author: the
+others can not read it to check.
+
+### Sending
+
+- A message gets a part for each member present in the room (`room.players()`), for its current key, and for its
+  sender. A member away gets none: a sequencer forging a key in its name, once it is forgotten, reads nothing. Back, it
+  sees the message unreadable.
+- The composer waits until each member present, its player included, has a key on the chain (`Preparing the
+  encryption…`): a sequencer withholding a key is reported for censoring it (`censoredEntry`). It waits as the one of the
+  chat too, every conversation counted together: 3 messages in 10 seconds, 5 messages not sent back. A message shows at
+  once, sending, failed when the room does not send it back within 15 seconds; sent again, it keeps its id and is
+  encrypted again.
+- **No moderation.** The host, often a player, could silence its opponent without reading what it writes; removing a
+  participant from the room already stops its messages.
+
+### A key changed, a page reloaded
+
+- **Reloaded**, a page keeps its key pair (IndexedDB), replays the chain, reads its own copies and the parts sent to it
+  again, and does not publish its key again.
+- **A key lost** (storage cleared, another browser, private browsing): the page publishes a new key, which becomes the
+  current one of its player. The messages encrypted for the older key, sent before the others applied the new one
+  included, show unreadable to it; the next ones are readable.
+
 ## Anti-cheat
 
 The participants report the cheats they detect with an `anti_cheat` message to all the others, outside
@@ -446,7 +549,7 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
 | `invalidSpin` | A spin of a cylinder is not one (a chamber missing or out of the group), or, once the keys are disclosed, not the cylinder received turned | the player | a spin that is not a cylinder breaks the cylinder |
 | `invalidShare` | A share of a chamber without its proof, or a key disclosed that is not the one of its player | the player | yes |
-| `invalidMessage` | A message of the chat not of the form the composer sends: over 1000 characters, or blank. The first one of each author only, the same block on every page | the player | yes |
+| `invalidMessage` | A message of the chat not of the form the composer sends: over 1000 characters, or blank. The first one of each author only, the same block on every page. A key or a message of a private conversation: a key malformed or a 17th one, an envelope malformed, naming keys not published by their participants, its sender not among its recipients or not a member, a recipient not a member, reported by every page alike; a text not decrypted or not of the form of the composer, reported by its recipient only. The first one of each author for each of the two (see [Checking the messages](#checking-the-messages)) | the player | yes |
 
 The reasons **against the sequencer** count to take the ordering away from it: only reports from
 connected participants other than the sequencer count, and more than half of them must have reported
@@ -496,7 +599,9 @@ The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
 messages through the `roulette` chain, the Bid Poker its `BP_*` messages through the `bid` chain, the Minority Game its `MG_*` messages through the `minority`
 chain, the chat
-`chatMessage` through the `chat` chain.
+`chatMessage` through the `chat` chain, the private conversations `PV_key` (`{ key }`, the public key of agreement of
+its sender) and `PV_message` (`{ conversation, id, key, parts }`, see [A message and its parts](#a-message-and-its-parts))
+through the `private` chain.
 
 **The flood of the chat.** The sequencer orders every message of the chat: refusing the messages of an
 author over the rate, it would be reported for censoring them by the participants watching them. Each
@@ -532,6 +637,22 @@ one again. The network packing the messages of an honest player on the chain nev
 - **Reloading during a game** replays the moves from the chain, and the hidden move committed and not
   revealed yet from the session storage. A move played in the new page before the chain replays its
   commitment replaces the stored one, and can not be revealed: the first commitment is final.
+- **The private conversations** hide their texts only:
+  - **Their metadata shows** to every participant: who writes to whom, in which conversation, when, the ids of the keys,
+    and the length of each text to the nearest 256 bytes.
+  - **No forward secrecy.** The keys of agreement are static for a player and a browser: whoever takes the private key
+    of a member, from its browser, reads every message sent to it, the past ones of the chain included.
+  - **The reports of a recipient can not be checked**: only it reads its part, so a text it calls invalid is its word.
+    A false report is a flag naming its author, nothing more.
+  - **A departed member can be impersonated**, as on every chain: once it is forgotten, 60 seconds after it left, the
+    sequencer may append a key or a message in its name, which the participants can not check. It reads nothing sent
+    while the member is away, who gets no part, but the messages forged in its name read as its own.
+  - **No moderation**: the host can not mute a member in its conversations; removing it from the room stops its
+    messages.
+  - **A key lost makes the history unreadable** to its player: the messages encrypted for it, its own copies included,
+    show unreadable after a reload without its storage.
+  - **A conversation closed is closed in the composer only**: a modified client may still write in it, and its members
+    read it. The messages are not filtered by the time of the game, which another chain orders.
 - The app is in development: the message format changes freely, all the participants run the same
   build.
 
