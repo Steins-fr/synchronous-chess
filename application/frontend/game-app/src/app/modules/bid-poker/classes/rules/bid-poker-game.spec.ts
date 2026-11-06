@@ -1,5 +1,6 @@
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { BID_POKER_RULES, BidPokerRules } from './bid-poker-rules';
-import { Applied, BidEventKind, BidPokerGame, BidPokerPhase, MissedReason } from './bid-poker-game';
+import { BidEventKind, BidPokerGame, BidPokerPhase, MissedReason } from './bid-poker-game';
 import { describe, expect, test } from 'vitest';
 
 /** One change session: the specs play a game to its end quickly */

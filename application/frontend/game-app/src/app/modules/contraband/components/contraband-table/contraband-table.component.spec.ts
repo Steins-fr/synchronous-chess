@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { SeededRandom } from '@app/modules/commit-reveal/classes/seeded-random';
 import { ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
@@ -15,7 +16,7 @@ import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CBGameSessionType, ContrabandPayloads } from '../../classes/game-sessions/contraband-messages';
 import { ContrabandSession } from '../../classes/game-sessions/contraband-session';
-import { Applied, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
+import { ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { Call, CallKind, CONTRABAND_RULES, ContrabandRules, ContrabandVariant } from '../../classes/rules/contraband-rules';
 import { CONTRABAND_SESSION_OPTIONS, ContrabandTableComponent } from './contraband-table.component';
 

@@ -1,3 +1,4 @@
+import { CommitRevealTypes, DrawMessage, GameRound, RematchMessage, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
 import { SeatMessage, UnseatMessage } from '@app/modules/game-table/classes/table-seats';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -22,23 +23,7 @@ export enum BPGameSessionType {
     REMATCH = 'BP_rematch',
 }
 
-/** The game of a message: a message of another one is void */
-export interface BidRound {
-    /** The index of the game in the room */
-    game: number;
-    /** The draws of the game: a draw timing out starts again */
-    attempt: number;
-}
-
-/** The start of the game, with the commitment of its player, a commitment of another player, or a random part revealed */
-export interface BidDrawMessage extends BidRound {
-    /** The players the start names, the seated ones in the order of their seats: a start naming others is void */
-    players?: ReadonlyArray<string>;
-    commitment?: string;
-    part?: string;
-}
-
-export interface BidCommitMessage extends BidRound {
+export interface BidCommitMessage extends GameRound {
     /** 0 the dealing session, then the change sessions */
     session: number;
     /** The index of the lot in the session, null for the discards */
@@ -46,39 +31,38 @@ export interface BidCommitMessage extends BidRound {
     commitment: string;
 }
 
-export interface BidRevealMessage extends BidRound {
+export interface BidRevealMessage extends GameRound {
     session: number;
     lot: number;
     amount: number;
     salt: string;
 }
 
-export interface BidDiscardMessage extends BidRound {
+export interface BidDiscardMessage extends GameRound {
     session: number;
     /** The indexes of the cards in the deck, in the order of the discards */
     cards: ReadonlyArray<number>;
     salt: string;
 }
 
-export interface BidTimeoutMessage extends BidRound {
-    /** The step the claim waited at: a move applied meanwhile voids it */
-    step: number;
-}
-
-export interface BidRematchMessage {
-    /** The index of the new game in the room */
-    game: number;
-}
+/** The types of the messages the Bid Poker shares with the other games committing then revealing their moves */
+export const BID_POKER_TYPES = {
+    seat: BPGameSessionType.SEAT,
+    unseat: BPGameSessionType.UNSEAT,
+    draw: BPGameSessionType.DRAW,
+    timeout: BPGameSessionType.TIMEOUT,
+    rematch: BPGameSessionType.REMATCH,
+} as const satisfies CommitRevealTypes;
 
 export interface BidPokerPayloads {
     [BPGameSessionType.SEAT]: SeatMessage;
     [BPGameSessionType.UNSEAT]: UnseatMessage;
-    [BPGameSessionType.DRAW]: BidDrawMessage;
+    [BPGameSessionType.DRAW]: DrawMessage;
     [BPGameSessionType.COMMIT]: BidCommitMessage;
     [BPGameSessionType.REVEAL]: BidRevealMessage;
     [BPGameSessionType.DISCARD]: BidDiscardMessage;
-    [BPGameSessionType.TIMEOUT]: BidTimeoutMessage;
-    [BPGameSessionType.REMATCH]: BidRematchMessage;
+    [BPGameSessionType.TIMEOUT]: TimeoutMessage;
+    [BPGameSessionType.REMATCH]: RematchMessage;
 }
 
 export type BidPokerMessage = {

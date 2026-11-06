@@ -35,8 +35,9 @@ The code lives in `application/frontend/game-app/src/app/modules/bid-poker`.
 | `drawCatalogue` | `classes/rules/catalogue.ts` | The lots of the dealing session, cut from the deck shuffled by the seed of the draw |
 | `settle` | `classes/rules/standings.ts` | The end of the game: the best hand of each player, the pigs, the places, the prizes, the fines |
 | `BidPokerGame` | `classes/rules/bid-poker-game.ts` | The game in signals: the phases, the auctions, the discards, the coins, the bank, the cards held, the events |
-| `PlayedBidGame` | `classes/game-sessions/played-bid-game.ts` | A game of the room: its players, the id of its secrets, the draw of its deck, then the game |
-| `BidPokerSession` | `classes/game-sessions/bid-poker-session.ts` | The games of the room: seats, the draw, the commitments and reveals, the timeouts, a new game |
+| `PlayedCommitRevealGame` | `modules/commit-reveal/classes/played-commit-reveal-game.ts` | A game of the room (`PlayedBidGame` of `bid-poker-session.ts`), without a setup: its players, the id of its secrets, the draw of its deck, then the game |
+| `BidPokerSession` | `classes/game-sessions/bid-poker-session.ts` | The games of the room, built on `CommitRevealSession`: the catalogue drawn, the bids and the discards committed then revealed |
+| `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game and the Contraband: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed of the deck no player chose alone, and the shuffle every page makes alike from it |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the players, and the values of the local player kept across the reloads of the page |
 | `bestHand`, `compareHands` | `modules/playing-cards/helpers/hand-evaluator.helper.ts` | The best 5 cards of a player, and their ranking |
@@ -82,8 +83,11 @@ No player shuffles alone (`FairDraw`):
 
 A bid is the commitment `SHA-256(id:bid:index:session:lot:amount:salt)`, sent with `BP_commit`; the discards the
 commitment `SHA-256(id:discard:index:session:discard:[cards]:salt)`, sent with `BP_commit` without a lot. The value and the salt
-are kept in the tab (`SealedStore`, kind `bids`) before the commitment is sent, by commitment. Once every player the
-phase waits for committed, or its time is over, each page reveals the value of its player (`BP_reveal`, `BP_discard`).
+are kept in the tab (`SealedStore`, kind `bids`) before the commitment is sent, by commitment, until revealed, refused or
+withheld, or until the chain refuses its commitment (too late, or a second one); the game over, or a new game started,
+the page clears its seals, a commitment lost on its way included. The commitment names the lot and the session the value
+was sealed for, fixed before the hash: a timeout applied meanwhile does not move it to the next one. Once every player
+the phase waits for committed, or its time is over, each page reveals the value of its player (`BP_reveal`, `BP_discard`).
 
 - No participant, the sequencer included, reads a value before its phase closes: the commitment hides it.
 - The first commitment of a player for a round counts (`SealedCommitments`), and the order of the commitments in the
@@ -163,8 +167,8 @@ claim naming a step past is void.
 The chain replays the whole game to a reloaded page, its cards and its coins included. The values the player sealed come
 back from the session storage of the tab (key `synchronous-chess:sealed-bids:<room>:<player>`, by commitment): its bid
 shows sealed again, and its page reveals it. The random part of the draw comes back too (kind `draws`, by the context of
-the draw): a page reloaded before its commitment came back commits to the same part again. Without session storage, a
-value sealed is lost: its player withholds it.
+the draw, until the deck is drawn or the draw times out): a page reloaded before its commitment came back commits to the
+same part again. Without session storage, a value sealed is lost: its player withholds it.
 
 ## Messages
 
@@ -211,8 +215,9 @@ value sealed is lost: its player withholds it.
   shares, rounding, every hand equal).
 - The draw and the shuffle: `fair-draw.spec.ts`, `seeded-random.spec.ts` of `modules/commit-reveal`.
 - The session: `bid-poker-session.spec.ts`, a `RoomHub` of 4 players and a spectator, lighter rules (3 lots of 5 cards,
-  1 change session): the start, the draw, the auctions, the cheats, the timeouts (an early claim void, the draw timing
-  out), a reload keeping a sealed bid, a new game.
+  1 change session): the start, the draw, the auctions, the cheats, the timeouts (an early claim void, a bid sealed as
+  the bidding closes naming its lot, the draw timing out), a reload keeping a sealed bid, the seals leaving the tab
+  (revealed, refused, withheld, refused by the chain, the game over, a new game), a new game.
 - The table: `bid-table.component.spec.ts`, the clock on fake timers (`setInterval` and `performance` only); the seat,
   the lot, the texts of the history and the sounds have their own specs.
 - End to end: `e2e/bid-poker.e2e.ts`, a game to its end watched by a spectator with the chat and a new game, a tie by the

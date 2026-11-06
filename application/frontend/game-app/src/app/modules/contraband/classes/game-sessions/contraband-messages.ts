@@ -1,3 +1,4 @@
+import { CommitRevealTypes, DrawMessage, GameRound, RematchMessage, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
 import { SeatMessage, UnseatMessage } from '@app/modules/game-table/classes/table-seats';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -23,14 +24,6 @@ export enum CBGameSessionType {
     REMATCH = 'CB_rematch',
 }
 
-/** The match of a message: a message of another one is void */
-export interface ContrabandRound {
-    /** The index of the match in the room */
-    game: number;
-    /** The draws of the match: a draw timing out starts again */
-    attempt: number;
-}
-
 /** The game of the match of a message: a message of another one is void */
 export interface CrossingKey {
     /** The index of the game in the match */
@@ -41,9 +34,7 @@ export interface CrossingKey {
  * The start of the match, with the setup of its player, a commitment of a player to its random part, or a random part
  * revealed
  */
-export interface ContrabandDrawMessage extends ContrabandRound {
-    /** The players the start names, the seated ones in the order of their seats: a start naming others is void */
-    players?: ReadonlyArray<string>;
+export interface ContrabandDrawMessage extends DrawMessage {
     /** The players of each country the start names, the North ones first: a start of other countries is void */
     north?: number;
     variant?: ContrabandVariant;
@@ -51,33 +42,30 @@ export interface ContrabandDrawMessage extends ContrabandRound {
     customsTime?: number;
     /** The games of the match */
     games?: number;
-    commitment?: string;
-    part?: string;
 }
 
-export interface ContrabandCommitMessage extends ContrabandRound, CrossingKey {
+export interface ContrabandCommitMessage extends GameRound, CrossingKey {
     commitment: string;
 }
 
-export interface ContrabandCallMessage extends ContrabandRound, CrossingKey {
+export interface ContrabandCallMessage extends GameRound, CrossingKey {
     call: Call;
 }
 
-export interface ContrabandRevealMessage extends ContrabandRound, CrossingKey {
+export interface ContrabandRevealMessage extends GameRound, CrossingKey {
     /** The money of the trunk, in millions: 0 for an iron bar */
     amount: number;
     salt: string;
 }
 
-export interface ContrabandTimeoutMessage extends ContrabandRound {
-    /** The step the claim waited at: a move applied meanwhile voids it */
-    step: number;
-}
-
-export interface ContrabandRematchMessage {
-    /** The index of the new match in the room */
-    game: number;
-}
+/** The types of the messages the Contraband shares with the other games committing then revealing their moves */
+export const CONTRABAND_TYPES = {
+    seat: CBGameSessionType.SEAT,
+    unseat: CBGameSessionType.UNSEAT,
+    draw: CBGameSessionType.DRAW,
+    timeout: CBGameSessionType.TIMEOUT,
+    rematch: CBGameSessionType.REMATCH,
+} as const satisfies CommitRevealTypes;
 
 export interface ContrabandPayloads {
     [CBGameSessionType.SEAT]: SeatMessage;
@@ -86,8 +74,8 @@ export interface ContrabandPayloads {
     [CBGameSessionType.COMMIT]: ContrabandCommitMessage;
     [CBGameSessionType.CALL]: ContrabandCallMessage;
     [CBGameSessionType.REVEAL]: ContrabandRevealMessage;
-    [CBGameSessionType.TIMEOUT]: ContrabandTimeoutMessage;
-    [CBGameSessionType.REMATCH]: ContrabandRematchMessage;
+    [CBGameSessionType.TIMEOUT]: TimeoutMessage;
+    [CBGameSessionType.REMATCH]: RematchMessage;
 }
 
 export type ContrabandMessage = {

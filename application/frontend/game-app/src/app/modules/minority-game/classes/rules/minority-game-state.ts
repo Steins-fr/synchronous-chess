@@ -1,4 +1,5 @@
 import { computed, Signal, signal } from '@angular/core';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { AskerDraw } from './asker';
 import { isVote, MinorityRules, MinoritySetup, MinorityVariant, Vote } from './minority-rules';
 import { MinorityResult, settleElimination, settleScore } from './standings';
@@ -66,15 +67,6 @@ export type MinorityEvent =
         readonly eliminated: ReadonlyArray<number>;
         /** The points of the question, in the order of the players: none but the ones scored or lost */
         readonly points: ReadonlyArray<Readonly<RoundPoints>> };
-
-/** What a move did */
-export enum Applied {
-    APPLIED = 'applied',
-    /** Against the rules: the session reports it */
-    ILLEGAL = 'illegal',
-    /** Out of its phase, from a player not awaited, or sent again: the first one counts */
-    IGNORED = 'ignored',
-}
 
 interface MinorityState {
     readonly phase: MinorityPhase;

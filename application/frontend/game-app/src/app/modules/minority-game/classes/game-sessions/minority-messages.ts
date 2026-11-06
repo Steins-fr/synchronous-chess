@@ -1,3 +1,4 @@
+import { CommitRevealTypes, DrawMessage, GameRound, RematchMessage, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
 import { SeatMessage, UnseatMessage } from '@app/modules/game-table/classes/table-seats';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
@@ -23,14 +24,6 @@ export enum MGGameSessionType {
     REMATCH = 'MG_rematch',
 }
 
-/** The game of a message: a message of another one is void */
-export interface MinorityRound {
-    /** The index of the game in the room */
-    game: number;
-    /** The draws of the game: a draw timing out starts again */
-    attempt: number;
-}
-
 /** The question of a message: a message of another one is void */
 export interface QuestionKey {
     /** The index of the question in the game */
@@ -43,38 +36,33 @@ export interface QuestionKey {
  * The start of the game, with the setup of its player, a commitment of a player to its random part, or a random part
  * revealed
  */
-export interface MinorityDrawMessage extends MinorityRound {
-    /** The players the start names, the seated ones in the order of their seats: a start naming others is void */
-    players?: ReadonlyArray<string>;
+export interface MinorityDrawMessage extends DrawMessage {
     variant?: MinorityVariant;
     /** The seconds of a vote */
     voteTime?: number;
-    commitment?: string;
-    part?: string;
 }
 
-export interface MinorityQuestionMessage extends MinorityRound, QuestionKey {
+export interface MinorityQuestionMessage extends GameRound, QuestionKey {
     text: string;
 }
 
-export interface MinorityCommitMessage extends MinorityRound, QuestionKey {
+export interface MinorityCommitMessage extends GameRound, QuestionKey {
     commitment: string;
 }
 
-export interface MinorityRevealMessage extends MinorityRound, QuestionKey {
+export interface MinorityRevealMessage extends GameRound, QuestionKey {
     vote: Vote;
     salt: string;
 }
 
-export interface MinorityTimeoutMessage extends MinorityRound {
-    /** The step the claim waited at: a move applied meanwhile voids it */
-    step: number;
-}
-
-export interface MinorityRematchMessage {
-    /** The index of the new game in the room */
-    game: number;
-}
+/** The types of the messages the Minority Game shares with the other games committing then revealing their moves */
+export const MINORITY_TYPES = {
+    seat: MGGameSessionType.SEAT,
+    unseat: MGGameSessionType.UNSEAT,
+    draw: MGGameSessionType.DRAW,
+    timeout: MGGameSessionType.TIMEOUT,
+    rematch: MGGameSessionType.REMATCH,
+} as const satisfies CommitRevealTypes;
 
 export interface MinorityPayloads {
     [MGGameSessionType.SEAT]: SeatMessage;
@@ -83,8 +71,8 @@ export interface MinorityPayloads {
     [MGGameSessionType.QUESTION]: MinorityQuestionMessage;
     [MGGameSessionType.COMMIT]: MinorityCommitMessage;
     [MGGameSessionType.REVEAL]: MinorityRevealMessage;
-    [MGGameSessionType.TIMEOUT]: MinorityTimeoutMessage;
-    [MGGameSessionType.REMATCH]: MinorityRematchMessage;
+    [MGGameSessionType.TIMEOUT]: TimeoutMessage;
+    [MGGameSessionType.REMATCH]: RematchMessage;
 }
 
 export type MinorityMessage = {

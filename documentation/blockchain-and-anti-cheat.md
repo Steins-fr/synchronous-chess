@@ -72,6 +72,8 @@ flowchart LR
 | `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
 | `SealedStore`, `SealedCommitments` | `modules/commit-reveal/classes` | Keep the hidden values of a player across the reloads of the page, and the first commitment of each player for each round (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | Draw a seed no player chose alone, and shuffle from it alike on every page (see [A fair draw](#a-fair-draw)) |
+| `CommitRevealSession` | `modules/commit-reveal/classes` | The session the Bid Poker, the Minority Game and the Contraband are built on: seats the players, draws the seed, seals then reveals the values of the local player, takes the claims of a timeout (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
+| `PlayedCommitRevealGame` | `modules/commit-reveal/classes` | A game of these sessions: its players, its setup, the id of its secrets, the draw of its seed, then the game |
 | `MentalDeck` | `modules/mental-poker/classes` | Shuffles, deals and opens a deck no participant sees, checks it at the end of the game (see [Mental poker](mental-poker.md)) |
 | `SeventeenPokerSession` | `modules/seventeen-poker/classes/game-sessions` | Seats the players, deals each hand with a mental deck, reports the illegal actions (see [Seventeen Poker session](seventeen-poker-session.md)) |
 | `Cylinder` | `modules/russian-roulette/classes/cylinder` | Loads, spins and fires a cylinder no participant sees, checks it at the end of the game (see [Russian roulette session](russian-roulette-session.md#the-cylinder)) |
@@ -365,12 +367,23 @@ replays its reveals, which it runs like the ones of the other players.
 
 **Reloading the page.** `SealedStore` keeps the actions the player committed to and whose reveal
 is not in the chain yet, with their salt, in the session storage of the tab (key
-`synchronous-chess:sealed-<kind>:<room>:<player>`, the kind `turns` for the chess). When the chain replays a commitment of the player
+`synchronous-chess:sealed-<kind>:<room>:<player>`, the kind `turns` for the chess, `bids` for the Bid Poker, its discards
+included, `votes` for the Minority Game, `trunks` for the Contraband, and `draws` for the random part of a fair draw of
+these three). When the chain replays a commitment of the player
 that its new page did not play, the stored action of that turn is used if it matches the commitment:
 the action of a previous game in a room of the same name never does. It is played once the game
 reaches its turn, then revealed as usual. The page does not know whether its reveal is in the chain
 already, so it may reveal it twice: the other participants ignore a reveal matching the commitment of
 a turn its player already played. Without session storage (blocked site data), the action is lost.
+
+The Bid Poker, the Minority Game and the Contraband share all but their moves: their sessions are built on
+`CommitRevealSession`, which applies their messages one after the other in the order of the chain, seats the players,
+draws the seed of the game ([A fair draw](#a-fair-draw)), takes the claims of a timeout on the time of the chain and
+starts a new game. It holds the life of a value the local player seals, the same for the three games: kept in the tab
+before its commitment is sent, the commitment naming its round fixed before the hash; removed once the chain does not
+take its commitment (too late, or a second one), once revealed, refused or withheld, and once the game is over or a new
+one starts; revealed by its page once the phase calls for it, again by a reloaded page. Each game keeps its own messages
+and their checks, its start and what a value is.
 
 ## Hidden cards: mental poker
 

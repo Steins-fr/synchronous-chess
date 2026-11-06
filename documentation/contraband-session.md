@@ -48,8 +48,10 @@ The code lives in `application/frontend/game-app/src/app/modules/contraband`.
 | `settleCall`, `withheldMovement` | `classes/rules/customs.ts` | The money a call moves, the trunk revealed, and the money a trunk withheld moves |
 | `settleContraband` | `classes/rules/standings.ts` | The end of the match: the ATMs left shared, the balance of each player, the totals of the countries, the winner |
 | `ContrabandGameState` | `classes/rules/contraband-game-state.ts` | The match in signals: the phases, the pair of the game, the call, the money of each player, the absent players, the events |
-| `PlayedContrabandGame` | `classes/game-sessions/played-contraband-game.ts` | A match of the room: its players, its countries, its setup, the id of its secrets, the draw of its seed, then the match |
-| `ContrabandSession` | `classes/game-sessions/contraband-session.ts` | The matches of the room: seats, the draw, the commitments and reveals of the trunks, the calls, the timeouts, the conversations of the match |
+| `PlayedCommitRevealGame` | `modules/commit-reveal/classes/played-commit-reveal-game.ts` | A game of the room committing then revealing its moves: its players, its setup, the id of its secrets, the draw of its seed, then the game |
+| `PlayedContrabandGame` | `classes/game-sessions/played-contraband-game.ts` | A match of the room, a `PlayedCommitRevealGame` knowing its countries |
+| `ContrabandSession` | `classes/game-sessions/contraband-session.ts` | The matches of the room, built on `CommitRevealSession`: the countries, the setup, the trunks committed then revealed, the calls, the conversations of the match |
+| `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game and the Contraband: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed no player chose alone, and the pairs every page draws alike from it |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the smugglers, and the trunk of the local player kept across the reloads of the page |
 | `TableSeats` | `modules/game-table/classes/table-seats.ts` | The 8 seats of the table: the requests of the participants, the salts, a seat freed |

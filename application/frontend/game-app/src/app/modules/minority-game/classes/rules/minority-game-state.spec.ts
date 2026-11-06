@@ -1,5 +1,6 @@
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { AskerDraw } from './asker';
-import { Applied, MinorityEvent, MinorityEventKind, MinorityGameState, MinorityPhase, MissedReason, VoteOutcome } from './minority-game-state';
+import { MinorityEvent, MinorityEventKind, MinorityGameState, MinorityPhase, MissedReason, VoteOutcome } from './minority-game-state';
 import { MINORITY_RULES, MinorityRules, MinorityVariant, Vote } from './minority-rules';
 import { MinorityStanding } from './standings';
 import { describe, expect, test } from 'vitest';
