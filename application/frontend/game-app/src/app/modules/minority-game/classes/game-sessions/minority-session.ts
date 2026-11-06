@@ -27,8 +27,6 @@ export interface MinoritySessionOptions {
 
 /** A vote the local player committed to, kept to reveal it */
 interface Seal {
-    /** The question of the vote */
-    readonly key: string;
     readonly vote: Vote;
     readonly salt: string;
 }
@@ -144,7 +142,7 @@ export class MinoritySession extends CommitRevealSession<
         const question: Omit<MinorityCommitMessage, 'commitment'> = { ...this.round(), round: game.round(), ask: game.ask() };
         const key: string = keyOf(question);
         const salt: string = drawSalt();
-        await this.seal(key, { key, vote, salt }, this.preimage(key, vote, salt, this.myIndex() as number),
+        await this.seal(key, { vote, salt }, this.preimage(key, vote, salt, this.myIndex() as number),
             (commitment: string) => this.room.transmitMessage(MGGameSessionType.COMMIT, { ...question, commitment }));
     }
 
@@ -185,7 +183,7 @@ export class MinoritySession extends CommitRevealSession<
 
     protected override setupOf({ variant, voteTime }: Readonly<MinorityDrawMessage>): Readonly<MinoritySetup> | undefined {
         const setup: { variant: unknown; voteTime: unknown } = { variant, voteTime };
-        return isSetup(this.rules, setup) ? { variant: setup.variant, voteTime: setup.voteTime } : undefined;
+        return isSetup(this.rules, setup) ? setup : undefined;
     }
 
     protected override openPlayed(seated: ReadonlyArray<Readonly<SeatedPlayer>>, setup: Readonly<MinoritySetup>): void {

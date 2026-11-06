@@ -25,8 +25,6 @@ export interface BidPokerSessionOptions {
 
 /** A value the local player committed to, kept to reveal it: a bid, or discards */
 interface Seal {
-    /** The session and the lot, `discard` for the discards */
-    readonly round: string;
     readonly value: number | ReadonlyArray<number>;
     readonly salt: string;
 }
@@ -122,7 +120,7 @@ export class BidPokerSession extends CommitRevealSession<
         if (game === null || !this.canBid()) {
             return;
         }
-        await this.sealValue(`${ game.session() }:${ game.lotIndex() }`, amount, game.lotIndex());
+        await this.sealValue(game, `${ game.session() }:${ game.lotIndex() }`, amount, game.lotIndex());
     }
 
     /** The local player discards cards, in its order, none to keep its cards: sealed until the discarding closes */
@@ -131,7 +129,7 @@ export class BidPokerSession extends CommitRevealSession<
         if (game === null || !this.canDiscard()) {
             return;
         }
-        await this.sealValue(`${ game.session() }:${ ROUND_OF_DISCARDS }`, cards, null);
+        await this.sealValue(game, `${ game.session() }:${ ROUND_OF_DISCARDS }`, cards, null);
     }
 
     protected override async apply(message: BidPokerMessage): Promise<void> {
@@ -213,11 +211,11 @@ export class BidPokerSession extends CommitRevealSession<
     }
 
     /** Stores the value before committing to it: a reload reveals it */
-    private async sealValue(round: string, value: number | ReadonlyArray<number>, lot: number | null): Promise<void> {
+    private async sealValue(game: BidPokerGame, round: string, value: number | ReadonlyArray<number>, lot: number | null): Promise<void> {
         // The round of the value, fixed before the hash: a timeout applied meanwhile moves to the next lot or session
-        const sealed: Omit<BidCommitMessage, 'commitment'> = { ...this.round(), session: (this.game() as BidPokerGame).session(), lot };
+        const sealed: Omit<BidCommitMessage, 'commitment'> = { ...this.round(), session: game.session(), lot };
         const salt: string = drawSalt();
-        await this.seal(round, { round, value, salt }, this.preimage(round, value, salt, this.myIndex() as number),
+        await this.seal(round, { value, salt }, this.preimage(round, value, salt, this.myIndex() as number),
             (commitment: string) => this.room.transmitMessage(BPGameSessionType.COMMIT, { ...sealed, commitment }));
     }
 

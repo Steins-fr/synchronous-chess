@@ -27,8 +27,6 @@ export interface ContrabandSessionOptions {
 
 /** A trunk the local player committed to, kept to reveal it */
 interface Seal {
-    /** The game of the trunk in the match */
-    readonly crossing: number;
     /** The money of the trunk, in millions: 0 for an iron bar */
     readonly amount: number;
     readonly salt: string;
@@ -177,7 +175,7 @@ export class ContrabandSession extends CommitRevealSession<
         const crossing: number = game.crossing();
         const trunk: Omit<ContrabandCommitMessage, 'commitment'> = { ...this.round(), crossing };
         const salt: string = drawSalt();
-        await this.seal(crossing, { crossing, amount, salt }, this.preimage(crossing, amount, salt, this.myIndex() as number),
+        await this.seal(crossing, { amount, salt }, this.preimage(crossing, amount, salt, this.myIndex() as number),
             (commitment: string) => this.room.transmitMessage(CBGameSessionType.COMMIT, { ...trunk, commitment }));
     }
 
@@ -227,7 +225,7 @@ export class ContrabandSession extends CommitRevealSession<
 
     protected override setupOf({ variant, customsTime, games }: Readonly<ContrabandDrawMessage>): Readonly<ContrabandSetup> | undefined {
         const setup: { variant: unknown; customsTime: unknown; games: unknown } = { variant, customsTime, games };
-        return isSetup(this.rules, setup) ? { variant: setup.variant, customsTime: setup.customsTime, games: setup.games } : undefined;
+        return isSetup(this.rules, setup) ? setup : undefined;
     }
 
     /** The match starts with the countries the start names, the ones seated: a start of other countries is void */
