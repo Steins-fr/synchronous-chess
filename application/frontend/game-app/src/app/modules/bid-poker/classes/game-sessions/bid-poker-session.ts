@@ -292,13 +292,14 @@ export class BidPokerSession {
 
     /** Stores the value before committing to it: a reload reveals it */
     private async seal(round: string, value: number | ReadonlyArray<number>, lot: number | null): Promise<void> {
-        const game: BidPokerGame = this.game() as BidPokerGame;
+        // The round of the value, fixed before the hash: a timeout applied meanwhile moves to the next lot or session
+        const sealed: Omit<BidCommitMessage, 'commitment'> = { ...this.round(), session: (this.game() as BidPokerGame).session(), lot };
         const salt: string = drawSalt();
         this._sending.set(true);
         this._seals.update((seals: ReadonlyMap<string, Readonly<Seal>>) => new Map([...seals, [round, { round, value, salt }]]));
         const commitment: string = await commitmentOf(this.preimage(round, value, salt, this.myIndex() as number), ':');
         this.sealStore.save(commitment, { round, value, salt });
-        this.room.transmitMessage(BPGameSessionType.COMMIT, { ...this.round(), session: game.session(), lot, commitment });
+        this.room.transmitMessage(BPGameSessionType.COMMIT, { ...sealed, commitment });
     }
 
     private isRound(payload: BidRound): boolean {
@@ -387,30 +388,47 @@ export class BidPokerSession {
 
     /** A player commits to its bid or its discards: the first commitment counts */
     private onCommit(message: AppMessage<BPGameSessionType.COMMIT, BidCommitMessage>): void {
+        const { session, lot, commitment } = message.payload;
+        const round: string = `${ session }:${ lot ?? ROUND_OF_DISCARDS }`;
+        const applied: Applied = this.applyCommit(message, round);
+
+        // A commitment of the local player the game did not take, too late or a second one: its seal is of no use. The one
+        // taken, delivered again, keeps its seal
+        if (applied !== Applied.APPLIED && message.from === this.room.localPlayer.name && this.commitments.get(round, message.from) !== commitment) {
+            this.sealStore.remove(commitment);
+        }
+    }
+
+    /**
+     * Applies the commitment to the game, which ignores one of another lot, too late or a second one, and refuses a
+     * malformed one or one of a seller on its own lot
+     */
+    private applyCommit(message: AppMessage<BPGameSessionType.COMMIT, BidCommitMessage>, round: string): Applied {
         const game: BidPokerGame | null = this.game();
         const player: number | null = this.indexOf(message.from);
         const { session, lot, commitment } = message.payload;
 
         if (game === null || player === null || !this.isRound(message.payload) || session !== game.session()) {
-            return;
+            return Applied.IGNORED;
         }
         if (!isCommitment(commitment)) {
             this.room.reportCheat(message, CheatReason.INVALID_MESSAGE);
-            return;
+            return Applied.ILLEGAL;
         }
 
         const discards: boolean = lot === null;
         if (!discards && lot !== game.lotIndex()) {
-            return;
+            return Applied.IGNORED;
         }
         const applied: Applied = discards ? game.commitDiscard(player) : game.commitBid(player);
         if (applied === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
         }
         if (applied === Applied.APPLIED) {
-            this.commitments.record(`${ session }:${ discards ? ROUND_OF_DISCARDS : lot }`, message.from, commitment);
+            this.commitments.record(round, message.from, commitment);
             this.restore(message.from, commitment);
         }
+        return applied;
     }
 
     /**
@@ -425,11 +443,15 @@ export class BidPokerSession {
         }
     }
 
-    /** Whether a revealed value matches the commitment of its player: else the reveal is reported, and counts as none */
+    /**
+     * Whether a revealed value matches the commitment of its player: else the reveal is reported, and counts as none. The
+     * value of the local player leaves its tab either way
+     */
     private async matches(message: BidPokerMessage, round: string, value: number | ReadonlyArray<number>, salt: unknown, player: number): Promise<boolean> {
         const matching: boolean = typeof salt === 'string'
             && this.commitments.get(round, message.from) === await commitmentOf(this.preimage(round, value, salt, player), ':');
 
+        this.revealed(message.from, round);
         if (!matching) {
             this.room.reportCheat(message, CheatReason.INVALID_REVEAL);
             this.game()?.refuse(player);
@@ -451,7 +473,6 @@ export class BidPokerSession {
         if (!await this.matches(message, round, typeof amount === 'number' ? amount : Number.NaN, salt, player)) {
             return;
         }
-        this.revealed(message.from, round);
         if (game.revealBid(player, amount) === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
         }
@@ -472,13 +493,12 @@ export class BidPokerSession {
         if (!await this.matches(message, round, discarded, salt, player)) {
             return;
         }
-        this.revealed(message.from, round);
         if (game.revealDiscard(player, discarded) === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
         }
     }
 
-    /** A value of the local player revealed in the chain: a reload does not need it anymore */
+    /** A value of the local player revealed in the chain, refused or withheld: a reload does not need it anymore */
     private revealed(from: string, round: string): void {
         const commitment: string | undefined = this.commitments.get(round, from);
         if (from === this.room.localPlayer.name && commitment !== undefined) {
@@ -509,10 +529,16 @@ export class BidPokerSession {
 
         const game: BidPokerGame | null = this.game();
         if (game !== null) {
+            const round: string | null = this.revealKey(game);
+            if (round !== null) {
+                this.revealed(this.room.localPlayer.name, round);
+            }
             game.close();
             return;
         }
 
+        // The part of the local player of a draw over: a reload does not need it anymore
+        this.partStore.remove(this._played().drawContext);
         this.awaited().forEach((late: string) => this.tableSeats.free(this.tableSeats.seatOf(late) as number));
         this._played.set(new PlayedBidGame(this._played().index, this._played().attempt + 1));
     }
@@ -530,6 +556,10 @@ export class BidPokerSession {
         this._played.set(new PlayedBidGame(game, 0));
         this.commitments = new SealedCommitments<string>();
         this._seals.set(new Map());
+        // No value of the new game is sealed yet: the seals left of a game over in the history of a page reloaded go
+        if (this.live) {
+            this.sealStore.clear();
+        }
     }
 
     /**
@@ -550,15 +580,32 @@ export class BidPokerSession {
             return;
         }
 
-        const phase: BidPokerPhase = game.phase();
-        if (game.awaited().includes(me) && (phase === BidPokerPhase.REVEALING || phase === BidPokerPhase.DISCLOSING)) {
-            const round: string = `${ game.session() }:${ phase === BidPokerPhase.REVEALING ? game.lotIndex() : ROUND_OF_DISCARDS }`;
+        // The game over live, no value is to reveal: the seal of a commitment lost on its way goes too. Not while the page
+        // catches up, a game over of the history before the game in progress
+        if (this.live && game.phase() === BidPokerPhase.OVER) {
+            this.sealStore.clear();
+        }
+
+        const round: string | null = this.revealKey(game);
+        if (round !== null && game.awaited().includes(me)) {
             const seal: Readonly<Seal> | undefined = this._seals().get(round);
             const key: string = `${ played.id() }:${ round }`;
             if (seal !== undefined && !this.sent.has(key)) {
                 this.sent.add(key);
                 this.transmitReveal(game, seal);
             }
+        }
+    }
+
+    /** The round of the values the phase reveals: the lot auctioned, or the discards of the session; none out of a reveal */
+    private revealKey(game: BidPokerGame): string | null {
+        switch (game.phase()) {
+            case BidPokerPhase.REVEALING:
+                return `${ game.session() }:${ game.lotIndex() }`;
+            case BidPokerPhase.DISCLOSING:
+                return `${ game.session() }:${ ROUND_OF_DISCARDS }`;
+            default:
+                return null;
         }
     }
 

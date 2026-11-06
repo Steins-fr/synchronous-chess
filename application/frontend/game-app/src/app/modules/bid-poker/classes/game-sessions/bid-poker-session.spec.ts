@@ -1,4 +1,6 @@
+import { CryptoHelper } from '@app/helpers/crypto.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { Room } from '@app/services/room-manager/classes/room/room';
@@ -322,6 +324,8 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
                 { kind: BidEventKind.MISSED, session: 0, lot: 0, phase: BidPokerPhase.REVEALING, reason: MissedReason.INVALID, players: [0] },
                 expect.objectContaining({ kind: BidEventKind.SOLD, winner: 1, price: 5 }),
             ]);
+            // Refused, the bid of Alice leaves her tab
+            expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:alice')).toEqual('{}');
         });
 
         test.each([
@@ -465,6 +469,34 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
             expect(gameOf('eve').events()[1]).toMatchObject({ kind: BidEventKind.SOLD, winner: 1, price: 20 });
         });
 
+        test('should commit to the lot bid on, a timeout applied while the bid is sealed opening the change session', async () => {
+            // Given the last lot of the dealing session, every bidder but Dave committed
+            await started();
+            await auction([10, 0, 0, 0]);
+            await auction([0, 10, 0, 0]);
+            await Promise.all([of('alice').bid(0), of('bob').bid(0), of('carol').bid(10)]);
+            await settled((session: BidPokerSession) => session.game()?.committed().length === 3);
+
+            // When Dave bids as the time runs out: the change session opens while his page hashes his bid
+            const sha256 = CryptoHelper.sha256.bind(CryptoHelper);
+            let hashed: () => void = () => undefined;
+            const hashing = new Promise<void>((resolve) => hashed = resolve);
+            vi.spyOn(CryptoHelper, 'sha256').mockImplementationOnce(async (text: string) => {
+                await hashing;
+                return sha256(text);
+            });
+            const bidding: Promise<void> = of('dave').bid(5);
+            claim('alice');
+            await settled((session: BidPokerSession) => session.game()?.phase() === BidPokerPhase.DISCARDING);
+            hashed();
+            await bidding;
+
+            // Then his commitment names the lot he bid on: the change session ignores it, his page its seal
+            expect(messagesOf(BPGameSessionType.COMMIT, 'dave').at(-1)?.payload).toMatchObject({ session: 0, lot: 2 });
+            expect(gameOf('eve').committed()).toEqual([]);
+            await eventually(() => expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:dave')).toEqual('{}'));
+        });
+
         test('should void a claim coming before the time of the phase, its claimer waiting again', async () => {
             // Given
             hub.time = 1_000;
@@ -533,6 +565,8 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
             await settled((session: BidPokerSession) => !session.started());
             expect(of('eve').tableSeats.seats()).toEqual(['alice', 'bob', 'carol', null, null, null, null, null]);
             expect(of('eve').played().attempt).toEqual(1);
+            // The draw over, the part of Alice leaves her tab
+            expect(sessionStorage.getItem('synchronous-chess:sealed-draws:room:alice')).toEqual('{}');
 
             // When the late part comes, then a player takes the seat and the game starts again
             hub.release();
@@ -593,12 +627,77 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
         expect(hub.reports).toEqual([]);
     });
 
+    test('should keep the seal of a commitment of the local player taken, delivered again', async () => {
+        // Given
+        await started();
+        await of('bob').bid(42);
+        await settled((session: BidPokerSession) => session.game()?.committed().length === 1);
+        const sealed: string | null = sessionStorage.getItem('synchronous-chess:sealed-bids:room:bob');
+
+        // When
+        hub.replay(rooms.get('bob') as Room<BidPokerPayloads>, messagesOf(BPGameSessionType.COMMIT, 'bob'));
+        await new Promise((resolve) => setTimeout(resolve));
+
+        // Then
+        expect(sealed).not.toEqual('{}');
+        expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:bob')).toEqual(sealed);
+    });
+
     /** A game played to its end: the dealing session, then nobody discards */
     async function played(): Promise<void> {
         await dealt();
         await Promise.all(['alice', 'bob', 'carol'].map((name: string) => of(name).discard([])));
         await settled((session: BidPokerSession) => session.over());
     }
+
+    test('should clear the seals left once the game is over, a page reloaded in the next game keeping its bid', async () => {
+        // Given the seal of a commitment of Bob lost on its way
+        new SealedStore<unknown>('bids', 'room', 'bob').save('lost', { round: '0:0', value: 1, salt: 'salt' });
+        await started();
+
+        // When
+        await played();
+
+        // Then
+        await eventually(() => expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:bob')).toEqual('{}'));
+        const firstGame: number = hub.delivered.length;
+
+        // When Bob bids in the next game, then reloads the page, its history caught up in two parts: the first game over
+        ['eve', 'bob', 'carol'].forEach((name: string) => of(name).rematch());
+        await settled((session: BidPokerSession) => session.pastGames().length === 1);
+        of('dave').start();
+        await settled((session: BidPokerSession) => session.game() !== null);
+        await of('bob').bid(42);
+        await settled((session: BidPokerSession) => session.game()?.committed().length === 1);
+        of('bob').destroy();
+        hub.close(rooms.get('bob') as Room<BidPokerPayloads>);
+        const reloaded: BidPokerSession = page('bob');
+        hub.replay(rooms.get('bob') as Room<BidPokerPayloads>, hub.delivered.slice(0, firstGame));
+        await eventually(() => expect(reloaded.over()).toBe(true));
+        hub.replay(rooms.get('bob') as Room<BidPokerPayloads>, hub.delivered.slice(firstGame));
+
+        // Then
+        await eventually(() => expect([reloaded.played().index, reloaded.myBid()]).toEqual([1, 42]));
+    });
+
+    test('should clear the seals left of a game over in the history of a page reloaded once a new game starts', async () => {
+        // Given Bob reloading the page once the game is over, a seal of his left
+        await started();
+        await played();
+        of('bob').destroy();
+        hub.close(rooms.get('bob') as Room<BidPokerPayloads>);
+        const reloaded: BidPokerSession = page('bob');
+        hub.replay(rooms.get('bob') as Room<BidPokerPayloads>);
+        await eventually(() => expect(reloaded.over()).toBe(true));
+        new SealedStore<unknown>('bids', 'room', 'bob').save('lost', { round: '0:0', value: 1, salt: 'salt' });
+
+        // When
+        ['eve', 'bob', 'carol'].forEach((name: string) => of(name).rematch());
+
+        // Then
+        await settled((session: BidPokerSession) => session.pastGames().length === 1);
+        expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:bob')).toEqual('{}');
+    });
 
     test('should play a new game once the former one is over, its bids and discards checked against its own commitments', async () => {
         // Given
@@ -654,6 +753,8 @@ describe('BidPokerSession', { timeout: 30_000 }, () => {
         // Then
         await settled((session: BidPokerSession) => session.game()?.withheld().join() === '3');
         expect(gameOf('eve').events()[0]).toMatchObject({ kind: BidEventKind.MISSED, phase: BidPokerPhase.REVEALING, players: [3] });
+        // Withheld, the bid of Dave leaves his tab
+        expect(sessionStorage.getItem('synchronous-chess:sealed-bids:room:dave')).toEqual('{}');
     });
 
     test('should commit again to the random part of the draw it stored, its page reloaded before its commitment came back', async () => {
