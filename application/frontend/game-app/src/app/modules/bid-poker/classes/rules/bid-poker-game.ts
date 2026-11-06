@@ -1,4 +1,5 @@
 import { computed, Signal, signal } from '@angular/core';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { BidPokerRules } from './bid-poker-rules';
 import { BidPokerResult, settle } from './standings';
 
@@ -59,15 +60,6 @@ export type BidEvent =
     | { readonly kind: BidEventKind.NO_DISCARD; readonly session: number }
     | { readonly kind: BidEventKind.MISSED; readonly session: number; readonly lot: number | null; readonly phase: BidPokerPhase;
         readonly reason: MissedReason; readonly players: ReadonlyArray<number> };
-
-/** What a move did */
-export enum Applied {
-    APPLIED = 'applied',
-    /** Against the rules: the session reports it */
-    ILLEGAL = 'illegal',
-    /** Out of its phase, from a player not awaited, or sent again: the first one counts */
-    IGNORED = 'ignored',
-}
 
 interface BidPokerState {
     readonly phase: BidPokerPhase;

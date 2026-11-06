@@ -1,7 +1,10 @@
 import { computed, Signal, signal } from '@angular/core';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
+import { DrawMessage, GameRound, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
 import { commitmentOf, CommitmentPart, drawSalt, isCommitment } from '@app/modules/commit-reveal/classes/commitment';
 import { DrawPhase, DrawStep, FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
+import { PlayedCommitRevealGame } from '@app/modules/commit-reveal/classes/played-commit-reveal-game';
 import { SealedCommitments } from '@app/modules/commit-reveal/classes/sealed-commitments';
 import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import { SeatedPlayer, TableSeats } from '@app/modules/game-table/classes/table-seats';
@@ -9,14 +12,13 @@ import { CheatReason } from '@app/services/room-manager/classes/room/block-room/
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
-import { Applied, BidPokerGame, BidPokerPhase, Lot } from '../rules/bid-poker-game';
+import { BidPokerGame, BidPokerPhase, Lot } from '../rules/bid-poker-game';
 import { BID_POKER_RULES, BidPokerRules } from '../rules/bid-poker-rules';
 import { drawCatalogue } from '../rules/catalogue';
-import {
-    BidCommitMessage, BidDiscardMessage, BidDrawMessage, BidPokerMessage, BidPokerPayloads, BidRevealMessage, BidRound, BidTimeoutMessage,
-    BPGameSessionType,
-} from './bid-poker-messages';
-import { PlayedBidGame } from './played-bid-game';
+import { BidCommitMessage, BidDiscardMessage, BidPokerMessage, BidPokerPayloads, BidRevealMessage, BPGameSessionType } from './bid-poker-messages';
+
+/** A game of the Bid Poker in the room: it has no setup */
+export type PlayedBidGame = PlayedCommitRevealGame<BidPokerGame>;
 
 export interface BidPokerSessionOptions {
     /** The rules of the game: the ones of the manga by default */
@@ -58,7 +60,7 @@ const isSafeIntegers = (values: unknown): values is ReadonlyArray<number> =>
 export class BidPokerSession {
     public readonly rules: BidPokerRules = this.options.rules ?? BID_POKER_RULES;
 
-    private readonly _played = signal<PlayedBidGame>(new PlayedBidGame(0, 0));
+    private readonly _played = signal<PlayedBidGame>(new PlayedCommitRevealGame(0, 0));
     /** The game in progress, else the latest */
     public readonly played: Signal<PlayedBidGame> = this._played.asReadonly();
     private readonly _pastGames = signal<ReadonlyArray<Readonly<PlayedBidGame>>>([]);
@@ -271,7 +273,7 @@ export class BidPokerSession {
         return this.parts;
     }
 
-    private round(): BidRound {
+    private round(): GameRound {
         return { game: this._played().index, attempt: this._played().attempt };
     }
 
@@ -302,7 +304,7 @@ export class BidPokerSession {
         this.room.transmitMessage(BPGameSessionType.COMMIT, { ...sealed, commitment });
     }
 
-    private isRound(payload: BidRound): boolean {
+    private isRound(payload: GameRound): boolean {
         return payload.game === this._played().index && payload.attempt === this._played().attempt;
     }
 
@@ -344,7 +346,7 @@ export class BidPokerSession {
      * A seated player starts the game with the seated players it names, 4 at least: a start naming others is void, a
      * seat changed meanwhile. Then each player commits to its random part, and reveals it once every one committed
      */
-    private async onDraw(message: AppMessage<BPGameSessionType.DRAW, BidDrawMessage>): Promise<void> {
+    private async onDraw(message: AppMessage<BPGameSessionType.DRAW, DrawMessage>): Promise<void> {
         const { players, commitment, part } = message.payload;
 
         if (!this.isRound(message.payload)) {
@@ -382,7 +384,7 @@ export class BidPokerSession {
         const names: ReadonlyArray<string> = seated.map((player: Readonly<SeatedPlayer>) => player.name);
 
         if (!this.started() && Array.isArray(players) && players.join('\n') === names.join('\n') && names.includes(from) && names.length >= this.rules.minPlayers) {
-            this._played().open(seated);
+            this._played().open(seated, null);
         }
     }
 
@@ -512,7 +514,7 @@ export class BidPokerSession {
      * its late players lose their seats and the seats open again, for a new attempt; else they act with no bid or no
      * discard
      */
-    private onTimeout(message: AppMessage<BPGameSessionType.TIMEOUT, BidTimeoutMessage>): void {
+    private onTimeout(message: AppMessage<BPGameSessionType.TIMEOUT, TimeoutMessage>): void {
         // A room without the time of a chain can not tell a claim too early
         const at: number | undefined = this.room.sequencedAt(message);
 
@@ -540,7 +542,7 @@ export class BidPokerSession {
         // The part of the local player of a draw over: a reload does not need it anymore
         this.partStore.remove(this._played().drawContext);
         this.awaited().forEach((late: string) => this.tableSeats.free(this.tableSeats.seatOf(late) as number));
-        this._played.set(new PlayedBidGame(this._played().index, this._played().attempt + 1));
+        this._played.set(new PlayedCommitRevealGame(this._played().index, this._played().attempt + 1));
     }
 
     /**
@@ -553,7 +555,7 @@ export class BidPokerSession {
         }
 
         this._pastGames.update((games: ReadonlyArray<Readonly<PlayedBidGame>>) => [...games, this._played()]);
-        this._played.set(new PlayedBidGame(game, 0));
+        this._played.set(new PlayedCommitRevealGame(game, 0));
         this.commitments = new SealedCommitments<string>();
         this._seals.set(new Map());
         // No value of the new game is sealed yet: the seals left of a game over in the history of a page reloaded go

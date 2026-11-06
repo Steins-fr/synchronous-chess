@@ -1,5 +1,7 @@
 import { computed, Signal, signal } from '@angular/core';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
+import { GameRound, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
 import { commitmentOf, CommitmentPart, drawSalt, isCommitment } from '@app/modules/commit-reveal/classes/commitment';
 import { DrawPhase, DrawStep, FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
 import { SealedCommitments } from '@app/modules/commit-reveal/classes/sealed-commitments';
@@ -13,12 +15,12 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
-import { Applied, ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../rules/contraband-game-state';
+import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../rules/contraband-game-state';
 import { Call, CONTRABAND_RULES, ContrabandRules, ContrabandSetup, isCall, isSetup, isTrunk, Team, teamOf } from '../rules/contraband-rules';
 import { Crossing, drawSchedule } from '../rules/schedule';
 import {
     CBGameSessionType, ContrabandCallMessage, ContrabandCommitMessage, ContrabandDrawMessage, ContrabandMessage, ContrabandPayloads, ContrabandRevealMessage,
-    ContrabandRound, ContrabandTimeoutMessage, CrossingKey,
+    CrossingKey,
 } from './contraband-messages';
 import { PlayedContrabandGame } from './played-contraband-game';
 
@@ -293,7 +295,7 @@ export class ContrabandSession {
 
         // The game of the trunk, fixed before the hash: a timeout applied meanwhile moves to the next game
         const crossing: number = game.crossing();
-        const round: ContrabandRound = this.round();
+        const round: GameRound = this.round();
         const salt: string = drawSalt();
         this._sending.set(true);
         this._seals.update((seals: ReadonlyMap<number, Readonly<Seal>>) => new Map([...seals, [crossing, { crossing, amount, salt }]]));
@@ -342,7 +344,7 @@ export class ContrabandSession {
         return this.north() >= this.rules.minTeam && this.players().length === 2 * this.north();
     }
 
-    private round(): ContrabandRound {
+    private round(): GameRound {
         return { game: this._played().index, attempt: this._played().attempt };
     }
 
@@ -360,12 +362,12 @@ export class ContrabandSession {
         return [this._played().id(), 'trunk', player, crossing, amount, salt];
     }
 
-    private isRound(payload: ContrabandRound): boolean {
+    private isRound(payload: GameRound): boolean {
         return payload.game === this._played().index && payload.attempt === this._played().attempt;
     }
 
     /** Whether a message names the game in progress of the match in progress */
-    private isCrossing(game: ContrabandGameState, payload: ContrabandRound & CrossingKey): boolean {
+    private isCrossing(game: ContrabandGameState, payload: GameRound & CrossingKey): boolean {
         return this.isRound(payload) && payload.crossing === game.crossing();
     }
 
@@ -454,7 +456,7 @@ export class ContrabandSession {
         }
         if (!this.started() && Array.isArray(players) && players.join('\n') === names.join('\n') && names.includes(message.from)
             && north === this.north() && this.balanced()) {
-            this._played().open(seated, this.north(), { variant: setup.variant, customsTime: setup.customsTime, games: setup.games });
+            this._played().openMatch(seated, this.north(), { variant: setup.variant, customsTime: setup.customsTime, games: setup.games });
         }
     }
 
@@ -563,7 +565,7 @@ export class ContrabandSession {
      * step past, or coming before the time of the phase on the time of the chain, is void. The draw of the seed over, its
      * late players lose their seats and the seats open again, for a new attempt; else the player late missed the phase
      */
-    private onTimeout(message: AppMessage<CBGameSessionType.TIMEOUT, ContrabandTimeoutMessage>): void {
+    private onTimeout(message: AppMessage<CBGameSessionType.TIMEOUT, TimeoutMessage>): void {
         // A room without the time of a chain can not tell a claim too early
         const at: number | undefined = this.room.sequencedAt(message);
 

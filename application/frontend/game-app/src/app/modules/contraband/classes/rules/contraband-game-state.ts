@@ -1,4 +1,5 @@
 import { computed, Signal, signal } from '@angular/core';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { Call, CallKind, ContrabandRules, ContrabandSetup, ContrabandVariant, isTrunk } from './contraband-rules';
 import { Movement, settleCall, withheldMovement } from './customs';
 import { Crossing } from './schedule';
@@ -47,15 +48,6 @@ export type ContrabandEvent =
         readonly movement: Movement;
         /** Why the trunk counts as withheld, none for a trunk revealed */
         readonly reason: WithheldReason | null };
-
-/** What a move did */
-export enum Applied {
-    APPLIED = 'applied',
-    /** Against the rules: the session reports it */
-    ILLEGAL = 'illegal',
-    /** Out of its phase, from a player not awaited, or sent again: the first one counts */
-    IGNORED = 'ignored',
-}
 
 interface ContrabandState {
     readonly phase: ContrabandPhase;

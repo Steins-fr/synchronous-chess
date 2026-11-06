@@ -1,4 +1,5 @@
-import { Applied, ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase, WithheldReason } from './contraband-game-state';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
+import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase, WithheldReason } from './contraband-game-state';
 import { Call, CallKind, CONTRABAND_RULES, ContrabandVariant, Team } from './contraband-rules';
 import { CustomsOutcome, Movement } from './customs';
 import { Crossing } from './schedule';

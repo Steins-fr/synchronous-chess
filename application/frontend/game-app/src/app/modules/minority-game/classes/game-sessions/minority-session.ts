@@ -1,7 +1,10 @@
 import { computed, Signal, signal } from '@angular/core';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
+import { Applied } from '@app/modules/commit-reveal/classes/applied';
+import { GameRound, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
 import { commitmentOf, CommitmentPart, drawSalt, isCommitment } from '@app/modules/commit-reveal/classes/commitment';
 import { DrawPhase, DrawStep, FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
+import { PlayedCommitRevealGame } from '@app/modules/commit-reveal/classes/played-commit-reveal-game';
 import { SealedCommitments } from '@app/modules/commit-reveal/classes/sealed-commitments';
 import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
 import { SeatedPlayer, TableSeats } from '@app/modules/game-table/classes/table-seats';
@@ -10,14 +13,16 @@ import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
 import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { AskerDraw, drawAsker } from '../rules/asker';
-import { Applied, MinorityGameState, MinorityPhase } from '../rules/minority-game-state';
+import { MinorityGameState, MinorityPhase } from '../rules/minority-game-state';
 import { isSetup, MINORITY_RULES, MinorityRules, MinoritySetup, Vote } from '../rules/minority-rules';
 import { isQuestionText } from '../rules/question';
 import {
     MGGameSessionType, MinorityCommitMessage, MinorityDrawMessage, MinorityMessage, MinorityPayloads, MinorityQuestionMessage, MinorityRevealMessage,
-    MinorityRound, MinorityTimeoutMessage, QuestionKey,
+    QuestionKey,
 } from './minority-messages';
-import { PlayedMinorityGame } from './played-minority-game';
+
+/** A game of the Minority Game in the room */
+export type PlayedMinorityGame = PlayedCommitRevealGame<MinorityGameState, MinoritySetup>;
 
 export interface MinoritySessionOptions {
     /** The rules of the game: the ones of the manga by default */
@@ -57,7 +62,7 @@ const keyOf = (question: Readonly<QuestionKey>): string => `${ question.round }:
 export class MinoritySession {
     public readonly rules: MinorityRules = this.options.rules ?? MINORITY_RULES;
 
-    private readonly _played = signal<PlayedMinorityGame>(new PlayedMinorityGame(0, 0));
+    private readonly _played = signal<PlayedMinorityGame>(new PlayedCommitRevealGame(0, 0));
     /** The game in progress, else the latest */
     public readonly played: Signal<PlayedMinorityGame> = this._played.asReadonly();
     private readonly _pastGames = signal<ReadonlyArray<Readonly<PlayedMinorityGame>>>([]);
@@ -258,7 +263,7 @@ export class MinoritySession {
 
         // The question of the vote, fixed before the hash: a timeout applied meanwhile moves to the next question
         const question: QuestionKey = { round: game.round(), ask: game.ask() };
-        const round: MinorityRound = this.round();
+        const round: GameRound = this.round();
         const key: string = keyOf(question);
         const salt: string = drawSalt();
         this._sending.set(true);
@@ -293,7 +298,7 @@ export class MinoritySession {
         return this.parts;
     }
 
-    private round(): MinorityRound {
+    private round(): GameRound {
         return { game: this._played().index, attempt: this._played().attempt };
     }
 
@@ -315,12 +320,12 @@ export class MinoritySession {
         return [this._played().id(), 'vote', player, key, vote, salt];
     }
 
-    private isRound(payload: MinorityRound): boolean {
+    private isRound(payload: GameRound): boolean {
         return payload.game === this._played().index && payload.attempt === this._played().attempt;
     }
 
     /** Whether a message names the question in progress of the game in progress */
-    private isQuestion(game: MinorityGameState, payload: MinorityRound & QuestionKey): boolean {
+    private isQuestion(game: MinorityGameState, payload: GameRound & QuestionKey): boolean {
         return this.isRound(payload) && payload.round === game.round() && payload.ask === game.ask();
     }
 
@@ -531,7 +536,7 @@ export class MinoritySession {
      * the seed over, its late players lose their seats and the seats open again, for a new attempt; else they missed the
      * phase
      */
-    private onTimeout(message: AppMessage<MGGameSessionType.TIMEOUT, MinorityTimeoutMessage>): void {
+    private onTimeout(message: AppMessage<MGGameSessionType.TIMEOUT, TimeoutMessage>): void {
         // A room without the time of a chain can not tell a claim too early
         const at: number | undefined = this.room.sequencedAt(message);
 
@@ -558,7 +563,7 @@ export class MinoritySession {
         // The part of the local player of a draw over: a reload does not need it anymore
         this.partStore.remove(this._played().drawContext);
         this.awaited().forEach((late: string) => this.tableSeats.free(this.tableSeats.seatOf(late) as number));
-        this._played.set(new PlayedMinorityGame(this._played().index, this._played().attempt + 1));
+        this._played.set(new PlayedCommitRevealGame(this._played().index, this._played().attempt + 1));
     }
 
     /**
@@ -571,7 +576,7 @@ export class MinoritySession {
         }
 
         this._pastGames.update((games: ReadonlyArray<Readonly<PlayedMinorityGame>>) => [...games, this._played()]);
-        this._played.set(new PlayedMinorityGame(game, 0));
+        this._played.set(new PlayedCommitRevealGame(game, 0));
         this.commitments = new SealedCommitments<string>();
         this._seals.set(new Map());
         // No vote of the new game is sealed yet: the seals left of a game over in the history of a page reloaded go
