@@ -35,8 +35,9 @@ The code lives in `application/frontend/game-app/src/app/modules/bid-poker`.
 | `drawCatalogue` | `classes/rules/catalogue.ts` | The lots of the dealing session, cut from the deck shuffled by the seed of the draw |
 | `settle` | `classes/rules/standings.ts` | The end of the game: the best hand of each player, the pigs, the places, the prizes, the fines |
 | `BidPokerGame` | `classes/rules/bid-poker-game.ts` | The game in signals: the phases, the auctions, the discards, the coins, the bank, the cards held, the events |
-| `PlayedBidGame` | `classes/game-sessions/played-bid-game.ts` | A game of the room: its players, the id of its secrets, the draw of its deck, then the game |
-| `BidPokerSession` | `classes/game-sessions/bid-poker-session.ts` | The games of the room: seats, the draw, the commitments and reveals, the timeouts, a new game |
+| `PlayedCommitRevealGame` | `modules/commit-reveal/classes/played-commit-reveal-game.ts` | A game of the room (`PlayedBidGame` of `bid-poker-session.ts`), without a setup: its players, the id of its secrets, the draw of its deck, then the game |
+| `BidPokerSession` | `classes/game-sessions/bid-poker-session.ts` | The games of the room, built on `CommitRevealSession`: the catalogue drawn, the bids and the discards committed then revealed |
+| `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game and the Contraband: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed of the deck no player chose alone, and the shuffle every page makes alike from it |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the players, and the values of the local player kept across the reloads of the page |
 | `bestHand`, `compareHands` | `modules/playing-cards/helpers/hand-evaluator.helper.ts` | The best 5 cards of a player, and their ranking |

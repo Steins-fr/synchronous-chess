@@ -37,8 +37,9 @@ The code lives in `application/frontend/game-app/src/app/modules/minority-game`.
 | `drawAsker` | `classes/rules/asker.ts` | The asker of a question, drawn from the seed of the game |
 | `settleElimination`, `settleScore` | `classes/rules/standings.ts` | The end of the game: the winners, the places, the points or the stakes won |
 | `MinorityGameState` | `classes/rules/minority-game-state.ts` | The game in signals: the phases, the asker, the votes, the eliminations, the scores, the absent players and the gone ones, the events |
-| `PlayedMinorityGame` | `classes/game-sessions/played-minority-game.ts` | A game of the room: its players, its setup, the id of its secrets, the draw of its seed, then the game |
-| `MinoritySession` | `classes/game-sessions/minority-session.ts` | The games of the room: seats, the draw, the askers, the questions, the commitments and reveals, the timeouts |
+| `PlayedCommitRevealGame` | `modules/commit-reveal/classes/played-commit-reveal-game.ts` | A game of the room (`PlayedMinorityGame` of `minority-session.ts`): its players, its setup, the id of its secrets, the draw of its seed, then the game |
+| `MinoritySession` | `classes/game-sessions/minority-session.ts` | The games of the room, built on `CommitRevealSession`: the setup, the askers, the questions, the votes committed then revealed |
+| `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game and the Contraband: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed no player chose alone, and the draws every page makes alike from it |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the players, and the vote of the local player kept across the reloads of the page |
 | `TableSeats` | `modules/game-table/classes/table-seats.ts` | The 8 seats of the table: the requests of the participants, the salts, a seat freed |
