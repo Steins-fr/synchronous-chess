@@ -1,24 +1,20 @@
-import { computed, Signal, signal } from '@angular/core';
-import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
+import { computed, Signal } from '@angular/core';
 import { Applied } from '@app/modules/commit-reveal/classes/applied';
-import { GameRound, TimeoutMessage } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
-import { commitmentOf, CommitmentPart, drawSalt, isCommitment } from '@app/modules/commit-reveal/classes/commitment';
-import { DrawPhase, DrawStep, FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
+import { GameRound } from '@app/modules/commit-reveal/classes/commit-reveal-messages';
+import { CommitRevealSession } from '@app/modules/commit-reveal/classes/commit-reveal-session';
+import { CommitmentPart, drawSalt, isCommitment } from '@app/modules/commit-reveal/classes/commitment';
 import { PlayedCommitRevealGame } from '@app/modules/commit-reveal/classes/played-commit-reveal-game';
-import { SealedCommitments } from '@app/modules/commit-reveal/classes/sealed-commitments';
-import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
-import { SeatedPlayer, TableSeats } from '@app/modules/game-table/classes/table-seats';
+import { SeatedPlayer } from '@app/modules/game-table/classes/table-seats';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
-import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { AskerDraw, drawAsker } from '../rules/asker';
 import { MinorityGameState, MinorityPhase } from '../rules/minority-game-state';
 import { isSetup, MINORITY_RULES, MinorityRules, MinoritySetup, Vote } from '../rules/minority-rules';
 import { isQuestionText } from '../rules/question';
 import {
-    MGGameSessionType, MinorityCommitMessage, MinorityDrawMessage, MinorityMessage, MinorityPayloads, MinorityQuestionMessage, MinorityRevealMessage,
-    QuestionKey,
+    MGGameSessionType, MINORITY_TYPES, MinorityCommitMessage, MinorityDrawMessage, MinorityMessage, MinorityPayloads, MinorityQuestionMessage,
+    MinorityRevealMessage, QuestionKey,
 } from './minority-messages';
 
 /** A game of the Minority Game in the room */
@@ -37,14 +33,6 @@ interface Seal {
     readonly salt: string;
 }
 
-/** The steps of the draw before the game: its commitments, then its reveals */
-const DRAW_STEPS: number = 2;
-/**
- * The seconds a claim of a timeout may come before the end of the time of its phase, on the time of the chain: the
- * clocks of the pages start once they receive the block opening the phase
- */
-const CLAIM_SLACK: number = 2;
-
 const keyOf = (question: Readonly<QuestionKey>): string => `${ question.round }:${ question.ask }`;
 
 /**
@@ -59,44 +47,12 @@ const keyOf = (question: Readonly<QuestionKey>): string => `${ question.round }:
  * claim in the chain counting, and the players it waited for missed it. A claim coming before the time of the phase, on
  * the time of the chain, is void.
  */
-export class MinoritySession {
-    public readonly rules: MinorityRules = this.options.rules ?? MINORITY_RULES;
-
-    private readonly _played = signal<PlayedMinorityGame>(new PlayedCommitRevealGame(0, 0));
-    /** The game in progress, else the latest */
-    public readonly played: Signal<PlayedMinorityGame> = this._played.asReadonly();
-    private readonly _pastGames = signal<ReadonlyArray<Readonly<PlayedMinorityGame>>>([]);
-    /** The games over before the one in progress, the first one first */
-    public readonly pastGames: Signal<ReadonlyArray<Readonly<PlayedMinorityGame>>> = this._pastGames.asReadonly();
-    /** The game, once its seed is drawn */
-    public readonly game: Signal<MinorityGameState | null> = computed((): MinorityGameState | null => this._played().game());
+export class MinoritySession extends CommitRevealSession<
+    typeof MINORITY_TYPES, MinorityPayloads, MinorityDrawMessage, MinorityRules, MinorityGameState, MinoritySetup, PlayedMinorityGame, string, Seal
+> {
     /** The setup of the game, once a player started it */
-    public readonly setup: Signal<Readonly<MinoritySetup> | null> = computed((): Readonly<MinoritySetup> | null => this._played().setup());
+    public readonly setup: Signal<Readonly<MinoritySetup> | null> = computed((): Readonly<MinoritySetup> | null => this.played().setup());
 
-    private readonly _sending = signal<boolean>(false);
-    /** A move of the local player waits for the chain: it acts once only, a second click sending nothing */
-    public readonly sending: Signal<boolean> = this._sending.asReadonly();
-
-    /** A player started the game: its players are final until it is over */
-    public readonly started: Signal<boolean> = computed((): boolean => this._played().players().length > 0);
-    public readonly over: Signal<boolean> = computed((): boolean => this._played().result() !== null);
-    /** The seats are open until the game starts, and once it is over */
-    public readonly seatsOpen: Signal<boolean> = computed((): boolean => !this.started() || this.over());
-
-    public readonly tableSeats = new TableSeats(this.room, {
-        count: this.rules.seats,
-        types: { seat: MGGameSessionType.SEAT, unseat: MGGameSessionType.UNSEAT },
-        open: (): boolean => this.seatsOpen(),
-        sending: this.sending,
-    });
-    /** The seated players not connected: the seats are the players of the game while it is played */
-    public readonly awayPlayers: Signal<ReadonlyArray<string>> = this.tableSeats.awayPlayers;
-    /** The players of the game, the seated ones in the order of their seats until it starts */
-    public readonly players: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => this.started()
-        ? this._played().players()
-        : this.tableSeats.taken().map((player: Readonly<SeatedPlayer>) => player.name));
-    /** The index of the local player among the players, none for a spectator */
-    public readonly myIndex: Signal<number | null> = computed((): number | null => this.indexOf(this.room.localPlayer.name));
     /** The local player was eliminated: it follows the game as a spectator */
     public readonly eliminated: Signal<boolean> = computed((): boolean => {
         const me: number | null = this.myIndex();
@@ -105,19 +61,6 @@ export class MinoritySession {
     /** The local player plays the game in progress, still in: leaving it asks to confirm */
     public readonly inMatch: Signal<boolean> = computed((): boolean => this.myIndex() !== null && this.started() && !this.over() && !this.eliminated());
 
-    /** The players the game waits for: to draw the seed, then to act in each phase */
-    public readonly awaited: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const game: MinorityGameState | null = this.game();
-        if (game === null) {
-            return this._played().drawWaitingFor();
-        }
-        return game.awaited().map((player: number) => this.players()[player]);
-    });
-    /** The players the game waits for who are away */
-    public readonly awaitedAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const away: ReadonlyArray<string> = this.awayPlayers();
-        return this.awaited().filter((name: string) => away.includes(name));
-    });
     /**
      * The players away who give the phase more time, once: every one, but the players a vote waits for gone since the
      * vote they missed, maybe for good (the score variant)
@@ -132,17 +75,7 @@ export class MinoritySession {
         const asker: number | null = this.game()?.asker() ?? null;
         return asker === null ? null : this.players()[asker];
     });
-    /** The phases of the game: a claim of a timeout names it, a move closing the phase meanwhile voids it */
-    public readonly step: Signal<number> = computed((): number => {
-        const game: MinorityGameState | null = this.game();
-        return game === null ? Number(this._played().drawPhase() === DrawPhase.REVEALING) : DRAW_STEPS + game.step();
-    });
-    /** The seconds of the phase in progress */
-    public readonly phaseTime: Signal<number> = computed((): number => this.game()?.phaseTime() ?? this.rules.drawTime);
 
-    /** Whether the local player may start the game: seated, with enough players, none started */
-    public readonly canStart: Signal<boolean> = computed((): boolean => !this._sending() && !this.started()
-        && this.tableSeats.mySeat() !== null && this.tableSeats.taken().length >= this.rules.minPlayers);
     /** Whether the local player may ask the question: the asker drawn */
     public readonly canAsk: Signal<boolean> = computed((): boolean => {
         const game: MinorityGameState | null = this.game();
@@ -156,7 +89,6 @@ export class MinoritySession {
         return !this._sending() && me !== null && game?.phase() === MinorityPhase.VOTING && game.alive().includes(me) && !game.committed().includes(me);
     });
 
-    private readonly _seals = signal<ReadonlyMap<string, Readonly<Seal>>>(new Map());
     /**
      * The vote of the local player on the question, sealed until the votes are revealed. Once the vote closed, the game
      * counts it only when its commitment came in time: sent as the time ran out, it is no vote
@@ -172,67 +104,14 @@ export class MinoritySession {
         return this._seals().get(this.questionKey(game))?.vote ?? null;
     });
 
-    private readonly _voidedClaims = signal<number>(0);
-    /** The claims of the local player voided as too early: its clock waits again */
-    public readonly voidedClaims: Signal<number> = this._voidedClaims.asReadonly();
-    // The session applied a live message: it caught up with the history of the room
-    private live: boolean = false;
-    private readonly _caughtUp = new Subject<void>();
-    /** Emits once, right before the first live message applies: the table shows the history at once */
-    public readonly caughtUp: Observable<void> = this._caughtUp.asObservable();
-
-    /** The commitments of the game in progress, by question */
-    private commitments = new SealedCommitments<string>();
-    private seals?: SealedStore<Seal>;
-    private parts?: SealedStore<string>;
-    /** What the local player sent in this page, once: a reveal sent again after a reload is ignored by the others */
-    private readonly sent = new Set<string>();
-    /** The time of the chain the phase in progress opened at */
-    private openedAt: number = 0;
-    private readonly subscription: Subscription;
-    /** The messages apply one after the other, in the order of the chain: a reveal checks its commitment first */
-    private queue: Promise<void> = Promise.resolve();
-    private pending: number = 0;
-
-    public constructor(private readonly room: Room<MinorityPayloads>, private readonly options: MinoritySessionOptions = {}) {
-        this.subscription = merge(...Object.values(MGGameSessionType).map((type: MGGameSessionType) => room.messenger(type)))
-            .subscribe((message: MinorityMessage) => {
-                this.pending++;
-                const history: boolean = room.isHistory(message);
-                this.queue = this.queue.then(async () => {
-                    if (!history && !this.live) {
-                        this.live = true;
-                        this._caughtUp.next();
-                    }
-                    const step: string = this.stepKey();
-                    await logHandlingFailure(message, this.apply(message));
-                    if (this.stepKey() !== step) {
-                        this.openedAt = room.sequencedAt(message) ?? 0;
-                    }
-                    // Once the messages received are applied, as a reloaded page catching up: the page acts on the chain
-                    if (--this.pending === 0) {
-                        await this.act();
-                    }
-                });
-            });
-    }
-
-    public destroy(): void {
-        this.subscription.unsubscribe();
-    }
-
-    public takeSeat(seat: number): void {
-        this.tableSeats.takeSeat(seat);
-    }
-
-    public leaveSeat(): void {
-        this.tableSeats.leaveSeat();
-    }
-
-    /** A seated player frees the seat of another one, away */
-    public unseat(seat: number): void {
-        this._sending.set(true);
-        this.tableSeats.unseat(seat);
+    public constructor(room: Room<MinorityPayloads>, options: MinoritySessionOptions = {}) {
+        super(room, {
+            rules: options.rules ?? MINORITY_RULES,
+            types: MINORITY_TYPES,
+            messages: Object.values(MGGameSessionType),
+            sealKind: 'votes',
+            played: (index: number, attempt: number): PlayedMinorityGame => new PlayedCommitRevealGame(index, attempt),
+        });
     }
 
     /** The local player starts the game with the seated players and its setup: then each one commits to its part of the draw */
@@ -262,79 +141,14 @@ export class MinoritySession {
         }
 
         // The question of the vote, fixed before the hash: a timeout applied meanwhile moves to the next question
-        const question: QuestionKey = { round: game.round(), ask: game.ask() };
-        const round: GameRound = this.round();
+        const question: Omit<MinorityCommitMessage, 'commitment'> = { ...this.round(), round: game.round(), ask: game.ask() };
         const key: string = keyOf(question);
         const salt: string = drawSalt();
-        this._sending.set(true);
-        this._seals.update((seals: ReadonlyMap<string, Readonly<Seal>>) => new Map([...seals, [key, { key, vote, salt }]]));
-        const commitment: string = await commitmentOf(this.preimage(key, vote, salt, this.myIndex() as number), ':');
-        this.sealStore.save(commitment, { key, vote, salt });
-        this.room.transmitMessage(MGGameSessionType.COMMIT, { ...round, ...question, commitment });
+        await this.seal(key, { key, vote, salt }, this.preimage(key, vote, salt, this.myIndex() as number),
+            (commitment: string) => this.room.transmitMessage(MGGameSessionType.COMMIT, { ...question, commitment }));
     }
 
-    /**
-     * The time of the phase is over: the players it waits for missed it. The claim names the step of the phase: a claim of
-     * a phase closed meanwhile is void
-     */
-    public claimTimeout(): void {
-        this._sending.set(true);
-        this.room.transmitMessage(MGGameSessionType.TIMEOUT, { ...this.round(), step: this.step() });
-    }
-
-    /** A player of the game over starts a new one */
-    public rematch(): void {
-        this._sending.set(true);
-        this.room.transmitMessage(MGGameSessionType.REMATCH, { game: this._pastGames().length + 1 });
-    }
-
-    private get sealStore(): SealedStore<Seal> {
-        this.seals ??= new SealedStore<Seal>('votes', this.room.roomName, this.room.localPlayer.name);
-        return this.seals;
-    }
-
-    private get partStore(): SealedStore<string> {
-        this.parts ??= new SealedStore<string>('draws', this.room.roomName, this.room.localPlayer.name);
-        return this.parts;
-    }
-
-    private round(): GameRound {
-        return { game: this._played().index, attempt: this._played().attempt };
-    }
-
-    private stepKey(): string {
-        return `${ this._played().index }:${ this._played().attempt }:${ this.started() }:${ this.step() }`;
-    }
-
-    private questionKey(game: MinorityGameState): string {
-        return keyOf({ round: game.round(), ask: game.ask() });
-    }
-
-    private indexOf(name: string): number | null {
-        const index: number = this.players().indexOf(name);
-        return index === -1 ? null : index;
-    }
-
-    /** The commitment to a vote: the game, the player, the question and the vote, with a salt */
-    private preimage(key: string, vote: string, salt: string, player: number): ReadonlyArray<CommitmentPart> {
-        return [this._played().id(), 'vote', player, key, vote, salt];
-    }
-
-    private isRound(payload: GameRound): boolean {
-        return payload.game === this._played().index && payload.attempt === this._played().attempt;
-    }
-
-    /** Whether a message names the question in progress of the game in progress */
-    private isQuestion(game: MinorityGameState, payload: GameRound & QuestionKey): boolean {
-        return this.isRound(payload) && payload.round === game.round() && payload.ask === game.ask();
-    }
-
-    private async apply(message: MinorityMessage): Promise<void> {
-        // The move of the local player is in the chain: it may act again
-        if (message.from === this.room.localPlayer.name && message.type !== MGGameSessionType.SEAT) {
-            this._sending.set(false);
-        }
-
+    protected override async apply(message: MinorityMessage): Promise<void> {
         switch (message.type) {
             case MGGameSessionType.SEAT:
                 this.tableSeats.onSeat(message);
@@ -364,6 +178,48 @@ export class MinoritySession {
         await this.drawAsker();
     }
 
+    /** As many players seated as the rules ask, at least */
+    protected override enough(): boolean {
+        return this.tableSeats.taken().length >= this.rules.minPlayers;
+    }
+
+    protected override setupOf({ variant, voteTime }: Readonly<MinorityDrawMessage>): Readonly<MinoritySetup> | undefined {
+        const setup: { variant: unknown; voteTime: unknown } = { variant, voteTime };
+        return isSetup(this.rules, setup) ? { variant: setup.variant, voteTime: setup.voteTime } : undefined;
+    }
+
+    protected override openPlayed(seated: ReadonlyArray<Readonly<SeatedPlayer>>, setup: Readonly<MinoritySetup>): void {
+        this.played().open(seated, setup);
+    }
+
+    /** The game: its seed draws the asker of each question */
+    protected override drawGame(seed: string): Promise<MinorityGameState> {
+        return Promise.resolve(new MinorityGameState(this.rules, this.players().length, this.setup() as MinoritySetup, seed));
+    }
+
+    /** The question of the votes, while they are revealed */
+    protected override revealKey(game: MinorityGameState): string | null {
+        return game.phase() === MinorityPhase.REVEALING ? this.questionKey(game) : null;
+    }
+
+    protected override transmitReveal(game: MinorityGameState, seal: Readonly<Seal>): void {
+        this.room.transmitMessage(MGGameSessionType.REVEAL, { ...this.round(), round: game.round(), ask: game.ask(), vote: seal.vote, salt: seal.salt });
+    }
+
+    private questionKey(game: MinorityGameState): string {
+        return keyOf({ round: game.round(), ask: game.ask() });
+    }
+
+    /** The commitment to a vote: the game, the player, the question and the vote, with a salt */
+    private preimage(key: string, vote: string, salt: string, player: number): ReadonlyArray<CommitmentPart> {
+        return [this.played().id(), 'vote', player, key, vote, salt];
+    }
+
+    /** Whether a message names the question in progress of the game in progress */
+    private isQuestion(game: MinorityGameState, payload: GameRound & QuestionKey): boolean {
+        return this.isRound(payload) && payload.round === game.round() && payload.ask === game.ask();
+    }
+
     /**
      * A question waiting for its asker draws it from the seed of the game, before the next message applies: every page
      * draws the same asker, a page catching up included
@@ -374,55 +230,6 @@ export class MinoritySession {
 
         if (game !== null && draw !== null) {
             game.appoint(await drawAsker(game.seed, draw));
-        }
-    }
-
-    /**
-     * A seated player starts the game with the seated players it names, 3 at least, and a setup the rules offer: a start
-     * naming others is void, a seat changed meanwhile. Then each player commits to its random part, and reveals it once
-     * every one committed
-     */
-    private async onDraw(message: AppMessage<MGGameSessionType.DRAW, MinorityDrawMessage>): Promise<void> {
-        const { players, variant, voteTime, commitment, part } = message.payload;
-
-        if (!this.isRound(message.payload)) {
-            return;
-        }
-        if (players !== undefined) {
-            this.open(message, players, { variant, voteTime });
-            return;
-        }
-        if (!this.started() || this.game() !== null) {
-            return;
-        }
-
-        const draw: FairDraw = this._played().draw as FairDraw;
-        const step: DrawStep = part === undefined ? draw.commit(message.from, commitment) : await draw.reveal(message.from, part);
-        if (step === DrawStep.INVALID) {
-            this.room.reportCheat(message, part === undefined ? CheatReason.INVALID_MESSAGE : CheatReason.INVALID_REVEAL);
-        }
-        this._played().drew();
-
-        const seed: string | undefined = await draw.seed();
-        if (seed !== undefined) {
-            // Every part is in the chain: a page reloaded draws the seed again from it
-            this.partStore.remove(this._played().drawContext);
-            this._played().start(new MinorityGameState(this.rules, draw.players.length, this._played().setup() as MinoritySetup, seed));
-        }
-    }
-
-    /** The game starts with the seated players, the ones the start names: its draw opens, with the salts of the players */
-    private open(message: AppMessage<MGGameSessionType.DRAW, MinorityDrawMessage>, players: unknown, setup: { variant: unknown; voteTime: unknown }): void {
-        const seated: ReadonlyArray<Readonly<SeatedPlayer>> = this.tableSeats.taken();
-        const names: ReadonlyArray<string> = seated.map((player: Readonly<SeatedPlayer>) => player.name);
-
-        if (!isSetup(this.rules, setup)) {
-            this.room.reportCheat(message, CheatReason.INVALID_MESSAGE);
-            return;
-        }
-        if (!this.started() && Array.isArray(players) && players.join('\n') === names.join('\n') && names.includes(message.from)
-            && names.length >= this.rules.minPlayers) {
-            this._played().open(seated, { variant: setup.variant, voteTime: setup.voteTime });
         }
     }
 
@@ -445,52 +252,27 @@ export class MinoritySession {
 
     /** A player commits to its vote: the first commitment counts */
     private onCommit(message: AppMessage<MGGameSessionType.COMMIT, MinorityCommitMessage>): void {
-        const applied: Applied = this.applyCommit(message);
-
-        // A commitment of the local player the game did not take, too late or a second one: its seal is of no use. The one
-        // taken, delivered again, keeps its seal
-        const { commitment } = message.payload;
-        if (applied !== Applied.APPLIED && message.from === this.room.localPlayer.name && this.commitments.get(keyOf(message.payload), message.from) !== commitment) {
-            this.sealStore.remove(commitment);
-        }
+        this.committed(this.applyCommit(message), keyOf(message.payload), message.from, message.payload.commitment);
     }
 
     /** Applies the commitment to the game, which ignores one too late or a second one, and refuses one of a player out */
     private applyCommit(message: AppMessage<MGGameSessionType.COMMIT, MinorityCommitMessage>): Applied {
         const game: MinorityGameState | null = this.game();
         const player: number | null = this.indexOf(message.from);
-        const { commitment } = message.payload;
 
         if (game === null || player === null || !this.isQuestion(game, message.payload)) {
             return Applied.IGNORED;
         }
-        if (!isCommitment(commitment)) {
+        if (!isCommitment(message.payload.commitment)) {
             this.room.reportCheat(message, CheatReason.INVALID_MESSAGE);
             return Applied.ILLEGAL;
         }
 
-        const key: string = this.questionKey(game);
         const applied: Applied = game.commitVote(player);
         if (applied === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
         }
-        if (applied === Applied.APPLIED) {
-            this.commitments.record(key, message.from, commitment);
-            this.restore(message.from, commitment);
-        }
         return applied;
-    }
-
-    /**
-     * The vote of a commitment of the local player, kept in the tab: its page was reloaded, or sealed another vote meanwhile,
-     * the first commitment in the chain counting
-     */
-    private restore(from: string, commitment: string): void {
-        const stored: Readonly<Seal> | undefined = from === this.room.localPlayer.name ? this.sealStore.get(commitment) : undefined;
-
-        if (stored !== undefined) {
-            this._seals.update((seals: ReadonlyMap<string, Readonly<Seal>>) => new Map([...seals, [stored.key, stored]]));
-        }
     }
 
     /**
@@ -507,135 +289,9 @@ export class MinoritySession {
         }
 
         const key: string = this.questionKey(game);
-        const matching: boolean = typeof salt === 'string'
-            && this.commitments.get(key, message.from) === await commitmentOf(this.preimage(key, typeof vote === 'string' ? vote : '', salt, player), ':');
-        if (!matching) {
-            this.room.reportCheat(message, CheatReason.INVALID_REVEAL);
-            this.revealed(message.from, key);
-            game.refuse(player);
-            return;
-        }
-
-        this.revealed(message.from, key);
-        if (game.revealVote(player, vote) === Applied.ILLEGAL) {
+        const matching: boolean = await this.opened(message, key, salt, (revealed: string) => this.preimage(key, typeof vote === 'string' ? vote : '', revealed, player));
+        if (matching && game.revealVote(player, vote) === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
-        }
-    }
-
-    /** A vote of the local player revealed in the chain, refused or withheld: a reload does not need it anymore */
-    private revealed(from: string, key: string): void {
-        const commitment: string | undefined = this.commitments.get(key, from);
-        if (from === this.room.localPlayer.name && commitment !== undefined) {
-            this.sealStore.remove(commitment);
-        }
-    }
-
-    /**
-     * A player of the game, eliminated or not, tells the time of the phase is over, the first claim in the chain counting:
-     * a claim naming a step past, or coming before the time of the phase on the time of the chain, is void. The draw of
-     * the seed over, its late players lose their seats and the seats open again, for a new attempt; else they missed the
-     * phase
-     */
-    private onTimeout(message: AppMessage<MGGameSessionType.TIMEOUT, TimeoutMessage>): void {
-        // A room without the time of a chain can not tell a claim too early
-        const at: number | undefined = this.room.sequencedAt(message);
-
-        if (this.indexOf(message.from) === null || !this.started() || !this.isRound(message.payload) || message.payload.step !== this.step()
-            || this.awaited().length === 0) {
-            return;
-        }
-        if (at !== undefined && at - this.openedAt < (this.phaseTime() - CLAIM_SLACK) * 1000) {
-            if (message.from === this.room.localPlayer.name) {
-                this._voidedClaims.update((count: number) => count + 1);
-            }
-            return;
-        }
-
-        const game: MinorityGameState | null = this.game();
-        if (game !== null) {
-            if (game.phase() === MinorityPhase.REVEALING) {
-                this.revealed(this.room.localPlayer.name, this.questionKey(game));
-            }
-            game.close();
-            return;
-        }
-
-        // The part of the local player of a draw over: a reload does not need it anymore
-        this.partStore.remove(this._played().drawContext);
-        this.awaited().forEach((late: string) => this.tableSeats.free(this.tableSeats.seatOf(late) as number));
-        this._played.set(new PlayedCommitRevealGame(this._played().index, this._played().attempt + 1));
-    }
-
-    /**
-     * A seated player starts a new game once the former one is over, its seats open: the first request starts it, the
-     * others name a game started already. The new game has its own setup, commitments and seals
-     */
-    private onRematch(from: string, game: number): void {
-        if (this.tableSeats.seatOf(from) === null || !this.over() || game !== this._pastGames().length + 1) {
-            return;
-        }
-
-        this._pastGames.update((games: ReadonlyArray<Readonly<PlayedMinorityGame>>) => [...games, this._played()]);
-        this._played.set(new PlayedCommitRevealGame(game, 0));
-        this.commitments = new SealedCommitments<string>();
-        this._seals.set(new Map());
-        // No vote of the new game is sealed yet: the seals left of a game over in the history of a page reloaded go
-        if (this.live) {
-            this.sealStore.clear();
-        }
-    }
-
-    /**
-     * What the local player owes the chain once the messages received are applied: its random part of the draw, its
-     * commitment then its reveal, and the reveal of its vote. A page reloaded acts from its tab
-     */
-    private async act(): Promise<void> {
-        const me: number | null = this.myIndex();
-        const played: PlayedMinorityGame = this._played();
-        const draw: FairDraw | null = played.draw;
-        const game: MinorityGameState | null = this.game();
-
-        if (me === null || draw === null) {
-            return;
-        }
-        if (game === null) {
-            await this.actOnDraw(draw, me);
-            return;
-        }
-        // The game over live, no vote is to reveal: the seal of a commitment lost on its way goes too. Not while the page
-        // catches up, a game over of the history before the game in progress
-        if (this.live && game.phase() === MinorityPhase.OVER) {
-            this.sealStore.clear();
-        }
-
-        if (game.phase() === MinorityPhase.REVEALING && game.awaited().includes(me)) {
-            const key: string = this.questionKey(game);
-            const seal: Readonly<Seal> | undefined = this._seals().get(key);
-            const sent: string = `${ played.id() }:${ key }`;
-            if (seal !== undefined && !this.sent.has(sent)) {
-                this.sent.add(sent);
-                this.room.transmitMessage(MGGameSessionType.REVEAL, { ...this.round(), round: game.round(), ask: game.ask(), vote: seal.vote, salt: seal.salt });
-            }
-        }
-    }
-
-    /** The local player commits to its part of the draw, then reveals it: its part kept in the tab */
-    private async actOnDraw(draw: FairDraw, me: number): Promise<void> {
-        const context: string = this._played().drawContext;
-        const waiting: boolean = draw.waitingFor.includes(this.room.localPlayer.name);
-
-        if (waiting && draw.phase === DrawPhase.COMMITTING && !this.sent.has(`draw:${ context }`)) {
-            this.sent.add(`draw:${ context }`);
-            // A page reloaded before its commitment came back commits to the same part again: the first one counts
-            const part: string = this.partStore.get(context) ?? FairDraw.drawPart();
-            this.partStore.save(context, part);
-            this.room.transmitMessage(MGGameSessionType.DRAW, { ...this.round(), commitment: await FairDraw.commitment(context, me, part) });
-        } else if (waiting && draw.phase === DrawPhase.REVEALING && !this.sent.has(`part:${ context }`)) {
-            const part: string | undefined = this.partStore.get(context);
-            if (part !== undefined) {
-                this.sent.add(`part:${ context }`);
-                this.room.transmitMessage(MGGameSessionType.DRAW, { ...this.round(), part });
-            }
         }
     }
 }
