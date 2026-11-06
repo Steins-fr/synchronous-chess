@@ -318,7 +318,7 @@ export class ContrabandSession extends CommitRevealSession<
             return;
         }
 
-        const matching: boolean = await this.opened(message, crossing, salt,
+        const matching: boolean = await this.opened(message, game, player, crossing, salt,
             (revealed: string) => this.preimage(crossing, typeof amount === 'number' ? amount : '', revealed, player));
         if (matching && game.reveal(player, amount) === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);

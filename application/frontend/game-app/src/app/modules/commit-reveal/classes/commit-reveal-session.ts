@@ -303,15 +303,18 @@ export abstract class CommitRevealSession<
      * Whether a value revealed matches the commitment of its player: else the reveal is reported, and the game refuses
      * it. The value of the local player leaves its tab either way
      *
+     * @param game the game the player reveals in
+     * @param player the seat of the player revealing
      * @param preimage the commitment to the value revealed, with the salt revealed
      */
-    protected async opened(message: AppMessage, key: Key, salt: unknown, preimage: (salt: string) => ReadonlyArray<CommitmentPart>): Promise<boolean> {
+    protected async opened(message: AppMessage, game: Game, player: number, key: Key, salt: unknown,
+        preimage: (salt: string) => ReadonlyArray<CommitmentPart>): Promise<boolean> {
         const matching: boolean = typeof salt === 'string' && this.commitments.get(key, message.from) === await commitmentOf(preimage(salt), ':');
 
         this.revealed(message.from, key);
         if (!matching) {
             this.room.reportCheat(message, CheatReason.INVALID_REVEAL);
-            (this.game() as Game).refuse(this.indexOf(message.from) as number);
+            game.refuse(player);
         }
         return matching;
     }

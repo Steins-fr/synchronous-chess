@@ -267,7 +267,7 @@ export class BidPokerSession extends CommitRevealSession<
         }
 
         const round: string = `${ session }:${ lot }`;
-        if (!await this.opened(message, round, salt, (revealed: string) => this.preimage(round, typeof amount === 'number' ? amount : Number.NaN, revealed, player))) {
+        if (!await this.opened(message, game, player, round, salt, (revealed: string) => this.preimage(round, typeof amount === 'number' ? amount : Number.NaN, revealed, player))) {
             return;
         }
         if (game.revealBid(player, amount) === Applied.ILLEGAL) {
@@ -288,7 +288,7 @@ export class BidPokerSession extends CommitRevealSession<
 
         const round: string = `${ session }:${ ROUND_OF_DISCARDS }`;
         const discarded: ReadonlyArray<number> = isSafeIntegers(cards) ? cards : [Number.NaN];
-        if (!await this.opened(message, round, salt, (revealed: string) => this.preimage(round, discarded, revealed, player))) {
+        if (!await this.opened(message, game, player, round, salt, (revealed: string) => this.preimage(round, discarded, revealed, player))) {
             return;
         }
         if (game.revealDiscard(player, discarded) === Applied.ILLEGAL) {

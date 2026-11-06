@@ -289,7 +289,7 @@ export class MinoritySession extends CommitRevealSession<
         }
 
         const key: string = this.questionKey(game);
-        const matching: boolean = await this.opened(message, key, salt, (revealed: string) => this.preimage(key, typeof vote === 'string' ? vote : '', revealed, player));
+        const matching: boolean = await this.opened(message, game, player, key, salt, (revealed: string) => this.preimage(key, typeof vote === 'string' ? vote : '', revealed, player));
         if (matching && game.revealVote(player, vote) === Applied.ILLEGAL) {
             this.room.reportCheat(message, CheatReason.ILLEGAL_MOVE);
         }
