@@ -183,6 +183,11 @@
       },
       "show": "Tampilkan ruang terbuka",
       "title": "Ruang terbuka"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} mnt",
+      "seconds": "{count} dtk"
     }
   }
 }

@@ -3,7 +3,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
-import { signed, SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
+import { clockText, setupTimeOf, setupTimeOptions, signed, SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
@@ -24,7 +24,7 @@ import { CastApple, RoundGain } from '../../classes/rules/apple-count';
 import { EdenEvent, EdenEventKind, EdenGameState, EdenPhase } from '../../classes/rules/eden-game-state';
 import { Apple } from '../../classes/rules/eden-rules';
 import { EdenResult, EdenStanding } from '../../classes/rules/standings';
-import { clockText, countText, CountedEvent, eventText } from '../../helpers/eden-texts.helper';
+import { countText, CountedEvent, eventText } from '../../helpers/eden-texts.helper';
 import { HeardEdenTable, tableSounds } from '../../helpers/table-sound.helper';
 import { EdenAppleComponent } from '../eden-apple/eden-apple.component';
 import { EdenSeatComponent } from '../eden-seat/eden-seat.component';
@@ -34,18 +34,6 @@ export const EDEN_SESSION_OPTIONS = new InjectionToken<EdenSessionOptions>('EDEN
 
 /** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
 const RETRY_TIME: number = 5;
-const SECONDS_PER_MINUTE: number = 60;
-
-/** The unit a time of a vote shows in, a select of its text */
-enum TimeUnit {
-    SECONDS = 'seconds',
-    MINUTES = 'minutes',
-}
-
-/** A time of a vote as the setup offers it: in seconds under a minute, else in minutes */
-function voteTimeOf(seconds: number): Readonly<{ unit: TimeUnit; count: number }> {
-    return seconds < SECONDS_PER_MINUTE ? { unit: TimeUnit.SECONDS, count: seconds } : { unit: TimeUnit.MINUTES, count: seconds / SECONDS_PER_MINUTE };
-}
 
 /** A seat of the table, as it shows */
 interface SeatView {
@@ -115,15 +103,7 @@ export class EdenTableComponent implements OnDestroy {
     });
     protected readonly setupForm = form(this.setupModel, { name: 'eden-setup' });
     protected readonly voteTimes: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
-        this.session().rules.voteTimes.map((seconds: number): ChoiceOption => {
-            const { unit, count } = voteTimeOf(seconds);
-            return {
-                value: String(seconds),
-                label: unit === TimeUnit.SECONDS
-                    ? { key: this.key(marker('table.start.seconds', undefined, 'eden')), params: { count } }
-                    : { key: this.key(marker('table.start.minutes', undefined, 'eden')), params: { count } },
-            };
-        }));
+        setupTimeOptions(this.session().rules.voteTimes));
     protected readonly startMoneys: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
         this.session().rules.startMoneys.map((amount: number): ChoiceOption =>
             ({ value: String(amount), label: { key: this.key(marker('table.start.money', undefined, 'eden')), params: { amount } } })));
@@ -160,7 +140,7 @@ export class EdenTableComponent implements OnDestroy {
             },
             {
                 id: 'terms',
-                text: { key: this.key(marker('table.info.terms', undefined, 'eden')), params: { ...voteTimeOf(game.setup.voteTime), amount: game.setup.startMoney } },
+                text: { key: this.key(marker('table.info.terms', undefined, 'eden')), params: { ...setupTimeOf(game.setup.voteTime), amount: game.setup.startMoney } },
             },
         ];
     });

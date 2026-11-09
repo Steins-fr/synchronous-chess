@@ -61,7 +61,6 @@
       "rematch": "Tekrar oyna",
       "start": "Oyunu başlat"
     },
-    "clock": "{minutes}:{seconds}",
     "eliminated": "Elendiniz: oyunun geri kalanını ve sohbeti takip edin.",
     "game": "Oyun {number}:",
     "history": "Oyunun hamleleri",
@@ -129,9 +128,7 @@
     },
     "start": {
       "elimination": "Eleme",
-      "minutes": "{count} dk",
       "score": "Skor",
-      "seconds": "{count} sn",
       "variant": "Varyant",
       "voteTime": "Oylama süresi"
     },

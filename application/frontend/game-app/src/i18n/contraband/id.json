@@ -85,7 +85,6 @@
       "check": "Periksa",
       "pass": "Loloskan"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Pabean ronde {number}: {smuggler} dan {inspector}",
       "team": "{team, select, north {Negara Utara} other {Negara Selatan}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, other {# ronde}}",
       "games": "Ronde",
       "goldRush": "Demam emas",
-      "minutes": "{count} mnt",
       "variant": "Varian"
     },
     "status": {

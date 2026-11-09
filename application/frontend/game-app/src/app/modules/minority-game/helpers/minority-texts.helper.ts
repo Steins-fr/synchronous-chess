@@ -48,11 +48,6 @@ export function countText(event: Readonly<CountedEvent>, names: ReadonlyArray<st
         };
 }
 
-/** The seconds left, in minutes and seconds */
-export function clockText(seconds: number): TranslatableText {
-    return { key: key(marker('table.clock', undefined, 'minority')), params: { minutes: Math.floor(seconds / 60), seconds: String(seconds % 60).padStart(2, '0') } };
-}
-
 /** Players whose vote did not count: late, a reveal not matching its commitment, neither yes nor no */
 function missedText(reason: MissedReason, phase: MinorityPhase, names: string): TranslatableText {
     switch (reason) {

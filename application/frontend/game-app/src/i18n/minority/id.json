@@ -61,7 +61,6 @@
       "rematch": "Main lagi",
       "start": "Mulai permainan"
     },
-    "clock": "{minutes}:{seconds}",
     "eliminated": "Anda tersingkir: ikuti sisa permainan dan obrolannya.",
     "game": "Permainan {number}:",
     "history": "Langkah permainan",
@@ -129,9 +128,7 @@
     },
     "start": {
       "elimination": "Eliminasi",
-      "minutes": "{count} mnt",
       "score": "Skor",
-      "seconds": "{count} dtk",
       "variant": "Varian",
       "voteTime": "Waktu memberi suara"
     },

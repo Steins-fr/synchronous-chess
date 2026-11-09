@@ -183,6 +183,11 @@
       },
       "show": "Mostra le stanze aperte",
       "title": "Stanze aperte"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} min",
+      "seconds": "{count} s"
     }
   }
 }

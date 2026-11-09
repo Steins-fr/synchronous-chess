@@ -61,7 +61,6 @@
       "rematch": "Nochmal spielen",
       "start": "Spiel starten"
     },
-    "clock": "{minutes}:{seconds}",
     "eliminated": "Du bist ausgeschieden: Verfolge den Rest der Partie und den Chat.",
     "game": "Spiel {number}:",
     "history": "Züge des Spiels",
@@ -129,9 +128,7 @@
     },
     "start": {
       "elimination": "Ausscheidung",
-      "minutes": "{count} Min.",
       "score": "Punktestand",
-      "seconds": "{count} s",
       "variant": "Variante",
       "voteTime": "Zeit zum Abstimmen"
     },

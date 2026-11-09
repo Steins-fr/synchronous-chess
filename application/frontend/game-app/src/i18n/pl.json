@@ -183,6 +183,11 @@
       },
       "show": "Pokaż otwarte pokoje",
       "title": "Otwarte pokoje"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} min",
+      "seconds": "{count} s"
     }
   }
 }

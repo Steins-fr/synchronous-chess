@@ -90,7 +90,6 @@
       "rematch": "Main lagi",
       "start": "Mulai permainan"
     },
-    "clock": "{minutes}:{seconds}",
     "game": "Permainan {number}:",
     "history": "Langkah permainan",
     "info": {
@@ -146,9 +145,7 @@
       "player": "Pemain"
     },
     "start": {
-      "minutes": "{count} mnt",
       "money": "{amount, plural, other {# juta}}",
-      "seconds": "{count} dtk",
       "startMoney": "Modal awal",
       "voteTime": "Waktu memberi suara"
     },

@@ -57,11 +57,6 @@ export function countText(event: Readonly<CountedEvent>, names: ReadonlyArray<st
     }
 }
 
-/** The seconds left, in minutes and seconds */
-export function clockText(seconds: number): TranslatableText {
-    return { key: key(marker('table.clock', undefined, 'eden')), params: { minutes: Math.floor(seconds / 60), seconds: String(seconds % 60).padStart(2, '0') } };
-}
-
 /** Players whose apple did not count, and what each one lost: late, a reveal not matching its commitment, no apple */
 function missedText(reason: MissedReason, phase: EdenPhase, names: string, amount: number): TranslatableText {
     switch (reason) {

@@ -56,8 +56,3 @@ export function trunkText(event: Readonly<SettledEvent>, variant: ContrabandVari
         ? { key: key(marker('table.trunk.amount', undefined, 'contraband')), params: { amount: contents } }
         : { key: key(marker('table.trunk.empty', undefined, 'contraband')) };
 }
-
-/** The seconds left, in minutes and seconds */
-export function clockText(seconds: number): TranslatableText {
-    return { key: key(marker('table.clock', undefined, 'contraband')), params: { minutes: Math.floor(seconds / 60), seconds: String(seconds % 60).padStart(2, '0') } };
-}

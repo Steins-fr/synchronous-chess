@@ -85,7 +85,6 @@
       "check": "Revistar",
       "pass": "Deixar passar"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Alfândega da rodada {number}: {smuggler} e {inspector}",
       "team": "{team, select, north {País do Norte} other {País do Sul}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# rodada} other {# rodadas}}",
       "games": "Rodadas",
       "goldRush": "Corrida do ouro",
-      "minutes": "{count} min",
       "variant": "Variante"
     },
     "status": {

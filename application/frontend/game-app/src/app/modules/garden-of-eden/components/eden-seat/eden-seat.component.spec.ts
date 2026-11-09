@@ -44,7 +44,7 @@ describe('EdenSeatComponent', () => {
         // When
         await show({
             name: 'bob', awaited: true, sealed: true, absent: true, apple: Apple.SILVER, gain: { sign: Sign.PLUS, amount: 200 },
-            balance: { sign: Sign.MINUS, amount: 300 }, clock: { key: 'eden.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
+            balance: { sign: Sign.MINUS, amount: 300 }, clock: { key: 'rooms.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
             standing: { key: 'eden.table.result.winner' }, winning: true,
         });
 

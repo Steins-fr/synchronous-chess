@@ -90,7 +90,6 @@
       "rematch": "Сыграть ещё",
       "start": "Начать партию"
     },
-    "clock": "{minutes}:{seconds}",
     "game": "Партия {number}:",
     "history": "Ходы партии",
     "info": {
@@ -146,9 +145,7 @@
       "player": "Игрок"
     },
     "start": {
-      "minutes": "{count} мин",
       "money": "{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
-      "seconds": "{count} с",
       "startMoney": "Стартовый капитал",
       "voteTime": "Время на голосование"
     },

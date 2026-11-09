@@ -6,7 +6,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
-import { signed } from '@app/modules/commit-reveal/helpers/table-texts.helper';
+import { clockText, SECONDS_PER_MINUTE, setupTimeOptions, signed } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
@@ -36,7 +36,7 @@ import { PlayedContrabandGame } from '../../classes/game-sessions/played-contrab
 import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { CallKind, ContrabandVariant, Team, teamOf, trunkLimit } from '../../classes/rules/contraband-rules';
 import { ContrabandResult, ContrabandStanding } from '../../classes/rules/standings';
-import { clockText, CrossingEvent, eventText, SettledEvent, trunkText } from '../../helpers/contraband-texts.helper';
+import { CrossingEvent, eventText, SettledEvent, trunkText } from '../../helpers/contraband-texts.helper';
 import { HeardContrabandTable, tableSounds } from '../../helpers/table-sound.helper';
 import { ContrabandSeatComponent, CustomsRole } from '../contraband-seat/contraband-seat.component';
 
@@ -45,7 +45,6 @@ export const CONTRABAND_SESSION_OPTIONS = new InjectionToken<ContrabandSessionOp
 
 /** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
 const RETRY_TIME: number = 5;
-const SECONDS_PER_MINUTE: number = 60;
 
 /** A seat of the table, as it shows */
 interface SeatView {
@@ -144,10 +143,7 @@ export class ContrabandTableComponent implements OnDestroy {
         { value: ContrabandVariant.GOLD_RUSH, label: { key: this.key(marker('table.start.goldRush', undefined, 'contraband')) } },
     ];
     protected readonly customsTimes: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
-        this.session().rules.customsTimes.map((seconds: number): ChoiceOption => ({
-            value: String(seconds),
-            label: { key: this.key(marker('table.start.minutes', undefined, 'contraband')), params: { count: seconds / SECONDS_PER_MINUTE } },
-        })));
+        setupTimeOptions(this.session().rules.customsTimes));
     protected readonly gameCounts: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
         this.session().rules.gameCounts.map((count: number): ChoiceOption => ({
             value: String(count),

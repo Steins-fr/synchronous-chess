@@ -61,7 +61,6 @@
       "rematch": "Zagraj ponownie",
       "start": "Rozpocznij partię"
     },
-    "clock": "{minutes}:{seconds}",
     "eliminated": "Odpadasz: śledź resztę gry i czat.",
     "game": "Partia {number}:",
     "history": "Ruchy partii",
@@ -129,9 +128,7 @@
     },
     "start": {
       "elimination": "Eliminacja",
-      "minutes": "{count} min",
       "score": "Wynik",
-      "seconds": "{count} s",
       "variant": "Wariant",
       "voteTime": "Czas na głosowanie"
     },

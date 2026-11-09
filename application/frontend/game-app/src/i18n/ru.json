@@ -183,6 +183,11 @@
       },
       "show": "Показать открытые комнаты",
       "title": "Открытые комнаты"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} мин",
+      "seconds": "{count} с"
     }
   }
 }

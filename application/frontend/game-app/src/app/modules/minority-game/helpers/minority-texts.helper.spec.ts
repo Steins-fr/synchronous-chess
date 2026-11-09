@@ -2,7 +2,7 @@ import { translated } from '@testing/translatable-text.helper';
 import { describe, expect, test } from 'vitest';
 import { MinorityEvent, MinorityEventKind, MinorityPhase, MissedReason, VoteOutcome } from '../classes/rules/minority-game-state';
 import { MinorityVariant, Vote } from '../classes/rules/minority-rules';
-import { clockText, eventText, Mask } from './minority-texts.helper';
+import { eventText, Mask } from './minority-texts.helper';
 
 const NAMES: ReadonlyArray<string> = ['alice', 'bob', 'carol', 'dave'];
 const { YES, NO } = Vote;
@@ -32,11 +32,5 @@ describe('eventText', () => {
         [counted({ votes: [], outcome: VoteOutcome.NO_VOTE }), MinorityVariant.SCORE, 'Round 3: 0 yes, 0 no. Nobody scores'],
     ])('should tell %o in the %s variant', (event: MinorityEvent, variant: MinorityVariant, text: string) => {
         expect(translated(eventText(event, NAMES, variant, shouting))).toEqual(text);
-    });
-});
-
-describe('clockText', () => {
-    test.each([[300, '5:00'], [65, '1:05'], [4, '0:04']])('should tell %i seconds in minutes and seconds', (seconds: number, text: string) => {
-        expect(translated(clockText(seconds))).toEqual(text);
     });
 });

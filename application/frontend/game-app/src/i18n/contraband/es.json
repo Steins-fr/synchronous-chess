@@ -85,7 +85,6 @@
       "check": "Registrar",
       "pass": "Dejar pasar"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Aduana de la ronda {number}: {smuggler} y {inspector}",
       "team": "{team, select, north {País del Norte} other {País del Sur}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# ronda} other {# rondas}}",
       "games": "Rondas",
       "goldRush": "Fiebre del oro",
-      "minutes": "{count} min",
       "variant": "Variante"
     },
     "status": {

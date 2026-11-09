@@ -85,7 +85,6 @@
       "check": "Kontrollieren",
       "pass": "Durchlassen"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Zoll von Durchgang {number}: {smuggler} und {inspector}",
       "team": "{team, select, north {Nordland} other {Südland}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# Durchgang} other {# Durchgänge}}",
       "games": "Durchgänge",
       "goldRush": "Goldrausch",
-      "minutes": "{count} Min.",
       "variant": "Variante"
     },
     "status": {

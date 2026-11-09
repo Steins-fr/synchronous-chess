@@ -85,7 +85,6 @@
       "check": "Check",
       "pass": "Pass"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Customs of game {number}: {smuggler} and {inspector}",
       "team": "{team, select, north {Northern country} other {Southern country}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# game} other {# games}}",
       "games": "Games",
       "goldRush": "Gold Rush",
-      "minutes": "{count} min",
       "variant": "Variant"
     },
     "status": {

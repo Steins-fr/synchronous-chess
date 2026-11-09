@@ -90,7 +90,6 @@
       "rematch": "Tekrar oyna",
       "start": "Oyunu başlat"
     },
-    "clock": "{minutes}:{seconds}",
     "game": "Oyun {number}:",
     "history": "Oyunun hamleleri",
     "info": {
@@ -146,9 +145,7 @@
       "player": "Oyuncu"
     },
     "start": {
-      "minutes": "{count} dk",
       "money": "{amount, plural, one {# milyon} other {# milyon}}",
-      "seconds": "{count} sn",
       "startMoney": "Başlangıç parası",
       "voteTime": "Oylama süresi"
     },

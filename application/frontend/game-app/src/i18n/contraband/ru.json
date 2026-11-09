@@ -85,7 +85,6 @@
       "check": "Досмотреть",
       "pass": "Пропустить"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Таможня раунда {number}: {smuggler} и {inspector}",
       "team": "{team, select, north {Северная страна} other {Южная страна}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# раунд} few {# раунда} many {# раундов} other {# раунда}}",
       "games": "Раунды",
       "goldRush": "«Золотая лихорадка»",
-      "minutes": "{count} мин",
       "variant": "Вариант"
     },
     "status": {

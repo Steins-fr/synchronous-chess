@@ -85,7 +85,6 @@
       "check": "Controlla",
       "pass": "Lascia passare"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Dogana della manche {number}: {smuggler} e {inspector}",
       "team": "{team, select, north {Paese del Nord} other {Paese del Sud}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# manche} other {# manche}}",
       "games": "Manche",
       "goldRush": "Corsa all'oro",
-      "minutes": "{count} min",
       "variant": "Variante"
     },
     "status": {

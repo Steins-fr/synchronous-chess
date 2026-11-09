@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { ContrabandEventKind, WithheldReason } from '../classes/rules/contraband-game-state';
 import { Call, CallKind, ContrabandVariant } from '../classes/rules/contraband-rules';
 import { CustomsOutcome, Movement } from '../classes/rules/customs';
-import { clockText, CrossingEvent, eventText, SettledEvent, trunkText } from './contraband-texts.helper';
+import { CrossingEvent, eventText, SettledEvent, trunkText } from './contraband-texts.helper';
 
 const NAMES: ReadonlyArray<string> = ['alice', 'bob', 'carol', 'dave'];
 const PASS: Call = { kind: CallKind.PASS };
@@ -41,11 +41,5 @@ describe('trunkText', () => {
         [null, ContrabandVariant.CLASSIC, 'Not revealed'],
     ])('should tell a trunk holding %o in the %s variant', (contents: number | null, variant: ContrabandVariant, text: string) => {
         expect(translated(trunkText(settled(PASS, contents, moved(CustomsOutcome.PASSED, contents ?? 0, 0, 0)), variant))).toEqual(text);
-    });
-});
-
-describe('clockText', () => {
-    test.each([[300, '5:00'], [65, '1:05'], [4, '0:04']])('should tell %i seconds in minutes and seconds', (seconds: number, text: string) => {
-        expect(translated(clockText(seconds))).toEqual(text);
     });
 });
