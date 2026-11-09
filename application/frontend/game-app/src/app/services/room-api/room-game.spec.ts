@@ -11,6 +11,7 @@ describe('RoomGame', () => {
         [RoomGame.BID_POKER, true],
         [RoomGame.MINORITY_GAME, true],
         [RoomGame.CONTRABAND, true],
+        [RoomGame.GARDEN_OF_EDEN, true],
         ['go', false],
         [undefined, false],
     ])('should tell whether %s is a game', (value: unknown, isGame: boolean) => {
