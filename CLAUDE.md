@@ -140,8 +140,9 @@ run by the CI.
   `e2e/test-room.ts`), which wait for a delay of the room: the joins refused for 20 seconds, a negotiation timing
   out after 15 seconds, the room handed over, the moves of a poker hand or its next deal timing out after 45 seconds, 30
   more for a player away, a vote of the Minority Game timing out after 30 seconds, its score variant played over 10
-  rounds, a trunk of the Contraband not revealed, claimed after 15 seconds and 15 more for a player away. Tag a new
-  scenario lasting 20 seconds or more. `npm run e2e` runs both.
+  rounds, a trunk of the Contraband not revealed, claimed after 15 seconds and 15 more for a player away, the 13 rounds
+  of the Garden of Eden, an apple missed after 30 seconds. Tag a new scenario lasting 20 seconds or more. `npm run e2e`
+  runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
 
@@ -207,8 +208,8 @@ run by the CI.
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
   the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`, the Minority Game page `/minority-game`,
-  the Contraband page `/contraband`: the home page only links to them. The sound lab `/sound-lab` plays every sound
-  effect of the games, linked from nowhere.
+  the Contraband page `/contraband`, the Garden of Eden page `/garden-of-eden`: the home page only links to them. The
+  sound lab `/sound-lab` plays every sound effect of the games, linked from nowhere.
 - Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
   `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
@@ -322,6 +323,23 @@ run by the CI.
   game 1: alice and bob` for the smuggler and the inspector of a game, closed once called.
 - A trunk waits 60 seconds, the customs the time picked, a reveal 15 seconds: every phase closes as soon as its player
   acted, a match of 10 games takes about 10 seconds when every player acts.
+
+### Testing a Garden of Eden game
+
+- The table has 8 seats, `#seat-0` to `#seat-7` of `app-eden-table`: each participant takes one with `Sit here`, then a
+  seated player picks the time to vote (`30 s` to `5 min`) and the starting money (`0 million`, `500 million`,
+  `1,000 million`), radio buttons of `#setup`, and clicks `Start the game` once 3 players are seated. The pages draw the
+  seed by themselves, then the first vote opens. See `documentation/garden-of-eden-session.md`.
+- A player still in paradise clicks `Gold apple`, `Silver apple` or `Red apple`; its seat shows `Sealed` to every page, its
+  page `Your apple, red, is sealed` (`#actions`). A player out of paradise reads `You lost paradise: follow the rest of
+  the game and the chat.` there.
+- `#round` (`Round 3 of 13 · 4 players in`) and `#terms` (`Votes of 1 min · starting money 0 million`) tell what the game
+  is at, `#last-round` the count of the round before (`Round 1: 3 gold, 0 silver, 1 red. alice alone picked red and loses
+  1,000 million, the other apples win 100 million`), kept during the next vote: wait on it, no pause parts two rounds.
+  The seats show the balance (`Balance: −900 million`), the last apple, `Out` and `Late`; `#winners` and `#standings` the
+  end, then `Play again` starts a new one.
+- A vote waits the time picked, a reveal 15 seconds: every phase closes as soon as every player acted, a round takes a
+  couple of seconds when every player acts.
 
 ### Cleanup after every browser test
 
