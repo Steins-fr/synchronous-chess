@@ -98,7 +98,7 @@
       "terms": "Votos de {unit, select, minutes {{count} min} other {{count} s}} · dinheiro inicial {amount, plural, one {# milhão} other {# milhões}}"
     },
     "lostParadise": "Perdeu o paraíso: acompanhe o resto da partida e o chat.",
-    "money": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhão}}",
+    "money": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
     "move": {
       "allRed": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. Só maçãs vermelhas: cada uma ganha {gain, plural, one {# milhão} other {# milhões}}",
       "illegal": "{names}: revelou algo que não é uma maçã, −{amount, plural, one {# milhão} other {# milhões}}",
@@ -114,7 +114,7 @@
       "out": "Ronda {round}: {names} {count, plural, one {perde} other {perdem}} o paraíso",
       "tie": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. Tantas de ouro como de prata: nenhuma ganha nem perde"
     },
-    "past": "{count, plural, one {Vencedor} other {Vencedores}}: {winners}, {sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhão}}",
+    "past": "{count, plural, one {Vencedor} other {Vencedores}}: {winners}, {sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
     "pastGames": "Partidas jogadas",
     "pastNoWinner": "Nenhum vencedor",
     "result": {
@@ -128,9 +128,9 @@
     "seat": {
       "absent": "Atrasado",
       "apple": "{apple, select, gold {Ouro} silver {Prata} other {Vermelha}}",
-      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhão}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
       "free": "Lugar livre",
-      "gain": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhão}}",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
       "leave": "Deixar o lugar",
       "out": "Expulso",
       "release": "Libertar o lugar",
