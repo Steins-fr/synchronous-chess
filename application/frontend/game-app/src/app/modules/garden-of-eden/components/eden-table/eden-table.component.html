@@ -63,9 +63,9 @@
 
     <div id="actions" appSteadyHeight class="flex flex-wrap items-start justify-center gap-3">
         @if (currentSession.canVote()) {
-        <button mat-flat-button type="button" (click)="vote(apples.GOLD)"><app-eden-apple class="mr-1 align-middle" [apple]="apples.GOLD" />{{ t('vote.gold') }}</button>
-        <button mat-flat-button type="button" (click)="vote(apples.SILVER)"><app-eden-apple class="mr-1 align-middle" [apple]="apples.SILVER" />{{ t('vote.silver') }}</button>
-        <button mat-flat-button type="button" (click)="vote(apples.RED)"><app-eden-apple class="mr-1 align-middle" [apple]="apples.RED" />{{ t('vote.red') }}</button>
+        <button mat-flat-button type="button" (click)="vote(apples.GOLD)"><app-eden-apple class="mr-1 size-5 align-middle" [apple]="apples.GOLD" />{{ t('vote.gold') }}</button>
+        <button mat-flat-button type="button" (click)="vote(apples.SILVER)"><app-eden-apple class="mr-1 size-5 align-middle" [apple]="apples.SILVER" />{{ t('vote.silver') }}</button>
+        <button mat-flat-button type="button" (click)="vote(apples.RED)"><app-eden-apple class="mr-1 size-5 align-middle" [apple]="apples.RED" />{{ t('vote.red') }}</button>
         }
         @let sealedApple = currentSession.myApple();
         @if (sealedApple !== null) {

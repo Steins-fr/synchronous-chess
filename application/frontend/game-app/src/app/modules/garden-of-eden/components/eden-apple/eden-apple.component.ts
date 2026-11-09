@@ -6,7 +6,7 @@ import { Apple } from '../../classes/rules/eden-rules';
     selector: 'app-eden-apple',
     templateUrl: './eden-apple.component.html',
     host: {
-        class: 'inline-block size-5 shrink-0',
+        class: 'inline-block shrink-0',
         'aria-hidden': 'true',
         '[class.text-app-apple-gold]': 'apple() === apples.GOLD',
         '[class.text-app-apple-silver]': 'apple() === apples.SILVER',
