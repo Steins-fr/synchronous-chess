@@ -97,7 +97,7 @@
       "round": "Runda {round} z {rounds} · {count, plural, one {# gracz w grze} few {# graczy w grze} many {# graczy w grze} other {# gracza w grze}}",
       "terms": "Głosowanie {unit, select, minutes {{count} min} other {{count} s}} · kapitał początkowy {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}"
     },
-    "lostParadise": "Straciłeś raj: śledź resztę gry i czat.",
+    "lostParadise": "Tracisz raj: śledź resztę gry i czat.",
     "money": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
     "move": {
       "allRed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tylko czerwone jabłka: każde wygrywa {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
