@@ -2,13 +2,13 @@ import { Component, computed, effect, inject, InjectionToken, input, linkedSigna
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
 import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { setupTimeOf, setupTimeOptions } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { noLink } from '@app/modules/form/rules/no-link.rule';
 import { requiredText } from '@app/modules/form/rules/required-text.rule';
 import { TextFieldComponent } from '@app/modules/form/text-field/text-field.component';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
@@ -25,7 +25,7 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { MinorityPayloads } from '../../classes/game-sessions/minority-messages';
-import { MinoritySession, MinoritySessionOptions, PlayedMinorityGame } from '../../classes/game-sessions/minority-session';
+import { MinoritySession, MinoritySessionOptions } from '../../classes/game-sessions/minority-session';
 import { CastVote, MinorityEvent, MinorityEventKind, MinorityGameState, MinorityPhase } from '../../classes/rules/minority-game-state';
 import { MinorityVariant, Vote } from '../../classes/rules/minority-rules';
 import { QUESTION_MAX_LENGTH } from '../../classes/rules/question';
@@ -100,7 +100,7 @@ export class MinorityTableComponent implements OnDestroy {
         return untracked(() => new MinoritySession(room, this.options));
     });
     /** The local player plays the game, still in: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<MinorityGameState | null> = computed((): MinorityGameState | null => this.session().game());
     protected readonly votes = Vote;
@@ -225,10 +225,7 @@ export class MinorityTableComponent implements OnDestroy {
     protected readonly withStakes: Signal<boolean> = computed((): boolean => this.game()?.variant === MinorityVariant.ELIMINATION);
 
     /** A seated player starts a new game once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: MinoritySession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
     /** The local player is a player the game waits for */
     private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canAsk() || this.session().canVote());
@@ -269,17 +266,8 @@ export class MinorityTableComponent implements OnDestroy {
     });
 
     /** The result of each game over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedMinorityGame>, index: number): PastResult => {
-            const result: MinorityResult = played.result() as MinorityResult;
-            const winners: string = this.names(result.winners, played.players());
-            return {
-                number: index + 1,
-                label: { key: this.key(marker('table.game', undefined, 'minority')), params: { number: index + 1 } },
-                text: this.pastText(result, winners),
-                verification: null,
-            };
-        }).reverse());
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.game', undefined, 'minority')),
+        (result: MinorityResult, players: ReadonlyArray<string>): TranslatableText => this.pastText(result, this.names(result.winners, players)));
 
     /** The session caught up with the history of the room: the table hears the changes from there */
     private liveSession: MinoritySession | null = null;

@@ -2,10 +2,10 @@ import { Component, computed, effect, inject, InjectionToken, input, linkedSigna
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
 import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { setupTimeOf, setupTimeOptions, signed, SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -19,7 +19,7 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { EdenPayloads } from '../../classes/game-sessions/eden-messages';
-import { EdenSession, EdenSessionOptions, PlayedEdenGame } from '../../classes/game-sessions/eden-session';
+import { EdenSession, EdenSessionOptions } from '../../classes/game-sessions/eden-session';
 import { CastApple, RoundGain } from '../../classes/rules/apple-count';
 import { EdenEvent, EdenEventKind, EdenGameState, EdenPhase } from '../../classes/rules/eden-game-state';
 import { Apple } from '../../classes/rules/eden-rules';
@@ -88,7 +88,7 @@ export class EdenTableComponent implements OnDestroy {
         return untracked(() => new EdenSession(room, this.options));
     });
     /** The local player plays the game, still in paradise: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<EdenGameState | null> = computed((): EdenGameState | null => this.session().game());
     protected readonly apples = Apple;
@@ -169,10 +169,7 @@ export class EdenTableComponent implements OnDestroy {
     });
 
     /** A seated player starts a new game once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: EdenSession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
     /** The clock of the phase, for the players it waits for: the page claims its time once over */
     protected readonly clock: PhaseClock = phaseClock(this.session, { extendingAway: (session: EdenSession) => session.extendingAway() });
@@ -218,21 +215,13 @@ export class EdenTableComponent implements OnDestroy {
     });
 
     /** The result of each game over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedEdenGame>, index: number): PastResult => {
-            const result: EdenResult = played.result() as EdenResult;
-            return {
-                number: index + 1,
-                label: { key: this.key(marker('table.game', undefined, 'eden')), params: { number: index + 1 } },
-                text: result.winners.length === 0
-                    ? { key: this.key(marker('table.pastNoWinner', undefined, 'eden')) }
-                    : {
-                        key: this.key(marker('table.past', undefined, 'eden')),
-                        params: { count: result.winners.length, winners: this.names(result.winners, played.players()), ...signed(result.standings[result.winners[0]].balance) },
-                    },
-                verification: null,
-            };
-        }).reverse());
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.game', undefined, 'eden')),
+        (result: EdenResult, players: ReadonlyArray<string>): TranslatableText => result.winners.length === 0
+            ? { key: this.key(marker('table.pastNoWinner', undefined, 'eden')) }
+            : {
+                key: this.key(marker('table.past', undefined, 'eden')),
+                params: { count: result.winners.length, winners: this.names(result.winners, players), ...signed(result.standings[result.winners[0]].balance) },
+            });
 
     /** The session caught up with the history of the room: the table hears the changes from there */
     private liveSession: EdenSession | null = null;

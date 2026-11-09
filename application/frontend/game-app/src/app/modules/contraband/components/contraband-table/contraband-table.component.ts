@@ -5,6 +5,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
 import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { SECONDS_PER_MINUTE, setupTimeOptions, signed } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
@@ -16,7 +17,6 @@ import { chipsOf } from '@app/modules/playing-cards/types/chip';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
 import { PrivateConversations } from '@app/modules/private-conversations/classes/private-conversations';
 import { PrivatePayloads } from '@app/modules/private-conversations/classes/private-messages';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -32,7 +32,6 @@ import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { ContrabandPayloads } from '../../classes/game-sessions/contraband-messages';
 import { ContrabandSession, ContrabandSessionOptions } from '../../classes/game-sessions/contraband-session';
-import { PlayedContrabandGame } from '../../classes/game-sessions/played-contraband-game';
 import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { CallKind, ContrabandVariant, Team, teamOf, trunkLimit } from '../../classes/rules/contraband-rules';
 import { ContrabandResult, ContrabandStanding } from '../../classes/rules/standings';
@@ -122,7 +121,7 @@ export class ContrabandTableComponent implements OnDestroy {
         return untracked(() => new PrivateConversations(room));
     });
     /** The local player plays the match, not over: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<ContrabandGameState | null> = computed((): ContrabandGameState | null => this.session().game());
     protected readonly variants = ContrabandVariant;
@@ -268,10 +267,7 @@ export class ContrabandTableComponent implements OnDestroy {
     });
 
     /** A seated player starts a new match once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: ContrabandSession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
     /** The local player is a player the game waits for */
     private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canPack() || this.session().canCall());
@@ -309,13 +305,8 @@ export class ContrabandTableComponent implements OnDestroy {
     });
 
     /** The result of each match over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedContrabandGame>, index: number): PastResult => ({
-            number: index + 1,
-            label: { key: this.key(marker('table.match', undefined, 'contraband')), params: { number: index + 1 } },
-            text: this.resultText(played.result() as ContrabandResult),
-            verification: null,
-        })).reverse());
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.match', undefined, 'contraband')),
+        (result: ContrabandResult): TranslatableText => this.resultText(result));
 
     /** The session caught up with the history of the room: the table hears the changes from there, and flies their chips */
     private liveSession: ContrabandSession | null = null;

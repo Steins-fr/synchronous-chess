@@ -2,11 +2,11 @@ import { Component, computed, effect, inject, InjectionToken, input, linkedSigna
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
 import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
 import { SuitedCard } from '@app/modules/playing-cards/types/playing-card';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -20,7 +20,7 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { BidPokerPayloads } from '../../classes/game-sessions/bid-poker-messages';
-import { BidPokerSession, BidPokerSessionOptions, PlayedBidGame } from '../../classes/game-sessions/bid-poker-session';
+import { BidPokerSession, BidPokerSessionOptions } from '../../classes/game-sessions/bid-poker-session';
 import { BidEvent, BidEventKind, BidPokerGame, BidPokerPhase, Lot } from '../../classes/rules/bid-poker-game';
 import { lotLetter } from '../../classes/rules/catalogue';
 import { BidPokerResult, Standing } from '../../classes/rules/standings';
@@ -92,7 +92,7 @@ export class BidTableComponent implements OnDestroy {
         return untracked(() => new BidPokerSession(room, this.options));
     });
     /** The local player plays the game: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<BidPokerGame | null> = computed((): BidPokerGame | null => this.session().game());
     /** The lot auctioned */
@@ -129,10 +129,7 @@ export class BidTableComponent implements OnDestroy {
     });
 
     /** A seated player starts a new game once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: BidPokerSession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
     /** The local player is a player the game waits for */
     private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canBid() || this.session().canDiscard());
@@ -205,22 +202,16 @@ export class BidTableComponent implements OnDestroy {
     });
 
     /** The result of each game over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedBidGame>, index: number): PastResult => {
-            const result: BidPokerResult = played.result() as BidPokerResult;
-            const names = (standings: ReadonlyArray<Readonly<Standing>>): string => standings.map((standing: Readonly<Standing>) => played.players()[standing.player]).join(', ');
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.game', undefined, 'bid')),
+        (result: BidPokerResult, players: ReadonlyArray<string>): TranslatableText => {
+            const names = (standings: ReadonlyArray<Readonly<Standing>>): string => standings.map((standing: Readonly<Standing>) => players[standing.player]).join(', ');
             const first: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.place === 1));
             const pigs: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.pig));
-            return {
-                number: index + 1,
-                label: { key: this.key(marker('table.game', undefined, 'bid')), params: { number: index + 1 } },
-                // Every player a pig: nobody first
-                text: first === ''
-                    ? { key: this.key(marker('table.pastAllPigs', undefined, 'bid')), params: { count: result.pigs, pigs } }
-                    : { key: this.key(marker('table.past', undefined, 'bid')), params: { first, count: result.pigs, pigs } },
-                verification: null,
-            };
-        }).reverse());
+            // Every player a pig: nobody first
+            return first === ''
+                ? { key: this.key(marker('table.pastAllPigs', undefined, 'bid')), params: { count: result.pigs, pigs } }
+                : { key: this.key(marker('table.past', undefined, 'bid')), params: { first, count: result.pigs, pigs } };
+        });
 
     /** The session caught up with the history of the room: the table hears the changes from there */
     private liveSession: BidPokerSession | null = null;
