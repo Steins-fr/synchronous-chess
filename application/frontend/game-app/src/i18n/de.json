@@ -28,8 +28,8 @@
     "title": "Synchrones Schach"
   },
   "cheat": {
-    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
-    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
+    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} eden {Garten Eden} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
+    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} eden {Garten Eden} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
   },
   "dialog": {
     "cancel": "Abbrechen",

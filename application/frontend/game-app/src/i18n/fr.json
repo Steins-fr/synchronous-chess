@@ -28,8 +28,8 @@
     "title": "Échecs synchrones"
   },
   "cheat": {
-    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} poker {poker} roulette {roulette} bid {poker aux enchères} minority {jeu de la minorité} private {conversation privée} contraband {contrebande} other {}}) de {author} est signalé comme triché par {reporters}",
-    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} poker {poker} roulette {roulette} bid {poker aux enchères} minority {jeu de la minorité} private {conversation privée} contraband {contrebande} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
+    "flagged": "Le message {index} ({chain, select, chess {échecs} chat {tchat} poker {poker} roulette {roulette} bid {poker aux enchères} minority {jeu de la minorité} private {conversation privée} contraband {contrebande} eden {jardin d'Éden} other {}}) de {author} est signalé comme triché par {reporters}",
+    "ignored": "Un message ({chain, select, chess {échecs} chat {tchat} poker {poker} roulette {roulette} bid {poker aux enchères} minority {jeu de la minorité} private {conversation privée} contraband {contrebande} eden {jardin d'Éden} other {}}) de {author} est ignoré par {sequencer}, signalé par {reporters}"
   },
   "dialog": {
     "cancel": "Annuler",

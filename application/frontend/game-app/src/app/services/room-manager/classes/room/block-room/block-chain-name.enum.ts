@@ -10,6 +10,8 @@ export enum BlockChainName {
     MINORITY = 'minority',
     /** The Contraband */
     CONTRABAND = 'contraband',
+    /** The Garden of Eden */
+    EDEN = 'eden',
     /** The private conversations of a game, encrypted to their members */
     PRIVATE = 'private',
 }

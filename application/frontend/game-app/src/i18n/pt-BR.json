@@ -28,8 +28,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} other {}}) de {author} foi denunciada como trapaça por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} other {}}) de {author} foi denunciada como trapaça por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {bate-papo} poker {pôquer} roulette {roleta} bid {pôquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
