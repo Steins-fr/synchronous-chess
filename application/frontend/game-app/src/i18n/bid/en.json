@@ -66,7 +66,6 @@
       "sealed": "Your bid of {amount, plural, one {# coin} other {# coins}} is sealed",
       "submit": "Bid"
     },
-    "clock": "{seconds} s",
     "discard": {
       "keep": "Keep my cards",
       "submit": "Discard {count, plural, one {# card} other {# cards}}"
@@ -103,7 +102,6 @@
     },
     "seat": {
       "absent": "Skipped",
-      "clock": "{seconds} s",
       "coins": "{count, plural, one {# coin} other {# coins}}",
       "free": "Free seat",
       "leave": "Leave",

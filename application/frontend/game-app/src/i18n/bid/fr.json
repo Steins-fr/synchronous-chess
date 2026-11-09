@@ -66,7 +66,6 @@
       "sealed": "Votre enchère de {amount, plural, one {# pièce} other {# pièces}} est scellée",
       "submit": "Enchérir"
     },
-    "clock": "{seconds} s",
     "discard": {
       "keep": "Garder mes cartes",
       "submit": "Défausser {count, plural, one {# carte} other {# cartes}}"
@@ -103,7 +102,6 @@
     },
     "seat": {
       "absent": "Absent",
-      "clock": "{seconds} s",
       "coins": "{count, plural, one {# pièce} other {# pièces}}",
       "free": "Place libre",
       "leave": "Quitter la place",

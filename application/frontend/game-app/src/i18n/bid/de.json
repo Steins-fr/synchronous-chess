@@ -66,7 +66,6 @@
       "sealed": "Dein Gebot von {amount, plural, one {# Münze} other {# Münzen}} ist verdeckt",
       "submit": "Bieten"
     },
-    "clock": "{seconds} s",
     "discard": {
       "keep": "Karten behalten",
       "submit": "{count, plural, one {# Karte abwerfen} other {# Karten abwerfen}}"
@@ -103,7 +102,6 @@
     },
     "seat": {
       "absent": "Übersprungen",
-      "clock": "{seconds} s",
       "coins": "{count, plural, one {# Münze} other {# Münzen}}",
       "free": "Freier Platz",
       "leave": "Platz verlassen",

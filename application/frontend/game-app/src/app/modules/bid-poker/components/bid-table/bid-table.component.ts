@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { clockText } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
 import { SuitedCard } from '@app/modules/playing-cards/types/playing-card';
@@ -146,13 +147,8 @@ export class BidTableComponent implements OnDestroy {
     private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
     private readonly clockKey: Signal<string | null> = computed((): string | null =>
         this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** The players the game waits for who are away */
-    private readonly awaitedAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const away: ReadonlyArray<string> = this.session().awayPlayers();
-        return this.session().awaited().filter((name: string) => away.includes(name));
-    });
     /** A player the game waits for is away: it gets more time, once */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.awaitedAway().length > 0);
+    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.session().awaitedAway().length > 0);
     /** The round the clock runs for, from its start: a late tick of a phase closed acts on nothing */
     private clocked: string | null = null;
     /** The seconds left to the players the phase waits for */
@@ -168,7 +164,11 @@ export class BidTableComponent implements OnDestroy {
         away: this.waitingAway,
         timeOut: () => this.timeOut(),
     });
-    protected readonly clockLow: number = CLOCK_LOW;
+    protected readonly clock: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
+        const left: number | null = this.timeLeft();
+        return left === null ? null : clockText(left);
+    });
+    protected readonly clockLow: Signal<boolean> = computed((): boolean => (this.timeLeft() ?? CLOCK_LOW + 1) <= CLOCK_LOW);
 
     /** What the table waits for */
     protected readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
@@ -185,13 +185,12 @@ export class BidTableComponent implements OnDestroy {
         if (session.over()) {
             return { key: this.key(marker('table.status.over', undefined, 'bid')) };
         }
-        const left: number | null = this.timeLeft();
-        if (this.myTurn() && left !== null && left <= CLOCK_LOW) {
+        if (this.myTurn() && this.clockLow()) {
             return { key: this.key(marker('table.status.hurry', undefined, 'bid')) };
         }
         // The local player to act reads its own prompt
         if (this.waitingAway() && !this.myTurn()) {
-            return { key: this.key(marker('table.status.away', undefined, 'bid')), params: { names: this.awaitedAway().join(', ') } };
+            return { key: this.key(marker('table.status.away', undefined, 'bid')), params: { names: session.awaitedAway().join(', ') } };
         }
         return this.phaseStatus(game, names);
     });

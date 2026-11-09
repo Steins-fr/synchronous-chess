@@ -66,7 +66,6 @@
       "sealed": "Tawaran Anda sebesar {amount, plural, other {# koin}} telah tertutup",
       "submit": "Tawar"
     },
-    "clock": "{seconds} dtk",
     "discard": {
       "keep": "Simpan kartu saya",
       "submit": "Buang {count, plural, other {# kartu}}"
@@ -103,7 +102,6 @@
     },
     "seat": {
       "absent": "Dilewati",
-      "clock": "{seconds} dtk",
       "coins": "{count, plural, other {# koin}}",
       "free": "Kursi kosong",
       "leave": "Tinggalkan kursi",

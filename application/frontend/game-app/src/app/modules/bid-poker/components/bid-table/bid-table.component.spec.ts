@@ -452,7 +452,7 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
 
             // Then
             expect(status()).toEqual('Hurry: your time runs out!');
-            expect(text('#bid-clock')).toEqual('4 s');
+            expect(text('#bid-clock')).toEqual('0:04');
 
             // When
             hub.time = LATER;
@@ -508,7 +508,7 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
 
             // Then
             await until(() => session().voidedClaims() === 1);
-            expect(text('#bid-clock')).toEqual('5 s');
+            expect(text('#bid-clock')).toEqual('0:05');
 
             // When
             hub.time = LATER;
@@ -530,7 +530,7 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
             expect(status()).toEqual('Bid on lot A, sealed: 0 for no bid.');
             await click('No bid');
             await until(() => status() === 'Waiting for dave to come back…');
-            expect(text('#seat-3')).toContain('s');
+            expect(text('#seat-3')).toMatch(/\d:\d\d/);
         });
     });
 });
