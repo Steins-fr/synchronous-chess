@@ -24,7 +24,7 @@
       "apples": "Raundun elmaları",
       "caption": "Raundun elmalarına göre her elmanın kazandığı ya da kaybettiği",
       "loneApple": {
-        "apples": "Kırmızılar arasında tek bir altın ya da gümüş elma",
+        "apples": "En az 2 kırmızı elma arasında tek bir altın ya da gümüş elma",
         "others": "+200 milyon",
         "red": "−100 milyon"
       },

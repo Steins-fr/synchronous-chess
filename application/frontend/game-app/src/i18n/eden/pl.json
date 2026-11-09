@@ -24,7 +24,7 @@
       "apples": "Jabłka rundy",
       "caption": "Ile każde jabłko wygrywa lub traci, zależnie od jabłek rundy",
       "loneApple": {
-        "apples": "Jedno złote lub srebrne jabłko wśród czerwonych",
+        "apples": "Jedno złote lub srebrne jabłko wśród co najmniej 2 czerwonych",
         "others": "+200 milionów",
         "red": "−100 milionów"
       },

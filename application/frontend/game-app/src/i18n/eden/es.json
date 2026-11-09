@@ -24,7 +24,7 @@
       "apples": "Las manzanas de la ronda",
       "caption": "Lo que gana o pierde cada manzana, según las manzanas de la ronda",
       "loneApple": {
-        "apples": "Una sola manzana de oro o de plata entre rojas",
+        "apples": "Una sola manzana de oro o de plata entre 2 rojas o más",
         "others": "+200 millones",
         "red": "−100 millones"
       },

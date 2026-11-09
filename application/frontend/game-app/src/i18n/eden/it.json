@@ -24,7 +24,7 @@
       "apples": "Le mele della manche",
       "caption": "Quanto vince o perde ogni mela, secondo le mele della manche",
       "loneApple": {
-        "apples": "Una sola mela d'oro o d'argento tra mele rosse",
+        "apples": "Una sola mela d'oro o d'argento tra 2 o più mele rosse",
         "others": "+200 milioni",
         "red": "−100 milioni"
       },

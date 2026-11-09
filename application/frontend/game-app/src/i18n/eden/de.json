@@ -24,7 +24,7 @@
       "apples": "Die Äpfel des Durchgangs",
       "caption": "Was jeder Apfel gewinnt oder verliert, je nach den Äpfeln des Durchgangs",
       "loneApple": {
-        "apples": "Ein einziger goldener oder silberner Apfel unter roten",
+        "apples": "Ein einziger goldener oder silberner Apfel unter 2 roten oder mehr",
         "others": "+200 Millionen",
         "red": "−100 Millionen"
       },

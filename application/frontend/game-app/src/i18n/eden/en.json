@@ -24,7 +24,7 @@
       "apples": "The apples of the round",
       "caption": "What each apple wins or loses, depending on the apples of the round",
       "loneApple": {
-        "apples": "A single gold or silver apple among red ones",
+        "apples": "A single gold or silver apple among 2 red ones or more",
         "others": "+200 million",
         "red": "−100 million"
       },

@@ -24,7 +24,7 @@
       "apples": "Apel di ronde itu",
       "caption": "Yang dimenangkan atau dikalahkan setiap apel, tergantung apel di ronde itu",
       "loneApple": {
-        "apples": "Satu apel emas atau perak di antara apel merah",
+        "apples": "Satu apel emas atau perak di antara 2 apel merah atau lebih",
         "others": "+200 juta",
         "red": "−100 juta"
       },

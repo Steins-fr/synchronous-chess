@@ -24,7 +24,7 @@
       "apples": "As maçãs da ronda",
       "caption": "O que cada maçã ganha ou perde, consoante as maçãs da ronda",
       "loneApple": {
-        "apples": "Uma única maçã de ouro ou de prata entre vermelhas",
+        "apples": "Uma única maçã de ouro ou de prata entre 2 vermelhas ou mais",
         "others": "+200 milhões",
         "red": "−100 milhões"
       },

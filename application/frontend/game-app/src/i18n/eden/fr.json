@@ -24,7 +24,7 @@
       "apples": "Les pommes de la manche",
       "caption": "Ce que chaque pomme gagne ou perd, selon les pommes de la manche",
       "loneApple": {
-        "apples": "Une seule pomme d'or ou d'argent parmi des rouges",
+        "apples": "Une seule pomme d'or ou d'argent parmi 2 rouges ou plus",
         "others": "+200 millions",
         "red": "−100 millions"
       },
