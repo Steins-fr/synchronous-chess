@@ -84,5 +84,92 @@
       "title": "Süreler"
     },
     "title": "Kurallar"
+  },
+  "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Oyunu başlat"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Oyun {number}:",
+    "history": "Oyunun hamleleri",
+    "info": {
+      "round": "Raunt {round}/{rounds} · {count, plural, one {oyunda # oyuncu} other {oyunda # oyuncu}}",
+      "terms": "{unit, select, minutes {{count} dk} other {{count} sn}} oylama · başlangıç parası {amount, plural, one {# milyon} other {# milyon}}"
+    },
+    "lostParadise": "Cenneti kaybettiniz: oyunun geri kalanını ve sohbeti takip edin.",
+    "money": "{sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+    "move": {
+      "allRed": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Yalnızca kırmızı elmalar: her biri {gain, plural, one {# milyon} other {# milyon}} kazanır",
+      "illegal": "{names}: elma dışında bir şey açıldı, −{amount, plural, one {# milyon} other {# milyon}}",
+      "invalid": "{names}: elma mühürlenenden farklı açıldı, −{amount, plural, one {# milyon} other {# milyon}}",
+      "late": "{names}: zamanında elma yok, −{amount, plural, one {# milyon} other {# milyon}}",
+      "lateReveal": "{names}: elma zamanında açılmadı, −{amount, plural, one {# milyon} other {# milyon}}",
+      "loneApple": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. {name} oyuncusunun tek {apple, select, gold {altın} other {gümüş}} elması {bonus, plural, one {# milyon} other {# milyon}} kazanır, kırmızılar {gain, plural, one {# milyon} other {# milyon}} kaybeder",
+      "loneRed": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Kırmızıyı tek başına {name} seçti ve {loss, plural, one {# milyon} other {# milyon}} kaybeder, diğer elmalar {gain, plural, one {# milyon} other {# milyon}} kazanır",
+      "majority": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. {apple, select, gold {Altın} other {Gümüş}} elmalar {gain, plural, one {# milyon} other {# milyon}} kazanır, diğerleri {gain, plural, one {# milyon} other {# milyon}} kaybeder",
+      "mixed": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Kırmızı elmalar {gain, plural, one {# milyon} other {# milyon}} kaybeder, altın ve gümüş elmalar {gain, plural, one {# milyon} other {# milyon}} kazanır",
+      "noVote": "Raunt {round}: hiç elma sayılmadı",
+      "oneColor": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Yalnızca {apple, select, gold {altın} other {gümüş}} elmalar: her biri {gain, plural, one {# milyon} other {# milyon}} kaybeder",
+      "out": "Raunt {round}: {names} {count, plural, one {cenneti kaybeder} other {cenneti kaybeder}}",
+      "tie": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Altın ve gümüş elma sayısı eşit: hiçbiri kazanmaz ya da kaybetmez"
+    },
+    "past": "{count, plural, one {Kazanan} other {Kazananlar}}: {winners}, {sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+    "pastGames": "Oynanan oyunlar",
+    "pastNoWinner": "Kazanan yok",
+    "result": {
+      "in": "Cennette",
+      "noWinner": "Kazanan yok: tüm oyuncular cenneti kaybetti",
+      "out": "{round}. rauntta kovuldu",
+      "place": "{place}. sıra",
+      "winner": "Kazanan",
+      "winners": "{count, plural, one {Kazanan: {names}} other {Kazananlar: {names}}}"
+    },
+    "seat": {
+      "absent": "Gecikti",
+      "apple": "{apple, select, gold {Altın} silver {Gümüş} other {Kırmızı}}",
+      "balance": "Bakiye: {sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+      "free": "Boş yer",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+      "leave": "Yeri bırak",
+      "out": "Kovuldu",
+      "release": "Yeri boşalt",
+      "sealed": "Kapalı",
+      "take": "Otur"
+    },
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "standings": {
+      "balance": "Milyon",
+      "caption": "Oyunun sıralaması",
+      "outcome": "Sonuç",
+      "place": "Sıra",
+      "player": "Oyuncu"
+    },
+    "start": {
+      "minutes": "{count} dk",
+      "money": "{amount, plural, one {# milyon} other {# milyon}}",
+      "seconds": "{count} sn",
+      "startMoney": "Başlangıç parası",
+      "voteTime": "Oylama süresi"
+    },
+    "status": {
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "drawing": "Oyun başlıyor: {names} bekleniyor.",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Oyun bitti.",
+      "revealing": "Elmalar açılıyor…",
+      "sealed": "Elmanız mühürlendi: {names} bekleniyor.",
+      "seats": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: oyun en az {min} oyuncuyla başlar.",
+      "start": "Oylama süresini ve başlangıç parasını seçin, ardından oyunu başlatın.",
+      "vote": "Elmanızı mühürlü olarak seçin: altın, gümüş ya da kırmızı.",
+      "voting": "{names} oyuncularının elmaları bekleniyor.",
+      "waitingStart": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: içlerinden birinin başlatması bekleniyor."
+    },
+    "vote": {
+      "gold": "Altın elma",
+      "red": "Kırmızı elma",
+      "sealed": "Elmanız, {apple, select, gold {altın} silver {gümüş} other {kırmızı}}, mühürlendi",
+      "silver": "Gümüş elma"
+    }
   }
 }

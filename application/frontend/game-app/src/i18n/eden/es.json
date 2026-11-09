@@ -84,5 +84,92 @@
       "title": "Los tiempos"
     },
     "title": "Reglas"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jugar otra vez",
+      "start": "Empezar la partida"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Partida {number}:",
+    "history": "Jugadas de la partida",
+    "info": {
+      "round": "Ronda {round} de {rounds} · {count, plural, one {# jugador en juego} other {# jugadores en juego}}",
+      "terms": "Votos de {unit, select, minutes {{count} min} other {{count} s}} · dinero inicial {amount, plural, one {# millón} other {# millones}}"
+    },
+    "lostParadise": "Perdiste el paraíso: sigue el resto de la partida y el chat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# millón} other {# millones}}} minus {−{amount, plural, one {# millón} other {# millones}}} other {0 millones}}",
+    "move": {
+      "allRed": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. Solo manzanas rojas: cada una gana {gain, plural, one {# millón} other {# millones}}",
+      "illegal": "{names}: revelado algo que no es una manzana, −{amount, plural, one {# millón} other {# millones}}",
+      "invalid": "{names}: manzana revelada distinta de la sellada, −{amount, plural, one {# millón} other {# millones}}",
+      "late": "{names}: sin manzana a tiempo, −{amount, plural, one {# millón} other {# millones}}",
+      "lateReveal": "{names}: manzana no revelada a tiempo, −{amount, plural, one {# millón} other {# millones}}",
+      "loneApple": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. La única manzana {apple, select, gold {de oro} other {de plata}}, de {name}, gana {bonus, plural, one {# millón} other {# millones}}, las rojas pierden {gain, plural, one {# millón} other {# millones}}",
+      "loneRed": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. {name} eligió roja en solitario y pierde {loss, plural, one {# millón} other {# millones}}, las demás manzanas ganan {gain, plural, one {# millón} other {# millones}}",
+      "majority": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. Las manzanas {apple, select, gold {de oro} other {de plata}} ganan {gain, plural, one {# millón} other {# millones}}, las otras pierden {gain, plural, one {# millón} other {# millones}}",
+      "mixed": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. Las manzanas rojas pierden {gain, plural, one {# millón} other {# millones}}, las de oro y de plata ganan {gain, plural, one {# millón} other {# millones}}",
+      "noVote": "Ronda {round}: ninguna manzana contada",
+      "oneColor": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. Solo manzanas {apple, select, gold {de oro} other {de plata}}: cada una pierde {gain, plural, one {# millón} other {# millones}}",
+      "out": "Ronda {round}: {names} {count, plural, one {pierde} other {pierden}} el paraíso",
+      "tie": "Ronda {round}: oro {gold}, plata {silver}, rojo {red}. Tantas de oro como de plata: ninguna gana ni pierde"
+    },
+    "past": "{count, plural, one {Ganador} other {Ganadores}}: {winners}, {sign, select, plus {+{amount, plural, one {# millón} other {# millones}}} minus {−{amount, plural, one {# millón} other {# millones}}} other {0 millones}}",
+    "pastGames": "Partidas jugadas",
+    "pastNoWinner": "Ningún ganador",
+    "result": {
+      "in": "En el paraíso",
+      "noWinner": "Sin ganador: todos los jugadores perdieron el paraíso",
+      "out": "Expulsado en la ronda {round}",
+      "place": "Posición {place}",
+      "winner": "Ganador",
+      "winners": "{count, plural, one {Ganador: {names}} other {Ganadores: {names}}}"
+    },
+    "seat": {
+      "absent": "Tarde",
+      "apple": "{apple, select, gold {Oro} silver {Plata} other {Roja}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# millón} other {# millones}}} minus {−{amount, plural, one {# millón} other {# millones}}} other {0 millones}}",
+      "free": "Puesto libre",
+      "gain": "{sign, select, plus {+{amount, plural, one {# millón} other {# millones}}} minus {−{amount, plural, one {# millón} other {# millones}}} other {0 millones}}",
+      "leave": "Dejar el puesto",
+      "out": "Expulsado",
+      "release": "Liberar el puesto",
+      "sealed": "Sellado",
+      "take": "Sentarse"
+    },
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "standings": {
+      "balance": "Millones",
+      "caption": "Clasificación de la partida",
+      "outcome": "Resultado",
+      "place": "Puesto",
+      "player": "Jugador"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# millón} other {# millones}}",
+      "seconds": "{count} s",
+      "startMoney": "Dinero inicial",
+      "voteTime": "Tiempo para votar"
+    },
+    "status": {
+      "away": "Esperando el regreso de {names}…",
+      "drawing": "La partida empieza: esperando a {names}.",
+      "hurry": "Date prisa: ¡se te acaba el tiempo!",
+      "over": "La partida ha terminado.",
+      "revealing": "Se revelan las manzanas…",
+      "sealed": "Tu manzana está sellada: esperando a {names}.",
+      "seats": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: la partida empieza con {min} como mínimo.",
+      "start": "Elige la duración del voto y el dinero inicial, y empieza la partida.",
+      "vote": "Elige tu manzana, sellada: de oro, de plata o roja.",
+      "voting": "Esperando las manzanas de {names}.",
+      "waitingStart": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: esperando a que uno de ellos la empiece."
+    },
+    "vote": {
+      "gold": "Manzana de oro",
+      "red": "Manzana roja",
+      "sealed": "Tu manzana, {apple, select, gold {de oro} silver {de plata} other {roja}}, está sellada",
+      "silver": "Manzana de plata"
+    }
   }
 }

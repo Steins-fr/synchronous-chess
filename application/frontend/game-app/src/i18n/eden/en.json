@@ -84,5 +84,92 @@
       "title": "The times"
     },
     "title": "Rules"
+  },
+  "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the game"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Game {number}:",
+    "history": "Moves of the game",
+    "info": {
+      "round": "Round {round} of {rounds} · {count, plural, one {# player in} other {# players in}}",
+      "terms": "Votes of {unit, select, minutes {{count} min} other {{count} s}} · starting money {amount, plural, one {# million} other {# million}}"
+    },
+    "lostParadise": "You lost paradise: follow the rest of the game and the chat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# million} other {# million}}} minus {−{amount, plural, one {# million} other {# million}}} other {0 million}}",
+    "move": {
+      "allRed": "Round {round}: {gold} gold, {silver} silver, {red} red. Only red apples: each one wins {gain, plural, one {# million} other {# million}}",
+      "illegal": "{names}: something else than an apple revealed, −{amount, plural, one {# million} other {# million}}",
+      "invalid": "{names}: apple revealed otherwise than sealed, −{amount, plural, one {# million} other {# million}}",
+      "late": "{names}: no apple in time, −{amount, plural, one {# million} other {# million}}",
+      "lateReveal": "{names}: apple not revealed in time, −{amount, plural, one {# million} other {# million}}",
+      "loneApple": "Round {round}: {gold} gold, {silver} silver, {red} red. The lone {apple, select, gold {gold} other {silver}} apple of {name} wins {bonus, plural, one {# million} other {# million}}, the red ones lose {gain, plural, one {# million} other {# million}}",
+      "loneRed": "Round {round}: {gold} gold, {silver} silver, {red} red. {name} alone picked red and loses {loss, plural, one {# million} other {# million}}, the other apples win {gain, plural, one {# million} other {# million}}",
+      "majority": "Round {round}: {gold} gold, {silver} silver, {red} red. The {apple, select, gold {gold} other {silver}} apples win {gain, plural, one {# million} other {# million}}, the others lose {gain, plural, one {# million} other {# million}}",
+      "mixed": "Round {round}: {gold} gold, {silver} silver, {red} red. The red apples lose {gain, plural, one {# million} other {# million}}, the gold and silver ones win {gain, plural, one {# million} other {# million}}",
+      "noVote": "Round {round}: no apple counted",
+      "oneColor": "Round {round}: {gold} gold, {silver} silver, {red} red. Only {apple, select, gold {gold} other {silver}} apples: each one loses {gain, plural, one {# million} other {# million}}",
+      "out": "Round {round}: {names} {count, plural, one {loses} other {lose}} paradise",
+      "tie": "Round {round}: {gold} gold, {silver} silver, {red} red. As many gold as silver apples: none wins or loses"
+    },
+    "past": "{count, plural, one {Winner} other {Winners}}: {winners}, {sign, select, plus {+{amount, plural, one {# million} other {# million}}} minus {−{amount, plural, one {# million} other {# million}}} other {0 million}}",
+    "pastGames": "Games played",
+    "pastNoWinner": "No winner",
+    "result": {
+      "in": "In paradise",
+      "noWinner": "No winner: every player lost paradise",
+      "out": "Out at round {round}",
+      "place": "Place {place}",
+      "winner": "Winner",
+      "winners": "{count, plural, one {Winner: {names}} other {Winners: {names}}}"
+    },
+    "seat": {
+      "absent": "Late",
+      "apple": "{apple, select, gold {Gold} silver {Silver} other {Red}}",
+      "balance": "Balance: {sign, select, plus {+{amount, plural, one {# million} other {# million}}} minus {−{amount, plural, one {# million} other {# million}}} other {0 million}}",
+      "free": "Free seat",
+      "gain": "{sign, select, plus {+{amount, plural, one {# million} other {# million}}} minus {−{amount, plural, one {# million} other {# million}}} other {0 million}}",
+      "leave": "Leave",
+      "out": "Out",
+      "release": "Free the seat",
+      "sealed": "Sealed",
+      "take": "Sit here"
+    },
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "standings": {
+      "balance": "Millions",
+      "caption": "Standings of the game",
+      "outcome": "Outcome",
+      "place": "Place",
+      "player": "Player"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# million} other {# million}}",
+      "seconds": "{count} s",
+      "startMoney": "Starting money",
+      "voteTime": "Time to vote"
+    },
+    "status": {
+      "away": "Waiting for {names} to come back…",
+      "drawing": "The game starts: waiting for {names}.",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The game is over.",
+      "revealing": "The apples are revealed…",
+      "sealed": "Your apple is sealed: waiting for {names}.",
+      "seats": "{count, plural, one {# player seated} other {# players seated}}: the game starts with {min} at least.",
+      "start": "Pick the time to vote and the starting money, then start the game.",
+      "vote": "Pick your apple, sealed: gold, silver or red.",
+      "voting": "Waiting for the apples of {names}.",
+      "waitingStart": "{count, plural, one {# player seated} other {# players seated}}: waiting for one of them to start."
+    },
+    "vote": {
+      "gold": "Gold apple",
+      "red": "Red apple",
+      "sealed": "Your apple, {apple, select, gold {gold} silver {silver} other {red}}, is sealed",
+      "silver": "Silver apple"
+    }
   }
 }

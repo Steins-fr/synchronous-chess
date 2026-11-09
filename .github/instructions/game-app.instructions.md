@@ -336,6 +336,7 @@ Claude writes the translations of every new or changed key, into every language:
 | apple | pomme | manzana | maçã | maçã | Apfel | яблоко | elma | apel | jabłko | mela |
 | gold / silver / red (apple) | d'or / d'argent / rouge | de oro / de plata / roja | de ouro / de prata / vermelha | de ouro / de prata / vermelha | golden / silbern / rot | золотое / серебряное / красное | altın / gümüş / kırmızı | emas / perak / merah | złote / srebrne / czerwone | d'oro / d'argento / rossa |
 | loss of paradise | perte du paradis | pérdida del paraíso | perda do paraíso | perda do paraíso | Verlust des Paradieses | потеря рая | cennetin kaybı | kehilangan surga | utrata raju | perdita del paradiso |
+| out (after the loss of paradise) | exclu | expulsado | expulso | expulso | verbannt | изгнан | kovuldu | terusir | wygnany | espulso |
 | starting money | fonds de départ | dinero inicial | dinheiro inicial | dinheiro inicial | Startgeld | стартовый капитал | başlangıç parası | modal awal | kapitał początkowy | capitale iniziale |
 
 ## APIs

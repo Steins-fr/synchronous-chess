@@ -84,5 +84,92 @@
       "title": "Время"
     },
     "title": "Правила"
+  },
+  "table": {
+    "action": {
+      "rematch": "Сыграть ещё",
+      "start": "Начать партию"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Партия {number}:",
+    "history": "Ходы партии",
+    "info": {
+      "round": "Раунд {round} из {rounds} · {count, plural, one {# игрок в игре} few {# игрока в игре} many {# игроков в игре} other {# игрока в игре}}",
+      "terms": "Голосование {unit, select, minutes {{count} мин} other {{count} с}} · стартовый капитал {amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}"
+    },
+    "lostParadise": "Вы потеряли рай: следите за остатком игры и чатом.",
+    "money": "{sign, select, plus {+{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} minus {−{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} other {0 миллионов}}",
+    "move": {
+      "allRed": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. Только красные яблоки: каждое выигрывает {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "illegal": "{names}: открыто не яблоко, −{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "invalid": "{names}: яблоко открыто не таким, каким было запечатано, −{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "late": "{names}: нет яблока вовремя, −{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "lateReveal": "{names}: яблоко не открыто вовремя, −{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "loneApple": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. Единственное {apple, select, gold {золотое} other {серебряное}} яблоко игрока {name} выигрывает {bonus, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}, красные теряют {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "loneRed": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. {name} единственным выбрал красное и теряет {loss, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}, остальные яблоки выигрывают {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "majority": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. {apple, select, gold {Золотые} other {Серебряные}} яблоки выигрывают {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}, остальные теряют {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "mixed": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. Красные яблоки теряют {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}, золотые и серебряные выигрывают {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "noVote": "Раунд {round}: ни одно яблоко не засчитано",
+      "oneColor": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. Только {apple, select, gold {золотые} other {серебряные}} яблоки: каждое теряет {gain, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "out": "Раунд {round}: {names} {count, plural, one {теряет} few {теряют} many {теряют} other {теряют}} рай",
+      "tie": "Раунд {round}: золотых {gold}, серебряных {silver}, красных {red}. Золотых столько же, сколько серебряных: ни одно не выигрывает и не теряет"
+    },
+    "past": "{count, plural, one {Победитель} few {Победители} many {Победители} other {Победители}}: {winners}, {sign, select, plus {+{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} minus {−{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} other {0 миллионов}}",
+    "pastGames": "Сыгранные партии",
+    "pastNoWinner": "Без победителя",
+    "result": {
+      "in": "В раю",
+      "noWinner": "Нет победителя: все игроки потеряли рай",
+      "out": "Изгнан в раунде {round}",
+      "place": "Место {place}",
+      "winner": "Победитель",
+      "winners": "{count, plural, one {Победитель: {names}} few {Победители: {names}} many {Победители: {names}} other {Победители: {names}}}"
+    },
+    "seat": {
+      "absent": "Опоздание",
+      "apple": "{apple, select, gold {Золотое} silver {Серебряное} other {Красное}}",
+      "balance": "Баланс: {sign, select, plus {+{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} minus {−{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} other {0 миллионов}}",
+      "free": "Свободное место",
+      "gain": "{sign, select, plus {+{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} minus {−{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}} other {0 миллионов}}",
+      "leave": "Освободить место",
+      "out": "Изгнан",
+      "release": "Убрать с места",
+      "sealed": "Закрыто",
+      "take": "Сесть"
+    },
+    "spectators": "{count, plural, one {# зритель} few {# зрителя} many {# зрителей} other {# зрителя}}",
+    "standings": {
+      "balance": "Миллионы",
+      "caption": "Итоги игры",
+      "outcome": "Итог",
+      "place": "Место",
+      "player": "Игрок"
+    },
+    "start": {
+      "minutes": "{count} мин",
+      "money": "{amount, plural, one {# миллион} few {# миллиона} many {# миллионов} other {# миллиона}}",
+      "seconds": "{count} с",
+      "startMoney": "Стартовый капитал",
+      "voteTime": "Время на голосование"
+    },
+    "status": {
+      "away": "Ожидание возвращения: {names}…",
+      "drawing": "Игра начинается: ожидание {names}.",
+      "hurry": "Скорее: ваше время на исходе!",
+      "over": "Партия окончена.",
+      "revealing": "Яблоки открываются…",
+      "sealed": "Ваше яблоко запечатано: ожидание {names}.",
+      "seats": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: партия начнётся, когда их будет не меньше {min}.",
+      "start": "Выберите время голосования и стартовый капитал, затем начните игру.",
+      "vote": "Выберите своё яблоко, запечатанное: золотое, серебряное или красное.",
+      "voting": "Ожидание яблок игроков {names}.",
+      "waitingStart": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: ожидание, пока один из них начнёт партию."
+    },
+    "vote": {
+      "gold": "Золотое яблоко",
+      "red": "Красное яблоко",
+      "sealed": "Ваше яблоко, {apple, select, gold {золотое} silver {серебряное} other {красное}}, запечатано",
+      "silver": "Серебряное яблоко"
+    }
   }
 }

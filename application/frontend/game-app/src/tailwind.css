@@ -53,6 +53,9 @@
     --color-app-chip-25-edge: var(--app-chip-25-edge);
     --color-app-chip-100: var(--app-chip-100);
     --color-app-chip-100-edge: var(--app-chip-100-edge);
+    --color-app-apple-gold: var(--app-apple-gold);
+    --color-app-apple-silver: var(--app-apple-silver);
+    --color-app-apple-red: var(--app-apple-red);
 }
 
 /* The bets of the round on the cloth of the poker, in front of each player */

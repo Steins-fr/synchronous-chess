@@ -1,0 +1,38 @@
+<ng-container *transloco="let t; prefix: 'eden.table.seat'">
+    <span class="min-w-0 truncate font-medium" [class.opacity-50]="out()">{{ name() ?? t('free') }}</span>
+    @if (out()) {
+    <span class="badge badge-draw">{{ t('out') }}</span>
+    }
+    @if (sealed()) {
+    <span class="badge badge-draw">{{ t('sealed') }}</span>
+    }
+    @if (absent()) {
+    <span class="badge badge-draw">{{ t('absent') }}</span>
+    }
+    @if (standing(); as text) {
+    <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">{{ text.key | transloco: text.params }}</span>
+    }
+    @if (clock(); as left) {
+    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+    }
+    @if (canTake()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>
+    }
+    @if (canLeave()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+    }
+    @if (canRelease()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="release.emit()">{{ t('release') }}</button>
+    }
+    @if (balance(); as money) {
+    <span class="flex w-full flex-wrap items-center gap-2 text-sm">
+        @if (apple(); as cast) {
+        <span class="badge badge-draw inline-flex items-center gap-1"><app-eden-apple class="size-4" [apple]="cast" />{{ t('apple', { apple: cast }) }}</span>
+        }
+        @if (gain(); as won) {
+        <span class="muted-note tabular-nums">{{ t('gain', won) }}</span>
+        }
+        <span class="ml-auto font-bold tabular-nums">{{ t('balance', money) }}</span>
+    </span>
+    }
+</ng-container>

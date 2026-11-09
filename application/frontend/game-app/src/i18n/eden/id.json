@@ -84,5 +84,92 @@
       "title": "Waktu"
     },
     "title": "Aturan"
+  },
+  "table": {
+    "action": {
+      "rematch": "Main lagi",
+      "start": "Mulai permainan"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Permainan {number}:",
+    "history": "Langkah permainan",
+    "info": {
+      "round": "Ronde {round} dari {rounds} · {count, plural, other {# pemain bermain}}",
+      "terms": "Suara {unit, select, minutes {{count} mnt} other {{count} dtk}} · modal awal {amount, plural, other {# juta}}"
+    },
+    "lostParadise": "Anda kehilangan surga: ikuti sisa permainan dan obrolan.",
+    "money": "{sign, select, plus {+{amount, plural, other {# juta}}} minus {−{amount, plural, other {# juta}}} other {0 juta}}",
+    "move": {
+      "allRed": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Hanya apel merah: masing-masing menang {gain, plural, other {# juta}}",
+      "illegal": "{names}: yang dibuka bukan apel, −{amount, plural, other {# juta}}",
+      "invalid": "{names}: apel dibuka berbeda dari yang disegel, −{amount, plural, other {# juta}}",
+      "late": "{names}: tidak ada apel tepat waktu, −{amount, plural, other {# juta}}",
+      "lateReveal": "{names}: apel tidak dibuka tepat waktu, −{amount, plural, other {# juta}}",
+      "loneApple": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Satu-satunya apel {apple, select, gold {emas} other {perak}}, milik {name}, menang {bonus, plural, other {# juta}}, apel merah kehilangan {gain, plural, other {# juta}}",
+      "loneRed": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Hanya {name} yang memilih merah dan kehilangan {loss, plural, other {# juta}}, apel lainnya menang {gain, plural, other {# juta}}",
+      "majority": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Apel {apple, select, gold {emas} other {perak}} menang {gain, plural, other {# juta}}, lainnya kehilangan {gain, plural, other {# juta}}",
+      "mixed": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Apel merah kehilangan {gain, plural, other {# juta}}, apel emas dan perak menang {gain, plural, other {# juta}}",
+      "noVote": "Ronde {round}: tidak ada apel yang dihitung",
+      "oneColor": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Hanya apel {apple, select, gold {emas} other {perak}}: masing-masing kehilangan {gain, plural, other {# juta}}",
+      "out": "Ronde {round}: {names} {count, plural, other {kehilangan surga}}",
+      "tie": "Ronde {round}: emas {gold}, perak {silver}, merah {red}. Apel emas dan perak sama banyak: tidak ada yang menang atau kalah"
+    },
+    "past": "{count, plural, other {Pemenang}}: {winners}, {sign, select, plus {+{amount, plural, other {# juta}}} minus {−{amount, plural, other {# juta}}} other {0 juta}}",
+    "pastGames": "Permainan yang dimainkan",
+    "pastNoWinner": "Tanpa pemenang",
+    "result": {
+      "in": "Di surga",
+      "noWinner": "Tidak ada pemenang: semua pemain kehilangan surga",
+      "out": "Terusir di ronde {round}",
+      "place": "Peringkat {place}",
+      "winner": "Pemenang",
+      "winners": "{count, plural, other {Pemenang: {names}}}"
+    },
+    "seat": {
+      "absent": "Terlambat",
+      "apple": "{apple, select, gold {Emas} silver {Perak} other {Merah}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, other {# juta}}} minus {−{amount, plural, other {# juta}}} other {0 juta}}",
+      "free": "Kursi kosong",
+      "gain": "{sign, select, plus {+{amount, plural, other {# juta}}} minus {−{amount, plural, other {# juta}}} other {0 juta}}",
+      "leave": "Tinggalkan kursi",
+      "out": "Terusir",
+      "release": "Kosongkan kursi",
+      "sealed": "Tertutup",
+      "take": "Duduk"
+    },
+    "spectators": "{count, plural, other {# penonton}}",
+    "standings": {
+      "balance": "Juta",
+      "caption": "Peringkat permainan",
+      "outcome": "Hasil",
+      "place": "Peringkat",
+      "player": "Pemain"
+    },
+    "start": {
+      "minutes": "{count} mnt",
+      "money": "{amount, plural, other {# juta}}",
+      "seconds": "{count} dtk",
+      "startMoney": "Modal awal",
+      "voteTime": "Waktu memberi suara"
+    },
+    "status": {
+      "away": "Menunggu {names} kembali…",
+      "drawing": "Permainan dimulai: menunggu {names}.",
+      "hurry": "Cepat: waktu Anda hampir habis!",
+      "over": "Permainan selesai.",
+      "revealing": "Apel sedang dibuka…",
+      "sealed": "Apel Anda disegel: menunggu {names}.",
+      "seats": "{count, plural, other {# pemain duduk}}: permainan dimulai dengan paling sedikit {min} pemain.",
+      "start": "Pilih waktu pemungutan suara dan modal awal, lalu mulai permainan.",
+      "vote": "Pilih apel Anda, disegel: emas, perak, atau merah.",
+      "voting": "Menunggu apel dari {names}.",
+      "waitingStart": "{count, plural, other {# pemain duduk}}: menunggu salah satu dari mereka memulai."
+    },
+    "vote": {
+      "gold": "Apel emas",
+      "red": "Apel merah",
+      "sealed": "Apel Anda, {apple, select, gold {emas} silver {perak} other {merah}}, disegel",
+      "silver": "Apel perak"
+    }
   }
 }

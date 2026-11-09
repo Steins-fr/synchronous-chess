@@ -84,5 +84,92 @@
       "title": "I tempi"
     },
     "title": "Regole"
+  },
+  "table": {
+    "action": {
+      "rematch": "Gioca ancora",
+      "start": "Avvia la partita"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Partita {number}:",
+    "history": "Mosse della partita",
+    "info": {
+      "round": "Manche {round} di {rounds} · {count, plural, one {# giocatore in gioco} other {# giocatori in gioco}}",
+      "terms": "Voti di {unit, select, minutes {{count} min} other {{count} s}} · capitale iniziale {amount, plural, one {# milione} other {# milioni}}"
+    },
+    "lostParadise": "Hai perso il paradiso: segui il resto della partita e la chat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# milione} other {# milioni}}} minus {−{amount, plural, one {# milione} other {# milioni}}} other {0 milioni}}",
+    "move": {
+      "allRed": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. Solo mele rosse: ognuna vince {gain, plural, one {# milione} other {# milioni}}",
+      "illegal": "{names}: rivelato qualcosa che non è una mela, −{amount, plural, one {# milione} other {# milioni}}",
+      "invalid": "{names}: mela rivelata diversa da quella sigillata, −{amount, plural, one {# milione} other {# milioni}}",
+      "late": "{names}: nessuna mela in tempo, −{amount, plural, one {# milione} other {# milioni}}",
+      "lateReveal": "{names}: mela non rivelata in tempo, −{amount, plural, one {# milione} other {# milioni}}",
+      "loneApple": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. L'unica mela {apple, select, gold {d'oro} other {d'argento}}, di {name}, vince {bonus, plural, one {# milione} other {# milioni}}, le rosse perdono {gain, plural, one {# milione} other {# milioni}}",
+      "loneRed": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. {name}, unico a scegliere rosso, perde {loss, plural, one {# milione} other {# milioni}}, le altre mele vincono {gain, plural, one {# milione} other {# milioni}}",
+      "majority": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. Le mele {apple, select, gold {d'oro} other {d'argento}} vincono {gain, plural, one {# milione} other {# milioni}}, le altre perdono {gain, plural, one {# milione} other {# milioni}}",
+      "mixed": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. Le mele rosse perdono {gain, plural, one {# milione} other {# milioni}}, quelle d'oro e d'argento vincono {gain, plural, one {# milione} other {# milioni}}",
+      "noVote": "Manche {round}: nessuna mela contata",
+      "oneColor": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. Solo mele {apple, select, gold {d'oro} other {d'argento}}: ognuna perde {gain, plural, one {# milione} other {# milioni}}",
+      "out": "Manche {round}: {names} {count, plural, one {perde} other {perdono}} il paradiso",
+      "tie": "Manche {round}: oro {gold}, argento {silver}, rosso {red}. Tante d'oro quante d'argento: nessuna vince né perde"
+    },
+    "past": "{count, plural, one {Vincitore} other {Vincitori}}: {winners}, {sign, select, plus {+{amount, plural, one {# milione} other {# milioni}}} minus {−{amount, plural, one {# milione} other {# milioni}}} other {0 milioni}}",
+    "pastGames": "Partite giocate",
+    "pastNoWinner": "Nessun vincitore",
+    "result": {
+      "in": "In paradiso",
+      "noWinner": "Nessun vincitore: tutti i giocatori hanno perso il paradiso",
+      "out": "Espulso alla manche {round}",
+      "place": "{place}° posto",
+      "winner": "Vincitore",
+      "winners": "{count, plural, one {Vincitore: {names}} other {Vincitori: {names}}}"
+    },
+    "seat": {
+      "absent": "In ritardo",
+      "apple": "{apple, select, gold {Oro} silver {Argento} other {Rossa}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# milione} other {# milioni}}} minus {−{amount, plural, one {# milione} other {# milioni}}} other {0 milioni}}",
+      "free": "Posto libero",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milione} other {# milioni}}} minus {−{amount, plural, one {# milione} other {# milioni}}} other {0 milioni}}",
+      "leave": "Lascia il posto",
+      "out": "Espulso",
+      "release": "Libera il posto",
+      "sealed": "Sigillato",
+      "take": "Siediti"
+    },
+    "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "standings": {
+      "balance": "Milioni",
+      "caption": "Classifica della partita",
+      "outcome": "Esito",
+      "place": "Posto",
+      "player": "Giocatore"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# milione} other {# milioni}}",
+      "seconds": "{count} s",
+      "startMoney": "Capitale iniziale",
+      "voteTime": "Tempo per votare"
+    },
+    "status": {
+      "away": "In attesa del ritorno di {names}…",
+      "drawing": "La partita inizia: in attesa di {names}.",
+      "hurry": "Sbrigati: il tempo sta per scadere!",
+      "over": "La partita è finita.",
+      "revealing": "Le mele vengono rivelate…",
+      "sealed": "La tua mela è sigillata: in attesa di {names}.",
+      "seats": "{count, plural, one {# giocatore seduto} other {# giocatori seduti}}: la partita inizia con almeno {min}.",
+      "start": "Scegli la durata del voto e il capitale iniziale, poi avvia la partita.",
+      "vote": "Scegli la tua mela, sigillata: d'oro, d'argento o rossa.",
+      "voting": "In attesa delle mele di {names}.",
+      "waitingStart": "{count, plural, one {# giocatore seduto: in attesa che avvii la partita.} other {# giocatori seduti: in attesa che uno di loro avvii la partita.}}"
+    },
+    "vote": {
+      "gold": "Mela d'oro",
+      "red": "Mela rossa",
+      "sealed": "La tua mela, {apple, select, gold {d'oro} silver {d'argento} other {rossa}}, è sigillata",
+      "silver": "Mela d'argento"
+    }
   }
 }

@@ -84,5 +84,92 @@
       "title": "Czasy"
     },
     "title": "Zasady"
+  },
+  "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Partia {number}:",
+    "history": "Ruchy partii",
+    "info": {
+      "round": "Runda {round} z {rounds} · {count, plural, one {# gracz w grze} few {# graczy w grze} many {# graczy w grze} other {# gracza w grze}}",
+      "terms": "Głosowanie {unit, select, minutes {{count} min} other {{count} s}} · kapitał początkowy {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}"
+    },
+    "lostParadise": "Straciłeś raj: śledź resztę gry i czat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+    "move": {
+      "allRed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tylko czerwone jabłka: każde wygrywa {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "illegal": "{names}: odkryto coś innego niż jabłko, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "invalid": "{names}: jabłko odkryte inaczej, niż zostało zapieczętowane, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "late": "{names}: brak jabłka na czas, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "lateReveal": "{names}: jabłko nieodkryte na czas, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "loneApple": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Jedyne {apple, select, gold {złote} other {srebrne}} jabłko gracza {name} wygrywa {bonus, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, czerwone tracą {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "loneRed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. {name} jako jedyny wybrał czerwone i traci {loss, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, pozostałe jabłka wygrywają {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "majority": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. {apple, select, gold {Złote} other {Srebrne}} jabłka wygrywają {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, pozostałe tracą {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "mixed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Czerwone jabłka tracą {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, złote i srebrne wygrywają {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "noVote": "Runda {round}: nie policzono żadnego jabłka",
+      "oneColor": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tylko {apple, select, gold {złote} other {srebrne}} jabłka: każde traci {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "out": "Runda {round}: {names} {count, plural, one {traci} few {tracą} many {tracą} other {tracą}} raj",
+      "tie": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tyle samo złotych co srebrnych: żadne nie wygrywa ani nie traci"
+    },
+    "past": "{count, plural, one {Zwycięzca} few {Zwycięzcy} many {Zwycięzcy} other {Zwycięzcy}}: {winners}, {sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+    "pastGames": "Rozegrane partie",
+    "pastNoWinner": "Bez zwycięzcy",
+    "result": {
+      "in": "W raju",
+      "noWinner": "Brak zwycięzcy: wszyscy gracze stracili raj",
+      "out": "Wygnany w rundzie {round}",
+      "place": "Miejsce {place}",
+      "winner": "Zwycięzca",
+      "winners": "{count, plural, one {Zwycięzca: {names}} few {Zwycięzcy: {names}} many {Zwycięzcy: {names}} other {Zwycięzcy: {names}}}"
+    },
+    "seat": {
+      "absent": "Spóźnienie",
+      "apple": "{apple, select, gold {Złote} silver {Srebrne} other {Czerwone}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+      "free": "Wolne miejsce",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+      "leave": "Zwolnij miejsce",
+      "out": "Wygnany",
+      "release": "Usuń z miejsca",
+      "sealed": "Zapieczętowano",
+      "take": "Usiądź"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "standings": {
+      "balance": "Miliony",
+      "caption": "Klasyfikacja gry",
+      "outcome": "Wynik",
+      "place": "Miejsce",
+      "player": "Gracz"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "seconds": "{count} s",
+      "startMoney": "Kapitał początkowy",
+      "voteTime": "Czas na głosowanie"
+    },
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "drawing": "Gra się zaczyna: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "revealing": "Jabłka są odkrywane…",
+      "sealed": "Twoje jabłko jest zapieczętowane: czekamy na {names}.",
+      "seats": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: partia wymaga co najmniej {min} graczy.",
+      "start": "Wybierz czas głosowania i kapitał początkowy, a potem rozpocznij grę.",
+      "vote": "Wybierz swoje jabłko, zapieczętowane: złote, srebrne lub czerwone.",
+      "voting": "Czekamy na jabłka: {names}.",
+      "waitingStart": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: czekamy, aż jeden z nich rozpocznie partię."
+    },
+    "vote": {
+      "gold": "Złote jabłko",
+      "red": "Czerwone jabłko",
+      "sealed": "Twoje jabłko, {apple, select, gold {złote} silver {srebrne} other {czerwone}}, jest zapieczętowane",
+      "silver": "Srebrne jabłko"
+    }
   }
 }

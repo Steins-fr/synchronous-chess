@@ -51,9 +51,10 @@ describe('GardenOfEden', () => {
         expect(fixture.nativeElement.querySelector('app-eden-presentation')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-eden-rules h2')?.textContent).toEqual('Rules');
         expect(fixture.nativeElement.querySelector('app-chat')).toBeNull();
+        expect(fixture.nativeElement.querySelector('app-eden-table')).toBeNull();
     });
 
-    test('should build a room of the game holding the chat, of 8 participants at most', async () => {
+    test('should build a room of the game holding its table and the chat, of 8 participants at most', async () => {
         // Given
         const roomSetupService: RoomSetupService = fixture.debugElement.injector.get(RoomSetupService);
 
@@ -68,9 +69,16 @@ describe('GardenOfEden', () => {
             { [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, [ChatMessengerType.MODERATION]: BlockChainName.CHAT, ...edenBlockChains }, expect.any(AbortSignal),
         );
         expect(fixture.nativeElement.querySelector('#room-chat app-chat')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#page-content app-chat')).toBeNull();
+        // The history of the table beside the game too, out of the page
+        expect(fixture.nativeElement.querySelector('#room-history app-room-history')).not.toBeNull();
+        expect(fixture.nativeElement.querySelector('#page-content app-room-history')).toBeNull();
         expect(fixture.nativeElement.querySelector('app-eden-presentation')).toBeNull();
-        // The rules are folded, without their own title
+        expect(fixture.nativeElement.querySelector('app-eden-table')).not.toBeNull();
+        // The rules are folded below the table, without their own title
         expect(fixture.nativeElement.querySelector('details.rules-details:not([open]) app-eden-rules')).not.toBeNull();
         expect(fixture.nativeElement.querySelector('app-eden-rules h2')).toBeNull();
+        const order: string[] = Array.from(fixture.nativeElement.querySelector('#page-content').children, (child: Element) => child.tagName.toLowerCase());
+        expect(order).toEqual(['app-eden-table', 'details']);
     });
 });
