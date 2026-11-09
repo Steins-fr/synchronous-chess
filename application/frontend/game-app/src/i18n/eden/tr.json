@@ -34,7 +34,7 @@
         "red": "−1.000 milyon, oyuncusunun adı açıklanır"
       },
       "majority": {
-        "apples": "Hiç kırmızı elma yok",
+        "apples": "Hiç kırmızı elma yok, iki renk de var, biri daha fazla",
         "others": "En çok seçilen renk +100 milyon, diğeri −100 milyon"
       },
       "mixed": {

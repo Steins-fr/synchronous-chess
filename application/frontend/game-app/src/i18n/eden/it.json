@@ -34,7 +34,7 @@
         "red": "−1000 milioni, e il suo giocatore viene nominato"
       },
       "majority": {
-        "apples": "Nessuna mela rossa",
+        "apples": "Nessuna mela rossa, entrambi i colori, uno più dell'altro",
         "others": "Il colore più scelto +100 milioni, l'altro −100 milioni"
       },
       "mixed": {

@@ -34,7 +34,7 @@
         "red": "−1000 millones, y se nombra a su jugador"
       },
       "majority": {
-        "apples": "Ninguna manzana roja",
+        "apples": "Ninguna manzana roja, de los dos colores, uno más que el otro",
         "others": "El color más elegido +100 millones, el otro −100 millones"
       },
       "mixed": {

@@ -34,7 +34,7 @@
         "red": "−1000 milhões, com o nome do jogador"
       },
       "majority": {
-        "apples": "Nenhuma maçã vermelha",
+        "apples": "Nenhuma maçã vermelha, das duas cores, uma mais do que a outra",
         "others": "A cor mais escolhida +100 milhões, a outra −100 milhões"
       },
       "mixed": {

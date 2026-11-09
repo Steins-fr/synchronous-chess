@@ -34,7 +34,7 @@
         "red": "−1000 milionów, a jego gracz zostaje wskazany"
       },
       "majority": {
-        "apples": "Żadnego czerwonego jabłka",
+        "apples": "Żadnego czerwonego jabłka, oba kolory, jednego więcej niż drugiego",
         "others": "Najczęstszy kolor +100 milionów, drugi −100 milionów"
       },
       "mixed": {

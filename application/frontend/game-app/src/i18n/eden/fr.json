@@ -34,7 +34,7 @@
         "red": "−1 000 millions, son joueur nommé"
       },
       "majority": {
-        "apples": "Aucune pomme rouge",
+        "apples": "Aucune pomme rouge, les deux couleurs, l'une plus que l'autre",
         "others": "La couleur la plus choisie +100 millions, l'autre −100 millions"
       },
       "mixed": {

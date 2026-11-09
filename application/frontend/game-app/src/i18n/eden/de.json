@@ -34,7 +34,7 @@
         "red": "−1.000 Millionen, sein Spieler wird genannt"
       },
       "majority": {
-        "apples": "Kein roter Apfel",
+        "apples": "Kein roter Apfel, beide Farben, eine häufiger als die andere",
         "others": "Die häufigste Farbe +100 Millionen, die andere −100 Millionen"
       },
       "mixed": {

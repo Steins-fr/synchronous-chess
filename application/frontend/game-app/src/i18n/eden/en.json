@@ -34,7 +34,7 @@
         "red": "−1,000 million, its player named"
       },
       "majority": {
-        "apples": "No red apple",
+        "apples": "No red apple, both colors, one more than the other",
         "others": "The color of the most apples +100 million, the other one −100 million"
       },
       "mixed": {
