@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Po 13 rundach wygrywa gracz z największą ilością pieniędzy.",
+      "paradise": "Gracz z −500 milionami lub mniej traci raj na dobre.",
+      "sealed": "Jabłka są zapieczętowane: nikt, nawet serwer, nie widzi jabłka, zanim wszyscy gracze nie wybiorą swojego."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z filmu Liar Game: The Final Stage: od 3 do 8 graczy 13 razy wybiera jabłko — złote, srebrne lub czerwone. Gdy wszystkie jabłka są czerwone, wygrywają wszyscy gracze.",
+    "tagline": "Wszyscy wygrywają tylko wtedy, gdy wszyscy sobie ufają.",
+    "title": "Ogród Eden"
+  },
+  "rules": {
+    "fair": {
+      "public": "Odkryte jabłka i salda są jawne, podczas gdy film podawał tylko liczby głosów. Pieniądze nie przechodzą między graczami: umowy pozostają słowami na czacie.",
+      "sealed": "Jabłko jest zapieczętowane: strona wysyła jego hash z losową solą i odkrywa je, gdy wszyscy gracze wybiorą. Jabłko odkryte inaczej, niż zostało zapieczętowane, jest zgłaszane. Przeładowana strona zachowuje swoje jabłko, chyba że jej pamięć jest zablokowana.",
+      "title": "Uczciwa gra"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Tylko czerwone jabłka",
+        "red": "+100 milionów"
+      },
+      "apples": "Jabłka rundy",
+      "caption": "Ile każde jabłko wygrywa lub traci, zależnie od jabłek rundy",
+      "loneApple": {
+        "apples": "Jedno złote lub srebrne jabłko wśród czerwonych",
+        "others": "+200 milionów",
+        "red": "−100 milionów"
+      },
+      "loneRed": {
+        "apples": "Jedno czerwone jabłko wśród złotych lub srebrnych",
+        "others": "+100 milionów",
+        "red": "−1000 milionów, a jego gracz zostaje wskazany"
+      },
+      "majority": {
+        "apples": "Żadnego czerwonego jabłka",
+        "others": "Najczęstszy kolor +100 milionów, drugi −100 milionów"
+      },
+      "mixed": {
+        "apples": "2 czerwone jabłka lub więcej i 2 złote lub srebrne lub więcej",
+        "others": "+100 milionów",
+        "red": "−100 milionów"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Żadnego czerwonego jabłka, wszystkie w jednym kolorze",
+        "others": "−100 milionów"
+      },
+      "others": "Złote lub srebrne jabłko",
+      "red": "Czerwone jabłko",
+      "text": "Po odkryciu jabłka są liczone i każde wygrywa lub przegrywa:",
+      "tie": {
+        "apples": "Żadnego czerwonego jabłka, tyle samo złotych co srebrnych",
+        "others": "0"
+      },
+      "title": "Wygrane"
+    },
+    "missed": {
+      "reveal": "Wybrane jabłko, nieodkryte w ciągu 15 sekund lub odkryte inaczej, niż zostało zapieczętowane, traci 1000 milionów i się nie liczy: tyle, ile samotne czerwone jabłko, więc zatajenie nigdy nie ratuje zdrajcy, który zobaczył pozostałe.",
+      "title": "Pominięte jabłka",
+      "vote": "Gracz wciąż w grze, który nie wybrał jabłka do końca głosowania, traci 100 milionów, a jego jabłko się nie liczy. Głosowanie czeka na wszystkich graczy w grze, także na nieobecnego."
+    },
+    "paradise": {
+      "end": "Gra kończy się po 13 rundach lub gdy w raju zostaje mniej niż 2 graczy.",
+      "floor": "Po podliczeniu rundy gracz z −500 milionami lub mniej traci raj na dobre: śledzi resztę gry jako widz.",
+      "title": "Utrata raju",
+      "winner": "Wygrywa gracz w grze z największą ilością pieniędzy, równe salda dzielą miejsce. Gdy wszyscy gracze stracili raj, nikt nie wygrywa."
+    },
+    "round": {
+      "apples": "Gra trwa 13 rund. W każdej rundzie każdy gracz, który wciąż jest w raju, wybiera jabłko: złote, srebrne lub czerwone — jabłko prawdy.",
+      "sealed": "Jabłka wybiera się jednocześnie, zapieczętowane: nikt nie widzi jabłka, zanim wszyscy gracze nie wybiorą, potem odkrywa się je wszystkim. Nikt nie musi dotrzymać słowa, a czat służy do umawiania się — albo do zdrady.",
+      "title": "Runda"
+    },
+    "setup": {
+      "choices": "Gracz rozpoczynający grę wybiera czas głosowania, od 30 sekund do 5 minut, oraz kapitał początkowy każdego gracza: 0, 500 lub 1000 milionów.",
+      "players": "Od 3 do 8 graczy zajmuje miejsca, potem jeden z nich rozpoczyna grę: miejsca pozostają zajęte do jej końca.",
+      "title": "Stół"
+    },
+    "summary": "Zasady Ogrodu Eden",
+    "times": {
+      "awayOnce": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz; głosowanie nie czeka już dłużej na gracza, który przegapił poprzednią fazę.",
+      "phases": "Głosowanie czeka czas wybrany na początku, odkrycie 15 sekund: każde kończy się, gdy tylko wszyscy gracze wykonają ruch.",
+      "title": "Czasy"
+    },
+    "title": "Zasady"
+  }
+}

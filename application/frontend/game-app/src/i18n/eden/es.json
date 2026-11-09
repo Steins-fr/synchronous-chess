@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Tras 13 rondas, gana el jugador con más dinero.",
+      "paradise": "Un jugador con −500 millones o menos pierde el paraíso, para siempre.",
+      "sealed": "Las manzanas van selladas: nadie, ni siquiera el servidor, ve una manzana antes de que todos los jugadores hayan elegido la suya."
+    },
+    "rooms": "Crea una sala o únete a una para jugar con otros.",
+    "summary": "Un juego de la película Liar Game: The Final Stage: de 3 a 8 jugadores eligen una manzana 13 veces, de oro, de plata o roja. Cuando todas las manzanas son rojas, todos los jugadores ganan.",
+    "tagline": "Todos ganan solo si todos confían en los demás.",
+    "title": "Jardín del Edén"
+  },
+  "rules": {
+    "fair": {
+      "public": "Las manzanas reveladas y los saldos son públicos, cuando la película solo daba los recuentos. Ningún dinero pasa de un jugador a otro: los acuerdos se quedan en palabras en el chat.",
+      "sealed": "Una manzana va sellada: la página envía su hash con una sal aleatoria y la revela cuando todos los jugadores han elegido. Una manzana revelada distinta de la sellada se denuncia. Una página recargada conserva su manzana, salvo si su almacenamiento está bloqueado.",
+      "title": "Juego limpio"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Solo manzanas rojas",
+        "red": "+100 millones"
+      },
+      "apples": "Las manzanas de la ronda",
+      "caption": "Lo que gana o pierde cada manzana, según las manzanas de la ronda",
+      "loneApple": {
+        "apples": "Una sola manzana de oro o de plata entre rojas",
+        "others": "+200 millones",
+        "red": "−100 millones"
+      },
+      "loneRed": {
+        "apples": "Una sola manzana roja entre manzanas de oro o de plata",
+        "others": "+100 millones",
+        "red": "−1000 millones, y se nombra a su jugador"
+      },
+      "majority": {
+        "apples": "Ninguna manzana roja",
+        "others": "El color más elegido +100 millones, el otro −100 millones"
+      },
+      "mixed": {
+        "apples": "2 manzanas rojas o más, y 2 de oro o de plata o más",
+        "others": "+100 millones",
+        "red": "−100 millones"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Ninguna manzana roja, todas de un solo color",
+        "others": "−100 millones"
+      },
+      "others": "Una manzana de oro o de plata",
+      "red": "Una manzana roja",
+      "text": "Una vez reveladas, las manzanas se cuentan, y cada una gana o pierde:",
+      "tie": {
+        "apples": "Ninguna manzana roja, tantas de oro como de plata",
+        "others": "0"
+      },
+      "title": "Las ganancias"
+    },
+    "missed": {
+      "reveal": "Una manzana elegida y no revelada en 15 segundos, o revelada distinta de la sellada, pierde 1000 millones y no cuenta: tanto como una manzana roja sola, así que retenerla nunca salva a un traidor que ha leído las demás.",
+      "title": "Manzanas perdidas",
+      "vote": "Un jugador que sigue en juego y no ha elegido manzana al acabar el tiempo del voto pierde 100 millones, y su manzana no cuenta. El voto espera a todos los jugadores en juego, incluido uno ausente."
+    },
+    "paradise": {
+      "end": "La partida termina tras 13 rondas, o en cuanto quedan menos de 2 jugadores en el paraíso.",
+      "floor": "Una vez contada una ronda, un jugador con −500 millones o menos pierde el paraíso, para siempre: sigue el resto de la partida como espectador.",
+      "title": "La pérdida del paraíso",
+      "winner": "Gana el jugador en juego con más dinero, y los saldos iguales comparten el puesto. Cuando todos los jugadores han perdido el paraíso, nadie gana."
+    },
+    "round": {
+      "apples": "La partida dura 13 rondas. En cada ronda, cada jugador que sigue en el paraíso elige una manzana: de oro, de plata o roja, la manzana de la verdad.",
+      "sealed": "Las manzanas se eligen a la vez, selladas: nadie ve una manzana antes de que todos los jugadores hayan elegido, y luego se revelan a todos. Nadie está obligado a cumplir su palabra, y el chat está para ponerse de acuerdo, o para traicionar.",
+      "title": "Una ronda"
+    },
+    "setup": {
+      "choices": "El jugador que inicia la partida elige la duración de un voto, de 30 segundos a 5 minutos, y el dinero inicial de cada jugador: 0, 500 o 1000 millones.",
+      "players": "De 3 a 8 jugadores ocupan los puestos y luego uno de ellos inicia la partida: los puestos siguen ocupados hasta el final.",
+      "title": "La mesa"
+    },
+    "summary": "Reglas del jardín del Edén",
+    "times": {
+      "awayOnce": "A un jugador ausente se le esperan 15 segundos más, una vez; un voto ya no espera más a un jugador que se perdió la fase anterior.",
+      "phases": "Un voto espera el tiempo elegido al inicio, una revelación 15 segundos: cada uno se cierra en cuanto todos los jugadores han actuado.",
+      "title": "Los tiempos"
+    },
+    "title": "Reglas"
+  }
+}

@@ -9,6 +9,7 @@
       "chat": "Tchat",
       "chess": "Échecs",
       "contraband": "Contrebande",
+      "gardenOfEden": "Éden",
       "home": "Accueil",
       "minorityGame": "Minorité",
       "poker": "Poker",
@@ -61,6 +62,11 @@
       "action": "Jouer",
       "description": "De 2 à 8 joueurs, en deux pays, font passer de l'argent par la douane de l'autre pays, leurs malles scellées : laisser passer, ou douter.",
       "title": "Contrebande"
+    },
+    "gardenOfEden": {
+      "action": "Jouer",
+      "description": "De 3 à 8 joueurs choisissent 13 fois une pomme d'or, d'argent ou rouge, en secret : tous gagnent seulement si tous se font confiance.",
+      "title": "Jardin d'Éden"
     },
     "intro": "Créez une salle, ou rejoignez l'une des salles ouvertes : les joueurs se connectent directement entre eux.",
     "minorityGame": {

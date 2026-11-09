@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Depois de 13 rodadas, vence o jogador com mais dinheiro.",
+      "paradise": "Um jogador com −500 milhões ou menos perde o paraíso, de vez.",
+      "sealed": "As maçãs são seladas: ninguém, nem mesmo o servidor, vê uma maçã antes de todos os jogadores escolherem a sua."
+    },
+    "rooms": "Crie uma sala ou entre em uma, para jogar com outras pessoas.",
+    "summary": "Um jogo do filme Liar Game: The Final Stage: de 3 a 8 jogadores escolhem uma maçã 13 vezes, de ouro, de prata ou vermelha. Quando todas as maçãs são vermelhas, todos os jogadores ganham.",
+    "tagline": "Todos ganham só se todos confiarem nos outros.",
+    "title": "Jardim do Éden"
+  },
+  "rules": {
+    "fair": {
+      "public": "As maçãs reveladas e os saldos são públicos, enquanto o filme só dava as contagens. Nenhum dinheiro passa de um jogador a outro: os acordos ficam só em palavras no bate-papo.",
+      "sealed": "Uma maçã é selada: a página envia o hash dela com um sal aleatório e a revela quando todos os jogadores escolheram. Uma maçã revelada diferente da selada é denunciada. Uma página recarregada mantém a sua maçã, a menos que o armazenamento esteja bloqueado.",
+      "title": "Jogo limpo"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Só maçãs vermelhas",
+        "red": "+100 milhões"
+      },
+      "apples": "As maçãs da rodada",
+      "caption": "O que cada maçã ganha ou perde, conforme as maçãs da rodada",
+      "loneApple": {
+        "apples": "Uma única maçã de ouro ou de prata entre vermelhas",
+        "others": "+200 milhões",
+        "red": "−100 milhões"
+      },
+      "loneRed": {
+        "apples": "Uma única maçã vermelha entre maçãs de ouro ou de prata",
+        "others": "+100 milhões",
+        "red": "−1.000 milhões, com o nome do jogador"
+      },
+      "majority": {
+        "apples": "Nenhuma maçã vermelha",
+        "others": "A cor mais escolhida +100 milhões, a outra −100 milhões"
+      },
+      "mixed": {
+        "apples": "2 maçãs vermelhas ou mais, e 2 de ouro ou de prata ou mais",
+        "others": "+100 milhões",
+        "red": "−100 milhões"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Nenhuma maçã vermelha, todas de uma só cor",
+        "others": "−100 milhões"
+      },
+      "others": "Uma maçã de ouro ou de prata",
+      "red": "Uma maçã vermelha",
+      "text": "Depois de reveladas, as maçãs são contadas, e cada uma ganha ou perde:",
+      "tie": {
+        "apples": "Nenhuma maçã vermelha, tantas de ouro quanto de prata",
+        "others": "0"
+      },
+      "title": "Os ganhos"
+    },
+    "missed": {
+      "reveal": "Uma maçã escolhida e não revelada em 15 segundos, ou revelada diferente da selada, perde 1.000 milhões e não conta: tanto quanto uma maçã vermelha sozinha, então retê-la nunca salva um traidor que leu as outras.",
+      "title": "Maçãs perdidas",
+      "vote": "Um jogador ainda em jogo que não escolheu uma maçã quando o tempo da votação acaba perde 100 milhões, e a maçã dele não conta. A votação espera todos os jogadores em jogo, inclusive um ausente."
+    },
+    "paradise": {
+      "end": "A partida termina depois de 13 rodadas, ou assim que restam menos de 2 jogadores no paraíso.",
+      "floor": "Depois que uma rodada é contada, um jogador com −500 milhões ou menos perde o paraíso, de vez: ele acompanha o resto da partida como espectador.",
+      "title": "A perda do paraíso",
+      "winner": "Vence o jogador em jogo com mais dinheiro, e saldos iguais dividem o lugar. Quando todos os jogadores perderam o paraíso, ninguém vence."
+    },
+    "round": {
+      "apples": "A partida dura 13 rodadas. Em cada rodada, cada jogador ainda no paraíso escolhe uma maçã: de ouro, de prata ou vermelha, a maçã da verdade.",
+      "sealed": "As maçãs são escolhidas ao mesmo tempo, seladas: ninguém vê uma maçã antes de todos os jogadores escolherem, depois elas são reveladas a todos. Ninguém é obrigado a cumprir a palavra, e o bate-papo está aí para combinar, ou para trair.",
+      "title": "Uma rodada"
+    },
+    "setup": {
+      "choices": "O jogador que inicia a partida escolhe a duração de uma votação, de 30 segundos a 5 minutos, e o dinheiro inicial de cada jogador: 0, 500 ou 1.000 milhões.",
+      "players": "De 3 a 8 jogadores ocupam os lugares, depois um deles inicia a partida: os lugares ficam ocupados até o fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do jardim do Éden",
+    "times": {
+      "awayOnce": "Um jogador ausente é esperado 15 segundos a mais, uma vez; uma votação não espera mais tempo por um jogador que perdeu a fase anterior.",
+      "phases": "Uma votação espera o tempo escolhido no início, uma revelação 15 segundos: cada uma fecha assim que todos os jogadores agiram.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  }
+}

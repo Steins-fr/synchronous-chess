@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Après 13 manches, le joueur le plus riche gagne.",
+      "paradise": "Un joueur à −500 millions ou moins perd le paradis, pour de bon.",
+      "sealed": "Les pommes sont scellées : personne, pas même le serveur, ne voit une pomme avant que tous les joueurs aient choisi la leur."
+    },
+    "rooms": "Créez une salle, ou rejoignez-en une, pour jouer avec d'autres joueurs.",
+    "summary": "Un jeu du film Liar Game: The Final Stage : de 3 à 8 joueurs choisissent 13 fois une pomme, d'or, d'argent ou rouge. Quand toutes les pommes sont rouges, tous les joueurs gagnent.",
+    "tagline": "Tout le monde gagne seulement si tout le monde fait confiance aux autres.",
+    "title": "Jardin d'Éden"
+  },
+  "rules": {
+    "fair": {
+      "public": "Les pommes révélées et les soldes sont publics, là où le film ne donnait que les comptes. Aucun argent ne passe d'un joueur à l'autre : les accords restent des mots dans le tchat.",
+      "sealed": "Une pomme est scellée : la page envoie son empreinte avec un sel aléatoire, puis la révèle une fois que tous les joueurs ont choisi. Une pomme révélée autrement que scellée est signalée. Une page rechargée garde sa pomme, sauf si son stockage est bloqué.",
+      "title": "Fair-play"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Que des pommes rouges",
+        "red": "+100 millions"
+      },
+      "apples": "Les pommes de la manche",
+      "caption": "Ce que chaque pomme gagne ou perd, selon les pommes de la manche",
+      "loneApple": {
+        "apples": "Une seule pomme d'or ou d'argent parmi des rouges",
+        "others": "+200 millions",
+        "red": "−100 millions"
+      },
+      "loneRed": {
+        "apples": "Une seule pomme rouge parmi des pommes d'or ou d'argent",
+        "others": "+100 millions",
+        "red": "−1 000 millions, son joueur nommé"
+      },
+      "majority": {
+        "apples": "Aucune pomme rouge",
+        "others": "La couleur la plus choisie +100 millions, l'autre −100 millions"
+      },
+      "mixed": {
+        "apples": "2 pommes rouges ou plus, et 2 pommes d'or ou d'argent ou plus",
+        "others": "+100 millions",
+        "red": "−100 millions"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Aucune pomme rouge, toutes d'une seule couleur",
+        "others": "−100 millions"
+      },
+      "others": "Une pomme d'or ou d'argent",
+      "red": "Une pomme rouge",
+      "text": "Une fois révélées, les pommes sont comptées, et chacune gagne ou perd :",
+      "tie": {
+        "apples": "Aucune pomme rouge, autant d'or que d'argent",
+        "others": "0"
+      },
+      "title": "Les gains"
+    },
+    "missed": {
+      "reveal": "Une pomme choisie et non révélée dans les 15 secondes, ou révélée autrement que scellée, perd 1 000 millions, et ne compte pas : autant qu'une pomme rouge seule, si bien que la retenir ne sauve jamais un traître qui a lu les autres.",
+      "title": "Les pommes manquées",
+      "vote": "Un joueur encore en jeu qui n'a pas choisi de pomme à la fin du vote perd 100 millions, et sa pomme ne compte pas. Le vote attend tous les joueurs encore en jeu, un joueur absent compris."
+    },
+    "paradise": {
+      "end": "La partie se termine après 13 manches, ou dès qu'il reste moins de 2 joueurs au paradis.",
+      "floor": "Une fois une manche comptée, un joueur à −500 millions ou moins perd le paradis, pour de bon : il suit la fin de la partie en spectateur.",
+      "title": "La perte du paradis",
+      "winner": "Le joueur encore en jeu le plus riche gagne, les soldes égaux partageant la place. Quand tous les joueurs ont perdu le paradis, personne ne gagne."
+    },
+    "round": {
+      "apples": "La partie dure 13 manches. À chaque manche, chaque joueur encore au paradis choisit une pomme : d'or, d'argent ou rouge, la pomme de la vérité.",
+      "sealed": "Les pommes sont choisies en même temps, scellées : personne ne voit une pomme avant que tous les joueurs aient choisi, puis elles sont révélées à tous. Personne n'est tenu de tenir parole, et le tchat est là pour s'entendre, ou pour trahir.",
+      "title": "Une manche"
+    },
+    "setup": {
+      "choices": "Le joueur qui lance la partie choisit la durée d'un vote, de 30 secondes à 5 minutes, et les fonds de départ de chaque joueur : 0, 500 ou 1 000 millions.",
+      "players": "De 3 à 8 joueurs prennent les places, puis l'un d'eux lance la partie : les places restent prises jusqu'à la fin.",
+      "title": "La table"
+    },
+    "summary": "Règles du jardin d'Éden",
+    "times": {
+      "awayOnce": "Un joueur absent est attendu 15 secondes de plus, une fois ; un vote n'attend plus davantage un joueur qui a manqué la phase précédente.",
+      "phases": "Un vote attend la durée choisie au départ, une révélation 15 secondes : chacun se ferme dès que tous les joueurs ont agi.",
+      "title": "Les temps"
+    },
+    "title": "Règles"
+  }
+}

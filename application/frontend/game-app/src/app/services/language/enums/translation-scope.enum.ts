@@ -11,6 +11,8 @@ export enum TranslationScope {
     MINORITY = 'minority',
     /** The Contraband */
     CONTRABAND = 'contraband',
+    /** The Garden of Eden */
+    EDEN = 'eden',
     /** The names of the playing cards, shared by the card games */
     CARDS = 'cards',
 }

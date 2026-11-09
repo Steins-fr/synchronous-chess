@@ -1,0 +1,11 @@
+<app-room-layout [dimContent]="false" [game]="game" [room]="room()">
+    <app-eden-presentation roomPresentation />
+    @if (room()) {
+    <details class="rules-details">
+        <summary>{{ 'eden.rules.summary' | transloco }}</summary>
+        <app-eden-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-eden-rules />
+    }
+</app-room-layout>

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { bidPokerPath, chatPath, chessPath, contrabandPath, minorityGamePath, pokerPath, roulettePath } from '@app/app.routes';
+import { bidPokerPath, chatPath, chessPath, contrabandPath, gardenOfEdenPath, minorityGamePath, pokerPath, roulettePath } from '@app/app.routes';
 
 /** The landing page: a card per game, linking to its page */
 @Component({
@@ -17,5 +17,6 @@ export class HomePage {
     protected readonly bidPokerPath: string = `/${ bidPokerPath }`;
     protected readonly minorityGamePath: string = `/${ minorityGamePath }`;
     protected readonly contrabandPath: string = `/${ contrabandPath }`;
+    protected readonly gardenOfEdenPath: string = `/${ gardenOfEdenPath }`;
     protected readonly chatPath: string = `/${ chatPath }`;
 }

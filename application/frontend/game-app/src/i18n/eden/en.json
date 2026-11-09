@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "After 13 rounds, the player with the most money wins.",
+      "paradise": "A player at −500 million or below loses paradise, for good.",
+      "sealed": "The apples are sealed: no one, not even the server, sees an apple before every player picked one."
+    },
+    "rooms": "Create a room, or join one, to play with others.",
+    "summary": "A game of the film Liar Game: The Final Stage: 3 to 8 players pick an apple 13 times, gold, silver or red. When every apple is red, every player wins.",
+    "tagline": "Everyone wins only if everyone trusts the others.",
+    "title": "Garden of Eden"
+  },
+  "rules": {
+    "fair": {
+      "public": "The apples revealed and the balances are public, where the film told the counts only. No money moves between players: the deals stay words in the chat.",
+      "sealed": "An apple is sealed: the page sends its hash with a random salt, then reveals it once every player picked one. An apple revealed otherwise than sealed is reported. A page reloaded keeps its apple, unless its storage is blocked.",
+      "title": "Fair play"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Only red apples",
+        "red": "+100 million"
+      },
+      "apples": "The apples of the round",
+      "caption": "What each apple wins or loses, depending on the apples of the round",
+      "loneApple": {
+        "apples": "A single gold or silver apple among red ones",
+        "others": "+200 million",
+        "red": "−100 million"
+      },
+      "loneRed": {
+        "apples": "A single red apple among gold or silver ones",
+        "others": "+100 million",
+        "red": "−1,000 million, its player named"
+      },
+      "majority": {
+        "apples": "No red apple",
+        "others": "The color of the most apples +100 million, the other one −100 million"
+      },
+      "mixed": {
+        "apples": "2 red apples or more, and 2 gold or silver ones or more",
+        "others": "+100 million",
+        "red": "−100 million"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "No red apple, all of one color",
+        "others": "−100 million"
+      },
+      "others": "A gold or silver apple",
+      "red": "A red apple",
+      "text": "Once revealed, the apples are counted, and each one wins or loses:",
+      "tie": {
+        "apples": "No red apple, as many gold as silver ones",
+        "others": "0"
+      },
+      "title": "The gains"
+    },
+    "missed": {
+      "reveal": "An apple picked and not revealed within 15 seconds, or revealed otherwise than sealed, loses 1,000 million, and does not count: as much as a lone red apple, so withholding never saves a traitor who read the others.",
+      "title": "Missed apples",
+      "vote": "A player still in who has not picked an apple when the time of the vote is over loses 100 million, and its apple does not count. The vote waits for every player still in, a player away included."
+    },
+    "paradise": {
+      "end": "The game is over after 13 rounds, or as soon as fewer than 2 players are still in paradise.",
+      "floor": "Once a round is counted, a player at −500 million or below loses paradise, for good: it follows the rest of the game as a spectator.",
+      "title": "The loss of paradise",
+      "winner": "The player still in with the most money wins, equal balances sharing the place. When every player lost paradise, nobody wins."
+    },
+    "round": {
+      "apples": "The game lasts 13 rounds. In each round, every player still in paradise picks an apple: gold, silver or red, the apple of truth.",
+      "sealed": "The apples are picked at the same time, sealed: no one sees an apple before every player picked one, then they are revealed to everyone. Nobody has to keep its word, and the chat is there to agree, or to betray.",
+      "title": "A round"
+    },
+    "setup": {
+      "choices": "The player who starts the game picks the time of a vote, from 30 seconds to 5 minutes, and the starting money of every player: 0, 500 or 1,000 million.",
+      "players": "3 to 8 players take the seats, then one of them starts the game: the seats stay taken until it is over.",
+      "title": "The table"
+    },
+    "summary": "Rules of the garden of Eden",
+    "times": {
+      "awayOnce": "A player away is waited for 15 seconds more, once; a vote no longer waits longer for a player who missed the phase before.",
+      "phases": "A vote waits the time picked at the start, a reveal 15 seconds: each one closes as soon as every player acted.",
+      "title": "The times"
+    },
+    "title": "Rules"
+  }
+}

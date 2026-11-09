@@ -9,6 +9,7 @@
       "chat": "Czat",
       "chess": "Szachy",
       "contraband": "Przemyt",
+      "gardenOfEden": "Eden",
       "home": "Start",
       "minorityGame": "Mniejszość",
       "poker": "Poker",
@@ -61,6 +62,11 @@
       "action": "Graj",
       "description": "Od 2 do 8 graczy z dwóch krajów przemyca pieniądze przez kontrolę celną przeciwnika w zapieczętowanych walizkach: przepuścić czy wątpić?",
       "title": "Przemyt"
+    },
+    "gardenOfEden": {
+      "action": "Graj",
+      "description": "Od 3 do 8 graczy 13 razy wybiera w tajemnicy jabłko złote, srebrne lub czerwone: wszyscy wygrywają tylko wtedy, gdy wszyscy sobie ufają.",
+      "title": "Ogród Eden"
     },
     "intro": "Utwórz pokój albo dołącz do jednego z otwartych pokojów: gracze łączą się ze sobą bezpośrednio.",
     "minorityGame": {

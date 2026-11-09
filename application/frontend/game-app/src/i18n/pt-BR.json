@@ -9,6 +9,7 @@
       "chat": "Bate-papo",
       "chess": "Xadrez",
       "contraband": "Contrabando",
+      "gardenOfEden": "Éden",
       "home": "Início",
       "minorityGame": "Minoria",
       "poker": "Pôquer",
@@ -61,6 +62,11 @@
       "action": "Jogar",
       "description": "De 2 a 8 jogadores, em dois países, passam dinheiro pela alfândega do outro, com as malas lacradas: deixar passar, ou duvidar.",
       "title": "Contrabando"
+    },
+    "gardenOfEden": {
+      "action": "Jogar",
+      "description": "De 3 a 8 jogadores escolhem 13 vezes uma maçã de ouro, de prata ou vermelha, em segredo: todos ganham só se todos confiarem nos outros.",
+      "title": "Jardim do Éden"
     },
     "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores se conectam diretamente entre si.",
     "minorityGame": {

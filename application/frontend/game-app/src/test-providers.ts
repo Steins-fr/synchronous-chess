@@ -99,6 +99,17 @@ import trContrabandTranslation from './i18n/contraband/tr.json';
 import idContrabandTranslation from './i18n/contraband/id.json';
 import plContrabandTranslation from './i18n/contraband/pl.json';
 import itContrabandTranslation from './i18n/contraband/it.json';
+import enEdenTranslation from './i18n/eden/en.json';
+import frEdenTranslation from './i18n/eden/fr.json';
+import esEdenTranslation from './i18n/eden/es.json';
+import ptBREdenTranslation from './i18n/eden/pt-BR.json';
+import ptPTEdenTranslation from './i18n/eden/pt-PT.json';
+import deEdenTranslation from './i18n/eden/de.json';
+import ruEdenTranslation from './i18n/eden/ru.json';
+import trEdenTranslation from './i18n/eden/tr.json';
+import idEdenTranslation from './i18n/eden/id.json';
+import plEdenTranslation from './i18n/eden/pl.json';
+import itEdenTranslation from './i18n/eden/it.json';
 import enCardsTranslation from './i18n/cards/en.json';
 import frCardsTranslation from './i18n/cards/fr.json';
 import esCardsTranslation from './i18n/cards/es.json';
@@ -201,6 +212,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'contraband/id': idContrabandTranslation,
     'contraband/pl': plContrabandTranslation,
     'contraband/it': itContrabandTranslation,
+    'eden/en': enEdenTranslation,
+    'eden/fr': frEdenTranslation,
+    'eden/es': esEdenTranslation,
+    'eden/pt-BR': ptBREdenTranslation,
+    'eden/pt-PT': ptPTEdenTranslation,
+    'eden/de': deEdenTranslation,
+    'eden/ru': ruEdenTranslation,
+    'eden/tr': trEdenTranslation,
+    'eden/id': idEdenTranslation,
+    'eden/pl': plEdenTranslation,
+    'eden/it': itEdenTranslation,
     'cards/en': enCardsTranslation,
     'cards/fr': frCardsTranslation,
     'cards/es': esCardsTranslation,

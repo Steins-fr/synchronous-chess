@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Schach",
       "contraband": "Schmuggel",
+      "gardenOfEden": "Eden",
       "home": "Start",
       "minorityGame": "Minderheit",
       "poker": "Poker",
@@ -61,6 +62,11 @@
       "action": "Spielen",
       "description": "2 bis 8 Spieler in zwei Ländern schmuggeln Geld durch den Zoll des anderen, ihre Koffer versiegelt: durchlassen oder zweifeln.",
       "title": "Schmuggel"
+    },
+    "gardenOfEden": {
+      "action": "Spielen",
+      "description": "3 bis 8 Spieler wählen 13-mal geheim einen goldenen, silbernen oder roten Apfel: Alle gewinnen nur, wenn alle einander vertrauen.",
+      "title": "Garten Eden"
     },
     "intro": "Erstelle einen Raum oder tritt einem der offenen Räume bei: Die Spieler verbinden sich direkt miteinander.",
     "minorityGame": {

@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Nach 13 Durchgängen gewinnt der Spieler mit dem meisten Geld.",
+      "paradise": "Ein Spieler bei −500 Millionen oder weniger verliert das Paradies, endgültig.",
+      "sealed": "Die Äpfel sind versiegelt: Niemand, nicht einmal der Server, sieht einen Apfel, bevor alle Spieler ihren gewählt haben."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem bei, um mit anderen zu spielen.",
+    "summary": "Ein Spiel aus dem Film Liar Game: The Final Stage: 3 bis 8 Spieler wählen 13-mal einen Apfel, golden, silbern oder rot. Sind alle Äpfel rot, gewinnen alle Spieler.",
+    "tagline": "Alle gewinnen nur, wenn alle den anderen vertrauen.",
+    "title": "Garten Eden"
+  },
+  "rules": {
+    "fair": {
+      "public": "Die aufgedeckten Äpfel und die Salden sind öffentlich, wo der Film nur die Zählungen nannte. Kein Geld wechselt zwischen Spielern: Absprachen bleiben Worte im Chat.",
+      "sealed": "Ein Apfel ist versiegelt: Die Seite sendet seinen Hash mit einem zufälligen Salt und deckt ihn auf, sobald alle Spieler gewählt haben. Ein anders als versiegelt aufgedeckter Apfel wird gemeldet. Eine neu geladene Seite behält ihren Apfel, außer ihr Speicher ist blockiert.",
+      "title": "Fairness"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Nur rote Äpfel",
+        "red": "+100 Millionen"
+      },
+      "apples": "Die Äpfel des Durchgangs",
+      "caption": "Was jeder Apfel gewinnt oder verliert, je nach den Äpfeln des Durchgangs",
+      "loneApple": {
+        "apples": "Ein einziger goldener oder silberner Apfel unter roten",
+        "others": "+200 Millionen",
+        "red": "−100 Millionen"
+      },
+      "loneRed": {
+        "apples": "Ein einziger roter Apfel unter goldenen oder silbernen",
+        "others": "+100 Millionen",
+        "red": "−1.000 Millionen, sein Spieler wird genannt"
+      },
+      "majority": {
+        "apples": "Kein roter Apfel",
+        "others": "Die häufigste Farbe +100 Millionen, die andere −100 Millionen"
+      },
+      "mixed": {
+        "apples": "2 rote Äpfel oder mehr und 2 goldene oder silberne oder mehr",
+        "others": "+100 Millionen",
+        "red": "−100 Millionen"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Kein roter Apfel, alle in einer Farbe",
+        "others": "−100 Millionen"
+      },
+      "others": "Ein goldener oder silberner Apfel",
+      "red": "Ein roter Apfel",
+      "text": "Aufgedeckt werden die Äpfel gezählt, und jeder gewinnt oder verliert:",
+      "tie": {
+        "apples": "Kein roter Apfel, gleich viele goldene wie silberne",
+        "others": "0"
+      },
+      "title": "Die Gewinne"
+    },
+    "missed": {
+      "reveal": "Ein gewählter Apfel, der nicht innerhalb von 15 Sekunden aufgedeckt oder anders als versiegelt aufgedeckt wird, verliert 1.000 Millionen und zählt nicht: so viel wie ein einzelner roter Apfel, sodass Zurückhalten nie einen Verräter rettet, der die anderen gesehen hat.",
+      "title": "Verpasste Äpfel",
+      "vote": "Ein Spieler, der noch im Spiel ist und bei Ablauf der Abstimmung keinen Apfel gewählt hat, verliert 100 Millionen, und sein Apfel zählt nicht. Die Abstimmung wartet auf alle Spieler im Spiel, auch auf einen abwesenden."
+    },
+    "paradise": {
+      "end": "Das Spiel endet nach 13 Durchgängen oder sobald weniger als 2 Spieler im Paradies sind.",
+      "floor": "Ist ein Durchgang gezählt, verliert ein Spieler bei −500 Millionen oder weniger das Paradies, endgültig: Er verfolgt den Rest des Spiels als Zuschauer.",
+      "title": "Der Verlust des Paradieses",
+      "winner": "Der Spieler im Spiel mit dem meisten Geld gewinnt, gleiche Salden teilen sich den Platz. Haben alle Spieler das Paradies verloren, gewinnt niemand."
+    },
+    "round": {
+      "apples": "Das Spiel dauert 13 Durchgänge. In jedem Durchgang wählt jeder Spieler, der noch im Paradies ist, einen Apfel: golden, silbern oder rot, den Apfel der Wahrheit.",
+      "sealed": "Die Äpfel werden gleichzeitig gewählt, versiegelt: Niemand sieht einen Apfel, bevor alle Spieler gewählt haben, dann werden sie allen aufgedeckt. Niemand muss sein Wort halten, und der Chat ist da, um sich abzusprechen oder zu verraten.",
+      "title": "Ein Durchgang"
+    },
+    "setup": {
+      "choices": "Wer das Spiel startet, wählt die Dauer einer Abstimmung, von 30 Sekunden bis 5 Minuten, und das Startgeld jedes Spielers: 0, 500 oder 1.000 Millionen.",
+      "players": "3 bis 8 Spieler nehmen die Plätze ein, dann startet einer von ihnen das Spiel: Die Plätze bleiben bis zum Ende besetzt.",
+      "title": "Der Tisch"
+    },
+    "summary": "Regeln des Gartens Eden",
+    "times": {
+      "awayOnce": "Auf einen abwesenden Spieler wird einmal 15 Sekunden länger gewartet; eine Abstimmung wartet nicht länger auf einen Spieler, der die Phase davor verpasst hat.",
+      "phases": "Eine Abstimmung wartet die beim Start gewählte Zeit, ein Aufdecken 15 Sekunden: Jede endet, sobald alle Spieler gehandelt haben.",
+      "title": "Die Zeiten"
+    },
+    "title": "Regeln"
+  }
+}

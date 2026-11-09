@@ -1,0 +1,88 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Dopo 13 manche, vince il giocatore con più denaro.",
+      "paradise": "Un giocatore a −500 milioni o meno perde il paradiso, per sempre.",
+      "sealed": "Le mele sono sigillate: nessuno, nemmeno il server, vede una mela prima che tutti i giocatori abbiano scelto la propria."
+    },
+    "rooms": "Crea una stanza o entra in una per giocare con altri.",
+    "summary": "Un gioco del film Liar Game: The Final Stage: da 3 a 8 giocatori scelgono 13 volte una mela, d'oro, d'argento o rossa. Quando tutte le mele sono rosse, vincono tutti i giocatori.",
+    "tagline": "Vincono tutti solo se tutti si fidano degli altri.",
+    "title": "Giardino dell'Eden"
+  },
+  "rules": {
+    "fair": {
+      "public": "Le mele rivelate e i saldi sono pubblici, mentre il film dava solo i conteggi. Nessun denaro passa da un giocatore all'altro: gli accordi restano parole nella chat.",
+      "sealed": "Una mela è sigillata: la pagina invia il suo hash con un sale casuale, poi la rivela quando tutti i giocatori hanno scelto. Una mela rivelata diversa da quella sigillata viene segnalata. Una pagina ricaricata conserva la sua mela, salvo se la sua memoria è bloccata.",
+      "title": "Gioco leale"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Solo mele rosse",
+        "red": "+100 milioni"
+      },
+      "apples": "Le mele della manche",
+      "caption": "Quanto vince o perde ogni mela, secondo le mele della manche",
+      "loneApple": {
+        "apples": "Una sola mela d'oro o d'argento tra mele rosse",
+        "others": "+200 milioni",
+        "red": "−100 milioni"
+      },
+      "loneRed": {
+        "apples": "Una sola mela rossa tra mele d'oro o d'argento",
+        "others": "+100 milioni",
+        "red": "−1000 milioni, e il suo giocatore viene nominato"
+      },
+      "majority": {
+        "apples": "Nessuna mela rossa",
+        "others": "Il colore più scelto +100 milioni, l'altro −100 milioni"
+      },
+      "mixed": {
+        "apples": "2 mele rosse o più, e 2 d'oro o d'argento o più",
+        "others": "+100 milioni",
+        "red": "−100 milioni"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Nessuna mela rossa, tutte di un solo colore",
+        "others": "−100 milioni"
+      },
+      "others": "Una mela d'oro o d'argento",
+      "red": "Una mela rossa",
+      "text": "Una volta rivelate, le mele vengono contate, e ognuna vince o perde:",
+      "tie": {
+        "apples": "Nessuna mela rossa, tante d'oro quante d'argento",
+        "others": "0"
+      },
+      "title": "Le vincite"
+    },
+    "missed": {
+      "reveal": "Una mela scelta e non rivelata entro 15 secondi, o rivelata diversa da quella sigillata, perde 1000 milioni e non conta: quanto una mela rossa da sola, così trattenerla non salva mai un traditore che ha visto le altre.",
+      "title": "Mele mancate",
+      "vote": "Un giocatore ancora in gioco che non ha scelto una mela allo scadere del voto perde 100 milioni, e la sua mela non conta. Il voto attende tutti i giocatori in gioco, anche uno assente."
+    },
+    "paradise": {
+      "end": "La partita finisce dopo 13 manche, o appena restano meno di 2 giocatori in paradiso.",
+      "floor": "Contata una manche, un giocatore a −500 milioni o meno perde il paradiso, per sempre: segue il resto della partita da spettatore.",
+      "title": "La perdita del paradiso",
+      "winner": "Vince il giocatore in gioco con più denaro, i saldi uguali condividono il posto. Quando tutti i giocatori hanno perso il paradiso, nessuno vince."
+    },
+    "round": {
+      "apples": "La partita dura 13 manche. In ogni manche, ogni giocatore ancora in paradiso sceglie una mela: d'oro, d'argento o rossa, la mela della verità.",
+      "sealed": "Le mele si scelgono nello stesso momento, sigillate: nessuno vede una mela prima che tutti i giocatori abbiano scelto, poi vengono rivelate a tutti. Nessuno è tenuto a mantenere la parola, e la chat serve per accordarsi, o per tradire.",
+      "title": "Una manche"
+    },
+    "setup": {
+      "choices": "Il giocatore che avvia la partita sceglie la durata di un voto, da 30 secondi a 5 minuti, e il capitale iniziale di ogni giocatore: 0, 500 o 1000 milioni.",
+      "players": "Da 3 a 8 giocatori occupano i posti, poi uno di loro avvia la partita: i posti restano occupati fino alla fine.",
+      "title": "Il tavolo"
+    },
+    "summary": "Regole del giardino dell'Eden",
+    "times": {
+      "awayOnce": "Un giocatore assente viene atteso 15 secondi in più, una volta; un voto non attende più a lungo un giocatore che ha mancato la fase precedente.",
+      "phases": "Un voto attende il tempo scelto all'inizio, una rivelazione 15 secondi: ognuno si chiude appena tutti i giocatori hanno agito.",
+      "title": "I tempi"
+    },
+    "title": "Regole"
+  }
+}
