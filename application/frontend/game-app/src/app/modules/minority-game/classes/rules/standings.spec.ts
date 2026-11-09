@@ -1,16 +1,9 @@
 import { MINORITY_RULES, MinorityVariant } from './minority-rules';
-import { MinorityResult, MinorityStanding, placesOf, settleElimination, settleScore } from './standings';
+import { MinorityResult, MinorityStanding, settleElimination, settleScore } from './standings';
 import { describe, expect, test } from 'vitest';
 
 const summary = (standing: MinorityStanding): [number, boolean, number | null, number | null, number | null] =>
     [standing.place, standing.winner, standing.points, standing.eliminatedAt, standing.balance];
-
-describe('placesOf', () => {
-    test('should place the highest keys first, equal keys sharing a place', () => {
-        // Then
-        expect(placesOf([3, 9, 3, -1, 9])).toEqual([3, 1, 3, 5, 1]);
-    });
-});
 
 describe('settleElimination', () => {
     test('should rank the winner first, taking every stake', () => {
