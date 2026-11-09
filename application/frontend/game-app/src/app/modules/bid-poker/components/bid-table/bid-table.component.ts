@@ -2,11 +2,11 @@ import { Component, computed, effect, inject, InjectionToken, input, linkedSigna
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
+import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
 import { SuitedCard } from '@app/modules/playing-cards/types/playing-card';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -20,7 +20,7 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { BidPokerPayloads } from '../../classes/game-sessions/bid-poker-messages';
-import { BidPokerSession, BidPokerSessionOptions, PlayedBidGame } from '../../classes/game-sessions/bid-poker-session';
+import { BidPokerSession, BidPokerSessionOptions } from '../../classes/game-sessions/bid-poker-session';
 import { BidEvent, BidEventKind, BidPokerGame, BidPokerPhase, Lot } from '../../classes/rules/bid-poker-game';
 import { lotLetter } from '../../classes/rules/catalogue';
 import { BidPokerResult, Standing } from '../../classes/rules/standings';
@@ -32,8 +32,6 @@ import { BidSeatComponent } from '../bid-seat/bid-seat.component';
 /** The options of the session of the table: the rules of the game, lighter ones for the specs */
 export const BID_POKER_SESSION_OPTIONS = new InjectionToken<BidPokerSessionOptions>('BID_POKER_SESSION_OPTIONS', { factory: (): BidPokerSessionOptions => ({}) });
 
-/** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
-const RETRY_TIME: number = 5;
 const CARD_ID: string = 'card-';
 
 /** A seat of the table, as it shows */
@@ -94,7 +92,7 @@ export class BidTableComponent implements OnDestroy {
         return untracked(() => new BidPokerSession(room, this.options));
     });
     /** The local player plays the game: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<BidPokerGame | null> = computed((): BidPokerGame | null => this.session().game());
     /** The lot auctioned */
@@ -114,7 +112,7 @@ export class BidTableComponent implements OnDestroy {
 
     /** The bid the local player types, 0 for each lot */
     /** The amount is null while the field is empty */
-    private readonly bidModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ amount: 0 }) });
+    private readonly bidModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.clock.roundKey(), computation: () => ({ amount: 0 }) });
     protected readonly bidForm = form(this.bidModel, (path) => {
         required(path.amount, { message: this.key(marker('table.bid.required', undefined, 'bid')) });
         min(path.amount, 0, { message: this.key(marker('table.bid.min', undefined, 'bid')) });
@@ -131,44 +129,12 @@ export class BidTableComponent implements OnDestroy {
     });
 
     /** A seated player starts a new game once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: BidPokerSession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
     /** The local player is a player the game waits for */
     private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canBid() || this.session().canDiscard());
-    private readonly roundKey: Signal<string> = computed((): string => {
-        const played: PlayedBidGame = this.session().played();
-        return `${ played.index }:${ played.attempt }:${ this.session().step() }`;
-    });
-    // A claim voided as too early: the page claims again once the time it was early by is over
-    private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
-    private readonly clockKey: Signal<string | null> = computed((): string | null =>
-        this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** The players the game waits for who are away */
-    private readonly awaitedAway: Signal<ReadonlyArray<string>> = computed((): ReadonlyArray<string> => {
-        const away: ReadonlyArray<string> = this.session().awayPlayers();
-        return this.session().awaited().filter((name: string) => away.includes(name));
-    });
-    /** A player the game waits for is away: it gets more time, once */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.awaitedAway().length > 0);
-    /** The round the clock runs for, from its start: a late tick of a phase closed acts on nothing */
-    private clocked: string | null = null;
-    /** The seconds left to the players the phase waits for */
-    protected readonly timeLeft: Signal<number | null> = turnClock({
-        running: () => this.clockKey() !== null,
-        times: () => {
-            this.clocked = this.roundKey();
-            return {
-                turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
-                awayTime: this.session().rules.awayTime,
-            };
-        },
-        away: this.waitingAway,
-        timeOut: () => this.timeOut(),
-    });
-    protected readonly clockLow: number = CLOCK_LOW;
+    /** The clock of the phase, for the players it waits for: the page claims its time once over */
+    protected readonly clock: PhaseClock = phaseClock(this.session);
 
     /** What the table waits for */
     protected readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
@@ -185,13 +151,12 @@ export class BidTableComponent implements OnDestroy {
         if (session.over()) {
             return { key: this.key(marker('table.status.over', undefined, 'bid')) };
         }
-        const left: number | null = this.timeLeft();
-        if (this.myTurn() && left !== null && left <= CLOCK_LOW) {
+        if (this.myTurn() && this.clock.low()) {
             return { key: this.key(marker('table.status.hurry', undefined, 'bid')) };
         }
         // The local player to act reads its own prompt
-        if (this.waitingAway() && !this.myTurn()) {
-            return { key: this.key(marker('table.status.away', undefined, 'bid')), params: { names: this.awaitedAway().join(', ') } };
+        if (this.clock.waitingAway() && !this.myTurn()) {
+            return { key: this.key(marker('table.status.away', undefined, 'bid')), params: { names: session.awaitedAway().join(', ') } };
         }
         return this.phaseStatus(game, names);
     });
@@ -237,22 +202,16 @@ export class BidTableComponent implements OnDestroy {
     });
 
     /** The result of each game over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedBidGame>, index: number): PastResult => {
-            const result: BidPokerResult = played.result() as BidPokerResult;
-            const names = (standings: ReadonlyArray<Readonly<Standing>>): string => standings.map((standing: Readonly<Standing>) => played.players()[standing.player]).join(', ');
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.game', undefined, 'bid')),
+        (result: BidPokerResult, players: ReadonlyArray<string>): TranslatableText => {
+            const names = (standings: ReadonlyArray<Readonly<Standing>>): string => standings.map((standing: Readonly<Standing>) => players[standing.player]).join(', ');
             const first: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.place === 1));
             const pigs: string = names(result.standings.filter((standing: Readonly<Standing>) => standing.pig));
-            return {
-                number: index + 1,
-                label: { key: this.key(marker('table.game', undefined, 'bid')), params: { number: index + 1 } },
-                // Every player a pig: nobody first
-                text: first === ''
-                    ? { key: this.key(marker('table.pastAllPigs', undefined, 'bid')), params: { count: result.pigs, pigs } }
-                    : { key: this.key(marker('table.past', undefined, 'bid')), params: { first, count: result.pigs, pigs } },
-                verification: null,
-            };
-        }).reverse());
+            // Every player a pig: nobody first
+            return first === ''
+                ? { key: this.key(marker('table.pastAllPigs', undefined, 'bid')), params: { count: result.pigs, pigs } }
+                : { key: this.key(marker('table.past', undefined, 'bid')), params: { first, count: result.pigs, pigs } };
+        });
 
     /** The session caught up with the history of the room: the table hears the changes from there */
     private liveSession: BidPokerSession | null = null;
@@ -328,18 +287,6 @@ export class BidTableComponent implements OnDestroy {
 
     protected release(seat: number): void {
         this.session().unseat(seat);
-    }
-
-    /**
-     * The time of the phase is over: a player of the game claims it, the local player included when late, which then acts
-     * no more until it bids or discards again. A late tick of the clock of a phase closed claims nothing
-     */
-    private timeOut(): void {
-        const session: BidPokerSession = this.session();
-
-        if (this.clocked === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
-            session.claimTimeout();
-        }
     }
 
     private seatView(seat: number, name: string | null): SeatView {

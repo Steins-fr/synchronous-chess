@@ -183,6 +183,11 @@
       },
       "show": "Show the open rooms",
       "title": "Open rooms"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} min",
+      "seconds": "{count} s"
     }
   }
 }

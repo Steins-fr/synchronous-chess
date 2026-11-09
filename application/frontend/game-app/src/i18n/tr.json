@@ -183,6 +183,11 @@
       },
       "show": "Açık odaları göster",
       "title": "Açık odalar"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} dk",
+      "seconds": "{count} sn"
     }
   }
 }

@@ -16,9 +16,8 @@
         @if (standing(); as text) {
         <span class="badge" [class.badge-win]="winning()" [class.badge-draw]="!winning()">{{ text.key | transloco: text.params }}</span>
         }
-        @let left = timeLeft();
-        @if (left !== null) {
-        <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="left <= clockLow">{{ t('clock', { seconds: left }) }}</span>
+        @if (clock(); as left) {
+        <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
         }
         @if (canTake()) {
         <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>

@@ -90,7 +90,6 @@
       "rematch": "Rejouer",
       "start": "Lancer la partie"
     },
-    "clock": "{minutes}:{seconds}",
     "game": "Partie {number} :",
     "history": "Coups de la partie",
     "info": {
@@ -146,9 +145,7 @@
       "player": "Joueur"
     },
     "start": {
-      "minutes": "{count} min",
       "money": "{amount, plural, one {# million} other {# millions}}",
-      "seconds": "{count} s",
       "startMoney": "Fonds de départ",
       "voteTime": "Durée du vote"
     },

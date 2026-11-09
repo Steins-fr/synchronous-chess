@@ -61,7 +61,6 @@
       "rematch": "Сыграть ещё",
       "start": "Начать партию"
     },
-    "clock": "{minutes}:{seconds}",
     "eliminated": "Вы выбыли: следите за остальной партией и чатом.",
     "game": "Партия {number}:",
     "history": "Ходы партии",
@@ -129,9 +128,7 @@
     },
     "start": {
       "elimination": "На выбывание",
-      "minutes": "{count} мин",
       "score": "На очки",
-      "seconds": "{count} с",
       "variant": "Вариант",
       "voteTime": "Время на голосование"
     },

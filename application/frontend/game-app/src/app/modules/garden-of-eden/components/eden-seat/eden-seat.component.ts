@@ -1,16 +1,10 @@
 import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { TranslatableText } from '@app/types/translatable-text.type';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { Apple } from '../../classes/rules/eden-rules';
-import { Sign } from '../../helpers/eden-texts.helper';
 import { EdenAppleComponent } from '../eden-apple/eden-apple.component';
-
-/** An amount of millions as a text reads it */
-export interface SignedAmount {
-    readonly sign: Sign;
-    readonly amount: number;
-}
 
 /**
  * A seat of the table: its player, its balance, the apple it revealed on the round before and what it won or lost. The

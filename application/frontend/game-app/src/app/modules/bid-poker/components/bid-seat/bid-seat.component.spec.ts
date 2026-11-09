@@ -41,7 +41,8 @@ describe('BidSeatComponent', () => {
         // When
         await show({
             name: 'bob', coins: 290, cards: [{ id: 'card-0', card: { rank: CardRank.TWO, suit: CardSuit.SPADES } }],
-            awaited: true, sealed: true, absent: true, timeLeft: 4, standing: { key: 'bid.table.result.pig' },
+            awaited: true, sealed: true, absent: true, clock: { key: 'rooms.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
+            standing: { key: 'bid.table.result.pig' },
         });
 
         // Then
@@ -52,6 +53,7 @@ describe('BidSeatComponent', () => {
         const pig: Element | undefined = Array.from(host().querySelectorAll('.badge')).find((badge: Element) => badge.textContent?.trim() === 'Pig');
         expect(pig?.classList).toContain('badge-draw');
         expect(host().querySelector('.badge-win')).toBeNull();
+        expect(host().querySelector('.tabular-nums')?.textContent?.trim()).toEqual('0:04');
         expect(host().querySelector('.tabular-nums')?.classList).toContain('text-app-clock-low');
         expect(host().classList).toContain('outline-2');
         expect(host().querySelectorAll('app-playing-card')).toHaveLength(1);

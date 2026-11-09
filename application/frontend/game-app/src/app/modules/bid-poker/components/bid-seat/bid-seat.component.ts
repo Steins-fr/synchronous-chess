@@ -1,6 +1,5 @@
 import { Component, input, model, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { CLOCK_LOW } from '@app/helpers/turn-clock.helper';
 import { CardHandComponent, HandCard } from '@app/modules/playing-cards/components/card-hand/card-hand.component';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { TranslatableText } from '@app/types/translatable-text.type';
@@ -34,8 +33,9 @@ export class BidSeatComponent {
     public readonly sealed = input<boolean>(false);
     /** Its player let a phase close without acting: the game goes on without waiting for it */
     public readonly absent = input<boolean>(false);
-    /** The seconds left to its player */
-    public readonly timeLeft = input<number | null>(null);
+    /** The time left to its player */
+    public readonly clock = input<TranslatableText | null>(null);
+    public readonly clockLow = input<boolean>(false);
     /** The end of the game for its player */
     public readonly standing = input<TranslatableText | null>(null);
     /** Its player won a prize: the standing of the others shows in the neutral colors */
@@ -50,6 +50,4 @@ export class BidSeatComponent {
     public readonly take = output<void>();
     public readonly leave = output<void>();
     public readonly release = output<void>();
-
-    protected readonly clockLow: number = CLOCK_LOW;
 }

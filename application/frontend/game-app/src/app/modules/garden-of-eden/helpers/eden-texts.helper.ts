@@ -9,25 +9,10 @@ import { Apple, EdenRules } from '../classes/rules/eden-rules';
 /** A count of the apples of a round */
 export type CountedEvent = Extract<EdenEvent, { kind: EdenEventKind.COUNTED }>;
 
-/** The sign of an amount, a select of its texts: they write the amount without it */
-export enum Sign {
-    PLUS = 'plus',
-    MINUS = 'minus',
-    ZERO = 'zero',
-}
-
 const key = (text: string): string => scopedKey(TranslationScope.EDEN, text);
 
 /** The names of players, joined */
 const named = (players: ReadonlyArray<number>, names: ReadonlyArray<string>): string => players.map((player: number) => names[player]).join(', ');
-
-/** An amount of millions as the texts read it: its sign apart, the amount without it */
-export function signed(amount: number): Readonly<{ sign: Sign; amount: number }> {
-    if (amount === 0) {
-        return { sign: Sign.ZERO, amount: 0 };
-    }
-    return amount > 0 ? { sign: Sign.PLUS, amount } : { sign: Sign.MINUS, amount: -amount };
-}
 
 /** A line of the history of the game: an event, its players named */
 export function eventText(event: Readonly<EdenEvent>, names: ReadonlyArray<string>, rules: EdenRules): TranslatableText {
@@ -70,11 +55,6 @@ export function countText(event: Readonly<CountedEvent>, names: ReadonlyArray<st
         case AppleOutcome.MIXED:
             return { key: key(marker('table.move.mixed', undefined, 'eden')), params };
     }
-}
-
-/** The seconds left, in minutes and seconds */
-export function clockText(seconds: number): TranslatableText {
-    return { key: key(marker('table.clock', undefined, 'eden')), params: { minutes: Math.floor(seconds / 60), seconds: String(seconds % 60).padStart(2, '0') } };
 }
 
 /** Players whose apple did not count, and what each one lost: late, a reveal not matching its commitment, no apple */

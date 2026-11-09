@@ -35,11 +35,12 @@ The code lives in `application/frontend/game-app/src/app/modules/garden-of-eden`
 |---|---|---|
 | `EDEN_RULES` | `classes/rules/eden-rules.ts` | The rules: the seats, the times, the times of a vote and the starting moneys offered, the rounds, the gains and the penalties, the floor of paradise; the apples, the checks of an apple and of a setup received |
 | `countApples` | `classes/rules/apple-count.ts` | The table of gains: the line the apples of a round fall on, the lone apple, the gain of each apple |
-| `settleEden`, `placesOf` | `classes/rules/standings.ts` | The end of the game: the places by balance, the winners |
+| `settleEden` | `classes/rules/standings.ts` | The end of the game: the places by balance (`placesOf` of `modules/commit-reveal/classes/places.ts`), the winners |
 | `EdenGameState` | `classes/rules/eden-game-state.ts` | The game in signals: the phases, the apples committed then revealed, the apples missed, the balances, the players out of paradise, the absent players, the events |
 | `PlayedCommitRevealGame` | `modules/commit-reveal/classes/played-commit-reveal-game.ts` | A game of the room (`PlayedEdenGame` of `eden-session.ts`): its players, its setup, the id of its secrets, the draw of its seed, then the game |
 | `EdenSession` | `classes/game-sessions/eden-session.ts` | The games of the room, built on `CommitRevealSession`: the setup, the apples committed then revealed, the loss of paradise |
 | `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game, the Contraband and the Garden of Eden: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
+| `phaseClock`, `watchMatch`, `canRematchOf`, `pastResultsOf` | `modules/commit-reveal/helpers` | What the tables of these games share: the clock of a phase in minutes and seconds and the claims of its timeout, the warning before leaving a game in progress, a new game, the games over |
 | `FairDraw` | `modules/commit-reveal/classes` | The seed no player chose alone, drawn as in the other games, unused by this one |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the players, and the apple of the local player kept across the reloads of the page |
 | `TableSeats` | `modules/game-table/classes/table-seats.ts` | The 8 seats of the table: the requests of the participants, the salts, a seat freed |
@@ -177,7 +178,7 @@ and a seated player starts the next one with a setup of its own. The new game ha
 
 ## The clock of a phase
 
-Each phase has its time, from when the page sees it (`turnClock`, shown in minutes and seconds): 20 seconds for each
+Each phase has its time, from when the page sees it (`phaseClock`, shown in minutes and seconds): 20 seconds for each
 step of the draw, the time picked for a vote, 15 seconds to reveal. A player away gives the phase 15 seconds more, once.
 Once the time is over, the page of a player of the game, one out of paradise included, claims it (`GE_timeout`, with the
 step its clock ran for): the first claim in the chain counts, a claim naming a step past is void.

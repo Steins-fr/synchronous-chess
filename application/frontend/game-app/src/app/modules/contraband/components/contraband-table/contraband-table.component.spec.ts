@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { SeededRandom } from '@app/modules/commit-reveal/classes/seeded-random';
+import { PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
 import { PrivatePayloads } from '@app/modules/private-conversations/classes/private-messages';
@@ -669,14 +670,13 @@ describe('ContrabandTableComponent', { timeout: 30_000 }, () => {
         test('should claim nothing on a late tick of the clock of a phase closed', async () => {
             // Given the clock of the packing
             await started();
-            const component = TestHelper.cast<{ timeOut(): void; clocked: unknown }>(fixture.componentInstance);
-            const clockOfThePacking: unknown = component.clocked;
+            const clock: PhaseClock = TestHelper.cast<{ clock: PhaseClock }>(fixture.componentInstance).clock;
+            const clockOfThePacking: string = clock.roundKey();
             await click('Pack the trunk');
             await until(() => phase() === ContrabandPhase.CUSTOMS);
 
             // When it ticks once the customs opened, before its effect stops it
-            component.clocked = clockOfThePacking;
-            component.timeOut();
+            clock.timeOut(clockOfThePacking);
 
             // Then
             expect(hub.types()).not.toContain(CBGameSessionType.TIMEOUT);

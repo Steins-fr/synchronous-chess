@@ -2,9 +2,10 @@ import { Component, computed, effect, inject, InjectionToken, input, linkedSigna
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
+import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
+import { setupTimeOf, setupTimeOptions, signed, SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -18,33 +19,18 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { EdenPayloads } from '../../classes/game-sessions/eden-messages';
-import { EdenSession, EdenSessionOptions, PlayedEdenGame } from '../../classes/game-sessions/eden-session';
+import { EdenSession, EdenSessionOptions } from '../../classes/game-sessions/eden-session';
 import { CastApple, RoundGain } from '../../classes/rules/apple-count';
 import { EdenEvent, EdenEventKind, EdenGameState, EdenPhase } from '../../classes/rules/eden-game-state';
 import { Apple } from '../../classes/rules/eden-rules';
 import { EdenResult, EdenStanding } from '../../classes/rules/standings';
-import { clockText, countText, CountedEvent, eventText, signed } from '../../helpers/eden-texts.helper';
+import { countText, CountedEvent, eventText } from '../../helpers/eden-texts.helper';
 import { HeardEdenTable, tableSounds } from '../../helpers/table-sound.helper';
 import { EdenAppleComponent } from '../eden-apple/eden-apple.component';
-import { EdenSeatComponent, SignedAmount } from '../eden-seat/eden-seat.component';
+import { EdenSeatComponent } from '../eden-seat/eden-seat.component';
 
 /** The options of the session of the table: the rules of the game, lighter ones for the specs */
 export const EDEN_SESSION_OPTIONS = new InjectionToken<EdenSessionOptions>('EDEN_SESSION_OPTIONS', { factory: (): EdenSessionOptions => ({}) });
-
-/** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
-const RETRY_TIME: number = 5;
-const SECONDS_PER_MINUTE: number = 60;
-
-/** The unit a time of a vote shows in, a select of its text */
-enum TimeUnit {
-    SECONDS = 'seconds',
-    MINUTES = 'minutes',
-}
-
-/** A time of a vote as the setup offers it: in seconds under a minute, else in minutes */
-function voteTimeOf(seconds: number): Readonly<{ unit: TimeUnit; count: number }> {
-    return seconds < SECONDS_PER_MINUTE ? { unit: TimeUnit.SECONDS, count: seconds } : { unit: TimeUnit.MINUTES, count: seconds / SECONDS_PER_MINUTE };
-}
 
 /** A seat of the table, as it shows */
 interface SeatView {
@@ -102,7 +88,7 @@ export class EdenTableComponent implements OnDestroy {
         return untracked(() => new EdenSession(room, this.options));
     });
     /** The local player plays the game, still in paradise: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<EdenGameState | null> = computed((): EdenGameState | null => this.session().game());
     protected readonly apples = Apple;
@@ -114,15 +100,7 @@ export class EdenTableComponent implements OnDestroy {
     });
     protected readonly setupForm = form(this.setupModel, { name: 'eden-setup' });
     protected readonly voteTimes: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
-        this.session().rules.voteTimes.map((seconds: number): ChoiceOption => {
-            const { unit, count } = voteTimeOf(seconds);
-            return {
-                value: String(seconds),
-                label: unit === TimeUnit.SECONDS
-                    ? { key: this.key(marker('table.start.seconds', undefined, 'eden')), params: { count } }
-                    : { key: this.key(marker('table.start.minutes', undefined, 'eden')), params: { count } },
-            };
-        }));
+        setupTimeOptions(this.session().rules.voteTimes));
     protected readonly startMoneys: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
         this.session().rules.startMoneys.map((amount: number): ChoiceOption =>
             ({ value: String(amount), label: { key: this.key(marker('table.start.money', undefined, 'eden')), params: { amount } } })));
@@ -159,7 +137,7 @@ export class EdenTableComponent implements OnDestroy {
             },
             {
                 id: 'terms',
-                text: { key: this.key(marker('table.info.terms', undefined, 'eden')), params: { ...voteTimeOf(game.setup.voteTime), amount: game.setup.startMoney } },
+                text: { key: this.key(marker('table.info.terms', undefined, 'eden')), params: { ...setupTimeOf(game.setup.voteTime), amount: game.setup.startMoney } },
             },
         ];
     });
@@ -191,43 +169,10 @@ export class EdenTableComponent implements OnDestroy {
     });
 
     /** A seated player starts a new game once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: EdenSession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
-    private readonly roundKey: Signal<string> = computed((): string => {
-        const played: PlayedEdenGame = this.session().played();
-        return `${ played.index }:${ played.attempt }:${ this.session().step() }`;
-    });
-    // A claim voided as too early: the page claims again once the time it was early by is over
-    private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
-    private readonly clockKey: Signal<string | null> = computed((): string | null =>
-        this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** A player the game waits for is away */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.session().awaitedAway().length > 0);
-    /** A player the game waits for is away, giving the phase more time, once */
-    private readonly extendedAway: Signal<boolean> = computed((): boolean => this.session().extendingAway().length > 0);
-    /** The round the clock runs for, from its start: a late tick of a phase closed acts on nothing */
-    private clocked: string | null = null;
-    /** The seconds left to the players the phase waits for */
-    protected readonly timeLeft: Signal<number | null> = turnClock({
-        running: () => this.clockKey() !== null,
-        times: () => {
-            this.clocked = this.roundKey();
-            return {
-                turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
-                awayTime: this.session().rules.awayTime,
-            };
-        },
-        away: this.extendedAway,
-        timeOut: () => this.timeOut(),
-    });
-    protected readonly clock: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
-        const left: number | null = this.timeLeft();
-        return left === null ? null : clockText(left);
-    });
-    protected readonly clockLow: Signal<boolean> = computed((): boolean => (this.timeLeft() ?? CLOCK_LOW + 1) <= CLOCK_LOW);
+    /** The clock of the phase, for the players it waits for: the page claims its time once over */
+    protected readonly clock: PhaseClock = phaseClock(this.session, { extendingAway: (session: EdenSession) => session.extendingAway() });
 
     /** What the table waits for */
     protected readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
@@ -244,11 +189,11 @@ export class EdenTableComponent implements OnDestroy {
         if (session.over()) {
             return { key: this.key(marker('table.status.over', undefined, 'eden')) };
         }
-        if (session.canVote() && this.clockLow()) {
+        if (session.canVote() && this.clock.low()) {
             return { key: this.key(marker('table.status.hurry', undefined, 'eden')) };
         }
         // The local player to vote reads its own prompt
-        if (this.waitingAway() && !session.canVote()) {
+        if (this.clock.waitingAway() && !session.canVote()) {
             return { key: this.key(marker('table.status.away', undefined, 'eden')), params: { names: session.awaitedAway().join(', ') } };
         }
         if (game.phase() === EdenPhase.REVEALING) {
@@ -270,21 +215,13 @@ export class EdenTableComponent implements OnDestroy {
     });
 
     /** The result of each game over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedEdenGame>, index: number): PastResult => {
-            const result: EdenResult = played.result() as EdenResult;
-            return {
-                number: index + 1,
-                label: { key: this.key(marker('table.game', undefined, 'eden')), params: { number: index + 1 } },
-                text: result.winners.length === 0
-                    ? { key: this.key(marker('table.pastNoWinner', undefined, 'eden')) }
-                    : {
-                        key: this.key(marker('table.past', undefined, 'eden')),
-                        params: { count: result.winners.length, winners: this.names(result.winners, played.players()), ...signed(result.standings[result.winners[0]].balance) },
-                    },
-                verification: null,
-            };
-        }).reverse());
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.game', undefined, 'eden')),
+        (result: EdenResult, players: ReadonlyArray<string>): TranslatableText => result.winners.length === 0
+            ? { key: this.key(marker('table.pastNoWinner', undefined, 'eden')) }
+            : {
+                key: this.key(marker('table.past', undefined, 'eden')),
+                params: { count: result.winners.length, winners: this.names(result.winners, players), ...signed(result.standings[result.winners[0]].balance) },
+            });
 
     /** The session caught up with the history of the room: the table hears the changes from there */
     private liveSession: EdenSession | null = null;
@@ -356,18 +293,6 @@ export class EdenTableComponent implements OnDestroy {
 
     protected release(seat: number): void {
         this.session().unseat(seat);
-    }
-
-    /**
-     * The time of the phase is over: a player of the game claims it, one out of paradise or a late one included. A late
-     * tick of the clock of a phase closed claims nothing
-     */
-    private timeOut(): void {
-        const session: EdenSession = this.session();
-
-        if (this.clocked === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
-            session.claimTimeout();
-        }
     }
 
     private seatView(seat: number, name: string | null): SeatView {

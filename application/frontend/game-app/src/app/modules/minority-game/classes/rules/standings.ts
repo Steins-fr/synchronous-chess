@@ -1,3 +1,4 @@
+import { placesOf } from '@app/modules/commit-reveal/classes/places';
 import { MinorityRules, MinorityVariant } from './minority-rules';
 
 /** The end of the game for a player */
@@ -21,11 +22,6 @@ export interface MinorityResult {
     readonly winners: ReadonlyArray<number>;
     /** In the order of the players */
     readonly standings: ReadonlyArray<Readonly<MinorityStanding>>;
-}
-
-/** The place of each key, the highest first: 1 plus the keys above it, equal keys sharing a place */
-export function placesOf(keys: ReadonlyArray<number>): number[] {
-    return keys.map((key: number) => 1 + keys.filter((other: number) => other > key).length);
 }
 
 /**

@@ -1,15 +1,8 @@
-import { EdenResult, EdenStanding, placesOf, settleEden } from './standings';
+import { EdenResult, EdenStanding, settleEden } from './standings';
 import { describe, expect, test } from 'vitest';
 
 const summary = (standing: EdenStanding): [number, boolean, number, number | null] =>
     [standing.place, standing.winner, standing.balance, standing.outAt];
-
-describe('placesOf', () => {
-    test('should place the highest keys first, equal keys sharing a place', () => {
-        // Then
-        expect(placesOf([3, 9, 3, -1, 9])).toEqual([3, 1, 3, 5, 1]);
-    });
-});
 
 describe('settleEden', () => {
     test('should rank by balance, equal balances sharing a place and every first still in winning', () => {

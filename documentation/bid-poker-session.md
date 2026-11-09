@@ -38,6 +38,7 @@ The code lives in `application/frontend/game-app/src/app/modules/bid-poker`.
 | `PlayedCommitRevealGame` | `modules/commit-reveal/classes/played-commit-reveal-game.ts` | A game of the room (`PlayedBidGame` of `bid-poker-session.ts`), without a setup: its players, the id of its secrets, the draw of its deck, then the game |
 | `BidPokerSession` | `classes/game-sessions/bid-poker-session.ts` | The games of the room, built on `CommitRevealSession`: the catalogue drawn, the bids and the discards committed then revealed |
 | `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game, the Contraband and the Garden of Eden: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
+| `phaseClock`, `watchMatch`, `canRematchOf`, `pastResultsOf` | `modules/commit-reveal/helpers` | What the tables of these games share: the clock of a phase in minutes and seconds and the claims of its timeout, the warning before leaving a game in progress, a new game, the games over |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed of the deck no player chose alone, and the shuffle every page makes alike from it |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the players, and the values of the local player kept across the reloads of the page |
 | `bestHand`, `compareHands` | `modules/playing-cards/helpers/hand-evaluator.helper.ts` | The best 5 cards of a player, and their ranking |
@@ -147,11 +148,11 @@ its own commitments and its own seals.
 
 ## The clock of a phase
 
-Each phase has its time, from when the page sees it (`turnClock`): 20 seconds for each step of the draw, 90 seconds for
-the first lot (60 to read the catalogue, 30 to bid), 30 for the other lots, 15 to reveal, 45 to discard. A player away
-gives the phase 15 seconds more, once. Once the time is over, the page of a player claims it (`BP_timeout`, with the step
-its clock ran for, a late tick of the clock of a phase closed claiming nothing): the first claim in the chain counts, a
-claim naming a step past is void.
+Each phase has its time, from when the page sees it (`phaseClock`, shown in minutes and seconds): 20 seconds for each
+step of the draw, 90 seconds for the first lot (60 to read the catalogue, 30 to bid), 30 for the other lots, 15 to
+reveal, 45 to discard. A player away gives the phase 15 seconds more, once. Once the time is over, the page of a player
+claims it (`BP_timeout`, with the step its clock ran for, a late tick of the clock of a phase closed claiming nothing):
+the first claim in the chain counts, a claim naming a step past is void.
 
 - A claim coming before the time of the phase, on the time of the chain (the time of its block minus the time of the
   block opening the phase, 2 seconds of slack), is void: a page can not close a phase early to win a lot. Its page waits

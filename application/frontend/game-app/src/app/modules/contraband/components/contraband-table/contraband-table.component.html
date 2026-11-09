@@ -10,8 +10,8 @@
 
     <div appSteadyHeight class="flex items-center gap-3">
         <output class="table-status flex-1">{{ status().key | transloco: status().params }}</output>
-        @if (clock(); as left) {
-        <span id="clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+        @if (clock.text(); as left) {
+        <span id="clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clock.low()">{{ left.key | transloco: left.params }}</span>
         }
     </div>
 
@@ -115,7 +115,7 @@
 
     <!-- The country of the other players above, the one of the local player below: for a spectator, the one of the first free seat while the seats are open, else the North -->
     @let seats = currentSession.tableSeats;
-    @let left = clock();
+    @let left = clock.text();
     @for (country of teams(); track country.team) {
     <div [id]="'team-' + country.team" class="flex flex-col gap-2">
         <h2 class="m-0 flex flex-wrap items-baseline gap-x-3 mat-title-medium">
@@ -129,7 +129,7 @@
             <app-contraband-seat #seatView
                 [seat]="view.seat" [name]="view.name" [awaited]="view.awaited" [absent]="view.absent" [role]="view.role"
                 [atm]="view.atm" [account]="view.account" [balance]="view.balance" [winning]="view.winning"
-                [clock]="view.awaited ? left : null" [clockLow]="clockLow()"
+                [clock]="view.awaited ? left : null" [clockLow]="clock.low()"
                 [canTake]="seats.canTake(view.seat)" [canLeave]="seats.mySeat() === view.seat && seats.canLeave()" [canRelease]="seats.canRelease(view.seat)"
                 (take)="takeSeat(view.seat)" (leave)="leaveSeat()" (release)="release(view.seat)" />
             }

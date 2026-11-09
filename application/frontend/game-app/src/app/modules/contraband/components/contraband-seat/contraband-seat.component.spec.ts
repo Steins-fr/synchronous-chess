@@ -42,7 +42,7 @@ describe('ContrabandSeatComponent', () => {
         // When
         await show({
             name: 'bob', awaited: true, absent: true, role: CustomsRole.SMUGGLER, atm: 260, account: 112.5,
-            clock: { key: 'contraband.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
+            clock: { key: 'rooms.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
         });
 
         // Then

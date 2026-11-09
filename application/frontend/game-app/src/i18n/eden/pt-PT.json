@@ -90,7 +90,6 @@
       "rematch": "Jogar outra vez",
       "start": "Iniciar a partida"
     },
-    "clock": "{minutes}:{seconds}",
     "game": "Partida {number}:",
     "history": "Jogadas da partida",
     "info": {
@@ -146,9 +145,7 @@
       "player": "Jogador"
     },
     "start": {
-      "minutes": "{count} min",
       "money": "{amount, plural, one {# milhão} other {# milhões}}",
-      "seconds": "{count} s",
       "startMoney": "Dinheiro inicial",
       "voteTime": "Tempo para votar"
     },

@@ -85,7 +85,6 @@
       "check": "Skontroluj",
       "pass": "Przepuść"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Kontrola celna rundy {number}: {smuggler} i {inspector}",
       "team": "{team, select, north {Kraj Północy} other {Kraj Południa}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# runda} few {# rundy} many {# rund} other {# rundy}}",
       "games": "Rundy",
       "goldRush": "Gorączka złota",
-      "minutes": "{count} min",
       "variant": "Wariant"
     },
     "status": {

@@ -183,6 +183,11 @@
       },
       "show": "Afficher les salles ouvertes",
       "title": "Salles ouvertes"
+    },
+    "table": {
+      "clock": "{minutes}:{seconds}",
+      "minutes": "{count} min",
+      "seconds": "{count} s"
     }
   }
 }

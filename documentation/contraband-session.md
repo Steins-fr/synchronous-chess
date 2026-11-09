@@ -52,6 +52,7 @@ The code lives in `application/frontend/game-app/src/app/modules/contraband`.
 | `PlayedContrabandGame` | `classes/game-sessions/played-contraband-game.ts` | A match of the room, a `PlayedCommitRevealGame` knowing its countries |
 | `ContrabandSession` | `classes/game-sessions/contraband-session.ts` | The matches of the room, built on `CommitRevealSession`: the countries, the setup, the trunks committed then revealed, the calls, the conversations of the match |
 | `CommitRevealSession` | `modules/commit-reveal/classes/commit-reveal-session.ts` | The session of every game committing then revealing its moves, shared by the Bid Poker, the Minority Game, the Contraband and the Garden of Eden: the messages applied in the order of the chain, the seats, the draw of the seed, the values the local player seals and their reveals, the claims of a timeout, a new game |
+| `phaseClock`, `watchMatch`, `canRematchOf`, `pastResultsOf` | `modules/commit-reveal/helpers` | What the tables of these games share: the clock of a phase in minutes and seconds and the claims of its timeout, the warning before leaving a game in progress, a new game, the games over |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | The seed no player chose alone, and the pairs every page draws alike from it |
 | `SealedCommitments`, `SealedStore`, `commitmentOf` | `modules/commit-reveal/classes` | The commitments of the smugglers, and the trunk of the local player kept across the reloads of the page |
 | `TableSeats` | `modules/game-table/classes/table-seats.ts` | The 8 seats of the table: the requests of the participants, the salts, a seat freed |
@@ -223,7 +224,7 @@ its own conversations.
 
 ## The clock of a phase
 
-Each phase has its time, from when the page sees it (`turnClock`, shown in minutes and seconds): 20 seconds for each
+Each phase has its time, from when the page sees it (`phaseClock`, shown in minutes and seconds): 20 seconds for each
 step of the draw, 60 seconds to pack, the time picked for the customs, 15 seconds to reveal. The reveal lasts 15 seconds,
 never less: more than the 10 seconds of the watch of the censorship, so a sequencer holding the reveal of a smuggler,
 which would seize its trunk, is caught first. A player away gives the phase 15 seconds more, once. Once the time is over,

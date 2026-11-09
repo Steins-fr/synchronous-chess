@@ -15,9 +15,8 @@
 
     <div appSteadyHeight class="flex items-center gap-3">
         <output class="table-status flex-1">{{ status().key | transloco: status().params }}</output>
-        @let left = timeLeft();
-        @if (left !== null) {
-        <span id="bid-clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="left <= clockLow">{{ t('clock', { seconds: left }) }}</span>
+        @if (clock.text(); as left) {
+        <span id="bid-clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clock.low()">{{ left.key | transloco: left.params }}</span>
         }
     </div>
 
@@ -90,11 +89,12 @@
     }
 
     @let seats = currentSession.tableSeats;
+    @let left = clock.text();
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4 [--app-card-width:2.75rem]">
         @for (view of otherSeats(); track view.seat) {
         <app-bid-seat
             [seat]="view.seat" [name]="view.name" [coins]="view.coins" [cards]="view.cards" [awaited]="view.awaited" [sealed]="view.sealed"
-            [absent]="view.absent" [standing]="view.standing" [winning]="view.winning" [highlighted]="view.highlighted" [timeLeft]="view.awaited ? left : null"
+            [absent]="view.absent" [standing]="view.standing" [winning]="view.winning" [highlighted]="view.highlighted" [clock]="view.awaited ? left : null" [clockLow]="clock.low()"
             [canTake]="seats.canTake(view.seat)" [canRelease]="seats.canRelease(view.seat)"
             (take)="takeSeat(view.seat)" (release)="release(view.seat)" />
         }
@@ -102,7 +102,7 @@
         @let mine = bottomSeat();
         <app-bid-seat class="md:col-span-2 xl:col-span-4 [--app-card-width:4.5rem]"
             [seat]="mine.seat" [name]="mine.name" [coins]="mine.coins" [cards]="mine.cards" [awaited]="mine.awaited" [sealed]="mine.sealed"
-            [absent]="mine.absent" [standing]="mine.standing" [winning]="mine.winning" [highlighted]="mine.highlighted" [timeLeft]="mine.awaited ? left : null"
+            [absent]="mine.absent" [standing]="mine.standing" [winning]="mine.winning" [highlighted]="mine.highlighted" [clock]="mine.awaited ? left : null" [clockLow]="clock.low()"
             [canTake]="seats.canTake(mine.seat)" [canLeave]="seats.canLeave()" [canRelease]="seats.canRelease(mine.seat)"
             [selectable]="currentSession.canDiscard()" [selected]="picked()" (selectedChange)="picked.set($event)"
             (take)="takeSeat(mine.seat)" (leave)="leaveSeat()" (release)="release(mine.seat)" />

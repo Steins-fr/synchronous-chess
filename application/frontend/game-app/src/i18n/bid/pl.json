@@ -66,7 +66,6 @@
       "sealed": "Twoja oferta jest zapieczętowana: {amount, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
       "submit": "Licytuj"
     },
-    "clock": "{seconds} s",
     "discard": {
       "keep": "Zostaw karty",
       "submit": "{count, plural, one {Odrzuć # kartę} few {Odrzuć # karty} many {Odrzuć # kart} other {Odrzuć # karty}}"
@@ -103,7 +102,6 @@
     },
     "seat": {
       "absent": "Pominięty",
-      "clock": "{seconds} s",
       "coins": "{count, plural, one {# moneta} few {# monety} many {# monet} other {# monety}}",
       "free": "Wolne miejsce",
       "leave": "Zwolnij miejsce",

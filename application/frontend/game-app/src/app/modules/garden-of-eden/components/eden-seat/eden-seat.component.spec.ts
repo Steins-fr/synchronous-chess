@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Apple } from '../../classes/rules/eden-rules';
-import { Sign } from '../../helpers/eden-texts.helper';
+import { Sign } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { EdenSeatComponent } from './eden-seat.component';
 
 describe('EdenSeatComponent', () => {
@@ -44,7 +44,7 @@ describe('EdenSeatComponent', () => {
         // When
         await show({
             name: 'bob', awaited: true, sealed: true, absent: true, apple: Apple.SILVER, gain: { sign: Sign.PLUS, amount: 200 },
-            balance: { sign: Sign.MINUS, amount: 300 }, clock: { key: 'eden.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
+            balance: { sign: Sign.MINUS, amount: 300 }, clock: { key: 'rooms.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true,
             standing: { key: 'eden.table.result.winner' }, winning: true,
         });
 

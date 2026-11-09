@@ -11,25 +11,7 @@ export type SettledEvent = Extract<ContrabandEvent, { kind: ContrabandEventKind.
 /** A game of the match over: its trunk settled, or never packed */
 export type CrossingEvent = (ContrabandEvent & { readonly kind: ContrabandEventKind.PACK_LATE }) | SettledEvent;
 
-/** The sign of an amount, a select of its texts: they write the amount without it */
-export enum Sign {
-    PLUS = 'plus',
-    MINUS = 'minus',
-    ZERO = 'zero',
-}
-
 const key = (text: string): string => scopedKey(TranslationScope.CONTRABAND, text);
-
-/**
- * An amount of millions as the texts read it: its sign apart, the amount without it. The amounts come rounded: halves,
- * or the balances of the standings, rounded to the hundredth
- */
-export function signed(amount: number): Readonly<{ sign: Sign; amount: number }> {
-    if (amount === 0) {
-        return { sign: Sign.ZERO, amount: 0 };
-    }
-    return amount > 0 ? { sign: Sign.PLUS, amount } : { sign: Sign.MINUS, amount: -amount };
-}
 
 /** A line of the history of the match: a game over, its players named, what its trunk held and the money it moved */
 export function eventText(event: Readonly<CrossingEvent>, names: ReadonlyArray<string>): TranslatableText {
@@ -73,9 +55,4 @@ export function trunkText(event: Readonly<SettledEvent>, variant: ContrabandVari
     return contents > 0
         ? { key: key(marker('table.trunk.amount', undefined, 'contraband')), params: { amount: contents } }
         : { key: key(marker('table.trunk.empty', undefined, 'contraband')) };
-}
-
-/** The seconds left, in minutes and seconds */
-export function clockText(seconds: number): TranslatableText {
-    return { key: key(marker('table.clock', undefined, 'contraband')), params: { minutes: Math.floor(seconds / 60), seconds: String(seconds % 60).padStart(2, '0') } };
 }

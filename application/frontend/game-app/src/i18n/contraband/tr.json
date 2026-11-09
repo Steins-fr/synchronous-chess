@@ -85,7 +85,6 @@
       "check": "Kontrol et",
       "pass": "Geçir"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "{number}. raunt gümrüğü: {smuggler} ve {inspector}",
       "team": "{team, select, north {Kuzey ülkesi} other {Güney ülkesi}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# raunt} other {# raunt}}",
       "games": "Rauntlar",
       "goldRush": "Altına hücum",
-      "minutes": "{count} dk",
       "variant": "Varyant"
     },
     "status": {

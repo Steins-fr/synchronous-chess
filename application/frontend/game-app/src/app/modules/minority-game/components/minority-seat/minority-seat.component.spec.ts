@@ -41,7 +41,7 @@ describe('MinoritySeatComponent', () => {
         // When
         await show({
             name: 'bob', awaited: true, sealed: true, absent: true, asker: true, vote: Vote.NO, points: 7,
-            clock: { key: 'minority.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true, standing: { key: 'minority.table.result.winner' }, winning: true,
+            clock: { key: 'rooms.table.clock', params: { minutes: 0, seconds: '04' } }, clockLow: true, standing: { key: 'minority.table.result.winner' }, winning: true,
         });
 
         // Then

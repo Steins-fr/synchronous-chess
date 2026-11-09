@@ -1,3 +1,5 @@
+import { placesOf } from '@app/modules/commit-reveal/classes/places';
+
 /** The end of the game for a player */
 export interface EdenStanding {
     /** The index of the player, among the players in the order of their seats */
@@ -16,11 +18,6 @@ export interface EdenResult {
     readonly winners: ReadonlyArray<number>;
     /** In the order of the players */
     readonly standings: ReadonlyArray<Readonly<EdenStanding>>;
-}
-
-/** The place of each key, the highest first: 1 plus the keys above it, equal keys sharing a place */
-export function placesOf(keys: ReadonlyArray<number>): number[] {
-    return keys.map((key: number) => 1 + keys.filter((other: number) => other > key).length);
 }
 
 /**

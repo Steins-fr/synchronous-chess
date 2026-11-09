@@ -66,7 +66,6 @@
       "sealed": "Ваша ставка в {amount, plural, one {# монету} few {# монеты} many {# монет} other {# монеты}} закрыта",
       "submit": "Поставить"
     },
-    "clock": "{seconds} с",
     "discard": {
       "keep": "Оставить карты",
       "submit": "Сбросить {count, plural, one {# карту} few {# карты} many {# карт} other {# карты}}"
@@ -103,7 +102,6 @@
     },
     "seat": {
       "absent": "Пропуск",
-      "clock": "{seconds} с",
       "coins": "{count, plural, one {# монета} few {# монеты} many {# монет} other {# монеты}}",
       "free": "Свободное место",
       "leave": "Освободить место",

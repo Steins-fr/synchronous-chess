@@ -85,7 +85,6 @@
       "check": "Contrôler",
       "pass": "Laisser passer"
     },
-    "clock": "{minutes}:{seconds}",
     "conversation": {
       "customs": "Douane de la manche {number} : {smuggler} et {inspector}",
       "team": "{team, select, north {Pays du Nord} other {Pays du Sud}}"
@@ -169,7 +168,6 @@
       "gameCount": "{count, plural, one {# manche} other {# manches}}",
       "games": "Manches",
       "goldRush": "Ruée vers l'or",
-      "minutes": "{count} min",
       "variant": "Variante"
     },
     "status": {

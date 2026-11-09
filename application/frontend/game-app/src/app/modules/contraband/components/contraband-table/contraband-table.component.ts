@@ -5,7 +5,9 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
+import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
+import { SECONDS_PER_MINUTE, setupTimeOptions, signed } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
@@ -15,7 +17,6 @@ import { chipsOf } from '@app/modules/playing-cards/types/chip';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
 import { PrivateConversations } from '@app/modules/private-conversations/classes/private-conversations';
 import { PrivatePayloads } from '@app/modules/private-conversations/classes/private-messages';
-import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
 import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.directive';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
@@ -31,20 +32,15 @@ import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { map, switchMap } from 'rxjs';
 import { ContrabandPayloads } from '../../classes/game-sessions/contraband-messages';
 import { ContrabandSession, ContrabandSessionOptions } from '../../classes/game-sessions/contraband-session';
-import { PlayedContrabandGame } from '../../classes/game-sessions/played-contraband-game';
 import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { CallKind, ContrabandVariant, Team, teamOf, trunkLimit } from '../../classes/rules/contraband-rules';
 import { ContrabandResult, ContrabandStanding } from '../../classes/rules/standings';
-import { clockText, CrossingEvent, eventText, SettledEvent, signed, trunkText } from '../../helpers/contraband-texts.helper';
+import { CrossingEvent, eventText, SettledEvent, trunkText } from '../../helpers/contraband-texts.helper';
 import { HeardContrabandTable, tableSounds } from '../../helpers/table-sound.helper';
 import { ContrabandSeatComponent, CustomsRole } from '../contraband-seat/contraband-seat.component';
 
 /** The options of the session of the table: the rules of the game, lighter ones for the specs */
 export const CONTRABAND_SESSION_OPTIONS = new InjectionToken<ContrabandSessionOptions>('CONTRABAND_SESSION_OPTIONS', { factory: (): ContrabandSessionOptions => ({}) });
-
-/** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
-const RETRY_TIME: number = 5;
-const SECONDS_PER_MINUTE: number = 60;
 
 /** A seat of the table, as it shows */
 interface SeatView {
@@ -125,7 +121,7 @@ export class ContrabandTableComponent implements OnDestroy {
         return untracked(() => new PrivateConversations(room));
     });
     /** The local player plays the match, not over: leaving the page asks to confirm */
-    private readonly inMatch: Signal<boolean> = inject(MatchLeaveWarning).watch(computed((): boolean => this.session().inMatch()));
+    private readonly inMatch: Signal<boolean> = watchMatch(this.session);
 
     protected readonly game: Signal<ContrabandGameState | null> = computed((): ContrabandGameState | null => this.session().game());
     protected readonly variants = ContrabandVariant;
@@ -143,10 +139,7 @@ export class ContrabandTableComponent implements OnDestroy {
         { value: ContrabandVariant.GOLD_RUSH, label: { key: this.key(marker('table.start.goldRush', undefined, 'contraband')) } },
     ];
     protected readonly customsTimes: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
-        this.session().rules.customsTimes.map((seconds: number): ChoiceOption => ({
-            value: String(seconds),
-            label: { key: this.key(marker('table.start.minutes', undefined, 'contraband')), params: { count: seconds / SECONDS_PER_MINUTE } },
-        })));
+        setupTimeOptions(this.session().rules.customsTimes));
     protected readonly gameCounts: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
         this.session().rules.gameCounts.map((count: number): ChoiceOption => ({
             value: String(count),
@@ -154,7 +147,7 @@ export class ContrabandTableComponent implements OnDestroy {
         })));
 
     /** The money of the trunk the smuggler types, none for each game: the amount is null while the field is empty */
-    private readonly packModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ amount: 0 }) });
+    private readonly packModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.clock.roundKey(), computation: () => ({ amount: 0 }) });
     protected readonly packForm = form(this.packModel, (path) => {
         required(path.amount, { message: this.key(marker('table.pack.required', undefined, 'contraband')) });
         min(path.amount, 0, { message: this.key(marker('table.pack.min', undefined, 'contraband')) });
@@ -164,7 +157,7 @@ export class ContrabandTableComponent implements OnDestroy {
             : { kind: 'integer', message: this.key(marker('table.pack.integer', undefined, 'contraband')) });
     }, { name: 'contraband-trunk' });
     /** The amount the inspector doubts, empty for each game */
-    private readonly doubtModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ amount: null }) });
+    private readonly doubtModel: WritableSignal<Readonly<{ amount: number | null }>> = linkedSignal({ source: () => this.clock.roundKey(), computation: () => ({ amount: null }) });
     protected readonly doubtForm = form(this.doubtModel, (path) => {
         required(path.amount, { message: this.key(marker('table.doubt.required', undefined, 'contraband')) });
         min(path.amount, 1, { message: this.key(marker('table.doubt.min', undefined, 'contraband')) });
@@ -274,45 +267,12 @@ export class ContrabandTableComponent implements OnDestroy {
     });
 
     /** A seated player starts a new match once the former one is over */
-    protected readonly canRematch: Signal<boolean> = computed((): boolean => {
-        const session: ContrabandSession = this.session();
-        return session.over() && session.tableSeats.mySeat() !== null && !session.sending();
-    });
+    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
 
     /** The local player is a player the game waits for */
     private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canPack() || this.session().canCall());
-    private readonly roundKey: Signal<string> = computed((): string => {
-        const played: PlayedContrabandGame = this.session().played();
-        return `${ played.index }:${ played.attempt }:${ this.session().step() }`;
-    });
-    // A claim voided as too early: the page claims again once the time it was early by is over
-    private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
-    private readonly clockKey: Signal<string | null> = computed((): string | null =>
-        this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** A player the game waits for is away */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.session().awaitedAway().length > 0);
-    /** A player the game waits for is away, giving the phase more time, once */
-    private readonly extendedAway: Signal<boolean> = computed((): boolean => this.session().extendingAway().length > 0);
-    /** The phase the clock runs for, from its start: a late tick of a phase closed acts on nothing */
-    private clocked: string | null = null;
-    /** The seconds left to the player the phase waits for */
-    protected readonly timeLeft: Signal<number | null> = turnClock({
-        running: () => this.clockKey() !== null,
-        times: () => {
-            this.clocked = this.roundKey();
-            return {
-                turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
-                awayTime: this.session().rules.awayTime,
-            };
-        },
-        away: this.extendedAway,
-        timeOut: () => this.timeOut(),
-    });
-    protected readonly clock: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
-        const left: number | null = this.timeLeft();
-        return left === null ? null : clockText(left);
-    });
-    protected readonly clockLow: Signal<boolean> = computed((): boolean => (this.timeLeft() ?? CLOCK_LOW + 1) <= CLOCK_LOW);
+    /** The clock of the phase, for the players it waits for: the page claims its time once over */
+    protected readonly clock: PhaseClock = phaseClock(this.session, { extendingAway: (session: ContrabandSession) => session.extendingAway() });
 
     /** What the table waits for */
     protected readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
@@ -328,11 +288,11 @@ export class ContrabandTableComponent implements OnDestroy {
         if (session.over()) {
             return { key: this.key(marker('table.status.over', undefined, 'contraband')) };
         }
-        if (this.myTurn() && this.clockLow()) {
+        if (this.myTurn() && this.clock.low()) {
             return { key: this.key(marker('table.status.hurry', undefined, 'contraband')) };
         }
         // The local player to act reads its own prompt
-        if (this.waitingAway() && !this.myTurn()) {
+        if (this.clock.waitingAway() && !this.myTurn()) {
             return { key: this.key(marker('table.status.away', undefined, 'contraband')), params: { names: session.awaitedAway().join(', ') } };
         }
         return this.phaseStatus(game);
@@ -345,13 +305,8 @@ export class ContrabandTableComponent implements OnDestroy {
     });
 
     /** The result of each match over before the one in progress, by its number in the room, the latest first */
-    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = computed((): ReadonlyArray<Readonly<PastResult>> =>
-        this.session().pastGames().map((played: Readonly<PlayedContrabandGame>, index: number): PastResult => ({
-            number: index + 1,
-            label: { key: this.key(marker('table.match', undefined, 'contraband')), params: { number: index + 1 } },
-            text: this.resultText(played.result() as ContrabandResult),
-            verification: null,
-        })).reverse());
+    public readonly pastResults: Signal<ReadonlyArray<Readonly<PastResult>>> = pastResultsOf(this.session, this.key(marker('table.match', undefined, 'contraband')),
+        (result: ContrabandResult): TranslatableText => this.resultText(result));
 
     /** The session caught up with the history of the room: the table hears the changes from there, and flies their chips */
     private liveSession: ContrabandSession | null = null;
@@ -472,18 +427,6 @@ export class ContrabandTableComponent implements OnDestroy {
 
     protected release(seat: number): void {
         this.session().unseat(seat);
-    }
-
-    /**
-     * The time of the phase is over: a player of the match claims it. A late tick of the clock of a phase closed claims
-     * nothing
-     */
-    private timeOut(): void {
-        const session: ContrabandSession = this.session();
-
-        if (this.clocked === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
-            session.claimTimeout();
-        }
     }
 
     private teamView(team: Team): TeamView {

@@ -90,7 +90,6 @@
       "rematch": "Nochmal spielen",
       "start": "Spiel starten"
     },
-    "clock": "{minutes}:{seconds}",
     "game": "Spiel {number}:",
     "history": "Züge des Spiels",
     "info": {
@@ -146,9 +145,7 @@
       "player": "Spieler"
     },
     "start": {
-      "minutes": "{count} Min.",
       "money": "{amount, plural, one {# Million} other {# Millionen}}",
-      "seconds": "{count} s",
       "startMoney": "Startgeld",
       "voteTime": "Zeit zum Abstimmen"
     },

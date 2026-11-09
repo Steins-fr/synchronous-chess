@@ -61,7 +61,6 @@
       "rematch": "Rejouer",
       "start": "Lancer la partie"
     },
-    "clock": "{minutes}:{seconds}",
     "eliminated": "Vous êtes éliminé : suivez la suite de la partie et le tchat.",
     "game": "Partie {number} :",
     "history": "Coups de la partie",
@@ -129,9 +128,7 @@
     },
     "start": {
       "elimination": "Élimination",
-      "minutes": "{count} min",
       "score": "Score",
-      "seconds": "{count} s",
       "variant": "Variante",
       "voteTime": "Durée du vote"
     },
