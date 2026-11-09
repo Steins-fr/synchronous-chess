@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Scacchi",
       "contraband": "Contrabbando",
+      "gardenOfEden": "Eden",
       "home": "Home",
       "minorityGame": "Minoranza",
       "poker": "Poker",
@@ -28,8 +29,8 @@
     "title": "Scacchi sincroni"
   },
   "cheat": {
-    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
-    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} eden {giardino dell'Eden} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} eden {giardino dell'Eden} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
   },
   "dialog": {
     "cancel": "Annulla",
@@ -61,6 +62,11 @@
       "action": "Gioca",
       "description": "Da 2 a 8 giocatori di due paesi contrabbandano denaro attraverso la dogana dell'altro, con le valigie sigillate: lasciar passare, o dubitare.",
       "title": "Contrabbando"
+    },
+    "gardenOfEden": {
+      "action": "Gioca",
+      "description": "Da 3 a 8 giocatori scelgono 13 volte una mela d'oro, d'argento o rossa, in segreto: vincono tutti solo se tutti si fidano degli altri.",
+      "title": "Giardino dell'Eden"
     },
     "intro": "Crea una stanza o entra in una delle stanze aperte: i giocatori si collegano direttamente tra loro.",
     "minorityGame": {

@@ -64,6 +64,19 @@
             <p class="muted-note">{{ t('contraband.description') }}</p>
             <span class="game-card-action">{{ t('contraband.action') }} <mat-icon>arrow_forward</mat-icon></span>
         </a>
+        <a [routerLink]="gardenOfEdenPath" class="game-card" id="game-card-garden-of-eden">
+            <!-- The apple of the garden, its stem and its leaf -->
+            <span aria-hidden="true" class="game-card-glyph">
+                <svg class="size-18" fill="currentColor" viewBox="0 0 100 100">
+                    <path d="M50 32 C36 20 12 25 12 52 C12 76 30 94 42 92 C46 91 48 89 50 89 C52 89 54 91 58 92 C70 94 88 76 88 52 C88 25 64 20 50 32 Z" />
+                    <path d="M47 31 C47 21 51 12 58 7 L62 11 C56 15 53 22 53 31 Z" />
+                    <path d="M57 22 C61 11 74 8 82 12 C77 22 67 26 57 22 Z" />
+                </svg>
+            </span>
+            <h2 class="m-0 mat-title-large">{{ t('gardenOfEden.title') }}</h2>
+            <p class="muted-note">{{ t('gardenOfEden.description') }}</p>
+            <span class="game-card-action">{{ t('gardenOfEden.action') }} <mat-icon>arrow_forward</mat-icon></span>
+        </a>
         <a [routerLink]="chatPath" class="game-card" id="game-card-chat">
             <!-- Material sizes its icons out of any layer, above the utilities -->
             <span aria-hidden="true" class="game-card-visual bg-app-surface text-app-accent-text">

@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Xadrez",
       "contraband": "Contrabando",
+      "gardenOfEden": "Éden",
       "home": "Início",
       "minorityGame": "Minoria",
       "poker": "Póquer",
@@ -28,8 +29,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} other {}}) de {author} foi denunciada como batota por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} other {}}) de {author} foi denunciada como batota por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -61,6 +62,11 @@
       "action": "Jogar",
       "description": "De 2 a 8 jogadores, em dois países, passam dinheiro pela alfândega do outro, com as malas fechadas: deixar passar, ou duvidar.",
       "title": "Contrabando"
+    },
+    "gardenOfEden": {
+      "action": "Jogar",
+      "description": "De 3 a 8 jogadores escolhem 13 vezes uma maçã de ouro, de prata ou vermelha, em segredo: todos ganham apenas se todos confiarem nos outros.",
+      "title": "Jardim do Éden"
     },
     "intro": "Crie uma sala ou entre numa das salas abertas: os jogadores ligam-se diretamente entre si.",
     "minorityGame": {

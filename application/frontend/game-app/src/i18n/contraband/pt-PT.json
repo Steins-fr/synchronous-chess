@@ -142,7 +142,7 @@
       "absent": "Atrasado",
       "account": "Conta: {amount, plural, one {# milhão} other {# milhões}}",
       "atm": "Multibanco: {amount, plural, one {# milhão} other {# milhões}}",
-      "balance": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhão}}",
+      "balance": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
       "free": "Lugar livre",
       "leave": "Deixar o lugar",
       "release": "Libertar o lugar",

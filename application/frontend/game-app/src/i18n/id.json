@@ -9,6 +9,7 @@
       "chat": "Obrolan",
       "chess": "Catur",
       "contraband": "Penyelundupan",
+      "gardenOfEden": "Eden",
       "home": "Beranda",
       "minorityGame": "Minoritas",
       "poker": "Poker",
@@ -28,8 +29,8 @@
     "title": "Catur Serentak"
   },
   "cheat": {
-    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} private {percakapan privat} contraband {penyelundupan} other {}}) dari {author} dilaporkan curang oleh {reporters}",
-    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} private {percakapan privat} contraband {penyelundupan} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
+    "flagged": "Pesan {index} ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} private {percakapan privat} contraband {penyelundupan} eden {taman Eden} other {}}) dari {author} dilaporkan curang oleh {reporters}",
+    "ignored": "Sebuah pesan ({chain, select, chess {catur} chat {obrolan} poker {poker} roulette {rulet} bid {poker lelang} minority {permainan minoritas} private {percakapan privat} contraband {penyelundupan} eden {taman Eden} other {}}) dari {author} diabaikan oleh {sequencer}, dilaporkan oleh {reporters}"
   },
   "dialog": {
     "cancel": "Batal",
@@ -61,6 +62,11 @@
       "action": "Main",
       "description": "2 sampai 8 pemain dari dua negara menyelundupkan uang melewati pabean lawan, dengan koper tersegel: loloskan, atau ragukan.",
       "title": "Penyelundupan"
+    },
+    "gardenOfEden": {
+      "action": "Main",
+      "description": "3 sampai 8 pemain memilih apel emas, perak, atau merah secara rahasia, 13 kali: semua menang hanya jika semua saling percaya.",
+      "title": "Taman Eden"
     },
     "intro": "Buat ruang, atau bergabunglah ke salah satu ruang terbuka: para pemain terhubung langsung satu sama lain.",
     "minorityGame": {

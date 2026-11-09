@@ -9,6 +9,7 @@
       "chat": "Sohbet",
       "chess": "Satranç",
       "contraband": "Kaçakçılık",
+      "gardenOfEden": "Aden",
       "home": "Ana sayfa",
       "minorityGame": "Azınlık",
       "poker": "Poker",
@@ -28,8 +29,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} eden {Aden Bahçesi} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} eden {Aden Bahçesi} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",
@@ -61,6 +62,11 @@
       "action": "Oyna",
       "description": "İki ülkeden 2 ila 8 oyuncu, mühürlü bavullarla birbirlerinin gümrüğünden para kaçırır: geçirmek ya da şüphelenmek.",
       "title": "Kaçakçılık"
+    },
+    "gardenOfEden": {
+      "action": "Oyna",
+      "description": "3 ila 8 oyuncu 13 kez gizlice altın, gümüş ya da kırmızı bir elma seçer: herkes ancak herkes birbirine güvenirse kazanır.",
+      "title": "Aden Bahçesi"
     },
     "intro": "Bir oda oluşturun ya da açık odalardan birine katılın: oyuncular birbirine doğrudan bağlanır.",
     "minorityGame": {

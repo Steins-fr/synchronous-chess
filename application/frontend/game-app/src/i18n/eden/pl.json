@@ -1,0 +1,175 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Po 13 rundach wygrywa gracz z największą ilością pieniędzy.",
+      "paradise": "Gracz z −500 milionami lub mniej traci raj na dobre.",
+      "sealed": "Jabłka są zapieczętowane: nikt, nawet serwer, nie widzi jabłka, zanim wszyscy gracze nie wybiorą swojego."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z filmu Liar Game: The Final Stage: od 3 do 8 graczy 13 razy wybiera jabłko — złote, srebrne lub czerwone. Gdy wszystkie jabłka są czerwone, wygrywają wszyscy gracze.",
+    "tagline": "Wszyscy wygrywają tylko wtedy, gdy wszyscy sobie ufają.",
+    "title": "Ogród Eden"
+  },
+  "rules": {
+    "fair": {
+      "public": "Odkryte jabłka i salda są jawne, podczas gdy film podawał tylko liczby głosów. Pieniądze nie przechodzą między graczami: umowy pozostają słowami na czacie.",
+      "sealed": "Jabłko jest zapieczętowane: strona wysyła jego hash z losową solą i odkrywa je, gdy wszyscy gracze wybiorą. Jabłko odkryte inaczej, niż zostało zapieczętowane, jest zgłaszane. Przeładowana strona zachowuje swoje jabłko, chyba że jej pamięć jest zablokowana.",
+      "title": "Uczciwa gra"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Tylko czerwone jabłka",
+        "red": "+100 milionów"
+      },
+      "apples": "Jabłka rundy",
+      "caption": "Ile każde jabłko wygrywa lub traci, zależnie od jabłek rundy",
+      "loneApple": {
+        "apples": "Jedno złote lub srebrne jabłko wśród co najmniej 2 czerwonych",
+        "others": "+200 milionów",
+        "red": "−100 milionów"
+      },
+      "loneRed": {
+        "apples": "Jedno czerwone jabłko wśród złotych lub srebrnych",
+        "others": "+100 milionów",
+        "red": "−1000 milionów, a jego gracz zostaje wskazany"
+      },
+      "majority": {
+        "apples": "Żadnego czerwonego jabłka, oba kolory, jednego więcej niż drugiego",
+        "others": "Najczęstszy kolor +100 milionów, drugi −100 milionów"
+      },
+      "mixed": {
+        "apples": "2 czerwone jabłka lub więcej i 2 złote lub srebrne lub więcej",
+        "others": "+100 milionów",
+        "red": "−100 milionów"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Żadnego czerwonego jabłka, wszystkie w jednym kolorze",
+        "others": "−100 milionów"
+      },
+      "others": "Złote lub srebrne jabłko",
+      "red": "Czerwone jabłko",
+      "text": "Po odkryciu jabłka są liczone i każde wygrywa lub przegrywa:",
+      "tie": {
+        "apples": "Żadnego czerwonego jabłka, tyle samo złotych co srebrnych",
+        "others": "0"
+      },
+      "title": "Wygrane"
+    },
+    "missed": {
+      "reveal": "Wybrane jabłko, nieodkryte w ciągu 15 sekund lub odkryte inaczej, niż zostało zapieczętowane, traci 1000 milionów i się nie liczy: tyle, ile samotne czerwone jabłko, więc zatajenie nigdy nie ratuje zdrajcy, który zobaczył pozostałe.",
+      "title": "Pominięte jabłka",
+      "vote": "Gracz wciąż w grze, który nie wybrał jabłka do końca głosowania, traci 100 milionów, a jego jabłko się nie liczy. Głosowanie czeka na wszystkich graczy w grze, także na nieobecnego."
+    },
+    "paradise": {
+      "end": "Gra kończy się po 13 rundach lub gdy w raju zostaje mniej niż 2 graczy.",
+      "floor": "Po podliczeniu rundy gracz z −500 milionami lub mniej traci raj na dobre: śledzi resztę gry jako widz.",
+      "title": "Utrata raju",
+      "winner": "Wygrywa gracz w grze z największą ilością pieniędzy, równe salda dzielą miejsce. Gdy wszyscy gracze stracili raj, nikt nie wygrywa."
+    },
+    "round": {
+      "apples": "Gra trwa 13 rund. W każdej rundzie każdy gracz, który wciąż jest w raju, wybiera jabłko: złote, srebrne lub czerwone — jabłko prawdy.",
+      "sealed": "Jabłka wybiera się jednocześnie, zapieczętowane: nikt nie widzi jabłka, zanim wszyscy gracze nie wybiorą, potem odkrywa się je wszystkim. Nikt nie musi dotrzymać słowa, a czat służy do umawiania się — albo do zdrady.",
+      "title": "Runda"
+    },
+    "setup": {
+      "choices": "Gracz rozpoczynający grę wybiera czas głosowania, od 30 sekund do 5 minut, oraz kapitał początkowy każdego gracza: 0, 500 lub 1000 milionów.",
+      "players": "Od 3 do 8 graczy zajmuje miejsca, potem jeden z nich rozpoczyna grę: miejsca pozostają zajęte do jej końca.",
+      "title": "Stół"
+    },
+    "summary": "Zasady Ogrodu Eden",
+    "times": {
+      "awayOnce": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz; głosowanie nie czeka już dłużej na gracza, który przegapił poprzednią fazę.",
+      "phases": "Głosowanie czeka czas wybrany na początku, odkrycie 15 sekund: każde kończy się, gdy tylko wszyscy gracze wykonają ruch.",
+      "title": "Czasy"
+    },
+    "title": "Zasady"
+  },
+  "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Partia {number}:",
+    "history": "Ruchy partii",
+    "info": {
+      "round": "Runda {round} z {rounds} · {count, plural, one {# gracz w grze} few {# graczy w grze} many {# graczy w grze} other {# gracza w grze}}",
+      "terms": "Głosowanie {unit, select, minutes {{count} min} other {{count} s}} · kapitał początkowy {amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}"
+    },
+    "lostParadise": "Tracisz raj: śledź resztę gry i czat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+    "move": {
+      "allRed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tylko czerwone jabłka: każde wygrywa {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "illegal": "{names}: odkryto coś innego niż jabłko, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "invalid": "{names}: jabłko odkryte inaczej, niż zostało zapieczętowane, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "late": "{names}: brak jabłka na czas, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "lateReveal": "{names}: jabłko nieodkryte na czas, −{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "loneApple": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Jedyne {apple, select, gold {złote} other {srebrne}} jabłko gracza {name} wygrywa {bonus, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, czerwone tracą {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "loneRed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. {name} jako jedyny wybrał czerwone i traci {loss, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, pozostałe jabłka wygrywają {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "majority": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. {apple, select, gold {Złote} other {Srebrne}} jabłka wygrywają {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, pozostałe tracą {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "mixed": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Czerwone jabłka tracą {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}, złote i srebrne wygrywają {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "noVote": "Runda {round}: nie policzono żadnego jabłka",
+      "oneColor": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tylko {apple, select, gold {złote} other {srebrne}} jabłka: każde traci {gain, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "out": "Runda {round}: {names} {count, plural, one {traci} few {tracą} many {tracą} other {tracą}} raj",
+      "tie": "Runda {round}: złote {gold}, srebrne {silver}, czerwone {red}. Tyle samo złotych co srebrnych: żadne nie wygrywa ani nie traci"
+    },
+    "past": "{count, plural, one {Zwycięzca} few {Zwycięzcy} many {Zwycięzcy} other {Zwycięzcy}}: {winners}, {sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+    "pastGames": "Rozegrane partie",
+    "pastNoWinner": "Bez zwycięzcy",
+    "result": {
+      "in": "W raju",
+      "noWinner": "Brak zwycięzcy: wszyscy gracze stracili raj",
+      "out": "Wygnany w rundzie {round}",
+      "place": "Miejsce {place}",
+      "winner": "Zwycięzca",
+      "winners": "{count, plural, one {Zwycięzca: {names}} few {Zwycięzcy: {names}} many {Zwycięzcy: {names}} other {Zwycięzcy: {names}}}"
+    },
+    "seat": {
+      "absent": "Spóźnienie",
+      "apple": "{apple, select, gold {Złote} silver {Srebrne} other {Czerwone}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+      "free": "Wolne miejsce",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} minus {−{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}} other {0 milionów}}",
+      "leave": "Zwolnij miejsce",
+      "out": "Wygnany",
+      "release": "Usuń z miejsca",
+      "sealed": "Zapieczętowano",
+      "take": "Usiądź"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "standings": {
+      "balance": "Miliony",
+      "caption": "Klasyfikacja gry",
+      "outcome": "Wynik",
+      "place": "Miejsce",
+      "player": "Gracz"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# milion} few {# miliony} many {# milionów} other {# miliona}}",
+      "seconds": "{count} s",
+      "startMoney": "Kapitał początkowy",
+      "voteTime": "Czas na głosowanie"
+    },
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "drawing": "Gra się zaczyna: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "revealing": "Jabłka są odkrywane…",
+      "sealed": "Twoje jabłko jest zapieczętowane: czekamy na {names}.",
+      "seats": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: partia wymaga co najmniej {min} graczy.",
+      "start": "Wybierz czas głosowania i kapitał początkowy, a potem rozpocznij grę.",
+      "vote": "Wybierz swoje jabłko, zapieczętowane: złote, srebrne lub czerwone.",
+      "voting": "Czekamy na jabłka: {names}.",
+      "waitingStart": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: czekamy, aż jeden z nich rozpocznie partię."
+    },
+    "vote": {
+      "gold": "Złote jabłko",
+      "red": "Czerwone jabłko",
+      "sealed": "Twoje jabłko, {apple, select, gold {złote} silver {srebrne} other {czerwone}}, jest zapieczętowane",
+      "silver": "Srebrne jabłko"
+    }
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "presentation": {
+    "points": {
+      "money": "13 rauntun sonunda en çok parası olan oyuncu kazanır.",
+      "paradise": "−500 milyon veya altına düşen oyuncu cenneti kalıcı olarak kaybeder.",
+      "sealed": "Elmalar mühürlüdür: tüm oyuncular kendi elmasını seçmeden kimse, sunucu bile, bir elmayı göremez."
+    },
+    "rooms": "Başkalarıyla oynamak için bir oda oluşturun ya da bir odaya katılın.",
+    "summary": "Liar Game: The Final Stage filminden bir oyun: 3 ila 8 oyuncu 13 kez bir elma seçer, altın, gümüş ya da kırmızı. Tüm elmalar kırmızı olduğunda tüm oyuncular kazanır.",
+    "tagline": "Herkes ancak herkes birbirine güvenirse kazanır.",
+    "title": "Aden Bahçesi"
+  },
+  "rules": {
+    "fair": {
+      "public": "Açılan elmalar ve bakiyeler herkese açıktır; filmde ise yalnızca sayımlar söylenirdi. Oyuncular arasında para el değiştirmez: anlaşmalar sohbette söz olarak kalır.",
+      "sealed": "Bir elma mühürlüdür: sayfa onun karmasını rastgele bir tuzla gönderir ve tüm oyuncular seçince açar. Mühürlenenden farklı açılan bir elma bildirilir. Yeniden yüklenen bir sayfa, depolaması engellenmediyse elmasını korur.",
+      "title": "Adil oyun"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Yalnızca kırmızı elmalar",
+        "red": "+100 milyon"
+      },
+      "apples": "Raundun elmaları",
+      "caption": "Raundun elmalarına göre her elmanın kazandığı ya da kaybettiği",
+      "loneApple": {
+        "apples": "En az 2 kırmızı elma arasında tek bir altın ya da gümüş elma",
+        "others": "+200 milyon",
+        "red": "−100 milyon"
+      },
+      "loneRed": {
+        "apples": "Altın ya da gümüş elmalar arasında tek bir kırmızı elma",
+        "others": "+100 milyon",
+        "red": "−1.000 milyon, oyuncusunun adı açıklanır"
+      },
+      "majority": {
+        "apples": "Hiç kırmızı elma yok, iki renk de var, biri daha fazla",
+        "others": "En çok seçilen renk +100 milyon, diğeri −100 milyon"
+      },
+      "mixed": {
+        "apples": "2 veya daha fazla kırmızı elma ve 2 veya daha fazla altın ya da gümüş elma",
+        "others": "+100 milyon",
+        "red": "−100 milyon"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Hiç kırmızı elma yok, hepsi tek renk",
+        "others": "−100 milyon"
+      },
+      "others": "Altın ya da gümüş elma",
+      "red": "Kırmızı elma",
+      "text": "Açıldıktan sonra elmalar sayılır ve her biri kazanır ya da kaybeder:",
+      "tie": {
+        "apples": "Hiç kırmızı elma yok, altın ve gümüş sayısı eşit",
+        "others": "0"
+      },
+      "title": "Kazançlar"
+    },
+    "missed": {
+      "reveal": "Seçilip 15 saniye içinde açılmayan ya da mühürlenenden farklı açılan bir elma 1.000 milyon kaybeder ve sayılmaz: tek bir kırmızı elma kadar; böylece elmayı saklamak, diğerlerini gören bir haini asla kurtarmaz.",
+      "title": "Kaçırılan elmalar",
+      "vote": "Oylamanın süresi dolduğunda elma seçmemiş, hâlâ oyunda olan bir oyuncu 100 milyon kaybeder ve elması sayılmaz. Oylama, uzaktaki bir oyuncu dahil oyundaki tüm oyuncuları bekler."
+    },
+    "paradise": {
+      "end": "Oyun 13 rauntun sonunda ya da cennette 2'den az oyuncu kaldığı anda biter.",
+      "floor": "Bir raunt sayıldığında −500 milyon veya altında olan oyuncu cenneti kalıcı olarak kaybeder: oyunun geri kalanını izleyici olarak takip eder.",
+      "title": "Cennetin kaybı",
+      "winner": "Oyunda kalan ve en çok parası olan oyuncu kazanır; eşit bakiyeler sırayı paylaşır. Tüm oyuncular cenneti kaybettiğinde kimse kazanmaz."
+    },
+    "round": {
+      "apples": "Oyun 13 raunt sürer. Her rauntta, hâlâ cennette olan her oyuncu bir elma seçer: altın, gümüş ya da kırmızı, yani gerçeğin elması.",
+      "sealed": "Elmalar aynı anda, mühürlü olarak seçilir: tüm oyuncular seçmeden kimse bir elmayı göremez, ardından herkese açılır. Kimse sözünü tutmak zorunda değildir; sohbet anlaşmak ya da ihanet etmek için oradadır.",
+      "title": "Bir raunt"
+    },
+    "setup": {
+      "choices": "Oyunu başlatan oyuncu bir oylamanın süresini, 30 saniyeden 5 dakikaya kadar, ve her oyuncunun başlangıç parasını seçer: 0, 500 veya 1.000 milyon.",
+      "players": "3 ila 8 oyuncu yerlere oturur, ardından içlerinden biri oyunu başlatır: yerler oyun bitene kadar dolu kalır.",
+      "title": "Masa"
+    },
+    "summary": "Aden Bahçesi kuralları",
+    "times": {
+      "awayOnce": "Uzaktaki bir oyuncu bir kez 15 saniye daha beklenir; bir oylama, önceki aşamayı kaçıran bir oyuncuyu artık daha uzun beklemez.",
+      "phases": "Bir oylama başlangıçta seçilen süreyi, bir açılış 15 saniyeyi bekler: her biri tüm oyuncular hamle yapınca hemen kapanır.",
+      "title": "Süreler"
+    },
+    "title": "Kurallar"
+  },
+  "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Oyunu başlat"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Oyun {number}:",
+    "history": "Oyunun hamleleri",
+    "info": {
+      "round": "Raunt {round}/{rounds} · {count, plural, one {oyunda # oyuncu} other {oyunda # oyuncu}}",
+      "terms": "{unit, select, minutes {{count} dk} other {{count} sn}} oylama · başlangıç parası {amount, plural, one {# milyon} other {# milyon}}"
+    },
+    "lostParadise": "Cenneti kaybettiniz: oyunun geri kalanını ve sohbeti takip edin.",
+    "money": "{sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+    "move": {
+      "allRed": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Yalnızca kırmızı elmalar: her biri {gain, plural, one {# milyon} other {# milyon}} kazanır",
+      "illegal": "{names}: elma dışında bir şey açıldı, −{amount, plural, one {# milyon} other {# milyon}}",
+      "invalid": "{names}: elma mühürlenenden farklı açıldı, −{amount, plural, one {# milyon} other {# milyon}}",
+      "late": "{names}: zamanında elma yok, −{amount, plural, one {# milyon} other {# milyon}}",
+      "lateReveal": "{names}: elma zamanında açılmadı, −{amount, plural, one {# milyon} other {# milyon}}",
+      "loneApple": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. {name} oyuncusunun tek {apple, select, gold {altın} other {gümüş}} elması {bonus, plural, one {# milyon} other {# milyon}} kazanır, kırmızılar {gain, plural, one {# milyon} other {# milyon}} kaybeder",
+      "loneRed": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Kırmızıyı tek başına {name} seçti ve {loss, plural, one {# milyon} other {# milyon}} kaybeder, diğer elmalar {gain, plural, one {# milyon} other {# milyon}} kazanır",
+      "majority": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. {apple, select, gold {Altın} other {Gümüş}} elmalar {gain, plural, one {# milyon} other {# milyon}} kazanır, diğerleri {gain, plural, one {# milyon} other {# milyon}} kaybeder",
+      "mixed": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Kırmızı elmalar {gain, plural, one {# milyon} other {# milyon}} kaybeder, altın ve gümüş elmalar {gain, plural, one {# milyon} other {# milyon}} kazanır",
+      "noVote": "Raunt {round}: hiç elma sayılmadı",
+      "oneColor": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Yalnızca {apple, select, gold {altın} other {gümüş}} elmalar: her biri {gain, plural, one {# milyon} other {# milyon}} kaybeder",
+      "out": "Raunt {round}: {names} {count, plural, one {cenneti kaybeder} other {cenneti kaybeder}}",
+      "tie": "Raunt {round}: altın {gold}, gümüş {silver}, kırmızı {red}. Altın ve gümüş elma sayısı eşit: hiçbiri kazanmaz ya da kaybetmez"
+    },
+    "past": "{count, plural, one {Kazanan} other {Kazananlar}}: {winners}, {sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+    "pastGames": "Oynanan oyunlar",
+    "pastNoWinner": "Kazanan yok",
+    "result": {
+      "in": "Cennette",
+      "noWinner": "Kazanan yok: tüm oyuncular cenneti kaybetti",
+      "out": "{round}. rauntta kovuldu",
+      "place": "{place}. sıra",
+      "winner": "Kazanan",
+      "winners": "{count, plural, one {Kazanan: {names}} other {Kazananlar: {names}}}"
+    },
+    "seat": {
+      "absent": "Gecikti",
+      "apple": "{apple, select, gold {Altın} silver {Gümüş} other {Kırmızı}}",
+      "balance": "Bakiye: {sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+      "free": "Boş yer",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milyon} other {# milyon}}} minus {−{amount, plural, one {# milyon} other {# milyon}}} other {0 milyon}}",
+      "leave": "Yeri bırak",
+      "out": "Kovuldu",
+      "release": "Yeri boşalt",
+      "sealed": "Kapalı",
+      "take": "Otur"
+    },
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "standings": {
+      "balance": "Milyon",
+      "caption": "Oyunun sıralaması",
+      "outcome": "Sonuç",
+      "place": "Sıra",
+      "player": "Oyuncu"
+    },
+    "start": {
+      "minutes": "{count} dk",
+      "money": "{amount, plural, one {# milyon} other {# milyon}}",
+      "seconds": "{count} sn",
+      "startMoney": "Başlangıç parası",
+      "voteTime": "Oylama süresi"
+    },
+    "status": {
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "drawing": "Oyun başlıyor: {names} bekleniyor.",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Oyun bitti.",
+      "revealing": "Elmalar açılıyor…",
+      "sealed": "Elmanız mühürlendi: {names} bekleniyor.",
+      "seats": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: oyun en az {min} oyuncuyla başlar.",
+      "start": "Oylama süresini ve başlangıç parasını seçin, ardından oyunu başlatın.",
+      "vote": "Elmanızı mühürlü olarak seçin: altın, gümüş ya da kırmızı.",
+      "voting": "{names} oyuncularının elmaları bekleniyor.",
+      "waitingStart": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: içlerinden birinin başlatması bekleniyor."
+    },
+    "vote": {
+      "gold": "Altın elma",
+      "red": "Kırmızı elma",
+      "sealed": "Elmanız, {apple, select, gold {altın} silver {gümüş} other {kırmızı}}, mühürlendi",
+      "silver": "Gümüş elma"
+    }
+  }
+}

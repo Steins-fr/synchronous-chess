@@ -1,0 +1,175 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Ao fim de 13 rondas, ganha o jogador com mais dinheiro.",
+      "paradise": "Um jogador com −500 milhões ou menos perde o paraíso, de vez.",
+      "sealed": "As maçãs são seladas: ninguém, nem sequer o servidor, vê uma maçã antes de todos os jogadores terem escolhido a sua."
+    },
+    "rooms": "Crie uma sala, ou entre numa, para jogar com outros.",
+    "summary": "Um jogo do filme Liar Game: The Final Stage: de 3 a 8 jogadores escolhem uma maçã 13 vezes, de ouro, de prata ou vermelha. Quando todas as maçãs são vermelhas, todos os jogadores ganham.",
+    "tagline": "Todos ganham apenas se todos confiarem nos outros.",
+    "title": "Jardim do Éden"
+  },
+  "rules": {
+    "fair": {
+      "public": "As maçãs reveladas e os saldos são públicos, enquanto o filme só dava as contagens. Nenhum dinheiro passa de um jogador para outro: os acordos ficam por palavras no chat.",
+      "sealed": "Uma maçã é selada: a página envia o seu hash com um sal aleatório e revela-a quando todos os jogadores escolheram. Uma maçã revelada diferente da selada é denunciada. Uma página recarregada mantém a sua maçã, exceto se o armazenamento estiver bloqueado.",
+      "title": "Jogo limpo"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Só maçãs vermelhas",
+        "red": "+100 milhões"
+      },
+      "apples": "As maçãs da ronda",
+      "caption": "O que cada maçã ganha ou perde, consoante as maçãs da ronda",
+      "loneApple": {
+        "apples": "Uma única maçã de ouro ou de prata entre 2 vermelhas ou mais",
+        "others": "+200 milhões",
+        "red": "−100 milhões"
+      },
+      "loneRed": {
+        "apples": "Uma única maçã vermelha entre maçãs de ouro ou de prata",
+        "others": "+100 milhões",
+        "red": "−1000 milhões, com o nome do jogador"
+      },
+      "majority": {
+        "apples": "Nenhuma maçã vermelha, das duas cores, uma mais do que a outra",
+        "others": "A cor mais escolhida +100 milhões, a outra −100 milhões"
+      },
+      "mixed": {
+        "apples": "2 maçãs vermelhas ou mais, e 2 de ouro ou de prata ou mais",
+        "others": "+100 milhões",
+        "red": "−100 milhões"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Nenhuma maçã vermelha, todas de uma só cor",
+        "others": "−100 milhões"
+      },
+      "others": "Uma maçã de ouro ou de prata",
+      "red": "Uma maçã vermelha",
+      "text": "Uma vez reveladas, as maçãs são contadas, e cada uma ganha ou perde:",
+      "tie": {
+        "apples": "Nenhuma maçã vermelha, tantas de ouro como de prata",
+        "others": "0"
+      },
+      "title": "Os ganhos"
+    },
+    "missed": {
+      "reveal": "Uma maçã escolhida e não revelada em 15 segundos, ou revelada diferente da selada, perde 1000 milhões e não conta: tanto como uma maçã vermelha sozinha, pelo que retê-la nunca salva um traidor que leu as outras.",
+      "title": "Maçãs perdidas",
+      "vote": "Um jogador ainda em jogo que não escolheu uma maçã quando o tempo da votação termina perde 100 milhões, e a sua maçã não conta. A votação espera por todos os jogadores em jogo, incluindo um ausente."
+    },
+    "paradise": {
+      "end": "A partida termina ao fim de 13 rondas, ou assim que restam menos de 2 jogadores no paraíso.",
+      "floor": "Depois de contada uma ronda, um jogador com −500 milhões ou menos perde o paraíso, de vez: acompanha o resto da partida como espetador.",
+      "title": "A perda do paraíso",
+      "winner": "Ganha o jogador em jogo com mais dinheiro, e saldos iguais partilham o lugar. Quando todos os jogadores perderam o paraíso, ninguém ganha."
+    },
+    "round": {
+      "apples": "A partida dura 13 rondas. Em cada ronda, cada jogador ainda no paraíso escolhe uma maçã: de ouro, de prata ou vermelha, a maçã da verdade.",
+      "sealed": "As maçãs são escolhidas ao mesmo tempo, seladas: ninguém vê uma maçã antes de todos os jogadores terem escolhido, e depois são reveladas a todos. Ninguém é obrigado a cumprir a palavra, e o chat existe para combinar, ou para trair.",
+      "title": "Uma ronda"
+    },
+    "setup": {
+      "choices": "O jogador que inicia a partida escolhe a duração de uma votação, de 30 segundos a 5 minutos, e o dinheiro inicial de cada jogador: 0, 500 ou 1000 milhões.",
+      "players": "De 3 a 8 jogadores ocupam os lugares, depois um deles inicia a partida: os lugares ficam ocupados até ao fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras do jardim do Éden",
+    "times": {
+      "awayOnce": "Um jogador ausente é aguardado mais 15 segundos, uma vez; uma votação deixa de esperar mais tempo por um jogador que falhou a fase anterior.",
+      "phases": "Uma votação espera o tempo escolhido no início, uma revelação 15 segundos: cada uma fecha assim que todos os jogadores agiram.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar outra vez",
+      "start": "Iniciar a partida"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Partida {number}:",
+    "history": "Jogadas da partida",
+    "info": {
+      "round": "Ronda {round} de {rounds} · {count, plural, one {# jogador em jogo} other {# jogadores em jogo}}",
+      "terms": "Votos de {unit, select, minutes {{count} min} other {{count} s}} · dinheiro inicial {amount, plural, one {# milhão} other {# milhões}}"
+    },
+    "lostParadise": "Perdeu o paraíso: acompanhe o resto da partida e o chat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
+    "move": {
+      "allRed": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. Só maçãs vermelhas: cada uma ganha {gain, plural, one {# milhão} other {# milhões}}",
+      "illegal": "{names}: revelou algo que não é uma maçã, −{amount, plural, one {# milhão} other {# milhões}}",
+      "invalid": "{names}: maçã revelada diferente da selada, −{amount, plural, one {# milhão} other {# milhões}}",
+      "late": "{names}: nenhuma maçã a tempo, −{amount, plural, one {# milhão} other {# milhões}}",
+      "lateReveal": "{names}: maçã não revelada a tempo, −{amount, plural, one {# milhão} other {# milhões}}",
+      "loneApple": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. A única maçã {apple, select, gold {de ouro} other {de prata}}, de {name}, ganha {bonus, plural, one {# milhão} other {# milhões}}, as vermelhas perdem {gain, plural, one {# milhão} other {# milhões}}",
+      "loneRed": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. {name} escolheu vermelha sozinho e perde {loss, plural, one {# milhão} other {# milhões}}, as outras maçãs ganham {gain, plural, one {# milhão} other {# milhões}}",
+      "majority": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. As maçãs {apple, select, gold {de ouro} other {de prata}} ganham {gain, plural, one {# milhão} other {# milhões}}, as outras perdem {gain, plural, one {# milhão} other {# milhões}}",
+      "mixed": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. As maçãs vermelhas perdem {gain, plural, one {# milhão} other {# milhões}}, as de ouro e de prata ganham {gain, plural, one {# milhão} other {# milhões}}",
+      "noVote": "Ronda {round}: nenhuma maçã contada",
+      "oneColor": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. Só maçãs {apple, select, gold {de ouro} other {de prata}}: cada uma perde {gain, plural, one {# milhão} other {# milhões}}",
+      "out": "Ronda {round}: {names} {count, plural, one {perde} other {perdem}} o paraíso",
+      "tie": "Ronda {round}: ouro {gold}, prata {silver}, vermelho {red}. Tantas de ouro como de prata: nenhuma ganha nem perde"
+    },
+    "past": "{count, plural, one {Vencedor} other {Vencedores}}: {winners}, {sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
+    "pastGames": "Partidas jogadas",
+    "pastNoWinner": "Nenhum vencedor",
+    "result": {
+      "in": "No paraíso",
+      "noWinner": "Nenhum vencedor: todos os jogadores perderam o paraíso",
+      "out": "Expulso na ronda {round}",
+      "place": "Posição {place}",
+      "winner": "Vencedor",
+      "winners": "{count, plural, one {Vencedor: {names}} other {Vencedores: {names}}}"
+    },
+    "seat": {
+      "absent": "Atrasado",
+      "apple": "{apple, select, gold {Ouro} silver {Prata} other {Vermelha}}",
+      "balance": "Saldo: {sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
+      "free": "Lugar livre",
+      "gain": "{sign, select, plus {+{amount, plural, one {# milhão} other {# milhões}}} minus {−{amount, plural, one {# milhão} other {# milhões}}} other {0 milhões}}",
+      "leave": "Deixar o lugar",
+      "out": "Expulso",
+      "release": "Libertar o lugar",
+      "sealed": "Fechado",
+      "take": "Sentar-se"
+    },
+    "spectators": "{count, plural, one {# espetador} other {# espetadores}}",
+    "standings": {
+      "balance": "Milhões",
+      "caption": "Classificação do jogo",
+      "outcome": "Resultado",
+      "place": "Posição",
+      "player": "Jogador"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# milhão} other {# milhões}}",
+      "seconds": "{count} s",
+      "startMoney": "Dinheiro inicial",
+      "voteTime": "Tempo para votar"
+    },
+    "status": {
+      "away": "A aguardar o regresso de {names}…",
+      "drawing": "A partida começa: a aguardar {names}.",
+      "hurry": "Depressa: o seu tempo está a acabar!",
+      "over": "A partida terminou.",
+      "revealing": "As maçãs são reveladas…",
+      "sealed": "A sua maçã está selada: a aguardar {names}.",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa com pelo menos {min}.",
+      "start": "Escolha a duração da votação e o dinheiro inicial, depois inicie a partida.",
+      "vote": "Escolha a sua maçã, selada: de ouro, de prata ou vermelha.",
+      "voting": "A aguardar as maçãs de {names}.",
+      "waitingStart": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a aguardar que um deles inicie a partida."
+    },
+    "vote": {
+      "gold": "Maçã de ouro",
+      "red": "Maçã vermelha",
+      "sealed": "A sua maçã, {apple, select, gold {de ouro} silver {de prata} other {vermelha}}, está selada",
+      "silver": "Maçã de prata"
+    }
+  }
+}

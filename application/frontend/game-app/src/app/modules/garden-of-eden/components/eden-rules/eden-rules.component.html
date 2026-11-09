@@ -1,0 +1,96 @@
+<ng-container *transloco="let t; prefix: 'eden.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('setup.title') }}</h3>
+        <p class="my-2">{{ t('setup.players') }}</p>
+        <p class="my-2">{{ t('setup.choices') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('round.title') }}</h3>
+        <p class="my-2">{{ t('round.apples') }}</p>
+        <p class="my-2">{{ t('round.sealed') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('gains.title') }}</h3>
+        <p class="my-2">{{ t('gains.text') }}</p>
+        <table class="w-full mt-3 border-collapse bg-app-surface-raised">
+            <caption class="sr-only">{{ t('gains.caption') }}</caption>
+            <thead>
+                <tr>
+                    <th class="rule-cell bg-app-surface font-bold" scope="col">{{ t('gains.apples') }}</th>
+                    <th class="rule-cell bg-app-surface font-bold" scope="col">{{ t('gains.red') }}</th>
+                    <th class="rule-cell bg-app-surface font-bold" scope="col">{{ t('gains.others') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.allRed.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.allRed.red') }}</td>
+                    <td class="rule-cell">{{ t('gains.none') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.mixed.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.mixed.red') }}</td>
+                    <td class="rule-cell">{{ t('gains.mixed.others') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.loneRed.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.loneRed.red') }}</td>
+                    <td class="rule-cell">{{ t('gains.loneRed.others') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.loneApple.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.loneApple.red') }}</td>
+                    <td class="rule-cell">{{ t('gains.loneApple.others') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.majority.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.none') }}</td>
+                    <td class="rule-cell">{{ t('gains.majority.others') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.oneColor.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.none') }}</td>
+                    <td class="rule-cell">{{ t('gains.oneColor.others') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('gains.tie.apples') }}</td>
+                    <td class="rule-cell">{{ t('gains.none') }}</td>
+                    <td class="rule-cell">{{ t('gains.tie.others') }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('missed.title') }}</h3>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('missed.vote') }}</li>
+            <li>{{ t('missed.reveal') }}</li>
+        </ul>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('paradise.title') }}</h3>
+        <p class="my-2">{{ t('paradise.floor') }}</p>
+        <p class="my-2">{{ t('paradise.end') }}</p>
+        <p class="my-2">{{ t('paradise.winner') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('times.title') }}</h3>
+        <p class="my-2">{{ t('times.phases') }}</p>
+        <p class="my-2">{{ t('times.awayOnce') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.sealed') }}</p>
+        <p class="my-2">{{ t('fair.public') }}</p>
+    </section>
+</ng-container>

@@ -1,0 +1,175 @@
+{
+  "presentation": {
+    "points": {
+      "money": "Après 13 manches, le joueur le plus riche gagne.",
+      "paradise": "Un joueur à −500 millions ou moins perd le paradis, pour de bon.",
+      "sealed": "Les pommes sont scellées : personne, pas même le serveur, ne voit une pomme avant que tous les joueurs aient choisi la leur."
+    },
+    "rooms": "Créez une salle, ou rejoignez-en une, pour jouer avec d'autres joueurs.",
+    "summary": "Un jeu du film Liar Game: The Final Stage : de 3 à 8 joueurs choisissent 13 fois une pomme, d'or, d'argent ou rouge. Quand toutes les pommes sont rouges, tous les joueurs gagnent.",
+    "tagline": "Tout le monde gagne seulement si tout le monde fait confiance aux autres.",
+    "title": "Jardin d'Éden"
+  },
+  "rules": {
+    "fair": {
+      "public": "Les pommes révélées et les soldes sont publics, là où le film ne donnait que les comptes. Aucun argent ne passe d'un joueur à l'autre : les accords restent des mots dans le tchat.",
+      "sealed": "Une pomme est scellée : la page envoie son empreinte avec un sel aléatoire, puis la révèle une fois que tous les joueurs ont choisi. Une pomme révélée autrement que scellée est signalée. Une page rechargée garde sa pomme, sauf si son stockage est bloqué.",
+      "title": "Fair-play"
+    },
+    "gains": {
+      "allRed": {
+        "apples": "Que des pommes rouges",
+        "red": "+100 millions"
+      },
+      "apples": "Les pommes de la manche",
+      "caption": "Ce que chaque pomme gagne ou perd, selon les pommes de la manche",
+      "loneApple": {
+        "apples": "Une seule pomme d'or ou d'argent parmi 2 rouges ou plus",
+        "others": "+200 millions",
+        "red": "−100 millions"
+      },
+      "loneRed": {
+        "apples": "Une seule pomme rouge parmi des pommes d'or ou d'argent",
+        "others": "+100 millions",
+        "red": "−1 000 millions, son joueur nommé"
+      },
+      "majority": {
+        "apples": "Aucune pomme rouge, les deux couleurs, l'une plus que l'autre",
+        "others": "La couleur la plus choisie +100 millions, l'autre −100 millions"
+      },
+      "mixed": {
+        "apples": "2 pommes rouges ou plus, et 2 pommes d'or ou d'argent ou plus",
+        "others": "+100 millions",
+        "red": "−100 millions"
+      },
+      "none": "—",
+      "oneColor": {
+        "apples": "Aucune pomme rouge, toutes d'une seule couleur",
+        "others": "−100 millions"
+      },
+      "others": "Une pomme d'or ou d'argent",
+      "red": "Une pomme rouge",
+      "text": "Une fois révélées, les pommes sont comptées, et chacune gagne ou perd :",
+      "tie": {
+        "apples": "Aucune pomme rouge, autant d'or que d'argent",
+        "others": "0"
+      },
+      "title": "Les gains"
+    },
+    "missed": {
+      "reveal": "Une pomme choisie et non révélée dans les 15 secondes, ou révélée autrement que scellée, perd 1 000 millions, et ne compte pas : autant qu'une pomme rouge seule, si bien que la retenir ne sauve jamais un traître qui a lu les autres.",
+      "title": "Les pommes manquées",
+      "vote": "Un joueur encore en jeu qui n'a pas choisi de pomme à la fin du vote perd 100 millions, et sa pomme ne compte pas. Le vote attend tous les joueurs encore en jeu, un joueur absent compris."
+    },
+    "paradise": {
+      "end": "La partie se termine après 13 manches, ou dès qu'il reste moins de 2 joueurs au paradis.",
+      "floor": "Une fois une manche comptée, un joueur à −500 millions ou moins perd le paradis, pour de bon : il suit la fin de la partie en spectateur.",
+      "title": "La perte du paradis",
+      "winner": "Le joueur encore en jeu le plus riche gagne, les soldes égaux partageant la place. Quand tous les joueurs ont perdu le paradis, personne ne gagne."
+    },
+    "round": {
+      "apples": "La partie dure 13 manches. À chaque manche, chaque joueur encore au paradis choisit une pomme : d'or, d'argent ou rouge, la pomme de la vérité.",
+      "sealed": "Les pommes sont choisies en même temps, scellées : personne ne voit une pomme avant que tous les joueurs aient choisi, puis elles sont révélées à tous. Personne n'est tenu de tenir parole, et le tchat est là pour s'entendre, ou pour trahir.",
+      "title": "Une manche"
+    },
+    "setup": {
+      "choices": "Le joueur qui lance la partie choisit la durée d'un vote, de 30 secondes à 5 minutes, et les fonds de départ de chaque joueur : 0, 500 ou 1 000 millions.",
+      "players": "De 3 à 8 joueurs prennent les places, puis l'un d'eux lance la partie : les places restent prises jusqu'à la fin.",
+      "title": "La table"
+    },
+    "summary": "Règles du jardin d'Éden",
+    "times": {
+      "awayOnce": "Un joueur absent est attendu 15 secondes de plus, une fois ; un vote n'attend plus davantage un joueur qui a manqué la phase précédente.",
+      "phases": "Un vote attend la durée choisie au départ, une révélation 15 secondes : chacun se ferme dès que tous les joueurs ont agi.",
+      "title": "Les temps"
+    },
+    "title": "Règles"
+  },
+  "table": {
+    "action": {
+      "rematch": "Rejouer",
+      "start": "Lancer la partie"
+    },
+    "clock": "{minutes}:{seconds}",
+    "game": "Partie {number} :",
+    "history": "Coups de la partie",
+    "info": {
+      "round": "Manche {round} sur {rounds} · {count, plural, one {# joueur en lice} other {# joueurs en lice}}",
+      "terms": "Votes de {unit, select, minutes {{count} min} other {{count} s}} · fonds de départ {amount, plural, one {# million} other {# millions}}"
+    },
+    "lostParadise": "Vous avez perdu le paradis : suivez la suite de la partie et le tchat.",
+    "money": "{sign, select, plus {+{amount, plural, one {# million} other {# millions}}} minus {−{amount, plural, one {# million} other {# millions}}} other {0 million}}",
+    "move": {
+      "allRed": "Manche {round} : or {gold}, argent {silver}, rouge {red}. Que des pommes rouges : chacune gagne {gain, plural, one {# million} other {# millions}}",
+      "illegal": "{names} : autre chose qu'une pomme révélée, −{amount, plural, one {# million} other {# millions}}",
+      "invalid": "{names} : pomme révélée autrement que scellée, −{amount, plural, one {# million} other {# millions}}",
+      "late": "{names} : pas de pomme à temps, −{amount, plural, one {# million} other {# millions}}",
+      "lateReveal": "{names} : pomme non révélée à temps, −{amount, plural, one {# million} other {# millions}}",
+      "loneApple": "Manche {round} : or {gold}, argent {silver}, rouge {red}. La pomme {apple, select, gold {d'or} other {d'argent}} seule de {name} gagne {bonus, plural, one {# million} other {# millions}}, les rouges perdent {gain, plural, one {# million} other {# millions}}",
+      "loneRed": "Manche {round} : or {gold}, argent {silver}, rouge {red}. {name}, seul à choisir rouge, perd {loss, plural, one {# million} other {# millions}}, les autres pommes gagnent {gain, plural, one {# million} other {# millions}}",
+      "majority": "Manche {round} : or {gold}, argent {silver}, rouge {red}. Les pommes {apple, select, gold {d'or} other {d'argent}} gagnent {gain, plural, one {# million} other {# millions}}, les autres perdent {gain, plural, one {# million} other {# millions}}",
+      "mixed": "Manche {round} : or {gold}, argent {silver}, rouge {red}. Les pommes rouges perdent {gain, plural, one {# million} other {# millions}}, celles d'or et d'argent gagnent {gain, plural, one {# million} other {# millions}}",
+      "noVote": "Manche {round} : aucune pomme comptée",
+      "oneColor": "Manche {round} : or {gold}, argent {silver}, rouge {red}. Que des pommes {apple, select, gold {d'or} other {d'argent}} : chacune perd {gain, plural, one {# million} other {# millions}}",
+      "out": "Manche {round} : {names} {count, plural, one {perd} other {perdent}} le paradis",
+      "tie": "Manche {round} : or {gold}, argent {silver}, rouge {red}. Autant d'or que d'argent : aucune pomme ne gagne ni ne perd"
+    },
+    "past": "{count, plural, one {Gagnant} other {Gagnants}} : {winners}, {sign, select, plus {+{amount, plural, one {# million} other {# millions}}} minus {−{amount, plural, one {# million} other {# millions}}} other {0 million}}",
+    "pastGames": "Parties jouées",
+    "pastNoWinner": "Aucun gagnant",
+    "result": {
+      "in": "Au paradis",
+      "noWinner": "Aucun gagnant : tous les joueurs ont perdu le paradis",
+      "out": "Exclu à la manche {round}",
+      "place": "Rang {place}",
+      "winner": "Gagnant",
+      "winners": "{count, plural, one {Gagnant : {names}} other {Gagnants : {names}}}"
+    },
+    "seat": {
+      "absent": "En retard",
+      "apple": "{apple, select, gold {Or} silver {Argent} other {Rouge}}",
+      "balance": "Solde : {sign, select, plus {+{amount, plural, one {# million} other {# millions}}} minus {−{amount, plural, one {# million} other {# millions}}} other {0 million}}",
+      "free": "Place libre",
+      "gain": "{sign, select, plus {+{amount, plural, one {# million} other {# millions}}} minus {−{amount, plural, one {# million} other {# millions}}} other {0 million}}",
+      "leave": "Quitter la place",
+      "out": "Exclu",
+      "release": "Libérer la place",
+      "sealed": "Scellé",
+      "take": "S'asseoir"
+    },
+    "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "standings": {
+      "balance": "Millions",
+      "caption": "Classement de la partie",
+      "outcome": "Résultat",
+      "place": "Rang",
+      "player": "Joueur"
+    },
+    "start": {
+      "minutes": "{count} min",
+      "money": "{amount, plural, one {# million} other {# millions}}",
+      "seconds": "{count} s",
+      "startMoney": "Fonds de départ",
+      "voteTime": "Durée du vote"
+    },
+    "status": {
+      "away": "En attente du retour de {names}…",
+      "drawing": "La partie commence : en attente de {names}.",
+      "hurry": "Vite : votre temps s'écoule !",
+      "over": "La partie est terminée.",
+      "revealing": "Les pommes sont révélées…",
+      "sealed": "Votre pomme est scellée : en attente de {names}.",
+      "seats": "{count, plural, one {# joueur assis} other {# joueurs assis}} : la partie commence à {min} au moins.",
+      "start": "Choisissez la durée du vote et les fonds de départ, puis lancez la partie.",
+      "vote": "Choisissez votre pomme, scellée : d'or, d'argent ou rouge.",
+      "voting": "En attente des pommes de {names}.",
+      "waitingStart": "{count, plural, one {# joueur assis} other {# joueurs assis}} : en attente que l'un d'eux lance la partie."
+    },
+    "vote": {
+      "gold": "Pomme d'or",
+      "red": "Pomme rouge",
+      "sealed": "Votre pomme, {apple, select, gold {d'or} silver {d'argent} other {rouge}}, est scellée",
+      "silver": "Pomme d'argent"
+    }
+  }
+}

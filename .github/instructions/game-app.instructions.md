@@ -119,7 +119,7 @@ This is an Angular TypeScript project with the following characteristics:
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
   `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `minority` (the Minority
-  Game), `contraband` (the Contraband), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
+  Game), `contraband` (the Contraband), `eden` (the Garden of Eden), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -329,9 +329,15 @@ Claude writes the translations of every new or changed key, into every language:
 | iron bar | lingot de fer | lingote de hierro | barra de ferro | barra de ferro | Eisenbarren | железный слиток | demir külçe | batangan besi | sztabka żelaza | lingotto di ferro |
 | indemnity | indemnité | indemnización | indenização | indemnização | Entschädigung | компенсация | tazminat | ganti rugi | odszkodowanie | indennizzo |
 | seize | saisir | confiscar | confiscar | apreender | beschlagnahmen | конфисковать | el koymak | menyita | skonfiskować | sequestrare |
-| balance (of a player, at the end) | solde | saldo | saldo | saldo | Saldo | баланс | bakiye | saldo | saldo | saldo |
+| balance (of a player) | solde | saldo | saldo | saldo | Saldo | баланс | bakiye | saldo | saldo | saldo |
 | offensive word | mot offensant | palabra ofensiva | palavra ofensiva | palavra ofensiva | anstößiges Wort | оскорбительное слово | kaba kelime | kata kasar | obraźliwe słowo | parola offensiva |
 | link (a web address) | lien | enlace | link | ligação | Link | ссылка | bağlantı | tautan | link | link |
+| Garden of Eden | jardin d'Éden | Jardín del Edén | Jardim do Éden | Jardim do Éden | Garten Eden | Эдемский сад | Aden Bahçesi | Taman Eden | Ogród Eden | Giardino dell'Eden |
+| apple | pomme | manzana | maçã | maçã | Apfel | яблоко | elma | apel | jabłko | mela |
+| gold / silver / red (apple) | d'or / d'argent / rouge | de oro / de plata / roja | de ouro / de prata / vermelha | de ouro / de prata / vermelha | golden / silbern / rot | золотое / серебряное / красное | altın / gümüş / kırmızı | emas / perak / merah | złote / srebrne / czerwone | d'oro / d'argento / rossa |
+| loss of paradise | perte du paradis | pérdida del paraíso | perda do paraíso | perda do paraíso | Verlust des Paradieses | потеря рая | cennetin kaybı | kehilangan surga | utrata raju | perdita del paradiso |
+| out (after the loss of paradise) | exclu | expulsado | expulso | expulso | verbannt | изгнан | kovuldu | terusir | wygnany | espulso |
+| starting money | fonds de départ | dinero inicial | dinheiro inicial | dinheiro inicial | Startgeld | стартовый капитал | başlangıç parası | modal awal | kapitał początkowy | capitale iniziale |
 
 ## APIs
 

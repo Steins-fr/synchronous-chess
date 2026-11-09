@@ -9,7 +9,7 @@ import { PageLoaderComponent } from '@app/modules/page-loader/page-loader.compon
 import { SoundMenuComponent } from '@app/modules/sound-menu/sound-menu.component';
 import { ThemeModeEnum } from '@app/services/theme/enums/theme-mode.enum';
 import { ShownTheme, ThemeService } from '@app/services/theme/theme.service';
-import { bidPokerPath, chatPath, chessPath, contrabandPath, homePath, minorityGamePath, pokerPath, roulettePath } from './app.routes';
+import { bidPokerPath, chatPath, chessPath, contrabandPath, gardenOfEdenPath, homePath, minorityGamePath, pokerPath, roulettePath } from './app.routes';
 
 type ThemeButton = {
     icon: string;
@@ -45,6 +45,7 @@ export class AppComponent {
     protected readonly bidPokerPath: string = `/${bidPokerPath}`;
     protected readonly minorityGamePath: string = `/${minorityGamePath}`;
     protected readonly contrabandPath: string = `/${contrabandPath}`;
+    protected readonly gardenOfEdenPath: string = `/${gardenOfEdenPath}`;
 
     protected readonly themeService = inject(ThemeService);
     protected readonly themeButton = computed<Readonly<ThemeButton>>(() => AppComponent.themeButtons[this.themeService.theme()]);
