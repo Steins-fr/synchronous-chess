@@ -9,8 +9,8 @@
 
     <div appSteadyHeight class="flex items-center gap-3">
         <output class="table-status flex-1">{{ status().key | transloco: status().params }}</output>
-        @if (clock(); as left) {
-        <span id="vote-clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+        @if (clock.text(); as left) {
+        <span id="vote-clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clock.low()">{{ left.key | transloco: left.params }}</span>
         }
     </div>
 
@@ -100,13 +100,13 @@
     </div>
 
     @let seats = currentSession.tableSeats;
-    @let left = clock();
+    @let left = clock.text();
     <div class="grid gap-3 grid-cols-2 lg:grid-cols-4">
         @for (view of otherSeats(); track view.seat) {
         <app-minority-seat
             [seat]="view.seat" [name]="view.name" [awaited]="view.awaited" [sealed]="view.sealed" [absent]="view.absent" [asker]="view.asker"
             [eliminated]="view.eliminated" [vote]="view.vote" [points]="view.points" [standing]="view.standing" [winning]="view.winning"
-            [clock]="view.awaited ? left : null" [clockLow]="clockLow()"
+            [clock]="view.awaited ? left : null" [clockLow]="clock.low()"
             [canTake]="seats.canTake(view.seat)" [canRelease]="seats.canRelease(view.seat)"
             (take)="takeSeat(view.seat)" (release)="release(view.seat)" />
         }
@@ -115,7 +115,7 @@
         <app-minority-seat class="col-span-2 lg:col-span-4"
             [seat]="mine.seat" [name]="mine.name" [awaited]="mine.awaited" [sealed]="mine.sealed" [absent]="mine.absent" [asker]="mine.asker"
             [eliminated]="mine.eliminated" [vote]="mine.vote" [points]="mine.points" [standing]="mine.standing" [winning]="mine.winning"
-            [clock]="mine.awaited ? left : null" [clockLow]="clockLow()"
+            [clock]="mine.awaited ? left : null" [clockLow]="clock.low()"
             [canTake]="seats.canTake(mine.seat)" [canLeave]="seats.canLeave()" [canRelease]="seats.canRelease(mine.seat)"
             (take)="takeSeat(mine.seat)" (leave)="leaveSeat()" (release)="release(mine.seat)" />
     </div>

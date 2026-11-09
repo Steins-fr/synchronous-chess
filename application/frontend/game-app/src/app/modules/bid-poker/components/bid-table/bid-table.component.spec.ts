@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
@@ -468,15 +469,14 @@ describe('BidTableComponent', { timeout: 30_000 }, () => {
         test('should claim nothing on a late tick of the clock of a phase closed', async () => {
             // Given the clock of lot A
             await started();
-            const component = TestHelper.cast<{ timeOut(): void; clocked: unknown }>(fixture.componentInstance);
-            const clockOfLotA: unknown = component.clocked;
+            const clock: PhaseClock = TestHelper.cast<{ clock: PhaseClock }>(fixture.componentInstance).clock;
+            const clockOfLotA: string = clock.roundKey();
             await click('No bid');
             await othersBid([0, 0, 0]);
             await until(() => status() === 'Bid on lot B, sealed: 0 for no bid.');
 
             // When it ticks once lot B is auctioned, before its effect stops it
-            component.clocked = clockOfLotA;
-            component.timeOut();
+            clock.timeOut(clockOfLotA);
 
             // Then
             expect(hub.types()).not.toContain(BPGameSessionType.TIMEOUT);

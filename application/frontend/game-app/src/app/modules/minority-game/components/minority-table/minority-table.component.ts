@@ -2,8 +2,8 @@ import { Component, computed, effect, inject, InjectionToken, input, linkedSigna
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
-import { clockText, setupTimeOf, setupTimeOptions } from '@app/modules/commit-reveal/helpers/table-texts.helper';
+import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
+import { setupTimeOf, setupTimeOptions } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { noLink } from '@app/modules/form/rules/no-link.rule';
 import { requiredText } from '@app/modules/form/rules/required-text.rule';
@@ -36,9 +36,6 @@ import { MinoritySeatComponent } from '../minority-seat/minority-seat.component'
 
 /** The options of the session of the table: the rules of the game, lighter ones for the specs */
 export const MINORITY_SESSION_OPTIONS = new InjectionToken<MinoritySessionOptions>('MINORITY_SESSION_OPTIONS', { factory: (): MinoritySessionOptions => ({}) });
-
-/** The seconds a page waits again once its claim of a timeout came too early on the time of the chain */
-const RETRY_TIME: number = 5;
 
 /** A seat of the table, as it shows */
 interface SeatView {
@@ -127,7 +124,7 @@ export class MinorityTableComponent implements OnDestroy {
         setupTimeOptions(this.session().rules.voteTimes));
 
     /** The question the asker types, empty for each question */
-    private readonly questionModel: WritableSignal<Readonly<{ text: string }>> = linkedSignal({ source: () => this.roundKey(), computation: () => ({ text: '' }) });
+    private readonly questionModel: WritableSignal<Readonly<{ text: string }>> = linkedSignal({ source: () => this.clock.roundKey(), computation: () => ({ text: '' }) });
     /** A question: too long, or holding a link or an e-mail address, it is refused, its error shown */
     protected readonly questionForm = form(this.questionModel, (path) => {
         requiredText(path.text, this.key(marker('table.question.required', undefined, 'minority')));
@@ -235,38 +232,8 @@ export class MinorityTableComponent implements OnDestroy {
 
     /** The local player is a player the game waits for */
     private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canAsk() || this.session().canVote());
-    private readonly roundKey: Signal<string> = computed((): string => {
-        const played: PlayedMinorityGame = this.session().played();
-        return `${ played.index }:${ played.attempt }:${ this.session().step() }`;
-    });
-    // A claim voided as too early: the page claims again once the time it was early by is over
-    private readonly voidedAt: Signal<number> = linkedSignal({ source: this.roundKey, computation: () => untracked(() => this.session().voidedClaims()) });
-    private readonly clockKey: Signal<string | null> = computed((): string | null =>
-        this.session().awaited().length === 0 ? null : `${ this.roundKey() }:${ this.session().voidedClaims() }`);
-    /** A player the game waits for is away */
-    private readonly waitingAway: Signal<boolean> = computed((): boolean => this.session().awaitedAway().length > 0);
-    /** A player the game waits for is away, giving the phase more time, once */
-    private readonly extendedAway: Signal<boolean> = computed((): boolean => this.session().extendingAway().length > 0);
-    /** The round the clock runs for, from its start: a late tick of a phase closed acts on nothing */
-    private clocked: string | null = null;
-    /** The seconds left to the players the phase waits for */
-    protected readonly timeLeft: Signal<number | null> = turnClock({
-        running: () => this.clockKey() !== null,
-        times: () => {
-            this.clocked = this.roundKey();
-            return {
-                turnTime: this.session().voidedClaims() > this.voidedAt() ? RETRY_TIME : this.session().phaseTime(),
-                awayTime: this.session().rules.awayTime,
-            };
-        },
-        away: this.extendedAway,
-        timeOut: () => this.timeOut(),
-    });
-    protected readonly clock: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
-        const left: number | null = this.timeLeft();
-        return left === null ? null : clockText(left);
-    });
-    protected readonly clockLow: Signal<boolean> = computed((): boolean => (this.timeLeft() ?? CLOCK_LOW + 1) <= CLOCK_LOW);
+    /** The clock of the phase, for the players it waits for: the page claims its time once over */
+    protected readonly clock: PhaseClock = phaseClock(this.session, { extendingAway: (session: MinoritySession) => session.extendingAway() });
 
     /** What the table waits for */
     protected readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
@@ -283,11 +250,11 @@ export class MinorityTableComponent implements OnDestroy {
         if (session.over()) {
             return { key: this.key(marker('table.status.over', undefined, 'minority')) };
         }
-        if (this.myTurn() && this.clockLow()) {
+        if (this.myTurn() && this.clock.low()) {
             return { key: this.key(marker('table.status.hurry', undefined, 'minority')) };
         }
         // The local player to act reads its own prompt
-        if (this.waitingAway() && !this.myTurn()) {
+        if (this.clock.waitingAway() && !this.myTurn()) {
             return { key: this.key(marker('table.status.away', undefined, 'minority')), params: { names: this.session().awaitedAway().join(', ') } };
         }
         return this.phaseStatus(game, names);
@@ -395,18 +362,6 @@ export class MinorityTableComponent implements OnDestroy {
 
     protected release(seat: number): void {
         this.session().unseat(seat);
-    }
-
-    /**
-     * The time of the phase is over: a player of the game claims it, an eliminated one or a late one included. A late tick
-     * of the clock of a phase closed claims nothing
-     */
-    private timeOut(): void {
-        const session: MinoritySession = this.session();
-
-        if (this.clocked === this.roundKey() && session.myIndex() !== null && session.awaited().length > 0) {
-            session.claimTimeout();
-        }
     }
 
     private seatView(seat: number, name: string | null): SeatView {

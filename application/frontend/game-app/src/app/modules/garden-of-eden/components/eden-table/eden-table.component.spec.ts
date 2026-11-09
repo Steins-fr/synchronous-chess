@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
@@ -432,15 +433,14 @@ describe('EdenTableComponent', { timeout: 30_000 }, () => {
         test('should claim nothing on a late tick of the clock of a phase closed', async () => {
             // Given the clock of the first vote
             await started();
-            const component = TestHelper.cast<{ timeOut(): void; clocked: unknown }>(fixture.componentInstance);
-            const clockOfTheVote: unknown = component.clocked;
+            const clock: PhaseClock = TestHelper.cast<{ clock: PhaseClock }>(fixture.componentInstance).clock;
+            const clockOfTheVote: string = clock.roundKey();
             await click('Gold apple');
             await othersVote([GOLD, GOLD, GOLD]);
             await until(() => session().game()?.round() === 1);
 
             // When it ticks once the next vote opened, before its effect stops it
-            component.clocked = clockOfTheVote;
-            component.timeOut();
+            clock.timeOut(clockOfTheVote);
 
             // Then
             expect(hub.types()).not.toContain(GEGameSessionType.TIMEOUT);
