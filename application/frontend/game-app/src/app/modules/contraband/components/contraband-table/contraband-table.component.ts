@@ -6,6 +6,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, max, min, required, submit, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { signed } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
@@ -35,7 +36,7 @@ import { PlayedContrabandGame } from '../../classes/game-sessions/played-contrab
 import { ContrabandEvent, ContrabandEventKind, ContrabandGameState, ContrabandPhase } from '../../classes/rules/contraband-game-state';
 import { CallKind, ContrabandVariant, Team, teamOf, trunkLimit } from '../../classes/rules/contraband-rules';
 import { ContrabandResult, ContrabandStanding } from '../../classes/rules/standings';
-import { clockText, CrossingEvent, eventText, SettledEvent, signed, trunkText } from '../../helpers/contraband-texts.helper';
+import { clockText, CrossingEvent, eventText, SettledEvent, trunkText } from '../../helpers/contraband-texts.helper';
 import { HeardContrabandTable, tableSounds } from '../../helpers/table-sound.helper';
 import { ContrabandSeatComponent, CustomsRole } from '../contraband-seat/contraband-seat.component';
 

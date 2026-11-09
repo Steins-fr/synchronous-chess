@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { AppleOutcome, CastApple } from '../classes/rules/apple-count';
 import { EdenEvent, EdenEventKind, EdenPhase, MissedReason } from '../classes/rules/eden-game-state';
 import { Apple, EDEN_RULES } from '../classes/rules/eden-rules';
-import { clockText, eventText, Sign, signed } from './eden-texts.helper';
+import { clockText, eventText } from './eden-texts.helper';
 
 const NAMES: ReadonlyArray<string> = ['alice', 'bob', 'carol', 'dave'];
 const { GOLD, SILVER, RED } = Apple;
@@ -37,12 +37,6 @@ describe('eventText', () => {
         [{ kind: EdenEventKind.OUT, round: 4, players: [0, 2] }, 'Round 5: alice, carol lose paradise'],
     ])('should tell %o', (event: EdenEvent, text: string) => {
         expect(translated(eventText(event, NAMES, EDEN_RULES))).toEqual(text);
-    });
-});
-
-describe('signed', () => {
-    test.each([[300, Sign.PLUS, 300], [-1000, Sign.MINUS, 1000], [0, Sign.ZERO, 0]])('should part %i into its sign and its amount', (value: number, sign: Sign, amount: number) => {
-        expect(signed(value)).toEqual({ sign, amount });
     });
 });
 

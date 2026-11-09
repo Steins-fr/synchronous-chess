@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Apple } from '../../classes/rules/eden-rules';
-import { Sign } from '../../helpers/eden-texts.helper';
+import { Sign } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { EdenSeatComponent } from './eden-seat.component';
 
 describe('EdenSeatComponent', () => {

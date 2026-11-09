@@ -3,6 +3,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { form, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { CLOCK_LOW, turnClock } from '@app/helpers/turn-clock.helper';
+import { signed, SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { PastResult } from '@app/modules/room-layout/room-history/past-result';
@@ -23,10 +24,10 @@ import { CastApple, RoundGain } from '../../classes/rules/apple-count';
 import { EdenEvent, EdenEventKind, EdenGameState, EdenPhase } from '../../classes/rules/eden-game-state';
 import { Apple } from '../../classes/rules/eden-rules';
 import { EdenResult, EdenStanding } from '../../classes/rules/standings';
-import { clockText, countText, CountedEvent, eventText, signed } from '../../helpers/eden-texts.helper';
+import { clockText, countText, CountedEvent, eventText } from '../../helpers/eden-texts.helper';
 import { HeardEdenTable, tableSounds } from '../../helpers/table-sound.helper';
 import { EdenAppleComponent } from '../eden-apple/eden-apple.component';
-import { EdenSeatComponent, SignedAmount } from '../eden-seat/eden-seat.component';
+import { EdenSeatComponent } from '../eden-seat/eden-seat.component';
 
 /** The options of the session of the table: the rules of the game, lighter ones for the specs */
 export const EDEN_SESSION_OPTIONS = new InjectionToken<EdenSessionOptions>('EDEN_SESSION_OPTIONS', { factory: (): EdenSessionOptions => ({}) });
