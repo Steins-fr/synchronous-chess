@@ -410,22 +410,25 @@ describe('MinoritySession', { timeout: 30_000 }, () => {
             // Given
             await started();
             await asked();
-            const reveal = { game: 0, attempt: 0, round: 0, ask: 0, vote: YES, salt: 's' };
-
-            // When
+            const reveal = { game: 0, attempt: 0, round: 0, ask: 0, vote: YES, salt: 'forged' };
             hub.send({ from: 'alice', type: MGGameSessionType.REVEAL, payload: reveal });
+            await of('dave').vote(NO);
+            await settled((session: MinoritySession) => session.game()?.committed().length === 1);
+
+            // When the reveal of Dave waits, the other ones counted, then the forged reveals come
+            hub.hold('dave');
             await of('alice').vote(YES);
             await of('bob').vote(NO);
             await of('carol').vote(NO);
-            hub.hold('dave');
-            await of('dave').vote(NO);
+            await settled((session: MinoritySession) => session.game()?.phase() === MinorityPhase.REVEALING && session.game()?.awaited().length === 1);
             hub.send({ from: 'alice', type: MGGameSessionType.REVEAL, payload: reveal });
-            hub.send({ from: 'alice', type: MGGameSessionType.REVEAL, payload: { ...reveal, ask: 1 } });
-
-            // Then
-            expect(hub.reports).toEqual([]);
+            hub.send({ from: 'dave', type: MGGameSessionType.REVEAL, payload: { ...reveal, ask: 1 } });
+            hub.send({ from: 'zoe', type: MGGameSessionType.REVEAL, payload: reveal });
             hub.release();
+
+            // Then, every forged reveal applied before the one of Dave
             await settled((session: MinoritySession) => counted(session) === 1);
+            expect(hub.reports).toEqual([]);
             expect(lastEvent()).toMatchObject({ outcome: VoteOutcome.MINORITY, eliminated: [1, 2, 3] });
         });
     });

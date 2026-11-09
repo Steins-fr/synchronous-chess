@@ -252,22 +252,25 @@ describe('EdenSession', { timeout: 30_000 }, () => {
         test('should ignore a reveal out of the reveal phase, of another round, or of a player not awaited', async () => {
             // Given
             await started();
-            const reveal = { game: 0, attempt: 0, round: 0, apple: RED, salt: 's' };
-
-            // When
+            const reveal = { game: 0, attempt: 0, round: 0, apple: RED, salt: 'forged' };
             hub.send({ from: 'alice', type: GEGameSessionType.REVEAL, payload: reveal });
-            await Promise.all(['alice', 'bob', 'carol'].map((name: string) => of(name).vote(RED)));
-            hub.hold('dave');
             await of('dave').vote(GOLD);
-            hub.send({ from: 'alice', type: GEGameSessionType.REVEAL, payload: reveal });
-            hub.send({ from: 'alice', type: GEGameSessionType.REVEAL, payload: { ...reveal, round: 1 } });
-            hub.send({ from: 'zoe', type: GEGameSessionType.REVEAL, payload: reveal });
+            await settled((session: EdenSession) => session.game()?.committed().length === 1);
 
-            // Then
-            expect(hub.reports).toEqual([]);
+            // When the reveal of Dave waits, the other ones counted, then the forged reveals come
+            hub.hold('dave');
+            await Promise.all(['alice', 'bob', 'carol'].map((name: string) => of(name).vote(RED)));
+            await settled((session: EdenSession) => session.game()?.phase() === EdenPhase.REVEALING && session.game()?.awaited().length === 1);
+            hub.send({ from: 'alice', type: GEGameSessionType.REVEAL, payload: reveal });
+            hub.send({ from: 'dave', type: GEGameSessionType.REVEAL, payload: { ...reveal, round: 1 } });
+            hub.send({ from: 'zoe', type: GEGameSessionType.REVEAL, payload: reveal });
             hub.release();
+
+            // Then, every forged reveal applied before the one of Dave
             await settled((session: EdenSession) => counted(session) === 1);
+            expect(hub.reports).toEqual([]);
             expect(lastCount()).toMatchObject({ outcome: AppleOutcome.LONE_APPLE, lone: 3 });
+            expect(gameOf('eve').balances()).toEqual([-100, -100, -100, 200]);
         });
     });
 
