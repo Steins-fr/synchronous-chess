@@ -55,7 +55,7 @@ No one reads a trunk before the call, not even the server: the page of the smugg
 
 ### Garden of Eden demo
 
-The Garden of Eden of the film *Liar Game: The Final Stage* for 3 to 8 players: 13 rounds, in each one every player picks an apple, sealed, gold, silver or red. When every apple is red, every player wins 100 million; a lone red apple among gold or silver ones loses 1,000 million, its player named, and a lone gold or silver apple among red ones wins 200 million. Each player takes a seat with `Sit here`, then one of them picks the time of a vote and the starting money, and clicks `Start the game`. A player at −500 million or below loses paradise, for good; after the 13 rounds, the richest player still in wins. The chat is where trust is built, and betrayed.
+The Garden of Eden of the film *Liar Game: The Final Stage* for 3 to 8 players: 13 rounds, in each one every player picks an apple, sealed, gold, silver or red. When every apple is red, every player wins 100 million; a lone red apple among gold or silver ones loses 1,000 million, its player named, and a lone gold or silver apple among 2 red ones or more wins 200 million. Each player takes a seat with `Sit here`, then one of them picks the time of a vote and the starting money, and clicks `Start the game`. A player at −500 million or below loses paradise, for good; after the 13 rounds, the richest player still in wins. The chat is where trust is built, and betrayed.
 
 No one reads an apple before every player picked one, not even the server: each page sends the hash of its apple, then reveals it once every player picked one, and an apple withheld loses as much as a lone red apple. See [Garden of Eden session](documentation/garden-of-eden-session.md).
 

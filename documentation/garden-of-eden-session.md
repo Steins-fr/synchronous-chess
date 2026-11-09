@@ -1,8 +1,8 @@
 # Garden of Eden session
 
 The **Garden of Eden** is a game of the film *Liar Game: The Final Stage*: 3 to 8 players pick an apple 13 times, gold,
-silver or red, their apples sealed. A lone red apple costs its player 1,000 million, a lone gold or silver one among red
-ones wins 200 million; when every apple is red, every player wins. It is played in a room, peer to peer, without any game
+silver or red, their apples sealed. A lone red apple costs its player 1,000 million, a lone gold or silver one among 2 red
+ones or more wins 200 million; when every apple is red, every player wins. It is played in a room, peer to peer, without any game
 server: no participant reads an apple before every player picked one. A player whose balance falls to −500 million or
 below loses paradise, for good.
 
