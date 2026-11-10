@@ -1,0 +1,82 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Chaque joueur commence avec 500 jetons, et les joueurs échangent leurs rôles à chaque manche : chacun est le croupier 5 fois.",
+      "sealed": "La bille est scellée : personne, pas même le serveur, ne voit sa case avant que le parieur ait misé.",
+      "talk": "Les deux joueurs discutent dans une conversation à eux, lue par toute la salle : le croupier peut dire n'importe quoi sur la bille, vrai ou faux."
+    },
+    "rooms": "Créez une salle, ou rejoignez-en une, pour jouer avec d'autres joueurs.",
+    "summary": "Un jeu du manga Liar Game : 2 joueurs s'affrontent sur une roue de 4 cases qui ne tourne jamais, en 10 manches. À chaque manche, le croupier place la bille et mise le premier, puis le parieur mise en lisant les mises du croupier.",
+    "tagline": "Une roulette qui ne tourne pas : le croupier sait où se trouve la bille.",
+    "title": "Roulette fixe"
+  },
+  "rules": {
+    "end": {
+      "games": "La partie se termine après 10 manches, ou aussitôt qu'un joueur n'a plus de jeton après une manche : il perd.",
+      "title": "La fin de la partie",
+      "winner": "Le joueur qui a le plus de jetons gagne ; à égalité de jetons, la partie est nulle, y compris quand les deux joueurs n'en ont plus en même temps. Les jetons pris par la banque sont perdus pour les deux."
+    },
+    "fair": {
+      "draw": "Personne ne choisit le premier croupier : chaque joueur donne une part aléatoire scellée au départ, et le croupier est tiré des deux parts, de la même façon sur chaque page.",
+      "order": "Une mise hors de son tour est ignorée par chaque page ; une mise de l'autre joueur, ou hors des règles, est signalée.",
+      "sealed": "La bille est scellée : la page du croupier envoie son empreinte avec un sel aléatoire, avec ses mises, puis la révèle une fois que le parieur a misé. Personne, pas même le serveur, ne voit la bille avant. Une page rechargée garde sa bille, sauf si son stockage est bloqué.",
+      "title": "Fair-play"
+    },
+    "game": {
+      "bet": "Puis le parieur mise, en voyant les mises du croupier : sur 2 cases au plus, autant de jetons que le croupier au moins, ou tous ses jetons s'il en a moins.",
+      "place": "Le croupier place la bille dans l'une des 4 cases, scellée, et mise en public en même temps : 1 jeton au moins, sur 1 à 4 cases, jamais plus de jetons qu'il n'en a.",
+      "reveal": "Puis la page du croupier révèle la bille d'elle-même, et les jetons sont réglés.",
+      "talk": "Chacun peut dire n'importe quoi sur la bille, vrai ou faux, dans la conversation des joueurs : toute la salle la lit, seuls les joueurs y écrivent.",
+      "title": "Une manche"
+    },
+    "missed": {
+      "bet": "Un parieur qui ne mise pas à temps perd la partie.",
+      "place": "Un croupier qui ne place pas la bille et ne mise pas à temps perd la partie.",
+      "reveal": "Un croupier dont la page ne révèle pas la bille dans les 15 secondes, révèle une autre bille que celle scellée, ou une bille hors de la roue, perd la partie.",
+      "title": "Hors délai",
+      "void": "Les mises de la manche reviennent alors à leurs propriétaires, et l'autre joueur gagne la partie, quels que soient les jetons."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "À la banque : tous les jetons misés sont perdus",
+        "onBall": "Aucun joueur"
+      },
+      "both": {
+        "losing": "Partagés selon leurs jetons sur la bille, chaque part arrondie à l'inférieur, le jeton restant au parieur",
+        "onBall": "Les deux joueurs"
+      },
+      "caption": "Où vont les jetons des autres cases, selon qui a misé sur la case de la bille",
+      "croupier": {
+        "losing": "Au croupier",
+        "onBall": "Le croupier seul"
+      },
+      "example": "Par exemple, le croupier mise 15 jetons sur la case 2 et 50 sur la case 3, le parieur 35 sur la case 2 et 30 sur la case 4. La bille est dans la case 2 : les deux joueurs reprennent leurs jetons sur cette case et se partagent les 80 jetons des autres cases, 15 contre 35. Le croupier reçoit 24 jetons et en perd 50, −26 ; le parieur reçoit 56 et en perd 30, +26.",
+      "leftover": "Les parts arrondies laissent un jeton au plus : avec 10 jetons du croupier et 20 du parieur sur la bille, les 5 jetons à partager donnent 1 au croupier, 3 au parieur et le jeton restant, soit 4.",
+      "losing": "Les jetons des autres cases",
+      "onBall": "Misé sur la bille",
+      "punter": {
+        "losing": "Au parieur",
+        "onBall": "Le parieur seul"
+      },
+      "text": "Les jetons misés sur la case de la bille reviennent à leurs propriétaires. Les jetons des autres cases vont :",
+      "title": "Le règlement"
+    },
+    "setup": {
+      "match": "Chaque joueur commence avec 500 jetons. La partie dure 10 manches, les joueurs échangeant leurs rôles à chaque manche : le premier croupier est tiré au sort, puis chaque joueur est le croupier 5 fois.",
+      "players": "2 joueurs prennent les places, les autres participants regardent. L'un des joueurs lance la partie et choisit le temps des mises, de 30 secondes à 5 minutes : les places restent prises jusqu'à la fin.",
+      "title": "La table"
+    },
+    "summary": "Règles de la roulette fixe",
+    "times": {
+      "away": "Un joueur absent est attendu 15 secondes de plus, une fois.",
+      "phases": "Le croupier et le parieur misent chacun dans le temps choisi au départ, la révélation attend 15 secondes : chaque phase se ferme dès que son joueur a agi.",
+      "title": "Les temps"
+    },
+    "title": "Règles"
+  },
+  "table": {
+    "conversation": {
+      "players": "{first} et {second}"
+    }
+  }
+}

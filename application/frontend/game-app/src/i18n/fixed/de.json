@@ -1,0 +1,82 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Jeder Spieler beginnt mit 500 Chips, und die Spieler tauschen in jedem Durchgang die Rollen: Jeder ist 5-mal der Croupier.",
+      "sealed": "Die Kugel ist versiegelt: Niemand, nicht einmal der Server, sieht ihr Fach, bevor der Pointeur gesetzt hat.",
+      "talk": "Die beiden Spieler reden in einer eigenen Unterhaltung, die der ganze Raum liest: Der Croupier darf alles über die Kugel sagen, wahr oder falsch."
+    },
+    "rooms": "Erstelle einen Raum oder tritt einem bei, um mit anderen zu spielen.",
+    "summary": "Ein Spiel aus dem Manga Liar Game: 2 Spieler treten über 10 Durchgänge an einem Rad mit 4 Fächern an, das sich nie dreht. In jedem Durchgang legt der Croupier die Kugel und setzt zuerst, dann setzt der Pointeur und liest dabei die Einsätze des Croupiers.",
+    "tagline": "Ein Roulette, das sich nicht dreht: Der Croupier weiß, wo die Kugel liegt.",
+    "title": "Festes Roulette"
+  },
+  "rules": {
+    "end": {
+      "games": "Die Partie endet nach 10 Durchgängen oder sofort, wenn ein Spieler nach einem Durchgang keinen Chip mehr hat: Er verliert.",
+      "title": "Das Ende der Partie",
+      "winner": "Der Spieler mit den meisten Chips gewinnt; bei gleich vielen Chips ist es ein Remis, auch wenn beiden Spielern zugleich die Chips ausgehen. Die Chips, die die Bank genommen hat, sind für beide verloren."
+    },
+    "fair": {
+      "draw": "Niemand wählt den ersten Croupier: Jeder Spieler gibt am Start einen versiegelten Zufallsanteil, und der Croupier wird aus beiden Anteilen ausgelost, auf jeder Seite gleich.",
+      "order": "Ein Einsatz außer der Reihe wird von jeder Seite ignoriert; ein Einsatz des anderen Spielers oder gegen die Regeln wird gemeldet.",
+      "sealed": "Die Kugel ist versiegelt: Die Seite des Croupiers sendet ihren Hash mit einem zufälligen Salt zusammen mit seinen Einsätzen und deckt sie auf, sobald der Pointeur gesetzt hat. Niemand, nicht einmal der Server, sieht die Kugel vorher. Eine neu geladene Seite behält ihre Kugel, außer ihr Speicher ist blockiert.",
+      "title": "Fairness"
+    },
+    "game": {
+      "bet": "Dann setzt der Pointeur und sieht dabei die Einsätze des Croupiers: auf höchstens 2 Fächer, mindestens so viele Chips wie der Croupier oder alle seine Chips, wenn er weniger hat.",
+      "place": "Der Croupier legt die Kugel versiegelt in eines der 4 Fächer und setzt zugleich öffentlich: mindestens 1 Chip, auf 1 bis 4 Fächer, nie mehr Chips, als er hat.",
+      "reveal": "Dann deckt die Seite des Croupiers die Kugel von selbst auf, und die Chips werden abgerechnet.",
+      "talk": "Jeder darf in der Unterhaltung der Spieler alles über die Kugel sagen, wahr oder falsch: Der ganze Raum liest sie, nur die Spieler schreiben darin.",
+      "title": "Ein Durchgang"
+    },
+    "missed": {
+      "bet": "Ein Pointeur, der nicht rechtzeitig setzt, verliert die Partie.",
+      "place": "Ein Croupier, der die Kugel nicht rechtzeitig legt und setzt, verliert die Partie.",
+      "reveal": "Ein Croupier, dessen Seite die Kugel nicht binnen 15 Sekunden aufdeckt, eine andere Kugel als die versiegelte aufdeckt oder eine Kugel außerhalb des Rads, verliert die Partie.",
+      "title": "Zeit verpasst",
+      "void": "Die Einsätze des Durchgangs gehen dann an ihre Besitzer zurück, und der andere Spieler gewinnt die Partie, unabhängig von den Chips."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "An die Bank: Alle gesetzten Chips sind verloren",
+        "onBall": "Kein Spieler"
+      },
+      "both": {
+        "losing": "Geteilt im Verhältnis ihrer Chips auf der Kugel, jeder Anteil abgerundet, der übrige Chip an den Pointeur",
+        "onBall": "Beide Spieler"
+      },
+      "caption": "Wohin die Chips der anderen Fächer gehen, je nachdem, wer auf das Fach der Kugel gesetzt hat",
+      "croupier": {
+        "losing": "An den Croupier",
+        "onBall": "Nur der Croupier"
+      },
+      "example": "Zum Beispiel setzt der Croupier 15 Chips auf Fach 2 und 50 auf Fach 3, der Pointeur 35 auf Fach 2 und 30 auf Fach 4. Die Kugel liegt in Fach 2: Beide Spieler bekommen ihre Chips darauf zurück und teilen die 80 Chips der anderen Fächer im Verhältnis 15 zu 35. Der Croupier erhält 24 Chips und verliert 50, −26; der Pointeur erhält 56 und verliert 30, +26.",
+      "leftover": "Die abgerundeten Anteile lassen höchstens einen Chip übrig: Mit 10 Chips des Croupiers und 20 des Pointeurs auf der Kugel ergeben die 5 zu teilenden Chips 1 für den Croupier, 3 für den Pointeur und den übrigen Chip, also 4.",
+      "losing": "Die Chips der anderen Fächer",
+      "onBall": "Auf die Kugel gesetzt",
+      "punter": {
+        "losing": "An den Pointeur",
+        "onBall": "Nur der Pointeur"
+      },
+      "text": "Die Chips auf dem Fach der Kugel gehen an ihre Besitzer zurück. Die Chips der anderen Fächer gehen:",
+      "title": "Die Abrechnung"
+    },
+    "setup": {
+      "match": "Jeder Spieler beginnt mit 500 Chips. Die Partie dauert 10 Durchgänge, die Spieler tauschen in jedem Durchgang die Rollen: Der erste Croupier wird ausgelost, dann ist jeder Spieler 5-mal der Croupier.",
+      "players": "2 Spieler nehmen die Plätze ein, die anderen Teilnehmer schauen zu. Einer der Spieler startet die Partie und wählt die Zeit der Einsätze, von 30 Sekunden bis 5 Minuten: Die Plätze bleiben bis zum Ende besetzt.",
+      "title": "Der Tisch"
+    },
+    "summary": "Regeln des festen Roulettes",
+    "times": {
+      "away": "Auf einen abwesenden Spieler wird einmal 15 Sekunden länger gewartet.",
+      "phases": "Croupier und Pointeur setzen jeweils in der zu Beginn gewählten Zeit, das Aufdecken wartet 15 Sekunden: Jede Phase endet, sobald ihr Spieler gehandelt hat.",
+      "title": "Die Zeiten"
+    },
+    "title": "Regeln"
+  },
+  "table": {
+    "conversation": {
+      "players": "{first} und {second}"
+    }
+  }
+}

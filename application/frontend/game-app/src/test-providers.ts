@@ -110,6 +110,17 @@ import trEdenTranslation from './i18n/eden/tr.json';
 import idEdenTranslation from './i18n/eden/id.json';
 import plEdenTranslation from './i18n/eden/pl.json';
 import itEdenTranslation from './i18n/eden/it.json';
+import enFixedTranslation from './i18n/fixed/en.json';
+import frFixedTranslation from './i18n/fixed/fr.json';
+import esFixedTranslation from './i18n/fixed/es.json';
+import ptBRFixedTranslation from './i18n/fixed/pt-BR.json';
+import ptPTFixedTranslation from './i18n/fixed/pt-PT.json';
+import deFixedTranslation from './i18n/fixed/de.json';
+import ruFixedTranslation from './i18n/fixed/ru.json';
+import trFixedTranslation from './i18n/fixed/tr.json';
+import idFixedTranslation from './i18n/fixed/id.json';
+import plFixedTranslation from './i18n/fixed/pl.json';
+import itFixedTranslation from './i18n/fixed/it.json';
 import enCardsTranslation from './i18n/cards/en.json';
 import frCardsTranslation from './i18n/cards/fr.json';
 import esCardsTranslation from './i18n/cards/es.json';
@@ -223,6 +234,17 @@ const translations: Readonly<Record<TranslationPath, Translation>> = {
     'eden/id': idEdenTranslation,
     'eden/pl': plEdenTranslation,
     'eden/it': itEdenTranslation,
+    'fixed/en': enFixedTranslation,
+    'fixed/fr': frFixedTranslation,
+    'fixed/es': esFixedTranslation,
+    'fixed/pt-BR': ptBRFixedTranslation,
+    'fixed/pt-PT': ptPTFixedTranslation,
+    'fixed/de': deFixedTranslation,
+    'fixed/ru': ruFixedTranslation,
+    'fixed/tr': trFixedTranslation,
+    'fixed/id': idFixedTranslation,
+    'fixed/pl': plFixedTranslation,
+    'fixed/it': itFixedTranslation,
     'cards/en': enCardsTranslation,
     'cards/fr': frCardsTranslation,
     'cards/es': esCardsTranslation,

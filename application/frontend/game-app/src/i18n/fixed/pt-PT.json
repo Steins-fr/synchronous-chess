@@ -1,0 +1,82 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Cada jogador começa com 500 fichas, e os jogadores trocam de papel em cada ronda: cada um é o croupier 5 vezes.",
+      "sealed": "A bola é selada: ninguém, nem mesmo o servidor, vê a sua casa antes de o apostador apostar.",
+      "talk": "Os dois jogadores falam numa conversa só deles, lida pela sala inteira: o croupier pode dizer qualquer coisa sobre a bola, verdadeira ou falsa."
+    },
+    "rooms": "Crie uma sala, ou entre numa, para jogar com outros.",
+    "summary": "Um jogo da manga Liar Game: 2 jogadores enfrentam-se numa roda de 4 casas que nunca gira, em 10 rondas. Em cada ronda, o croupier coloca a bola e aposta primeiro, depois o apostador aposta, lendo as apostas do croupier.",
+    "tagline": "Uma roleta que não gira: o croupier sabe onde está a bola.",
+    "title": "Roleta fixa"
+  },
+  "rules": {
+    "end": {
+      "games": "A partida termina após 10 rondas, ou logo que um jogador fica sem fichas depois de uma ronda: perde.",
+      "title": "O fim da partida",
+      "winner": "Ganha o jogador com mais fichas; com fichas iguais, é empate, incluindo quando os dois jogadores ficam sem fichas ao mesmo tempo. As fichas que a banca levou ficam perdidas para ambos."
+    },
+    "fair": {
+      "draw": "Ninguém escolhe o primeiro croupier: cada jogador dá uma parte aleatória fechada no início, e o croupier é sorteado a partir das duas, igual em cada página.",
+      "order": "Uma aposta fora da sua vez é ignorada por cada página; uma aposta do outro jogador, ou fora das regras, é denunciada.",
+      "sealed": "A bola é selada: a página do croupier envia o seu hash com um sal aleatório, juntamente com as apostas, e revela-a quando o apostador apostou. Ninguém, nem mesmo o servidor, vê a bola antes. Uma página recarregada mantém a sua bola, exceto se o armazenamento estiver bloqueado.",
+      "title": "Jogo limpo"
+    },
+    "game": {
+      "bet": "Depois o apostador aposta, vendo as apostas do croupier: em 2 casas no máximo, pelo menos tantas fichas como o croupier, ou todas as suas fichas se tiver menos.",
+      "place": "O croupier coloca a bola numa das 4 casas, selada, e aposta em público ao mesmo tempo: 1 ficha no mínimo, em 1 a 4 casas, nunca mais fichas do que as que tem.",
+      "reveal": "Depois a página do croupier revela a bola sozinha, e as fichas são liquidadas.",
+      "talk": "Qualquer um pode dizer qualquer coisa sobre a bola, verdadeira ou falsa, na conversa dos jogadores: a sala inteira lê-a, só os jogadores escrevem nela.",
+      "title": "Uma ronda"
+    },
+    "missed": {
+      "bet": "Um apostador que não aposta a tempo perde a partida.",
+      "place": "Um croupier que não coloca a bola nem aposta a tempo perde a partida.",
+      "reveal": "Um croupier cuja página não revela a bola em 15 segundos, revela outra bola que não a selada, ou uma bola fora da roda, perde a partida.",
+      "title": "Fora de tempo",
+      "void": "As apostas da ronda voltam então aos seus donos, e o outro jogador ganha a partida, sejam quais forem as fichas."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Para a banca: todas as fichas apostadas perdem-se",
+        "onBall": "Nenhum jogador"
+      },
+      "both": {
+        "losing": "Divididas na proporção das suas fichas na bola, cada parte arredondada para baixo, a ficha que sobra para o apostador",
+        "onBall": "Os dois jogadores"
+      },
+      "caption": "Para onde vão as fichas das outras casas, consoante quem apostou na casa da bola",
+      "croupier": {
+        "losing": "Para o croupier",
+        "onBall": "Só o croupier"
+      },
+      "example": "Por exemplo, o croupier aposta 15 fichas na casa 2 e 50 na casa 3, o apostador 35 na casa 2 e 30 na casa 4. A bola está na casa 2: os dois jogadores recuperam as suas fichas nela e dividem as 80 fichas das outras casas, 15 para 35. O croupier recebe 24 fichas e perde 50, −26; o apostador recebe 56 e perde 30, +26.",
+      "leftover": "As partes arredondadas deixam uma ficha no máximo: com 10 fichas do croupier e 20 do apostador na bola, as 5 fichas a dividir dão 1 ao croupier, 3 ao apostador e a ficha que sobra, ou seja, 4.",
+      "losing": "As fichas das outras casas",
+      "onBall": "Apostou na bola",
+      "punter": {
+        "losing": "Para o apostador",
+        "onBall": "Só o apostador"
+      },
+      "text": "As fichas apostadas na casa da bola voltam aos seus donos. As fichas das outras casas vão:",
+      "title": "A liquidação"
+    },
+    "setup": {
+      "match": "Cada jogador começa com 500 fichas. A partida dura 10 rondas, e os jogadores trocam de papel em cada ronda: o primeiro croupier é sorteado, depois cada jogador é o croupier 5 vezes.",
+      "players": "2 jogadores ocupam os lugares, os restantes participantes assistem. Um dos jogadores inicia a partida e escolhe o tempo das apostas, de 30 segundos a 5 minutos: os lugares ficam ocupados até ao fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras da roleta fixa",
+    "times": {
+      "away": "Um jogador ausente é aguardado mais 15 segundos, uma vez.",
+      "phases": "O croupier e o apostador apostam cada um no tempo escolhido no início, a revelação aguarda 15 segundos: cada fase fecha-se logo que o seu jogador agiu.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  },
+  "table": {
+    "conversation": {
+      "players": "{first} e {second}"
+    }
+  }
+}

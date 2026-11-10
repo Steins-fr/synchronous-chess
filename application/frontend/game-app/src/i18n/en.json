@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Chess",
       "contraband": "Contraband",
+      "fixedRoulette": "Fixed roulette",
       "gardenOfEden": "Eden",
       "home": "Home",
       "minorityGame": "Minority",
@@ -62,6 +63,11 @@
       "action": "Play",
       "description": "2 to 8 players in two countries smuggle money past each other's customs, their trunks sealed: let it pass, or doubt.",
       "title": "Contraband"
+    },
+    "fixedRoulette": {
+      "action": "Play",
+      "description": "2 players bet on a wheel of 4 pockets that never spins: the croupier places the ball, sealed, and bets first; the punter reads its bets.",
+      "title": "Fixed roulette"
     },
     "gardenOfEden": {
       "action": "Play",

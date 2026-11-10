@@ -1,4 +1,5 @@
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
+import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
 import { commitmentOf } from '@app/modules/commit-reveal/classes/commitment';
 import { FairDraw } from '@app/modules/commit-reveal/classes/fair-draw';
 import { SealedStore } from '@app/modules/commit-reveal/classes/sealed-store';
@@ -754,6 +755,62 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
 
             // Then
             await eventually(() => expect([again.played().index, again.myBall()]).toEqual([1, 4]));
+        });
+    });
+
+    describe('the conversation of the players', () => {
+        /** The conversation of the players of a match, as every page declares it */
+        const conversation = (id: string, open: boolean): Readonly<PrivateConversation> => ({
+            id, members: PLAYERS, title: { key: 'fixed.table.conversation.players', params: { first: 'alice', second: 'bob' } }, open, watched: true,
+        });
+
+        test('should declare the conversation of the players from the start of the match, closed once it is over, kept until the next match starts', async () => {
+            // Given
+            await seated();
+            expect(of('eve').conversations()).toEqual([]);
+
+            // When
+            await started();
+
+            // Then
+            sessions.forEach((session: FixedRouletteSession) => expect(session.conversations()).toEqual([conversation('fr-0-0', true)]));
+
+            // When
+            await playedThrough();
+
+            // Then
+            expect(of('eve').conversations()).toEqual([conversation('fr-0-0', false)]);
+
+            // When the players play again: the spectators keep reading the conversation of the match over
+            ['eve', 'bob', 'alice'].forEach((name: string) => of(name).rematch());
+            await settled((session: FixedRouletteSession) => session.pastGames().length === 1);
+
+            // Then
+            expect(of('eve').conversations()).toEqual([conversation('fr-0-0', false)]);
+
+            // When
+            of('bob').start(SETUP);
+            await settled((session: FixedRouletteSession) => session.started());
+
+            // Then
+            sessions.forEach((session: FixedRouletteSession) => expect(session.conversations()).toEqual([conversation('fr-1-0', true)]));
+        });
+
+        test('should declare no conversation once the draw of the first match times out', async () => {
+            // Given
+            hub.time = 0;
+            await seated();
+            hub.hold('bob');
+            of('alice').start(SETUP);
+            await settled((session: FixedRouletteSession) => session.awaited().length === 1);
+            expect(of('eve').conversations()).toEqual([conversation('fr-0-0', true)]);
+
+            // When
+            claim('alice', LIGHT.drawTime * 1000);
+
+            // Then
+            await settled((session: FixedRouletteSession) => !session.started());
+            expect(of('eve').conversations()).toEqual([]);
         });
     });
 

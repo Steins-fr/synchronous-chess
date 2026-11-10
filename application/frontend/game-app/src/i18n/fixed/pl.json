@@ -1,0 +1,82 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Każdy gracz zaczyna z 500 żetonami, a gracze zamieniają się rolami w każdej rundzie: każdy jest krupierem 5 razy.",
+      "sealed": "Kulka jest zapieczętowana: nikt, nawet serwer, nie widzi jej przegródki, zanim obstawiający postawi.",
+      "talk": "Obaj gracze rozmawiają we własnej rozmowie, którą czyta cały pokój: krupier może mówić o kulce cokolwiek, prawdę lub kłamstwo."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z mangi Liar Game: 2 graczy mierzy się przez 10 rund przy kole z 4 przegródkami, które nigdy się nie kręci. W każdej rundzie krupier kładzie kulkę i stawia pierwszy, potem stawia obstawiający, czytając stawki krupiera.",
+    "tagline": "Ruletka, która się nie kręci: krupier wie, gdzie leży kulka.",
+    "title": "Nieruchoma ruletka"
+  },
+  "rules": {
+    "end": {
+      "games": "Partia kończy się po 10 rundach albo od razu, gdy gracz po rundzie nie ma już żetonów: przegrywa.",
+      "title": "Koniec partii",
+      "winner": "Wygrywa gracz z największą liczbą żetonów; przy równej liczbie żetonów jest remis, także gdy obu graczom żetony skończą się naraz. Żetony zabrane przez bank przepadają dla obu."
+    },
+    "fair": {
+      "draw": "Nikt nie wybiera pierwszego krupiera: każdy gracz daje na początku zapieczętowaną losową część, a krupier jest losowany z obu części, tak samo na każdej stronie.",
+      "order": "Stawkę poza kolejnością każda strona pomija; stawka drugiego gracza albo niezgodna z zasadami jest zgłaszana.",
+      "sealed": "Kulka jest zapieczętowana: strona krupiera wysyła jej hash z losową solą razem ze stawkami i odkrywa ją, gdy obstawiający postawi. Nikt, nawet serwer, nie widzi kulki wcześniej. Przeładowana strona zachowuje swoją kulkę, chyba że jej pamięć jest zablokowana.",
+      "title": "Uczciwa gra"
+    },
+    "game": {
+      "bet": "Potem stawia obstawiający, widząc stawki krupiera: na najwyżej 2 przegródki, co najmniej tyle żetonów co krupier albo wszystkie swoje żetony, jeśli ma ich mniej.",
+      "place": "Krupier kładzie kulkę w jednej z 4 przegródek, zapieczętowaną, i jednocześnie jawnie stawia: co najmniej 1 żeton, na 1 do 4 przegródek, nigdy więcej żetonów, niż ma.",
+      "reveal": "Potem strona krupiera sama odkrywa kulkę, a żetony są rozliczane.",
+      "talk": "Każdy może mówić o kulce cokolwiek, prawdę lub kłamstwo, w rozmowie graczy: czyta ją cały pokój, piszą w niej tylko gracze.",
+      "title": "Runda"
+    },
+    "missed": {
+      "bet": "Obstawiający, który nie postawi na czas, przegrywa partię.",
+      "place": "Krupier, który nie położy kulki i nie postawi na czas, przegrywa partię.",
+      "reveal": "Krupier, którego strona nie odkryje kulki w ciągu 15 sekund, odkryje inną kulkę niż zapieczętowana albo kulkę spoza koła, przegrywa partię.",
+      "title": "Po czasie",
+      "void": "Stawki rundy wracają wtedy do właścicieli, a drugi gracz wygrywa partię, niezależnie od żetonów."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Do banku: wszystkie postawione żetony przepadają",
+        "onBall": "Żaden gracz"
+      },
+      "both": {
+        "losing": "Dzielone w proporcji ich żetonów na kulce, każda część zaokrąglona w dół, pozostały żeton dla obstawiającego",
+        "onBall": "Obaj gracze"
+      },
+      "caption": "Dokąd trafiają żetony z pozostałych przegródek, zależnie od tego, kto postawił na przegródkę kulki",
+      "croupier": {
+        "losing": "Do krupiera",
+        "onBall": "Tylko krupier"
+      },
+      "example": "Na przykład krupier stawia 15 żetonów na przegródkę 2 i 50 na przegródkę 3, obstawiający 35 na przegródkę 2 i 30 na przegródkę 4. Kulka leży w przegródce 2: obaj gracze odbierają z niej swoje żetony i dzielą 80 żetonów z pozostałych przegródek w stosunku 15 do 35. Krupier dostaje 24 żetony i traci 50, −26; obstawiający dostaje 56 i traci 30, +26.",
+      "leftover": "Zaokrąglone części zostawiają najwyżej jeden żeton: przy 10 żetonach krupiera i 20 obstawiającego na kulce 5 żetonów do podziału daje krupierowi 1, obstawiającemu 3 i pozostały żeton, czyli 4.",
+      "losing": "Żetony z pozostałych przegródek",
+      "onBall": "Postawił na kulkę",
+      "punter": {
+        "losing": "Do obstawiającego",
+        "onBall": "Tylko obstawiający"
+      },
+      "text": "Żetony postawione na przegródkę kulki wracają do właścicieli. Żetony z pozostałych przegródek trafiają:",
+      "title": "Rozliczenie"
+    },
+    "setup": {
+      "match": "Każdy gracz zaczyna z 500 żetonami. Partia trwa 10 rund, a gracze zamieniają się rolami w każdej rundzie: pierwszy krupier jest losowany, potem każdy gracz jest krupierem 5 razy.",
+      "players": "2 graczy zajmuje miejsca, pozostali uczestnicy oglądają. Jeden z graczy rozpoczyna partię i wybiera czas na stawki, od 30 sekund do 5 minut: miejsca pozostają zajęte do jej końca.",
+      "title": "Stół"
+    },
+    "summary": "Zasady nieruchomej ruletki",
+    "times": {
+      "away": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz.",
+      "phases": "Krupier i obstawiający stawiają każdy w czasie wybranym na początku, odkrycie czeka 15 sekund: każda faza zamyka się, gdy tylko jej gracz wykona ruch.",
+      "title": "Czasy"
+    },
+    "title": "Zasady"
+  },
+  "table": {
+    "conversation": {
+      "players": "{first} i {second}"
+    }
+  }
+}

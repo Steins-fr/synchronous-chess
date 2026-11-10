@@ -9,6 +9,7 @@
       "chat": "Sohbet",
       "chess": "Satranç",
       "contraband": "Kaçakçılık",
+      "fixedRoulette": "Sabit rulet",
       "gardenOfEden": "Aden",
       "home": "Ana sayfa",
       "minorityGame": "Azınlık",
@@ -62,6 +63,11 @@
       "action": "Oyna",
       "description": "İki ülkeden 2 ila 8 oyuncu, mühürlü bavullarla birbirlerinin gümrüğünden para kaçırır: geçirmek ya da şüphelenmek.",
       "title": "Kaçakçılık"
+    },
+    "fixedRoulette": {
+      "action": "Oyna",
+      "description": "2 oyuncu hiç dönmeyen 4 bölmeli bir çarka bahis yapar: krupiye topu mühürlü yerleştirir ve önce oynar; bahisçi onun bahislerini okur.",
+      "title": "Sabit rulet"
     },
     "gardenOfEden": {
       "action": "Oyna",

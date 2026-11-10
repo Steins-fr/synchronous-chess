@@ -13,6 +13,8 @@ export enum TranslationScope {
     CONTRABAND = 'contraband',
     /** The Garden of Eden */
     EDEN = 'eden',
+    /** The Fixed Roulette */
+    FIXED = 'fixed',
     /** The names of the playing cards, shared by the card games */
     CARDS = 'cards',
 }

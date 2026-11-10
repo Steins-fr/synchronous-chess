@@ -9,6 +9,7 @@
       "chat": "Obrolan",
       "chess": "Catur",
       "contraband": "Penyelundupan",
+      "fixedRoulette": "Rulet tetap",
       "gardenOfEden": "Eden",
       "home": "Beranda",
       "minorityGame": "Minoritas",
@@ -62,6 +63,11 @@
       "action": "Main",
       "description": "2 sampai 8 pemain dari dua negara menyelundupkan uang melewati pabean lawan, dengan koper tersegel: loloskan, atau ragukan.",
       "title": "Penyelundupan"
+    },
+    "fixedRoulette": {
+      "action": "Main",
+      "description": "2 pemain bertaruh di roda 4 kantong yang tidak pernah berputar: bandar menaruh bola, tersegel, dan bertaruh lebih dulu; petaruh membaca taruhannya.",
+      "title": "Rulet tetap"
     },
     "gardenOfEden": {
       "action": "Main",

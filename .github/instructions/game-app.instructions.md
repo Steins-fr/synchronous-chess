@@ -119,7 +119,7 @@ This is an Angular TypeScript project with the following characteristics:
 - The texts of a game are a Transloco scope, in files of their own (`src/i18n/<scope>/<code>.json`),
   loaded by the pages showing the game only: `chess` (the game, its presentation and its rules),
   `poker` (the Seventeen Poker), `roulette` (the 24-shot Russian roulette), `bid` (the Bid Poker), `minority` (the Minority
-  Game), `contraband` (the Contraband), `eden` (the Garden of Eden), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
+  Game), `contraband` (the Contraband), `eden` (the Garden of Eden), `fixed` (the Fixed Roulette), `cards` (the names of the cards and of the kinds of hands, shared by the card games) and `chat`. The rest is global, `home` included: it presents every game
 - The route of a page provides the scopes of the games it holds (`provideTranslocoScope('chess',
   'chat')`: the chess page holds the chat), written as literals: the keys manager finds the scopes that
   way. Its `translationScopesGuard` loads them before the page shows, as the app loads its global
@@ -320,7 +320,7 @@ Claude writes the translations of every new or changed key, into every language:
 | account (in the third country) | compte | cuenta | conta | conta | Konto | счёт | hesap | rekening | konto | conto |
 | third country | pays tiers | tercer país | terceiro país | país terceiro | Drittland | третья страна | üçüncü ülke | negara ketiga | kraj trzeci | paese terzo |
 | Northern / Southern country | pays du Nord / du Sud | país del Norte / del Sur | país do Norte / do Sul | país do Norte / do Sul | Nordland / Südland | Северная / Южная страна | Kuzey / Güney ülkesi | negara Utara / Selatan | kraj Północy / Południa | paese del Nord / del Sud |
-| game (of Contraband, one smuggler at the customs) | manche | ronda | rodada | ronda | Durchgang | раунд | raunt | ronde | runda | manche |
+| game (of Contraband or the Fixed Roulette, one round of the match) | manche | ronda | rodada | ronda | Durchgang | раунд | raunt | ronde | runda | manche |
 | Classic / Gold Rush (the variants) | classique / Ruée vers l'or | clásica / Fiebre del oro | clássica / Corrida do ouro | clássica / Corrida ao ouro | klassisch / Goldrausch | классический / «Золотая лихорадка» | klasik / Altına hücum | klasik / Demam emas | klasyczny / Gorączka złota | classica / Corsa all'oro |
 | pass (the call) | laisser passer | dejar pasar | deixar passar | deixar passar | durchlassen | пропустить | geçirmek | loloskan | przepuścić | lasciar passare |
 | doubt (the call) | douter | dudar / duda | duvidar | duvidar | zweifeln / Zweifel | сомнение | şüphe / şüphelenmek | ragukan | wątpić / wątpienie | dubitare / dubbio |
@@ -338,6 +338,12 @@ Claude writes the translations of every new or changed key, into every language:
 | loss of paradise | perte du paradis | pérdida del paraíso | perda do paraíso | perda do paraíso | Verlust des Paradieses | потеря рая | cennetin kaybı | kehilangan surga | utrata raju | perdita del paradiso |
 | out (after the loss of paradise) | exclu | expulsado | expulso | expulso | verbannt | изгнан | kovuldu | terusir | wygnany | espulso |
 | starting money | fonds de départ | dinero inicial | dinheiro inicial | dinheiro inicial | Startgeld | стартовый капитал | başlangıç parası | modal awal | kapitał początkowy | capitale iniziale |
+| Fixed Roulette | roulette fixe | ruleta fija | roleta fixa | roleta fixa | festes Roulette | неподвижная рулетка | sabit rulet | rulet tetap | nieruchoma ruletka | roulette fissa |
+| croupier (of the Fixed Roulette) | croupier | crupier | crupiê | croupier | Croupier | крупье | krupiye | bandar | krupier | croupier |
+| punter | parieur | apostador | apostador | apostador | Pointeur | понтёр | bahisçi | petaruh | obstawiający | puntatore |
+| pocket (of the wheel) | case | casilla | casa | casa | Fach | ячейка | bölme | kantong | przegródka | casella |
+| ball | bille | bola | bola | bola | Kugel | шарик | top | bola | kulka | pallina |
+| wheel | roue | rueda | roda | roda | Rad | колесо | çark | roda | koło | ruota |
 
 ## APIs
 

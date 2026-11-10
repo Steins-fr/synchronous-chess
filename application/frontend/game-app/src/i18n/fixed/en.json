@@ -1,0 +1,82 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Each player starts with 500 chips, and the players swap their roles each game: each one is the croupier 5 times.",
+      "sealed": "The ball is sealed: no one, not even the server, sees the pocket of the ball before the punter bet.",
+      "talk": "The two players talk in a conversation of their own, read by the whole room: the croupier may say anything about the ball, true or false."
+    },
+    "rooms": "Create a room, or join one, to play with others.",
+    "summary": "A game of the manga Liar Game: 2 players face each other on a wheel of 4 pockets that never spins, over 10 games. In each game, the croupier places the ball and bets first, then the punter bets, reading the bets of the croupier.",
+    "tagline": "A roulette that does not spin: the croupier knows where the ball lies.",
+    "title": "Fixed roulette"
+  },
+  "rules": {
+    "end": {
+      "games": "The match is over after 10 games, or at once when a player has no chip left after a game: it loses.",
+      "title": "The end of the match",
+      "winner": "The player with the most chips wins; equal chips make a draw, two players out of chips at once included. The chips the bank took are lost to both."
+    },
+    "fair": {
+      "draw": "No one picks the first croupier: each player gives a sealed random part at the start, and the croupier is drawn from both, the same on every page.",
+      "order": "A bet out of its turn is ignored by every page; a bet of the other player, or beyond the rules, is reported.",
+      "sealed": "The ball is sealed: the page of the croupier sends its hash with a random salt, along with its bets, then reveals it once the punter bet. No one, not even the server, sees the ball before. A page reloaded keeps its ball, unless its storage is blocked.",
+      "title": "Fair play"
+    },
+    "game": {
+      "bet": "Then the punter bets, seeing the bets of the croupier: on 2 pockets at most, as many chips as the croupier at least, or every chip it holds when it holds fewer.",
+      "place": "The croupier places the ball in one of the 4 pockets, sealed, and bets in public at the same time: 1 chip at least, on 1 to 4 pockets, never more chips than it holds.",
+      "reveal": "Then the page of the croupier reveals the ball by itself, and the chips are settled.",
+      "talk": "Anyone may say anything about the ball, true or false, in the conversation of the players: the whole room reads it, only the players write in it.",
+      "title": "A game"
+    },
+    "missed": {
+      "bet": "A punter who does not bet in time loses the match.",
+      "place": "A croupier who does not place the ball and bet in time loses the match.",
+      "reveal": "A croupier whose page does not reveal the ball within 15 seconds, reveals another ball than the one sealed, or a ball off the wheel, loses the match.",
+      "title": "Out of time",
+      "void": "The bets of the game then go back to their owners, and the other player wins the match, whatever the chips."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "To the bank: every chip bet is lost",
+        "onBall": "Neither player"
+      },
+      "both": {
+        "losing": "Shared in the ratio of their chips on the ball, each share rounded down, the chip left over to the punter",
+        "onBall": "Both players"
+      },
+      "caption": "Where the chips of the other pockets go, depending on who bet on the pocket of the ball",
+      "croupier": {
+        "losing": "To the croupier",
+        "onBall": "The croupier only"
+      },
+      "example": "For example, the croupier bets 15 chips on pocket 2 and 50 on pocket 3, the punter 35 on pocket 2 and 30 on pocket 4. The ball lies in pocket 2: both players take back their chips on it and share the 80 chips of the other pockets, 15 to 35. The croupier receives 24 chips and loses 50, −26; the punter receives 56 and loses 30, +26.",
+      "leftover": "The shares rounded down leave one chip at most: with 10 chips of the croupier and 20 of the punter on the ball, the 5 chips to share give the croupier 1, the punter 3 and the chip left over, 4.",
+      "losing": "The chips of the other pockets",
+      "onBall": "Bet on the ball",
+      "punter": {
+        "losing": "To the punter",
+        "onBall": "The punter only"
+      },
+      "text": "The chips bet on the pocket of the ball go back to their owners. The chips of the other pockets go:",
+      "title": "The settlement"
+    },
+    "setup": {
+      "match": "Each player starts with 500 chips. The match lasts 10 games, the players swapping their roles each game: the first croupier is drawn, then each player is the croupier 5 times.",
+      "players": "2 players take the seats, the other participants watch. One of the players starts the match and picks the time of the bets, from 30 seconds to 5 minutes: the seats stay taken until it is over.",
+      "title": "The table"
+    },
+    "summary": "Rules of the fixed roulette",
+    "times": {
+      "away": "A player away is waited for 15 seconds more, once.",
+      "phases": "The croupier and the punter each bet within the time picked at the start, the reveal waits 15 seconds: each phase closes as soon as its player acted.",
+      "title": "The times"
+    },
+    "title": "Rules"
+  },
+  "table": {
+    "conversation": {
+      "players": "{first} and {second}"
+    }
+  }
+}

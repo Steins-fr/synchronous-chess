@@ -1,0 +1,11 @@
+<app-room-layout [dimContent]="false" [game]="game" [room]="room()">
+    <app-fixed-presentation roomPresentation />
+    @if (room()) {
+    <details class="rules-details">
+        <summary>{{ 'fixed.rules.summary' | transloco }}</summary>
+        <app-fixed-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-fixed-rules />
+    }
+</app-room-layout>

@@ -9,6 +9,7 @@
       "chat": "Tchat",
       "chess": "Échecs",
       "contraband": "Contrebande",
+      "fixedRoulette": "Roulette fixe",
       "gardenOfEden": "Éden",
       "home": "Accueil",
       "minorityGame": "Minorité",
@@ -62,6 +63,11 @@
       "action": "Jouer",
       "description": "De 2 à 8 joueurs, en deux pays, font passer de l'argent par la douane de l'autre pays, leurs malles scellées : laisser passer, ou douter.",
       "title": "Contrebande"
+    },
+    "fixedRoulette": {
+      "action": "Jouer",
+      "description": "2 joueurs misent sur une roue de 4 cases qui ne tourne jamais : le croupier place la bille, scellée, et mise le premier ; le parieur lit ses mises.",
+      "title": "Roulette fixe"
     },
     "gardenOfEden": {
       "action": "Jouer",

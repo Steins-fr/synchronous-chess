@@ -9,6 +9,7 @@
       "chat": "Bate-papo",
       "chess": "Xadrez",
       "contraband": "Contrabando",
+      "fixedRoulette": "Roleta fixa",
       "gardenOfEden": "Éden",
       "home": "Início",
       "minorityGame": "Minoria",
@@ -62,6 +63,11 @@
       "action": "Jogar",
       "description": "De 2 a 8 jogadores, em dois países, passam dinheiro pela alfândega do outro, com as malas lacradas: deixar passar, ou duvidar.",
       "title": "Contrabando"
+    },
+    "fixedRoulette": {
+      "action": "Jogar",
+      "description": "2 jogadores apostam em uma roda de 4 casas que nunca gira: o crupiê coloca a bola, selada, e aposta primeiro; o apostador lê as apostas dele.",
+      "title": "Roleta fixa"
     },
     "gardenOfEden": {
       "action": "Jogar",

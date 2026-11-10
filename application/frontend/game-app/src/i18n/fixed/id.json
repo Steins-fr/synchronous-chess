@@ -1,0 +1,82 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Setiap pemain mulai dengan 500 chip, dan para pemain bertukar peran di setiap ronde: masing-masing menjadi bandar 5 kali.",
+      "sealed": "Bola disegel: tidak seorang pun, bahkan server, melihat kantongnya sebelum petaruh bertaruh.",
+      "talk": "Kedua pemain berbicara dalam percakapan mereka sendiri, dibaca seluruh ruang: bandar boleh mengatakan apa saja tentang bola, benar atau salah."
+    },
+    "rooms": "Buat ruang, atau bergabunglah ke salah satu ruang, untuk bermain dengan pemain lain.",
+    "summary": "Permainan dari manga Liar Game: 2 pemain berhadapan di roda dengan 4 kantong yang tidak pernah berputar, selama 10 ronde. Di setiap ronde, bandar menaruh bola dan bertaruh lebih dulu, lalu petaruh bertaruh sambil membaca taruhan bandar.",
+    "tagline": "Rulet yang tidak berputar: bandar tahu di mana bolanya.",
+    "title": "Rulet tetap"
+  },
+  "rules": {
+    "end": {
+      "games": "Pertandingan selesai setelah 10 ronde, atau segera ketika seorang pemain tidak punya chip lagi setelah satu ronde: ia kalah.",
+      "title": "Akhir pertandingan",
+      "winner": "Pemain dengan chip terbanyak menang; jika chip sama, hasilnya remis, termasuk ketika kedua pemain kehabisan chip bersamaan. Chip yang diambil bank hilang bagi keduanya."
+    },
+    "fair": {
+      "draw": "Tidak ada yang memilih bandar pertama: setiap pemain memberi bagian acak tersegel di awal, dan bandar diundi dari kedua bagian itu, sama di setiap halaman.",
+      "order": "Taruhan di luar gilirannya diabaikan oleh setiap halaman; taruhan pemain lain, atau di luar aturan, dilaporkan.",
+      "sealed": "Bola disegel: halaman bandar mengirim hash-nya dengan salt acak, bersama taruhannya, lalu membukanya setelah petaruh bertaruh. Tidak seorang pun, bahkan server, melihat bola sebelumnya. Halaman yang dimuat ulang tetap menyimpan bolanya, kecuali penyimpanannya diblokir.",
+      "title": "Permainan adil"
+    },
+    "game": {
+      "bet": "Lalu petaruh bertaruh sambil melihat taruhan bandar: di paling banyak 2 kantong, sedikitnya sebanyak chip bandar, atau semua chipnya jika ia punya lebih sedikit.",
+      "place": "Bandar menaruh bola di salah satu dari 4 kantong, tersegel, dan sekaligus bertaruh secara terbuka: minimal 1 chip, di 1 sampai 4 kantong, tidak pernah lebih dari chip yang dimilikinya.",
+      "reveal": "Lalu halaman bandar membuka bola dengan sendirinya, dan chip diselesaikan.",
+      "talk": "Siapa pun boleh mengatakan apa saja tentang bola, benar atau salah, di percakapan para pemain: seluruh ruang membacanya, hanya para pemain yang menulis di sana.",
+      "title": "Satu ronde"
+    },
+    "missed": {
+      "bet": "Petaruh yang tidak bertaruh tepat waktu kalah dalam pertandingan.",
+      "place": "Bandar yang tidak menaruh bola dan bertaruh tepat waktu kalah dalam pertandingan.",
+      "reveal": "Bandar yang halamannya tidak membuka bola dalam 15 detik, membuka bola yang berbeda dari yang disegel, atau bola di luar roda, kalah dalam pertandingan.",
+      "title": "Kehabisan waktu",
+      "void": "Taruhan ronde itu lalu kembali ke pemiliknya, dan pemain lain memenangkan pertandingan, berapa pun chipnya."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Bank: semua chip yang dipasang hilang",
+        "onBall": "Tidak ada pemain"
+      },
+      "both": {
+        "losing": "Dibagi sesuai perbandingan chip mereka di bola, tiap bagian dibulatkan ke bawah, sisa chip untuk petaruh",
+        "onBall": "Kedua pemain"
+      },
+      "caption": "Ke mana chip di kantong lain pergi, tergantung siapa yang bertaruh di kantong bola",
+      "croupier": {
+        "losing": "Bandar",
+        "onBall": "Hanya bandar"
+      },
+      "example": "Misalnya, bandar memasang 15 chip di kantong 2 dan 50 di kantong 3, petaruh 35 di kantong 2 dan 30 di kantong 4. Bola ada di kantong 2: kedua pemain mengambil kembali chip mereka di sana dan membagi 80 chip di kantong lain, 15 banding 35. Bandar menerima 24 chip dan kehilangan 50, −26; petaruh menerima 56 dan kehilangan 30, +26.",
+      "leftover": "Bagian yang dibulatkan menyisakan paling banyak satu chip: dengan 10 chip bandar dan 20 chip petaruh di bola, 5 chip yang dibagi memberi bandar 1, petaruh 3 ditambah sisa chip, jadi 4.",
+      "losing": "Chip di kantong lain",
+      "onBall": "Bertaruh di bola",
+      "punter": {
+        "losing": "Petaruh",
+        "onBall": "Hanya petaruh"
+      },
+      "text": "Chip yang dipasang di kantong bola kembali ke pemiliknya. Chip di kantong lain menjadi milik:",
+      "title": "Penyelesaian"
+    },
+    "setup": {
+      "match": "Setiap pemain mulai dengan 500 chip. Pertandingan berlangsung 10 ronde, dan para pemain bertukar peran di setiap ronde: bandar pertama diundi, lalu setiap pemain menjadi bandar 5 kali.",
+      "players": "2 pemain menempati kursi, peserta lain menonton. Salah satu pemain memulai pertandingan dan memilih waktu taruhan, dari 30 detik hingga 5 menit: kursi tetap terisi sampai pertandingan selesai.",
+      "title": "Meja"
+    },
+    "summary": "Aturan rulet tetap",
+    "times": {
+      "away": "Pemain yang sedang pergi ditunggu 15 detik lagi, satu kali.",
+      "phases": "Bandar dan petaruh masing-masing bertaruh dalam waktu yang dipilih di awal, pembukaan menunggu 15 detik: setiap fase ditutup begitu pemainnya bertindak.",
+      "title": "Waktu"
+    },
+    "title": "Aturan"
+  },
+  "table": {
+    "conversation": {
+      "players": "{first} dan {second}"
+    }
+  }
+}

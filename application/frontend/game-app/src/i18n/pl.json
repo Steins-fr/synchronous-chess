@@ -9,6 +9,7 @@
       "chat": "Czat",
       "chess": "Szachy",
       "contraband": "Przemyt",
+      "fixedRoulette": "Nieruchoma ruletka",
       "gardenOfEden": "Eden",
       "home": "Start",
       "minorityGame": "Mniejszość",
@@ -62,6 +63,11 @@
       "action": "Graj",
       "description": "Od 2 do 8 graczy z dwóch krajów przemyca pieniądze przez kontrolę celną przeciwnika w zapieczętowanych walizkach: przepuścić czy wątpić?",
       "title": "Przemyt"
+    },
+    "fixedRoulette": {
+      "action": "Graj",
+      "description": "2 graczy stawia przy kole z 4 przegródkami, które nigdy się nie kręci: krupier kładzie kulkę, zapieczętowaną, i stawia pierwszy; obstawiający czyta jego stawki.",
+      "title": "Nieruchoma ruletka"
     },
     "gardenOfEden": {
       "action": "Graj",

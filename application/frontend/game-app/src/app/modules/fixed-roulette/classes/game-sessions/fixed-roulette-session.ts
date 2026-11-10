@@ -5,9 +5,13 @@ import { CommitRevealSession } from '@app/modules/commit-reveal/classes/commit-r
 import { CommitmentPart, drawSalt, isCommitment } from '@app/modules/commit-reveal/classes/commitment';
 import { PlayedCommitRevealGame } from '@app/modules/commit-reveal/classes/played-commit-reveal-game';
 import { SeatedPlayer } from '@app/modules/game-table/classes/table-seats';
+import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
+import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
+import { scopedKey } from '@app/services/language/scoped-key';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
+import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { drawCroupier } from '../rules/croupier';
 import { FixedRouletteGameState, FixedRoulettePhase } from '../rules/fixed-roulette-game-state';
 import {
@@ -17,6 +21,9 @@ import {
     FIXED_ROULETTE_TYPES, FixedRouletteBetMessage, FixedRouletteCommitMessage, FixedRouletteDrawMessage, FixedRouletteMessage, FixedRoulettePayloads,
     FixedRouletteRevealMessage, FRGameSessionType, RoundKey,
 } from './fixed-roulette-messages';
+
+/** The key of the title of the conversation of the players, in the scope of the game */
+const PLAYERS_TITLE: string = scopedKey(TranslationScope.FIXED, marker('table.conversation.players', undefined, 'fixed'));
 
 /** A match of the Fixed Roulette in the room */
 export type PlayedFixedRouletteGame = PlayedCommitRevealGame<FixedRouletteGameState, FixedRouletteSetup>;
@@ -101,6 +108,28 @@ export class FixedRouletteSession extends CommitRevealSession<
             return null;
         }
         return this._seals().get(game.round())?.pocket ?? null;
+    });
+
+    /**
+     * The conversation of the players of the match, the same on every page: written by both players, read by every
+     * participant, open until the match is over. While the next match has no players yet, the one of the last match,
+     * closed: the spectators keep reading it
+     */
+    public readonly conversations: Signal<ReadonlyArray<Readonly<PrivateConversation>>> = computed((): ReadonlyArray<Readonly<PrivateConversation>> => {
+        const played: PlayedFixedRouletteGame = this.played();
+        const match: Readonly<PlayedFixedRouletteGame> | undefined = played.players().length > 0 ? played : this.pastGames().at(-1);
+
+        if (match === undefined) {
+            return [];
+        }
+        const [first, second] = match.players();
+        return [{
+            id: `fr-${ match.index }-${ match.attempt }`,
+            members: match.players(),
+            title: { key: PLAYERS_TITLE, params: { first, second } },
+            open: match === played && !this.over(),
+            watched: true,
+        }];
     });
 
     public constructor(room: Room<FixedRoulettePayloads>, options: FixedRouletteSessionOptions = {}) {
