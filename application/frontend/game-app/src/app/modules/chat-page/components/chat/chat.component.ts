@@ -94,7 +94,8 @@ export interface ChatPayloads {
     [ChatMessengerType.MODERATION]: ChatDecision;
 }
 
-// The chat has its own block chain, so its activity never delays the messages of another chain sharing the room
+// The chat has its own block chain, so its activity never delays the messages of another chain sharing the room. The
+// watched conversations travel on it too, in the order of its moderation
 export const chatBlockChains: BlockChainRouting<ChatPayloads> = {
     [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT,
     // On the chain of the messages, ordered among them: every page hides the same ones
