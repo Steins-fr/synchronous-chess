@@ -24,7 +24,7 @@ describe('settle', () => {
 
         // Then
         expect(settlement).toEqual({
-            kind: SettlementCase.SPLIT, back: { [CROUPIER]: 15, [PUNTER]: 35 }, won: { [CROUPIER]: 24, [PUNTER]: 56 }, bank: 0, leftover: 0,
+            kind: SettlementCase.SPLIT, back: { [CROUPIER]: 15, [PUNTER]: 35 }, won: { [CROUPIER]: 24, [PUNTER]: 56 }, bank: 0,
         });
         expect([payoutOf(settlement, CROUPIER), payoutOf(settlement, PUNTER)]).toEqual([39, 91]);
         expect(nets(settlement, ISSUE)).toEqual([-26, 26]);
@@ -41,7 +41,7 @@ describe('settle', () => {
         // Then
         expect(settlement.kind).toEqual(kind);
         expect(nets(settlement, ISSUE)).toEqual(net);
-        expect([settlement.bank, settlement.leftover]).toEqual([bank, 0]);
+        expect(settlement.bank).toEqual(bank);
     });
 
     test('should give one side alone on the ball its chips on it and every chip of the other pockets', () => {
@@ -61,7 +61,7 @@ describe('settle', () => {
 
         // Then
         expect(settlement).toEqual({
-            kind: SettlementCase.SPLIT, back: { [CROUPIER]: 10, [PUNTER]: 20 }, won: { [CROUPIER]: 1, [PUNTER]: 4 }, bank: 0, leftover: 1,
+            kind: SettlementCase.SPLIT, back: { [CROUPIER]: 10, [PUNTER]: 20 }, won: { [CROUPIER]: 1, [PUNTER]: 4 }, bank: 0,
         });
         expect(nets(settlement, game)).toEqual([-4, 4]);
     });
@@ -76,7 +76,7 @@ describe('settle', () => {
         // Then
         expect(settlement.kind).toEqual(SettlementCase.SPLIT);
         expect(nets(settlement, game)).toEqual([0, 0]);
-        expect([settlement.bank, settlement.leftover]).toEqual([0, 0]);
+        expect(settlement.bank).toEqual(0);
     });
 
     test('should give the bank every chip of both sides all in off the ball', () => {
@@ -93,7 +93,7 @@ describe('settle', () => {
         expect(nets(settlement, game)).toEqual([-500, -500]);
     });
 
-    test('should keep every chip bet, in amounts of 0 or more, the leftover chip in a split only, for every bets and ball', () => {
+    test('should keep every chip bet, in amounts of 0 or more, the leftover chip of a split to the punter, for every bets and ball', () => {
         // Given every bets of 0, 1, 2 or 7 chips on each pocket, of each side
         const amounts: ReadonlyArray<number> = [0, 1, 2, 7];
         const pockets: number = FIXED_ROULETTE_RULES.pockets;
@@ -105,11 +105,11 @@ describe('settle', () => {
             const game: GameBets = bets(chips.slice(0, pockets), chips.slice(pockets));
             for (let ball = 1; ball <= pockets; ball++) {
                 const settlement: Settlement = settle(game, ball);
-                const { back, won, bank, leftover, kind } = settlement;
+                const { back, won, bank, kind } = settlement;
                 const croupier: number = game[CROUPIER][ball - 1];
                 const punter: number = game[PUNTER][ball - 1];
                 const lost: number = totalOf(game[CROUPIER]) + totalOf(game[PUNTER]) - croupier - punter;
-                const amountsOf: ReadonlyArray<number> = [back[CROUPIER], back[PUNTER], won[CROUPIER], won[PUNTER], bank, leftover];
+                const amountsOf: ReadonlyArray<number> = [back[CROUPIER], back[PUNTER], won[CROUPIER], won[PUNTER], bank];
 
                 if (payoutOf(settlement, CROUPIER) + payoutOf(settlement, PUNTER) + bank !== totalOf(game[CROUPIER]) + totalOf(game[PUNTER])) {
                     violations.push(`chips not kept: ${ chips.join(',') } ball ${ ball }`);
@@ -117,11 +117,14 @@ describe('settle', () => {
                 if (amountsOf.some((amount: number) => !Number.isInteger(amount) || amount < 0)) {
                     violations.push(`amount not a whole number of chips: ${ chips.join(',') } ball ${ ball }`);
                 }
-                if (kind !== caseOf(croupier, punter) || (kind !== SettlementCase.SPLIT && leftover !== 0) || leftover > 1) {
-                    violations.push(`wrong case or leftover: ${ chips.join(',') } ball ${ ball }`);
+                if (kind !== caseOf(croupier, punter)) {
+                    violations.push(`wrong case: ${ chips.join(',') } ball ${ ball }`);
                 }
+                // In a split, the punter's floored share and the chip left over, if any
+                const leftover: number = kind === SettlementCase.SPLIT ? won[PUNTER] - Math.floor(lost * punter / (croupier + punter)) : 0;
                 if ([back[CROUPIER], back[PUNTER]].join() !== [croupier, punter].join()
-                    || (kind === SettlementCase.SPLIT && won[CROUPIER] !== Math.floor(lost * croupier / (croupier + punter)))) {
+                    || (kind === SettlementCase.SPLIT && won[CROUPIER] !== Math.floor(lost * croupier / (croupier + punter)))
+                    || leftover < 0 || leftover > 1) {
                     violations.push(`wrong share: ${ chips.join(',') } ball ${ ball }`);
                 }
             }

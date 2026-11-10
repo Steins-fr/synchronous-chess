@@ -1,3 +1,4 @@
+import { otherSeat } from '@app/helpers/seat-pair.helper';
 import { signed, SignedAmount } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
@@ -42,7 +43,7 @@ export function settledText(event: Readonly<SettledEvent>, names: ReadonlyArray<
             croupier: names[event.croupier],
             croupierSign: croupier.sign,
             croupierNet: croupier.amount,
-            punter: names[1 - event.croupier],
+            punter: names[otherSeat(event.croupier)],
             punterSign: punter.sign,
             punterNet: punter.amount,
         },
@@ -55,11 +56,11 @@ export function resultText(result: Readonly<FixedRouletteResult>, names: Readonl
         return { key: key(marker('table.result.draw', undefined, 'fixed')), params: { chips: result.chips[0] } };
     }
     const winner: number = result.winner;
-    const params = { winner: names[winner], loser: names[1 - winner] };
+    const params = { winner: names[winner], loser: names[otherSeat(winner)] };
 
     switch (result.end) {
         case MatchEnd.GAMES:
-            return { key: key(marker('table.result.games', undefined, 'fixed')), params: { ...params, winnerChips: result.chips[winner], loserChips: result.chips[1 - winner] } };
+            return { key: key(marker('table.result.games', undefined, 'fixed')), params: { ...params, winnerChips: result.chips[winner], loserChips: result.chips[otherSeat(winner)] } };
         case MatchEnd.BANKRUPT:
             return { key: key(marker('table.result.bankrupt', undefined, 'fixed')), params };
         case MatchEnd.FORFEIT:

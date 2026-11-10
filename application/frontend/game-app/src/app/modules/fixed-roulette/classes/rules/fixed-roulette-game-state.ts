@@ -1,5 +1,5 @@
 import { computed, Signal, signal } from '@angular/core';
-import { SeatPair } from '@app/helpers/seat-pair.helper';
+import { otherSeat, SeatPair, withSeat } from '@app/helpers/seat-pair.helper';
 import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import { Bets, betError, croupierOf, FixedRouletteRules, FixedRouletteSetup, isPocket, Side, totalOf } from './fixed-roulette-rules';
 import { GameBets, payoutOf, PlacedBets, settle, Settlement } from './settlement';
@@ -103,7 +103,7 @@ export class FixedRouletteGameState {
     public readonly phase: Signal<FixedRoulettePhase> = computed(() => this._state().phase);
     public readonly round: Signal<number> = computed(() => this._state().round);
     public readonly croupier: Signal<number> = computed((): number => croupierOf(this._state().round, this.first));
-    public readonly punter: Signal<number> = computed((): number => 1 - this.croupier());
+    public readonly punter: Signal<number> = computed((): number => otherSeat(this.croupier()));
     /** The bets of the game, each side once it bet */
     public readonly bets: Signal<PlacedBets> = computed(() => this._state().bets);
     /** The chips each player holds off the table */
@@ -153,7 +153,7 @@ export class FixedRouletteGameState {
     /** The punter bets after the croupier, the bets checked by the rules: refused, it still has to bet */
     public bet(player: number, bets: Bets): Applied {
         const state: Readonly<FixedRouletteState> = this._state();
-        const punter: number = 1 - croupierOf(state.round, this.first);
+        const punter: number = otherSeat(croupierOf(state.round, this.first));
 
         if (state.phase !== FixedRoulettePhase.BETTING || !this.isPlayer(player)) {
             return Applied.IGNORED;
@@ -244,7 +244,7 @@ export class FixedRouletteGameState {
             case FixedRoulettePhase.REVEALING:
                 return [croupier];
             case FixedRoulettePhase.BETTING:
-                return [1 - croupier];
+                return [otherSeat(croupier)];
             case FixedRoulettePhase.OVER:
                 return [];
         }
@@ -262,7 +262,7 @@ export class FixedRouletteGameState {
     ): FixedRouletteState {
         const croupier: number = croupierOf(state.round, this.first);
         const chips: SeatPair<number> = withChips(
-            withChips(state.chips, croupier, totalOf(state.bets[Side.CROUPIER] ?? [])), 1 - croupier, totalOf(state.bets[Side.PUNTER] ?? []),
+            withChips(state.chips, croupier, totalOf(state.bets[Side.CROUPIER] ?? [])), otherSeat(croupier), totalOf(state.bets[Side.PUNTER] ?? []),
         );
 
         return {
@@ -272,7 +272,7 @@ export class FixedRouletteGameState {
             chips,
             events: [...state.events, event],
             step: state.step + 1,
-            result: { winner: 1 - player, end, cause, chips },
+            result: { winner: otherSeat(player), end, cause, chips },
         };
     }
 
@@ -282,7 +282,7 @@ export class FixedRouletteGameState {
         const bets: GameBets = state.bets as GameBets;
         const settlement: Settlement = settle(bets, ball);
         const chips: SeatPair<number> = withChips(
-            withChips(state.chips, croupier, payoutOf(settlement, Side.CROUPIER)), 1 - croupier, payoutOf(settlement, Side.PUNTER),
+            withChips(state.chips, croupier, payoutOf(settlement, Side.CROUPIER)), otherSeat(croupier), payoutOf(settlement, Side.PUNTER),
         );
 
         return this.next({
@@ -321,5 +321,5 @@ function winnerOf([one, two]: SeatPair<number>): number | null {
 
 /** The chips of a player changed by an amount */
 function withChips(chips: SeatPair<number>, player: number, amount: number): SeatPair<number> {
-    return player === 0 ? [chips[0] + amount, chips[1]] : [chips[0], chips[1] + amount];
+    return withSeat(chips, player, chips[player] + amount);
 }

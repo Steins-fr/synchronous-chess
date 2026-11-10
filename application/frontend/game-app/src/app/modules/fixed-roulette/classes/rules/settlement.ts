@@ -28,8 +28,6 @@ export interface Settlement {
     readonly won: Readonly<Record<Side, number>>;
     /** The chips the bank takes */
     readonly bank: number;
-    /** The chip the floored shares of a split leave, given to the punter: 0 or 1 */
-    readonly leftover: number;
 }
 
 const sides = (croupier: number, punter: number): Readonly<Record<Side, number>> => ({ [Side.CROUPIER]: croupier, [Side.PUNTER]: punter });
@@ -50,19 +48,18 @@ export function settle(bets: GameBets, ball: number): Settlement {
     const back: Readonly<Record<Side, number>> = sides(croupier, punter);
 
     if (croupier === 0 && punter === 0) {
-        return { kind: SettlementCase.BANK, back, won: sides(0, 0), bank: lost, leftover: 0 };
+        return { kind: SettlementCase.BANK, back, won: sides(0, 0), bank: lost };
     }
     if (punter === 0) {
-        return { kind: SettlementCase.CROUPIER, back, won: sides(lost, 0), bank: 0, leftover: 0 };
+        return { kind: SettlementCase.CROUPIER, back, won: sides(lost, 0), bank: 0 };
     }
     if (croupier === 0) {
-        return { kind: SettlementCase.PUNTER, back, won: sides(0, lost), bank: 0, leftover: 0 };
+        return { kind: SettlementCase.PUNTER, back, won: sides(0, lost), bank: 0 };
     }
 
     const croupierShare: number = quotient(lost * croupier, croupier + punter);
-    const punterShare: number = quotient(lost * punter, croupier + punter);
-    const leftover: number = lost - croupierShare - punterShare;
-    return { kind: SettlementCase.SPLIT, back, won: sides(croupierShare, punterShare + leftover), bank: 0, leftover };
+    // The punter takes the rest: its floored share and the chip the floored shares leave
+    return { kind: SettlementCase.SPLIT, back, won: sides(croupierShare, lost - croupierShare), bank: 0 };
 }
 
 /** The chips a side gets back from the table: its chips on the pocket of the ball and the ones it takes */

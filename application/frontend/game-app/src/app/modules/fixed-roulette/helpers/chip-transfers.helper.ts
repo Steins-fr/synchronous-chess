@@ -1,3 +1,4 @@
+import { otherSeat } from '@app/helpers/seat-pair.helper';
 import { SettledEvent } from '../classes/rules/fixed-roulette-game-state';
 import { Bets, Side } from '../classes/rules/fixed-roulette-rules';
 import { PlacedBets } from '../classes/rules/settlement';
@@ -36,7 +37,7 @@ export function betTransfers(player: number, bets: Bets): ReadonlyArray<Readonly
 /** The chips of a game void, a player forfeiting the match: the bets on the table back to their owners */
 export function voidTransfers(bets: PlacedBets, croupier: number): ReadonlyArray<Readonly<ChipTransfer>> {
     return [Side.CROUPIER, Side.PUNTER].flatMap((side: Side) => {
-        const player: number = side === Side.CROUPIER ? croupier : 1 - croupier;
+        const player: number = side === Side.CROUPIER ? croupier : otherSeat(croupier);
         return backTransfers(player, bets[side] ?? []);
     });
 }
@@ -48,7 +49,7 @@ export function voidTransfers(bets: PlacedBets, croupier: number): ReadonlyArray
  */
 export function settlementTransfers(event: Readonly<SettledEvent>): ReadonlyArray<Readonly<ChipTransfer>> {
     const { ball, bets, settlement } = event;
-    const playerOf = (side: Side): number => side === Side.CROUPIER ? event.croupier : 1 - event.croupier;
+    const playerOf = (side: Side): number => side === Side.CROUPIER ? event.croupier : otherSeat(event.croupier);
     const sides: ReadonlyArray<Side> = [Side.CROUPIER, Side.PUNTER];
     const back: ReadonlyArray<Readonly<ChipTransfer>> = sides.flatMap((side: Side) =>
         backTransfers(playerOf(side), bets[side].map((amount: number, index: number) => index + 1 === ball ? amount : 0)));

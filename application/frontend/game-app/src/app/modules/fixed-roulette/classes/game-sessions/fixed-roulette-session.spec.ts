@@ -268,7 +268,7 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
 
             // Then
             const split: SettledEvent = lastSettled() as SettledEvent;
-            expect(split).toMatchObject({ round: 0, croupier: PLAYERS.indexOf(first), ball: 2, settlement: { kind: SettlementCase.SPLIT, leftover: 0 } });
+            expect(split).toMatchObject({ round: 0, croupier: PLAYERS.indexOf(first), ball: 2, settlement: { kind: SettlementCase.SPLIT } });
             expect([Side.CROUPIER, Side.PUNTER].map((side: Side) => netOf(split.settlement, split.bets, side))).toEqual([-26, 26]);
             expect(of(first).myChips()).toEqual(LIGHT.startChips - 26);
             expect([croupier(), of('eve').phaseTime(), of(first).myIndex()]).toEqual([PLAYERS.find((name: string) => name !== first), QUICK.betTime, gameOf('eve').punter()]);

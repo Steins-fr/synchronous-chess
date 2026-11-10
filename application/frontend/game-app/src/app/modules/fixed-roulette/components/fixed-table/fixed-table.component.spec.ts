@@ -506,6 +506,26 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         expect(flown(launch).filter(([, delay]: [number, number | undefined]) => delay === 700)).toEqual([[4, 700], [4, 700], [8, 700], [6, 700]]);
     });
 
+    test('should show no error of a form a player out of time left touched, in its next match', async () => {
+        // Given Alice, the croupier, sends her form empty, then runs out of time
+        await started();
+        await click('Place the ball and bet');
+        expect(formError()).toEqual('Bet 1 chip at least');
+        hub.time = LATER;
+        of('bob').claimTimeout();
+        await until(() => session().over());
+
+        // When a new match starts, Alice the croupier of its first game again
+        await click('Play again');
+        await until(() => button('Start the match') !== undefined);
+        await click('Start the match');
+        await until(() => status() === 'Place the ball and bet: the ball stays sealed until the punter bet.');
+
+        // Then
+        expect(element().querySelector('#place-form mat-error')).toBeNull();
+        expect(formError()).toEqual('');
+    });
+
     test('should forfeit the punter not betting in time, the bets of the croupier flying back', async () => {
         // Given
         await started();

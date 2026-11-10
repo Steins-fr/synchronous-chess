@@ -4,7 +4,7 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { applyEach, form, min, required, schema, Schema, submit, validate, ValidationError } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { SeatPair } from '@app/helpers/seat-pair.helper';
+import { otherSeat, SeatPair } from '@app/helpers/seat-pair.helper';
 import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
 import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { setupTimeOf, setupTimeOptions } from '@app/modules/commit-reveal/helpers/table-texts.helper';
@@ -192,7 +192,7 @@ export class FixedTableComponent implements OnDestroy {
 
     /** The seat of the local player at the bottom; for a spectator, the first free seat while the seats are open, else the first seat */
     protected readonly bottomSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(this.session().tableSeats.bottomSeat()));
-    protected readonly topSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(1 - this.session().tableSeats.bottomSeat()));
+    protected readonly topSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(otherSeat(this.session().tableSeats.bottomSeat())));
 
     /** The chips of the players on each pocket: the player of the top seat, then the one of the bottom seat */
     protected readonly stakes: Signal<ReadonlyArray<SeatPair<number>>> = computed((): ReadonlyArray<SeatPair<number>> => {
@@ -353,6 +353,18 @@ export class FixedTableComponent implements OnDestroy {
     });
 
     // The match declares the conversation of its players in the ones of the room, as each message applies
+    /**
+     * Each game starts with untouched forms, their values emptied by their models: a form sent, or left touched by a
+     * player out of time, shows no error before the player types in its next game
+     */
+    private readonly untouched = effect(() => {
+        this.clock.roundKey();
+        untracked(() => {
+            this.placeForm().reset();
+            this.betForm().reset();
+        });
+    });
+
     private readonly declaring = effect(() => {
         const conversations: PrivateConversations = this.conversations();
         const declared: ReadonlyArray<Readonly<PrivateConversation>> = this.session().conversations();
@@ -368,25 +380,12 @@ export class FixedTableComponent implements OnDestroy {
         void submit(this.setupForm, { action: () => Promise.resolve(this.session().start({ betTime: Number(this.setupModel().betTime) })) });
     }
 
-    /** The croupier places the ball and bets, the form untouched again: the next game of the player shows no error before it types */
     protected place(): void {
-        void submit(this.placeForm, {
-            action: async () => {
-                await this.session().place(Number(this.placeModel().pocket), this.betsOf(this.placeModel().chips));
-                this.placeForm().reset();
-            },
-        });
+        void submit(this.placeForm, { action: () => this.session().place(Number(this.placeModel().pocket), this.betsOf(this.placeModel().chips)) });
     }
 
-    /** The punter bets, the form untouched again: the next game of the player shows no error before it types */
     protected bet(): void {
-        void submit(this.betForm, {
-            action: () => {
-                this.session().bet(this.betsOf(this.betModel().chips));
-                this.betForm().reset();
-                return Promise.resolve();
-            },
-        });
+        void submit(this.betForm, { action: () => Promise.resolve(this.session().bet(this.betsOf(this.betModel().chips))) });
     }
 
     protected rematch(): void {
