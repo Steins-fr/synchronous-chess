@@ -98,6 +98,16 @@ export class Room<M extends object> {
     }
 
     /**
+     * Whether this page checked the signature of the author of a message delivered by this room: a room keeping a block
+     * chain trusts the entry of an author it does not know, left before this page joined it or forgotten since, which
+     * its sequencer may have forged. A room without block chain receives each message from its author
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the message of a block room, which checks its author
+    public isSigned(_message: AppMessage): boolean {
+        return true;
+    }
+
+    /**
      * When the sequencer of a room keeping a block chain ordered a message it delivered: the same time on every page,
      * which a rule of the application reads alike. A room without block chain orders none
      */

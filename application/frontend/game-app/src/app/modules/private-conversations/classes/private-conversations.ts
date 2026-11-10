@@ -527,8 +527,9 @@ export class PrivateConversations {
     /**
      * A message of a watched conversation, checked by every page, on the chain of the chat, the same everywhere: its
      * form, its text included, then its author, dropped when muted or removed, as the chat hides it, neither counted nor
-     * told, then its rate. One appended live in the name of a participant away from this page is dropped once counted:
-     * unknown to the room once it left, the sequencer may have forged it, its pages not checking the signature
+     * told, then its rate. One appended live in the name of an author whose signature this page could not check is
+     * dropped once counted: unknown to the room once it left, the sequencer may have forged it. A participant this page
+     * lost but the room still knows signs its messages: checked, they show as on every other page
      */
     private async onWatched(message: WatchedMessage, live: boolean): Promise<void> {
         const text: unknown = message.payload;
@@ -547,7 +548,7 @@ export class PrivateConversations {
 
         const { admission, time } = this.admit(message, this.watchedFlood);
         this.watchedFlood = admission.flood;
-        if (live && message.from !== this.room.localPlayer.name && !this.room.players().some((player: Readonly<Player>) => player.name === message.from)) {
+        if (live && !this.room.isSigned(message)) {
             return;
         }
         await this.arrive({ message, conversation: text.conversation, admitted: admission.shown, notice: admission.notice, live, time });

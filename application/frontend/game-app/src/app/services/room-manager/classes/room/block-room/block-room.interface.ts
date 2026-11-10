@@ -5,6 +5,7 @@ export interface BlockRoomInterface {
     /**
      * Delivers the message of a block to the application
      * @param history whether the block was in the chain before this participant caught up with it
+     * @param signed whether this participant checked the signature of its author, unknown to it otherwise
      */
-    notifyMessage(chain: BlockChainName, block: Block, history: boolean): void;
+    notifyMessage(chain: BlockChainName, block: Block, history: boolean, signed: boolean): void;
 }

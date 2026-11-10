@@ -62,7 +62,7 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
     /** The block chains by name, to dispatch the received messages */
     private readonly blockChains: ReadonlyMap<BlockChainName, SequencedBlockChain>;
     /** The block of each message delivered to the application, to report it */
-    private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block; history: boolean }>();
+    private readonly deliveredBlocks = new WeakMap<AppMessage, { chain: BlockChainName; block: Block; history: boolean; signed: boolean }>();
     /** The sequencers most of the other participants reported as cheating */
     private distrusted = new Set<string>();
     /** The number of handovers made, to know whether the other participants follow a later sequencer */
@@ -371,6 +371,10 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         return this.deliveredBlocks.get(message)?.history ?? false;
     }
 
+    public override isSigned(message: AppMessage): boolean {
+        return this.deliveredBlocks.get(message)?.signed ?? false;
+    }
+
     public override sequencedAt(message: AppMessage): number | undefined {
         return this.deliveredBlocks.get(message)?.block.time;
     }
@@ -410,11 +414,11 @@ export class BlockRoom<M extends object> extends Room<M> implements BlockRoomInt
         }
     }
 
-    public notifyMessage(chain: BlockChainName, block: Block, history: boolean): void {
+    public notifyMessage(chain: BlockChainName, block: Block, history: boolean, signed: boolean): void {
         const message: AppMessage = block.entry.data;
         TimedLogger.log(message);
 
-        this.deliveredBlocks.set(message, { chain, block, history });
+        this.deliveredBlocks.set(message, { chain, block, history, signed });
         this.publicMessenger$.next(message);
     }
 

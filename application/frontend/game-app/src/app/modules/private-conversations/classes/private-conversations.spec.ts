@@ -996,7 +996,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
             expect(linesOf('alice')).toEqual([]);
         });
 
-        test('should drop a message appended live in the name of a participant away, counted in its rate', async () => {
+        test('should drop a message appended live in the name of an author it could not check, counted in its rate', async () => {
             // Given
             pagesOf(['alice', 'eve'], [TALK]);
             page('bob').declare([TALK]);

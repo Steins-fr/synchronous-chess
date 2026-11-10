@@ -593,8 +593,9 @@ every participant reads. Encrypting a text everyone reads would protect nothing,
   members as the others: a spectator coming later, or a page reloaded, reads the history of the chain.
 - **The rate** is counted as for the chat and the private messages, an author over 8 messages in 10 seconds hidden, but
   apart from the envelopes: the two kinds travel on two chains, ordered apart, and a page receives them in its own order.
-- **A message appended live in the name of a participant away** from the page is dropped once counted, without report:
-  unknown to the room once it left, the sequencer may have forged it, as a key (see [The keys on the chain](#the-keys-on-the-chain)).
+- **A message appended live in the name of an author the page can not check** (`Room.isSigned()`) is dropped once
+  counted, without report: unknown to the room once it left, the sequencer may have forged it. A participant this page
+  lost but the room still knows (its key kept a minute) signs its messages: checked, they show as on every other page.
 - **Moderated as the chat**: `PrivateConversations` applies the decisions of the moderator of the chat in its own
   queue, in the order of the `chat` chain, as `ChatComponent` does (`isModeratorDecision`, the decision ordered by its
   author, not on itself), and drops a watched message of an author muted or removed at its time, before counting its
@@ -725,7 +726,8 @@ one again. The network packing the messages of an honest player on the chain nev
   network, through the first 30 seconds of a sequencer makes its receiver report an honest sequencer:
   with two participants, that single report takes the ordering away.
 - **History of departed players.** A participant who joins after a player left for good can not check
-  the signatures of its blocks: they are trusted on the hash chain of the sequencer.
+  the signatures of its blocks: they are trusted on the hash chain of the sequencer. `Room.isSigned()` tells the
+  application whether the page checked the signature of a message it delivers, for a rule to tell such an entry apart.
 - **Reloading during a game** replays the moves from the chain, and the hidden move committed and not
   revealed yet from the session storage. A move played in the new page before the chain replays its
   commitment replaces the stored one, and can not be revealed: the first commitment is final.
@@ -745,8 +747,8 @@ one again. The network packing the messages of an honest player on the chain nev
   - **No moderation** of a private conversation: the host can not mute a member in it; removing it from the room stops
     its messages.
   - **A watched conversation is as authentic as the chat**: in clear text, a message is checked by the signature of its
-    entry only. A page that saw its author away drops a message appended in its name live, but a page joining later
-    replays it as history, and reads it as written by its author.
+    entry only. A page that no longer knows its author drops a message appended in its name live, but a page joining
+    later replays it as history, and reads it as written by its author.
   - **A moderator who is a player** can mute its opponent in a watched conversation, as in the chat: the room host
     is often one of the two players of a duel. A removal hides the messages ordered from it on, the earlier ones stay.
   - **The messages waiting** for a conversation are bounded by author: an author sending to conversations made up

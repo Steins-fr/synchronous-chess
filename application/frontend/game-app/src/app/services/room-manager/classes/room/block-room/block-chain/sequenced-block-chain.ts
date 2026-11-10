@@ -358,7 +358,7 @@ export class SequencedBlockChain {
                     this.report(block, CheatReason.FORGED_AUTHOR);
                 } else {
                     // An author who left before this participant joined is unknown: its entry is trusted
-                    this.blockRoomService.notifyMessage(this.name, block, this.liveFrom === undefined || block.index < this.liveFrom);
+                    this.blockRoomService.notifyMessage(this.name, block, this.liveFrom === undefined || block.index < this.liveFrom, signature === Signature.SIGNED);
                 }
             }
 
