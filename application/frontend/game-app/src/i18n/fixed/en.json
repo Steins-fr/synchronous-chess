@@ -75,8 +75,87 @@
     "title": "Rules"
   },
   "table": {
+    "action": {
+      "rematch": "Play again",
+      "start": "Start the match"
+    },
+    "bank": "Bank: {chips, plural, one {# chip} other {# chips}}",
+    "bets": {
+      "error": {
+        "allIn": "You hold fewer chips than {name} bet: bet all your chips",
+        "none": "Bet 1 chip at least",
+        "over": "You hold {chips, plural, one {# chip} other {# chips}} only",
+        "pockets": "Bet on {pockets, plural, one {# pocket} other {# pockets}} at most",
+        "under": "Bet {minimum, plural, one {# chip} other {# chips}} at least, as many as {name}"
+      },
+      "hint": "{name} bets {total, plural, one {# chip} other {# chips}}: {allIn, select, yes {bet all your chips} other {bet as many at least}}, on {pockets, plural, one {# pocket} other {# pockets}} at most.",
+      "integer": "Bet whole chips",
+      "label": "Chips on {pocket}",
+      "min": "No negative bet",
+      "submit": "Bet"
+    },
     "conversation": {
       "players": "{first} and {second}"
+    },
+    "history": "Games of the match",
+    "info": {
+      "game": "Game {number} of {games}",
+      "terms": "Bets of {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Match {number}:",
+    "move": {
+      "cheated": "Game {number}: {name} {reason, select, invalidReveal {reveals another ball than the one sealed} other {reveals a ball off the wheel}} and loses the match",
+      "late": "Game {number}: {name} {phase, select, placing {does not place the ball in time} betting {does not bet in time} other {does not reveal the ball in time}} and loses the match",
+      "settled": "Game {number}: ball in pocket {ball}, {case, select, croupier {the croupier alone on it} punter {the punter alone on it} split {both players on it} other {no one on it}}. {croupier} (croupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# chip} other {# chips}}, {punter} (punter) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# chip} other {# chips}}"
+    },
+    "pastMatches": "Matches played",
+    "place": {
+      "hint": "Bet 1 chip at least, on any pockets: the punter reads your bets.",
+      "option": "{pocket}",
+      "pocket": "Pocket of the ball",
+      "required": "Pick the pocket of the ball",
+      "submit": "Place the ball and bet"
+    },
+    "result": {
+      "bankrupt": "{winner} wins: {loser} has no chip left",
+      "cheat": "{winner} wins: {loser} {cause, select, invalidReveal {reveals another ball than the one sealed} other {reveals a ball off the wheel}}",
+      "draw": "A draw, {chips, plural, one {# chip} other {# chips}} each",
+      "forfeit": "{winner} wins: {loser} {cause, select, placing {does not place the ball in time} betting {does not bet in time} other {does not reveal the ball in time}}",
+      "games": "{winner} wins, {winnerChips, plural, one {# chip} other {# chips}} to {loserChips, plural, one {# chip} other {# chips}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# chip} other {# chips}}",
+      "free": "Free seat",
+      "leave": "Leave",
+      "release": "Free the seat",
+      "side": "{side, select, croupier {Croupier} other {Punter}}",
+      "take": "Sit here"
+    },
+    "spectators": "{count, plural, one {# spectator} other {# spectators}}",
+    "start": {
+      "betTime": "Time to bet"
+    },
+    "status": {
+      "away": "Waiting for {names} to come back…",
+      "bet": "Bet, reading the bets of {name}.",
+      "betting": "{name} bets…",
+      "drawing": "The match starts: waiting for {names}.",
+      "hurry": "Hurry: your time runs out!",
+      "over": "The match is over.",
+      "place": "Place the ball and bet: the ball stays sealed until the punter bet.",
+      "placing": "{name} places the ball and bets…",
+      "revealing": "The ball is revealed…",
+      "sealed": "Your ball is sealed: {name} bets next…",
+      "seats": "{count, plural, one {# player seated} other {# players seated}}: the match starts once both seats are taken.",
+      "start": "Pick the time of the bets, then start the match.",
+      "waitingStart": "Both players are seated: waiting for one of them to start the match."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Last ball: pocket {pocket}",
+      "sealed": "Your ball, sealed: pocket {pocket}"
+    },
+    "pocket": "Pocket {number}{ball, select, sealed {, your ball, sealed} last {, the last ball} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# chip} other {# chips}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# chip} other {# chips}}} other {}}"
   }
 }

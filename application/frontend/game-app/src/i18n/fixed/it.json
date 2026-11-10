@@ -75,8 +75,87 @@
     "title": "Regole"
   },
   "table": {
+    "action": {
+      "rematch": "Gioca ancora",
+      "start": "Avvia la partita"
+    },
+    "bank": "Banco: {chips, plural, one {# fiche} other {# fiche}}",
+    "bets": {
+      "error": {
+        "allIn": "Hai meno fiche di quante ne ha puntate {name}: punta tutte le tue fiche",
+        "none": "Punta almeno 1 fiche",
+        "over": "Hai solo {chips, plural, one {# fiche} other {# fiche}}",
+        "pockets": "Punta al massimo su {pockets, plural, one {# casella} other {# caselle}}",
+        "under": "Punta almeno {minimum, plural, one {# fiche} other {# fiche}}, quanto {name}"
+      },
+      "hint": "{name} punta {total, plural, one {# fiche} other {# fiche}}: {allIn, select, yes {punta tutte le tue fiche} other {punta almeno altrettanto}}, al massimo su {pockets, plural, one {# casella} other {# caselle}}.",
+      "integer": "Solo fiche intere",
+      "label": "Fiche su {pocket}",
+      "min": "Nessuna puntata negativa",
+      "submit": "Punta"
+    },
     "conversation": {
       "players": "{first} e {second}"
+    },
+    "history": "Manche della partita",
+    "info": {
+      "game": "Manche {number} di {games}",
+      "terms": "Puntate di {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partita {number}:",
+    "move": {
+      "cheated": "Manche {number}: {name} {reason, select, invalidReveal {rivela una pallina diversa da quella sigillata} other {rivela una pallina fuori dalla ruota}} e perde la partita",
+      "late": "Manche {number}: {name} {phase, select, placing {non mette la pallina in tempo} betting {non punta in tempo} other {non rivela la pallina in tempo}} e perde la partita",
+      "settled": "Manche {number}: pallina nella casella {ball}, {case, select, croupier {solo il croupier sopra} punter {solo il puntatore sopra} split {entrambi i giocatori sopra} other {nessuno sopra}}. {croupier} (croupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# fiche} other {# fiche}}, {punter} (puntatore) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# fiche} other {# fiche}}"
+    },
+    "pastMatches": "Partite giocate",
+    "place": {
+      "hint": "Punta almeno 1 fiche, sulle caselle che vuoi: il puntatore legge le tue puntate.",
+      "option": "{pocket}",
+      "pocket": "Casella della pallina",
+      "required": "Scegli la casella della pallina",
+      "submit": "Metti la pallina e punta"
+    },
+    "result": {
+      "bankrupt": "{winner} vince: {loser} non ha più fiche",
+      "cheat": "{winner} vince: {loser} {cause, select, invalidReveal {rivela una pallina diversa da quella sigillata} other {rivela una pallina fuori dalla ruota}}",
+      "draw": "Patta, {chips, plural, one {# fiche} other {# fiche}} a testa",
+      "forfeit": "{winner} vince: {loser} {cause, select, placing {non mette la pallina in tempo} betting {non punta in tempo} other {non rivela la pallina in tempo}}",
+      "games": "{winner} vince, {winnerChips, plural, one {# fiche} other {# fiche}} a {loserChips, plural, one {# fiche} other {# fiche}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# fiche} other {# fiche}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "release": "Libera il posto",
+      "side": "{side, select, croupier {Croupier} other {Puntatore}}",
+      "take": "Siediti"
+    },
+    "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "start": {
+      "betTime": "Tempo per puntare"
+    },
+    "status": {
+      "away": "In attesa del ritorno di {names}…",
+      "bet": "Punta, leggendo le puntate di {name}.",
+      "betting": "{name} punta…",
+      "drawing": "La partita inizia: in attesa di {names}.",
+      "hurry": "Sbrigati: il tempo sta per scadere!",
+      "over": "La partita è finita.",
+      "place": "Metti la pallina e punta: la pallina resta sigillata finché il puntatore non ha puntato.",
+      "placing": "{name} mette la pallina e punta…",
+      "revealing": "La pallina viene rivelata…",
+      "sealed": "La tua pallina è sigillata: ora punta {name}…",
+      "seats": "{count, plural, one {# giocatore seduto} other {# giocatori seduti}}: la partita inizia quando entrambi i posti sono occupati.",
+      "start": "Scegli il tempo delle puntate, poi avvia la partita.",
+      "waitingStart": "Entrambi i giocatori sono seduti: in attesa che uno di loro avvii la partita."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Ultima pallina: casella {pocket}",
+      "sealed": "La tua pallina, sigillata: casella {pocket}"
+    },
+    "pocket": "Casella {number}{ball, select, sealed {, la tua pallina, sigillata} last {, l'ultima pallina} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# fiche} other {# fiche}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# fiche} other {# fiche}}} other {}}"
   }
 }

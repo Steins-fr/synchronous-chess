@@ -75,8 +75,87 @@
     "title": "Правила"
   },
   "table": {
+    "action": {
+      "rematch": "Сыграть ещё",
+      "start": "Начать партию"
+    },
+    "bank": "Казна: {chips, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}",
+    "bets": {
+      "error": {
+        "allIn": "У вас меньше фишек, чем поставил {name}: поставьте все свои фишки",
+        "none": "Поставьте хотя бы 1 фишку",
+        "over": "У вас только {chips, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}",
+        "pockets": "Ставьте не больше чем на {pockets, plural, one {# ячейку} few {# ячейки} many {# ячеек} other {# ячейки}}",
+        "under": "Поставьте не меньше {minimum, plural, one {# фишки} few {# фишек} many {# фишек} other {# фишки}}, столько же, сколько {name}"
+      },
+      "hint": "{name} ставит {total, plural, one {# фишку} few {# фишки} many {# фишек} other {# фишки}}: {allIn, select, yes {поставьте все свои фишки} other {поставьте не меньше}}, не больше чем на {pockets, plural, one {# ячейку} few {# ячейки} many {# ячеек} other {# ячейки}}.",
+      "integer": "Только целые фишки",
+      "label": "Фишки на {pocket}",
+      "min": "Ставка не может быть отрицательной",
+      "submit": "Поставить"
+    },
     "conversation": {
       "players": "{first} и {second}"
+    },
+    "history": "Раунды партии",
+    "info": {
+      "game": "Раунд {number} из {games}",
+      "terms": "Ставки: {unit, select, minutes {{count} мин} other {{count} с}}"
+    },
+    "match": "Партия {number}:",
+    "move": {
+      "cheated": "Раунд {number}: {name} {reason, select, invalidReveal {открывает не тот шарик, что был запечатан} other {открывает шарик вне колеса}} и проигрывает партию",
+      "late": "Раунд {number}: {name} {phase, select, placing {не кладёт шарик вовремя} betting {не ставит вовремя} other {не открывает шарик вовремя}} и проигрывает партию",
+      "settled": "Раунд {number}: шарик в ячейке {ball}, {case, select, croupier {на ней только крупье} punter {на ней только понтёр} split {на ней оба игрока} other {на ней никого}}. {croupier} (крупье) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}, {punter} (понтёр) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}"
+    },
+    "pastMatches": "Сыгранные партии",
+    "place": {
+      "hint": "Поставьте хотя бы 1 фишку, на любые ячейки: понтёр видит ваши ставки.",
+      "option": "{pocket}",
+      "pocket": "Ячейка шарика",
+      "required": "Выберите ячейку шарика",
+      "submit": "Положить шарик и поставить"
+    },
+    "result": {
+      "bankrupt": "{winner} побеждает: у {loser} не осталось фишек",
+      "cheat": "{winner} побеждает: {loser} {cause, select, invalidReveal {открывает не тот шарик, что был запечатан} other {открывает шарик вне колеса}}",
+      "draw": "Ничья: у каждого {chips, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}",
+      "forfeit": "{winner} побеждает: {loser} {cause, select, placing {не кладёт шарик вовремя} betting {не ставит вовремя} other {не открывает шарик вовремя}}",
+      "games": "{winner} побеждает: {winnerChips, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}} против {loserChips, plural, one {# фишки} few {# фишек} many {# фишек} other {# фишки}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}",
+      "free": "Свободное место",
+      "leave": "Освободить место",
+      "release": "Убрать с места",
+      "side": "{side, select, croupier {Крупье} other {Понтёр}}",
+      "take": "Сесть"
+    },
+    "spectators": "{count, plural, one {# зритель} few {# зрителя} many {# зрителей} other {# зрителя}}",
+    "start": {
+      "betTime": "Время на ставку"
+    },
+    "status": {
+      "away": "Ожидание возвращения: {names}…",
+      "bet": "Ставьте: ставки игрока {name} перед вами.",
+      "betting": "{name} делает ставку…",
+      "drawing": "Партия начинается: ожидание {names}.",
+      "hurry": "Скорее: ваше время на исходе!",
+      "over": "Партия окончена.",
+      "place": "Положите шарик и сделайте ставку: шарик остаётся запечатанным, пока понтёр не поставит.",
+      "placing": "{name} кладёт шарик и делает ставку…",
+      "revealing": "Шарик раскрывается…",
+      "sealed": "Ваш шарик запечатан: следующим ставит {name}…",
+      "seats": "{count, plural, one {# игрок за столом} few {# игрока за столом} many {# игроков за столом} other {# игрока за столом}}: партия начнётся, когда оба места будут заняты.",
+      "start": "Выберите время ставок, затем начните партию.",
+      "waitingStart": "Оба игрока за столом: ожидание, пока один из них начнёт партию."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Последний шарик: ячейка {pocket}",
+      "sealed": "Ваш шарик, запечатан: ячейка {pocket}"
+    },
+    "pocket": "Ячейка {number}{ball, select, sealed {, ваш шарик, запечатан} last {, последний шарик} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}} other {}}"
   }
 }

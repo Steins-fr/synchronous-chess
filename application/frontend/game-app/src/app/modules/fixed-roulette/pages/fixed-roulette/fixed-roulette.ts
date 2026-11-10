@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { RoomLayoutComponent } from '@app/modules/room-layout/room-layout.component';
+import { RoomHistoryComponent } from '@app/modules/room-layout/room-history/room-history.component';
 import { MatchPage } from '@app/modules/room-layout/leave-match.guard';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
 import { provideRooms, roomFromSetup } from '@app/modules/room-layout/room-from-setup';
@@ -11,12 +12,13 @@ import { privateBlockChains, PrivatePayloads } from '@app/modules/private-conver
 import { fixedRouletteBlockChains, FixedRoulettePayloads } from '../../classes/game-sessions/fixed-roulette-messages';
 import { FixedPresentationComponent } from '../../components/fixed-presentation/fixed-presentation.component';
 import { FixedRulesComponent } from '../../components/fixed-rules/fixed-rules.component';
+import { FixedTableComponent } from '../../components/fixed-table/fixed-table.component';
 
 /** The page of the Fixed Roulette: its rooms, each one holding a table, the chat and the conversation of the players */
 @Component({
     selector: 'app-fixed-roulette',
     templateUrl: './fixed-roulette.html',
-    imports: [RoomLayoutComponent, FixedPresentationComponent, FixedRulesComponent, TranslocoPipe],
+    imports: [RoomLayoutComponent, RoomHistoryComponent, FixedPresentationComponent, FixedRulesComponent, FixedTableComponent, TranslocoPipe],
     providers: [provideRooms()],
 })
 export class FixedRoulette implements MatchPage {
@@ -28,4 +30,6 @@ export class FixedRoulette implements MatchPage {
         mergeBlockChainRoutings(mergeBlockChainRoutings(chatBlockChains, privateBlockChains), fixedRouletteBlockChains),
     );
     public readonly leaveWarning: MatchLeaveWarning = inject(MatchLeaveWarning);
+    // By its reference: its history and its private conversations given to the panel of the room
+    protected readonly table = viewChild<FixedTableComponent>('fixedTable');
 }

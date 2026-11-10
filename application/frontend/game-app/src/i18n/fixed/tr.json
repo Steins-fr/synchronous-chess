@@ -75,8 +75,87 @@
     "title": "Kurallar"
   },
   "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Maçı başlat"
+    },
+    "bank": "Banka: {chips, plural, one {# fiş} other {# fiş}}",
+    "bets": {
+      "error": {
+        "allIn": "Fişleriniz, {name} tarafından yatırılandan az: tüm fişlerinizi yatırın",
+        "none": "En az 1 fiş yatırın",
+        "over": "Yalnızca {chips, plural, one {# fişiniz} other {# fişiniz}} var",
+        "pockets": "En fazla {pockets, plural, one {# bölmeye} other {# bölmeye}} bahis yapın",
+        "under": "En az {minimum, plural, one {# fiş} other {# fiş}} yatırın, {name} kadar"
+      },
+      "hint": "{name} {total, plural, one {# fiş} other {# fiş}} yatırıyor: {allIn, select, yes {tüm fişlerinizi yatırın} other {en az aynı miktarı yatırın}}, en fazla {pockets, plural, one {# bölmeye} other {# bölmeye}}.",
+      "integer": "Tam fiş girin",
+      "label": "Fiş: {pocket}. bölme",
+      "min": "Negatif bahis olmaz",
+      "submit": "Bahis yap"
+    },
     "conversation": {
       "players": "{first} ve {second}"
+    },
+    "history": "Maçın rauntları",
+    "info": {
+      "game": "Raunt {number} / {games}",
+      "terms": "{unit, select, minutes {{count} dk} other {{count} sn}} bahis süresi"
+    },
+    "match": "Maç {number}:",
+    "move": {
+      "cheated": "Raunt {number}: {name} {reason, select, invalidReveal {mühürlenenden farklı bir top açar} other {çarkın dışında bir top açar}} ve maçı kaybeder",
+      "late": "Raunt {number}: {name} {phase, select, placing {topu zamanında yerleştirmez} betting {zamanında bahis yapmaz} other {topu zamanında açmaz}} ve maçı kaybeder",
+      "settled": "Raunt {number}: top {ball}. bölmede, {case, select, croupier {üzerinde yalnız krupiye} punter {üzerinde yalnız bahisçi} split {üzerinde iki oyuncu da} other {üzerinde kimse yok}}. {croupier} (krupiye) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# fiş} other {# fiş}}, {punter} (bahisçi) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# fiş} other {# fiş}}"
+    },
+    "pastMatches": "Oynanan maçlar",
+    "place": {
+      "hint": "En az 1 fiş yatırın, istediğiniz bölmelere: bahisçi bahislerinizi görür.",
+      "option": "{pocket}",
+      "pocket": "Topun bölmesi",
+      "required": "Topun bölmesini seçin",
+      "submit": "Topu yerleştir ve bahis yap"
+    },
+    "result": {
+      "bankrupt": "{winner} kazanır: {loser} fişsiz kalır",
+      "cheat": "{winner} kazanır: {loser} {cause, select, invalidReveal {mühürlenenden farklı bir top açar} other {çarkın dışında bir top açar}}",
+      "draw": "Berabere, her birinde {chips, plural, one {# fiş} other {# fiş}}",
+      "forfeit": "{winner} kazanır: {loser} {cause, select, placing {topu zamanında yerleştirmez} betting {zamanında bahis yapmaz} other {topu zamanında açmaz}}",
+      "games": "{winner} kazanır: {winnerChips, plural, one {# fiş} other {# fiş}}, rakibinde {loserChips, plural, one {# fiş} other {# fiş}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# fiş} other {# fiş}}",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "release": "Yeri boşalt",
+      "side": "{side, select, croupier {Krupiye} other {Bahisçi}}",
+      "take": "Otur"
+    },
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "start": {
+      "betTime": "Bahis süresi"
+    },
+    "status": {
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "bet": "Bahsinizi yapın: krupiye {name} bahislerini yaptı.",
+      "betting": "{name} bahis yapıyor…",
+      "drawing": "Maç başlıyor, bekleniyor: {names}.",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Maç bitti.",
+      "place": "Topu yerleştirin ve bahis yapın: top, bahisçi bahis yapana kadar mühürlü kalır.",
+      "placing": "{name} topu yerleştiriyor ve bahis yapıyor…",
+      "revealing": "Top açılıyor…",
+      "sealed": "Topunuz mühürlendi: sırada {name} bahis yapacak…",
+      "seats": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: maç iki yer de dolunca başlar.",
+      "start": "Bahis süresini seçin, ardından maçı başlatın.",
+      "waitingStart": "İki oyuncu da oturdu: içlerinden birinin maçı başlatması bekleniyor."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Son top: {pocket}. bölme",
+      "sealed": "Topunuz, mühürlü: {pocket}. bölme"
+    },
+    "pocket": "{number}. bölme{ball, select, sealed {, topunuz, mühürlü} last {, son top} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# fiş} other {# fiş}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# fiş} other {# fiş}}} other {}}"
   }
 }

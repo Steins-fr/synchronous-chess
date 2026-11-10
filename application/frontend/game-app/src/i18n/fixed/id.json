@@ -75,8 +75,87 @@
     "title": "Aturan"
   },
   "table": {
+    "action": {
+      "rematch": "Main lagi",
+      "start": "Mulai pertandingan"
+    },
+    "bank": "Bank: {chips, plural, other {# chip}}",
+    "bets": {
+      "error": {
+        "allIn": "Chip Anda lebih sedikit dari taruhan {name}: pertaruhkan semua chip Anda",
+        "none": "Bertaruhlah paling sedikit 1 chip",
+        "over": "Anda hanya punya {chips, plural, other {# chip}}",
+        "pockets": "Bertaruhlah di paling banyak {pockets, plural, other {# kantong}}",
+        "under": "Bertaruhlah paling sedikit {minimum, plural, other {# chip}}, sebanyak {name}"
+      },
+      "hint": "{name} bertaruh {total, plural, other {# chip}}: {allIn, select, yes {pertaruhkan semua chip Anda} other {bertaruhlah paling sedikit sebanyak itu}}, di paling banyak {pockets, plural, other {# kantong}}.",
+      "integer": "Chip utuh saja",
+      "label": "Chip di {pocket}",
+      "min": "Taruhan tidak boleh negatif",
+      "submit": "Bertaruh"
+    },
     "conversation": {
       "players": "{first} dan {second}"
+    },
+    "history": "Ronde pertandingan",
+    "info": {
+      "game": "Ronde {number} dari {games}",
+      "terms": "Taruhan {unit, select, minutes {{count} mnt} other {{count} dtk}}"
+    },
+    "match": "Pertandingan {number}:",
+    "move": {
+      "cheated": "Ronde {number}: {name} {reason, select, invalidReveal {membuka bola yang berbeda dari yang disegel} other {membuka bola di luar roda}} dan kalah dalam pertandingan",
+      "late": "Ronde {number}: {name} {phase, select, placing {tidak menaruh bola tepat waktu} betting {tidak bertaruh tepat waktu} other {tidak membuka bola tepat waktu}} dan kalah dalam pertandingan",
+      "settled": "Ronde {number}: bola di kantong {ball}, {case, select, croupier {hanya bandar di sana} punter {hanya petaruh di sana} split {kedua pemain di sana} other {tak seorang pun di sana}}. {croupier} (bandar) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, other {# chip}}, {punter} (petaruh) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, other {# chip}}"
+    },
+    "pastMatches": "Pertandingan yang dimainkan",
+    "place": {
+      "hint": "Bertaruhlah paling sedikit 1 chip, di kantong mana pun: petaruh melihat taruhan Anda.",
+      "option": "{pocket}",
+      "pocket": "Kantong bola",
+      "required": "Pilih kantong bola",
+      "submit": "Taruh bola dan bertaruh"
+    },
+    "result": {
+      "bankrupt": "{winner} menang: chip {loser} habis",
+      "cheat": "{winner} menang: {loser} {cause, select, invalidReveal {membuka bola yang berbeda dari yang disegel} other {membuka bola di luar roda}}",
+      "draw": "Remis, masing-masing {chips, plural, other {# chip}}",
+      "forfeit": "{winner} menang: {loser} {cause, select, placing {tidak menaruh bola tepat waktu} betting {tidak bertaruh tepat waktu} other {tidak membuka bola tepat waktu}}",
+      "games": "{winner} menang, {winnerChips, plural, other {# chip}} lawan {loserChips, plural, other {# chip}}"
+    },
+    "seat": {
+      "chips": "{count, plural, other {# chip}}",
+      "free": "Kursi kosong",
+      "leave": "Tinggalkan kursi",
+      "release": "Kosongkan kursi",
+      "side": "{side, select, croupier {Bandar} other {Petaruh}}",
+      "take": "Duduk"
+    },
+    "spectators": "{count, plural, other {# penonton}}",
+    "start": {
+      "betTime": "Waktu bertaruh"
+    },
+    "status": {
+      "away": "Menunggu {names} kembali…",
+      "bet": "Bertaruhlah, dengan melihat taruhan {name}.",
+      "betting": "{name} bertaruh…",
+      "drawing": "Pertandingan dimulai: menunggu {names}.",
+      "hurry": "Cepat: waktu Anda hampir habis!",
+      "over": "Pertandingan selesai.",
+      "place": "Taruh bola dan bertaruhlah: bola tetap tersegel sampai petaruh bertaruh.",
+      "placing": "{name} menaruh bola dan bertaruh…",
+      "revealing": "Bola dibuka…",
+      "sealed": "Bola Anda tersegel: berikutnya {name} bertaruh…",
+      "seats": "{count, plural, other {# pemain duduk}}: pertandingan dimulai setelah kedua kursi terisi.",
+      "start": "Pilih waktu taruhan, lalu mulai pertandingan.",
+      "waitingStart": "Kedua pemain sudah duduk: menunggu salah satu dari mereka memulai pertandingan."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Bola terakhir: kantong {pocket}",
+      "sealed": "Bola Anda, tersegel: kantong {pocket}"
+    },
+    "pocket": "Kantong {number}{ball, select, sealed {, bola Anda, tersegel} last {, bola terakhir} other {}}{topBet, select, yes {, {top}: {topChips, plural, other {# chip}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, other {# chip}}} other {}}"
   }
 }

@@ -75,8 +75,87 @@
     "title": "Règles"
   },
   "table": {
+    "action": {
+      "rematch": "Rejouer",
+      "start": "Lancer la partie"
+    },
+    "bank": "Banque : {chips, plural, one {# jeton} other {# jetons}}",
+    "bets": {
+      "error": {
+        "allIn": "Vous avez moins de jetons que la mise de {name} : misez tous vos jetons",
+        "none": "Misez 1 jeton au moins",
+        "over": "Vous n'avez que {chips, plural, one {# jeton} other {# jetons}}",
+        "pockets": "Misez sur {pockets, plural, one {# case} other {# cases}} au plus",
+        "under": "Misez {minimum, plural, one {# jeton} other {# jetons}} au moins, autant que {name}"
+      },
+      "hint": "{name} mise {total, plural, one {# jeton} other {# jetons}} : {allIn, select, yes {misez tous vos jetons} other {misez-en autant au moins}}, sur {pockets, plural, one {# case} other {# cases}} au plus.",
+      "integer": "Des jetons entiers",
+      "label": "Jetons sur {pocket}",
+      "min": "Pas de mise négative",
+      "submit": "Miser"
+    },
     "conversation": {
       "players": "{first} et {second}"
+    },
+    "history": "Manches de la partie",
+    "info": {
+      "game": "Manche {number} sur {games}",
+      "terms": "Mises de {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partie {number} :",
+    "move": {
+      "cheated": "Manche {number} : {name} {reason, select, invalidReveal {révèle une autre bille que celle scellée} other {révèle une bille hors de la roue}} et perd la partie",
+      "late": "Manche {number} : {name} {phase, select, placing {ne place pas la bille à temps} betting {ne mise pas à temps} other {ne révèle pas la bille à temps}} et perd la partie",
+      "settled": "Manche {number} : bille dans la case {ball}, {case, select, croupier {le croupier seul dessus} punter {le parieur seul dessus} split {les deux joueurs dessus} other {personne dessus}}. {croupier} (croupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# jeton} other {# jetons}}, {punter} (parieur) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# jeton} other {# jetons}}"
+    },
+    "pastMatches": "Parties jouées",
+    "place": {
+      "hint": "Misez 1 jeton au moins, sur les cases de votre choix : le parieur lit vos mises.",
+      "option": "{pocket}",
+      "pocket": "Case de la bille",
+      "required": "Choisissez la case de la bille",
+      "submit": "Placer la bille et miser"
+    },
+    "result": {
+      "bankrupt": "{winner} gagne : {loser} n'a plus de jeton",
+      "cheat": "{winner} gagne : {loser} {cause, select, invalidReveal {révèle une autre bille que celle scellée} other {révèle une bille hors de la roue}}",
+      "draw": "Partie nulle, {chips, plural, one {# jeton} other {# jetons}} chacun",
+      "forfeit": "{winner} gagne : {loser} {cause, select, placing {ne place pas la bille à temps} betting {ne mise pas à temps} other {ne révèle pas la bille à temps}}",
+      "games": "{winner} gagne, {winnerChips, plural, one {# jeton} other {# jetons}} contre {loserChips, plural, one {# jeton} other {# jetons}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# jeton} other {# jetons}}",
+      "free": "Place libre",
+      "leave": "Quitter la place",
+      "release": "Libérer la place",
+      "side": "{side, select, croupier {Croupier} other {Parieur}}",
+      "take": "S'asseoir"
+    },
+    "spectators": "{count, plural, one {# spectateur} other {# spectateurs}}",
+    "start": {
+      "betTime": "Temps des mises"
+    },
+    "status": {
+      "away": "En attente du retour de {names}…",
+      "bet": "Misez, en lisant les mises de {name}.",
+      "betting": "{name} mise…",
+      "drawing": "La partie commence : en attente de {names}.",
+      "hurry": "Vite : votre temps s'écoule !",
+      "over": "La partie est terminée.",
+      "place": "Placez la bille et misez : la bille reste scellée jusqu'à la mise du parieur.",
+      "placing": "{name} place la bille et mise…",
+      "revealing": "La bille est révélée…",
+      "sealed": "Votre bille est scellée : {name} mise ensuite…",
+      "seats": "{count, plural, one {# joueur assis} other {# joueurs assis}} : la partie commence quand les deux places sont prises.",
+      "start": "Choisissez le temps des mises, puis lancez la partie.",
+      "waitingStart": "Les deux joueurs sont assis : en attente que l'un d'eux lance la partie."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Dernière bille : case {pocket}",
+      "sealed": "Votre bille, scellée : case {pocket}"
+    },
+    "pocket": "Case {number}{ball, select, sealed {, votre bille, scellée} last {, la dernière bille} other {}}{topBet, select, yes {, {top} : {topChips, plural, one {# jeton} other {# jetons}}} other {}}{bottomBet, select, yes {, {bottom} : {bottomChips, plural, one {# jeton} other {# jetons}}} other {}}"
   }
 }

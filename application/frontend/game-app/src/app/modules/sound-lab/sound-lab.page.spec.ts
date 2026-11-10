@@ -36,7 +36,7 @@ describe('SoundLabPage', () => {
     test('should list every sound of the games, by game', () => {
         // Then
         expect([...fixture.nativeElement.querySelectorAll('h2')].map((title: HTMLElement) => title.textContent.trim())).toEqual([
-            'Synchronous chess', 'Seventeen Poker', 'Russian roulette', 'Every game', 'Chat and rooms',
+            'Synchronous chess', 'Seventeen Poker', 'Russian roulette', 'Fixed roulette', 'Every game', 'Chat and rooms',
         ]);
         Object.values(SoundEffect).forEach((effect: SoundEffect) => expect(soundRow(effect)).not.toBeNull());
         expect(soundRow(SoundEffect.CHAT_MESSAGE).textContent).toContain('A message of another participant received unread, or while the page is hidden');

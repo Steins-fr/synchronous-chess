@@ -104,6 +104,12 @@ html {
     --app-apple-gold: light-dark(#c99a06, #f2c14e);
     --app-apple-silver: light-dark(#7c838d, #8f969f);
     --app-apple-red: light-dark(#c62828, #ef5350);
+    // The fixed roulette: the wood of its wheel, the numbers of its pockets and its ivory ball
+    --app-wheel-rim: light-dark(#7a5230, #5c3d22);
+    --app-pocket-red: light-dark(#c62828, #b71c1c);
+    --app-pocket-black: light-dark(#1c1b1f, #121114);
+    --app-ball: light-dark(#fbfaf7, #ece9e2);
+    --app-ball-edge: light-dark(#8d8a84, #5f5b52);
     // The width of a card, larger out of a phone
     --app-card-width: 4.5rem;
 

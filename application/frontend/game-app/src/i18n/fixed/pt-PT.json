@@ -75,8 +75,87 @@
     "title": "Regras"
   },
   "table": {
+    "action": {
+      "rematch": "Jogar outra vez",
+      "start": "Iniciar a partida"
+    },
+    "bank": "Banca: {chips, plural, one {# ficha} other {# fichas}}",
+    "bets": {
+      "error": {
+        "allIn": "Tem menos fichas do que {name} apostou: aposte todas as suas fichas",
+        "none": "Aposte pelo menos 1 ficha",
+        "over": "Só tem {chips, plural, one {# ficha} other {# fichas}}",
+        "pockets": "Aposte no máximo em {pockets, plural, one {# casa} other {# casas}}",
+        "under": "Aposte pelo menos {minimum, plural, one {# ficha} other {# fichas}}, tanto quanto {name}"
+      },
+      "hint": "{name} aposta {total, plural, one {# ficha} other {# fichas}}: {allIn, select, yes {aposte todas as suas fichas} other {aposte pelo menos o mesmo}}, no máximo em {pockets, plural, one {# casa} other {# casas}}.",
+      "integer": "Fichas inteiras",
+      "label": "Fichas em {pocket}",
+      "min": "Sem apostas negativas",
+      "submit": "Apostar"
+    },
     "conversation": {
       "players": "{first} e {second}"
+    },
+    "history": "Rondas da partida",
+    "info": {
+      "game": "Ronda {number} de {games}",
+      "terms": "Apostas de {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partida {number}:",
+    "move": {
+      "cheated": "Ronda {number}: {name} {reason, select, invalidReveal {revela outra bola que não a selada} other {revela uma bola fora da roda}} e perde a partida",
+      "late": "Ronda {number}: {name} {phase, select, placing {não coloca a bola a tempo} betting {não aposta a tempo} other {não revela a bola a tempo}} e perde a partida",
+      "settled": "Ronda {number}: bola na casa {ball}, {case, select, croupier {só o croupier nela} punter {só o apostador nela} split {os dois jogadores nela} other {ninguém nela}}. {croupier} (croupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# ficha} other {# fichas}}, {punter} (apostador) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# ficha} other {# fichas}}"
+    },
+    "pastMatches": "Partidas jogadas",
+    "place": {
+      "hint": "Aposte pelo menos 1 ficha, nas casas que quiser: o apostador lê as suas apostas.",
+      "option": "{pocket}",
+      "pocket": "Casa da bola",
+      "required": "Escolha a casa da bola",
+      "submit": "Colocar a bola e apostar"
+    },
+    "result": {
+      "bankrupt": "{winner} ganha: {loser} fica sem fichas",
+      "cheat": "{winner} ganha: {loser} {cause, select, invalidReveal {revela outra bola que não a selada} other {revela uma bola fora da roda}}",
+      "draw": "Empate, {chips, plural, one {# ficha} other {# fichas}} cada um",
+      "forfeit": "{winner} ganha: {loser} {cause, select, placing {não coloca a bola a tempo} betting {não aposta a tempo} other {não revela a bola a tempo}}",
+      "games": "{winner} ganha, {winnerChips, plural, one {# ficha} other {# fichas}} contra {loserChips, plural, one {# ficha} other {# fichas}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "release": "Libertar o lugar",
+      "side": "{side, select, croupier {Croupier} other {Apostador}}",
+      "take": "Sentar-se"
+    },
+    "spectators": "{count, plural, one {# espetador} other {# espetadores}}",
+    "start": {
+      "betTime": "Tempo para apostar"
+    },
+    "status": {
+      "away": "A aguardar o regresso de {names}…",
+      "bet": "Aposte, lendo as apostas de {name}.",
+      "betting": "{name} aposta…",
+      "drawing": "A partida começa: a aguardar {names}.",
+      "hurry": "Depressa: o seu tempo está a acabar!",
+      "over": "A partida terminou.",
+      "place": "Coloque a bola e aposte: a bola fica selada até à aposta do apostador.",
+      "placing": "{name} coloca a bola e aposta…",
+      "revealing": "A bola é revelada…",
+      "sealed": "A sua bola está selada: {name} aposta a seguir…",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa quando os dois lugares estiverem ocupados.",
+      "start": "Escolha o tempo das apostas, depois inicie a partida.",
+      "waitingStart": "Os dois jogadores estão sentados: a aguardar que um deles inicie a partida."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Última bola: casa {pocket}",
+      "sealed": "A sua bola, selada: casa {pocket}"
+    },
+    "pocket": "Casa {number}{ball, select, sealed {, a sua bola, selada} last {, a última bola} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# ficha} other {# fichas}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# ficha} other {# fichas}}} other {}}"
   }
 }

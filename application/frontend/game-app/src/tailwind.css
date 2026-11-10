@@ -56,6 +56,11 @@
     --color-app-apple-gold: var(--app-apple-gold);
     --color-app-apple-silver: var(--app-apple-silver);
     --color-app-apple-red: var(--app-apple-red);
+    --color-app-wheel-rim: var(--app-wheel-rim);
+    --color-app-pocket-red: var(--app-pocket-red);
+    --color-app-pocket-black: var(--app-pocket-black);
+    --color-app-ball: var(--app-ball);
+    --color-app-ball-edge: var(--app-ball-edge);
 }
 
 /* The bets of the round on the cloth of the poker, in front of each player */
@@ -175,6 +180,11 @@
 
 @utility rule-cell {
     @apply px-3 py-2 border border-app-border text-left align-top;
+}
+
+/* A stake of a player on a pocket of the fixed roulette: its chips beside their count, the height of a chip kept while empty */
+@utility pocket-stake {
+    @apply flex items-center justify-center gap-1 min-h-[1.85rem] text-sm font-bold tabular-nums;
 }
 
 @utility badge {

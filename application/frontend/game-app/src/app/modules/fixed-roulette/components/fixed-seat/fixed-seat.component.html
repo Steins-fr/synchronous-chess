@@ -1,0 +1,26 @@
+<ng-container *transloco="let t; prefix: 'fixed.table.seat'">
+    <span class="min-w-0 truncate font-medium">{{ name() ?? t('free') }}</span>
+    @if (side(); as part) {
+    <span class="badge badge-draw">{{ t('side', { side: part }) }}</span>
+    }
+    @if (clock(); as left) {
+    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+    }
+    @if (canTake()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>
+    }
+    @if (canLeave()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
+    }
+    @if (canRelease()) {
+    <button class="ml-auto" mat-stroked-button type="button" (click)="release.emit()">{{ t('release') }}</button>
+    }
+    @let count = chips();
+    @if (count !== null) {
+    <!-- The chips of the player off the table, where the chips bet fly from and the chips won to -->
+    <span class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <app-chip-stack #stack [amount]="count" />
+        <span class="font-medium tabular-nums">{{ t('chips', { count }) }}</span>
+    </span>
+    }
+</ng-container>

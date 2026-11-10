@@ -26,6 +26,12 @@ const snap = (at: number, gain: number = 0.6): ReadonlyArray<SoundPart> => [
     tone({ wave: 'square', frequency: 1800, to: 900, at, duration: 0.02, gain: gain * 0.3, attack: 0.001 }),
 ];
 
+/** The ivory ball striking the wood of its pocket: a short tap, its pitch steady */
+const tap = (at: number, gain: number): ReadonlyArray<SoundPart> => [
+    noise({ filter: 'bandpass', frequency: 2600, q: 4, at, duration: 0.03, gain, attack: 0.001 }),
+    tone({ wave: 'sine', frequency: 1250, at, duration: 0.05, gain: gain * 0.5, attack: 0.001 }),
+];
+
 /** The chips of the pot gathered */
 const gathered: ReadonlyArray<SoundPart> = [3300, 2800, 3600, 3000, 3400, 2700].flatMap((frequency: number, index: number) => chip(index * 0.045, frequency));
 
@@ -51,6 +57,9 @@ export const SOUND_RECIPES: Readonly<Record<SynthesizedSoundEffect, ReadonlyArra
         ...snap(0, 0.4), ...snap(0.18, 0.4), ...snap(0.36, 0.4),
         ...snap(0.6, 0.7), tone({ wave: 'sine', frequency: 300, to: 200, at: 0.6, duration: 0.08, gain: 0.3 }),
     ],
+    // The ball dropped in its pocket, bouncing in place, each bounce lower and sooner, until it rests: no sweep of a wheel
+    [SoundEffect.FIXED_BALL_DROP]: [[0, 0.55], [0.2, 0.4], [0.34, 0.28], [0.44, 0.19], [0.51, 0.12], [0.56, 0.07]]
+        .flatMap(([at, gain]: ReadonlyArray<number>) => tap(at, gain)),
     // A soft pop, rising
     [SoundEffect.SEAT_TAKEN]: [
         tone({ wave: 'sine', frequency: 440, to: 660, duration: 0.12, gain: 0.3, attack: 0.005 }),

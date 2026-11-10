@@ -75,8 +75,87 @@
     "title": "Zasady"
   },
   "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "bank": "Bank: {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+    "bets": {
+      "error": {
+        "allIn": "Masz mniej żetonów, niż postawił {name}: postaw wszystkie swoje żetony",
+        "none": "Postaw co najmniej 1 żeton",
+        "over": "Masz tylko {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+        "pockets": "Obstawiaj najwyżej {pockets, plural, one {# przegródkę} few {# przegródki} many {# przegródek} other {# przegródki}}",
+        "under": "Postaw co najmniej {minimum, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}, tyle co {name}"
+      },
+      "hint": "{name} stawia {total, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}: {allIn, select, yes {postaw wszystkie swoje żetony} other {postaw co najmniej tyle samo}}, najwyżej na {pockets, plural, one {# przegródkę} few {# przegródki} many {# przegródek} other {# przegródki}}.",
+      "integer": "Tylko pełne żetony",
+      "label": "Żetony na {pocket}",
+      "min": "Stawka nie może być ujemna",
+      "submit": "Postaw"
+    },
     "conversation": {
       "players": "{first} i {second}"
+    },
+    "history": "Rundy partii",
+    "info": {
+      "game": "Runda {number} z {games}",
+      "terms": "Stawki: {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partia {number}:",
+    "move": {
+      "cheated": "Runda {number}: {name} {reason, select, invalidReveal {odkrywa inną kulkę niż zapieczętowana} other {odkrywa kulkę spoza koła}} i przegrywa partię",
+      "late": "Runda {number}: {name} {phase, select, placing {nie kładzie kulki na czas} betting {nie stawia na czas} other {nie odkrywa kulki na czas}} i przegrywa partię",
+      "settled": "Runda {number}: kulka w przegródce {ball}, {case, select, croupier {na niej tylko krupier} punter {na niej tylko obstawiający} split {na niej obaj gracze} other {na niej nikt}}. {croupier} (krupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}, {punter} (obstawiający) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}"
+    },
+    "pastMatches": "Rozegrane partie",
+    "place": {
+      "hint": "Postaw co najmniej 1 żeton, na dowolne przegródki: obstawiający widzi twoje stawki.",
+      "option": "{pocket}",
+      "pocket": "Przegródka kulki",
+      "required": "Wybierz przegródkę kulki",
+      "submit": "Połóż kulkę i postaw"
+    },
+    "result": {
+      "bankrupt": "{winner} wygrywa: {loser} nie ma już żetonów",
+      "cheat": "{winner} wygrywa: {loser} {cause, select, invalidReveal {odkrywa inną kulkę niż zapieczętowana} other {odkrywa kulkę spoza koła}}",
+      "draw": "Remis: każdy ma {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+      "forfeit": "{winner} wygrywa: {loser} {cause, select, placing {nie kładzie kulki na czas} betting {nie stawia na czas} other {nie odkrywa kulki na czas}}",
+      "games": "{winner} wygrywa: {winnerChips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}} wobec {loserChips, plural, one {# żetonu} few {# żetonów} many {# żetonów} other {# żetonu}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "release": "Usuń z miejsca",
+      "side": "{side, select, croupier {Krupier} other {Obstawiający}}",
+      "take": "Usiądź"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "start": {
+      "betTime": "Czas na stawki"
+    },
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "bet": "Postaw, patrząc na stawki gracza {name}.",
+      "betting": "{name} stawia…",
+      "drawing": "Partia się zaczyna: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "place": "Połóż kulkę i postaw: kulka pozostaje zapieczętowana, dopóki obstawiający nie postawi.",
+      "placing": "{name} kładzie kulkę i stawia…",
+      "revealing": "Kulka zostaje odkryta…",
+      "sealed": "Twoja kulka jest zapieczętowana: teraz stawia {name}…",
+      "seats": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: partia zacznie się, gdy oba miejsca będą zajęte.",
+      "start": "Wybierz czas na stawki, a potem rozpocznij partię.",
+      "waitingStart": "Obaj gracze siedzą przy stole: czekamy, aż jeden z nich rozpocznie partię."
     }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Ostatnia kulka: przegródka {pocket}",
+      "sealed": "Twoja kulka, zapieczętowana: przegródka {pocket}"
+    },
+    "pocket": "Przegródka {number}{ball, select, sealed {, twoja kulka, zapieczętowana} last {, ostatnia kulka} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}} other {}}"
   }
 }
