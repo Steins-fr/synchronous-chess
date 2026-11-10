@@ -1,0 +1,84 @@
+<ng-container *transloco="let t; prefix: 'fixed.rules'">
+    @if (withTitle()) {
+    <h2 class="mt-6 mb-2 text-[28px] font-bold">{{ t('title') }}</h2>
+    }
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('setup.title') }}</h3>
+        <p class="my-2">{{ t('setup.players') }}</p>
+        <p class="my-2">{{ t('setup.match') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('game.title') }}</h3>
+        <ol class="pl-5 list-decimal space-y-1">
+            <li>{{ t('game.place') }}</li>
+            <li>{{ t('game.bet') }}</li>
+            <li>{{ t('game.reveal') }}</li>
+        </ol>
+        <p class="my-2">{{ t('game.talk') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('settlement.title') }}</h3>
+        <p class="my-2">{{ t('settlement.text') }}</p>
+        <table class="w-full mt-3 border-collapse bg-app-surface-raised">
+            <caption class="sr-only">{{ t('settlement.caption') }}</caption>
+            <thead>
+                <tr>
+                    <th class="rule-cell bg-app-surface font-bold" scope="col">{{ t('settlement.onBall') }}</th>
+                    <th class="rule-cell bg-app-surface font-bold" scope="col">{{ t('settlement.losing') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="rule-cell">{{ t('settlement.croupier.onBall') }}</td>
+                    <td class="rule-cell">{{ t('settlement.croupier.losing') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('settlement.punter.onBall') }}</td>
+                    <td class="rule-cell">{{ t('settlement.punter.losing') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('settlement.both.onBall') }}</td>
+                    <td class="rule-cell">{{ t('settlement.both.losing') }}</td>
+                </tr>
+                <tr>
+                    <td class="rule-cell">{{ t('settlement.bank.onBall') }}</td>
+                    <td class="rule-cell">{{ t('settlement.bank.losing') }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="my-2">{{ t('settlement.example') }}</p>
+        <p class="my-2">{{ t('settlement.leftover') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('end.title') }}</h3>
+        <p class="my-2">{{ t('end.games') }}</p>
+        <p class="my-2">{{ t('end.winner') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('missed.title') }}</h3>
+        <ul class="pl-5 list-disc space-y-1">
+            <li>{{ t('missed.place') }}</li>
+            <li>{{ t('missed.bet') }}</li>
+            <li>{{ t('missed.reveal') }}</li>
+        </ul>
+        <p class="my-2">{{ t('missed.void') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('times.title') }}</h3>
+        <p class="my-2">{{ t('times.phases') }}</p>
+        <p class="my-2">{{ t('times.away') }}</p>
+    </section>
+
+    <section class="rule-card">
+        <h3 class="rule-heading">{{ t('fair.title') }}</h3>
+        <p class="my-2">{{ t('fair.sealed') }}</p>
+        <p class="my-2">{{ t('fair.draw') }}</p>
+        <p class="my-2">{{ t('fair.order') }}</p>
+    </section>
+</ng-container>

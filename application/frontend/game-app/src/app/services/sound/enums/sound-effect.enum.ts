@@ -22,6 +22,8 @@ export enum SoundEffect {
     // The hammer on an empty chamber
     ROULETTE_CLICK = 'roulette-click',
     ROULETTE_SHOT = 'roulette-shot',
+    // The ball of the fixed roulette revealed, bouncing in its pocket
+    FIXED_BALL_DROP = 'fixed-ball-drop',
     // A participant taking a seat, at every game
     SEAT_TAKEN = 'seat-taken',
     // Chips moving on a table: a bet, a pass, a pot, the chips of the table taken

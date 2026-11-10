@@ -355,6 +355,27 @@ export class RoomParticipant {
         await panel.getByRole('button', { name: 'Send privately' }).click();
     }
 
+    /** Sends a message to the watched conversation of the title given: in clear, read by the whole room */
+    public async sendOpenly(title: string, text: string): Promise<void> {
+        await this.selectPrivate(title);
+        const panel: Locator = this.page.locator('#room-private');
+        await panel.getByRole('textbox').fill(text);
+        await panel.getByRole('button', { name: 'Send openly' }).click();
+    }
+
+    /**
+     * Sends a message to the watched conversation of the title given around its composer, as a script in the page would:
+     * through the room of the chat, reached by the debugging utilities of Angular
+     */
+    public async transmitOpenlyAroundComposer(title: string, text: string): Promise<void> {
+        const tabId: string | null = await this.privateTabs().filter({ hasText: title }).getAttribute('id');
+        const conversation: string = (tabId as string).replace('private-conversation-', '');
+        await this.page.evaluate(({ id, message }: { id: string; message: string }) => {
+            const chat = window.ng.getComponent(document.querySelector('app-chat') as Element);
+            chat.room().transmitMessage('PV_watched', { conversation: id, id: crypto.randomUUID(), at: Date.now(), text: message });
+        }, { id: conversation, message: text });
+    }
+
     /** The messages of the private conversation shown, with their author */
     public privateLines(): Locator {
         return this.page.locator('#private-log .chat-bubble');

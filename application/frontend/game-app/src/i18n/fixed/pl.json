@@ -1,0 +1,161 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Każdy gracz zaczyna z 500 żetonami, a gracze zamieniają się rolami w każdej rundzie: każdy jest krupierem 5 razy.",
+      "sealed": "Kulka jest zapieczętowana: nikt, nawet serwer, nie widzi jej przegródki, zanim obstawiający postawi.",
+      "talk": "Obaj gracze rozmawiają we własnej rozmowie, którą czyta cały pokój: krupier może mówić o kulce cokolwiek, prawdę lub kłamstwo."
+    },
+    "rooms": "Utwórz pokój lub dołącz do jednego, by grać z innymi.",
+    "summary": "Gra z mangi Liar Game: 2 graczy mierzy się przez 10 rund przy kole z 4 przegródkami, które nigdy się nie kręci. W każdej rundzie krupier kładzie kulkę i stawia pierwszy, potem stawia obstawiający, czytając stawki krupiera.",
+    "tagline": "Ruletka, która się nie kręci: krupier wie, gdzie leży kulka.",
+    "title": "Nieruchoma ruletka"
+  },
+  "rules": {
+    "end": {
+      "games": "Partia kończy się po 10 rundach albo od razu, gdy gracz po rundzie nie ma już żetonów: przegrywa.",
+      "title": "Koniec partii",
+      "winner": "Wygrywa gracz z największą liczbą żetonów; przy równej liczbie żetonów jest remis, także gdy obu graczom żetony skończą się naraz. Żetony zabrane przez bank przepadają dla obu."
+    },
+    "fair": {
+      "draw": "Nikt nie wybiera pierwszego krupiera: każdy gracz daje na początku zapieczętowaną losową część, a krupier jest losowany z obu części, tak samo na każdej stronie.",
+      "order": "Stawkę poza kolejnością każda strona pomija; stawka drugiego gracza albo niezgodna z zasadami jest zgłaszana.",
+      "sealed": "Kulka jest zapieczętowana: strona krupiera wysyła jej hash z losową solą razem ze stawkami i odkrywa ją, gdy obstawiający postawi. Nikt, nawet serwer, nie widzi kulki wcześniej. Przeładowana strona zachowuje swoją kulkę, chyba że jej pamięć jest zablokowana.",
+      "title": "Uczciwa gra"
+    },
+    "game": {
+      "bet": "Potem stawia obstawiający, widząc stawki krupiera: na najwyżej 2 przegródki, co najmniej tyle żetonów co krupier albo wszystkie swoje żetony, jeśli ma ich mniej.",
+      "place": "Krupier kładzie kulkę w jednej z 4 przegródek, zapieczętowaną, i jednocześnie jawnie stawia: co najmniej 1 żeton, na 1 do 4 przegródek, nigdy więcej żetonów, niż ma.",
+      "reveal": "Potem strona krupiera sama odkrywa kulkę, a żetony są rozliczane.",
+      "talk": "Każdy może mówić o kulce cokolwiek, prawdę lub kłamstwo, w rozmowie graczy: czyta ją cały pokój, piszą w niej tylko gracze.",
+      "title": "Runda"
+    },
+    "missed": {
+      "bet": "Obstawiający, który nie postawi na czas, przegrywa partię.",
+      "place": "Krupier, który nie położy kulki i nie postawi na czas, przegrywa partię.",
+      "reveal": "Krupier, którego strona nie odkryje kulki w ciągu 15 sekund, odkryje inną kulkę niż zapieczętowana albo kulkę spoza koła, przegrywa partię.",
+      "title": "Po czasie",
+      "void": "Stawki rundy wracają wtedy do właścicieli, a drugi gracz wygrywa partię, niezależnie od żetonów."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Do banku: wszystkie postawione żetony przepadają",
+        "onBall": "Żaden gracz"
+      },
+      "both": {
+        "losing": "Dzielone w proporcji ich żetonów na kulce, każda część zaokrąglona w dół, pozostały żeton dla obstawiającego",
+        "onBall": "Obaj gracze"
+      },
+      "caption": "Dokąd trafiają żetony z pozostałych przegródek, zależnie od tego, kto postawił na przegródkę kulki",
+      "croupier": {
+        "losing": "Do krupiera",
+        "onBall": "Tylko krupier"
+      },
+      "example": "Na przykład krupier stawia 15 żetonów na przegródkę 2 i 50 na przegródkę 3, obstawiający 35 na przegródkę 2 i 30 na przegródkę 4. Kulka leży w przegródce 2: obaj gracze odbierają z niej swoje żetony i dzielą 80 żetonów z pozostałych przegródek w stosunku 15 do 35. Krupier dostaje 24 żetony i traci 50, −26; obstawiający dostaje 56 i traci 30, +26.",
+      "leftover": "Zaokrąglone części zostawiają najwyżej jeden żeton: przy 10 żetonach krupiera i 20 obstawiającego na kulce 5 żetonów do podziału daje krupierowi 1, obstawiającemu 3 i pozostały żeton, czyli 4.",
+      "losing": "Żetony z pozostałych przegródek",
+      "onBall": "Postawił na kulkę",
+      "punter": {
+        "losing": "Do obstawiającego",
+        "onBall": "Tylko obstawiający"
+      },
+      "text": "Żetony postawione na przegródkę kulki wracają do właścicieli. Żetony z pozostałych przegródek trafiają:",
+      "title": "Rozliczenie"
+    },
+    "setup": {
+      "match": "Każdy gracz zaczyna z 500 żetonami. Partia trwa 10 rund, a gracze zamieniają się rolami w każdej rundzie: pierwszy krupier jest losowany, potem każdy gracz jest krupierem 5 razy.",
+      "players": "2 graczy zajmuje miejsca, pozostali uczestnicy oglądają. Jeden z graczy rozpoczyna partię i wybiera czas na stawki, od 30 sekund do 5 minut: miejsca pozostają zajęte do jej końca.",
+      "title": "Stół"
+    },
+    "summary": "Zasady nieruchomej ruletki",
+    "times": {
+      "away": "Na nieobecnego gracza czeka się 15 sekund dłużej, raz.",
+      "phases": "Krupier i obstawiający stawiają każdy w czasie wybranym na początku, odkrycie czeka 15 sekund: każda faza zamyka się, gdy tylko jej gracz wykona ruch.",
+      "title": "Czasy"
+    },
+    "title": "Zasady"
+  },
+  "table": {
+    "action": {
+      "rematch": "Zagraj ponownie",
+      "start": "Rozpocznij partię"
+    },
+    "bank": "Bank: {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+    "bets": {
+      "error": {
+        "allIn": "Masz mniej żetonów, niż postawił {name}: postaw wszystkie swoje żetony",
+        "none": "Postaw co najmniej 1 żeton",
+        "over": "Masz tylko {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+        "pockets": "Obstawiaj najwyżej {pockets, plural, one {# przegródkę} few {# przegródki} many {# przegródek} other {# przegródki}}",
+        "under": "Postaw co najmniej {minimum, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}, tyle co {name}"
+      },
+      "hint": "{name} stawia {total, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}: {allIn, select, yes {postaw wszystkie swoje żetony} other {postaw co najmniej tyle samo}}, najwyżej na {pockets, plural, one {# przegródkę} few {# przegródki} many {# przegródek} other {# przegródki}}.",
+      "integer": "Tylko pełne żetony",
+      "label": "Żetony na {pocket}",
+      "min": "Stawka nie może być ujemna",
+      "submit": "Postaw"
+    },
+    "conversation": {
+      "players": "{first} i {second}"
+    },
+    "history": "Rundy partii",
+    "info": {
+      "game": "Runda {number} z {games}",
+      "terms": "Stawki: {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partia {number}:",
+    "move": {
+      "cheated": "Runda {number}: {name} {reason, select, invalidReveal {odkrywa inną kulkę niż zapieczętowana} other {odkrywa kulkę spoza koła}} i przegrywa partię",
+      "late": "Runda {number}: {name} {phase, select, placing {nie kładzie kulki na czas} betting {nie stawia na czas} other {nie odkrywa kulki na czas}} i przegrywa partię",
+      "settled": "Runda {number}: kulka w przegródce {ball}, {case, select, croupier {na niej tylko krupier} punter {na niej tylko obstawiający} split {na niej obaj gracze} other {na niej nikt}}. {croupier} (krupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}, {punter} (obstawiający) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}"
+    },
+    "pastMatches": "Rozegrane partie",
+    "place": {
+      "hint": "Postaw co najmniej 1 żeton, na dowolne przegródki: obstawiający widzi twoje stawki.",
+      "option": "{pocket}",
+      "pocket": "Przegródka kulki",
+      "required": "Wybierz przegródkę kulki",
+      "submit": "Połóż kulkę i postaw"
+    },
+    "result": {
+      "bankrupt": "{winner} wygrywa: {loser} nie ma już żetonów",
+      "cheat": "{winner} wygrywa: {loser} {cause, select, invalidReveal {odkrywa inną kulkę niż zapieczętowana} other {odkrywa kulkę spoza koła}}",
+      "draw": "Remis: każdy ma {chips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+      "forfeit": "{winner} wygrywa: {loser} {cause, select, placing {nie kładzie kulki na czas} betting {nie stawia na czas} other {nie odkrywa kulki na czas}}",
+      "games": "{winner} wygrywa: {winnerChips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}} wobec {loserChips, plural, one {# żetonu} few {# żetonów} many {# żetonów} other {# żetonu}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
+      "free": "Wolne miejsce",
+      "leave": "Zwolnij miejsce",
+      "release": "Usuń z miejsca",
+      "side": "{side, select, croupier {Krupier} other {Obstawiający}}",
+      "take": "Usiądź"
+    },
+    "spectators": "{count, plural, one {# widz} few {# widzów} many {# widzów} other {# widza}}",
+    "start": {
+      "betTime": "Czas na stawki"
+    },
+    "status": {
+      "away": "Czekamy na powrót: {names}…",
+      "bet": "Postaw, patrząc na stawki gracza {name}.",
+      "betting": "{name} stawia…",
+      "drawing": "Partia się zaczyna: czekamy na {names}.",
+      "hurry": "Pospiesz się: czas się kończy!",
+      "over": "Partia się skończyła.",
+      "place": "Połóż kulkę i postaw: kulka pozostaje zapieczętowana, dopóki obstawiający nie postawi.",
+      "placing": "{name} kładzie kulkę i stawia…",
+      "revealing": "Kulka zostaje odkryta…",
+      "sealed": "Twoja kulka jest zapieczętowana: teraz stawia {name}…",
+      "seats": "{count, plural, one {# gracz przy stole} few {# graczy przy stole} many {# graczy przy stole} other {# gracza przy stole}}: partia zacznie się, gdy oba miejsca będą zajęte.",
+      "start": "Wybierz czas na stawki, a potem rozpocznij partię.",
+      "waitingStart": "Obaj gracze siedzą przy stole: czekamy, aż jeden z nich rozpocznie partię."
+    }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Ostatnia kulka: przegródka {pocket}",
+      "sealed": "Twoja kulka, zapieczętowana: przegródka {pocket}"
+    },
+    "pocket": "Przegródka {number}{ball, select, sealed {, twoja kulka, zapieczętowana} last {, ostatnia kulka} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}} other {}}"
+  }
+}

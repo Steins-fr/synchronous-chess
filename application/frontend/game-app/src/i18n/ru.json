@@ -9,6 +9,7 @@
       "chat": "Чат",
       "chess": "Шахматы",
       "contraband": "Контрабанда",
+      "fixedRoulette": "Неподвижная рулетка",
       "gardenOfEden": "Эдем",
       "home": "Главная",
       "minorityGame": "Меньшинство",
@@ -29,8 +30,8 @@
     "title": "Синхронные шахматы"
   },
   "cheat": {
-    "flagged": "Сообщение {index} ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} bid {аукционный покер} minority {игра меньшинства} private {приватная переписка} contraband {контрабанда} eden {Эдемский сад} other {}}) от {author} помечено как жульничество игроками: {reporters}",
-    "ignored": "Сообщение ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} bid {аукционный покер} minority {игра меньшинства} private {приватная переписка} contraband {контрабанда} eden {Эдемский сад} other {}}) от {author} проигнорировано игроком {sequencer}, отмечено игроками: {reporters}"
+    "flagged": "Сообщение {index} ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} bid {аукционный покер} minority {игра меньшинства} private {приватная переписка} contraband {контрабанда} eden {Эдемский сад} fixed {неподвижная рулетка} other {}}) от {author} помечено как жульничество игроками: {reporters}",
+    "ignored": "Сообщение ({chain, select, chess {шахматы} chat {чат} poker {покер} roulette {рулетка} bid {аукционный покер} minority {игра меньшинства} private {приватная переписка} contraband {контрабанда} eden {Эдемский сад} fixed {неподвижная рулетка} other {}}) от {author} проигнорировано игроком {sequencer}, отмечено игроками: {reporters}"
   },
   "dialog": {
     "cancel": "Отмена",
@@ -62,6 +63,11 @@
       "action": "Играть",
       "description": "От 2 до 8 игроков из двух стран провозят деньги через таможню соперника в запечатанных чемоданах: пропустить или усомниться.",
       "title": "Контрабанда"
+    },
+    "fixedRoulette": {
+      "action": "Играть",
+      "description": "2 игрока ставят у колеса с 4 ячейками, которое никогда не крутится: крупье кладёт запечатанный шарик и ставит первым; понтёр читает его ставки.",
+      "title": "Неподвижная рулетка"
     },
     "gardenOfEden": {
       "action": "Играть",

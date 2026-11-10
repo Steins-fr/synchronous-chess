@@ -1,0 +1,161 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Ogni giocatore parte con 500 fiche, e i giocatori si scambiano i ruoli a ogni manche: ognuno è il croupier 5 volte.",
+      "sealed": "La pallina è sigillata: nessuno, nemmeno il server, vede la sua casella prima che il puntatore abbia puntato.",
+      "talk": "I due giocatori parlano in una conversazione tutta loro, letta da tutta la stanza: il croupier può dire qualsiasi cosa sulla pallina, vera o falsa."
+    },
+    "rooms": "Crea una stanza o entra in una per giocare con altri.",
+    "summary": "Un gioco del manga Liar Game: 2 giocatori si sfidano su una ruota di 4 caselle che non gira mai, in 10 manche. In ogni manche, il croupier mette la pallina e punta per primo, poi il puntatore punta leggendo le puntate del croupier.",
+    "tagline": "Una roulette che non gira: il croupier sa dove si trova la pallina.",
+    "title": "Roulette fissa"
+  },
+  "rules": {
+    "end": {
+      "games": "La partita finisce dopo 10 manche, o appena un giocatore resta senza fiche dopo una manche: perde.",
+      "title": "La fine della partita",
+      "winner": "Vince il giocatore con più fiche; a parità di fiche è patta, anche quando entrambi i giocatori restano senza fiche nello stesso momento. Le fiche prese dal banco sono perse per entrambi."
+    },
+    "fair": {
+      "draw": "Nessuno sceglie il primo croupier: ogni giocatore dà una parte casuale sigillata all'inizio, e il croupier è sorteggiato da entrambe le parti, allo stesso modo su ogni pagina.",
+      "order": "Una puntata fuori turno viene ignorata da ogni pagina; una puntata dell'altro giocatore, o fuori dalle regole, viene segnalata.",
+      "sealed": "La pallina è sigillata: la pagina del croupier invia il suo hash con un sale casuale, insieme alle puntate, poi la rivela quando il puntatore ha puntato. Nessuno, nemmeno il server, vede la pallina prima. Una pagina ricaricata conserva la sua pallina, salvo se la sua memoria è bloccata.",
+      "title": "Gioco leale"
+    },
+    "game": {
+      "bet": "Poi il puntatore punta, vedendo le puntate del croupier: su 2 caselle al massimo, almeno tante fiche quante il croupier, o tutte le sue fiche se ne ha meno.",
+      "place": "Il croupier mette la pallina in una delle 4 caselle, sigillata, e allo stesso tempo punta in pubblico: almeno 1 fiche, su 1 a 4 caselle, mai più fiche di quante ne abbia.",
+      "reveal": "Poi la pagina del croupier rivela la pallina da sola, e le fiche vengono regolate.",
+      "talk": "Chiunque può dire qualsiasi cosa sulla pallina, vera o falsa, nella conversazione dei giocatori: tutta la stanza la legge, solo i giocatori ci scrivono.",
+      "title": "Una manche"
+    },
+    "missed": {
+      "bet": "Un puntatore che non punta in tempo perde la partita.",
+      "place": "Un croupier che non mette la pallina e non punta in tempo perde la partita.",
+      "reveal": "Un croupier la cui pagina non rivela la pallina entro 15 secondi, rivela una pallina diversa da quella sigillata o una pallina fuori dalla ruota, perde la partita.",
+      "title": "Fuori tempo",
+      "void": "Le puntate della manche tornano allora ai loro proprietari, e l'altro giocatore vince la partita, quali che siano le fiche."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Al banco: tutte le fiche puntate sono perse",
+        "onBall": "Nessun giocatore"
+      },
+      "both": {
+        "losing": "Divise in proporzione alle loro fiche sulla pallina, ogni parte arrotondata per difetto, la fiche avanzata al puntatore",
+        "onBall": "Entrambi i giocatori"
+      },
+      "caption": "Dove vanno le fiche delle altre caselle, a seconda di chi ha puntato sulla casella della pallina",
+      "croupier": {
+        "losing": "Al croupier",
+        "onBall": "Solo il croupier"
+      },
+      "example": "Per esempio, il croupier punta 15 fiche sulla casella 2 e 50 sulla casella 3, il puntatore 35 sulla casella 2 e 30 sulla casella 4. La pallina è nella casella 2: entrambi i giocatori riprendono le loro fiche su di essa e si dividono le 80 fiche delle altre caselle, 15 a 35. Il croupier riceve 24 fiche e ne perde 50, −26; il puntatore riceve 56 e ne perde 30, +26.",
+      "leftover": "Le parti arrotondate lasciano al massimo una fiche: con 10 fiche del croupier e 20 del puntatore sulla pallina, le 5 fiche da dividere danno 1 al croupier, 3 al puntatore e la fiche avanzata, cioè 4.",
+      "losing": "Le fiche delle altre caselle",
+      "onBall": "Ha puntato sulla pallina",
+      "punter": {
+        "losing": "Al puntatore",
+        "onBall": "Solo il puntatore"
+      },
+      "text": "Le fiche puntate sulla casella della pallina tornano ai loro proprietari. Le fiche delle altre caselle vanno:",
+      "title": "Il regolamento"
+    },
+    "setup": {
+      "match": "Ogni giocatore parte con 500 fiche. La partita dura 10 manche, e i giocatori si scambiano i ruoli a ogni manche: il primo croupier è sorteggiato, poi ogni giocatore è il croupier 5 volte.",
+      "players": "2 giocatori occupano i posti, gli altri partecipanti guardano. Uno dei giocatori avvia la partita e sceglie il tempo delle puntate, da 30 secondi a 5 minuti: i posti restano occupati fino alla fine.",
+      "title": "Il tavolo"
+    },
+    "summary": "Regole della roulette fissa",
+    "times": {
+      "away": "Un giocatore assente viene atteso 15 secondi in più, una volta.",
+      "phases": "Il croupier e il puntatore puntano ciascuno nel tempo scelto all'inizio, la rivelazione attende 15 secondi: ciascuna fase si chiude appena il suo giocatore ha agito.",
+      "title": "I tempi"
+    },
+    "title": "Regole"
+  },
+  "table": {
+    "action": {
+      "rematch": "Gioca ancora",
+      "start": "Avvia la partita"
+    },
+    "bank": "Banco: {chips, plural, one {# fiche} other {# fiche}}",
+    "bets": {
+      "error": {
+        "allIn": "Hai meno fiche di quante ne ha puntate {name}: punta tutte le tue fiche",
+        "none": "Punta almeno 1 fiche",
+        "over": "Hai solo {chips, plural, one {# fiche} other {# fiche}}",
+        "pockets": "Punta al massimo su {pockets, plural, one {# casella} other {# caselle}}",
+        "under": "Punta almeno {minimum, plural, one {# fiche} other {# fiche}}, quanto {name}"
+      },
+      "hint": "{name} punta {total, plural, one {# fiche} other {# fiche}}: {allIn, select, yes {punta tutte le tue fiche} other {punta almeno altrettanto}}, al massimo su {pockets, plural, one {# casella} other {# caselle}}.",
+      "integer": "Solo fiche intere",
+      "label": "Fiche su {pocket}",
+      "min": "Nessuna puntata negativa",
+      "submit": "Punta"
+    },
+    "conversation": {
+      "players": "{first} e {second}"
+    },
+    "history": "Manche della partita",
+    "info": {
+      "game": "Manche {number} di {games}",
+      "terms": "Puntate di {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partita {number}:",
+    "move": {
+      "cheated": "Manche {number}: {name} {reason, select, invalidReveal {rivela una pallina diversa da quella sigillata} other {rivela una pallina fuori dalla ruota}} e perde la partita",
+      "late": "Manche {number}: {name} {phase, select, placing {non mette la pallina in tempo} betting {non punta in tempo} other {non rivela la pallina in tempo}} e perde la partita",
+      "settled": "Manche {number}: pallina nella casella {ball}, {case, select, croupier {solo il croupier sopra} punter {solo il puntatore sopra} split {entrambi i giocatori sopra} other {nessuno sopra}}. {croupier} (croupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# fiche} other {# fiche}}, {punter} (puntatore) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# fiche} other {# fiche}}"
+    },
+    "pastMatches": "Partite giocate",
+    "place": {
+      "hint": "Punta almeno 1 fiche, sulle caselle che vuoi: il puntatore legge le tue puntate.",
+      "option": "{pocket}",
+      "pocket": "Casella della pallina",
+      "required": "Scegli la casella della pallina",
+      "submit": "Metti la pallina e punta"
+    },
+    "result": {
+      "bankrupt": "{winner} vince: {loser} non ha più fiche",
+      "cheat": "{winner} vince: {loser} {cause, select, invalidReveal {rivela una pallina diversa da quella sigillata} other {rivela una pallina fuori dalla ruota}}",
+      "draw": "Patta, {chips, plural, one {# fiche} other {# fiche}} a testa",
+      "forfeit": "{winner} vince: {loser} {cause, select, placing {non mette la pallina in tempo} betting {non punta in tempo} other {non rivela la pallina in tempo}}",
+      "games": "{winner} vince, {winnerChips, plural, one {# fiche} other {# fiche}} a {loserChips, plural, one {# fiche} other {# fiche}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# fiche} other {# fiche}}",
+      "free": "Posto libero",
+      "leave": "Lascia il posto",
+      "release": "Libera il posto",
+      "side": "{side, select, croupier {Croupier} other {Puntatore}}",
+      "take": "Siediti"
+    },
+    "spectators": "{count, plural, one {# spettatore} other {# spettatori}}",
+    "start": {
+      "betTime": "Tempo per puntare"
+    },
+    "status": {
+      "away": "In attesa del ritorno di {names}…",
+      "bet": "Punta, leggendo le puntate di {name}.",
+      "betting": "{name} punta…",
+      "drawing": "La partita inizia: in attesa di {names}.",
+      "hurry": "Sbrigati: il tempo sta per scadere!",
+      "over": "La partita è finita.",
+      "place": "Metti la pallina e punta: la pallina resta sigillata finché il puntatore non ha puntato.",
+      "placing": "{name} mette la pallina e punta…",
+      "revealing": "La pallina viene rivelata…",
+      "sealed": "La tua pallina è sigillata: ora punta {name}…",
+      "seats": "{count, plural, one {# giocatore seduto} other {# giocatori seduti}}: la partita inizia quando entrambi i posti sono occupati.",
+      "start": "Scegli il tempo delle puntate, poi avvia la partita.",
+      "waitingStart": "Entrambi i giocatori sono seduti: in attesa che uno di loro avvii la partita."
+    }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Ultima pallina: casella {pocket}",
+      "sealed": "La tua pallina, sigillata: casella {pocket}"
+    },
+    "pocket": "Casella {number}{ball, select, sealed {, la tua pallina, sigillata} last {, l'ultima pallina} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# fiche} other {# fiche}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# fiche} other {# fiche}}} other {}}"
+  }
+}

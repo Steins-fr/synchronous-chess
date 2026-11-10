@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Scacchi",
       "contraband": "Contrabbando",
+      "fixedRoulette": "Roulette fissa",
       "gardenOfEden": "Eden",
       "home": "Home",
       "minorityGame": "Minoranza",
@@ -29,8 +30,8 @@
     "title": "Scacchi sincroni"
   },
   "cheat": {
-    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} eden {giardino dell'Eden} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
-    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} eden {giardino dell'Eden} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
+    "flagged": "Il messaggio {index} ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} eden {giardino dell'Eden} fixed {roulette fissa} other {}}) di {author} è stato segnalato come imbroglio da {reporters}",
+    "ignored": "Un messaggio ({chain, select, chess {scacchi} chat {chat} poker {poker} roulette {roulette} bid {poker all'asta} minority {gioco della minoranza} private {conversazione privata} contraband {contrabbando} eden {giardino dell'Eden} fixed {roulette fissa} other {}}) di {author} viene ignorato da {sequencer}, segnalato da {reporters}"
   },
   "dialog": {
     "cancel": "Annulla",
@@ -62,6 +63,11 @@
       "action": "Gioca",
       "description": "Da 2 a 8 giocatori di due paesi contrabbandano denaro attraverso la dogana dell'altro, con le valigie sigillate: lasciar passare, o dubitare.",
       "title": "Contrabbando"
+    },
+    "fixedRoulette": {
+      "action": "Gioca",
+      "description": "2 giocatori puntano su una ruota di 4 caselle che non gira mai: il croupier mette la pallina, sigillata, e punta per primo; il puntatore legge le sue puntate.",
+      "title": "Roulette fissa"
     },
     "gardenOfEden": {
       "action": "Gioca",

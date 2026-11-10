@@ -59,6 +59,12 @@ The Garden of Eden of the film *Liar Game: The Final Stage* for 3 to 8 players: 
 
 No one reads an apple before every player picked one, not even the server: each page sends the hash of its apple, then reveals it once every player picked one, and an apple withheld loses as much as a lone red apple. See [Garden of Eden session](documentation/garden-of-eden-session.md).
 
+### Fixed Roulette demo
+
+The roulette that does not spin of the manga *Liar Game*, for two players: a fixed wheel of 4 pockets, 10 games, 500 chips each. Each player takes a seat with `Sit here`, then one of them picks the time of the bets and clicks `Start the match`. In each game, the croupier places the ball in a pocket, sealed, and bets first, in public, 1 chip at least; the punter then bets on 2 pockets at most, as many chips as the croupier at least, reading its bets. The chips on the pocket of the ball go back to their owners, and the chips of the other pockets go to the player alone on the ball, are shared by both in the ratio of their chips on it, or go to the bank when no one bet on it. The players swap their roles each game; the match ends after the 10 games, or at once when a player has no chip left, and the most chips win. The two players talk in a conversation of their own, which the whole room reads: the croupier may say anything about the ball, true or false.
+
+No one reads the ball before the punter bet, not even the server: the page of the croupier sends the hash of the ball with its bets, then reveals it once the punter bet, and a ball withheld loses the match. No one picks the first croupier: it is drawn from a sealed random part of each player. See [Fixed Roulette session](documentation/fixed-roulette-session.md).
+
 ### Chat demo
 
 A simple chat demo with ping displayed between peers. For the moment, you have to click on the send button for sending the message. The `Enter` key is not supported.
@@ -110,22 +116,23 @@ The API is composed of 4 lambdas for managing websocket connection, disconnectio
 ### **Frontend**
 ---
 
-The synchronous chess board game, the Seventeen Poker, the 24-shot Russian roulette, the Bid Poker, the Minority Game, the Contraband and the Garden of Eden, with chat.
+The synchronous chess board game, the Seventeen Poker, the 24-shot Russian roulette, the Bid Poker, the Minority Game, the Contraband, the Garden of Eden and the Fixed Roulette, with chat.
 
 The players exchange their moves and chat messages directly over WebRTC, through block chains ordered by the host,
 which the other participants watch for cheats. The moves stay hidden until both players are committed, the
 cards of the poker until their showdown, the bullets of the roulette until their chamber fires, the bids of the Bid
 Poker until their auction closes, the votes of the Minority Game until every player voted, the trunks of the
-Contraband until their inspector called, and the apples of the Garden of Eden until every player picked one; the
-private conversations of the Contraband are encrypted end to end.
+Contraband until their inspector called, the apples of the Garden of Eden until every player picked one, and the ball of
+the Fixed Roulette until the punter bet; the private conversations of the Contraband are encrypted end to end.
 See [Block chains and anti-cheat](documentation/blockchain-and-anti-cheat.md),
 [Chess game session](documentation/chess-game-session.md), [Mental poker](documentation/mental-poker.md),
 [Seventeen Poker session](documentation/seventeen-poker-session.md),
 [Russian roulette session](documentation/russian-roulette-session.md),
 [Bid Poker session](documentation/bid-poker-session.md),
 [Minority Game session](documentation/minority-game-session.md),
-[Contraband session](documentation/contraband-session.md) and
-[Garden of Eden session](documentation/garden-of-eden-session.md).
+[Contraband session](documentation/contraband-session.md),
+[Garden of Eden session](documentation/garden-of-eden-session.md) and
+[Fixed Roulette session](documentation/fixed-roulette-session.md).
 
 **Required**: Backend API (its websocket API and its HTTP API).
 
@@ -146,7 +153,7 @@ The schema is written with Drizzle in `application/backend/websocket-api/shared/
 - connection_id: Websocket connection id of the host;
 - host_player: Player name of the host;
 - max_player: Maximum of player that can join the room;
-- game: The game of the room, chess, seventeen-poker, russian-roulette, bid-poker, minority-game, contraband, garden-of-eden or chat;
+- game: The game of the room, chess, seventeen-poker, russian-roulette, bid-poker, minority-game, contraband, garden-of-eden, fixed-roulette or chat;
 - created_at, name_key: The date of its creation and its id in lower case, to list and search the rooms, unique: the ids differ whatever their case;
 - password_hash, is_private: The salted hash of the password of a private room;
 - expires_at: Set while the host is disconnected, in epoch seconds: the room no longer exists after it, and the creation of a room deletes it.

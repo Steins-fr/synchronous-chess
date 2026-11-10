@@ -1,0 +1,161 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Cada jogador começa com 500 fichas, e os jogadores trocam de papel a cada rodada: cada um é o crupiê 5 vezes.",
+      "sealed": "A bola é selada: ninguém, nem mesmo o servidor, vê a casa dela antes de o apostador apostar.",
+      "talk": "Os dois jogadores conversam em uma conversa só deles, lida pela sala inteira: o crupiê pode dizer qualquer coisa sobre a bola, verdadeira ou falsa."
+    },
+    "rooms": "Crie uma sala ou entre em uma, para jogar com outras pessoas.",
+    "summary": "Um jogo do mangá Liar Game: 2 jogadores se enfrentam em uma roda de 4 casas que nunca gira, em 10 rodadas. Em cada rodada, o crupiê coloca a bola e aposta primeiro, depois o apostador aposta, lendo as apostas do crupiê.",
+    "tagline": "Uma roleta que não gira: o crupiê sabe onde está a bola.",
+    "title": "Roleta fixa"
+  },
+  "rules": {
+    "end": {
+      "games": "A partida termina após 10 rodadas, ou assim que um jogador fica sem fichas depois de uma rodada: ele perde.",
+      "title": "O fim da partida",
+      "winner": "Vence o jogador com mais fichas; com fichas iguais, é empate, inclusive quando os dois jogadores ficam sem fichas ao mesmo tempo. As fichas que a banca levou estão perdidas para os dois."
+    },
+    "fair": {
+      "draw": "Ninguém escolhe o primeiro crupiê: cada jogador dá uma parte aleatória lacrada no início, e o crupiê é sorteado a partir das duas, igual em cada página.",
+      "order": "Uma aposta fora da sua vez é ignorada por cada página; uma aposta do outro jogador, ou fora das regras, é denunciada.",
+      "sealed": "A bola é selada: a página do crupiê envia o hash dela com um sal aleatório, junto com as apostas, e a revela quando o apostador apostou. Ninguém, nem mesmo o servidor, vê a bola antes. Uma página recarregada mantém a sua bola, a menos que o armazenamento esteja bloqueado.",
+      "title": "Jogo limpo"
+    },
+    "game": {
+      "bet": "Depois o apostador aposta, vendo as apostas do crupiê: em 2 casas no máximo, pelo menos tantas fichas quanto o crupiê, ou todas as suas fichas se tiver menos.",
+      "place": "O crupiê coloca a bola em uma das 4 casas, selada, e aposta em público ao mesmo tempo: 1 ficha no mínimo, em 1 a 4 casas, nunca mais fichas do que tem.",
+      "reveal": "Depois a página do crupiê revela a bola sozinha, e as fichas são acertadas.",
+      "talk": "Qualquer um pode dizer qualquer coisa sobre a bola, verdadeira ou falsa, na conversa dos jogadores: a sala inteira a lê, só os jogadores escrevem nela.",
+      "title": "Uma rodada"
+    },
+    "missed": {
+      "bet": "Um apostador que não aposta a tempo perde a partida.",
+      "place": "Um crupiê que não coloca a bola e não aposta a tempo perde a partida.",
+      "reveal": "Um crupiê cuja página não revela a bola em 15 segundos, revela outra bola que não a selada, ou uma bola fora da roda, perde a partida.",
+      "title": "Fora do tempo",
+      "void": "As apostas da rodada voltam então para os donos, e o outro jogador vence a partida, sejam quais forem as fichas."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Para a banca: todas as fichas apostadas se perdem",
+        "onBall": "Nenhum jogador"
+      },
+      "both": {
+        "losing": "Divididas na proporção das fichas deles na bola, cada parte arredondada para baixo, a ficha que sobra para o apostador",
+        "onBall": "Os dois jogadores"
+      },
+      "caption": "Para onde vão as fichas das outras casas, conforme quem apostou na casa da bola",
+      "croupier": {
+        "losing": "Para o crupiê",
+        "onBall": "Só o crupiê"
+      },
+      "example": "Por exemplo, o crupiê aposta 15 fichas na casa 2 e 50 na casa 3, o apostador 35 na casa 2 e 30 na casa 4. A bola está na casa 2: os dois jogadores pegam de volta suas fichas nela e dividem as 80 fichas das outras casas, 15 para 35. O crupiê recebe 24 fichas e perde 50, −26; o apostador recebe 56 e perde 30, +26.",
+      "leftover": "As partes arredondadas deixam uma ficha no máximo: com 10 fichas do crupiê e 20 do apostador na bola, as 5 fichas a dividir dão 1 ao crupiê, 3 ao apostador e a ficha que sobra, ou seja, 4.",
+      "losing": "As fichas das outras casas",
+      "onBall": "Apostou na bola",
+      "punter": {
+        "losing": "Para o apostador",
+        "onBall": "Só o apostador"
+      },
+      "text": "As fichas apostadas na casa da bola voltam para os donos. As fichas das outras casas vão:",
+      "title": "O acerto"
+    },
+    "setup": {
+      "match": "Cada jogador começa com 500 fichas. A partida dura 10 rodadas, e os jogadores trocam de papel a cada rodada: o primeiro crupiê é sorteado, depois cada jogador é o crupiê 5 vezes.",
+      "players": "2 jogadores ocupam os lugares, os outros participantes assistem. Um dos jogadores inicia a partida e escolhe o tempo das apostas, de 30 segundos a 5 minutos: os lugares ficam ocupados até o fim.",
+      "title": "A mesa"
+    },
+    "summary": "Regras da roleta fixa",
+    "times": {
+      "away": "Um jogador ausente é esperado 15 segundos a mais, uma vez.",
+      "phases": "O crupiê e o apostador apostam cada um no tempo escolhido no início, a revelação espera 15 segundos: cada fase se fecha assim que o seu jogador agiu.",
+      "title": "Os tempos"
+    },
+    "title": "Regras"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jogar de novo",
+      "start": "Iniciar a partida"
+    },
+    "bank": "Banca: {chips, plural, one {# ficha} other {# fichas}}",
+    "bets": {
+      "error": {
+        "allIn": "Você tem menos fichas do que {name} apostou: aposte todas as suas fichas",
+        "none": "Aposte pelo menos 1 ficha",
+        "over": "Você só tem {chips, plural, one {# ficha} other {# fichas}}",
+        "pockets": "Aposte em no máximo {pockets, plural, one {# casa} other {# casas}}",
+        "under": "Aposte pelo menos {minimum, plural, one {# ficha} other {# fichas}}, tanto quanto {name}"
+      },
+      "hint": "{name} aposta {total, plural, one {# ficha} other {# fichas}}: {allIn, select, yes {aposte todas as suas fichas} other {aposte pelo menos o mesmo}}, em no máximo {pockets, plural, one {# casa} other {# casas}}.",
+      "integer": "Fichas inteiras",
+      "label": "Fichas em {pocket}",
+      "min": "Sem aposta negativa",
+      "submit": "Apostar"
+    },
+    "conversation": {
+      "players": "{first} e {second}"
+    },
+    "history": "Rodadas da partida",
+    "info": {
+      "game": "Rodada {number} de {games}",
+      "terms": "Apostas de {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partida {number}:",
+    "move": {
+      "cheated": "Rodada {number}: {name} {reason, select, invalidReveal {revela outra bola que não a selada} other {revela uma bola fora da roda}} e perde a partida",
+      "late": "Rodada {number}: {name} {phase, select, placing {não coloca a bola a tempo} betting {não aposta a tempo} other {não revela a bola a tempo}} e perde a partida",
+      "settled": "Rodada {number}: bola na casa {ball}, {case, select, croupier {só o crupiê nela} punter {só o apostador nela} split {os dois jogadores nela} other {ninguém nela}}. {croupier} (crupiê) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# ficha} other {# fichas}}, {punter} (apostador) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# ficha} other {# fichas}}"
+    },
+    "pastMatches": "Partidas jogadas",
+    "place": {
+      "hint": "Aposte pelo menos 1 ficha, nas casas que quiser: o apostador lê suas apostas.",
+      "option": "{pocket}",
+      "pocket": "Casa da bola",
+      "required": "Escolha a casa da bola",
+      "submit": "Colocar a bola e apostar"
+    },
+    "result": {
+      "bankrupt": "{winner} vence: {loser} fica sem fichas",
+      "cheat": "{winner} vence: {loser} {cause, select, invalidReveal {revela outra bola que não a selada} other {revela uma bola fora da roda}}",
+      "draw": "Empate, {chips, plural, one {# ficha} other {# fichas}} para cada um",
+      "forfeit": "{winner} vence: {loser} {cause, select, placing {não coloca a bola a tempo} betting {não aposta a tempo} other {não revela a bola a tempo}}",
+      "games": "{winner} vence, {winnerChips, plural, one {# ficha} other {# fichas}} contra {loserChips, plural, one {# ficha} other {# fichas}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "free": "Lugar livre",
+      "leave": "Deixar o lugar",
+      "release": "Liberar o lugar",
+      "side": "{side, select, croupier {Crupiê} other {Apostador}}",
+      "take": "Sentar"
+    },
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "start": {
+      "betTime": "Tempo para apostar"
+    },
+    "status": {
+      "away": "Aguardando {names} voltar…",
+      "bet": "Aposte, lendo as apostas de {name}.",
+      "betting": "{name} aposta…",
+      "drawing": "A partida começa: aguardando {names}.",
+      "hurry": "Rápido: seu tempo está acabando!",
+      "over": "A partida terminou.",
+      "place": "Coloque a bola e aposte: a bola fica selada até a aposta do apostador.",
+      "placing": "{name} coloca a bola e aposta…",
+      "revealing": "A bola é revelada…",
+      "sealed": "Sua bola está selada: {name} aposta em seguida…",
+      "seats": "{count, plural, one {# jogador sentado} other {# jogadores sentados}}: a partida começa quando os dois lugares estiverem ocupados.",
+      "start": "Escolha o tempo das apostas, depois inicie a partida.",
+      "waitingStart": "Os dois jogadores estão sentados: aguardando que um deles inicie a partida."
+    }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Última bola: casa {pocket}",
+      "sealed": "Sua bola, selada: casa {pocket}"
+    },
+    "pocket": "Casa {number}{ball, select, sealed {, sua bola, selada} last {, a última bola} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# ficha} other {# fichas}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# ficha} other {# fichas}}} other {}}"
+  }
+}

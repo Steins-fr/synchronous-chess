@@ -1,0 +1,161 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Cada jugador empieza con 500 fichas, y los jugadores intercambian sus papeles en cada ronda: cada uno es el crupier 5 veces.",
+      "sealed": "La bola va sellada: nadie, ni siquiera el servidor, ve su casilla antes de que el apostador haya apostado.",
+      "talk": "Los dos jugadores hablan en una conversación propia, que lee toda la sala: el crupier puede decir cualquier cosa sobre la bola, verdadera o falsa."
+    },
+    "rooms": "Crea una sala o únete a una para jugar con otros.",
+    "summary": "Un juego del manga Liar Game: 2 jugadores se enfrentan en una rueda de 4 casillas que nunca gira, en 10 rondas. En cada ronda, el crupier coloca la bola y apuesta primero, luego el apostador apuesta leyendo las apuestas del crupier.",
+    "tagline": "Una ruleta que no gira: el crupier sabe dónde está la bola.",
+    "title": "Ruleta fija"
+  },
+  "rules": {
+    "end": {
+      "games": "La partida termina tras 10 rondas, o en cuanto un jugador se queda sin fichas tras una ronda: pierde.",
+      "title": "El final de la partida",
+      "winner": "Gana el jugador con más fichas; con las mismas fichas hay empate, también cuando los dos jugadores se quedan sin fichas a la vez. Las fichas que se llevó la banca se pierden para ambos."
+    },
+    "fair": {
+      "draw": "Nadie elige el primer crupier: cada jugador da una parte aleatoria sellada al inicio, y el crupier se sortea a partir de las dos, igual en cada página.",
+      "order": "Una apuesta fuera de su turno es ignorada por cada página; una apuesta del otro jugador, o fuera de las reglas, se denuncia.",
+      "sealed": "La bola va sellada: la página del crupier envía su hash con una sal aleatoria, junto con sus apuestas, y la revela cuando el apostador ha apostado. Nadie, ni siquiera el servidor, ve la bola antes. Una página recargada conserva su bola, salvo si su almacenamiento está bloqueado.",
+      "title": "Juego limpio"
+    },
+    "game": {
+      "bet": "Luego el apostador apuesta, viendo las apuestas del crupier: en 2 casillas como máximo, al menos tantas fichas como el crupier, o todas sus fichas si tiene menos.",
+      "place": "El crupier coloca la bola en una de las 4 casillas, sellada, y apuesta en público a la vez: 1 ficha como mínimo, en 1 a 4 casillas, nunca más fichas de las que tiene.",
+      "reveal": "Luego la página del crupier revela la bola por sí sola, y se liquidan las fichas.",
+      "talk": "Cualquiera puede decir cualquier cosa sobre la bola, verdadera o falsa, en la conversación de los jugadores: toda la sala la lee, solo los jugadores escriben en ella.",
+      "title": "Una ronda"
+    },
+    "missed": {
+      "bet": "Un apostador que no apuesta a tiempo pierde la partida.",
+      "place": "Un crupier que no coloca la bola ni apuesta a tiempo pierde la partida.",
+      "reveal": "Un crupier cuya página no revela la bola en 15 segundos, revela otra bola distinta de la sellada, o una bola fuera de la rueda, pierde la partida.",
+      "title": "Fuera de tiempo",
+      "void": "Las apuestas de la ronda vuelven entonces a sus dueños, y el otro jugador gana la partida, sean cuales sean las fichas."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "A la banca: se pierden todas las fichas apostadas",
+        "onBall": "Ningún jugador"
+      },
+      "both": {
+        "losing": "Se reparten según sus fichas en la bola, cada parte redondeada hacia abajo, la ficha sobrante para el apostador",
+        "onBall": "Los dos jugadores"
+      },
+      "caption": "Adónde van las fichas de las demás casillas, según quién apostó en la casilla de la bola",
+      "croupier": {
+        "losing": "Al crupier",
+        "onBall": "Solo el crupier"
+      },
+      "example": "Por ejemplo, el crupier apuesta 15 fichas en la casilla 2 y 50 en la casilla 3, el apostador 35 en la casilla 2 y 30 en la casilla 4. La bola está en la casilla 2: los dos jugadores recuperan sus fichas en ella y se reparten las 80 fichas de las demás casillas, 15 a 35. El crupier recibe 24 fichas y pierde 50, −26; el apostador recibe 56 y pierde 30, +26.",
+      "leftover": "Las partes redondeadas dejan una ficha como mucho: con 10 fichas del crupier y 20 del apostador en la bola, las 5 fichas a repartir dan 1 al crupier, 3 al apostador y la ficha sobrante, o sea 4.",
+      "losing": "Las fichas de las demás casillas",
+      "onBall": "Apostó en la bola",
+      "punter": {
+        "losing": "Al apostador",
+        "onBall": "Solo el apostador"
+      },
+      "text": "Las fichas apostadas en la casilla de la bola vuelven a sus dueños. Las fichas de las demás casillas van:",
+      "title": "La liquidación"
+    },
+    "setup": {
+      "match": "Cada jugador empieza con 500 fichas. La partida dura 10 rondas, y los jugadores intercambian sus papeles en cada ronda: el primer crupier se sortea, luego cada jugador es el crupier 5 veces.",
+      "players": "2 jugadores ocupan los puestos, los demás participantes miran. Uno de los jugadores inicia la partida y elige el tiempo de las apuestas, de 30 segundos a 5 minutos: los puestos siguen ocupados hasta el final.",
+      "title": "La mesa"
+    },
+    "summary": "Reglas de la ruleta fija",
+    "times": {
+      "away": "A un jugador ausente se le esperan 15 segundos más, una vez.",
+      "phases": "El crupier y el apostador apuestan cada uno en el tiempo elegido al inicio, la revelación espera 15 segundos: cada fase se cierra en cuanto su jugador ha actuado.",
+      "title": "Los tiempos"
+    },
+    "title": "Reglas"
+  },
+  "table": {
+    "action": {
+      "rematch": "Jugar otra vez",
+      "start": "Empezar la partida"
+    },
+    "bank": "Banca: {chips, plural, one {# ficha} other {# fichas}}",
+    "bets": {
+      "error": {
+        "allIn": "Tienes menos fichas de las que apostó {name}: apuesta todas tus fichas",
+        "none": "Apuesta 1 ficha como mínimo",
+        "over": "Solo tienes {chips, plural, one {# ficha} other {# fichas}}",
+        "pockets": "Apuesta en {pockets, plural, one {# casilla} other {# casillas}} como máximo",
+        "under": "Apuesta {minimum, plural, one {# ficha} other {# fichas}} como mínimo, tanto como {name}"
+      },
+      "hint": "{name} apuesta {total, plural, one {# ficha} other {# fichas}}: {allIn, select, yes {apuesta todas tus fichas} other {apuesta al menos lo mismo}}, en {pockets, plural, one {# casilla} other {# casillas}} como máximo.",
+      "integer": "Fichas enteras",
+      "label": "Fichas en {pocket}",
+      "min": "Sin apuestas negativas",
+      "submit": "Apostar"
+    },
+    "conversation": {
+      "players": "{first} y {second}"
+    },
+    "history": "Rondas de la partida",
+    "info": {
+      "game": "Ronda {number} de {games}",
+      "terms": "Apuestas de {unit, select, minutes {{count} min} other {{count} s}}"
+    },
+    "match": "Partida {number}:",
+    "move": {
+      "cheated": "Ronda {number}: {name} {reason, select, invalidReveal {revela otra bola distinta de la sellada} other {revela una bola fuera de la rueda}} y pierde la partida",
+      "late": "Ronda {number}: {name} {phase, select, placing {no coloca la bola a tiempo} betting {no apuesta a tiempo} other {no revela la bola a tiempo}} y pierde la partida",
+      "settled": "Ronda {number}: bola en la casilla {ball}, {case, select, croupier {solo el crupier en ella} punter {solo el apostador en ella} split {los dos jugadores en ella} other {nadie en ella}}. {croupier} (crupier) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# ficha} other {# fichas}}, {punter} (apostador) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# ficha} other {# fichas}}"
+    },
+    "pastMatches": "Partidas jugadas",
+    "place": {
+      "hint": "Apuesta 1 ficha como mínimo, en las casillas que quieras: el apostador lee tus apuestas.",
+      "option": "{pocket}",
+      "pocket": "Casilla de la bola",
+      "required": "Elige la casilla de la bola",
+      "submit": "Colocar la bola y apostar"
+    },
+    "result": {
+      "bankrupt": "{winner} gana: {loser} se queda sin fichas",
+      "cheat": "{winner} gana: {loser} {cause, select, invalidReveal {revela otra bola distinta de la sellada} other {revela una bola fuera de la rueda}}",
+      "draw": "Empate, {chips, plural, one {# ficha} other {# fichas}} cada uno",
+      "forfeit": "{winner} gana: {loser} {cause, select, placing {no coloca la bola a tiempo} betting {no apuesta a tiempo} other {no revela la bola a tiempo}}",
+      "games": "{winner} gana, {winnerChips, plural, one {# ficha} other {# fichas}} contra {loserChips, plural, one {# ficha} other {# fichas}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# ficha} other {# fichas}}",
+      "free": "Puesto libre",
+      "leave": "Dejar el puesto",
+      "release": "Liberar el puesto",
+      "side": "{side, select, croupier {Crupier} other {Apostador}}",
+      "take": "Sentarse"
+    },
+    "spectators": "{count, plural, one {# espectador} other {# espectadores}}",
+    "start": {
+      "betTime": "Tiempo para apostar"
+    },
+    "status": {
+      "away": "Esperando el regreso de {names}…",
+      "bet": "Apuesta, leyendo las apuestas de {name}.",
+      "betting": "{name} apuesta…",
+      "drawing": "La partida empieza: esperando a {names}.",
+      "hurry": "Date prisa: ¡se te acaba el tiempo!",
+      "over": "La partida ha terminado.",
+      "place": "Coloca la bola y apuesta: la bola queda sellada hasta la apuesta del apostador.",
+      "placing": "{name} coloca la bola y apuesta…",
+      "revealing": "Se revela la bola…",
+      "sealed": "Tu bola está sellada: {name} apuesta a continuación…",
+      "seats": "{count, plural, one {# jugador sentado} other {# jugadores sentados}}: la partida empieza cuando los dos puestos están ocupados.",
+      "start": "Elige el tiempo de las apuestas y empieza la partida.",
+      "waitingStart": "Los dos jugadores están sentados: esperando a que uno de ellos empiece la partida."
+    }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Última bola: casilla {pocket}",
+      "sealed": "Tu bola, sellada: casilla {pocket}"
+    },
+    "pocket": "Casilla {number}{ball, select, sealed {, tu bola, sellada} last {, la última bola} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# ficha} other {# fichas}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# ficha} other {# fichas}}} other {}}"
+  }
+}

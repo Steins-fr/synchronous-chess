@@ -12,12 +12,13 @@ export const bidPokerPath: string = 'bid-poker';
 export const minorityGamePath: string = 'minority-game';
 export const contrabandPath: string = 'contraband';
 export const gardenOfEdenPath: string = 'garden-of-eden';
+export const fixedRoulettePath: string = 'fixed-roulette';
 // Developer tooling, linked from nowhere: every sound of the games, to listen to them
 export const soundLabPath: string = 'sound-lab';
 
 // The pages are loaded on their first visit, each in a chunk of its own: the initial bundle only holds the shell of the
 // app (the navigation, the theme). The pages of the games show once their translations are loaded (TranslationScope):
-// the chess, poker, roulette, bid poker, minority game, contraband and garden of Eden pages hold the chat, the poker pages the names of the cards. The scopes are written as literals,
+// the chess, poker, roulette, bid poker, minority game, contraband, garden of Eden and fixed roulette pages hold the chat, the poker pages the names of the cards. The scopes are written as literals,
 // for the keys manager to find them. None waits for the APIs: a page reaches them once a visitor acts on it
 // (VisitorPresenceService), a bot rendering it never wakes the paused database. Leaving the page of a game while the
 // player plays a match asks it to confirm, the other player waiting for it
@@ -83,6 +84,13 @@ export const routes: Routes = [
         canDeactivate: [leaveMatchGuard],
         providers: [provideTranslocoScope('eden', 'chat')],
         loadComponent: () => import('@app/modules/garden-of-eden/pages/garden-of-eden/garden-of-eden').then((page) => page.GardenOfEden),
+    },
+    {
+        path: fixedRoulettePath,
+        canActivate: [translationScopesGuard],
+        canDeactivate: [leaveMatchGuard],
+        providers: [provideTranslocoScope('fixed', 'chat')],
+        loadComponent: () => import('@app/modules/fixed-roulette/pages/fixed-roulette/fixed-roulette').then((page) => page.FixedRoulette),
     },
     {
         path: soundLabPath,

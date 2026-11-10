@@ -1,0 +1,17 @@
+<app-room-layout [conversations]="table()?.conversations()" [dimContent]="false" [game]="game" [room]="room()">
+    <app-fixed-presentation roomPresentation />
+    @if (room(); as myRoom) {
+    <app-fixed-table #fixedTable [room]="myRoom" />
+    <details class="rules-details">
+        <summary>{{ 'fixed.rules.summary' | transloco }}</summary>
+        <app-fixed-rules [withTitle]="false" />
+    </details>
+    } @else {
+    <app-fixed-rules />
+    }
+    <!-- The history of the table, in the panel of the room -->
+    @if (table(); as table) {
+    <app-room-history [currentTitle]="'fixed.table.history' | transloco" [current]="table.history()"
+        [pastTitle]="'fixed.table.pastMatches' | transloco" [past]="table.pastResults()" roomHistory />
+    }
+</app-room-layout>

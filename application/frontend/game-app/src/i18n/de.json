@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Schach",
       "contraband": "Schmuggel",
+      "fixedRoulette": "Festes Roulette",
       "gardenOfEden": "Eden",
       "home": "Start",
       "minorityGame": "Minderheit",
@@ -29,8 +30,8 @@
     "title": "Synchrones Schach"
   },
   "cheat": {
-    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} eden {Garten Eden} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
-    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} eden {Garten Eden} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
+    "flagged": "Nachricht {index} ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} eden {Garten Eden} fixed {festes Roulette} other {}}) von {author} wurde von {reporters} als Betrug gemeldet",
+    "ignored": "Eine Nachricht ({chain, select, chess {Schach} chat {Chat} poker {Poker} roulette {Roulette} bid {Auktionspoker} minority {Minderheitsspiel} private {private Unterhaltung} contraband {Schmuggel} eden {Garten Eden} fixed {festes Roulette} other {}}) von {author} wird von {sequencer} ignoriert, gemeldet von {reporters}"
   },
   "dialog": {
     "cancel": "Abbrechen",
@@ -62,6 +63,11 @@
       "action": "Spielen",
       "description": "2 bis 8 Spieler in zwei Ländern schmuggeln Geld durch den Zoll des anderen, ihre Koffer versiegelt: durchlassen oder zweifeln.",
       "title": "Schmuggel"
+    },
+    "fixedRoulette": {
+      "action": "Spielen",
+      "description": "2 Spieler setzen an einem Rad mit 4 Fächern, das sich nie dreht: Der Croupier legt die Kugel versiegelt und setzt zuerst; der Pointeur liest seine Einsätze.",
+      "title": "Festes Roulette"
     },
     "gardenOfEden": {
       "action": "Spielen",

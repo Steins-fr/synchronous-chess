@@ -1,0 +1,161 @@
+{
+  "presentation": {
+    "points": {
+      "roles": "Her oyuncu 500 fişle başlar ve oyuncular her rauntta rollerini değiştirir: her biri 5 kez krupiye olur.",
+      "sealed": "Top mühürlüdür: bahisçi bahis yapmadan önce kimse, sunucu bile, topun bölmesini göremez.",
+      "talk": "İki oyuncu, tüm odanın okuduğu kendilerine ait bir konuşmada konuşur: krupiye top hakkında doğru ya da yanlış her şeyi söyleyebilir."
+    },
+    "rooms": "Başkalarıyla oynamak için bir oda oluşturun ya da bir odaya katılın.",
+    "summary": "Liar Game mangasından bir oyun: 2 oyuncu, hiç dönmeyen 4 bölmeli bir çarkta 10 raunt boyunca karşı karşıya gelir. Her rauntta krupiye topu yerleştirir ve önce bahis yapar, ardından bahisçi krupiyenin bahislerini okuyarak bahis yapar.",
+    "tagline": "Dönmeyen bir rulet: krupiye topun nerede olduğunu bilir.",
+    "title": "Sabit rulet"
+  },
+  "rules": {
+    "end": {
+      "games": "Maç 10 rauntun ardından ya da bir oyuncunun bir rauntun sonunda hiç fişi kalmadığı anda biter: o oyuncu kaybeder.",
+      "title": "Maçın sonu",
+      "winner": "En çok fişi olan oyuncu kazanır; fişler eşitse maç berabere biter, iki oyuncunun da fişi aynı anda biterse dahil. Bankanın aldığı fişler iki oyuncu için de kaybedilmiştir."
+    },
+    "fair": {
+      "draw": "İlk krupiyeyi kimse seçmez: her oyuncu başlangıçta mühürlü bir rastgele parça verir ve krupiye iki parçadan, her sayfada aynı şekilde çekilir.",
+      "order": "Sırası dışında yapılan bir bahis her sayfa tarafından yok sayılır; diğer oyuncunun bahsi ya da kurallara aykırı bir bahis bildirilir.",
+      "sealed": "Top mühürlüdür: krupiyenin sayfası, bahisleriyle birlikte topun karmasını rastgele bir tuzla gönderir ve bahisçi bahis yapınca açar. Ondan önce kimse, sunucu bile, topu göremez. Yeniden yüklenen bir sayfa, depolaması engellenmediyse topunu korur.",
+      "title": "Adil oyun"
+    },
+    "game": {
+      "bet": "Ardından bahisçi, krupiyenin bahislerini görerek bahis yapar: en fazla 2 bölmeye, en az krupiye kadar fiş ya da daha az fişi varsa tüm fişlerini.",
+      "place": "Krupiye topu 4 bölmeden birine mühürlü olarak yerleştirir ve aynı anda herkesin önünde bahis yapar: en az 1 fiş, 1 ila 4 bölmeye, asla elindekinden fazla fiş değil.",
+      "reveal": "Ardından krupiyenin sayfası topu kendiliğinden açar ve fişler hesaplanır.",
+      "talk": "Herkes oyuncuların konuşmasında top hakkında doğru ya da yanlış her şeyi söyleyebilir: tüm oda onu okur, yalnızca oyuncular yazar.",
+      "title": "Bir raunt"
+    },
+    "missed": {
+      "bet": "Zamanında bahis yapmayan bahisçi maçı kaybeder.",
+      "place": "Topu zamanında yerleştirip bahis yapmayan krupiye maçı kaybeder.",
+      "reveal": "Sayfası topu 15 saniye içinde açmayan, mühürlenenden farklı bir top ya da çarkın dışında bir top açan krupiye maçı kaybeder.",
+      "title": "Süre aşımı",
+      "void": "Bu durumda rauntun bahisleri sahiplerine döner ve fişler ne olursa olsun diğer oyuncu maçı kazanır."
+    },
+    "settlement": {
+      "bank": {
+        "losing": "Bankaya: yatırılan tüm fişler kaybedilir",
+        "onBall": "Hiçbir oyuncu"
+      },
+      "both": {
+        "losing": "Topun üstündeki fişleri oranında paylaşılır, her pay aşağı yuvarlanır, artan fiş bahisçiye",
+        "onBall": "İki oyuncu da"
+      },
+      "caption": "Topun bölmesine kimin bahis yaptığına göre diğer bölmelerin fişlerinin gittiği yer",
+      "croupier": {
+        "losing": "Krupiyeye",
+        "onBall": "Yalnızca krupiye"
+      },
+      "example": "Örneğin krupiye 2. bölmeye 15, 3. bölmeye 50 fiş, bahisçi 2. bölmeye 35, 4. bölmeye 30 fiş yatırır. Top 2. bölmededir: iki oyuncu da oradaki fişlerini geri alır ve diğer bölmelerin 80 fişini 15'e 35 oranında paylaşır. Krupiye 24 fiş alır ve 50 kaybeder, −26; bahisçi 56 alır ve 30 kaybeder, +26.",
+      "leftover": "Aşağı yuvarlanan paylar en fazla bir fiş artırır: topta krupiyenin 10, bahisçinin 20 fişi varken paylaşılacak 5 fiş krupiyeye 1, bahisçiye 3 ve artan fişle birlikte 4 verir.",
+      "losing": "Diğer bölmelerin fişleri",
+      "onBall": "Topa bahis yapan",
+      "punter": {
+        "losing": "Bahisçiye",
+        "onBall": "Yalnızca bahisçi"
+      },
+      "text": "Topun bölmesine yatırılan fişler sahiplerine döner. Diğer bölmelerin fişleri şuraya gider:",
+      "title": "Hesaplaşma"
+    },
+    "setup": {
+      "match": "Her oyuncu 500 fişle başlar. Maç 10 raunt sürer ve oyuncular her rauntta rollerini değiştirir: ilk krupiye kurayla belirlenir, sonra her oyuncu 5 kez krupiye olur.",
+      "players": "2 oyuncu yerleri alır, diğer katılımcılar izler. Oyunculardan biri maçı başlatır ve 30 saniyeden 5 dakikaya kadar bahis süresini seçer: yerler maç bitene kadar dolu kalır.",
+      "title": "Masa"
+    },
+    "summary": "Sabit ruletin kuralları",
+    "times": {
+      "away": "Uzaktaki bir oyuncu bir kez 15 saniye daha beklenir.",
+      "phases": "Krupiye ve bahisçi, her biri başta seçilen süre içinde bahis yapar, açılış 15 saniye bekler: her aşama, oyuncusu hamlesini yapar yapmaz kapanır.",
+      "title": "Süreler"
+    },
+    "title": "Kurallar"
+  },
+  "table": {
+    "action": {
+      "rematch": "Tekrar oyna",
+      "start": "Maçı başlat"
+    },
+    "bank": "Banka: {chips, plural, one {# fiş} other {# fiş}}",
+    "bets": {
+      "error": {
+        "allIn": "Fişleriniz, {name} tarafından yatırılandan az: tüm fişlerinizi yatırın",
+        "none": "En az 1 fiş yatırın",
+        "over": "Yalnızca {chips, plural, one {# fişiniz} other {# fişiniz}} var",
+        "pockets": "En fazla {pockets, plural, one {# bölmeye} other {# bölmeye}} bahis yapın",
+        "under": "En az {minimum, plural, one {# fiş} other {# fiş}} yatırın, {name} kadar"
+      },
+      "hint": "{name} {total, plural, one {# fiş} other {# fiş}} yatırıyor: {allIn, select, yes {tüm fişlerinizi yatırın} other {en az aynı miktarı yatırın}}, en fazla {pockets, plural, one {# bölmeye} other {# bölmeye}}.",
+      "integer": "Tam fiş girin",
+      "label": "Fiş: {pocket}. bölme",
+      "min": "Negatif bahis olmaz",
+      "submit": "Bahis yap"
+    },
+    "conversation": {
+      "players": "{first} ve {second}"
+    },
+    "history": "Maçın rauntları",
+    "info": {
+      "game": "Raunt {number} / {games}",
+      "terms": "{unit, select, minutes {{count} dk} other {{count} sn}} bahis süresi"
+    },
+    "match": "Maç {number}:",
+    "move": {
+      "cheated": "Raunt {number}: {name} {reason, select, invalidReveal {mühürlenenden farklı bir top açar} other {çarkın dışında bir top açar}} ve maçı kaybeder",
+      "late": "Raunt {number}: {name} {phase, select, placing {topu zamanında yerleştirmez} betting {zamanında bahis yapmaz} other {topu zamanında açmaz}} ve maçı kaybeder",
+      "settled": "Raunt {number}: top {ball}. bölmede, {case, select, croupier {üzerinde yalnız krupiye} punter {üzerinde yalnız bahisçi} split {üzerinde iki oyuncu da} other {üzerinde kimse yok}}. {croupier} (krupiye) {croupierSign, select, plus {+} minus {−} other {}}{croupierNet, plural, one {# fiş} other {# fiş}}, {punter} (bahisçi) {punterSign, select, plus {+} minus {−} other {}}{punterNet, plural, one {# fiş} other {# fiş}}"
+    },
+    "pastMatches": "Oynanan maçlar",
+    "place": {
+      "hint": "En az 1 fiş yatırın, istediğiniz bölmelere: bahisçi bahislerinizi görür.",
+      "option": "{pocket}",
+      "pocket": "Topun bölmesi",
+      "required": "Topun bölmesini seçin",
+      "submit": "Topu yerleştir ve bahis yap"
+    },
+    "result": {
+      "bankrupt": "{winner} kazanır: {loser} fişsiz kalır",
+      "cheat": "{winner} kazanır: {loser} {cause, select, invalidReveal {mühürlenenden farklı bir top açar} other {çarkın dışında bir top açar}}",
+      "draw": "Berabere, her birinde {chips, plural, one {# fiş} other {# fiş}}",
+      "forfeit": "{winner} kazanır: {loser} {cause, select, placing {topu zamanında yerleştirmez} betting {zamanında bahis yapmaz} other {topu zamanında açmaz}}",
+      "games": "{winner} kazanır: {winnerChips, plural, one {# fiş} other {# fiş}}, rakibinde {loserChips, plural, one {# fiş} other {# fiş}}"
+    },
+    "seat": {
+      "chips": "{count, plural, one {# fiş} other {# fiş}}",
+      "free": "Boş yer",
+      "leave": "Yeri bırak",
+      "release": "Yeri boşalt",
+      "side": "{side, select, croupier {Krupiye} other {Bahisçi}}",
+      "take": "Otur"
+    },
+    "spectators": "{count, plural, one {# izleyici} other {# izleyici}}",
+    "start": {
+      "betTime": "Bahis süresi"
+    },
+    "status": {
+      "away": "Geri dönüş bekleniyor: {names}…",
+      "bet": "Bahsinizi yapın: krupiye {name} bahislerini yaptı.",
+      "betting": "{name} bahis yapıyor…",
+      "drawing": "Maç başlıyor, bekleniyor: {names}.",
+      "hurry": "Acele edin: süreniz doluyor!",
+      "over": "Maç bitti.",
+      "place": "Topu yerleştirin ve bahis yapın: top, bahisçi bahis yapana kadar mühürlü kalır.",
+      "placing": "{name} topu yerleştiriyor ve bahis yapıyor…",
+      "revealing": "Top açılıyor…",
+      "sealed": "Topunuz mühürlendi: sırada {name} bahis yapacak…",
+      "seats": "{count, plural, one {# oyuncu oturdu} other {# oyuncu oturdu}}: maç iki yer de dolunca başlar.",
+      "start": "Bahis süresini seçin, ardından maçı başlatın.",
+      "waitingStart": "İki oyuncu da oturdu: içlerinden birinin maçı başlatması bekleniyor."
+    }
+  },
+  "wheel": {
+    "ball": {
+      "last": "Son top: {pocket}. bölme",
+      "sealed": "Topunuz, mühürlü: {pocket}. bölme"
+    },
+    "pocket": "{number}. bölme{ball, select, sealed {, topunuz, mühürlü} last {, son top} other {}}{topBet, select, yes {, {top}: {topChips, plural, one {# fiş} other {# fiş}}} other {}}{bottomBet, select, yes {, {bottom}: {bottomChips, plural, one {# fiş} other {# fiş}}} other {}}"
+  }
+}

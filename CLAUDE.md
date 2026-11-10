@@ -141,8 +141,9 @@ run by the CI.
   out after 15 seconds, the room handed over, the moves of a poker hand or its next deal timing out after 45 seconds, 30
   more for a player away, a vote of the Minority Game timing out after 30 seconds, its score variant played over 10
   rounds, a trunk of the Contraband not revealed, claimed after 15 seconds and 15 more for a player away, the 13 rounds
-  of the Garden of Eden, an apple missed after 30 seconds. Tag a new scenario lasting 20 seconds or more. `npm run e2e`
-  runs both.
+  of the Garden of Eden, an apple missed after 30 seconds, a punter of the Fixed Roulette not betting in 30 seconds, a
+  ball not revealed, claimed after 15 seconds and 15 more for a player away. Tag a new scenario lasting 20 seconds or
+  more. `npm run e2e` runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
 
@@ -172,7 +173,7 @@ run by the CI.
 - The private conversations a game declares (`PrivateConversations`, see `documentation/blockchain-and-anti-cheat.md`)
   are a third content of the panel (`#room-private`), shown by the button `#room-private-toggle` (`Private`, the unread
   messages on its badge) to their members only: the Contraband declares them, a spectator has none. A watched
-  conversation (the talk of the players of a duel) shows to every participant (`Players' talk`, the panel titled
+  conversation (the talk of the players of a duel, the Fixed Roulette) shows to every participant (`Players' talk`, the panel titled
   `Conversation of the players`): a member writes in it (`Message to bob, read by the whole room`, `Send openly`), the
   others read it without composer (`#private-read-only`, `Only the players write here`). A tab per
   conversation (`#private-conversation-<id>`, the open ones first), its log `#private-log` (the bubbles of the chat,
@@ -212,8 +213,8 @@ run by the CI.
 
 - The chess page is `/synchronous-chess`, the chat page `/simple-chat`, the Seventeen Poker page `/seventeen-poker`,
   the Russian roulette page `/russian-roulette`, the Bid Poker page `/bid-poker`, the Minority Game page `/minority-game`,
-  the Contraband page `/contraband`, the Garden of Eden page `/garden-of-eden`: the home page only links to them. The
-  sound lab `/sound-lab` plays every sound effect of the games, linked from nowhere.
+  the Contraband page `/contraband`, the Garden of Eden page `/garden-of-eden`, the Fixed Roulette page `/fixed-roulette`:
+  the home page only links to them. The sound lab `/sound-lab` plays every sound effect of the games, linked from nowhere.
 - Each participant, the host included, takes a seat with the single button below the board (`#seat-bottom`):
   `Play white`, or `Play black` once white is taken. Two tabs are enough. See `documentation/chess-game-session.md`.
 - The pieces only move by drag and drop (CDK drag). Drive the mouse from
@@ -344,6 +345,36 @@ run by the CI.
   end, then `Play again` starts a new one.
 - A vote waits the time picked, a reveal 15 seconds: every phase closes as soon as every player acted, a round takes a
   couple of seconds when every player acts.
+
+### Testing a Fixed Roulette game
+
+- The table has 2 seats, `#seat-top` and `#seat-bottom` of `app-fixed-table`: each participant takes one with `Sit here`,
+  on the free seat at the bottom of the table only, as at poker, then a seated player picks the time of the bets (`30 s`
+  to `5 min`), radio buttons of `#setup`, and clicks `Start the match` once both seats are taken. The pages draw the first
+  croupier by themselves, then the players swap their roles each game. See `documentation/fixed-roulette-session.md`.
+- The croupier is drawn: read it from the status of a spectator (`alice places the ball and bets…`) once `#game` shows the
+  game (`Game 1 of 10`); the seats show `Croupier` and `Punter`.
+- The croupier picks the pocket of the ball, radio buttons `1` to `4` of `#place-form`, fills the number fields `Chips on
+  1` to `Chips on 4` (role `spinbutton`, an empty field betting no chip), then clicks `Place the ball and bet`; the punter
+  fills the same fields of `#bet-form`, its hint telling the least it bets (`alice bets 65 chips: bet as many at least, on 2
+  pockets at most.`), then clicks `Bet`. Bets refused tell why under the fields (`Bet 65 chips at least, as many as
+  alice`). The page of the croupier reveals the ball by itself.
+- The ball shows on the page of its croupier only until revealed: `Your ball, sealed: pocket 3` in `app-fixed-wheel`,
+  `[data-ball="sealed"]` on its disk; then on every page until the next ball is placed (`Last ball: pocket 2`,
+  `[data-ball="last"]`). The pockets `#pocket-1` to `#pocket-4` are images named by the ball and the stakes (`Pocket 3,
+  alice: 50 chips`, `Pocket 2, the last ball`).
+- The `status` role (`<output>`) tells what the table waits for (`bob bets…`, `Hurry: your time runs out!` in the last 5
+  seconds of the player to act, `Waiting for alice to come back…`), `#clock` the time left, `#bank` the chips the bank
+  took (`Bank: 130 chips`), `#last-game` the game over last (`Game 1: ball in pocket 2, both players on it. alice
+  (croupier) −26 chips, bob (punter) +26 chips`), as the history of the room, kept while the next game is played, the
+  seats the chips of each player (`500 chips`), `#result` the end (`alice wins, 550 chips to 450 chips`, `A draw, 0 chips
+  each`), then `Play again` starts a new match.
+- The conversation of the players (`alice and bob`) is a watched one: `sendOpenly(title, text)` of
+  `e2e/room-participant.ts` sends in it (`Send openly`), `transmitOpenlyAroundComposer(title, text)` around the composer,
+  as a script in the page would; a spectator reads it without composer (`#private-read-only`).
+- The bets wait the time picked, a reveal 15 seconds, a player away 15 more once; a player missing its time loses the
+  match. Every phase closes as soon as its player acted: a match of 10 games takes about 10 seconds when every player
+  acts.
 
 ### Cleanup after every browser test
 

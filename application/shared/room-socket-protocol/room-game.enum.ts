@@ -8,6 +8,7 @@ export enum RoomGame {
     MINORITY_GAME = 'minority-game',
     CONTRABAND = 'contraband',
     GARDEN_OF_EDEN = 'garden-of-eden',
+    FIXED_ROULETTE = 'fixed-roulette',
 }
 
 /** Whether a game received from the network is one of the rooms */

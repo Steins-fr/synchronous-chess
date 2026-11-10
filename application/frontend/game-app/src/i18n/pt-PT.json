@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Xadrez",
       "contraband": "Contrabando",
+      "fixedRoulette": "Roleta fixa",
       "gardenOfEden": "Éden",
       "home": "Início",
       "minorityGame": "Minoria",
@@ -29,8 +30,8 @@
     "title": "Xadrez sincronizado"
   },
   "cheat": {
-    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} other {}}) de {author} foi denunciada como batota por {reporters}",
-    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
+    "flagged": "A mensagem {index} ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} fixed {roleta fixa} other {}}) de {author} foi denunciada como batota por {reporters}",
+    "ignored": "Uma mensagem ({chain, select, chess {xadrez} chat {chat} poker {póquer} roulette {roleta} bid {póquer de leilão} minority {jogo da minoria} private {conversa privada} contraband {contrabando} eden {jardim do Éden} fixed {roleta fixa} other {}}) de {author} foi ignorada por {sequencer}, denunciada por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -62,6 +63,11 @@
       "action": "Jogar",
       "description": "De 2 a 8 jogadores, em dois países, passam dinheiro pela alfândega do outro, com as malas fechadas: deixar passar, ou duvidar.",
       "title": "Contrabando"
+    },
+    "fixedRoulette": {
+      "action": "Jogar",
+      "description": "2 jogadores apostam numa roda de 4 casas que nunca gira: o croupier coloca a bola, selada, e aposta primeiro; o apostador lê as suas apostas.",
+      "title": "Roleta fixa"
     },
     "gardenOfEden": {
       "action": "Jogar",

@@ -1,0 +1,6 @@
+<!-- Its line kept while there is no error, read as the error shows: the error of a group has no control to describe -->
+<p class="m-0 min-h-lh text-sm text-(--mat-sys-error)" aria-live="polite">
+    @if (error(); as error) {
+    {{ error.key | transloco: error.params }}
+    }
+</p>

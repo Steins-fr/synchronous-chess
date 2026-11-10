@@ -9,6 +9,7 @@
       "chat": "Chat",
       "chess": "Ajedrez",
       "contraband": "Contrabando",
+      "fixedRoulette": "Ruleta fija",
       "gardenOfEden": "Edén",
       "home": "Inicio",
       "minorityGame": "Minoría",
@@ -29,8 +30,8 @@
     "title": "Ajedrez sincrónico"
   },
   "cheat": {
-    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} other {}}) de {author} ha sido señalado como trampa por {reporters}",
-    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
+    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} fixed {ruleta fija} other {}}) de {author} ha sido señalado como trampa por {reporters}",
+    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} fixed {ruleta fija} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
@@ -62,6 +63,11 @@
       "action": "Jugar",
       "description": "De 2 a 8 jugadores, en dos países, pasan dinero por la aduana del otro, con sus maletas selladas: dejar pasar, o dudar.",
       "title": "Contrabando"
+    },
+    "fixedRoulette": {
+      "action": "Jugar",
+      "description": "2 jugadores apuestan en una rueda de 4 casillas que nunca gira: el crupier coloca la bola, sellada, y apuesta primero; el apostador lee sus apuestas.",
+      "title": "Ruleta fija"
     },
     "gardenOfEden": {
       "action": "Jugar",

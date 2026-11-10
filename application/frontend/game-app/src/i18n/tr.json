@@ -9,6 +9,7 @@
       "chat": "Sohbet",
       "chess": "Satranç",
       "contraband": "Kaçakçılık",
+      "fixedRoulette": "Sabit rulet",
       "gardenOfEden": "Aden",
       "home": "Ana sayfa",
       "minorityGame": "Azınlık",
@@ -29,8 +30,8 @@
     "title": "Eşzamanlı Satranç"
   },
   "cheat": {
-    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} eden {Aden Bahçesi} other {}}) {reporters} tarafından hile olarak bildirildi",
-    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} eden {Aden Bahçesi} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
+    "flagged": "{author} kullanıcısının {index}. mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} eden {Aden Bahçesi} fixed {sabit rulet} other {}}) {reporters} tarafından hile olarak bildirildi",
+    "ignored": "{author} kullanıcısının bir mesajı ({chain, select, chess {satranç} chat {sohbet} poker {poker} roulette {rulet} bid {açık artırma pokeri} minority {azınlık oyunu} private {özel konuşma} contraband {kaçakçılık} eden {Aden Bahçesi} fixed {sabit rulet} other {}}) {sequencer} tarafından yok sayıldı, bildirenler: {reporters}"
   },
   "dialog": {
     "cancel": "İptal",
@@ -62,6 +63,11 @@
       "action": "Oyna",
       "description": "İki ülkeden 2 ila 8 oyuncu, mühürlü bavullarla birbirlerinin gümrüğünden para kaçırır: geçirmek ya da şüphelenmek.",
       "title": "Kaçakçılık"
+    },
+    "fixedRoulette": {
+      "action": "Oyna",
+      "description": "2 oyuncu hiç dönmeyen 4 bölmeli bir çarka bahis yapar: krupiye topu mühürlü yerleştirir ve önce oynar; bahisçi onun bahislerini okur.",
+      "title": "Sabit rulet"
     },
     "gardenOfEden": {
       "action": "Oyna",

@@ -1,0 +1,100 @@
+<section *transloco="let t; prefix: 'fixed.table'" #tableSection class="relative flex flex-col gap-3 py-4">
+    @let currentSession = session();
+    @let seats = currentSession.tableSeats;
+    @let left = clock.text();
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        @if (info(); as shown) {
+        <span id="game">{{ shown.game.key | transloco: shown.game.params }}</span>
+        <span id="terms">{{ shown.terms.key | transloco: shown.terms.params }}</span>
+        }
+        <span class="ml-auto">{{ t('spectators', { count: seats.spectatorNumber() }) }}</span>
+    </div>
+
+    <!-- The other player above; the local player below, a spectator seeing the table from the first free seat -->
+    @let top = topSeat();
+    <app-fixed-seat #topSeatView appSteadyHeight id="seat-top"
+        [name]="top.name" [awaited]="top.awaited" [side]="top.side" [chips]="top.chips"
+        [clock]="top.awaited ? left : null" [clockLow]="clock.low()"
+        [canRelease]="seats.canRelease(top.seat)" (release)="release(top.seat)" />
+
+    <!-- The cloth: the bank, the fixed wheel and the bets on each pocket, the game over last keeping its lines -->
+    @let last = lastGame();
+    <div id="cloth" appSteadyHeight class="flex flex-col items-center gap-3 p-4 rounded-2xl border border-app-border bg-app-surface-raised">
+        <p #bankView id="bank" class="m-0 text-sm">{{ t('bank', { chips: bank() }) }}</p>
+        <app-fixed-wheel #wheel class="w-full max-w-md" [stakes]="stakes()" [names]="wheelNames()" [ball]="ball()" />
+        <p id="last-game" class="m-0 min-h-[3lh] text-center muted-note">
+            @if (last) {
+            {{ last.key | transloco: last.params }}
+            }
+        </p>
+    </div>
+
+    @let bottom = bottomSeat();
+    <app-fixed-seat #bottomSeatView appSteadyHeight id="seat-bottom"
+        [name]="bottom.name" [awaited]="bottom.awaited" [side]="bottom.side" [chips]="bottom.chips"
+        [clock]="bottom.awaited ? left : null" [clockLow]="clock.low()"
+        [canTake]="seats.canTake(bottom.seat)" [canLeave]="seats.mySeat() === bottom.seat && seats.canLeave()" [canRelease]="seats.canRelease(bottom.seat)"
+        (take)="takeSeat(bottom.seat)" (leave)="leaveSeat()" (release)="release(bottom.seat)" />
+
+    <!-- What the table waits for, the forms of the local player and the result, their place kept as they come and go -->
+    <div appSteadyHeight class="flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+            <output class="table-status flex-1">{{ status().key | transloco: status().params }}</output>
+            @if (left) {
+            <span id="clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clock.low()">{{ left.key | transloco: left.params }}</span>
+            }
+        </div>
+
+        <div id="actions" class="flex flex-col items-center gap-3">
+            @if (currentSession.canPlace()) {
+            <!-- Validated by the form: the browser would show its own message for an amount out of its bounds -->
+            <form id="place-form" class="flex w-full max-w-md flex-col gap-1" (submit)="$event.preventDefault(); place()" novalidate>
+                <app-choice-field [field]="placeForm.pocket" [label]="t('place.pocket')" [options]="pocketOptions()" />
+                <div class="grid grid-cols-2 gap-x-3">
+                    @for (stake of placeForm.chips; track $index) {
+                    <app-number-field [field]="stake" [label]="t('bets.label', { pocket: $index + 1 })" />
+                    }
+                </div>
+                <p class="m-0 min-h-lh text-sm muted-note">{{ t('place.hint') }}</p>
+                <app-form-error [field]="placeForm.chips" />
+                <button class="self-center" mat-flat-button type="submit">{{ t('place.submit') }}</button>
+            </form>
+            }
+            @if (currentSession.canBet()) {
+            <form id="bet-form" class="flex w-full max-w-md flex-col gap-1" (submit)="$event.preventDefault(); bet()" novalidate>
+                <div class="grid grid-cols-2 gap-x-3">
+                    @for (stake of betForm.chips; track $index) {
+                    <app-number-field [field]="stake" [label]="t('bets.label', { pocket: $index + 1 })" />
+                    }
+                </div>
+                <p class="m-0 min-h-lh text-sm muted-note">{{ betHint().key | transloco: betHint().params }}</p>
+                <app-form-error [field]="betForm.chips" />
+                <button class="self-center" mat-flat-button type="submit">{{ t('bets.submit') }}</button>
+            </form>
+            }
+            @if (canRematch()) {
+            <button mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+            }
+        </div>
+
+        <!-- The line of the result, kept while the match is played -->
+        <p class="table-result">
+            @if (result(); as current) {
+            <span id="result" class="badge" [class.badge-win]="!current.draw" [class.badge-draw]="current.draw">
+                {{ current.text.key | transloco: current.text.params }}
+            </span>
+            }
+        </p>
+    </div>
+
+    <!-- The setup of the next match, apart from the actions of the game: their height holds the game only -->
+    @if (currentSession.canStart()) {
+    <form id="setup" class="flex flex-wrap items-end justify-center gap-4" (submit)="$event.preventDefault(); start()">
+        <app-choice-field [field]="setupForm.betTime" [label]="t('start.betTime')" [options]="betTimes()" />
+        <button mat-flat-button type="submit">{{ t('action.start') }}</button>
+    </form>
+    }
+
+    <!-- The chips moved from a place of the table to another one, flying over it -->
+    <app-chip-flights #chipFlights />
+</section>
