@@ -79,7 +79,15 @@
     "tabClosed": "Kapalı",
     "title": "Özel konuşmalar",
     "unreadable": "{name} kişisinin bir mesajı bu tarayıcıda okunamıyor",
-    "unreadableSelf": "Mesajlarınızdan biri bu tarayıcıda okunamıyor"
+    "unreadableSelf": "Mesajlarınızdan biri bu tarayıcıda okunamıyor",
+    "watched": {
+      "close": "Oyuncuların konuşmasını kapat",
+      "message": "{names} için mesaj, tüm oda okur",
+      "readOnly": "Burada yalnızca oyuncular yazar",
+      "send": "Açık gönder",
+      "tab": "Tüm oda okur",
+      "title": "Oyuncuların konuşması"
+    }
   },
   "send": "Gönder"
 }

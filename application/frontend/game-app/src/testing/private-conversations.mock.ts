@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { ChatEntryKind, ChatMessage, ChatMessageState } from '@app/modules/chat-page/components/chat/chat-message/chat-message.component';
 import {
     PrivateComposerWait,
@@ -14,9 +14,11 @@ import { vi } from 'vitest';
  * The private conversations of alice, as the spec sets them: the conversations of the player, why its composer waits,
  * until when it sends too many messages
  */
-export class PrivateConversationsMock implements Pick<PrivateConversations, 'localName' | 'waitUntil' | 'composerWait' | 'send' | 'retry'> {
+export class PrivateConversationsMock implements Pick<PrivateConversations, 'localName' | 'watchedOnly' | 'waitUntil' | 'composerWait' | 'send' | 'retry'> {
     public readonly localName: string = 'alice';
-    public readonly mine = signal<ReadonlyArray<Readonly<PrivateConversationView>>>([]);
+    public readonly shown = signal<ReadonlyArray<Readonly<PrivateConversationView>>>([]);
+    public readonly watchedOnly = computed<boolean>(() => this.shown().length > 0
+        && this.shown().every((conversation: Readonly<PrivateConversationView>) => conversation.watched === true));
     public readonly wait = signal<PrivateComposerWait | undefined>(undefined);
     public readonly until = signal<number | undefined>(undefined);
     public readonly send = vi.fn<PrivateConversations['send']>().mockReturnValue(true);
@@ -56,7 +58,11 @@ export function privateNotice(kind: PrivateLineKind.FLOOD | PrivateLineKind.UNRE
     return { kind, id: ++lineIds, name, at: Date.now(), live: true };
 }
 
-/** A conversation of alice, titled by the key test.{id}, which the spec translates */
-export function privateConversation(id: string, members: ReadonlyArray<string>, lines: ReadonlyArray<PrivateLine> = [], open: boolean = true): PrivateConversationView {
-    return { id, members, title: { key: `test.${ id }` }, open, lines, missingKeys: [] };
+/**
+ * A conversation shown to alice, titled by the key test.{id}, which the spec translates: alice writes in it when it is a
+ * member, else it reads a watched one
+ */
+export function privateConversation(id: string, members: ReadonlyArray<string>, lines: ReadonlyArray<PrivateLine> = [], open: boolean = true,
+    watched: boolean = false): PrivateConversationView {
+    return { id, members, title: { key: `test.${ id }` }, open, lines, missingKeys: [], member: members.includes('alice'), ...(watched ? { watched } : {}) };
 }

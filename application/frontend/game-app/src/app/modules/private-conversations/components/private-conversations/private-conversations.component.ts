@@ -59,8 +59,9 @@ const lineId = (line: Readonly<PrivateLine>): number => (line.kind === PrivateLi
 const isReceived = (line: Readonly<PrivateLine>): boolean => line.kind === PrivateLineKind.MESSAGE && line.live && !line.message.isSelf;
 
 /**
- * The private conversations of the local player, a tab each: the open ones first, then the closed ones, the latest
- * declared first. Each conversation keeps its draft: the selection never moves by itself while the composer holds one, a
+ * The private conversations of the local player, and the watched ones, a tab each: the open ones first, then the closed
+ * ones, the latest declared first. A participant reads a watched conversation of which it is no member, without
+ * composer. Each conversation keeps its draft: the selection never moves by itself while the composer holds one, a
  * text written to a team never sent to its opponent
  */
 @Component({
@@ -88,7 +89,9 @@ export class PrivateConversationsComponent {
 
     protected readonly lineKinds = PrivateLineKind;
     protected readonly localName = computed<string>(() => this.conversations().localName);
-    private readonly views = computed<ReadonlyArray<Readonly<PrivateConversationView>>>(() => this.conversations().mine());
+    private readonly views = computed<ReadonlyArray<Readonly<PrivateConversationView>>>(() => this.conversations().shown());
+    /** Every conversation shown is a watched one: the panel tells the conversations of the players */
+    protected readonly watchedOnly = computed<boolean>(() => this.conversations().watchedOnly());
     // The order of the tabs: the open ones first, then the closed ones, the latest declared first. Not computed again for
     // a message received
     private readonly tabStates = computed<ReadonlyArray<Readonly<PrivateTabState>>>(() => {

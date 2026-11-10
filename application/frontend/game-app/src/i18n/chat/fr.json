@@ -79,7 +79,15 @@
     "tabClosed": "Fermée",
     "title": "Conversations privées",
     "unreadable": "Un message de {name} est illisible dans ce navigateur",
-    "unreadableSelf": "Un de vos messages est illisible dans ce navigateur"
+    "unreadableSelf": "Un de vos messages est illisible dans ce navigateur",
+    "watched": {
+      "close": "Fermer la conversation des joueurs",
+      "message": "Message à {names}, lu par toute la salle",
+      "readOnly": "Seuls les joueurs écrivent ici",
+      "send": "Envoyer à tous",
+      "tab": "Lue par toute la salle",
+      "title": "Conversation des joueurs"
+    }
   },
   "send": "Envoyer"
 }

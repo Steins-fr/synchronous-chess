@@ -79,7 +79,15 @@
     "tabClosed": "Closed",
     "title": "Private conversations",
     "unreadable": "A message from {name} cannot be read in this browser",
-    "unreadableSelf": "One of your messages cannot be read in this browser"
+    "unreadableSelf": "One of your messages cannot be read in this browser",
+    "watched": {
+      "close": "Close the conversation of the players",
+      "message": "Message to {names}, read by the whole room",
+      "readOnly": "Only the players write here",
+      "send": "Send openly",
+      "tab": "Read by the whole room",
+      "title": "Conversation of the players"
+    }
   },
   "send": "Send"
 }

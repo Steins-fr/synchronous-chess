@@ -79,7 +79,15 @@
     "tabClosed": "Geschlossen",
     "title": "Private Unterhaltungen",
     "unreadable": "Eine Nachricht von {name} ist in diesem Browser nicht lesbar",
-    "unreadableSelf": "Eine deiner Nachrichten ist in diesem Browser nicht lesbar"
+    "unreadableSelf": "Eine deiner Nachrichten ist in diesem Browser nicht lesbar",
+    "watched": {
+      "close": "Unterhaltung der Spieler schließen",
+      "message": "Nachricht an {names}, der ganze Raum liest mit",
+      "readOnly": "Nur die Spieler schreiben hier",
+      "send": "Offen senden",
+      "tab": "Der ganze Raum liest mit",
+      "title": "Unterhaltung der Spieler"
+    }
   },
   "send": "Senden"
 }

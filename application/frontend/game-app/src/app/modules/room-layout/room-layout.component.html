@@ -22,8 +22,8 @@
                         #privateButton (click)="togglePanel(panels.PRIVATE, !privateOpen())" [attr.aria-expanded]="privateOpen()"
                         [matBadgeDescription]="'rooms.bar.unread' | transloco: { count: privateUnread() }" [matBadgeHidden]="privateUnread() === 0" [matBadge]="privateUnread()"
                         aria-controls="room-private" id="room-private-toggle" mat-button type="button">
-                        <mat-icon>lock</mat-icon>
-                        <span class="max-sm:sr-only">{{ 'rooms.bar.private' | transloco }}</span>
+                        <mat-icon>{{ watchedOnly() ? 'visibility' : 'lock' }}</mat-icon>
+                        <span class="max-sm:sr-only">{{ (watchedOnly() ? 'rooms.bar.watched' : 'rooms.bar.private') | transloco }}</span>
                     </button>
                     }
                     @if (history()) {

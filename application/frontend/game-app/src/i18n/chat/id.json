@@ -79,7 +79,15 @@
     "tabClosed": "Ditutup",
     "title": "Percakapan privat",
     "unreadable": "Pesan dari {name} tidak dapat dibaca di browser ini",
-    "unreadableSelf": "Salah satu pesan Anda tidak dapat dibaca di browser ini"
+    "unreadableSelf": "Salah satu pesan Anda tidak dapat dibaca di browser ini",
+    "watched": {
+      "close": "Tutup percakapan para pemain",
+      "message": "Pesan untuk {names}, dibaca seluruh ruang",
+      "readOnly": "Hanya para pemain yang menulis di sini",
+      "send": "Kirim terbuka",
+      "tab": "Dibaca seluruh ruang",
+      "title": "Percakapan para pemain"
+    }
   },
   "send": "Kirim"
 }

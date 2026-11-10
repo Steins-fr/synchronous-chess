@@ -79,7 +79,15 @@
     "tabClosed": "Cerrada",
     "title": "Conversaciones privadas",
     "unreadable": "Un mensaje de {name} no se puede leer en este navegador",
-    "unreadableSelf": "Uno de tus mensajes no se puede leer en este navegador"
+    "unreadableSelf": "Uno de tus mensajes no se puede leer en este navegador",
+    "watched": {
+      "close": "Cerrar la conversación de los jugadores",
+      "message": "Mensaje para {names}, lo lee toda la sala",
+      "readOnly": "Solo los jugadores escriben aquí",
+      "send": "Enviar en abierto",
+      "tab": "La lee toda la sala",
+      "title": "Conversación de los jugadores"
+    }
   },
   "send": "Enviar"
 }

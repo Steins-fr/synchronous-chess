@@ -13,12 +13,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PrivateConversation } from './private-conversation';
 import { MAX_KEYS_PER_PARTICIPANT, WAITING_MAX, PrivateComposerWait, PrivateConversations, PrivateLine, PrivateLineKind } from './private-conversations';
 import { exportAgreementKey, importAgreementKey, keyIdOf, pairKey, seal } from './private-crypto';
-import { PrivateEnvelope, PrivateKeyPayload, PrivateMessengerType, PrivatePayloads, PrivatePublicKey, SealedPart } from './private-messages';
+import { PrivateEnvelope, PrivateKeyPayload, PrivateMessengerType, PrivatePayloads, PrivatePublicKey, SealedPart, WatchedText } from './private-messages';
 
 const TEAM: PrivateConversation = { id: 'team', members: ['alice', 'bob'], title: { key: 'team' }, open: true };
 const SIDE: PrivateConversation = { id: 'side', members: ['alice', 'mallory'], title: { key: 'side' }, open: true };
 const TRIO: PrivateConversation = { id: 'trio', members: ['alice', 'bob', 'carol'], title: { key: 'trio' }, open: true };
 const CONVERSATIONS: ReadonlyArray<PrivateConversation> = [TEAM, SIDE];
+/** The conversation of the players, read by the whole room */
+const TALK: PrivateConversation = { id: 'talk', members: ['alice', 'bob'], title: { key: 'talk' }, open: true, watched: true };
 const INVALID: string = CheatReason.INVALID_MESSAGE;
 
 const eventually = <T>(check: () => T | Promise<T>): Promise<T> => vi.waitFor(check, { timeout: 10_000 });
@@ -64,7 +66,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
 
     /** The lines of a conversation of the player, as `author: text`, `flood author` or `unreadable author` */
     function linesOf(name: string, conversation: string = TEAM.id): string[] {
-        return of(name).mine().find((view) => view.id === conversation)?.lines.map(describeLine) ?? [];
+        return of(name).shown().find((view) => view.id === conversation)?.lines.map(describeLine) ?? [];
     }
 
     async function ready(name: string, conversation: string = TEAM.id): Promise<void> {
@@ -168,7 +170,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         // Then
         expect(messagesOf(PrivateMessengerType.KEY).map((message: AppMessage) => message.from).sort()).toEqual(['alice', 'bob']);
         expect(latestKey('alice')).toEqual((await storedKey('alice')).key);
-        expect(of('eve').mine()).toEqual([]);
+        expect(of('eve').shown()).toEqual([]);
         expect(of('eve').conversations()).toEqual([TEAM]);
         expect(of('eve').composerWait(TEAM.id, Date.now())).toEqual(PrivateComposerWait.CLOSED);
     });
@@ -182,8 +184,8 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         alice.declare([TEAM]);
 
         // Then
-        expect(alice.mine()[0].missingKeys).toEqual(['alice', 'bob']);
-        await eventually(() => expect(alice.mine()[0].missingKeys).toEqual(['bob']));
+        expect(alice.shown()[0].missingKeys).toEqual(['alice', 'bob']);
+        await eventually(() => expect(alice.shown()[0].missingKeys).toEqual(['bob']));
         expect(alice.composerWait(TEAM.id, Date.now())).toEqual(PrivateComposerWait.KEYS);
         expect(alice.send(TEAM.id, 'hello')).toBe(false);
 
@@ -211,8 +213,8 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         expect(envelopes('alice')[0].parts.map((part: SealedPart) => part.to)).toEqual(['alice', 'bob']);
         expect(JSON.stringify(envelopes('alice'))).not.toContain('trunk');
         expect(linesOf('carol', TRIO.id)).toEqual([]);
-        expect(of('eve').mine()).toEqual([]);
-        const [line] = of('bob').mine()[0].lines;
+        expect(of('eve').shown()).toEqual([]);
+        const [line] = of('bob').shown()[0].lines;
         expect(line).toEqual(expect.objectContaining({ kind: PrivateLineKind.MESSAGE, live: true }));
         expect(hub.reports).toEqual([]);
     });
@@ -266,7 +268,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         await applied();
 
         // When
-        expect(of('alice').mine()[0].missingKeys).toEqual([]);
+        expect(of('alice').shown()[0].missingKeys).toEqual([]);
         of('alice').send(TRIO.id, 'carol left');
 
         // Then
@@ -510,7 +512,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         await eventually(() => expect(linesOf('alice')).toEqual(['alice: hello', 'bob: hi']));
         await applied();
         expect(messagesOf(PrivateMessengerType.KEY, 'alice')).toHaveLength(1);
-        expect(of('alice').mine()[0].lines.every((line: Readonly<PrivateLine>) => !line.live)).toBe(true);
+        expect(of('alice').shown()[0].lines.every((line: Readonly<PrivateLine>) => !line.live)).toBe(true);
         await ready('alice');
     });
 
@@ -770,7 +772,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
 
             // Then
             expect(linesOf('alice')).toEqual(['alice: hello (failed)']);
-            const [line] = of('alice').mine()[0].lines;
+            const [line] = of('alice').shown()[0].lines;
             const messageId: string = line.kind === PrivateLineKind.MESSAGE ? line.message.messageId : '';
             expect(of('alice').retry(TEAM.id, 'another-id')).toBe(false);
             expect(of('alice').retry(SIDE.id, messageId)).toBe(false);
@@ -814,7 +816,7 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
             expect(of('alice').send(TEAM.id, 'held back')).toBe(false);
 
             // When
-            const [failed] = of('alice').mine()[0].lines;
+            const [failed] = of('alice').shown()[0].lines;
             const retried: boolean = of('alice').retry(TEAM.id, failed.kind === PrivateLineKind.MESSAGE ? failed.message.messageId : '');
 
             // Then
@@ -865,6 +867,228 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
         });
     });
 
+    describe('watched conversations', () => {
+        /** A message of a watched conversation, as a client sends it */
+        function talk(from: string, text: string, options: Partial<WatchedText> = {}): WatchedText {
+            present(from);
+            const payload: WatchedText = { conversation: TALK.id, id: crypto.randomUUID(), at: Date.now(), text, ...options };
+            hub.send({ from, type: PrivateMessengerType.WATCHED, payload });
+            return payload;
+        }
+
+        function talks(from?: string): WatchedText[] {
+            return messagesOf(PrivateMessengerType.WATCHED, from).map((message: AppMessage) => message.payload as WatchedText);
+        }
+
+        test('should show a watched conversation to every participant, its members only writing', async () => {
+            // When
+            pagesOf(['alice', 'eve'], [TALK]);
+            await applied();
+
+            // Then
+            expect(of('alice').shown()).toEqual([{ ...TALK, member: true, lines: [], missingKeys: [] }]);
+            expect(of('eve').shown()).toEqual([{ ...TALK, member: false, lines: [], missingKeys: [] }]);
+            expect(of('eve').watchedOnly()).toBe(true);
+            expect(of('alice').composerWait(TALK.id, Date.now())).toBeUndefined();
+            expect(of('eve').composerWait(TALK.id, Date.now())).toEqual(PrivateComposerWait.CLOSED);
+            expect(of('eve').send(TALK.id, 'let me in')).toBe(false);
+            expect(messagesOf(PrivateMessengerType.KEY)).toEqual([]);
+        });
+
+        test('should tell the conversations of the players apart from the private ones', async () => {
+            // When
+            pagesOf(['alice', 'eve'], [TEAM, TALK]);
+            await ready('alice');
+
+            // Then
+            expect(of('alice').watchedOnly()).toBe(false);
+            expect(of('eve').watchedOnly()).toBe(true);
+            expect(page('zoe').watchedOnly()).toBe(false);
+            expect(messagesOf(PrivateMessengerType.KEY).map((message: AppMessage) => message.from)).toEqual(['alice']);
+        });
+
+        test('should send a message in clear text, read by every participant', async () => {
+            // Given
+            pagesOf(['alice', 'bob', 'eve'], [TALK]);
+            await applied();
+
+            // When
+            expect(of('alice').send(TALK.id, '  the ball is on 3  ')).toBe(true);
+
+            // Then
+            expect(linesOf('alice', TALK.id)).toEqual(['alice: the ball is on 3 (sending)']);
+            await applied();
+            expect(talks('alice')).toEqual([{ conversation: TALK.id, id: expect.any(String), at: expect.any(Number), text: 'the ball is on 3' }]);
+            expect(linesOf('alice', TALK.id)).toEqual(['alice: the ball is on 3']);
+            expect(linesOf('bob', TALK.id)).toEqual(['alice: the ball is on 3']);
+            expect(linesOf('eve', TALK.id)).toEqual(['alice: the ball is on 3']);
+            expect(of('eve').shown()[0].lines[0]).toEqual(expect.objectContaining({ kind: PrivateLineKind.MESSAGE, live: true }));
+            expect(envelopes()).toEqual([]);
+            expect(hub.reports).toEqual([]);
+        });
+
+        test('should give the earlier messages to a spectator coming later, and to a page reloaded', async () => {
+            // Given
+            pagesOf(['alice', 'bob'], [TALK]);
+            await applied();
+            of('alice').send(TALK.id, 'I bet on 2');
+            await applied();
+            talk('bob', 'I do not believe you');
+            await applied();
+
+            // When
+            page('eve');
+            hub.replay(rooms.get('eve') as Room<PrivatePayloads>);
+            of('eve').declare([TALK]);
+            reload('alice', [TALK]);
+            await applied();
+
+            // Then
+            expect(linesOf('eve', TALK.id)).toEqual(['alice: I bet on 2', 'bob: I do not believe you']);
+            expect(linesOf('alice', TALK.id)).toEqual(['alice: I bet on 2', 'bob: I do not believe you']);
+            expect(of('eve').shown()[0].lines.every((line: Readonly<PrivateLine>) => !line.live)).toBe(true);
+            expect(hub.reports).toEqual([]);
+        });
+
+        test('should keep the messages of a watched conversation not declared yet, a bounded number by author', async () => {
+            // Given: the conversation not declared yet by the page of eve
+            page('eve');
+            hub.time = 1000;
+            talk('carol', 'first');
+            for (let index = 0; index <= WAITING_MAX; index++) {
+                hub.time += 2 * CHAT_RATE_WINDOW;
+                talk('bob', `calm ${ index }`);
+            }
+            await applied();
+
+            // When
+            of('eve').declare([{ ...TALK, members: ['bob', 'carol'] }]);
+            await applied();
+
+            // Then: carol's message kept, bob's oldest one dropped
+            const expected: string[] = Array.from({ length: WAITING_MAX }, (_: unknown, index: number) => `bob: calm ${ index + 1 }`);
+            expect(linesOf('eve', TALK.id)).toEqual(['carol: first', ...expected]);
+        });
+
+        test('should report a text invalid, a non-member writing, and a message of the other kind', async () => {
+            // Given
+            pagesOf(['alice', 'bob', 'eve'], [TEAM, TALK]);
+            await ready('alice');
+            await ready('bob');
+
+            // When
+            talk('bob', 'see example.com');
+            talk('bob', 'twice invalid', { id: 'not-an-id' });
+            talk('eve', 'I am a player too');
+            talk('alice', 'in the team', { conversation: TEAM.id });
+            sendEnvelope('bob', await sealed('bob', TALK.id, 'sealed', ['alice', 'bob']));
+            hub.send({ from: 'carol', type: PrivateMessengerType.WATCHED, payload: { conversation: TALK.id, id: crypto.randomUUID(), at: 0, text: 'hi', extra: 1 } });
+            await applied();
+
+            // Then
+            expect(hub.reported().sort()).toEqual([
+                `alice ${ INVALID } alice`, `alice ${ INVALID } bob`, `alice ${ INVALID } carol`, `alice ${ INVALID } eve`,
+                `bob ${ INVALID } alice`, `bob ${ INVALID } bob`, `bob ${ INVALID } carol`, `bob ${ INVALID } eve`,
+                `eve ${ INVALID } alice`, `eve ${ INVALID } bob`, `eve ${ INVALID } carol`, `eve ${ INVALID } eve`,
+            ]);
+            expect(linesOf('alice', TALK.id)).toEqual([]);
+            expect(linesOf('alice')).toEqual([]);
+        });
+
+        test('should drop a message appended live in the name of a participant away, counted in its rate', async () => {
+            // Given
+            pagesOf(['alice', 'eve'], [TALK]);
+            page('bob').declare([TALK]);
+            await applied();
+            hub.leave(rooms.get('bob') as Room<PrivatePayloads>);
+            hub.time = 1000;
+
+            // When
+            Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) =>
+                hub.send({ from: 'bob', type: PrivateMessengerType.WATCHED, payload: { conversation: TALK.id, id: crypto.randomUUID(), at: 0, text: `forged ${ index }` } }));
+            await applied();
+            hub.back(rooms.get('bob') as Room<PrivatePayloads>);
+            talk('bob', 'back again');
+            await applied();
+
+            // Then
+            expect(linesOf('eve', TALK.id)).toEqual(['flood bob']);
+            expect(hub.reports).toEqual([]);
+        });
+
+        test('should count the rate of the watched messages apart from the private ones', async () => {
+            // Given
+            pagesOf(['alice', 'bob'], [TEAM, TALK]);
+            await ready('alice');
+            await ready('bob');
+            hub.time = 1000;
+            const envelopesOfBob: PrivateEnvelope[] = await Promise.all(Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) =>
+                sealed('bob', TEAM.id, `private ${ index }`, ['alice', 'bob'])));
+
+            // When
+            envelopesOfBob.forEach((envelope: PrivateEnvelope) => sendEnvelope('bob', envelope));
+            Array.from({ length: CHAT_RATE_LIMIT + 1 }, (_: unknown, index: number) => talk('bob', `open ${ index }`));
+            await applied();
+
+            // Then
+            expect(linesOf('alice')).toHaveLength(CHAT_RATE_LIMIT);
+            expect(linesOf('alice', TALK.id)).toEqual([...Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) => `bob: open ${ index }`), 'flood bob']);
+        });
+
+        test('should show a message sent again once, its own one sent back as sent', async () => {
+            // Given
+            pagesOf(['alice', 'bob'], [TALK]);
+            await applied();
+            const twice: WatchedText = talk('bob', 'twice');
+
+            // When
+            hub.send({ from: 'bob', type: PrivateMessengerType.WATCHED, payload: twice });
+            await applied();
+
+            // Then
+            expect(linesOf('alice', TALK.id)).toEqual(['bob: twice']);
+            expect(linesOf('bob', TALK.id)).toEqual(['bob: twice']);
+        });
+
+        test('should fail a message not sent back in time, send it again under the same id', async () => {
+            // Given
+            pagesOf(['alice', 'eve'], [TALK]);
+            await applied();
+            vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+            hub.hold('alice');
+            of('alice').send(TALK.id, 'hello');
+            vi.advanceTimersByTime(SEND_TIMEOUT);
+            expect(linesOf('alice', TALK.id)).toEqual(['alice: hello (failed)']);
+            const [line] = of('alice').shown()[0].lines;
+            const messageId: string = line.kind === PrivateLineKind.MESSAGE ? line.message.messageId : '';
+
+            // When
+            expect(of('alice').retry(TALK.id, messageId)).toBe(true);
+            await eventually(() => expect(hub.held).toHaveLength(2));
+            hub.release();
+            await applied();
+
+            // Then
+            expect(linesOf('alice', TALK.id)).toEqual(['alice: hello']);
+            expect(linesOf('eve', TALK.id)).toEqual(['alice: hello']);
+            expect(talks('alice').map((text: WatchedText) => text.id)).toEqual([messageId, messageId]);
+        });
+
+        test('should send nothing once destroyed before its message goes', async () => {
+            // Given
+            pagesOf(['alice'], [TALK]);
+            await applied();
+
+            // When
+            of('alice').send(TALK.id, 'too late');
+            of('alice').destroy();
+            await applied();
+
+            // Then
+            expect(talks()).toEqual([]);
+        });
+    });
+
     describe('declare', () => {
         test.each<[string, PrivateConversation]>([
             ['an invalid id', { ...TEAM, id: 'Team' }],
@@ -885,11 +1109,14 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
 
             // Then
             expect(alice.conversations()).toEqual([{ ...TEAM, members: ['bob', 'alice'], open: false }]);
-            expect(() => alice.declare([{ ...TEAM, members: ['alice', 'carol'] }])).toThrow('The private conversation team is declared again with other members');
-            expect(() => alice.declare([{ ...TEAM, members: ['alice'] }])).toThrow('The private conversation team is declared again with other members');
-            expect(() => alice.declare([SIDE, { ...SIDE, members: ['alice', 'bob'] }])).toThrow('The private conversation side is declared again with other members');
+            const again: string = 'is declared again with other members or of another kind';
+            expect(() => alice.declare([{ ...TEAM, members: ['alice', 'carol'] }])).toThrow(`The private conversation team ${ again }`);
+            expect(() => alice.declare([{ ...TEAM, members: ['alice'] }])).toThrow(`The private conversation team ${ again }`);
+            expect(() => alice.declare([SIDE, { ...SIDE, members: ['alice', 'bob'] }])).toThrow(`The private conversation side ${ again }`);
+            expect(() => alice.declare([{ ...TEAM, members: ['bob', 'alice'], watched: true }])).toThrow(`The private conversation team ${ again }`);
             expect(alice.conversations()).toEqual([{ ...TEAM, members: ['bob', 'alice'], open: false }]);
             expect(() => alice.declare([SIDE])).not.toThrow();
+            expect(() => alice.declare([{ ...TEAM, watched: false }])).not.toThrow();
         });
     });
 
@@ -998,6 +1225,6 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
 
         // Then
         expect(TimedLogger.error).toHaveBeenCalledWith('Failed to apply a change of the private conversations', expect.any(Error));
-        expect(broken.mine()[0].missingKeys).toEqual(['zoe']);
+        expect(broken.shown()[0].missingKeys).toEqual(['zoe']);
     });
 });

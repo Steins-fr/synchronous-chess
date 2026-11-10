@@ -1,4 +1,4 @@
-import { CHAT_MESSAGE_MAX_LENGTH, LATEST_TIME } from '@app/modules/chat-page/components/chat/chat.component';
+import { CHAT_MESSAGE_MAX_LENGTH, ChatText, isChatText, LATEST_TIME } from '@app/modules/chat-page/components/chat/chat.component';
 import { BlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import { BlockChainName } from '@app/services/room-manager/classes/room/block-room/block-chain-name.enum';
 import { AppMessage } from '@app/services/room-manager/classes/webrtc/messages/room-message';
@@ -9,6 +9,8 @@ export enum PrivateMessengerType {
     KEY = 'PV_key',
     /** A message of a private conversation, encrypted to each of its recipients */
     MESSAGE = 'PV_message',
+    /** A message of a watched conversation, in clear text: every participant reads it */
+    WATCHED = 'PV_watched',
 }
 
 /** A public key of agreement, ECDH on P-384: the fields of its JSON Web Key telling its point, nothing else */
@@ -47,19 +49,27 @@ export interface PrivateEnvelope {
     readonly parts: ReadonlyArray<Readonly<SealedPart>>;
 }
 
+/** A message of a watched conversation: its text, read by every participant, written by a member */
+export interface WatchedText extends ChatText {
+    readonly conversation: string;
+}
+
 export interface PrivatePayloads {
     [PrivateMessengerType.KEY]: PrivateKeyPayload;
     [PrivateMessengerType.MESSAGE]: PrivateEnvelope;
+    [PrivateMessengerType.WATCHED]: WatchedText;
 }
 
 export type PrivateMessage = {
     [Type in keyof PrivatePayloads]: AppMessage<Type, PrivatePayloads[Type]>;
 }[keyof PrivatePayloads];
 
-// The private conversations have their own block chain: their messages never delay the moves of the game
+// The private conversations have their own block chain: their messages never delay the moves of the game. The watched
+// ones travel on the chain of the chat, in the order of its moderation: a mute reaches the messages ordered after it
 export const privateBlockChains: BlockChainRouting<PrivatePayloads> = {
     [PrivateMessengerType.KEY]: BlockChainName.PRIVATE,
     [PrivateMessengerType.MESSAGE]: BlockChainName.PRIVATE,
+    [PrivateMessengerType.WATCHED]: BlockChainName.CHAT,
 };
 
 /** The members of a conversation at most: the players of a room */
@@ -140,4 +150,13 @@ export function isPrivateEnvelope(payload: unknown): payload is PrivateEnvelope 
     const parts: unknown = payload['parts'];
     return Array.isArray(parts) && parts.length > 0 && parts.length <= PRIVATE_MAX_MEMBERS && parts.every(isSealedPart)
         && new Set(parts.map((part: SealedPart) => part.to)).size === parts.length;
+}
+
+/**
+ * A message of a watched conversation from a peer, of the form the application sends: a text of the chat, checked by
+ * every page, no link included
+ */
+export function isWatchedText(payload: unknown): payload is WatchedText {
+    return hasFields(payload, ['conversation', 'id', 'at', 'text']) && matches(payload['conversation'], CONVERSATION_ID) && matches(payload['id'], MESSAGE_ID)
+        && isChatText(payload);
 }

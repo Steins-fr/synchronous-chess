@@ -116,8 +116,13 @@ export class RoomLayoutComponent {
     protected readonly chatOpen = computed<boolean>(() => this.panel() === RoomPanel.CHAT);
     protected readonly historyOpen = computed<boolean>(() => this.panel() === RoomPanel.HISTORY);
     protected readonly privateOpen = computed<boolean>(() => this.panel() === RoomPanel.PRIVATE);
-    /** The local player is a member of a private conversation: a spectator has none */
-    protected readonly hasPrivate = computed<boolean>(() => (this.conversations()?.mine().length ?? 0) > 0);
+    /**
+     * Conversations shown to the local player: its own private ones, and the watched ones to everyone. A spectator of a
+     * game without watched conversation has none
+     */
+    protected readonly hasPrivate = computed<boolean>(() => (this.conversations()?.shown().length ?? 0) > 0);
+    /** Every conversation shown is a watched one: the button tells the talk of the players */
+    protected readonly watchedOnly = computed<boolean>(() => this.conversations()?.watchedOnly() ?? false);
 
     private readonly chat = viewChild(ChatComponent);
     private readonly chatButton = viewChild<string, ElementRef<HTMLElement>>('chatButton', { read: ElementRef });
@@ -165,7 +170,7 @@ export class RoomLayoutComponent {
             }
         });
 
-        // No private conversation left for the local player, a spectator of the next game: their panel closes with its button
+        // No conversation left to show, a spectator of the next game: their panel closes with its button
         effect(() => {
             if (!this.hasPrivate() && untracked(() => this.panel()) === RoomPanel.PRIVATE) {
                 untracked(() => this.togglePanel(RoomPanel.PRIVATE, false));

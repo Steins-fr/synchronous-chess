@@ -93,7 +93,8 @@
       "leave": "Sair",
       "private": "Privado",
       "room": "Sala {roomName}",
-      "unread": "{count, plural, one {# mensagem não lida} other {# mensagens não lidas}}"
+      "unread": "{count, plural, one {# mensagem não lida} other {# mensagens não lidas}}",
+      "watched": "Entre jogadores"
     },
     "booting": {
       "delay": "O servidor e o banco de dados dele entram em repouso quando ninguém joga: acordá-los leva até uns trinta segundos.",

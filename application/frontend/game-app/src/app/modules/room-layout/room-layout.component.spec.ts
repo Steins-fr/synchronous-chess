@@ -432,9 +432,10 @@ describe('RoomLayoutComponent', () => {
             // When: no button to pulse
             fixture.componentInstance['pulse'](undefined);
 
-            // Then: nothing unread without a chat
+            // Then: nothing unread without a chat, no conversation of the players without conversations
             expect(toggle()).toBeNull();
             expect(fixture.componentInstance['unread']()).toEqual(0);
+            expect(fixture.componentInstance['watchedOnly']()).toEqual(false);
         });
 
         describe('with private conversations', () => {
@@ -449,7 +450,7 @@ describe('RoomLayoutComponent', () => {
             }
 
             async function declare(): Promise<void> {
-                conversations.mine.set([privateConversation('team', ['alice', 'bob'])]);
+                conversations.shown.set([privateConversation('team', ['alice', 'bob'])]);
                 await fixture.whenStable();
             }
 
@@ -507,6 +508,26 @@ describe('RoomLayoutComponent', () => {
                 expect(privateToggle()?.getAttribute('aria-expanded')).toEqual('false');
             });
 
+            test('should offer the conversation of the players to everyone, a spectator included', async () => {
+                // Given
+                await showRoom();
+
+                // When: a spectator of a watched conversation
+                conversations.shown.set([privateConversation('team', ['bob', 'carol'], [], true, true)]);
+                await fixture.whenStable();
+
+                // Then
+                expect(privateToggle()?.querySelector('mat-icon')?.textContent).toEqual('visibility');
+                expect(privateToggle()?.textContent).toContain("Players' talk");
+
+                // When: a private conversation beside it
+                await declare();
+
+                // Then
+                expect(privateToggle()?.querySelector('mat-icon')?.textContent).toEqual('lock');
+                expect(privateToggle()?.textContent).toContain('Private');
+            });
+
             test('should close the private conversations once the local player has none left', async () => {
                 // Given
                 await showRoom();
@@ -516,7 +537,7 @@ describe('RoomLayoutComponent', () => {
                 expect(privatePanel().hidden).toEqual(false);
 
                 // When: a spectator of the next game
-                conversations.mine.set([]);
+                conversations.shown.set([]);
                 await fixture.whenStable();
 
                 // Then: with its button
@@ -555,7 +576,7 @@ describe('RoomLayoutComponent', () => {
                 toggle().animate = vi.fn();
 
                 // When
-                conversations.mine.set([privateConversation('team', ['alice', 'bob'], [privateMessage('bob', 'hello')])]);
+                conversations.shown.set([privateConversation('team', ['alice', 'bob'], [privateMessage('bob', 'hello')])]);
                 await fixture.whenStable();
 
                 // Then

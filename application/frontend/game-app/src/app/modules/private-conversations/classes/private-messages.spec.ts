@@ -9,22 +9,28 @@ import {
     isKeyId,
     isPrivateEnvelope,
     isPrivateKeyPayload,
+    isWatchedText,
     PRIVATE_SEALED_MAX_LENGTH,
     privateBlockChains,
     PrivateEnvelope,
     PrivateMessengerType,
-    SealedPart
+    SealedPart,
+    WatchedText
 } from './private-messages';
 
 const KEY_ID: string = 'a'.repeat(64);
 const COORDINATE: string = `${ 'A'.repeat(62) }-_`;
 const PART: SealedPart = { to: 'bob', key: KEY_ID, iv: 'AAAAAAAAAAAAAAAA', data: 'AAAA' };
 const ENVELOPE: PrivateEnvelope = { conversation: 'cb-1-0-north', id: '0b6c7d4e-1f2a-4b3c-8d9e-0a1b2c3d4e5f', key: KEY_ID, parts: [PART] };
+const WATCHED: WatchedText = { conversation: 'fr-1-0', id: '0b6c7d4e-1f2a-4b3c-8d9e-0a1b2c3d4e5f', at: 1, text: 'the ball is on 3' };
 
 describe('private messages', () => {
-    test('should carry the keys and the messages on the private chain', () => {
-        expect(Object.values(privateBlockChains)).toEqual([BlockChainName.PRIVATE, BlockChainName.PRIVATE]);
-        expect(Object.keys(privateBlockChains)).toEqual([PrivateMessengerType.KEY, PrivateMessengerType.MESSAGE]);
+    test('should carry the keys and the messages on the private chain, the watched ones on the chain of the chat', () => {
+        expect(privateBlockChains).toEqual({
+            [PrivateMessengerType.KEY]: BlockChainName.PRIVATE,
+            [PrivateMessengerType.MESSAGE]: BlockChainName.PRIVATE,
+            [PrivateMessengerType.WATCHED]: BlockChainName.CHAT,
+        });
     });
 
     test.each<[string, boolean]>([
@@ -91,6 +97,26 @@ describe('private messages', () => {
         ['a part with data too long', { ...ENVELOPE, parts: [{ ...PART, data: 'A'.repeat(PRIVATE_SEALED_MAX_LENGTH + 1) }] }],
     ])('should refuse an envelope with %s', (_: string, payload: unknown) => {
         expect(isPrivateEnvelope(payload)).toBe(false);
+    });
+
+    test('should accept a watched message of the form the application sends', () => {
+        expect(isWatchedText(WATCHED)).toBe(true);
+        expect(isWatchedText({ ...WATCHED, text: 'a'.repeat(CHAT_MESSAGE_MAX_LENGTH) })).toBe(true);
+    });
+
+    test.each<[string, unknown]>([
+        ['no object', null],
+        ['a list', [WATCHED]],
+        ['another field', { ...WATCHED, key: KEY_ID }],
+        ['a missing field', { conversation: WATCHED.conversation, id: WATCHED.id, text: WATCHED.text }],
+        ['an invalid conversation', { ...WATCHED, conversation: 'Talk' }],
+        ['an id not drawn', { ...WATCHED, id: 'message-1' }],
+        ['a blank text', { ...WATCHED, text: '  ' }],
+        ['a text too long', { ...WATCHED, text: 'a'.repeat(CHAT_MESSAGE_MAX_LENGTH + 1) }],
+        ['a link', { ...WATCHED, text: 'see example.com' }],
+        ['a time out of range', { ...WATCHED, at: Number.MAX_SAFE_INTEGER }],
+    ])('should refuse a watched message with %s', (_: string, payload: unknown) => {
+        expect(isWatchedText(payload)).toBe(false);
     });
 
     test.each<[string, string, number]>([

@@ -93,7 +93,8 @@
       "leave": "Ayrıl",
       "private": "Özel",
       "room": "Oda {roomName}",
-      "unread": "{count, plural, one {# okunmamış mesaj} other {# okunmamış mesaj}}"
+      "unread": "{count, plural, one {# okunmamış mesaj} other {# okunmamış mesaj}}",
+      "watched": "Oyuncular arası"
     },
     "booting": {
       "delay": "Kimse oynamadığında sunucu ve veritabanı uyku moduna geçer: uyanmaları otuz saniyeye kadar sürebilir.",

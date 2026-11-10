@@ -76,7 +76,8 @@ describe('Contraband', () => {
             { type: 'create', game: RoomGame.CONTRABAND, roomName: 'room', playerName: 'local', token: 'token' }, 8,
             {
                 [ChatMessengerType.CHAT_MESSAGE]: BlockChainName.CHAT, [ChatMessengerType.MODERATION]: BlockChainName.CHAT,
-                [PrivateMessengerType.KEY]: BlockChainName.PRIVATE, [PrivateMessengerType.MESSAGE]: BlockChainName.PRIVATE, ...contrabandBlockChains,
+                [PrivateMessengerType.KEY]: BlockChainName.PRIVATE, [PrivateMessengerType.MESSAGE]: BlockChainName.PRIVATE,
+                [PrivateMessengerType.WATCHED]: BlockChainName.CHAT, ...contrabandBlockChains,
             },
             expect.any(AbortSignal),
         );
