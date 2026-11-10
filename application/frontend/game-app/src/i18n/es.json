@@ -29,8 +29,8 @@
     "title": "Ajedrez sincrónico"
   },
   "cheat": {
-    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} other {}}) de {author} ha sido señalado como trampa por {reporters}",
-    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
+    "flagged": "El mensaje {index} ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} fixed {ruleta fija} other {}}) de {author} ha sido señalado como trampa por {reporters}",
+    "ignored": "Un mensaje ({chain, select, chess {ajedrez} chat {chat} poker {póker} roulette {ruleta} bid {póker de subasta} minority {juego de la minoría} private {conversación privada} contraband {contrabando} eden {jardín del Edén} fixed {ruleta fija} other {}}) de {author} es ignorado por {sequencer}, señalado por {reporters}"
   },
   "dialog": {
     "cancel": "Cancelar",
