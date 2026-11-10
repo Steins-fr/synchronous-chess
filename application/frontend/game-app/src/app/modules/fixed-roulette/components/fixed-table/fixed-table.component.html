@@ -56,7 +56,7 @@
                     }
                 </div>
                 <p class="m-0 min-h-lh text-sm muted-note">{{ t('place.hint') }}</p>
-                <app-form-error [field]="placeForm" />
+                <app-form-error [field]="placeForm.chips" />
                 <button class="self-center" mat-flat-button type="submit">{{ t('place.submit') }}</button>
             </form>
             }
@@ -68,7 +68,7 @@
                     }
                 </div>
                 <p class="m-0 min-h-lh text-sm muted-note">{{ betHint().key | transloco: betHint().params }}</p>
-                <app-form-error [field]="betForm" />
+                <app-form-error [field]="betForm.chips" />
                 <button class="self-center" mat-flat-button type="submit">{{ t('bets.submit') }}</button>
             </form>
             }

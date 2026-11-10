@@ -1,6 +1,6 @@
 import { Applied } from '@app/modules/commit-reveal/classes/applied';
 import {
-    CheatKind, FixedRouletteEvent, FixedRouletteEventKind, FixedRouletteGameState, FixedRoulettePhase, lastSettled, MatchEnd,
+    CheatKind, FixedRouletteEvent, FixedRouletteEventKind, FixedRouletteGameState, FixedRoulettePhase, MatchEnd,
 } from './fixed-roulette-game-state';
 import { Bets, FIXED_ROULETTE_RULES, Side, totalOf } from './fixed-roulette-rules';
 import { settle } from './settlement';
@@ -41,7 +41,6 @@ describe('FixedRouletteGameState', () => {
         expect(roulette.phaseTime()).toEqual(30);
         expect(roulette.chips()).toEqual([500, 500]);
         expect([roulette.bank(), roulette.bets(), roulette.events(), roulette.result()]).toEqual([0, NO_BETS, [], null]);
-        expect(lastSettled(roulette.events())).toBeNull();
     });
 
     test('should await the punter once the croupier placed, the croupier revealing once the punter bet, then settle and swap the roles', () => {
@@ -74,16 +73,9 @@ describe('FixedRouletteGameState', () => {
         const bets = { [CROUPIER]: CROUPIER_BETS, [PUNTER]: PUNTER_BETS };
         const settled: Readonly<FixedRouletteEvent> = { kind: FixedRouletteEventKind.SETTLED, round: 0, croupier: 0, ball: 2, bets, settlement: settle(bets, 2) };
         expect(lastEvent(roulette)).toEqual(settled);
-        expect(lastSettled(roulette.events())).toEqual(settled);
         expect(roulette.chips()).toEqual([474, 526]);
         expect([roulette.phase(), roulette.round(), roulette.step(), roulette.bets()]).toEqual([PLACING, 1, 3, NO_BETS]);
         expect([roulette.croupier(), roulette.punter(), roulette.awaited()]).toEqual([1, 0, [1]]);
-
-        // When
-        roulette.place(1, [0, 0, 0, 10]);
-
-        // Then the game settled stays the latest one
-        expect(lastSettled(roulette.events())).toEqual(settled);
     });
 
     test('should ignore the moves out of their phase, of no player, or sent again, and tell the moves of the player not awaited', () => {

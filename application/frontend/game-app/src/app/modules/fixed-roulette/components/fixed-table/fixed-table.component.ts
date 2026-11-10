@@ -162,7 +162,7 @@ export class FixedTableComponent implements OnDestroy {
     protected readonly placeForm = form(this.placeModel, (path) => {
         required(path.pocket, { message: key(marker('table.place.required', undefined, 'fixed')) });
         applyEach(path.chips, STAKE);
-        validate(path, ({ value }) => this.betsError(Side.CROUPIER, value().chips));
+        validate(path.chips, ({ value }) => this.betsError(Side.CROUPIER, value()));
     }, { name: 'fixed-place' });
     /** The bets the punter types, none for each game */
     private readonly betModel: WritableSignal<Readonly<BetModel>> = linkedSignal({
@@ -171,7 +171,7 @@ export class FixedTableComponent implements OnDestroy {
     });
     protected readonly betForm = form(this.betModel, (path) => {
         applyEach(path.chips, STAKE);
-        validate(path, ({ value }) => this.betsError(Side.PUNTER, value().chips));
+        validate(path.chips, ({ value }) => this.betsError(Side.PUNTER, value()));
     }, { name: 'fixed-bet' });
     /** The pockets the croupier places the ball in */
     protected readonly pocketOptions: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
@@ -368,14 +368,25 @@ export class FixedTableComponent implements OnDestroy {
         void submit(this.setupForm, { action: () => Promise.resolve(this.session().start({ betTime: Number(this.setupModel().betTime) })) });
     }
 
-    /** The croupier places the ball and bets */
+    /** The croupier places the ball and bets, the form untouched again: the next game of the player shows no error before it types */
     protected place(): void {
-        void submit(this.placeForm, { action: () => this.session().place(Number(this.placeModel().pocket), this.betsOf(this.placeModel().chips)) });
+        void submit(this.placeForm, {
+            action: async () => {
+                await this.session().place(Number(this.placeModel().pocket), this.betsOf(this.placeModel().chips));
+                this.placeForm().reset();
+            },
+        });
     }
 
-    /** The punter bets */
+    /** The punter bets, the form untouched again: the next game of the player shows no error before it types */
     protected bet(): void {
-        void submit(this.betForm, { action: () => Promise.resolve(this.session().bet(this.betsOf(this.betModel().chips))) });
+        void submit(this.betForm, {
+            action: () => {
+                this.session().bet(this.betsOf(this.betModel().chips));
+                this.betForm().reset();
+                return Promise.resolve();
+            },
+        });
     }
 
     protected rematch(): void {

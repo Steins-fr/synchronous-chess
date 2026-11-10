@@ -15,7 +15,7 @@ import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { drawCroupier } from '../rules/croupier';
 import { FixedRouletteGameState, FixedRoulettePhase } from '../rules/fixed-roulette-game-state';
 import {
-    Bets, FIXED_ROULETTE_RULES, FixedRouletteRules, FixedRouletteSetup, isBets, isCroupierBet, isPocket, isPunterBet, isSetup, Side, sideOf, totalOf,
+    Bets, FIXED_ROULETTE_RULES, FixedRouletteRules, FixedRouletteSetup, isBets, isCroupierBet, isPocket, isPunterBet, isSetup, Side, totalOf,
 } from '../rules/fixed-roulette-rules';
 import {
     FIXED_ROULETTE_TYPES, FixedRouletteBetMessage, FixedRouletteCommitMessage, FixedRouletteDrawMessage, FixedRouletteMessage, FixedRoulettePayloads,
@@ -73,12 +73,6 @@ export class FixedRouletteSession extends CommitRevealSession<
     public readonly punter: Signal<string | null> = computed((): string | null => {
         const game: FixedRouletteGameState | null = this.game();
         return game === null ? null : this.players()[game.punter()];
-    });
-    /** The role of the local player in the game, none for a spectator or before the seed is drawn */
-    public readonly mySide: Signal<Side | null> = computed((): Side | null => {
-        const me: number | null = this.myIndex();
-        const game: FixedRouletteGameState | null = this.game();
-        return me === null || game === null ? null : sideOf(me, game.croupier());
     });
     /** The chips the local player holds off the table, none for a spectator or before the seed is drawn */
     public readonly myChips: Signal<number | null> = computed((): number | null => {

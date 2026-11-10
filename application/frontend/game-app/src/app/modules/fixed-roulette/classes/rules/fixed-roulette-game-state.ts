@@ -88,18 +88,6 @@ interface FixedRouletteState {
 
 const NO_BETS: PlacedBets = { [Side.CROUPIER]: null, [Side.PUNTER]: null };
 
-/** The latest game settled of the events, none before the first one */
-export function lastSettled(events: ReadonlyArray<Readonly<FixedRouletteEvent>>): SettledEvent | null {
-    // No findLast in the ES2022 library of the app
-    for (let index = events.length - 1; index >= 0; index--) {
-        const event: Readonly<FixedRouletteEvent> = events[index];
-        if (event.kind === FixedRouletteEventKind.SETTLED) {
-            return event;
-        }
-    }
-    return null;
-}
-
 /**
  * The match, in signals, the same on every page: in each game, the croupier seals the pocket of the ball and bets, the
  * punter bets, then the croupier reveals the ball and the chips settle. The players swap their roles each game. The match

@@ -11,7 +11,7 @@ import { RoomHub } from '@testing/room-hub';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { drawCroupier } from '../rules/croupier';
 import {
-    CheatKind, FixedRouletteEvent, FixedRouletteEventKind, FixedRouletteGameState, FixedRoulettePhase, lastSettled, MatchEnd, SettledEvent,
+    CheatKind, FixedRouletteEvent, FixedRouletteEventKind, FixedRouletteGameState, FixedRoulettePhase, MatchEnd, SettledEvent,
 } from '../rules/fixed-roulette-game-state';
 import { Bets, FIXED_ROULETTE_RULES, FixedRouletteRules, FixedRouletteSetup, Side } from '../rules/fixed-roulette-rules';
 import { netOf, SettlementCase } from '../rules/settlement';
@@ -59,6 +59,9 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
     const of = (name: string): FixedRouletteSession => sessions.get(name) as FixedRouletteSession;
     const gameOf = (name: string): FixedRouletteGameState => of(name).game() as FixedRouletteGameState;
     const lastEvent = (): Readonly<FixedRouletteEvent> | undefined => gameOf('eve').events().at(-1);
+    /** The latest game settled, none before the first one */
+    const lastSettled = (): SettledEvent | undefined =>
+        gameOf('eve').events().filter((event: Readonly<FixedRouletteEvent>): event is SettledEvent => event.kind === FixedRouletteEventKind.SETTLED).at(-1);
     const croupier = (): string => of('eve').croupier() as string;
     const punter = (): string => of('eve').punter() as string;
 
@@ -167,7 +170,7 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
             await settled((session: FixedRouletteSession) => session.players().length === 1);
 
             // Then nobody starts, places nor bets
-            expect([of('alice').canStart(), of('alice').canPlace(), of('alice').canBet(), of('alice').myChips(), of('alice').mySide(), of('alice').myBall()])
+            expect([of('alice').canStart(), of('alice').canPlace(), of('alice').canBet(), of('alice').myChips(), of('alice').game(), of('alice').myBall()])
                 .toEqual([false, false, false, null, null, null]);
             expect([of('eve').croupier(), of('eve').punter(), of('eve').awaited(), of('eve').setup(), of('eve').myChips()]).toEqual([null, null, [], null, null]);
             of('alice').start(SETUP);
@@ -198,7 +201,7 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
             expect([croupier(), punter()]).toEqual([PLAYERS[first], PLAYERS[1 - first]]);
             expect([of('eve').step(), of('eve').awaited(), of('eve').phaseTime()]).toEqual([2, [croupier()], SETUP.betTime]);
             expect([of(croupier()).canPlace(), of(punter()).canPlace(), of(punter()).canBet(), of('eve').canPlace()]).toEqual([true, false, false, false]);
-            expect([of(croupier()).mySide(), of(punter()).mySide(), of('eve').mySide()]).toEqual([Side.CROUPIER, Side.PUNTER, null]);
+            expect([of(croupier()).myIndex(), of(punter()).myIndex(), of('eve').myIndex()]).toEqual([gameOf('eve').croupier(), gameOf('eve').punter(), null]);
             expect([of('alice').myChips(), of('bob').myChips(), of('eve').myChips(), of(croupier()).myBall()]).toEqual([LIGHT.startChips, LIGHT.startChips, null, null]);
             expect(hub.reports).toEqual([]);
             // Their parts in the chain, the pages keep them no more
@@ -264,11 +267,11 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
             await played(2);
 
             // Then
-            const split: SettledEvent = lastSettled(gameOf('eve').events()) as SettledEvent;
+            const split: SettledEvent = lastSettled() as SettledEvent;
             expect(split).toMatchObject({ round: 0, croupier: PLAYERS.indexOf(first), ball: 2, settlement: { kind: SettlementCase.SPLIT, leftover: 0 } });
             expect([Side.CROUPIER, Side.PUNTER].map((side: Side) => netOf(split.settlement, split.bets, side))).toEqual([-26, 26]);
             expect(of(first).myChips()).toEqual(LIGHT.startChips - 26);
-            expect([croupier(), of('eve').phaseTime(), of(first).mySide()]).toEqual([PLAYERS.find((name: string) => name !== first), QUICK.betTime, Side.PUNTER]);
+            expect([croupier(), of('eve').phaseTime(), of(first).myIndex()]).toEqual([PLAYERS.find((name: string) => name !== first), QUICK.betTime, gameOf('eve').punter()]);
 
             // When the ball falls in the fourth pocket, only the punter on it
             await played(4);
@@ -630,7 +633,7 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
             await played(4);
 
             // Then
-            expect(lastSettled(gameOf('eve').events())).toMatchObject({ ball: 4, settlement: { kind: SettlementCase.PUNTER } });
+            expect(lastSettled()).toMatchObject({ ball: 4, settlement: { kind: SettlementCase.PUNTER } });
         });
 
         test('should keep the ball sealed by a croupier who reloads the page while the punter bets, and reveal it, the punter betting after a reload', async () => {
@@ -646,7 +649,7 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
             await eventually(() => expect([croupierPage.myBall(), punterPage.canBet()]).toEqual([3, true]));
 
             // Then
-            expect([croupierPage.canPlace(), punterPage.myBall(), croupierPage.mySide()]).toEqual([false, null, Side.CROUPIER]);
+            expect([croupierPage.canPlace(), punterPage.myBall(), croupierPage.myIndex()]).toEqual([false, null, gameOf('eve').croupier()]);
 
             // When
             punterPage.bet(PUNTER_BETS);
@@ -674,7 +677,7 @@ describe('FixedRouletteSession', { timeout: 30_000 }, () => {
 
             // Then
             await settled((session: FixedRouletteSession) => settledGames(session) === 1);
-            expect([lastSettled(gameOf('eve').events())?.ball, again.myBall()]).toEqual([2, null]);
+            expect([lastSettled()?.ball, again.myBall()]).toEqual([2, null]);
             expect(hub.reports).toEqual([]);
         });
 

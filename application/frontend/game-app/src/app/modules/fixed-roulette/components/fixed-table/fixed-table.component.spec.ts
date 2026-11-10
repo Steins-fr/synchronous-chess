@@ -366,6 +366,53 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         expect(element().querySelector('#pocket-3')?.getAttribute('aria-label')).toEqual('Pocket 3');
     });
 
+    test('should show no error of the bets before the player types them, a pocket picked or in its next game of each side', async () => {
+        // Given four games: each player places twice and bets twice
+        await started({ ...LIGHT, games: 4 });
+
+        // When the croupier picks its pocket only
+        await pick('Pocket of the ball', '2');
+
+        // Then
+        expect(element().querySelector('#place-form mat-error')).toBeNull();
+        expect(formError()).toEqual('');
+
+        // When
+        await click('Place the ball and bet');
+
+        // Then
+        expect(formError()).toEqual('Bet 1 chip at least');
+
+        // When the second game: Alice bets, nothing first
+        await typeBets(['1', '', '', '']);
+        await click('Place the ball and bet');
+        await until(() => phase() === FixedRoulettePhase.BETTING);
+        await betBy('bob', [1, 0, 0, 0]);
+        await placedBy('bob', 3, [0, 0, 10, 0]);
+        await click('Bet');
+
+        // Then
+        expect(formError()).toEqual('Bet 10 chips at least, as many as bob');
+
+        // When the third game: Alice places again
+        await bet(['', '', '10', '']);
+
+        // Then
+        expect(status()).toEqual('Place the ball and bet: the ball stays sealed until the punter bet.');
+        expect(element().querySelector('#place-form mat-error')).toBeNull();
+        expect(formError()).toEqual('');
+
+        // When the fourth game: Alice bets again
+        await placed(1, ['1', '', '', '']);
+        await betBy('bob', [1, 0, 0, 0]);
+        await placedBy('bob', 3, [0, 0, 10, 0]);
+
+        // Then
+        expect(element().querySelector('#bet-form')).not.toBeNull();
+        expect(element().querySelector('#bet-form mat-error')).toBeNull();
+        expect(formError()).toEqual('');
+    });
+
     test('should let the punter bet as many chips as the croupier on 2 pockets at most, then end the match', async () => {
         // Given Bob places the second ball
         await started();
