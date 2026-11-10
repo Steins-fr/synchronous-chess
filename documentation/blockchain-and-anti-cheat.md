@@ -22,6 +22,7 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 - [Sealed votes: the Minority Game](#sealed-votes-the-minority-game)
 - [Sealed trunks: Contraband](#sealed-trunks-contraband)
 - [Sealed apples: the Garden of Eden](#sealed-apples-the-garden-of-eden)
+- [A sealed ball: the Fixed Roulette](#a-sealed-ball-the-fixed-roulette)
 - [Hidden bullets: the cylinder of the roulette](#hidden-bullets-the-cylinder-of-the-roulette)
 - [A fair draw](#a-fair-draw)
 - [Private conversations](#private-conversations)
@@ -33,9 +34,10 @@ The code lives in `application/frontend/game-app/src/app/services/room-manager/c
 ## Overview
 
 A room (`BlockRoom`) runs **one block chain per feature**: `chat`, and the chain of its game, `chess`,
-`poker`, `roulette`, `bid` (the Bid Poker), `minority` (the Minority Game), `contraband` or `eden` (the Garden of Eden),
-and `private` for a game declaring private conversations, the Contraband (see [Private conversations](#private-conversations)); the
-watched conversations travel on the `chat` chain. Each chain orders its
+`poker`, `roulette`, `bid` (the Bid Poker), `minority` (the Minority Game), `contraband`, `eden` (the Garden of Eden) or
+`fixed` (the Fixed Roulette), and `private` for a game declaring private conversations, the Contraband (see
+[Private conversations](#private-conversations)); the watched conversations, the one of the players of the Fixed Roulette,
+travel on the `chat` chain. Each chain orders its
 blocks on its own, so a busy chat never delays the moves of the game. The chains share the WebRTC
 connections and the identity of the participants.
 
@@ -74,7 +76,7 @@ flowchart LR
 | `SynchronousChessOnlineGameSession` | `modules/chess/classes/game-sessions` | Seats the players, commits then reveals the moves, reports the cheated ones (see [Chess game session](chess-game-session.md)) |
 | `SealedStore`, `SealedCommitments` | `modules/commit-reveal/classes` | Keep the hidden values of a player across the reloads of the page, and the first commitment of each player for each round (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
 | `FairDraw`, `SeededRandom` | `modules/commit-reveal/classes` | Draw a seed no player chose alone, and shuffle from it alike on every page (see [A fair draw](#a-fair-draw)) |
-| `CommitRevealSession` | `modules/commit-reveal/classes` | The session the Bid Poker, the Minority Game, the Contraband and the Garden of Eden are built on: seats the players, draws the seed, seals then reveals the values of the local player, takes the claims of a timeout (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
+| `CommitRevealSession` | `modules/commit-reveal/classes` | The session the Bid Poker, the Minority Game, the Contraband, the Garden of Eden and the Fixed Roulette are built on: seats the players, draws the seed, seals then reveals the values of the local player, takes the claims of a timeout (see [Hidden moves](#hidden-moves-commit-then-reveal)) |
 | `PlayedCommitRevealGame` | `modules/commit-reveal/classes` | A game of these sessions: its players, its setup, the id of its secrets, the draw of its seed, then the game |
 | `MentalDeck` | `modules/mental-poker/classes` | Shuffles, deals and opens a deck no participant sees, checks it at the end of the game (see [Mental poker](mental-poker.md)) |
 | `SeventeenPokerSession` | `modules/seventeen-poker/classes/game-sessions` | Seats the players, deals each hand with a mental deck, reports the illegal actions (see [Seventeen Poker session](seventeen-poker-session.md)) |
@@ -84,6 +86,7 @@ flowchart LR
 | `MinoritySession` | `modules/minority-game/classes/game-sessions` | Seats the players, draws the askers, seals then reveals the votes, reports the cheats (see [Minority Game session](minority-game-session.md)) |
 | `ContrabandSession` | `modules/contraband/classes/game-sessions` | Seats the players in their countries, draws the pairs, seals then reveals the trunks, takes the calls, reports the cheats, gives the private conversations of the match (see [Contraband session](contraband-session.md)) |
 | `EdenSession` | `modules/garden-of-eden/classes/game-sessions` | Seats the players, seals then reveals the apples, counts them, takes the players out of paradise, reports the cheats (see [Garden of Eden session](garden-of-eden-session.md)) |
+| `FixedRouletteSession` | `modules/fixed-roulette/classes/game-sessions` | Seats the two players, draws the first croupier, seals then reveals the balls, takes the bets, reports the cheats, gives the watched conversation of the players (see [Fixed Roulette session](fixed-roulette-session.md)) |
 | `PrivateConversations` | `modules/private-conversations/classes` | Publishes the key of agreement of the player, encrypts its messages to each member of a conversation the game declares, checks, reads and reports the messages of the conversations; sends and reads the watched ones in clear text, moderated as the chat (see [Private conversations](#private-conversations)) |
 
 The application only sees `Room.transmitMessage()`, `Room.messenger()` and `Room.reportCheat()`: a
@@ -371,18 +374,18 @@ replays its reveals, which it runs like the ones of the other players.
 **Reloading the page.** `SealedStore` keeps the actions the player committed to and whose reveal
 is not in the chain yet, with their salt, in the session storage of the tab (key
 `synchronous-chess:sealed-<kind>:<room>:<player>`, the kind `turns` for the chess, `bids` for the Bid Poker, its discards
-included, `votes` for the Minority Game, `trunks` for the Contraband, `apples` for the Garden of Eden, and `draws` for the random
-part of a fair draw of these four). When the chain replays a commitment of the player
+included, `votes` for the Minority Game, `trunks` for the Contraband, `apples` for the Garden of Eden, `balls` for the Fixed
+Roulette, and `draws` for the random part of a fair draw of these five). When the chain replays a commitment of the player
 that its new page did not play, the stored action of that turn is used if it matches the commitment:
 the action of a previous game in a room of the same name never does. It is played once the game
 reaches its turn, then revealed as usual. The page does not know whether its reveal is in the chain
 already, so it may reveal it twice: the other participants ignore a reveal matching the commitment of
 a turn its player already played. Without session storage (blocked site data), the action is lost.
 
-The Bid Poker, the Minority Game, the Contraband and the Garden of Eden share all but their moves: their sessions are built on
-`CommitRevealSession`, which applies their messages one after the other in the order of the chain, seats the players,
-draws the seed of the game ([A fair draw](#a-fair-draw)), takes the claims of a timeout on the time of the chain and
-starts a new game. It holds the life of a value the local player seals, the same for the four games: kept in the tab
+The Bid Poker, the Minority Game, the Contraband, the Garden of Eden and the Fixed Roulette share all but their moves: their
+sessions are built on `CommitRevealSession`, which applies their messages one after the other in the order of the chain,
+seats the players, draws the seed of the game ([A fair draw](#a-fair-draw)), takes the claims of a timeout on the time of the chain and
+starts a new game. It holds the life of a value the local player seals, the same for the five games: kept in the tab
 before its commitment is sent, the commitment naming its round fixed before the hash; removed once the chain does not
 take its commitment (too late, or a second one), once revealed, refused or withheld, and once the game is over or a new
 one starts; revealed by its page once the phase calls for it, again by a reloaded page. Each game keeps its own messages
@@ -442,6 +445,26 @@ fair draw every game built on `CommitRevealSession` makes is unused. An apple wi
 otherwise than committed, loses 1,000 million and does not count, as much as a lone red apple: the last one to reveal
 could otherwise change the count once it read the others, and it never saves its loss that way. A claim of a timeout is
 checked on the time of the chain. See [Garden of Eden session](garden-of-eden-session.md).
+
+## A sealed ball: the Fixed Roulette
+
+The Fixed Roulette hides the ball only, by the shared commit-reveal: in each game, the croupier commits to the pocket of
+the ball with the id of the match, its index, the index of the game and a salt, in the same message as its bets, which are
+public (`FR_commit`); the punter bets reading them, then the page of the croupier reveals the ball, and the chips settle.
+No participant, the sequencer and the punter included, reads the ball before the punter bet: the page of the croupier
+alone shows it. The croupier of the first game is drawn from the seed of a fair draw of both players, alike on every
+page, then the players swap the roles. The croupier reveals after the punter bet: a ball withheld, not revealed in time,
+revealed otherwise than committed or off the wheel, loses the match, the bets of the game back to their owners, so
+withholding never pays. The reveal waits 15 seconds, more than the watch of the censorship: a sequencer holding the
+reveal of a croupier is caught first.
+
+Each phase waits for one player, and the order of the chain decides between a move and its phase: a move out of its
+phase is **ignored** by every page alike, without report, and changes nothing (a bet of the punter before the croupier
+placed the ball, a commitment of the croupier once it placed it, a commitment sent again); a move of the other player in
+its phase, or bets beyond the rules, is **reported** (`illegalMove`), the player of the phase still
+awaited. A player missing its time loses the match, its claim checked on the time of the chain. The two players talk in
+a [watched conversation](#a-watched-conversation), read by the whole room. See
+[Fixed Roulette session](fixed-roulette-session.md).
 
 ## Hidden bullets: the cylinder of the roulette
 
@@ -538,6 +561,8 @@ closed only: a message received while it is closed still shows (see the [limits]
 the game merges `privateBlockChains` into its routing, and gives the instance to the layout of the room
 (`app-room-layout`, `[conversations]`). The Contraband declares one for each country of 2 players or more, and one for
 the customs of each game, between its smuggler and its inspector (see [Contraband session](contraband-session.md#private-conversations)).
+The Fixed Roulette declares a watched one, of the two players of the match (see
+[Fixed Roulette session](fixed-roulette-session.md#the-conversation-of-the-players)).
 
 ### Checking the messages
 
@@ -633,8 +658,8 @@ the chains: a report does not need to be ordered, and the sequencer can not hide
 | `conflictingBlock` | The sequencer sent another block for an index already in the chain, a block not following the latest one, or a head proves it signed two blocks for the same index | the sequencer | not added |
 | `censoredEntry` | The sequencer orders other entries, not this one, for 10 seconds | the sequencer | |
 | `clockAhead` | A live block of the sequencer is received more than 5 seconds sooner, from its time, than the shortest delay of its first ones (5 over 30 seconds at least): its clock jumped ahead | the sequencer | no |
-| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange), a move of the roulette (a pass, a shot), a bid or a discard of the Bid Poker (above the coins of its player, on its own lot, a card not held), a question or a vote of the Minority Game (a question of another player than the asker, a vote of a player eliminated, a vote neither yes nor no), a move of the Contraband (a trunk committed by another player than the smuggler, a call by another player than the inspector, a trunk out of the rules), or an apple of the Garden of Eden (committed by a player out of paradise, revealed as something else than an apple) is against the rules | the player | yes |
-| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of a draw, a bid or discards of the Bid Poker, a vote of the Minority Game, a trunk of the Contraband, or an apple of the Garden of Eden, its commitment | the player | yes |
+| `illegalMove` | A revealed move, an action of the poker (a bet, an exchange), a move of the roulette (a pass, a shot), a bid or a discard of the Bid Poker (above the coins of its player, on its own lot, a card not held), a question or a vote of the Minority Game (a question of another player than the asker, a vote of a player eliminated, a vote neither yes nor no), a move of the Contraband (a trunk committed by another player than the smuggler, a call by another player than the inspector, a trunk out of the rules), an apple of the Garden of Eden (committed by a player out of paradise, revealed as something else than an apple), or a move of the Fixed Roulette (a ball and bets committed by the punter, bets of the croupier in the phase of the punter, bets out of the rules, a ball revealed off the wheel) is against the rules | the player | yes |
+| `invalidReveal` | A revealed move does not match its commitment, or its turn, or a random part of a draw, a bid or discards of the Bid Poker, a vote of the Minority Game, a trunk of the Contraband, an apple of the Garden of Eden, or a ball of the Fixed Roulette, its commitment | the player | yes |
 | `invalidShuffle` | A deck is not one (a card missing or twice), or, once the keys are disclosed, not made from the previous one with the keys of its player | the player | a deck that is not one breaks the deck |
 | `invalidCardKey` | A key is malformed, does not give the card to its recipient (with two players), or is not the one disclosed at the end of the game | the player | a malformed key |
 | `invalidLoad` | A key of a cylinder without the proof of its player, or a load without the proofs of its bullets | the player | yes |
@@ -690,7 +715,7 @@ The chess game sends `SC_GS_seat`, `SC_GS_commit` and `SC_GS_reveal` through the
 `chess` chain, the Seventeen Poker its `SP_*` and `MP_*` messages through the `poker` chain, the roulette its `RR_*`
 messages through the `roulette` chain, the Bid Poker its `BP_*` messages through the `bid` chain, the Minority Game its `MG_*` messages through the `minority`
 chain, the Contraband its `CB_*` messages through the `contraband` chain, the Garden of Eden its `GE_*` messages through
-the `eden` chain, the chat
+the `eden` chain, the Fixed Roulette its `FR_*` messages through the `fixed` chain, the chat
 `chatMessage` through the `chat` chain, the private conversations `PV_key` (`{ key }`, the public key of agreement of
 its sender) and `PV_message` (`{ conversation, id, key, parts }`, see [A message and its parts](#a-message-and-its-parts))
 through the `private` chain, and `PV_watched` (`{ conversation, id, at, text }`, see [A watched conversation](#a-watched-conversation))
