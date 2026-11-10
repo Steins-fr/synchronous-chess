@@ -1,6 +1,7 @@
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { CHAT_RATE_LIMIT, CHAT_SEND_LIMIT, CHAT_UNSENT_LIMIT, CHAT_RATE_WINDOW } from '@app/modules/chat-page/components/chat/chat-flood';
-import { SEND_TIMEOUT } from '@app/modules/chat-page/components/chat/chat.component';
+import { ChatMessengerType, SEND_TIMEOUT } from '@app/modules/chat-page/components/chat/chat.component';
+import { ChatDecision, ChatModerationAction, MuteMinutes } from '@app/modules/chat-page/components/chat/chat-moderation';
 import { ChatMessageState } from '@app/modules/chat-page/components/chat/chat-message/chat-message.component';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { ParticipantKeyStore } from '@app/services/room-manager/classes/room/block-room/block-chain/participant-key-store';
@@ -1072,6 +1073,123 @@ describe('PrivateConversations', { timeout: 30_000 }, () => {
             expect(linesOf('alice', TALK.id)).toEqual(['alice: hello']);
             expect(linesOf('eve', TALK.id)).toEqual(['alice: hello']);
             expect(talks('alice').map((text: WatchedText) => text.id)).toEqual([messageId, messageId]);
+        });
+
+        describe('moderated as the chat', () => {
+            const MINUTE: number = 60_000;
+
+            /** A decision of the moderator, carol, ordering the chain */
+            function decide(decision: ChatDecision | Record<string, unknown>, from: string = 'carol'): void {
+                present(from);
+                hub.send({ from, type: ChatMessengerType.MODERATION, payload: decision });
+            }
+
+            beforeEach(() => {
+                hub.sequencer.set('carol');
+                hub.time = 1000;
+            });
+
+            test('should drop the messages of an author muted or removed, from the decision on, on every page, replayed too', async () => {
+                // Given
+                pagesOf(['alice', 'bob', 'eve'], [TALK]);
+                await applied();
+
+                // When
+                talk('bob', 'before');
+                decide({ action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+                talk('bob', 'muted');
+                hub.time += MuteMinutes.SHORT * MINUTE;
+                talk('bob', 'after the mute');
+                decide({ action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+                talk('bob', 'muted to the end');
+                decide({ action: ChatModerationAction.UNMUTE, target: 'bob' });
+                talk('bob', 'unmuted');
+                decide({ action: ChatModerationAction.REMOVE, target: 'bob' });
+                talk('bob', 'removed');
+                await applied();
+                reload('eve', [TALK]);
+                await applied();
+
+                // Then
+                const shown: string[] = ['bob: before', 'bob: after the mute', 'bob: unmuted'];
+                expect(linesOf('alice', TALK.id)).toEqual(shown);
+                expect(linesOf('bob', TALK.id)).toEqual(shown);
+                expect(linesOf('eve', TALK.id)).toEqual(shown);
+                expect(hub.reports).toEqual([]);
+            });
+
+            test('should ignore a decision not ordered by its author, on its author, or invalid, reported by the chat only', async () => {
+                // Given
+                pagesOf(['alice', 'eve'], [TALK]);
+                await applied();
+
+                // When
+                decide({ action: ChatModerationAction.MUTE, target: 'alice', minutes: null }, 'bob');
+                decide({ action: ChatModerationAction.MUTE, target: 'carol', minutes: null });
+                decide({ action: 'ban', target: 'alice' });
+                talk('alice', 'still here');
+                talk('carol', 'me too', { conversation: TALK.id });
+                await applied();
+
+                // Then
+                expect(linesOf('eve', TALK.id)).toEqual(['alice: still here']);
+                expect(hub.reported()).toEqual([`alice ${ INVALID } carol`, `eve ${ INVALID } carol`]);
+            });
+
+            test('should drop its own message sent muted, not counted in its rate', async () => {
+                // Given
+                pagesOf(['alice', 'bob', 'eve'], [TALK]);
+                await applied();
+                decide({ action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+                await applied();
+
+                // When: around the composer
+                expect(of('bob').send(TALK.id, 'hidden')).toBe(true);
+                Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) => talk('bob', `script ${ index }`));
+                await applied();
+                decide({ action: ChatModerationAction.UNMUTE, target: 'bob' });
+                Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) => talk('bob', `calm ${ index }`));
+                await applied();
+
+                // Then
+                const shown: string[] = Array.from({ length: CHAT_RATE_LIMIT }, (_: unknown, index: number) => `bob: calm ${ index }`);
+                expect(linesOf('bob', TALK.id)).toEqual(shown);
+                expect(linesOf('eve', TALK.id)).toEqual(shown);
+            });
+
+            test('should time the decisions and the messages as they arrive in a room without chain times', async () => {
+                // Given
+                const room: Room<PrivatePayloads> = hub.room('alice');
+                rooms.set('alice', Object.assign(room, { sequencedAt: () => undefined }));
+                pagesOf(['alice'], [TALK]);
+                await applied();
+
+                // When
+                talk('bob', 'before');
+                decide({ action: ChatModerationAction.MUTE, target: 'bob', minutes: MuteMinutes.SHORT });
+                talk('bob', 'muted');
+                await applied();
+
+                // Then
+                expect(linesOf('alice', TALK.id)).toEqual(['bob: before']);
+            });
+
+            test('should keep the private messages of an author muted', async () => {
+                // Given
+                pagesOf(['alice', 'bob'], [TEAM, TALK]);
+                await ready('alice');
+                await ready('bob');
+                decide({ action: ChatModerationAction.MUTE, target: 'bob', minutes: null });
+
+                // When
+                sendEnvelope('bob', await sealed('bob', TEAM.id, 'between us', ['alice', 'bob']));
+                talk('bob', 'to everyone');
+                await applied();
+
+                // Then
+                expect(linesOf('alice')).toEqual(['bob: between us']);
+                expect(linesOf('alice', TALK.id)).toEqual([]);
+            });
         });
 
         test('should send nothing once destroyed before its message goes', async () => {

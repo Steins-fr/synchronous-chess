@@ -2,9 +2,18 @@ import { computed, Signal, signal } from '@angular/core';
 import { idGenerator } from '@app/helpers/id-generator.helper';
 import { logHandlingFailure } from '@app/helpers/received-message-failure.helper';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
-import { isChatText, SEND_TIMEOUT } from '@app/modules/chat-page/components/chat/chat.component';
+import { ChatMessengerType, ChatPayloads, isChatText, SEND_TIMEOUT } from '@app/modules/chat-page/components/chat/chat.component';
 import { admitChatMessage, CHAT_UNSENT_LIMIT, ChatAdmission, ChatFlood, NO_FLOOD, sendWaitUntil } from '@app/modules/chat-page/components/chat/chat-flood';
 import { ChatEntryKind, ChatMessage, ChatMessageState } from '@app/modules/chat-page/components/chat/chat-message/chat-message.component';
+import {
+    ChatDecision,
+    ChatModeration,
+    isChatDecision,
+    isModeratorDecision,
+    isSilenced,
+    moderateChat,
+    NO_MODERATION
+} from '@app/modules/chat-page/components/chat/chat-moderation';
 import { Player } from '@app/services/room-manager/classes/player/player';
 import { CheatReason } from '@app/services/room-manager/classes/room/block-room/anti-cheat/cheat-report';
 import { ParticipantKeyStore } from '@app/services/room-manager/classes/room/block-room/block-chain/participant-key-store';
@@ -83,6 +92,11 @@ export enum PrivateComposerWait {
     RATE = 'rate',
     /** Too many messages of the local player are not sent back yet */
     UNSENT = 'unsent',
+    /**
+     * The local player is muted in the chat of the room, which a watched conversation follows: told by the panel, which
+     * reads the end of the mute from the chat
+     */
+    MUTED = 'muted',
 }
 
 export interface PrivateConversationsOptions {
@@ -90,7 +104,11 @@ export interface PrivateConversationsOptions {
     readonly keyStore?: ParticipantKeyStore;
 }
 
+/** The messages the conversations read: their own, and the decisions of the moderator of the chat */
+export type PrivateRoomPayloads = PrivatePayloads & Pick<ChatPayloads, ChatMessengerType.MODERATION>;
+
 type KeyMessage = AppMessage<PrivateMessengerType.KEY, PrivateKeyPayload>;
+type DecisionMessage = AppMessage<ChatMessengerType.MODERATION, ChatDecision>;
 type EnvelopeMessage = AppMessage<PrivateMessengerType.MESSAGE, PrivateEnvelope>;
 type WatchedMessage = AppMessage<PrivateMessengerType.WATCHED, WatchedText>;
 
@@ -136,8 +154,9 @@ const sameMembers = (members: ReadonlyArray<string>, others: ReadonlyArray<strin
  * stops sending.
  *
  * A watched conversation is read by every participant, written by its members only: its messages travel in clear text,
- * on the chain of the chat, every page checking their texts, their authors and their rate. A participant member of
- * watched conversations only publishes no key
+ * on the chain of the chat, every page checking their texts, their authors and their rate. Moderated as the chat: the
+ * messages of an author muted or removed are dropped, in the order of the chain. A participant member of watched
+ * conversations only publishes no key
  */
 export class PrivateConversations {
     private readonly keyStore: ParticipantKeyStore;
@@ -204,6 +223,8 @@ export class PrivateConversations {
     private flood: ChatFlood = NO_FLOOD;
     /** The rate of the watched messages, on the chain of the chat: ordered apart from the envelopes */
     private watchedFlood: ChatFlood = NO_FLOOD;
+    /** The decisions of the moderator in force, as the queue reached them: the chat of the room applies them alike */
+    private moderation: ChatModeration = NO_MODERATION;
     private ownKeyPair?: Promise<OwnKey>;
     private keySent: boolean = false;
     /** The key of the local player came back on the chain since it published it, counted or not */
@@ -222,13 +243,16 @@ export class PrivateConversations {
     /** The messages of the local player are encrypted in the order it sent them */
     private sending: Promise<void> = Promise.resolve();
 
-    public constructor(private readonly room: Room<PrivatePayloads>, options: PrivateConversationsOptions = {}) {
+    public constructor(private readonly room: Room<PrivateRoomPayloads>, options: PrivateConversationsOptions = {}) {
         this.keyStore = options.keyStore ?? new ParticipantKeyStore();
         this.subscription = merge(room.messenger(PrivateMessengerType.KEY), room.messenger(PrivateMessengerType.MESSAGE), room.messenger(PrivateMessengerType.WATCHED))
             .subscribe((message: PrivateMessage) => {
                 const live: boolean = !room.isHistory(message);
                 this.enqueue(() => logHandlingFailure(message, this.onMessage(message, live)));
             });
+        // In the same queue as the watched messages, in the order of their chain
+        this.subscription.add(room.messenger(ChatMessengerType.MODERATION).subscribe((message: DecisionMessage) =>
+            this.enqueue(() => Promise.resolve(this.onDecision(message)))));
     }
 
     /** The local player */
@@ -490,15 +514,34 @@ export class PrivateConversations {
     }
 
     /**
+     * A decision of the moderator of the chat, applied as the chat applies it: an invalid one is reported by the chat
+     * only
+     */
+    private onDecision(message: DecisionMessage): void {
+        const decision: unknown = message.payload;
+        if (isChatDecision(decision) && isModeratorDecision(message.from, this.room.sequencedBy(message), decision)) {
+            this.moderation = moderateChat(this.moderation, decision, this.room.sequencedAt(message) ?? Date.now()).moderation;
+        }
+    }
+
+    /**
      * A message of a watched conversation, checked by every page, on the chain of the chat, the same everywhere: its
-     * form, its text included, then the rate of its author. One appended live in the name of a participant away from this
-     * page is dropped once counted: unknown to the room once it left, the sequencer may have forged it, its pages not
-     * checking the signature
+     * form, its text included, then its author, dropped when muted or removed, as the chat hides it, neither counted nor
+     * told, then its rate. One appended live in the name of a participant away from this page is dropped once counted:
+     * unknown to the room once it left, the sequencer may have forged it, its pages not checking the signature
      */
     private async onWatched(message: WatchedMessage, live: boolean): Promise<void> {
         const text: unknown = message.payload;
         if (!isWatchedText(text)) {
             this.reportInvalid(message);
+            return;
+        }
+        if (isSilenced(this.moderation, message.from, this.room.sequencedAt(message) ?? Date.now())) {
+            // Its own message, waiting or failed: hidden from every page, sending it again would be too
+            const sent: PrivateMessageLine | undefined = message.from === this.room.localPlayer.name ? this.ownLine(text.conversation, text.id) : undefined;
+            if (sent !== undefined) {
+                this.updateLines(text.conversation, (lines: ReadonlyArray<Readonly<PrivateLine>>) => lines.filter((line: Readonly<PrivateLine>) => line !== sent));
+            }
             return;
         }
 

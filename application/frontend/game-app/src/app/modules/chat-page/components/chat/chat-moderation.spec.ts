@@ -4,8 +4,10 @@ import {
     ChatModerationAction,
     decisionText,
     isChatDecision,
+    isModeratorDecision,
     isSilenced,
     moderateChat,
+    mutedHint,
     MuteMinutes,
     NO_MODERATION
 } from './chat-moderation';
@@ -143,5 +145,22 @@ describe('decisionText', () => {
         expect(decisionText(remove('bob'), 'alice', 'alice')).toEqual({ key: 'chat.log.removal.byYou', params: { moderator: 'alice', name: 'bob' } });
         expect(decisionText(remove('bob'), 'alice', 'bob')).toEqual({ key: 'chat.log.removal.other', params: { moderator: 'alice', name: 'bob' } });
         expect(decisionText(remove('bob'), 'alice', 'carol')).toEqual({ key: 'chat.log.removal.other', params: { moderator: 'alice', name: 'bob' } });
+    });
+});
+
+describe('isModeratorDecision', () => {
+    test('should count a decision ordered by its author, not on itself', () => {
+        expect(isModeratorDecision('alice', 'alice', remove('bob'))).toBe(true);
+        expect(isModeratorDecision('alice', 'bob', remove('bob'))).toBe(false);
+        expect(isModeratorDecision('alice', undefined, remove('bob'))).toBe(false);
+        expect(isModeratorDecision('alice', 'alice', remove('alice'))).toBe(false);
+    });
+});
+
+describe('mutedHint', () => {
+    test('should tell the end of a mute rounded up to the minute, or the end of the room', () => {
+        const format = new Intl.DateTimeFormat('en', { timeStyle: 'short', timeZone: 'UTC' });
+        expect(mutedHint(Date.UTC(2026, 0, 1, 12, 37, 1), format)).toEqual({ key: 'chat.composer.muted', params: { time: '12:38 PM' } });
+        expect(mutedHint(Number.POSITIVE_INFINITY, format)).toEqual({ key: 'chat.composer.mutedToEnd' });
     });
 });

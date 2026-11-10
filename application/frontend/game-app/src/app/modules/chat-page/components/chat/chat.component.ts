@@ -48,8 +48,10 @@ import {
     ChatModerationAction,
     decisionText,
     isChatDecision,
+    isModeratorDecision,
     isSilenced,
     moderateChat,
+    mutedHint,
     MuteMinutes,
     NO_MODERATION
 } from './chat-moderation';
@@ -158,7 +160,6 @@ function isLeftOut(entry: Readonly<ChatEntry>, hiddenAuthors: ReadonlySet<string
     }
 }
 
-const MINUTE: number = 60 * 1000;
 /** A pause longer than this starts a new group of messages, its time shown again */
 export const GROUP_PAUSE: number = 5 * 60 * 1000;
 // The log is at its bottom closer than this, in pixels: the new messages keep it there
@@ -252,18 +253,17 @@ export class ChatComponent {
     });
     // The next mute in force to end, by the clock of this page: none while every mute lasts until the end of the room
     private readonly nextMuteEnd = computed<number>(() => Math.min(Number.POSITIVE_INFINITY, ...this.muteEnds().values()));
-    // When the mute of the local player ends, by the clock of this page: none while it may send
-    private readonly mutedUntil = computed<number | undefined>(() => this.muteEnds().get(this.localName()));
+    /**
+     * When the mute of the local player ends, by the clock of this page: none while it may send. The conversations of
+     * the players follow it
+     */
+    public readonly mutedUntil: Signal<number | undefined> = computed<number | undefined>(() => this.muteEnds().get(this.localName()));
     protected readonly isMuted = computed<boolean>(() => this.mutedUntil() !== undefined);
     /** Why the composer does not send: muted, until a time rounded up to the minute, then waiting, or held back */
     protected readonly composerHint = computed<TranslatableText | undefined>(() => {
         const mutedUntil: number | undefined = this.mutedUntil();
-        if (mutedUntil === Number.POSITIVE_INFINITY) {
-            return { key: scopedKey(TranslationScope.CHAT, marker('composer.mutedToEnd', undefined, 'chat')) };
-        }
         if (mutedUntil !== undefined) {
-            const time: string = this.timeFormat().format(Math.ceil(mutedUntil / MINUTE) * MINUTE);
-            return { key: scopedKey(TranslationScope.CHAT, marker('composer.muted', undefined, 'chat')), params: { time } };
+            return mutedHint(mutedUntil, this.timeFormat());
         }
         if (this.isWaiting()) {
             return { key: scopedKey(TranslationScope.CHAT, marker('composer.wait', undefined, 'chat')), params: { seconds: this.waitSeconds() } };
@@ -591,7 +591,7 @@ export class ChatComponent {
         if (message.from === room.localPlayer.name) {
             this.pendingTargets.update((targets: ReadonlySet<string>) => new Set<string>([...targets].filter((target: string) => target !== decision.target)));
         }
-        if (message.from !== room.sequencedBy(message) || decision.target === message.from) {
+        if (!isModeratorDecision(message.from, room.sequencedBy(message), decision)) {
             return;
         }
 

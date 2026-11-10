@@ -127,6 +127,8 @@ export class RoomLayoutComponent {
     private readonly chat = viewChild(ChatComponent);
     private readonly chatButton = viewChild<string, ElementRef<HTMLElement>>('chatButton', { read: ElementRef });
     protected readonly unread = computed<number>(() => this.chat()?.unread() ?? 0);
+    /** When the mute of the local player in the chat ends: the conversations of the players follow it */
+    protected readonly mutedUntil = computed<number | undefined>(() => this.chat()?.mutedUntil());
     private readonly privateTalk = viewChild(PrivateConversationsComponent);
     private readonly privateButton = viewChild<string, ElementRef<HTMLElement>>('privateButton', { read: ElementRef });
     protected readonly privateUnread = computed<number>(() => this.privateTalk()?.unread() ?? 0);

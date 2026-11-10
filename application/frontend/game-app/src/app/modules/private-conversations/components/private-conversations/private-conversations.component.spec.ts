@@ -25,11 +25,12 @@ import { PrivateConversationsComponent } from './private-conversations.component
 
 @Component({
     imports: [PrivateConversationsComponent],
-    template: '<app-private-conversations (closed)="closes.set(closes() + 1)" [conversations]="conversations()" [open]="open()" />',
+    template: '<app-private-conversations (closed)="closes.set(closes() + 1)" [conversations]="conversations()" [mutedUntil]="mutedUntil()" [open]="open()" />',
 })
 class HostComponent {
     public readonly conversations = signal<PrivateConversations>(new PrivateConversationsMock().conversations);
     public readonly open = signal<boolean>(true);
+    public readonly mutedUntil = signal<number | undefined>(undefined);
     public readonly closes = signal<number>(0);
 }
 
@@ -351,6 +352,44 @@ describe('PrivateConversationsComponent', () => {
         expect(sendButton().getAttribute('aria-label')).toEqual('Send openly');
         expect(fake.send).toHaveBeenCalledExactlyOnceWith('team', 'I bet on 2');
         expect(query('#private-read-only')).toBeNull();
+    });
+
+    test('should wait while the local player is muted in the chat, in a watched conversation only', async () => {
+        // Given
+        await show(privateConversation('team', ['alice', 'bob'], [privateMessage('alice', 'failed', { state: ChatMessageState.FAILED })], true, true));
+
+        // When
+        fixture.componentInstance.mutedUntil.set(Date.now() + 60_000);
+        await type('Message to bob, read by the whole room', 'I bet on 2');
+
+        // Then
+        expect(hint()).toMatch(/^You are muted until /);
+        expect(sendButton().disabled).toEqual(true);
+        const retry: HTMLButtonElement | undefined = [...fixture.nativeElement.querySelectorAll('app-chat-message button')]
+            .find((button: HTMLButtonElement) => button.textContent.trim() === 'Retry');
+        expect(retry?.disabled).toEqual(true);
+
+        // When
+        fixture.componentInstance.mutedUntil.set(Number.POSITIVE_INFINITY);
+        await fixture.whenStable();
+
+        // Then
+        expect(hint()).toEqual('You are muted until the end of the room');
+
+        // When: the conversation closed
+        fake.wait.set(PrivateComposerWait.CLOSED);
+        await show(privateConversation('team', ['alice', 'bob'], [], false, true));
+
+        // Then
+        expect(hint()).toEqual('The conversation is closed: no more messages');
+
+        // When: a private conversation
+        fake.wait.set(undefined);
+        await show(privateConversation('team', ['alice', 'bob']));
+
+        // Then
+        expect(hint()).toBeUndefined();
+        expect(sendButton().disabled).toEqual(false);
     });
 
     test('should tell the private conversations beside a watched one', async () => {

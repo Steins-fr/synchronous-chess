@@ -6,6 +6,7 @@ import { MatIcon } from '@angular/material/icon';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { marker } from '@jsverse/transloco-keys-manager/marker';
 import { chatMessageRules, GROUP_PAUSE } from '@app/modules/chat-page/components/chat/chat.component';
+import { mutedHint } from '@app/modules/chat-page/components/chat/chat-moderation';
 import { ChatComposerComponent } from '@app/modules/chat-page/components/chat/chat-composer/chat-composer.component';
 import { ChatMessage, ChatMessageComponent } from '@app/modules/chat-page/components/chat/chat-message/chat-message.component';
 import { ChatPreferencesService } from '@app/services/chat-preferences/chat-preferences.service';
@@ -83,6 +84,11 @@ export class PrivateConversationsComponent {
     public readonly conversations = input.required<PrivateConversations>();
     /** Whether the panel is shown: the messages received while it is not are unread */
     public readonly open = input<boolean>(true);
+    /**
+     * When the mute of the local player in the chat of the room ends, by the clock of the page, none while it may send:
+     * its composer of a watched conversation waits until then, as the one of the chat
+     */
+    public readonly mutedUntil = input<number | undefined>();
     public readonly closed = output<void>();
 
     private readonly log = viewChild.required<ElementRef<HTMLElement>>('log');
@@ -163,13 +169,18 @@ export class PrivateConversationsComponent {
     private readonly now = signal<number>(Date.now());
     private readonly waitUntil = computed<number | undefined>(() => this.conversations().waitUntil(this.now()));
     /** Why the composer does not send, none when it may */
-    protected readonly wait = computed<PrivateComposerWait | undefined>(() => this.conversations().composerWait(this.selected() ?? '', this.now()));
+    protected readonly wait = computed<PrivateComposerWait | undefined>(() => {
+        const wait: PrivateComposerWait | undefined = this.conversations().composerWait(this.selected() ?? '', this.now());
+        return wait !== PrivateComposerWait.CLOSED && this.view()?.watched === true && this.mutedUntil() !== undefined ? PrivateComposerWait.MUTED : wait;
+    });
     protected readonly hint = computed<TranslatableText | undefined>(() => {
         switch (this.wait()) {
             case PrivateComposerWait.CLOSED:
                 return { key: scopedKey(TranslationScope.CHAT, marker('private.composer.closed', undefined, 'chat')) };
             case PrivateComposerWait.KEYS:
                 return { key: scopedKey(TranslationScope.CHAT, marker('private.composer.preparing', undefined, 'chat')) };
+            case PrivateComposerWait.MUTED:
+                return mutedHint(this.mutedUntil() as number, this.timeFormat());
             case PrivateComposerWait.RATE: {
                 const seconds: number = Math.ceil(((this.waitUntil() as number) - this.now()) / 1000);
                 return { key: scopedKey(TranslationScope.CHAT, marker('composer.wait', undefined, 'chat')), params: { seconds } };

@@ -74,7 +74,8 @@
         }
         @if (conversations(); as conversations) {
         <div [hidden]="shownPanel() !== panels.PRIVATE" class="h-full" id="room-private">
-            <app-private-conversations (closed)="togglePanel(panels.PRIVATE, false)" [conversations]="conversations" [open]="privateOpen()" class="h-full" />
+            <app-private-conversations (closed)="togglePanel(panels.PRIVATE, false)" [conversations]="conversations" [mutedUntil]="mutedUntil()" [open]="privateOpen()"
+                class="h-full" />
         </div>
         }
         @if (history()) {
