@@ -168,7 +168,7 @@ describe('BlockRoom', () => {
         expect(() => room.transmitMessage(TestHelper.cast<'move'>('unknown'), 'e4')).toThrow('No block chain routes the unknown messages');
     });
 
-    test('notifyMessage should publish the message of the block, telling whether it is history, when and by whom it was ordered', () => {
+    test('notifyMessage should publish the message of the block, telling whether it is history, signed, when and by whom it was ordered', () => {
         // Given
         const room: BlockRoom<TestPayloads> = createRoom();
         const data: AppMessage = { from: 'remote', type: 'move', payload: 'd5' };
@@ -177,14 +177,17 @@ describe('BlockRoom', () => {
         room.messenger('move').subscribe((message: AppMessage) => moves.push(message));
 
         // When
-        room.notifyMessage(BlockChainName.CHESS, new Block(1, 'previous', { id: 'id', data, signature: 'signature' }, 'local', 1000, 'hash', 'signature'), true);
-        room.notifyMessage(BlockChainName.CHESS, new Block(2, 'hash', { id: 'id2', data: liveData, signature: 'signature' }, 'b', 2000, 'hash2', 'signature'), false);
+        room.notifyMessage(BlockChainName.CHESS, new Block(1, 'previous', { id: 'id', data, signature: 'signature' }, 'local', 1000, 'hash', 'signature'), true, false);
+        room.notifyMessage(BlockChainName.CHESS, new Block(2, 'hash', { id: 'id2', data: liveData, signature: 'signature' }, 'b', 2000, 'hash2', 'signature'), false, true);
 
         // Then
         expect(moves).toEqual([data, liveData]);
         expect(room.isHistory(data)).toEqual(true);
         expect(room.isHistory(liveData)).toEqual(false);
         expect(room.isHistory({ ...data })).toEqual(false);
+        expect(room.isSigned(data)).toEqual(false);
+        expect(room.isSigned(liveData)).toEqual(true);
+        expect(room.isSigned({ ...liveData })).toEqual(false);
         expect(room.sequencedAt(data)).toEqual(1000);
         expect(room.sequencedAt(liveData)).toEqual(2000);
         expect(room.sequencedAt({ ...data })).toBeUndefined();

@@ -93,7 +93,8 @@
       "leave": "Quitter",
       "private": "Privé",
       "room": "Salle {roomName}",
-      "unread": "{count, plural, one {# message non lu} other {# messages non lus}}"
+      "unread": "{count, plural, one {# message non lu} other {# messages non lus}}",
+      "watched": "Entre joueurs"
     },
     "booting": {
       "delay": "Le serveur et sa base de données se mettent en veille quand personne ne joue : leur réveil prend jusqu'à une trentaine de secondes.",

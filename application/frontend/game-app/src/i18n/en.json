@@ -93,7 +93,8 @@
       "leave": "Leave",
       "private": "Private",
       "room": "Room {roomName}",
-      "unread": "{count, plural, one {# unread message} other {# unread messages}}"
+      "unread": "{count, plural, one {# unread message} other {# unread messages}}",
+      "watched": "Players' talk"
     },
     "booting": {
       "delay": "The server and its database sleep when nobody plays: waking them up takes up to about thirty seconds.",

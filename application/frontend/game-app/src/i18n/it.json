@@ -93,7 +93,8 @@
       "leave": "Esci",
       "private": "Privato",
       "room": "Stanza {roomName}",
-      "unread": "{count, plural, one {# messaggio non letto} other {# messaggi non letti}}"
+      "unread": "{count, plural, one {# messaggio non letto} other {# messaggi non letti}}",
+      "watched": "Tra giocatori"
     },
     "booting": {
       "delay": "Il server e il suo database vanno in sospensione quando nessuno gioca: risvegliarli richiede fino a una trentina di secondi.",

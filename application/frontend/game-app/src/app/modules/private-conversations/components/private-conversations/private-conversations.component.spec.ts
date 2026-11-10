@@ -25,11 +25,12 @@ import { PrivateConversationsComponent } from './private-conversations.component
 
 @Component({
     imports: [PrivateConversationsComponent],
-    template: '<app-private-conversations (closed)="closes.set(closes() + 1)" [conversations]="conversations()" [open]="open()" />',
+    template: '<app-private-conversations (closed)="closes.set(closes() + 1)" [conversations]="conversations()" [mutedUntil]="mutedUntil()" [open]="open()" />',
 })
 class HostComponent {
     public readonly conversations = signal<PrivateConversations>(new PrivateConversationsMock().conversations);
     public readonly open = signal<boolean>(true);
+    public readonly mutedUntil = signal<number | undefined>(undefined);
     public readonly closes = signal<number>(0);
 }
 
@@ -78,7 +79,7 @@ describe('PrivateConversationsComponent', () => {
     }
 
     async function show(...conversations: ReadonlyArray<PrivateConversationView>): Promise<void> {
-        fake.mine.set(conversations);
+        fake.shown.set(conversations);
         await fixture.whenStable();
     }
 
@@ -136,7 +137,7 @@ describe('PrivateConversationsComponent', () => {
     test('should not ring for the messages there before the panel', async () => {
         // Given: a panel created closed, for conversations holding a message received already
         const conversations = new PrivateConversationsMock();
-        conversations.mine.set([
+        conversations.shown.set([
             privateConversation('team', ['alice', 'bob'], [privateMessage('bob', 'before')]),
         ]);
         const other: ComponentFixture<HostComponent> = TestBed.createComponent(HostComponent);
@@ -313,6 +314,91 @@ describe('PrivateConversationsComponent', () => {
 
         // Then
         expect(fake.send).toHaveBeenCalledTimes(2);
+    });
+
+    test('should show a watched conversation to a spectator, without composer', async () => {
+        // When
+        await show(privateConversation('team', ['bob', 'carol'], [privateMessage('bob', 'the ball is on 3')], true, true));
+
+        // Then
+        expect(query('#private-conversations h2')?.textContent).toEqual('Conversation of the players');
+        expect(query('[role="tablist"]')?.getAttribute('aria-label')).toEqual('Conversation of the players');
+        expect(query('#private-log')?.getAttribute('aria-label')).toEqual('Conversation of the players');
+        expect(query('#private-close')?.getAttribute('aria-label')).toEqual('Close the conversation of the players');
+        expect(texts('#private-conversation-team mat-icon')).toEqual(['visibility']);
+        expect(texts('#private-conversation-team .sr-only')).toEqual(['Read by the whole room']);
+        expect(texts('.chat-bubble')).toHaveLength(1);
+        expect(query('app-chat-composer')).toBeNull();
+        expect(query('#private-read-only')?.textContent.trim()).toEqual('Only the players write here');
+
+        // When: the match over
+        await show(privateConversation('team', ['bob', 'carol'], [], false, true));
+
+        // Then
+        expect(texts('#private-conversation-team mat-icon')).toEqual(['visibility', 'lock_clock']);
+        expect(texts('#private-conversation-team .sr-only')).toEqual(['Read by the whole room', 'Closed']);
+        expect(query('#private-closed')).not.toBeNull();
+    });
+
+    test('should send openly in a watched conversation of the local player', async () => {
+        // Given
+        await show(privateConversation('team', ['alice', 'bob'], [], true, true));
+
+        // When
+        await type('Message to bob, read by the whole room', 'I bet on 2');
+        await click(sendButton());
+
+        // Then
+        expect(sendButton().getAttribute('aria-label')).toEqual('Send openly');
+        expect(fake.send).toHaveBeenCalledExactlyOnceWith('team', 'I bet on 2');
+        expect(query('#private-read-only')).toBeNull();
+    });
+
+    test('should wait while the local player is muted in the chat, in a watched conversation only', async () => {
+        // Given
+        await show(privateConversation('team', ['alice', 'bob'], [privateMessage('alice', 'failed', { state: ChatMessageState.FAILED })], true, true));
+
+        // When
+        fixture.componentInstance.mutedUntil.set(Date.now() + 60_000);
+        await type('Message to bob, read by the whole room', 'I bet on 2');
+
+        // Then
+        expect(hint()).toMatch(/^You are muted until /);
+        expect(sendButton().disabled).toEqual(true);
+        const retry: HTMLButtonElement | undefined = [...fixture.nativeElement.querySelectorAll('app-chat-message button')]
+            .find((button: HTMLButtonElement) => button.textContent.trim() === 'Retry');
+        expect(retry?.disabled).toEqual(true);
+
+        // When
+        fixture.componentInstance.mutedUntil.set(Number.POSITIVE_INFINITY);
+        await fixture.whenStable();
+
+        // Then
+        expect(hint()).toEqual('You are muted until the end of the room');
+
+        // When: the conversation closed
+        fake.wait.set(PrivateComposerWait.CLOSED);
+        await show(privateConversation('team', ['alice', 'bob'], [], false, true));
+
+        // Then
+        expect(hint()).toEqual('The conversation is closed: no more messages');
+
+        // When: a private conversation
+        fake.wait.set(undefined);
+        await show(privateConversation('team', ['alice', 'bob']));
+
+        // Then
+        expect(hint()).toBeUndefined();
+        expect(sendButton().disabled).toEqual(false);
+    });
+
+    test('should tell the private conversations beside a watched one', async () => {
+        // When
+        await show(privateConversation('team', ['alice', 'bob']), privateConversation('customs-1', ['alice', 'bob'], [], true, true));
+
+        // Then
+        expect(query('#private-conversations h2')?.textContent).toEqual('Private conversations');
+        expect(query('#private-close')?.getAttribute('aria-label')).toEqual('Close the private conversations');
     });
 
     test('should not send without a conversation shown', async () => {
@@ -524,7 +610,7 @@ describe('PrivateConversationsComponent between two pages', { timeout: 30_000 },
         await fixture.whenStable();
 
         // Then
-        await vi.waitFor(() => expect(bob.mine()[0].lines.map((line: Readonly<PrivateLine>) => line.kind === PrivateLineKind.MESSAGE && line.message.text))
+        await vi.waitFor(() => expect(bob.shown()[0].lines.map((line: Readonly<PrivateLine>) => line.kind === PrivateLineKind.MESSAGE && line.message.text))
             .toEqual(['I put 7']));
         await vi.waitFor(async () => {
             await fixture.whenStable();

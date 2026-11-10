@@ -93,7 +93,8 @@
       "leave": "Verlassen",
       "private": "Privat",
       "room": "Raum {roomName}",
-      "unread": "{count, plural, one {# ungelesene Nachricht} other {# ungelesene Nachrichten}}"
+      "unread": "{count, plural, one {# ungelesene Nachricht} other {# ungelesene Nachrichten}}",
+      "watched": "Unter Spielern"
     },
     "booting": {
       "delay": "Der Server und seine Datenbank schlafen, wenn niemand spielt: Das Aufwecken dauert bis zu etwa dreißig Sekunden.",

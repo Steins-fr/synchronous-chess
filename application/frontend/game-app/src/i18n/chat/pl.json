@@ -79,7 +79,15 @@
     "tabClosed": "Zamknięta",
     "title": "Rozmowy prywatne",
     "unreadable": "Wiadomości od {name} nie można odczytać w tej przeglądarce",
-    "unreadableSelf": "Jednej z twoich wiadomości nie można odczytać w tej przeglądarce"
+    "unreadableSelf": "Jednej z twoich wiadomości nie można odczytać w tej przeglądarce",
+    "watched": {
+      "close": "Zamknij rozmowę graczy",
+      "message": "Wiadomość do {names}, czyta ją cały pokój",
+      "readOnly": "Tu piszą tylko gracze",
+      "send": "Wyślij jawnie",
+      "tab": "Czyta ją cały pokój",
+      "title": "Rozmowa graczy"
+    }
   },
   "send": "Wyślij"
 }

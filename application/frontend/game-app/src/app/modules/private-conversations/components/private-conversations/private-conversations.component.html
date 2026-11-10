@@ -1,19 +1,24 @@
 <section *transloco="let t; prefix: 'chat'" class="flex min-h-0 flex-1 flex-col" id="private-conversations">
     <header class="panel-header">
-        <h2 class="m-0 flex-1 mat-title-medium">{{ t('private.title') }}</h2>
-        <button (click)="closed.emit()" [attr.aria-label]="t('private.close')" [title]="t('private.close')" id="private-close" mat-icon-button type="button">
+        <h2 class="m-0 flex-1 mat-title-medium">{{ watchedOnly() ? t('private.watched.title') : t('private.title') }}</h2>
+        <button (click)="closed.emit()" [attr.aria-label]="watchedOnly() ? t('private.watched.close') : t('private.close')"
+            [title]="watchedOnly() ? t('private.watched.close') : t('private.close')" id="private-close" mat-icon-button type="button">
             <mat-icon>close</mat-icon>
         </button>
     </header>
 
     @if (tabs().length > 0) {
     <!-- The tabs on a line, scrolled sideways once they overflow -->
-    <div [attr.aria-label]="t('private.title')" class="flex gap-2 overflow-x-auto border-b border-app-border px-3 py-2" role="tablist">
+    <div [attr.aria-label]="watchedOnly() ? t('private.watched.title') : t('private.title')" class="flex gap-2 overflow-x-auto border-b border-app-border px-3 py-2" role="tablist">
         @for (tab of tabs(); track tab.view.id) {
         <button (click)="select(tab.view.id)" [attr.aria-selected]="tab.view.id === selected()" [id]="'private-conversation-' + tab.view.id"
             aria-controls="private-log" class="flex shrink-0 cursor-pointer items-center gap-1 rounded-2xl border border-app-border bg-app-surface px-3 py-1 text-sm text-app-text aria-selected:border-app-accent-text aria-selected:text-app-accent-text"
             role="tab" type="button">
             <span>{{ tab.view.title.key | transloco: tab.view.title.params }}</span>
+            @if (tab.view.watched) {
+            <mat-icon aria-hidden="true" class="size-4! text-base! text-app-text-muted">visibility</mat-icon>
+            <span class="sr-only">{{ t('private.watched.tab') }}</span>
+            }
             @if (!tab.view.open) {
             <mat-icon aria-hidden="true" class="size-4! text-base! text-app-text-muted">lock_clock</mat-icon>
             <span class="sr-only">{{ t('private.tabClosed') }}</span>
@@ -27,7 +32,7 @@
     </div>
     }
 
-    <div #log [attr.aria-label]="t('private.title')" class="flex flex-1 flex-col overflow-y-auto px-3 pb-3" id="private-log" role="log">
+    <div #log [attr.aria-label]="watchedOnly() ? t('private.watched.title') : t('private.title')" class="flex flex-1 flex-col overflow-y-auto px-3 pb-3" id="private-log" role="log">
         @if (view(); as view) {
         @for (line of lines(); track line.id) {
         @if (line.message; as message) {
@@ -50,8 +55,13 @@
         }
     </div>
 
-    @if (view()) {
+    @if (view(); as view) {
+    @if (view.member) {
     <app-chat-composer (send)="send()" [disabled]="isBlank() || wait() !== undefined" [field]="messageForm" [hint]="hint()"
-        [label]="t('private.message', { names: recipients() })" [sendLabel]="t('private.send')" formId="private-send-form" sendId="private-send" />
+        [label]="view.watched ? t('private.watched.message', { names: recipients() }) : t('private.message', { names: recipients() })"
+        [sendLabel]="view.watched ? t('private.watched.send') : t('private.send')" formId="private-send-form" sendId="private-send" />
+    } @else {
+    <p class="muted-note m-0 px-3 pb-3 text-sm" id="private-read-only">{{ t('private.watched.readOnly') }}</p>
+    }
     }
 </section>

@@ -105,6 +105,27 @@ export function isSilenced(moderation: ChatModeration, author: string, time: num
     return moderation.removed.has(author) || isMutedAt(moderation, author, time);
 }
 
+/**
+ * Whether a decision counts: ordered by its author, the moderator of the room then, and not on itself. The decision of
+ * an honest moderator, still pending when another sequencer took over, comes back ordered by it
+ * @param sequencer the participant who ordered its block
+ */
+export function isModeratorDecision(author: string, sequencer: string | undefined, decision: ChatDecision): boolean {
+    return author === sequencer && decision.target !== author;
+}
+
+/**
+ * Why a composer of the local player muted does not send: until a time rounded up to the minute, or until the end of the
+ * room
+ * @param until the end of its mute, by the clock of the page: Number.POSITIVE_INFINITY until the end of the room
+ */
+export function mutedHint(until: number, format: Intl.DateTimeFormat): TranslatableText {
+    if (until === Number.POSITIVE_INFINITY) {
+        return { key: scopedKey(TranslationScope.CHAT, marker('composer.mutedToEnd', undefined, 'chat')) };
+    }
+    return { key: scopedKey(TranslationScope.CHAT, marker('composer.muted', undefined, 'chat')), params: { time: format.format(Math.ceil(until / MINUTE) * MINUTE) } };
+}
+
 function isMutedAt(moderation: ChatModeration, author: string, time: number): boolean {
     return (moderation.mutes.get(author) ?? Number.NEGATIVE_INFINITY) > time;
 }

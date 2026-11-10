@@ -171,7 +171,10 @@ run by the CI.
   `historyLines()` and `pastLines()` of `e2e/room-participant.ts`. `#history-close` closes it.
 - The private conversations a game declares (`PrivateConversations`, see `documentation/blockchain-and-anti-cheat.md`)
   are a third content of the panel (`#room-private`), shown by the button `#room-private-toggle` (`Private`, the unread
-  messages on its badge) to their members only: the Contraband declares them, a spectator has none. A tab per
+  messages on its badge) to their members only: the Contraband declares them, a spectator has none. A watched
+  conversation (the talk of the players of a duel) shows to every participant (`Players' talk`, the panel titled
+  `Conversation of the players`): a member writes in it (`Message to bob, read by the whole room`, `Send openly`), the
+  others read it without composer (`#private-read-only`, `Only the players write here`). A tab per
   conversation (`#private-conversation-<id>`, the open ones first), its log `#private-log` (the bubbles of the chat,
   `#private-closed` once closed), its composer `#private-send-form` / `#private-send` (`Message to bob, carol`), one draft
   per conversation; `#private-close` closes it. `openPrivate()`, `privateTabs()`, `selectPrivate(title)`,
@@ -197,7 +200,8 @@ run by the CI.
   worded for each one: `You muted bob for 5 minutes` for the host, `alice muted you for 5 minutes` for bob, `alice
   muted bob for 5 minutes` for the others, `alice removed bob from the room`. The composer of a muted participant
   waits, `#send` disabled, its hint telling until when (`You are muted until 12:38 PM`), and every page hides its
-  messages. A participant removed is told `The host removed you from the room.` and sees the list again, its links
+  messages; its composer of a watched conversation waits alike, and every page drops its messages there too. A
+  participant removed is told `The host removed you from the room.` and sees the list again, its links
   closed after 5 seconds; its joins are refused, under its name or from its browser under another one (`You were
   removed from this room: you cannot join it again.`).
 - The API knows a browser by an id of its local storage (`synchronous-chess:browser-id`): the tabs of one Playwright

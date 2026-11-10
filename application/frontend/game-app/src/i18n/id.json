@@ -93,7 +93,8 @@
       "leave": "Keluar",
       "private": "Privat",
       "room": "Ruang {roomName}",
-      "unread": "{count, plural, other {# pesan belum dibaca}}"
+      "unread": "{count, plural, other {# pesan belum dibaca}}",
+      "watched": "Antarpemain"
     },
     "booting": {
       "delay": "Server dan basis datanya tidur saat tidak ada yang bermain: membangunkannya butuh waktu hingga sekitar tiga puluh detik.",

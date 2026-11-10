@@ -12,4 +12,9 @@ export interface PrivateConversation {
      * message received while it is closed shows, the game being on another chain, ordered apart
      */
     readonly open: boolean;
+    /**
+     * Read by every participant of the room, spectators included, written by its members only: its messages travel in
+     * clear text. Fixed with the id, private when left out
+     */
+    readonly watched?: boolean;
 }

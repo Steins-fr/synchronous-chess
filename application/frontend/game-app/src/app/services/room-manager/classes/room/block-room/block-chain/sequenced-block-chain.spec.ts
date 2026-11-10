@@ -194,7 +194,7 @@ describe('SequencedBlockChain', () => {
             expect(block.index).toEqual(1);
             expect(block.sequencer).toEqual('a');
             expect(block.entry.data).toEqual({ from: 'a', type: 'move', payload: 'e4' });
-            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(chainName, block, false);
+            expect(node.room.notifyMessage).toHaveBeenCalledExactlyOnceWith(chainName, block, false, true);
             expect(sent(node.players['b'])).toEqual([{ type: BlockChainMessageType.NEW_BLOCK, payload: block, origin: MessageOriginType.BLOCK_ROOM_SERVICE, chain: chainName }]);
             expect(node.internals.ownPendingEntries.size).toEqual(0);
             expect(await node.internals.blockChain.hasValidHash(block)).toEqual(true);
@@ -579,6 +579,8 @@ describe('SequencedBlockChain', () => {
             // Then
             expect(reasons(node)).toEqual([[1, CheatReason.FORGED_AUTHOR]]);
             expect(delivered(node)).toEqual([entryOfUnknownAuthor.data]);
+            // Not signed for the application, which may tell apart an entry the sequencer could have forged
+            expect(node.room.notifyMessage.mock.calls.map((call: unknown[]) => call[3])).toEqual([false]);
         });
 
         test('should deliver in order, waiting for the key of an author', async () => {
