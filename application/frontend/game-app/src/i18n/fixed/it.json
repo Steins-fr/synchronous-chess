@@ -111,7 +111,6 @@
     "pastMatches": "Partite giocate",
     "place": {
       "hint": "Punta almeno 1 fiche, sulle caselle che vuoi: il puntatore legge le tue puntate.",
-      "option": "{pocket}",
       "pocket": "Casella della pallina",
       "required": "Scegli la casella della pallina",
       "submit": "Metti la pallina e punta"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# fiche} other {# fiche}}",
       "free": "Posto libero",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Lascia il posto",
       "release": "Libera il posto",
       "side": "{side, select, croupier {Croupier} other {Puntatore}}",

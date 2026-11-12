@@ -111,7 +111,6 @@
     "pastMatches": "Pertandingan yang dimainkan",
     "place": {
       "hint": "Bertaruhlah paling sedikit 1 chip, di kantong mana pun: petaruh melihat taruhan Anda.",
-      "option": "{pocket}",
       "pocket": "Kantong bola",
       "required": "Pilih kantong bola",
       "submit": "Taruh bola dan bertaruh"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, other {# chip}}",
       "free": "Kursi kosong",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Tinggalkan kursi",
       "release": "Kosongkan kursi",
       "side": "{side, select, croupier {Bandar} other {Petaruh}}",

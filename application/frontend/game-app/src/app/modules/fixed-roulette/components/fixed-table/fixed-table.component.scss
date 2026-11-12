@@ -1,0 +1,45 @@
+// The game over last fades in under the wheel, once its ball reached its pocket
+.line-shown {
+    animation: line-shown var(--app-motion-medium) ease-out;
+}
+
+@keyframes line-shown {
+    from {
+        opacity: 0;
+        transform: translateY(0.4rem);
+    }
+}
+
+// The result of the match pops up over the wheel, then leaves it to the players
+.result-shown {
+    animation: result-shown 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.result-banner:not(.result-shown) {
+    opacity: 0;
+}
+
+@keyframes result-shown {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) scale(0.6);
+    }
+
+    12%,
+    80% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+// No motion asked: the result shows on its line only
+@media (prefers-reduced-motion: reduce) {
+    .result-banner {
+        display: none;
+    }
+}

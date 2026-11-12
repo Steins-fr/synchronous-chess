@@ -8,7 +8,11 @@ import { marker } from '@jsverse/transloco-keys-manager/marker';
  * a number field) gives an error of its own, without message
  */
 export function fieldError<T>(field: FieldTree<T>): TranslatableText | undefined {
-    const error: ValidationError.WithFieldTree | undefined = field().errors()[0];
+    return errorText(field().errors()[0]);
+}
+
+/** The message of an error of a field, none without error */
+export function errorText(error: ValidationError.WithFieldTree | undefined): TranslatableText | undefined {
     if (error?.message === undefined) {
         return error && { key: marker('form.unreadable') };
     }

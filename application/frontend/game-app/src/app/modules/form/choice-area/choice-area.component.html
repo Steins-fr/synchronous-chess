@@ -1,0 +1,5 @@
+<label class="choice-area relative flex size-full cursor-pointer items-center justify-center">
+    <!-- The radio button covers the area, unseen: a click anywhere on it picks the option -->
+    <input class="absolute inset-0 m-0 size-full cursor-pointer opacity-0" type="radio" [formField]="field()" [value]="value()" [attr.form]="formId()" />
+    <ng-content />
+</label>

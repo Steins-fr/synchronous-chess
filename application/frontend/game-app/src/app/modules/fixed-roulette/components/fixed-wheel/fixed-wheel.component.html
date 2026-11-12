@@ -1,81 +1,92 @@
 <ng-container *transloco="let t; prefix: 'fixed.wheel'">
-    <!-- The disk, decorative: the betting cells tell the pockets, the ball and the stakes -->
-    <svg class="size-28" viewBox="0 0 100 100" aria-hidden="true">
-        <circle [attr.cx]="center" [attr.cy]="center" r="49" class="fill-app-wheel-rim" />
-        <circle [attr.cx]="center" [attr.cy]="center" [attr.r]="faceRadius" class="fill-app-card-face" />
-        @for (divider of dividers(); track $index) {
-        <line [attr.x1]="divider.from.x" [attr.y1]="divider.from.y" [attr.x2]="divider.to.x" [attr.y2]="divider.to.y" class="stroke-app-wheel-rim" stroke-width="1.5" />
+    @let pick = pocketField();
+    @let fields = stakeFields();
+    <div class="wheel relative aspect-square w-full">
+        <!-- The disk: its pockets in reading order, the rim around them. The croupier picks the pocket of its ball among them -->
+        <div
+            class="wheel-disk grid size-full grid-cols-2 gap-0.5 overflow-hidden rounded-full bg-app-wheel-rim shadow-lg"
+            [attr.role]="pick ? 'radiogroup' : null"
+            [attr.aria-label]="pick ? ('fixed.table.place.pocket' | transloco) : null">
+            @for (cell of pockets(); track cell.pocket) {
+            <div
+                class="pocket flex min-w-0 flex-col text-app-on-color"
+                [class]="cell.layout"
+                [id]="'pocket-' + cell.pocket"
+                [class.bg-app-pocket-red-felt]="cell.red"
+                [class.bg-app-pocket-black-felt]="!cell.red"
+                [class.pocket-hit]="cell.ball === ballKinds.LAST && !rolling()"
+                [class.pocket-sealed]="cell.ball === ballKinds.SEALED"
+                [attr.role]="pick || fields ? 'group' : 'img'"
+                [attr.aria-label]="t('pocket', {
+                    number: cell.pocket,
+                    ball: rolling() ? 'none' : (cell.ball ?? 'none'),
+                    topBet: cell.top > 0 ? 'yes' : 'no',
+                    top: names()[0],
+                    topChips: cell.top,
+                    bottomBet: cell.bottom > 0 ? 'yes' : 'no',
+                    bottom: names()[1],
+                    bottomChips: cell.bottom
+                })">
+                <div class="flex h-full w-[64%] flex-col items-center gap-1">
+                    <!-- Its number, on the side of the rim: the croupier clicks it to place its ball there -->
+                    <div class="flex min-h-0 w-full flex-1 items-center justify-center" [class.order-first]="cell.numberFirst" [class.order-last]="!cell.numberFirst">
+                        @if (pick) {
+                        <app-choice-area
+                            class="pocket-pick"
+                            [field]="pick"
+                            [value]="'' + cell.pocket"
+                            [formId]="formId()"
+                            (pointerenter)="hovered.set(cell.pocket)"
+                            (pointerleave)="hovered.set(null)">
+                            <span class="pocket-number">{{ cell.pocket }}</span>
+                        </app-choice-area>
+                        } @else {
+                        <span class="pocket-number" aria-hidden="true">{{ cell.pocket }}</span>
+                        }
+                    </div>
+                    <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.TOP">
+                        <app-chip-stack [amount]="cell.top" />
+                        @if (cell.top > 0) {
+                        <span>{{ cell.top }}</span>
+                        }
+                    </span>
+                    <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.BOTTOM">
+                        @if (fields) {
+                        <app-stake-field [field]="fields[$index]" [label]="'fixed.table.bets.label' | transloco: { pocket: cell.pocket }" [formId]="formId()" />
+                        } @else {
+                        <app-chip-stack [amount]="cell.bottom" />
+                        @if (cell.bottom > 0) {
+                        <span>{{ cell.bottom }}</span>
+                        }
+                        }
+                    </span>
+                </div>
+            </div>
+            }
+        </div>
+        <span class="wheel-hub pointer-events-none absolute top-1/2 left-1/2 size-[15%] -translate-1/2 rounded-full bg-app-wheel-rim shadow-md" aria-hidden="true"></span>
+        <!-- The ball the croupier is about to place: under its pointer, pale, then on the pocket it picked -->
+        @if (ghost(); as placing) {
+        <span class="ball-orbit pointer-events-none absolute inset-0" [style.--ball-angle.deg]="angles[placing.pocket - 1]" aria-hidden="true">
+            <span class="ball" [class.ball-ghost]="!placing.picked" [class.ball-sealed]="placing.picked" [attr.data-ghost]="placing.pocket"></span>
+        </span>
         }
-        @for (pocket of pockets(); track pocket.pocket) {
-        <text
-            [attr.x]="pocket.number.x"
-            [attr.y]="pocket.number.y"
-            text-anchor="middle"
-            dominant-baseline="central"
-            font-size="12"
-            font-weight="700"
-            [class.fill-app-pocket-red]="pocket.red"
-            [class.fill-app-pocket-black]="!pocket.red">{{ pocket.pocket }}</text>
+        @if (ball(); as shown) {
+        <!-- The ball sealed shows dashed and pale, on the page of its croupier only; revealed, it rolls from the hub -->
+        <span class="pointer-events-none absolute inset-0" animate.enter="ball-placed" animate.leave="ball-taken" aria-hidden="true">
+            <span class="ball-orbit absolute inset-0" [class.rolling]="rolling()" [style.--ball-angle.deg]="angles[shown.pocket - 1]">
+                <span class="ball" [class.ball-sealed]="shown.kind === ballKinds.SEALED" [attr.data-ball]="shown.kind" (animationend)="end($event)"></span>
+            </span>
+        </span>
         }
-        <circle [attr.cx]="center" [attr.cy]="center" [attr.r]="hubRadius" class="fill-app-wheel-rim" />
-        @if (ballPocket(); as pocket) {
-        @let sealed = ball()?.kind === ballKinds.SEALED;
-        <!-- The ball sealed shows dashed and pale, on the page of its croupier only -->
-        <circle
-            [attr.data-ball]="ball()?.kind"
-            [attr.cx]="pocket.ball.x"
-            [attr.cy]="pocket.ball.y"
-            r="5.5"
-            class="fill-app-ball stroke-app-ball-edge"
-            stroke-width="1.2"
-            [attr.stroke-dasharray]="sealed ? '2 1.5' : null"
-            [attr.fill-opacity]="sealed ? 0.6 : null" />
-        }
-    </svg>
-    <p class="m-0 min-h-lh text-center text-sm muted-note">
+    </div>
+    <p class="m-0 min-h-lh text-center text-sm">
         @if (ball(); as shown) {
         @if (shown.kind === ballKinds.SEALED) {
         {{ t('ball.sealed', { pocket: shown.pocket }) }}
-        } @else {
+        } @else if (!rolling()) {
         {{ t('ball.last', { pocket: shown.pocket }) }}
         }
         }
     </p>
-    <div class="grid w-full grid-cols-2 gap-2 sm:grid-cols-4">
-        @for (cell of cells(); track cell.pocket) {
-        <div
-            role="img"
-            class="flex flex-col items-center gap-1 rounded-lg border border-app-border bg-app-surface-raised px-1 py-1 outline-offset-2 outline-app-accent-text"
-            [id]="'pocket-' + cell.pocket"
-            [class.outline-2]="cell.ball !== null"
-            [class.outline-dashed]="cell.ball === ballKinds.SEALED"
-            [attr.aria-label]="t('pocket', {
-                number: cell.pocket,
-                ball: cell.ball ?? 'none',
-                topBet: cell.top > 0 ? 'yes' : 'no',
-                top: names()[0],
-                topChips: cell.top,
-                bottomBet: cell.bottom > 0 ? 'yes' : 'no',
-                bottom: names()[1],
-                bottomChips: cell.bottom
-            })">
-            <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.TOP">
-                <app-chip-stack [amount]="cell.top" />
-                @if (cell.top > 0) {
-                <span>{{ cell.top }}</span>
-                }
-            </span>
-            <span
-                class="inline-flex size-7 items-center justify-center rounded-full border-2 border-app-wheel-rim text-sm font-bold text-app-on-color"
-                [class.bg-app-pocket-red]="cell.red"
-                [class.bg-app-pocket-black]="!cell.red">{{ cell.pocket }}</span>
-            <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.BOTTOM">
-                <app-chip-stack [amount]="cell.bottom" />
-                @if (cell.bottom > 0) {
-                <span>{{ cell.bottom }}</span>
-                }
-            </span>
-        </div>
-        }
-    </div>
 </ng-container>

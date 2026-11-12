@@ -111,7 +111,6 @@
     "pastMatches": "Rozegrane partie",
     "place": {
       "hint": "Postaw co najmniej 1 żeton, na dowolne przegródki: obstawiający widzi twoje stawki.",
-      "option": "{pocket}",
       "pocket": "Przegródka kulki",
       "required": "Wybierz przegródkę kulki",
       "submit": "Połóż kulkę i postaw"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# żeton} few {# żetony} many {# żetonów} other {# żetonu}}",
       "free": "Wolne miejsce",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Zwolnij miejsce",
       "release": "Usuń z miejsca",
       "side": "{side, select, croupier {Krupier} other {Obstawiający}}",

@@ -31,6 +31,8 @@ export interface PhaseClockOptions<Session extends ClockedSession> {
 export interface PhaseClock {
     /** The round in progress: its game, its attempt, its step. The forms of a round start again with it */
     readonly roundKey: Signal<string>;
+    /** The seconds left, null without a phase waiting */
+    readonly left: Signal<number | null>;
     /** The time left, null without a phase waiting */
     readonly text: Signal<TranslatableText | null>;
     /** The time runs out */
@@ -85,6 +87,7 @@ export function phaseClock<Session extends ClockedSession>(session: Signal<Sessi
 
     return {
         roundKey,
+        left: timeLeft,
         text: computed((): TranslatableText | null => {
             const left: number | null = timeLeft();
             return left === null ? null : clockText(left);

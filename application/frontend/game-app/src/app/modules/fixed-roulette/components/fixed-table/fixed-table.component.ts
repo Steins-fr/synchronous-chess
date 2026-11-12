@@ -1,8 +1,8 @@
 import {
-    afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, Signal, untracked, viewChild, WritableSignal,
+    afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, input, linkedSignal, OnDestroy, signal, Signal, untracked, viewChild, WritableSignal,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { applyEach, form, min, required, schema, Schema, submit, validate, ValidationError } from '@angular/forms/signals';
+import { applyEach, FieldTree, form, min, required, schema, Schema, submit, validate, ValidationError } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { otherSeat, SeatPair } from '@app/helpers/seat-pair.helper';
 import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-reveal/helpers/commit-reveal-table.helper';
@@ -10,9 +10,9 @@ import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase
 import { setupTimeOf, setupTimeOptions } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
 import { FormErrorComponent } from '@app/modules/form/form-error/form-error.component';
-import { NumberFieldComponent } from '@app/modules/form/number-field/number-field.component';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/game-table/helpers/table-point.helper';
+import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
 import { PrivateConversations } from '@app/modules/private-conversations/classes/private-conversations';
 import { PrivatePayloads } from '@app/modules/private-conversations/classes/private-messages';
@@ -21,6 +21,7 @@ import { SteadyHeightDirective } from '@app/modules/room-layout/steady-height.di
 import { TranslationScope } from '@app/services/language/enums/translation-scope.enum';
 import { scopedKey } from '@app/services/language/scoped-key';
 import { PageVisibilityService } from '@app/services/page-visibility/page-visibility.service';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
@@ -31,15 +32,15 @@ import { map, switchMap } from 'rxjs';
 import { FixedRoulettePayloads } from '../../classes/game-sessions/fixed-roulette-messages';
 import { FixedRouletteSession, FixedRouletteSessionOptions } from '../../classes/game-sessions/fixed-roulette-session';
 import {
-    FixedRouletteEvent, FixedRouletteEventKind, FixedRouletteGameState, FixedRoulettePhase, FixedRouletteResult,
+    FixedRouletteEvent, FixedRouletteEventKind, FixedRouletteGameState, FixedRoulettePhase, FixedRouletteResult, SettledEvent,
 } from '../../classes/rules/fixed-roulette-game-state';
 import { Bets, BetError, betError, FixedRouletteRules, punterMinimum, Side, sideOf, totalOf } from '../../classes/rules/fixed-roulette-rules';
-import { PlacedBets, pocketStakes } from '../../classes/rules/settlement';
+import { netOf, PlacedBets, pocketStakes } from '../../classes/rules/settlement';
 import { betTransfers, ChipPlace, ChipPlaceKind, ChipTransfer, settlementTransfers, voidTransfers } from '../../helpers/chip-transfers.helper';
 import { eventText, GameOverEvent, isGameOver, resultText } from '../../helpers/fixed-texts.helper';
-import { BALL_DROP, HeardFixedTable, tableSounds, TimedSound } from '../../helpers/table-sound.helper';
+import { HeardFixedTable, tableSounds, TimedSound } from '../../helpers/table-sound.helper';
 import { FixedSeatComponent } from '../fixed-seat/fixed-seat.component';
-import { BallKind, FixedWheelComponent, ShownBall, StakeRow } from '../fixed-wheel/fixed-wheel.component';
+import { BALL_ROLL, BallKind, FixedWheelComponent, ShownBall, StakeRow } from '../fixed-wheel/fixed-wheel.component';
 
 /** The options of the session of the table: the rules of the game, lighter ones for the specs */
 export const FIXED_ROULETTE_SESSION_OPTIONS = new InjectionToken<FixedRouletteSessionOptions>('FIXED_ROULETTE_SESSION_OPTIONS', {
@@ -100,6 +101,8 @@ interface SeatView {
     readonly awaited: boolean;
     readonly side: Side | null;
     readonly chips: number | null;
+    /** The chips its player won, or lost below 0, in the game settled last, until the next ball is placed */
+    readonly gain: number | null;
 }
 
 /** The result of the match, once over */
@@ -107,6 +110,51 @@ interface ResultView {
     readonly text: TranslatableText;
     readonly draw: boolean;
 }
+
+/** What the table shows of the match: the game as it is, or as it was while the ball revealed rolls to its pocket */
+interface TableView {
+    readonly top: Readonly<SeatView>;
+    readonly bottom: Readonly<SeatView>;
+    /** The chips of the players on each pocket: the player of the top seat, then the one of the bottom seat */
+    readonly stakes: ReadonlyArray<SeatPair<number>>;
+    /** The players of the top and of the bottom seats, naming the stakes */
+    readonly names: SeatPair<string>;
+    /** The chips the bank took in the match */
+    readonly bank: number;
+    readonly ball: Readonly<ShownBall> | null;
+    /** The games over of the match: settled, or ending it on a player late or cheating */
+    readonly gamesOver: ReadonlyArray<Readonly<GameOverEvent>>;
+    /** What the match is at: the game and the time of the bets */
+    readonly info: Readonly<{ game: TranslatableText; terms: TranslatableText }> | null;
+    readonly result: Readonly<ResultView> | null;
+    /** What the table waits for */
+    readonly status: TranslatableText;
+}
+
+/** The ball of a game settled rolling to its pocket: the table keeps the game as it was until the ball is there */
+interface Rolling {
+    readonly event: Readonly<SettledEvent>;
+    readonly before: Readonly<TableView>;
+}
+
+/** The moves of a game the table showed, and what it showed then */
+interface PlayedMoves {
+    readonly game: FixedRouletteGameState | null;
+    readonly events: number;
+    readonly view: Readonly<TableView>;
+}
+
+/** The moves a render shows for the first time, applied live: the table plays them */
+interface MovesShown {
+    readonly game: FixedRouletteGameState | null;
+    readonly events: ReadonlyArray<Readonly<FixedRouletteEvent>>;
+    /** The ones the table did not play yet */
+    readonly moves: ReadonlyArray<Readonly<FixedRouletteEvent>>;
+    /** The table before them */
+    readonly before: Readonly<TableView>;
+}
+
+const isSettled = (event: Readonly<FixedRouletteEvent>): event is Readonly<SettledEvent> => event.kind === FixedRouletteEventKind.SETTLED;
 
 /**
  * The table of the Fixed Roulette: the seat of the other player above, the cloth with the bank, the fixed wheel and the
@@ -117,9 +165,9 @@ interface ResultView {
 @Component({
     selector: 'app-fixed-table',
     templateUrl: './fixed-table.component.html',
+    styleUrl: './fixed-table.component.scss',
     imports: [
-        ChipFlightsComponent, ChoiceFieldComponent, FixedSeatComponent, FixedWheelComponent, FormErrorComponent, MatButtonModule, NumberFieldComponent,
-        SteadyHeightDirective, TranslocoDirective, TranslocoPipe,
+        ChipFlightsComponent, ChipStackComponent, ChoiceFieldComponent, FixedSeatComponent, FixedWheelComponent, FormErrorComponent, MatButtonModule, SteadyHeightDirective, TranslocoDirective, TranslocoPipe,
     ],
     host: { class: 'block max-w-[1100px] mx-auto px-4' },
 })
@@ -128,6 +176,9 @@ export class FixedTableComponent implements OnDestroy {
     private readonly options: FixedRouletteSessionOptions = inject(FIXED_ROULETTE_SESSION_OPTIONS);
     private readonly soundService: SoundService = inject(SoundService);
     private readonly pageVisibility: PageVisibilityService = inject(PageVisibilityService);
+    private readonly reducedMotion: ReducedMotionService = inject(ReducedMotionService);
+    /** The time the ball revealed rolls to its pocket, in seconds */
+    private readonly ballRoll: number = inject(BALL_ROLL) / 1000;
 
     protected readonly session: Signal<FixedRouletteSession> = computed((): FixedRouletteSession => {
         const room: Room<FixedRoulettePayloads> = this.room();
@@ -173,12 +224,6 @@ export class FixedTableComponent implements OnDestroy {
         applyEach(path.chips, STAKE);
         validate(path.chips, ({ value }) => this.betsError(Side.PUNTER, value()));
     }, { name: 'fixed-bet' });
-    /** The pockets the croupier places the ball in */
-    protected readonly pocketOptions: Signal<ReadonlyArray<Readonly<ChoiceOption>>> = computed((): ReadonlyArray<Readonly<ChoiceOption>> =>
-        Array.from({ length: this.session().rules.pockets }, (_, index: number): ChoiceOption => ({
-            value: String(index + 1),
-            label: { key: key(marker('table.place.option', undefined, 'fixed')), params: { pocket: index + 1 } },
-        })));
     /** What the punter bets at least, and on how many pockets at most */
     protected readonly betHint: Signal<TranslatableText> = computed((): TranslatableText => {
         const total: number = this.croupierTotal();
@@ -191,11 +236,11 @@ export class FixedTableComponent implements OnDestroy {
     });
 
     /** The seat of the local player at the bottom; for a spectator, the first free seat while the seats are open, else the first seat */
-    protected readonly bottomSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(this.session().tableSeats.bottomSeat()));
-    protected readonly topSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(otherSeat(this.session().tableSeats.bottomSeat())));
+    private readonly bottomSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(this.session().tableSeats.bottomSeat()));
+    private readonly topSeat: Signal<Readonly<SeatView>> = computed((): Readonly<SeatView> => this.seatView(otherSeat(this.session().tableSeats.bottomSeat())));
 
     /** The chips of the players on each pocket: the player of the top seat, then the one of the bottom seat */
-    protected readonly stakes: Signal<ReadonlyArray<SeatPair<number>>> = computed((): ReadonlyArray<SeatPair<number>> => {
+    private readonly stakes: Signal<ReadonlyArray<SeatPair<number>>> = computed((): ReadonlyArray<SeatPair<number>> => {
         const game: FixedRouletteGameState | null = this.game();
         const rules: FixedRouletteRules = this.session().rules;
 
@@ -205,15 +250,15 @@ export class FixedTableComponent implements OnDestroy {
         const stakes: ReadonlyArray<SeatPair<number>> = pocketStakes(rules, game.bets(), game.croupier());
         return this.topSeat().seat === 0 ? stakes : stakes.map(([first, second]: SeatPair<number>): SeatPair<number> => [second, first]);
     });
-    protected readonly wheelNames: Signal<SeatPair<string>> = computed((): SeatPair<string> => [this.topSeat().name ?? '', this.bottomSeat().name ?? '']);
+    private readonly wheelNames: Signal<SeatPair<string>> = computed((): SeatPair<string> => [this.topSeat().name ?? '', this.bottomSeat().name ?? '']);
     /** The chips the bank took in the match */
-    protected readonly bank: Signal<number> = computed((): number => this.game()?.bank() ?? 0);
+    private readonly bank: Signal<number> = computed((): number => this.game()?.bank() ?? 0);
 
     /**
      * The ball the wheel shows: the one the local player sealed, on its page only, until it is revealed; then the ball of
      * the game settled last, until the croupier of the next game places its own
      */
-    protected readonly ball: Signal<Readonly<ShownBall> | null> = computed((): Readonly<ShownBall> | null => {
+    private readonly ball: Signal<Readonly<ShownBall> | null> = computed((): Readonly<ShownBall> | null => {
         const mine: number | null = this.session().myBall();
 
         if (mine !== null) {
@@ -228,12 +273,12 @@ export class FixedTableComponent implements OnDestroy {
         (this.game()?.events() ?? []).filter(isGameOver));
     /** The game over last, kept while the next one is played: no pause parts two games */
     protected readonly lastGame: Signal<TranslatableText | null> = computed((): TranslatableText | null => {
-        const last: Readonly<GameOverEvent> | undefined = this.gamesOver().at(-1);
+        const last: Readonly<GameOverEvent> | undefined = this.view().gamesOver.at(-1);
         return last === undefined ? null : eventText(last, this.session().players());
     });
 
     /** What the match is at: the game and the time of the bets */
-    protected readonly info: Signal<Readonly<{ game: TranslatableText; terms: TranslatableText }> | null> = computed(() => {
+    private readonly info: Signal<Readonly<{ game: TranslatableText; terms: TranslatableText }> | null> = computed(() => {
         const game: FixedRouletteGameState | null = this.game();
 
         if (game === null) {
@@ -246,21 +291,22 @@ export class FixedTableComponent implements OnDestroy {
     });
 
     /** The winner and why, or a draw, once the match is over */
-    protected readonly result: Signal<Readonly<ResultView> | null> = computed((): Readonly<ResultView> | null => {
+    private readonly result: Signal<Readonly<ResultView> | null> = computed((): Readonly<ResultView> | null => {
         const result: Readonly<FixedRouletteResult> | null = this.session().played().result();
         return result === null ? null : { text: resultText(result, this.session().players()), draw: result.winner === null };
     });
 
     /** A seated player starts a new match once the former one is over */
-    protected readonly canRematch: Signal<boolean> = canRematchOf(this.session);
+    private readonly mayRematch: Signal<boolean> = canRematchOf(this.session);
+    protected readonly canRematch: Signal<boolean> = computed((): boolean => this.mayRematch() && !this.busy());
 
     /** The local player is the player the game waits for */
-    private readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canPlace() || this.session().canBet());
+    protected readonly myTurn: Signal<boolean> = computed((): boolean => this.session().canPlace() || this.session().canBet());
     /** The clock of the phase, for the player it waits for: the page claims its time once over */
     protected readonly clock: PhaseClock = phaseClock(this.session);
 
     /** What the table waits for */
-    protected readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
+    private readonly status: Signal<TranslatableText> = computed((): TranslatableText => {
         const session: FixedRouletteSession = this.session();
         const game: FixedRouletteGameState | null = this.game();
 
@@ -283,10 +329,72 @@ export class FixedTableComponent implements OnDestroy {
         return this.phaseStatus(game);
     });
 
+    /** The game as it is */
+    private readonly liveView: Signal<Readonly<TableView>> = computed((): Readonly<TableView> => ({
+        top: this.topSeat(),
+        bottom: this.bottomSeat(),
+        stakes: this.stakes(),
+        names: this.wheelNames(),
+        bank: this.bank(),
+        ball: this.ball(),
+        gamesOver: this.gamesOver(),
+        info: this.info(),
+        result: this.result(),
+        status: this.status(),
+    }));
+
+    /** The ball of a game settled rolling to its pocket: until it is there, the table keeps its result for itself */
+    private readonly _rolling = signal<Readonly<Rolling> | null>(null);
+    private readonly rolling: Signal<Readonly<Rolling> | null> = this._rolling.asReadonly();
+    private readonly _played = signal<Readonly<PlayedMoves> | null>(null);
+    /**
+     * A game settled the table did not play yet: its ball rolls once the table is rendered, the render showing it keeps
+     * the table as it was, not the game settled
+     */
+    private readonly unplayed: Signal<boolean> = computed((): boolean => {
+        const played: Readonly<PlayedMoves> | null = this._played();
+        const game: FixedRouletteGameState | null = this.game();
+        return played !== null && played.game === game && (game?.events() ?? []).slice(played.events).some((event: Readonly<FixedRouletteEvent>) => isSettled(event));
+    });
+    /** The local player, croupier, places its ball and bets: not while the ball of the game before rolls */
+    protected readonly canPlace: Signal<boolean> = computed((): boolean => this.session().canPlace() && !this.busy());
+    protected readonly canBet: Signal<boolean> = computed((): boolean => this.session().canBet() && !this.busy());
+    /** The stakes the local player types in the pockets of the wheel, and their form under the table */
+    protected readonly stakeFields: Signal<FieldTree<ReadonlyArray<number | null>> | null> = computed((): FieldTree<ReadonlyArray<number | null>> | null => {
+        if (this.canPlace()) {
+            return this.placeForm.chips;
+        }
+        return this.canBet() ? this.betForm.chips : null;
+    });
+    protected readonly formId: Signal<string | null> = computed((): string | null => {
+        if (this.canPlace()) {
+            return 'place-form';
+        }
+        return this.canBet() ? 'bet-form' : null;
+    });
+
+    /** The table holds the game back while its ball rolls: no form of the next game, nor its clock */
+    protected readonly busy: Signal<boolean> = computed((): boolean => this.rolling() !== null || this.unplayed());
+    /** The ball shown rolls to its pocket */
+    protected readonly ballRolling: Signal<boolean> = computed((): boolean => this.rolling() !== null);
+    /** What the table shows: the game before its ball revealed, until the ball reached its pocket */
+    protected readonly view: Signal<Readonly<TableView>> = computed((): Readonly<TableView> => {
+        const rolling: Readonly<Rolling> | null = this.rolling();
+        if (rolling !== null) {
+            return { ...rolling.before, ball: { pocket: rolling.event.ball, kind: BallKind.LAST } };
+        }
+        return this.unplayed() ? (this._played() as Readonly<PlayedMoves>).view : this.liveView();
+    });
+    /** The part of the time of the phase left, from 1 to 0: none while the table holds the game back */
+    protected readonly timeLeft: Signal<number | null> = computed((): number | null => {
+        const left: number | null = this.clock.left();
+        return left === null || this.busy() ? null : Math.min(1, left / this.session().phaseTime());
+    });
+
     /** The games of the match over, the latest first */
     public readonly history: Signal<ReadonlyArray<TranslatableText>> = computed((): ReadonlyArray<TranslatableText> => {
         const names: ReadonlyArray<string> = this.session().players();
-        return [...this.gamesOver()].reverse().map((event: Readonly<GameOverEvent>) => eventText(event, names));
+        return [...this.view().gamesOver].reverse().map((event: Readonly<GameOverEvent>) => eventText(event, names));
     });
 
     /** The result of each match over before the one in progress, by its number in the room, the latest first */
@@ -295,7 +403,8 @@ export class FixedTableComponent implements OnDestroy {
     /** The session caught up with the history of the room: the table hears the changes from there, and flies their chips */
     private liveSession: FixedRouletteSession | null = null;
     private heard: Readonly<{ session: FixedRouletteSession; game: FixedRouletteGameState | null; table: Readonly<HeardFixedTable> }> | null = null;
-    private flown: Readonly<{ session: FixedRouletteSession; game: FixedRouletteGameState | null; events: number }> | null = null;
+    /** The moves last shown, with their session, their game, and the table shown */
+    private shown: Readonly<{ session: FixedRouletteSession; game: FixedRouletteGameState | null; events: number; view: Readonly<TableView> }> | null = null;
     private readonly heardTable: Signal<Readonly<HeardFixedTable>> = computed((): Readonly<HeardFixedTable> => {
         const session: FixedRouletteSession = this.session();
         return { seatsTaken: session.tableSeats.seatsTaken(), events: this.game()?.events() ?? [], result: session.played().result() };
@@ -317,7 +426,7 @@ export class FixedTableComponent implements OnDestroy {
     ).subscribe((session: FixedRouletteSession) => {
         this.liveSession = session;
         this.heard = { session, game: session.game(), table: this.heardTable() };
-        this.flown = { session, game: session.game(), events: this.heardTable().events.length };
+        this.shown = { session, game: session.game(), events: this.heardTable().events.length, view: this.liveView() };
     });
 
     // A change of the table plays its sounds on every page, a hidden one included: a new match starts from an empty one
@@ -334,22 +443,44 @@ export class FixedTableComponent implements OnDestroy {
             return;
         }
         const before: Readonly<HeardFixedTable> = previous.game === game ? previous.table : { ...previous.table, events: [], result: null };
-        untracked(() => tableSounds(before, table, session.myIndex()).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
+        // A page asking for no motion settles the chips at once
+        const roll: number = untracked(this.reducedMotion.reduced) ? 0 : this.ballRoll;
+        untracked(() => tableSounds(before, table, session.myIndex(), roll).forEach(({ effect: sound, delay }: TimedSound) => this.soundService.play(sound, delay)));
     });
 
-    // Once the table shows a move applied live, its chips fly: the bets from the stacks to the pockets, the chips of a game
-    // settled, once the ball dropped, to their takers, the bets of a game void back to their owners. The history of the room
-    // flies nothing
-    private readonly flights = afterRenderEffect(() => {
-        const session: FixedRouletteSession = this.session();
-        const game: FixedRouletteGameState | null = this.game();
-        const events: ReadonlyArray<Readonly<FixedRouletteEvent>> = this.heardTable().events;
-        const previous: typeof this.flown = this.flown;
-        this.flown = { session, game, events: events.length };
+    // Once the table shows moves applied live, they play: the chips of a bet fly from the stack of its player to the
+    // pockets, the bets of a game void back to their owners, and the ball of a game settled rolls to its pocket, its chips
+    // settled once there. A hidden page, whose animations would wait for it to be shown, shows the game settled at once.
+    // The history of the room plays nothing
+    private readonly plays = afterRenderEffect({
+        earlyRead: (): Readonly<MovesShown> => {
+            const session: FixedRouletteSession = this.session();
+            const game: FixedRouletteGameState | null = this.game();
+            const events: ReadonlyArray<Readonly<FixedRouletteEvent>> = this.heardTable().events;
+            const view: Readonly<TableView> = this.liveView();
+            const previous: typeof this.shown = this.shown;
+            this.shown = { session, game, events: events.length, view };
 
-        if (this.liveSession === session && previous?.session === session && previous.game === game) {
-            untracked(() => this.launch(events.slice(previous.events).flatMap((event: Readonly<FixedRouletteEvent>) => this.flightsOf(event, events))));
-        }
+            return this.liveSession === session && previous?.session === session && previous.game === game
+                ? { game, events, moves: events.slice(previous.events), before: previous.view }
+                : { game, events, moves: [], before: view };
+        },
+        write: (shown: Signal<Readonly<MovesShown>>): void => {
+            const { game, events, moves, before } = shown();
+
+            // The moves play once: the signals they write must not play them again
+            untracked(() => {
+                if (this.pageVisibility.visible()) {
+                    const settled: Readonly<SettledEvent> | undefined = moves.find(isSettled);
+                    if (settled !== undefined) {
+                        this._rolling.set({ event: settled, before });
+                    }
+                    this.chipFlights().launch(moves.filter((move: Readonly<FixedRouletteEvent>) => !isSettled(move))
+                        .flatMap((move: Readonly<FixedRouletteEvent>) => this.flightsOf(move, events)));
+                }
+                this._played.set({ game, events: events.length, view: this.rolling()?.before ?? this.liveView() });
+            });
+        },
     });
 
     // The match declares the conversation of its players in the ones of the room, as each message applies
@@ -388,6 +519,13 @@ export class FixedTableComponent implements OnDestroy {
         void submit(this.betForm, { action: () => Promise.resolve(this.session().bet(this.betsOf(this.betModel().chips))) });
     }
 
+    /** The ball reached its pocket: the table shows the game settled, its chips flying to their takers */
+    protected rolled(): void {
+        const rolling: Readonly<Rolling> = this.rolling() as Readonly<Rolling>;
+        this._rolling.set(null);
+        this.chipFlights().launch(this.flightsOf(rolling.event, this.heardTable().events));
+    }
+
     protected rematch(): void {
         this.session().rematch();
     }
@@ -419,7 +557,14 @@ export class FixedTableComponent implements OnDestroy {
             awaited: name !== null && session.awaited().includes(name),
             side: player === null || playingGame.phase() === FixedRoulettePhase.OVER ? null : sideOf(player, playingGame.croupier()),
             chips: player === null ? null : playingGame.chips()[player],
+            gain: player === null ? null : this.gainOf(player, playingGame),
         };
+    }
+
+    /** What a player won or lost in the game settled last, until the next ball is placed */
+    private gainOf(player: number, game: FixedRouletteGameState): number | null {
+        const last: Readonly<FixedRouletteEvent> | undefined = game.events().at(-1);
+        return last !== undefined && isSettled(last) ? netOf(last.settlement, last.bets, sideOf(player, last.croupier)) : null;
     }
 
     private startStatus(): TranslatableText {
@@ -497,8 +642,8 @@ export class FixedTableComponent implements OnDestroy {
             case FixedRouletteEventKind.BET:
                 return this.flightsFrom(betTransfers(event.punter, event.bets), 0);
             case FixedRouletteEventKind.SETTLED:
-                // Once the ball dropped in its pocket
-                return this.flightsFrom(settlementTransfers(event), BALL_DROP * 1000);
+                // Once the ball reached its pocket
+                return this.flightsFrom(settlementTransfers(event), 0);
             default:
                 // A game void: its bets back to their owners
                 return this.flightsFrom(voidTransfers(this.placedBets(events, event.round), (this.game() as FixedRouletteGameState).croupier()), 0);
@@ -544,13 +689,6 @@ export class FixedTableComponent implements OnDestroy {
                 return this.wheel().stackOf(place.pocket, place.player === top ? StakeRow.TOP : StakeRow.BOTTOM);
             case ChipPlaceKind.BANK:
                 return this.bankView().nativeElement;
-        }
-    }
-
-    /** The chips fly, heard by the sounds of the moves. A hidden page runs no animation */
-    private launch(flights: ReadonlyArray<Readonly<ChipFlight>>): void {
-        if (this.pageVisibility.visible()) {
-            this.chipFlights().launch(flights);
         }
     }
 }

@@ -41,6 +41,8 @@ html {
     --app-border: var(--mat-sys-outline-variant);
     --app-win: light-dark(#1b5e20, #a5d6a7);
     --app-win-surface: light-dark(#e3f1e4, #1e3a20);
+    --app-loss: light-dark(#b3261e, #f2b8b5);
+    --app-loss-surface: light-dark(#f9dedc, #5c1f1b);
     --app-draw: light-dark(#424242, #e0e0e0);
     --app-draw-surface: light-dark(#ececec, #555);
     // The light cells of the board, dimmed in the dark theme. The pieces stay black, their glyphs tell their color
@@ -110,6 +112,14 @@ html {
     --app-pocket-black: light-dark(#1c1b1f, #121114);
     --app-ball: light-dark(#fbfaf7, #ece9e2);
     --app-ball-edge: light-dark(#8d8a84, #5f5b52);
+    // The cloth of its pockets, red and black, the number printed on it, a field sunk in the cloth, the light of a pocket
+    // under the pointer and the gold of the pocket the ball lies in
+    --app-pocket-red-felt: light-dark(#a33434, #7a2424);
+    --app-pocket-black-felt: light-dark(#34333a, #1d1c21);
+    --app-pocket-ink: rgb(255 255 255 / 24%);
+    --app-felt-inset: rgb(0 0 0 / 32%);
+    --app-felt-glow: rgb(255 255 255 / 16%);
+    --app-pocket-hit: light-dark(#f2c14e, #d9a93a);
     // The width of a card, larger out of a phone
     --app-card-width: 4.5rem;
 

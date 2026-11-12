@@ -25,6 +25,30 @@ export function numberFieldInput(root: ParentNode, label: string): HTMLInputElem
     return labelledField(root, 'app-number-field', label).querySelector('input') as HTMLInputElement;
 }
 
+/** The input of the stake field of this label, read by a screen reader only */
+export function stakeFieldInput(root: ParentNode, label: string): HTMLInputElement {
+    const input: HTMLInputElement | undefined = [...root.querySelectorAll<HTMLInputElement>('app-stake-field input')]
+        .find((candidate: HTMLInputElement) => candidate.getAttribute('aria-label') === label);
+
+    if (input === undefined) {
+        throw new Error(`No stake field labelled '${ label }'`);
+    }
+
+    return input;
+}
+
+/** The radio button of an option of the choice areas of the group of this label, found by the texts of the group and the option */
+export function choiceAreaOption(root: ParentNode, label: string, option: string): HTMLInputElement {
+    const radio: HTMLInputElement | undefined = [...root.querySelectorAll<HTMLInputElement>(`[role="radiogroup"][aria-label="${ label }"] app-choice-area input`)]
+        .find((candidate: HTMLInputElement) => (candidate.closest('label') as HTMLLabelElement).textContent.trim() === option);
+
+    if (radio === undefined) {
+        throw new Error(`No option '${ option }' of the choice areas labelled '${ label }'`);
+    }
+
+    return radio;
+}
+
 /** The button of an option of the choice field of this label, found as a player finds them: by the texts of the legend and the option */
 export function choiceFieldOption(root: ParentNode, label: string, option: string): HTMLButtonElement {
     const field: Element | undefined = [...root.querySelectorAll('app-choice-field')]

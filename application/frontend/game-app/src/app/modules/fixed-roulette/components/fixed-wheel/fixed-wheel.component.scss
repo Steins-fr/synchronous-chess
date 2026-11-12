@@ -1,0 +1,165 @@
+// The wheel measures itself: its rim, its ball and the number of a pocket follow its width, on a phone as on a desk
+:host {
+    container-type: inline-size;
+}
+
+.wheel {
+    --wheel-rim: clamp(14px, 5.5cqw, 24px);
+    --ball-size: calc(var(--wheel-rim) * 0.8);
+    // From the rim to the hub
+    --ball-travel: calc(50cqw - var(--wheel-rim) / 2);
+    // The ball always rolls for a moment, a page asking for no motion included: its end tells the table to settle the chips
+    --roll: max(var(--ball-roll), 20ms);
+}
+
+.wheel-disk {
+    border: var(--wheel-rim) solid var(--app-wheel-rim);
+    box-shadow: inset 0 0 0 2px var(--app-felt-inset), 0 6px 18px var(--app-felt-inset);
+}
+
+.wheel-hub {
+    border: 3px solid var(--app-ball-edge);
+    background-image: radial-gradient(circle at 35% 30%, var(--app-felt-glow), transparent 60%);
+}
+
+.pocket-number {
+    font-size: 11cqw;
+    font-weight: 900;
+    line-height: 1;
+    opacity: 0.85;
+    // A click on the number of a pocket to pick reaches its radio button
+    pointer-events: none;
+    user-select: none;
+}
+
+// The number of a pocket the croupier may click: a dashed pill tells it, lit under the pointer
+.pocket-pick {
+    width: 82%;
+    height: min(100%, 15cqw);
+    border: 2px dashed var(--app-felt-glow);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.pocket {
+    transition: filter var(--app-motion-fast);
+}
+
+.pocket:has(.pocket-pick:hover) {
+    filter: brightness(1.15);
+}
+
+// The pocket of the ball: a gold ring, flashing as the ball reaches it; dashed while the ball is sealed
+.pocket-hit {
+    box-shadow: inset 0 0 0 3px var(--app-pocket-hit);
+    animation: pocket-hit var(--app-motion-medium) ease-out 2;
+}
+
+.pocket-sealed {
+    outline: 2px dashed var(--app-pocket-hit);
+    outline-offset: -5px;
+}
+
+@keyframes pocket-hit {
+    50% {
+        filter: brightness(1.6);
+    }
+}
+
+// The ball lies on the rim, in the middle of its pocket: its ring turns it there around the hub
+.ball-orbit {
+    transform: rotate(var(--ball-angle));
+}
+
+.ball {
+    position: absolute;
+    top: calc((var(--wheel-rim) - var(--ball-size)) / 2);
+    left: calc(50% - var(--ball-size) / 2);
+    width: var(--ball-size);
+    height: var(--ball-size);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--app-on-color), var(--app-ball) 45%, var(--app-ball-edge));
+    box-shadow: 0 1px 3px var(--app-felt-inset);
+}
+
+.ball-sealed {
+    opacity: 0.75;
+    outline: 2px dashed var(--app-ball);
+    outline-offset: 2px;
+}
+
+.ball-ghost {
+    opacity: 0.45;
+}
+
+.ball-placed {
+    animation: ball-placed var(--app-motion-fast) ease-out;
+}
+
+.ball-taken {
+    animation: ball-placed var(--app-motion-fast) ease-in reverse forwards;
+}
+
+@keyframes ball-placed {
+    from {
+        opacity: 0;
+    }
+}
+
+// The ball revealed leaves the hub, turns around it as it runs to the rim, slower and slower, and bounces there
+.rolling {
+    animation: ball-orbit var(--roll) cubic-bezier(0.12, 0.55, 0.25, 1) both;
+
+    .ball {
+        animation: ball-out var(--roll) linear both;
+    }
+}
+
+@keyframes ball-orbit {
+    from {
+        transform: rotate(calc(var(--ball-angle) - 900deg));
+    }
+}
+
+@keyframes ball-out {
+    from {
+        opacity: 0;
+        transform: translateY(var(--ball-travel)) scale(0.2);
+    }
+
+    8% {
+        opacity: 1;
+        transform: translateY(calc(var(--ball-travel) * 0.92)) scale(1);
+    }
+
+    72% {
+        transform: translateY(calc(var(--wheel-rim) * 1.4));
+    }
+
+    84% {
+        transform: translateY(0);
+    }
+
+    92% {
+        transform: translateY(calc(var(--wheel-rim) * 0.45));
+    }
+}
+
+@keyframes ball-still {
+    from {
+        opacity: 0.99;
+    }
+}
+
+// No motion asked: the ball shows in its pocket at once, its animation kept for its end only
+@media (prefers-reduced-motion: reduce) {
+    .rolling,
+    .rolling .ball {
+        animation-name: ball-still;
+        animation-duration: 20ms;
+    }
+
+    .pocket-hit {
+        animation: none;
+    }
+}

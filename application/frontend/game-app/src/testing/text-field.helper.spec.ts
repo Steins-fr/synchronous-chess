@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { choiceFieldOption, textAreaFieldInput, textFieldInput } from './text-field.helper';
+import { choiceAreaOption, choiceFieldOption, stakeFieldInput, textAreaFieldInput, textFieldInput } from './text-field.helper';
 
 describe('textFieldInput', () => {
     const root: HTMLElement = document.createElement('div');
@@ -36,5 +36,39 @@ describe('choiceFieldOption', () => {
     test('should fail without a choice field of this label, or without this option', () => {
         expect(() => choiceFieldOption(root, 'Speed', 'Score')).toThrow('No option \'Score\' of a choice field labelled \'Speed\'');
         expect(() => choiceFieldOption(root, 'Time', 'Score')).toThrow('No option \'Score\' of a choice field labelled \'Time\'');
+    });
+});
+
+describe('stakeFieldInput', () => {
+    const root: HTMLElement = document.createElement('div');
+    root.innerHTML = `
+        <app-stake-field><input id="one" aria-label="Chips on 1"></app-stake-field>
+        <app-stake-field><input id="two" aria-label="Chips on 2"></app-stake-field>`;
+
+    test('should find the input of the stake field by its label', () => {
+        expect(stakeFieldInput(root, 'Chips on 2').id).toEqual('two');
+    });
+
+    test('should fail without a stake field of this label', () => {
+        expect(() => stakeFieldInput(root, 'Chips on 3')).toThrow('No stake field labelled \'Chips on 3\'');
+    });
+});
+
+describe('choiceAreaOption', () => {
+    const root: HTMLElement = document.createElement('div');
+    root.innerHTML = `
+        <div role="radiogroup" aria-label="Pocket of the ball">
+            <app-choice-area><label><input id="first" type="radio"> 1 </label></app-choice-area>
+            <app-choice-area><label><input id="second" type="radio">2</label></app-choice-area>
+        </div>`;
+
+    test('should find the radio button of an option by the label of its group and its text', () => {
+        expect(choiceAreaOption(root, 'Pocket of the ball', '1').id).toEqual('first');
+        expect(choiceAreaOption(root, 'Pocket of the ball', '2').id).toEqual('second');
+    });
+
+    test('should fail without a group of this label, or without this option', () => {
+        expect(() => choiceAreaOption(root, 'Pocket', '1')).toThrow('No option \'1\' of the choice areas labelled \'Pocket\'');
+        expect(() => choiceAreaOption(root, 'Pocket of the ball', '3')).toThrow('No option \'3\' of the choice areas labelled \'Pocket of the ball\'');
     });
 });

@@ -111,7 +111,6 @@
     "pastMatches": "Parties jouées",
     "place": {
       "hint": "Misez 1 jeton au moins, sur les cases de votre choix : le parieur lit vos mises.",
-      "option": "{pocket}",
       "pocket": "Case de la bille",
       "required": "Choisissez la case de la bille",
       "submit": "Placer la bille et miser"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# jeton} other {# jetons}}",
       "free": "Place libre",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Quitter la place",
       "release": "Libérer la place",
       "side": "{side, select, croupier {Croupier} other {Parieur}}",
