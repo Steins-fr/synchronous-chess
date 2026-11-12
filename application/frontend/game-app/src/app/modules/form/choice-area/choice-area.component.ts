@@ -3,9 +3,10 @@ import { FieldTree, FormField } from '@angular/forms/signals';
 
 /**
  * An option of a choice picked by clicking an area of the page: a radio button bound to a field of Signal Forms, unseen,
- * covering the component with its label, whose content names it. The options of a choice lie where the page
- * puts them, in a group it labels (`radiogroup`). The area tells it is clickable under the pointer, and its option once
- * picked
+ * covering the component with its label, whose content names it. The options of a choice lie where the page puts them,
+ * in a group it labels (`radiogroup`). The page draws the area, its content, and how it tells its option picked: the
+ * component only tells the area reached by the keyboard. Another label of the page may pick the option too, through the
+ * id given to its radio button
  */
 @Component({
     selector: 'app-choice-area',
@@ -22,4 +23,6 @@ export class ChoiceAreaComponent {
     public readonly value = input.required<string>();
     /** The form the radio button belongs to, when it lies out of it */
     public readonly formId = input<string | null>(null);
+    /** The id of the radio button, for another label of the page picking the option */
+    public readonly inputId = input<string | null>(null);
 }

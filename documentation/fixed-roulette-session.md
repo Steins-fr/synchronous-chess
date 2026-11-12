@@ -55,7 +55,7 @@ The code lives in `application/frontend/game-app/src/app/modules/fixed-roulette`
 | `PrivateConversations` | `modules/private-conversations/classes` | The private conversations of the room, for its life: the table declares the watched conversation of the match into it |
 | `FixedTableComponent` | `components/fixed-table` | Shows the session, turns the clicks into seats, a setup, balls and bets, runs the clock of each phase, flies the chips, declares the conversation |
 | `FixedSeatComponent` | `components/fixed-seat` | A seat: its player, its side in the game, the clock of the phase it is awaited in, its chips off the table |
-| `FixedWheelComponent` | `components/fixed-wheel` | The fixed wheel, a round board of 4 pockets holding the stakes of both players and the fields of the local player, with the ball on its rim, rolling there from the hub once revealed |
+| `FixedWheelComponent` | `components/fixed-wheel` | The fixed wheel, a round board of 4 pockets holding the stakes of both players and the fields of the local player, with the ball in its pocket, against the rim, rolling there from the hub once revealed |
 | `eventText`, `resultText` | `helpers/fixed-texts.helper.ts` | The lines of the history: a game over, the result of a match |
 | `betTransfers`, `settlementTransfers`, `voidTransfers` | `helpers/chip-transfers.helper.ts` | The chips a bet, a settlement or a game void moves, from a place of the table to another one |
 | `tableSounds` | `helpers/table-sound.helper.ts` | The sounds of a change of the table |
@@ -304,14 +304,15 @@ The bets are 4 whole numbers of chips, 0 or more, the first pocket first. The co
   in its middle, under the stake of the player of the top seat above the one of the player of the bottom seat, against the hub; it is
   an image named by its stakes (`Pocket 3, alice: 50 chips`), a group once it holds a field. The local player types its
   stakes in the pockets, in place of its own stakes (`StakeFieldComponent`: `Chips on 1` to `Chips on 4`, two buttons
-  stepping the stake by 5 for a pointer), and the croupier places its ball by clicking the place of the ball of a pocket, a dashed pill beside its rim
-  (`ChoiceAreaComponent`: the radio buttons `1` to `4` of the group `Pocket of the ball`): a pale ball shows on the rim of
-  the pocket under its pointer (`data-ghost`), then on the one picked.
-- **The ball** lies on the rim of its pocket. It shows sealed, dashed, on the page of its croupier only, until revealed
+  stepping the stake by 5 for a pointer), and the croupier places its ball by clicking a pocket, or its socket against the rim, where the ball will lie
+  (`ChoiceAreaComponent`: the radio buttons `1` to `4` of the group `Pocket of the ball`): a pale ball shows in the
+  socket of the pocket under its pointer (`data-ghost`), then the ball in the one picked, its pocket ringed.
+- **The ball** lies in its pocket, against the rim, never on it. It shows sealed, dashed, on the page of its croupier only, until revealed
   (`Your ball, sealed: pocket 3`, `Pocket 3, your ball, sealed, alice: 20 chips`), then on every page as the last ball
   until the croupier of the next game places its own (`Last ball: pocket 2`, `Pocket 2, the last ball`), its pocket ringed
   in gold. It carries `data-ball`, `sealed` or `last`.
-- **The ball revealed rolls** from the hub to the rim of its pocket, turning around the hub, for 2.5 seconds (`BALL_ROLL`).
+- **The ball revealed rolls** for 2.5 seconds (`BALL_ROLL`): it comes out of the hub, wavers there, then rolls straight
+  down its pocket to the rim and bounces against it, the wheel never spinning.
   Until it is there, the table keeps the game as it was (`view()`): the stakes on the pockets, the chips and the roles of
   the seats, the bank, the game and its status (`The ball is revealed…`), no form nor clock of the next game, no result of
   the match, the history of the room included. Once there (`rolled`), the table shows the game settled and its chips fly.

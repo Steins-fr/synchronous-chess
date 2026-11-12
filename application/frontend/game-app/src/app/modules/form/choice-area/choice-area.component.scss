@@ -1,20 +1,9 @@
-// The area lights up under the pointer, sinks while pressed, and keeps a ring once picked or reached by the keyboard
+// The area takes the shape the page gives the component, and tells it reached by the keyboard
 .choice-area {
-    transition: background-color var(--app-motion-fast), box-shadow var(--app-motion-fast);
-
-    &:hover {
-        background-color: var(--app-felt-glow);
-    }
-
-    &:active {
-        background-color: var(--app-felt-inset);
-    }
-
-    &:has(:checked) {
-        box-shadow: inset 0 0 0 3px var(--app-pocket-hit);
-    }
+    border-radius: inherit;
 
     &:has(:focus-visible) {
-        box-shadow: inset 0 0 0 3px var(--app-on-color);
+        outline: 2px solid var(--app-on-color);
+        outline-offset: 2px;
     }
 }

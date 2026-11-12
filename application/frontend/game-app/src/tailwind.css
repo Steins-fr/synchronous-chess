@@ -192,7 +192,7 @@
 
 /* A stake of a player on a pocket of the fixed roulette: its chips beside their count, the height of a chip kept while empty */
 @utility pocket-stake {
-    @apply flex items-center justify-center gap-1 min-h-9 sm:min-h-11 text-sm font-bold tabular-nums;
+    @apply flex items-center justify-center gap-1 min-h-8 sm:min-h-11 text-sm font-bold tabular-nums;
 }
 
 /* Typed, the part of a clock left moves smoothly from a second to the next one */

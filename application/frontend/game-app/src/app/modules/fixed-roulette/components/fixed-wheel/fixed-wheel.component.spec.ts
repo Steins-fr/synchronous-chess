@@ -80,7 +80,7 @@ describe('FixedWheelComponent', () => {
         expect(cell(2).querySelectorAll('app-chip-stack')).toHaveLength(2);
     });
 
-    test('should show the ball the local player sealed, dashed, on the rim of its pocket', async () => {
+    test('should show the ball the local player sealed, dashed, in its pocket', async () => {
         // When
         await show({ stakes: [[0, 0], [15, 0], [0, 0], [0, 0]], names: ['bob', 'alice'], ball: { pocket: 2, kind: BallKind.SEALED } });
 
@@ -210,24 +210,37 @@ describe('FixedWheelComponent', () => {
             expect(cell(2, root()).getAttribute('role')).toEqual('img');
         });
 
-        test('should let the croupier place its ball by clicking the place of the ball of a pocket, the ball to place shown on its rim', async () => {
-            // Then the places of the ball are radio buttons named by their pocket, in a group
-            const disk: HTMLElement = root().querySelector('.wheel-disk') as HTMLElement;
-            expect(disk.getAttribute('role')).toEqual('radiogroup');
-            expect(disk.getAttribute('aria-label')).toEqual('Pocket of the ball');
+        test('should let the croupier place its ball by clicking the socket of a pocket, or the pocket itself, the ball to place shown in the socket', async () => {
+            // Then the sockets are radio buttons named by their pocket, in a group of their own
+            const group: HTMLElement = root().querySelector('[role="radiogroup"]') as HTMLElement;
+            expect(group.getAttribute('aria-label')).toEqual('Pocket of the ball');
+            expect(root().querySelector('.wheel-disk')?.contains(group)).toBe(false);
             expect(radios().map((radio: HTMLInputElement) => [radio.value, radio.closest('label')?.textContent.trim(), radio.getAttribute('form')]))
                 .toEqual([['1', '1', 'place-form'], ['2', '2', 'place-form'], ['3', '3', 'place-form'], ['4', '4', 'place-form']]);
-            expect(ghost()).toBeNull();
-
-            // When the pointer comes over the place of the ball of a pocket
+            expect(radios().map((radio: HTMLInputElement) => radio.closest('.ball-orbit')?.getAttribute('style'))).toEqual([
+                '--ball-angle: 315deg;', '--ball-angle: 45deg;', '--ball-angle: 225deg;', '--ball-angle: 135deg;',
+            ]);
+            // Each pocket is a label of the radio button of its socket
             const areas: HTMLElement[] = Array.from(root().querySelectorAll('app-choice-area'));
+            const pocketLabels: HTMLLabelElement[] = [1, 2, 3, 4].map((pocket: number) => cell(pocket, root()).querySelector('label') as HTMLLabelElement);
+            expect(pocketLabels.map((label: HTMLLabelElement) => label.htmlFor)).toEqual(radios().map((radio: HTMLInputElement) => radio.id));
+            expect(new Set(radios().map((radio: HTMLInputElement) => radio.id)).size).toEqual(4);
+            expect(ghost()).toBeNull();
+            // No ball picked: every socket calls for a click
+            expect(areas.map((area: HTMLElement) => area.classList.contains('socket-calling'))).toEqual([true, true, true, true]);
+
+            // When the pointer comes over the socket of a pocket
             areas[1].dispatchEvent(new Event('pointerenter'));
             await table.whenStable();
 
-            // Then a pale ball shows on its rim, no ball of the game
+            // Then a pale ball shows in it, its pocket lit, no ball of the game
             expect(ghost()?.getAttribute('data-ghost')).toEqual('2');
             expect(ghost()?.classList).toContain('ball-ghost');
-            expect(orbit(ghost()).style.getPropertyValue('--ball-angle')).toEqual('45deg');
+            expect(areas[1].contains(ghost())).toBe(true);
+            expect(areas[1].classList).toContain('socket-lit');
+            expect(areas[1].classList).not.toContain('socket-picked');
+            expect(cell(2, root()).classList).toContain('pocket-lit');
+            expect(cell(1, root()).classList).not.toContain('pocket-lit');
             expect(ball(root())).toBeNull();
 
             // When it leaves
@@ -236,24 +249,47 @@ describe('FixedWheelComponent', () => {
 
             // Then
             expect(ghost()).toBeNull();
+            expect(cell(2, root()).classList).not.toContain('pocket-lit');
 
-            // When the croupier clicks the place of the ball of a pocket
-            radios()[2].click();
+            // When the pointer comes over a pocket, then leaves it
+            pocketLabels[3].dispatchEvent(new Event('pointerenter'));
+            await table.whenStable();
+            expect(ghost()?.getAttribute('data-ghost')).toEqual('4');
+            expect(areas[3].classList).toContain('socket-lit');
+            pocketLabels[3].dispatchEvent(new Event('pointerleave'));
+            await table.whenStable();
+            expect(ghost()).toBeNull();
+
+            // When the croupier clicks a pocket
+            pocketLabels[2].click();
             await table.whenStable();
 
-            // Then the ball to seal shows there
+            // Then the ball to seal shows in its socket, its pocket ringed, no socket calling any more
             expect(table.componentInstance.bets().pocket).toEqual('3');
+            expect(radios().map((radio: HTMLInputElement) => radio.checked)).toEqual([false, false, true, false]);
             expect(ghost()?.getAttribute('data-ghost')).toEqual('3');
-            expect(ghost()?.classList).toContain('ball-sealed');
             expect(ghost()?.classList).not.toContain('ball-ghost');
+            expect(areas[2].classList).toContain('socket-picked');
+            expect(cell(3, root()).classList).toContain('pocket-sealed');
+            expect(areas.map((area: HTMLElement) => area.classList.contains('socket-calling'))).toEqual([false, false, false, false]);
 
-            // When the pointer comes over another one
+            // When the pointer comes over the socket of another one
             areas[0].dispatchEvent(new Event('pointerenter'));
             await table.whenStable();
 
             // Then
             expect(ghost()?.getAttribute('data-ghost')).toEqual('1');
             expect(ghost()?.classList).toContain('ball-ghost');
+            expect(areas[0].classList).not.toContain('socket-picked');
+            expect(cell(3, root()).classList).not.toContain('pocket-sealed');
+
+            // When the croupier clicks it
+            radios()[0].click();
+            await table.whenStable();
+
+            // Then
+            expect(table.componentInstance.bets().pocket).toEqual('1');
+            expect(areas[0].classList).toContain('socket-picked');
         });
     });
 });

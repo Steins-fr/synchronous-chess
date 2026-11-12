@@ -13,7 +13,7 @@ import { FieldState, FieldTree, FormField } from '@angular/forms/signals';
     templateUrl: './stake-field.component.html',
     styleUrl: './stake-field.component.scss',
     host: {
-        'class': 'stake-field inline-flex items-stretch h-9 sm:h-11 sm:text-lg rounded-full bg-app-felt-inset text-app-on-color',
+        'class': 'stake-field inline-flex items-stretch h-8 sm:h-11 sm:text-lg rounded-full bg-app-felt-inset text-app-on-color',
         '[class.stake-invalid]': 'invalid()',
     },
 })

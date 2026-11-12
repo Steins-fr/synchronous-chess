@@ -34,24 +34,30 @@ interface WheelPocket {
     readonly top: number;
     readonly bottom: number;
     readonly ball: BallKind | null;
-    /** The classes laying its content in its quarter of the disk: against the hub, its number on the side of the rim */
+    /** The classes laying its content in its quarter of the disk: against the hub, room left for its ball on the side of the rim */
     readonly layout: string;
-    /** Whether the place of its ball lies above its stakes: the pockets of the first row */
+    /** Whether its stakes lie below the room left on the side of the rim: the pockets of the first row */
     readonly rimFirst: boolean;
     /** The classes pushing its number from the rim to the middle of its quarter of the disk */
     readonly inset: string;
 }
 
-/** The time the ball revealed rolls from the hub to the rim of its pocket, in milliseconds: none for the specs */
+/** The time the ball revealed rolls from the hub down its pocket, to the rim, in milliseconds: none for the specs */
 export const BALL_ROLL = new InjectionToken<number>('BALL_ROLL', { factory: (): number => 2500 });
+
+let nextId: number = 0;
 
 /** The pockets lie in reading order, two by row: where each one is around the hub, in degrees from the top, clockwise */
 const POCKET_ANGLES: ReadonlyArray<number> = [315, 45, 225, 135];
 /**
  * The content of a pocket lies against the hub, where its quarter of the disk is the widest: its stakes along the line
- * between the rows, the place the croupier clicks for its ball on the side of the rim
+ * between the rows, room left on the side of the rim for its ball. Each pocket takes the shape of its quarter, its corner on the
+ * rim rounded: the ring telling the pocket of the ball follows the rim
  */
-const POCKET_LAYOUTS: ReadonlyArray<string> = ['items-end pr-[14%] pb-[9%]', 'items-start pl-[14%] pb-[9%]', 'items-end pr-[14%] pt-[9%]', 'items-start pl-[14%] pt-[9%]'];
+const POCKET_LAYOUTS: ReadonlyArray<string> = [
+    'rounded-tl-full items-end pr-[14%] pb-[6%]', 'rounded-tr-full items-start pl-[14%] pb-[6%]',
+    'rounded-bl-full items-end pr-[14%] pt-[6%]', 'rounded-br-full items-start pl-[14%] pt-[6%]',
+];
 
 /** The number of a pocket, printed in the middle of its quarter of the disk: pushed from the rim of its corner */
 const NUMBER_INSETS: ReadonlyArray<string> = ['pt-[14%] pl-[14%]', 'pt-[14%] pr-[14%]', 'pb-[14%] pl-[14%]', 'pb-[14%] pr-[14%]'];
@@ -62,9 +68,9 @@ const isRed = (index: number): boolean => (Math.floor(index / 2) + index % 2) % 
 /**
  * The fixed wheel of the roulette: a disk that never spins in its square, its four pockets in reading order around a
  * hub, red and black, each one its number printed in its middle, under the stake of the player of the top seat above the one of the bottom
- * seat. The local player types its stakes in the pockets, and the croupier places its ball by clicking the place of
- * the ball of one, beside its rim. The ball lies on the
- * rim of its pocket: the ball the local player sealed, on its page only, then the ball revealed, rolling there from the
+ * seat. The local player types its stakes in the pockets, and the croupier places its ball by clicking a pocket, or
+ * its socket against the rim, where the ball will lie: a pale ball shows there under the pointer, then the ball picked.
+ * The ball lies in its pocket, against the rim, never on it: the ball the local player sealed, on its page only, then the ball revealed, rolling there from the
  * hub, until the next game places its own. Each pocket tells its number, the ball and the stakes to a screen reader
  */
 @Component({
@@ -96,9 +102,11 @@ export class FixedWheelComponent {
     protected readonly rows = StakeRow;
     protected readonly angles: ReadonlyArray<number> = POCKET_ANGLES;
     protected readonly roll: number = inject(BALL_ROLL);
+    /** The id of the radio button of each pocket, followed by its number: the pocket itself is a label of it */
+    protected readonly radioId: string = `fixed-wheel-${ ++nextId }-pocket-`;
     private readonly host: HTMLElement = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
-    /** The pocket under the pointer of the croupier placing its ball */
+    /** The pocket under the pointer of the croupier placing its ball, or its socket */
     protected readonly hovered = signal<number | null>(null);
 
     protected readonly pockets: Signal<ReadonlyArray<Readonly<WheelPocket>>> = computed((): ReadonlyArray<Readonly<WheelPocket>> => {

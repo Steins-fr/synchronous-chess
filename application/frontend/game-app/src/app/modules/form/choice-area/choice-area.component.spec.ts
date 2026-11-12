@@ -6,7 +6,7 @@ import { ChoiceAreaComponent } from './choice-area.component';
 
 @Component({
     imports: [ChoiceAreaComponent],
-    template: '<app-choice-area [field]="pocketForm" value="1" formId="place">One</app-choice-area><app-choice-area [field]="pocketForm" value="2">Two</app-choice-area>',
+    template: '<app-choice-area [field]="pocketForm" value="1" formId="place" inputId="first">One</app-choice-area><app-choice-area [field]="pocketForm" value="2">Two</app-choice-area>',
 })
 class HostComponent {
     public readonly pocket = signal<string>('');
@@ -25,7 +25,8 @@ describe('ChoiceAreaComponent', () => {
 
     test('should show a radio button in a label holding its content, in the form given', () => {
         // Then
-        expect(radios().map((radio: HTMLInputElement) => [radio.value, radio.checked, radio.getAttribute('form')])).toEqual([['1', false, 'place'], ['2', false, null]]);
+        expect(radios().map((radio: HTMLInputElement) => [radio.value, radio.checked, radio.getAttribute('form'), radio.getAttribute('id')]))
+            .toEqual([['1', false, 'place', 'first'], ['2', false, null, null]]);
         expect(radios().map((radio: HTMLInputElement) => radio.closest('label')?.textContent.trim())).toEqual(['One', 'Two']);
     });
 

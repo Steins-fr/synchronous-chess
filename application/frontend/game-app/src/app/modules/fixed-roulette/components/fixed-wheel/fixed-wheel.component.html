@@ -2,11 +2,37 @@
     @let pick = pocketField();
     @let fields = stakeFields();
     <div class="wheel relative aspect-square w-full">
-        <!-- The disk: its pockets in reading order, the rim around them. The croupier picks the pocket of its ball among them -->
-        <div
-            class="wheel-disk grid size-full grid-cols-2 gap-0.5 overflow-hidden rounded-full bg-app-wheel-rim shadow-lg"
-            [attr.role]="pick ? 'radiogroup' : null"
-            [attr.aria-label]="pick ? ('fixed.table.place.pocket' | transloco) : null">
+        @let placing = ghost();
+        @if (pick) {
+        <!-- The sockets of the pockets, against the rim, where the ball of each one lies: the croupier clicks one to place its ball there -->
+        <div class="pointer-events-none absolute inset-0 z-10" role="radiogroup" [attr.aria-label]="'fixed.table.place.pocket' | transloco">
+            @for (cell of pockets(); track cell.pocket) {
+            <span class="ball-orbit" [style.--ball-angle.deg]="angles[$index]">
+                <app-choice-area
+                    class="socket-area"
+                    [class.socket-lit]="hovered() === cell.pocket"
+                    [class.socket-picked]="placing?.picked === true && placing?.pocket === cell.pocket"
+                    [class.socket-calling]="placing === null"
+                    [field]="pick"
+                    [value]="'' + cell.pocket"
+                    [formId]="formId()"
+                    [inputId]="radioId + cell.pocket"
+                    (pointerenter)="hovered.set(cell.pocket)"
+                    (pointerleave)="hovered.set(null)">
+                    <span class="socket" aria-hidden="true">
+                        @if (placing?.pocket === cell.pocket) {
+                        <!-- The ball to place: pale under the pointer, then on the pocket picked -->
+                        <span class="socket-ball" [class.ball-ghost]="!placing?.picked" [attr.data-ghost]="cell.pocket"></span>
+                        }
+                    </span>
+                    <span class="sr-only">{{ cell.pocket }}</span>
+                </app-choice-area>
+            </span>
+            }
+        </div>
+        }
+        <!-- The disk: its pockets in reading order, the rim around them -->
+        <div class="wheel-disk grid size-full grid-cols-2 gap-0.5 overflow-hidden rounded-full bg-app-wheel-rim shadow-lg">
             @for (cell of pockets(); track cell.pocket) {
             <div
                 class="pocket relative flex min-w-0 flex-col text-app-on-color"
@@ -15,7 +41,8 @@
                 [class.bg-app-pocket-red-felt]="cell.red"
                 [class.bg-app-pocket-black-felt]="!cell.red"
                 [class.pocket-hit]="cell.ball === ballKinds.LAST && !rolling()"
-                [class.pocket-sealed]="cell.ball === ballKinds.SEALED"
+                [class.pocket-sealed]="cell.ball === ballKinds.SEALED || (placing?.picked === true && placing?.pocket === cell.pocket)"
+                [class.pocket-lit]="pick !== null && hovered() === cell.pocket"
                 [attr.role]="pick || fields ? 'group' : 'img'"
                 [attr.aria-label]="t('pocket', {
                     number: cell.pocket,
@@ -29,22 +56,18 @@
                 })">
                 <!-- Its number, printed on the cloth in the middle of its quarter: the stakes lie over it -->
                 <span class="pocket-number absolute inset-0 flex items-center justify-center" [class]="cell.inset" aria-hidden="true">{{ cell.pocket }}</span>
-                <div class="relative flex h-full w-[78%] flex-col items-center gap-1">
-                    <!-- The place of its ball, on the side of the rim: the croupier clicks it to place its ball there -->
-                    <div class="flex min-h-0 w-full flex-1 items-center justify-center" [class.order-first]="cell.rimFirst" [class.order-last]="!cell.rimFirst">
-                        @if (pick) {
-                        <app-choice-area
-                            class="pocket-pick"
-                            [field]="pick"
-                            [value]="'' + cell.pocket"
-                            [formId]="formId()"
-                            (pointerenter)="hovered.set(cell.pocket)"
-                            (pointerleave)="hovered.set(null)">
-                            <span class="pick-ball" aria-hidden="true"></span>
-                            <span class="sr-only">{{ cell.pocket }}</span>
-                        </app-choice-area>
-                        }
-                    </div>
+                @if (pick) {
+                <!-- The whole pocket picks it for the ball, but its fields: a label of the radio button of its socket, which names it -->
+                <label
+                    class="absolute inset-0 cursor-pointer"
+                    [attr.for]="radioId + cell.pocket"
+                    (pointerenter)="hovered.set(cell.pocket)"
+                    (pointerleave)="hovered.set(null)"></label>
+                }
+                <!-- Over the sockets, whose areas are wider than they show: a field keeps its clicks -->
+                <div class="pointer-events-none relative z-20 flex h-full w-[78%] flex-col items-center gap-1">
+                    <!-- Room left on the side of the rim: the stakes lie against the hub, where the pocket is the widest -->
+                    <div class="min-h-0 flex-1" [class.order-first]="cell.rimFirst" [class.order-last]="!cell.rimFirst"></div>
                     <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.TOP">
                         <app-chip-stack [amount]="cell.top" />
                         @if (cell.top > 0) {
@@ -53,7 +76,7 @@
                     </span>
                     <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.BOTTOM">
                         @if (fields) {
-                        <app-stake-field [field]="fields[$index]" [label]="'fixed.table.bets.label' | transloco: { pocket: cell.pocket }" [formId]="formId()" />
+                        <app-stake-field class="pointer-events-auto" [field]="fields[$index]" [label]="'fixed.table.bets.label' | transloco: { pocket: cell.pocket }" [formId]="formId()" />
                         } @else {
                         <app-chip-stack [amount]="cell.bottom" />
                         @if (cell.bottom > 0) {
@@ -66,15 +89,9 @@
             }
         </div>
         <span class="wheel-hub pointer-events-none absolute top-1/2 left-1/2 size-[15%] -translate-1/2 rounded-full bg-app-wheel-rim shadow-md" aria-hidden="true"></span>
-        <!-- The ball the croupier is about to place: under its pointer, pale, then on the pocket it picked -->
-        @if (ghost(); as placing) {
-        <span class="ball-orbit pointer-events-none" [style.--ball-angle.deg]="angles[placing.pocket - 1]" aria-hidden="true">
-            <span class="ball" [class.ball-ghost]="!placing.picked" [class.ball-sealed]="placing.picked" [attr.data-ghost]="placing.pocket"></span>
-        </span>
-        }
         @if (ball(); as shown) {
         <!-- The ball sealed shows dashed and pale, on the page of its croupier only; revealed, it rolls from the hub -->
-        <span class="pointer-events-none absolute inset-0" animate.enter="ball-placed" animate.leave="ball-taken" aria-hidden="true">
+        <span class="pointer-events-none absolute inset-0 z-30" animate.enter="ball-placed" animate.leave="ball-taken" aria-hidden="true">
             <span class="ball-orbit" [class.rolling]="rolling()" [style.--ball-angle.deg]="angles[shown.pocket - 1]">
                 <span class="ball" [class.ball-sealed]="shown.kind === ballKinds.SEALED" [attr.data-ball]="shown.kind" (animationend)="end($event)"></span>
             </span>
