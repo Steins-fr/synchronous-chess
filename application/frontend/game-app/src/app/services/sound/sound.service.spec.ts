@@ -172,7 +172,8 @@ describe('SoundService', () => {
             const [from]: number[] = source.start.mock.calls[0];
             const [to]: number[] = source.stop.mock.calls[0];
             expect(to).toBeGreaterThan(from);
-            expect(to).toBeLessThan(1);
+            // The longest one, the ball of the fixed roulette, lasts as long as its roll: 2.5 seconds
+            expect(to).toBeLessThan(3);
         });
     });
 

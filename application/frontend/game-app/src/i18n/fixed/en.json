@@ -111,7 +111,6 @@
     "pastMatches": "Matches played",
     "place": {
       "hint": "Bet 1 chip at least, on any pockets: the punter reads your bets.",
-      "option": "{pocket}",
       "pocket": "Pocket of the ball",
       "required": "Pick the pocket of the ball",
       "submit": "Place the ball and bet"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# chip} other {# chips}}",
       "free": "Free seat",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Leave",
       "release": "Free the seat",
       "side": "{side, select, croupier {Croupier} other {Punter}}",

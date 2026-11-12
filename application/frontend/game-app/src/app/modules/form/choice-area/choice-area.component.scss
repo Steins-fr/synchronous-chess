@@ -1,0 +1,9 @@
+// The area takes the shape the page gives the component, and tells it reached by the keyboard
+.choice-area {
+    border-radius: inherit;
+
+    &:has(:focus-visible) {
+        outline: 2px solid var(--app-on-color);
+        outline-offset: 2px;
+    }
+}

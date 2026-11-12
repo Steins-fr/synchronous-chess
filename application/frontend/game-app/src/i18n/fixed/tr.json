@@ -111,7 +111,6 @@
     "pastMatches": "Oynanan maçlar",
     "place": {
       "hint": "En az 1 fiş yatırın, istediğiniz bölmelere: bahisçi bahislerinizi görür.",
-      "option": "{pocket}",
       "pocket": "Topun bölmesi",
       "required": "Topun bölmesini seçin",
       "submit": "Topu yerleştir ve bahis yap"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# fiş} other {# fiş}}",
       "free": "Boş yer",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Yeri bırak",
       "release": "Yeri boşalt",
       "side": "{side, select, croupier {Krupiye} other {Bahisçi}}",

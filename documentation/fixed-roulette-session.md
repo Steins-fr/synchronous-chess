@@ -55,7 +55,7 @@ The code lives in `application/frontend/game-app/src/app/modules/fixed-roulette`
 | `PrivateConversations` | `modules/private-conversations/classes` | The private conversations of the room, for its life: the table declares the watched conversation of the match into it |
 | `FixedTableComponent` | `components/fixed-table` | Shows the session, turns the clicks into seats, a setup, balls and bets, runs the clock of each phase, flies the chips, declares the conversation |
 | `FixedSeatComponent` | `components/fixed-seat` | A seat: its player, its side in the game, the clock of the phase it is awaited in, its chips off the table |
-| `FixedWheelComponent` | `components/fixed-wheel` | The fixed wheel, decorative, with the ball shown, and under it a cell for each pocket holding the stakes of both players |
+| `FixedWheelComponent` | `components/fixed-wheel` | The fixed wheel, a round board of 4 pockets holding the stakes of both players and the fields of the local player, with the ball in its pocket, against the rim, rolling there from the hub once revealed |
 | `eventText`, `resultText` | `helpers/fixed-texts.helper.ts` | The lines of the history: a game over, the result of a match |
 | `betTransfers`, `settlementTransfers`, `voidTransfers` | `helpers/chip-transfers.helper.ts` | The chips a bet, a settlement or a game void moves, from a place of the table to another one |
 | `tableSounds` | `helpers/table-sound.helper.ts` | The sounds of a change of the table |
@@ -173,7 +173,7 @@ to share give the croupier 1 and the punter 3, and the chip left over, 4: −4 a
 nothing moves; both all in off the ball, the bank takes 1,000 chips, and the match is a draw.
 
 `#last-game` tells the game over last until the next one is over, the history of the room every game. The chips fly
-once the ball dropped: the chips on its pocket back to their owners, then the chips of the other pockets, pocket by
+once the ball reached its pocket: the chips on its pocket back to their owners, then the chips of the other pockets, pocket by
 pocket, to their takers, the croupier first, else to the bank. `#bank` counts the chips the bank took in the match.
 
 ## The conversation of the players
@@ -295,30 +295,53 @@ The bets are 4 whole numbers of chips, 0 or more, the first pocket first. The co
   `#seat-bottom`: the player, `Croupier` or `Punter`, the clock of the phase, `500 chips`, `Sit here`, `Leave`, `Free the
   seat`); the cloth (`#cloth`): the chips the bank took (`#bank`, `Bank: 130 chips`), the wheel (`app-fixed-wheel`) and
   the game over last (`#last-game`, 3 lines kept); the status line (`<output>`, the `status` role) and the clock of the
-  phase (`#clock`); the actions of the local player (`#actions`): the form of the croupier (`#place-form`: `Pocket of the
-  ball`, `1` to `4`, then `Chips on 1` to `Chips on 4` and `Place the ball and bet`), the form of the punter
-  (`#bet-form`: the same chips, its hint, `Bet`), `Play again`; the result (`#result`); the setup of the next match
-  (`#setup`: the time of the bets as radio buttons, then `Start the match`).
-- **The wheel** is a small disk that never turns, decorative, its 4 numbered pockets, and under it a cell for each pocket
-  (`#pocket-1` to `#pocket-4`), holding the stake of the player of the top seat, the pocket and the stake of the player of
-  the bottom seat; each cell is an image named by its stakes (`Pocket 3, alice: 50 chips`). **The ball** shows sealed,
-  dashed, on the page of its croupier only, until revealed (`Your ball, sealed: pocket 3`, `Pocket 3, your ball, sealed,
-  alice: 20 chips`), then on every page as the last ball until the croupier of the next game places its own (`Last ball:
-  pocket 2`, `Pocket 2, the last ball`). The disk carries it as `data-ball`, `sealed` or `last`.
+  phase (`#clock`); the actions of the local player, on the cloth under the wheel (`#actions`, their place kept): the form of
+  the croupier (`#place-form`: its hint and `Place the ball and bet`), the form of the punter (`#bet-form`: its hint, `Bet`),
+  `Play again`; the result (`#result`);
+  the setup of the next match (`#setup`: the time of the bets as radio buttons, then `Start the match`). The fields of both
+  forms lie in the pockets of the wheel, tied to their form by its id.
+- **The wheel** is a disk that never turns, in its square: its 4 pockets in reading order (1 and 2 above 3 and 4) around
+  a hub, red and black by turns around it (`#pocket-1` to `#pocket-4`). Each pocket holds its number, printed
+  in its middle, under the stake of the player of the top seat above the one of the player of the bottom seat, against the hub; it is
+  an image named by its stakes (`Pocket 3, alice: 50 chips`), a group once it holds a field. The local player types its
+  stakes in the pockets, in place of its own stakes (`StakeFieldComponent`: `Chips on 1` to `Chips on 4`, two buttons
+  stepping the stake by 5 for a pointer), and the croupier places its ball by clicking a pocket, or its socket against the rim, where the ball will lie
+  (`ChoiceAreaComponent`: the radio buttons `1` to `4` of the group `Pocket of the ball`): a pale ball shows in the
+  socket of the pocket under its pointer (`data-ghost`), then the ball in the one picked, its pocket ringed.
+- **The ball** lies in its pocket, against the rim, never on it. It shows sealed, dashed, on the page of its croupier only, until revealed
+  (`Your ball, sealed: pocket 3`, `Pocket 3, your ball, sealed, alice: 20 chips`), then on every page as the last ball
+  (`Last ball: pocket 2`, `Pocket 2, the last ball`), its pocket ringed in gold along its arc, for a second (`BALL_STAY`):
+  the ball and the ring fade out then (`rested`), and the wheel is bare for the next game. It carries `data-ball`, `sealed`
+  or `last`.
+- **The ball revealed rolls** for 2.5 seconds (`BALL_ROLL`): it comes out of the hub, wavers there, then rolls straight
+  down its pocket to the rim and bounces against it, the wheel never spinning.
+  Until it is there, the table keeps the game as it was (`view()`): the stakes on the pockets, the chips and the roles of
+  the seats, the bank, the game and its status (`The ball is revealed…`), no form nor clock of the next game, no result of
+  the match, the history of the room included. Once there (`rolled`), the table shows the game settled and its chips fly; the form of the next game waits for the ball
+  to leave the wheel, a second later.
+  A page asking for no motion shows the ball in its pocket at once; a hidden page, whose animations would wait for it,
+  shows the game settled at once, without ball; the history of the room rolls nothing.
 - **The forms** show no error before the player types, and are empty again for each game. An empty field bets no chip; a
   field refuses a negative number (`No negative bet`) or a part of a chip (`Bet whole chips`), the croupier's form a
-  missing pocket (`Pick the pocket of the ball`); under the fields, the error of `betError` tells why the bets are refused
+  missing pocket (`Pick the pocket of the ball`): the field refused is ringed, and the form tells the first error of the
+  fields touched (`touchedError()`) on the cloth, in place of its hint, above its button, with the error of `betError` telling why the bets are refused
   (`Bet 1 chip at least`, `You hold 40 chips only`, `Bet on 2 pockets at most`, `Bet 65 chips at least, as many as alice`,
   `You hold fewer chips than alice bet: bet all your chips`).
 - The seats, the cloth and the status block keep their tallest height (`SteadyHeightDirective`), the line of the game over
   last keeping its place empty: the page does not jump while the match is played.
 - The amounts go through the plurals of ICU (`1,000 chips`), and the sign of a net through a select, never a `+` added
   to the text.
+- **The seats** show the part of their player (`Croupier`, `Punter`), its chips in a stack and counted, and what the game
+  settled last gave or took (`+26`, `−26`), until the next ball is placed. The seat the game waits for is outlined, a halo
+  beating around it, the time left to its player in a ring emptying with it, red in its last 5 seconds. The button of what
+  the table waits for from the local player beats too (`Sit here`, `Start the match`, `Place the ball and bet`, `Bet`,
+  `Play again`), and the result of the match pops up over the wheel for a moment, beside its line (`#result`).
 - **The chips fly** (`ChipFlightsComponent`): a bet from the stack of its player to its pockets, a settlement once the ball
-  dropped, a game void its bets back to their owners. A page reloaded flies the chips of the live moves only, a hidden page
+  reached its pocket, a game void its bets back to their owners. A page reloaded flies the chips of the live moves only, a hidden page
   none.
-- The sounds: a seat taken (`SEAT_TAKEN`), the chips of a bet (`CHIPS`), the ball revealed bouncing in its pocket
-  (`FIXED_BALL_DROP`, a sound of its own, in the group `Fixed roulette` of the sound lab), then, 0.7 second later, the chips
+- The sounds: a seat taken (`SEAT_TAKEN`), the chips of a bet (`CHIPS`), the ball revealed rolling to its pocket
+  and bouncing there (`FIXED_BALL_DROP`, a sound of its own, as long as the roll, in the group `Fixed roulette` of the sound
+  lab), then, once it is there, 2.5 seconds later (at once on a page asking for no motion), the chips
   settled (`POKER_POT_WON` for a player of the match winning chips, `POKER_POT_LOST` for one losing some, else `CHIPS`), the
   bets of a game void going back (`CHIPS`), and the end of the match (`GAME_WON` or `GAME_LOST`, won for a spectator,
   `GAME_DRAW` on a draw). A page reloaded hears the changes from its first live message only; a hidden page hears them.

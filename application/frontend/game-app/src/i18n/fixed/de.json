@@ -111,7 +111,6 @@
     "pastMatches": "Gespielte Partien",
     "place": {
       "hint": "Setze mindestens 1 Chip, auf beliebige Fächer: Der Pointeur sieht deine Einsätze.",
-      "option": "{pocket}",
       "pocket": "Fach der Kugel",
       "required": "Wähle das Fach der Kugel",
       "submit": "Kugel legen und setzen"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# Chip} other {# Chips}}",
       "free": "Freier Platz",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Platz verlassen",
       "release": "Platz freigeben",
       "side": "{side, select, croupier {Croupier} other {Pointeur}}",

@@ -57,9 +57,14 @@ export const SOUND_RECIPES: Readonly<Record<SynthesizedSoundEffect, ReadonlyArra
         ...snap(0, 0.4), ...snap(0.18, 0.4), ...snap(0.36, 0.4),
         ...snap(0.6, 0.7), tone({ wave: 'sine', frequency: 300, to: 200, at: 0.6, duration: 0.08, gain: 0.3 }),
     ],
-    // The ball dropped in its pocket, bouncing in place, each bounce lower and sooner, until it rests: no sweep of a wheel
-    [SoundEffect.FIXED_BALL_DROP]: [[0, 0.55], [0.2, 0.4], [0.34, 0.28], [0.44, 0.19], [0.51, 0.12], [0.56, 0.07]]
-        .flatMap(([at, gain]: ReadonlyArray<number>) => tap(at, gain)),
+    // The ball coming out of the hub of the wheel that does not spin, wavering there, then rolling down its pocket, its
+    // ticks closer and closer, knocking the rim and bouncing there, lower each time, until it rests: as long as its roll
+    // (BALL_ROLL)
+    [SoundEffect.FIXED_BALL_DROP]: [
+        [0.05, 0.3], [0.55, 0.1], [0.75, 0.1], [0.9, 0.08],
+        [1.08, 0.12], [1.32, 0.14], [1.5, 0.16], [1.64, 0.18], [1.75, 0.2], [1.84, 0.22],
+        [1.95, 0.55], [2.3, 0.3], [2.45, 0.14],
+    ].flatMap(([at, gain]: ReadonlyArray<number>) => tap(at, gain)),
     // A soft pop, rising
     [SoundEffect.SEAT_TAKEN]: [
         tone({ wave: 'sine', frequency: 440, to: 660, duration: 0.12, gain: 0.3, attack: 0.005 }),

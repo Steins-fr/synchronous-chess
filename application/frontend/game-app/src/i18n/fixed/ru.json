@@ -111,7 +111,6 @@
     "pastMatches": "Сыгранные партии",
     "place": {
       "hint": "Поставьте хотя бы 1 фишку, на любые ячейки: понтёр видит ваши ставки.",
-      "option": "{pocket}",
       "pocket": "Ячейка шарика",
       "required": "Выберите ячейку шарика",
       "submit": "Положить шарик и поставить"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# фишка} few {# фишки} many {# фишек} other {# фишки}}",
       "free": "Свободное место",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Освободить место",
       "release": "Убрать с места",
       "side": "{side, select, croupier {Крупье} other {Понтёр}}",

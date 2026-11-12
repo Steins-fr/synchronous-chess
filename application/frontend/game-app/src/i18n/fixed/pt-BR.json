@@ -111,7 +111,6 @@
     "pastMatches": "Partidas jogadas",
     "place": {
       "hint": "Aposte pelo menos 1 ficha, nas casas que quiser: o apostador lê suas apostas.",
-      "option": "{pocket}",
       "pocket": "Casa da bola",
       "required": "Escolha a casa da bola",
       "submit": "Colocar a bola e apostar"
@@ -126,6 +125,7 @@
     "seat": {
       "chips": "{count, plural, one {# ficha} other {# fichas}}",
       "free": "Lugar livre",
+      "gain": "{sign, select, plus {+} other {−}}{count}",
       "leave": "Deixar o lugar",
       "release": "Liberar o lugar",
       "side": "{side, select, croupier {Crupiê} other {Apostador}}",

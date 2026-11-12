@@ -83,7 +83,7 @@ const GROUPS: ReadonlyArray<Readonly<LabGroup>> = [
     {
         title: 'Fixed roulette',
         sounds: [
-            sound(SoundEffect.FIXED_BALL_DROP, 'Ball revealed', 'The ball revealed by the page of the croupier, bouncing in its pocket, before the chips are settled'),
+            sound(SoundEffect.FIXED_BALL_DROP, 'Ball revealed', 'The ball revealed by the page of the croupier, coming out of the hub, rolling straight down its pocket to the rim and bouncing there, before the chips are settled'),
         ],
     },
     {

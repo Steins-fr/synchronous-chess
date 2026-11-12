@@ -1,0 +1,12 @@
+<!-- The buttons are a shortcut of the pointer: a screen reader and the keyboard step the input itself -->
+<button class="stake-step rounded-l-full" type="button" tabindex="-1" aria-hidden="true" (click)="change(-1)">−</button>
+<input
+    class="stake-input w-11 sm:w-14 min-w-0 border-0 bg-transparent p-0 text-center font-bold tabular-nums text-inherit outline-none"
+    [formField]="field()"
+    type="number"
+    inputmode="numeric"
+    autocomplete="off"
+    placeholder="0"
+    [attr.aria-label]="label()"
+    [attr.form]="formId()" />
+<button class="stake-step rounded-r-full" type="button" tabindex="-1" aria-hidden="true" (click)="change(1)">+</button>

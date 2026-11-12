@@ -1,0 +1,269 @@
+// The wheel measures itself: its rim, its ball and the number of a pocket follow its width, on a phone as on a desk
+:host {
+    container-type: inline-size;
+}
+
+.wheel {
+    --wheel-rim: clamp(14px, 5.5cqw, 24px);
+    --ball-size: clamp(14px, 5cqw, 22px);
+    // The room between the ball at rest in its pocket and the rim
+    --ball-gap: 5px;
+    // From the middle of the wheel to the ball at rest
+    --ball-rest: calc(50cqw - var(--wheel-rim) - var(--ball-gap) - var(--ball-size) / 2);
+    // From its place at rest to the hub
+    --ball-travel: var(--ball-rest);
+    // The ball always rolls for a moment, a page asking for no motion included: its end tells the table to settle the chips
+    --roll: max(var(--ball-roll), 20ms);
+    // The ball revealed fades out once it stayed its moment in its pocket: its end tells the table to take it away
+    --fade: max(var(--app-motion-fast), 20ms);
+}
+
+.wheel-disk {
+    border: var(--wheel-rim) solid var(--app-wheel-rim);
+    box-shadow: inset 0 0 0 2px var(--app-felt-inset), 0 6px 18px var(--app-felt-inset);
+}
+
+.wheel-hub {
+    border: 3px solid var(--app-ball-edge);
+    background-image: radial-gradient(circle at 35% 30%, var(--app-felt-glow), transparent 60%);
+}
+
+.pocket-number {
+    color: var(--app-pocket-ink);
+    font-size: 24cqw;
+    font-weight: 900;
+    line-height: 1;
+    // A click on a pocket goes through its number
+    pointer-events: none;
+    user-select: none;
+}
+
+// A pocket the croupier may click for its ball lights up under the pointer, as its socket does
+.pocket {
+    transition: filter var(--app-motion-fast);
+}
+
+.pocket-lit {
+    filter: brightness(1.18);
+}
+
+// The pocket of the ball: a gold ring, flashing as the ball reaches it, fading out with the ball once it stayed its
+// moment; dashed while the ball is sealed
+.pocket-hit {
+    box-shadow: inset 0 0 0 3px var(--app-pocket-hit);
+    animation:
+        pocket-hit var(--app-motion-medium) ease-out 2,
+        pocket-out var(--fade) ease-in var(--ball-stay) forwards;
+}
+
+.pocket-sealed {
+    outline: 2px dashed var(--app-pocket-hit);
+    outline-offset: -5px;
+}
+
+@keyframes pocket-hit {
+    50% {
+        filter: brightness(1.6);
+    }
+}
+
+@keyframes pocket-out {
+    to {
+        box-shadow: inset 0 0 0 3px transparent;
+    }
+}
+
+// The ball lies in its pocket, against the rim, in the middle of its arc: its ring, a point on the hub, turns it there. A
+// ring as wide as the wheel would run out of it once turned, and out of a narrow window
+.ball-orbit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    transform: rotate(var(--ball-angle));
+}
+
+.ball,
+.socket-ball {
+    width: var(--ball-size);
+    height: var(--ball-size);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--app-on-color), var(--app-ball) 45%, var(--app-ball-edge));
+    box-shadow: 0 1px 3px var(--app-felt-inset);
+}
+
+.ball {
+    position: absolute;
+    top: calc(var(--ball-size) / -2 - var(--ball-rest));
+    left: calc(var(--ball-size) / -2);
+}
+
+// The socket of a pocket, sunk in its cloth against the rim, where its ball lies: the croupier clicks it, or its pocket,
+// to place its ball there. Its area is wider than the socket, for a finger
+.socket-area {
+    --socket-area: max(var(--ball-size) * 1.8, 36px);
+
+    position: absolute;
+    top: calc(var(--socket-area) / -2 - var(--ball-rest));
+    left: calc(var(--socket-area) / -2);
+    width: var(--socket-area);
+    height: var(--socket-area);
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+.socket {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--ball-size) + 6px);
+    height: calc(var(--ball-size) + 6px);
+    border-radius: 50%;
+    background: var(--app-felt-inset);
+    box-shadow: inset 0 1px 3px var(--app-felt-inset), 0 0 0 2px var(--app-felt-glow);
+    pointer-events: none;
+    transition: box-shadow var(--app-motion-fast), transform var(--app-motion-fast);
+}
+
+// No ball picked yet: a halo beats around each socket, telling where to click
+.socket-calling .socket {
+    animation: socket-calling 1.8s ease-out infinite;
+}
+
+.socket-lit .socket {
+    box-shadow: inset 0 1px 3px var(--app-felt-inset), 0 0 0 2px var(--app-on-color);
+    transform: scale(1.15);
+    animation: none;
+}
+
+.socket-picked .socket {
+    box-shadow: inset 0 1px 3px var(--app-felt-inset), 0 0 0 2px var(--app-pocket-hit);
+}
+
+@keyframes socket-calling {
+    from {
+        box-shadow: inset 0 1px 3px var(--app-felt-inset), 0 0 0 2px var(--app-on-color);
+    }
+
+    to {
+        box-shadow: inset 0 1px 3px var(--app-felt-inset), 0 0 0 0.6rem transparent;
+    }
+}
+
+.ball-sealed {
+    opacity: 0.75;
+    outline: 2px dashed var(--app-ball);
+    outline-offset: 2px;
+}
+
+// The ball revealed stays its moment in its pocket, then fades out
+.ball-resting {
+    animation: ball-out-of-sight var(--fade) ease-in var(--ball-stay) forwards;
+}
+
+@keyframes ball-out-of-sight {
+    to {
+        opacity: 0;
+    }
+}
+
+.ball-ghost {
+    opacity: 0.45;
+}
+
+.ball-placed {
+    animation: ball-placed var(--app-motion-fast) ease-out;
+}
+
+.ball-taken {
+    animation: ball-placed var(--app-motion-fast) ease-in reverse forwards;
+}
+
+@keyframes ball-placed {
+    from {
+        opacity: 0;
+    }
+}
+
+// The wheel does not spin: the ball revealed comes out of the hub, wavers there for a moment, then rolls straight down
+// its pocket, faster and faster, knocks the rim and bounces there
+.rolling .ball {
+    animation: ball-out var(--roll) linear both;
+}
+
+@keyframes ball-out {
+    from {
+        opacity: 0;
+        transform: translateY(var(--ball-travel)) scale(0.2);
+    }
+
+    8% {
+        opacity: 1;
+        transform: translateY(var(--ball-travel)) scale(1.2);
+    }
+
+    14% {
+        transform: translateY(var(--ball-travel)) scale(1);
+    }
+
+    22% {
+        transform: translate(-22%, var(--ball-travel));
+    }
+
+    30% {
+        transform: translate(22%, var(--ball-travel));
+    }
+
+    36% {
+        transform: translate(-10%, var(--ball-travel));
+    }
+
+    // Down the slope of the pocket
+    42% {
+        transform: translateY(var(--ball-travel));
+        animation-timing-function: cubic-bezier(0.55, 0, 1, 0.7);
+    }
+
+    78% {
+        transform: translateY(0);
+        animation-timing-function: ease-out;
+    }
+
+    86% {
+        transform: translateY(calc(var(--ball-size) * 1.6));
+        animation-timing-function: ease-in;
+    }
+
+    92% {
+        transform: translateY(0);
+        animation-timing-function: ease-out;
+    }
+
+    96% {
+        transform: translateY(calc(var(--ball-size) * 0.5));
+        animation-timing-function: ease-in;
+    }
+}
+
+@keyframes ball-still {
+    from {
+        opacity: 0.99;
+    }
+}
+
+// No motion asked: the ball shows in its pocket at once, its animation kept for its end only
+@media (prefers-reduced-motion: reduce) {
+    .rolling .ball {
+        animation-name: ball-still;
+        animation-duration: 20ms;
+    }
+
+    .pocket-hit {
+        animation: pocket-out var(--fade) ease-in var(--ball-stay) forwards;
+    }
+
+    .socket-calling .socket {
+        animation: none;
+    }
+}

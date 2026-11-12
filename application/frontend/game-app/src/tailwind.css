@@ -13,6 +13,8 @@
     --color-app-border: var(--app-border);
     --color-app-win: var(--app-win);
     --color-app-win-surface: var(--app-win-surface);
+    --color-app-loss: var(--app-loss);
+    --color-app-loss-surface: var(--app-loss-surface);
     --color-app-draw: var(--app-draw);
     --color-app-draw-surface: var(--app-draw-surface);
     --color-app-board-light: var(--app-board-light);
@@ -61,6 +63,12 @@
     --color-app-pocket-black: var(--app-pocket-black);
     --color-app-ball: var(--app-ball);
     --color-app-ball-edge: var(--app-ball-edge);
+    --color-app-pocket-red-felt: var(--app-pocket-red-felt);
+    --color-app-pocket-black-felt: var(--app-pocket-black-felt);
+    --color-app-pocket-ink: var(--app-pocket-ink);
+    --color-app-felt-inset: var(--app-felt-inset);
+    --color-app-felt-glow: var(--app-felt-glow);
+    --color-app-pocket-hit: var(--app-pocket-hit);
 }
 
 /* The bets of the round on the cloth of the poker, in front of each player */
@@ -184,7 +192,64 @@
 
 /* A stake of a player on a pocket of the fixed roulette: its chips beside their count, the height of a chip kept while empty */
 @utility pocket-stake {
-    @apply flex items-center justify-center gap-1 min-h-[1.85rem] text-sm font-bold tabular-nums;
+    @apply flex items-center justify-center gap-1 min-h-8 sm:min-h-11 text-sm font-bold tabular-nums;
+}
+
+/* Typed, the part of a clock left moves smoothly from a second to the next one */
+@property --clock-left {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 1;
+}
+
+/* The time left to a player in a ring emptying with it (--clock-left, from 1 to 0), red and beating once it runs out: as
+   high as a button of a seat, the seat keeping its height with it */
+@utility clock-ring {
+    @apply inline-flex items-center justify-center size-10 rounded-full text-xs font-bold tabular-nums;
+    --clock-color: var(--app-accent-text);
+    background:
+        radial-gradient(closest-side, var(--app-surface-raised) calc(100% - 4px), transparent calc(100% - 3px)),
+        conic-gradient(var(--clock-color) calc(var(--clock-left, 1) * 1turn), var(--app-border) 0);
+    transition: --clock-left 1s linear;
+
+    &.clock-low {
+        --clock-color: var(--app-clock-low);
+        color: var(--app-clock-low);
+        animation: clock-low 1s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+
+        &.clock-low {
+            animation: none;
+        }
+    }
+}
+
+@keyframes clock-low {
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* The button of what the table waits for from the local player: a halo beats around it */
+@utility action-pulse {
+    animation: action-pulse 1.8s ease-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+@keyframes action-pulse {
+    from {
+        box-shadow: 0 0 0 0 var(--app-accent-text);
+    }
+
+    to {
+        box-shadow: 0 0 0 0.6rem transparent;
+    }
 }
 
 @utility badge {
@@ -193,6 +258,10 @@
 
 @utility badge-win {
     @apply bg-app-win-surface text-app-win;
+}
+
+@utility badge-loss {
+    @apply bg-app-loss-surface text-app-loss;
 }
 
 @utility badge-draw {

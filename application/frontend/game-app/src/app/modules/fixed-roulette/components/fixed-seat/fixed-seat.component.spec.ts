@@ -46,7 +46,9 @@ describe('FixedSeatComponent', () => {
         // Then
         expect(shown()).toEqual(['bob', 'Croupier', '0:04', '435 chips']);
         expect(host().classList).toContain('outline-2');
-        expect(host().querySelector('.tabular-nums')?.classList).toContain('text-app-clock-low');
+        expect(host().classList).toContain('action-pulse');
+        expect(host().querySelector('.badge')?.classList).toContain('badge-win');
+        expect(host().querySelector('.clock-ring')?.classList).toContain('clock-low');
         expect(fixture.componentInstance.chipsPlace().tagName).toEqual('APP-CHIP-STACK');
 
         // When
@@ -55,6 +57,40 @@ describe('FixedSeatComponent', () => {
         // Then
         expect(shown()).toEqual(['bob', 'Punter', '1 chip']);
         expect(host().classList).not.toContain('outline-2');
+        expect(host().classList).not.toContain('action-pulse');
+        expect(host().querySelector('.badge')?.classList).toContain('badge-draw');
+    });
+
+    test('should empty the ring of its clock with the time left', async () => {
+        // When
+        await show({ name: 'bob', awaited: true, chips: 435, clock: { key: 'rooms.table.clock', params: { minutes: 0, seconds: '30' } }, timeLeft: 0.5 });
+
+        // Then
+        const ring: HTMLElement = host().querySelector('.clock-ring') as HTMLElement;
+        expect(ring.style.getPropertyValue('--clock-left')).toEqual('0.5');
+        expect(ring.classList).not.toContain('clock-low');
+    });
+
+    test('should show what the game settled last gave its player, or took from it, nothing for a game even', async () => {
+        // When
+        await show({ name: 'bob', chips: 526, gain: 26 });
+
+        // Then
+        expect(shown()).toEqual(['bob', '526 chips', '+26']);
+        expect(host().querySelector('.gain')?.classList).toContain('badge-win');
+
+        // When
+        await show({ chips: 435, gain: -65 });
+
+        // Then
+        expect(shown()).toEqual(['bob', '435 chips', '−65']);
+        expect(host().querySelector('.gain')?.classList).toContain('badge-loss');
+
+        // When
+        await show({ chips: 500, gain: 0 });
+
+        // Then
+        expect(shown()).toEqual(['bob', '500 chips']);
     });
 
     test('should show the chips of a player bankrupt, none on its stack', async () => {

@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TimedLogger } from '@app/helpers/timed-logger.helper';
 import { Applied } from '@app/modules/commit-reveal/classes/applied';
@@ -6,11 +7,12 @@ import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/compon
 import { PrivateConversation } from '@app/modules/private-conversations/classes/private-conversation';
 import { PrivatePayloads } from '@app/modules/private-conversations/classes/private-messages';
 import { MatchLeaveWarning } from '@app/modules/room-layout/match-leave-warning';
+import { ReducedMotionService } from '@app/services/reduced-motion/reduced-motion.service';
 import { Room } from '@app/services/room-manager/classes/room/room';
 import { SoundEffect } from '@app/services/sound/enums/sound-effect.enum';
 import { SoundService } from '@app/services/sound/sound.service';
 import { RoomHub } from '@testing/room-hub';
-import { choiceFieldOption, numberFieldInput } from '@testing/text-field.helper';
+import { choiceAreaOption, choiceFieldOption, stakeFieldInput } from '@testing/text-field.helper';
 import { TestHelper } from '@testing/test.helper';
 import { pastLine, translated } from '@testing/translatable-text.helper';
 import { afterEach, beforeEach, describe, expect, MockInstance, test, vi } from 'vitest';
@@ -18,6 +20,7 @@ import { FixedRoulettePayloads, FRGameSessionType } from '../../classes/game-ses
 import { FixedRouletteSession } from '../../classes/game-sessions/fixed-roulette-session';
 import { FixedRouletteGameState, FixedRoulettePhase } from '../../classes/rules/fixed-roulette-game-state';
 import { Bets, FIXED_ROULETTE_RULES, FixedRouletteRules } from '../../classes/rules/fixed-roulette-rules';
+import { BALL_ROLL } from '../fixed-wheel/fixed-wheel.component';
 import { FIXED_ROULETTE_SESSION_OPTIONS, FixedTableComponent } from './fixed-table.component';
 
 type Payloads = FixedRoulettePayloads & PrivatePayloads;
@@ -26,6 +29,8 @@ type Payloads = FixedRoulettePayloads & PrivatePayloads;
 const LIGHT: FixedRouletteRules = { ...FIXED_ROULETTE_RULES, games: 2 };
 /** The time of the chain past any phase: a claim then counts */
 const LATER: number = 1_000_000;
+/** The time the ball rolls to its pocket, in seconds: the sounds of the chips settled wait for it */
+const ROLL: number = 0.04;
 
 const eventually = <T>(check: () => T | Promise<T>): Promise<T> => vi.waitFor(check, { timeout: 10_000 });
 
@@ -51,12 +56,12 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
     const flights = (): ChipFlightsComponent => TestHelper.cast<{ chipFlights(): ChipFlightsComponent }>(fixture.componentInstance).chipFlights();
     const conversations = (): ReadonlyArray<Readonly<PrivateConversation>> => fixture.componentInstance.conversations().conversations();
     /** The ball the disk shows, by its kind: none while no ball shows */
-    const diskBall = (): string | null => element().querySelector('circle[data-ball]')?.getAttribute('data-ball') ?? null;
-    const formError = (): string => text('app-form-error');
+    const diskBall = (): string | null => element().querySelector('[data-ball]')?.getAttribute('data-ball') ?? null;
+    const formError = (): string => text('#actions .form-error');
     /** What a seat shows: its player, its part in the game and its chips */
     const seatOf = (place: 'top' | 'bottom'): ReadonlyArray<string | null> => [
         seat(place).querySelector('span')?.textContent?.trim() ?? null,
-        seat(place).querySelector('.badge')?.textContent?.trim() ?? null,
+        seat(place).querySelector('.badge:not(.gain)')?.textContent?.trim() ?? null,
         seat(place).querySelector('span.font-medium.tabular-nums')?.textContent?.trim() ?? null,
     ];
     /** The chips flown, by their amounts and delays, in the order they took off */
@@ -72,13 +77,32 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await fixture.whenStable();
     }
 
+    /** The ball revealed stayed its moment in its pocket: the table takes it away, the form of the next game shows */
+    async function rested(): Promise<void> {
+        (element().querySelector('[data-ball="last"]') as HTMLElement).dispatchEvent(new Event('animationend', { bubbles: true }));
+        await fixture.whenStable();
+    }
+
+    /**
+     * The ball of a game settled rolls to its pocket, the table keeping the game as it was: once there, the table shows the
+     * game settled, then takes the ball away once it stayed its moment, unless the spec looks at it first
+     */
+    async function rolled(stays: boolean = false): Promise<void> {
+        await until(() => element().querySelector('.rolling') !== null);
+        (element().querySelector('.rolling [data-ball]') as HTMLElement).dispatchEvent(new Event('animationend', { bubbles: true }));
+        await fixture.whenStable();
+        if (!stays) {
+            await rested();
+        }
+    }
+
     async function click(label: string, root?: ParentNode): Promise<void> {
         (button(label, root) as HTMLButtonElement).click();
         await fixture.whenStable();
     }
 
     async function type(label: string, value: string): Promise<void> {
-        const input: HTMLInputElement = numberFieldInput(element(), label);
+        const input: HTMLInputElement = stakeFieldInput(element(), label);
         input.value = value;
         input.dispatchEvent(new Event('input'));
         input.dispatchEvent(new Event('blur'));
@@ -87,6 +111,12 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
 
     async function pick(label: string, option: string): Promise<void> {
         choiceFieldOption(element(), label, option).click();
+        await fixture.whenStable();
+    }
+
+    /** The croupier clicks the place of the ball of its pocket */
+    async function pickBall(pocket: number): Promise<void> {
+        choiceAreaOption(element(), 'Pocket of the ball', String(pocket)).click();
         await fixture.whenStable();
     }
 
@@ -99,7 +129,9 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
 
     /** The table of Alice in the room, Bob and Eve on their pages */
     async function table(rules: FixedRouletteRules = LIGHT): Promise<void> {
-        TestBed.configureTestingModule({ providers: [{ provide: FIXED_ROULETTE_SESSION_OPTIONS, useValue: { rules } }, MatchLeaveWarning] });
+        TestBed.configureTestingModule({
+            providers: [{ provide: FIXED_ROULETTE_SESSION_OPTIONS, useValue: { rules } }, { provide: BALL_ROLL, useValue: ROLL * 1000 }, MatchLeaveWarning],
+        });
         fixture = TestBed.createComponent(FixedTableComponent);
         const room: Room<Payloads> = hub.room('alice');
         rooms.set('alice', room);
@@ -124,7 +156,7 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
 
     /** Alice places the ball and bets through her form: Bob bets next */
     async function placed(pocket: number, bets: ReadonlyArray<string>): Promise<void> {
-        await pick('Pocket of the ball', String(pocket));
+        await pickBall(pocket);
         await typeBets(bets);
         await click('Place the ball and bet');
         await until(() => phase() === FixedRoulettePhase.BETTING);
@@ -136,6 +168,7 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await eventually(() => expect(of(name).canBet()).toBe(true));
         of(name).bet(bets);
         await until(() => session().step() > settled + 1);
+        await rolled();
     }
 
     /** Bob, the croupier of a game, places the ball and bets */
@@ -151,6 +184,7 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await typeBets(bets);
         await click('Bet');
         await until(() => session().step() > settled + 1);
+        await rolled();
     }
 
     beforeEach(() => {
@@ -265,7 +299,9 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
 
         // Then
         expect(text('[data-stake="3-top"]')).toEqual('7');
-        expect(text('[data-stake="3-bottom"]')).toEqual('');
+        // The field of the local player in place of its stake
+        expect(stakeFieldInput(element(), 'Chips on 3').closest('[data-stake]')?.getAttribute('data-stake')).toEqual('3-bottom');
+        expect(stakeFieldInput(element(), 'Chips on 3').getAttribute('form')).toEqual('bet-form');
         expect(element().querySelector('#pocket-3')?.getAttribute('aria-label')).toEqual('Pocket 3, bob: 7 chips');
         expect(diskBall()).toBeNull();
         expect(status()).toEqual('Bet, reading the bets of bob.');
@@ -281,24 +317,30 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         // When nothing is picked nor bet
         await click('Place the ball and bet');
 
+        // Then the pocket first
+        expect(formError()).toEqual('Pick the pocket of the ball');
+
+        // When
+        await pickBall(2);
+
         // Then
-        expect(text('app-choice-field mat-error')).toEqual('Pick the pocket of the ball');
         expect(formError()).toEqual('Bet 1 chip at least');
+        expect(element().querySelector('[data-ghost]')?.getAttribute('data-ghost')).toEqual('2');
 
         // When
         await type('Chips on 1', '-1');
 
-        // Then
-        expect(text('app-number-field mat-error')).toEqual('No negative bet');
+        // Then the field refused is marked, its error told by the form
+        expect(formError()).toEqual('No negative bet');
+        expect(stakeFieldInput(element(), 'Chips on 1').closest('app-stake-field')?.classList).toContain('stake-invalid');
 
         // When
         await type('Chips on 1', '1.5');
 
         // Then
-        expect(text('app-number-field mat-error')).toEqual('Bet whole chips');
+        expect(formError()).toEqual('Bet whole chips');
 
         // When
-        await pick('Pocket of the ball', '2');
         await type('Chips on 1', '501');
         await click('Place the ball and bet');
 
@@ -315,7 +357,9 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await until(() => status() === 'Your ball is sealed: bob bets next…');
         expect(text('app-fixed-wheel p')).toEqual('Your ball, sealed: pocket 2');
         expect(diskBall()).toEqual('sealed');
-        expect(element().querySelector('#pocket-2')?.classList).toContain('outline-dashed');
+        expect(element().querySelector('#pocket-2')?.classList).toContain('pocket-sealed');
+        expect(element().querySelector('#place-form')).toBeNull();
+        expect(element().querySelector('app-fixed-wheel input')).toBeNull();
 
         // When
         hub.release();
@@ -342,6 +386,25 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         // When
         hub.release();
         await until(() => round() === 1);
+        await until(() => element().querySelector('.rolling') !== null);
+
+        // Then the ball rolls to its pocket, the table keeping the game as it was
+        expect(status()).toEqual('The ball is revealed…');
+        expect(diskBall()).toEqual('last');
+        expect(text('app-fixed-wheel p')).toEqual('');
+        expect(text('#last-game')).toEqual('');
+        expect(history()).toEqual([]);
+        expect(seatOf('bottom')).toEqual(['alice', 'Croupier', '435 chips']);
+        expect(seat('bottom').querySelector('.gain')).toBeNull();
+        expect(text('[data-stake="2-bottom"]')).toEqual('15');
+        expect(text('#game')).toEqual('Game 1 of 2');
+        expect(element().querySelector('#clock')).toBeNull();
+        expect(element().querySelector('.clock-ring')).toBeNull();
+        expect(flown(launch).slice(2)).toEqual([[35, 0], [30, 0]]);
+        expect(play).toHaveBeenCalledWith(SoundEffect.FIXED_BALL_DROP, 0);
+
+        // When the ball reached its pocket
+        await rolled(true);
 
         // Then the shares of the chips lost, 15 to 35, and the ball of the game until the next one is placed
         const settled: string = 'Game 1: ball in pocket 2, both players on it. alice (croupier) −26 chips, bob (punter) +26 chips';
@@ -352,18 +415,32 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         expect(text('app-fixed-wheel p')).toEqual('Last ball: pocket 2');
         expect(diskBall()).toEqual('last');
         expect(text('[data-stake="2-bottom"]')).toEqual('');
-        expect(flown(launch).slice(2)).toEqual([[35, 0], [30, 0], [15, 700], [35, 700], [24, 700], [26, 700], [30, 700]]);
-        expect(play).toHaveBeenCalledWith(SoundEffect.FIXED_BALL_DROP, 0);
-        expect(play).toHaveBeenCalledWith(SoundEffect.POKER_POT_LOST, 0.7);
+        expect(text('#game')).toEqual('Game 2 of 2');
+        expect([text('#seat-bottom .gain'), text('#seat-top .gain')]).toEqual(['−26', '+26']);
+        expect(element().querySelector('#pocket-2')?.classList).toContain('pocket-hit');
+        expect(flown(launch).slice(4)).toEqual([[15, 0], [35, 0], [24, 0], [26, 0], [30, 0]]);
+        expect(play).toHaveBeenCalledWith(SoundEffect.POKER_POT_LOST, ROLL);
         expect(status()).toEqual('bob places the ball and bets…');
+
+        // When the ball stayed its moment in its pocket
+        await rested();
+
+        // Then the wheel is bare for the next game, the game over last told still
+        expect(diskBall()).toBeNull();
+        expect(text('app-fixed-wheel p')).toEqual('');
+        expect(element().querySelector('#pocket-2')?.getAttribute('aria-label')).toEqual('Pocket 2');
+        expect(element().querySelector('#pocket-2')?.classList).not.toContain('pocket-hit');
+        expect(text('#last-game')).toEqual(settled);
+        expect([text('#seat-bottom .gain'), text('#seat-top .gain')]).toEqual(['−26', '+26']);
 
         // When the croupier of the second game places its own ball
         await placedBy('bob', 3, [10, 0, 0, 0]);
 
-        // Then no ball shows on the page of the punter
+        // Then no ball shows on the page of the punter, which bets: the gains of the game before are gone
         expect(diskBall()).toBeNull();
-        expect(text('app-fixed-wheel p')).toEqual('');
         expect(element().querySelector('#pocket-3')?.getAttribute('aria-label')).toEqual('Pocket 3');
+        expect(element().querySelector('#bet-form')).not.toBeNull();
+        expect(seat('bottom').querySelector('.gain')).toBeNull();
     });
 
     test('should show no error of the bets before the player types them, a pocket picked or in its next game of each side', async () => {
@@ -371,10 +448,9 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await started({ ...LIGHT, games: 4 });
 
         // When the croupier picks its pocket only
-        await pick('Pocket of the ball', '2');
+        await pickBall(2);
 
         // Then
-        expect(element().querySelector('#place-form mat-error')).toBeNull();
         expect(formError()).toEqual('');
 
         // When
@@ -399,7 +475,6 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
 
         // Then
         expect(status()).toEqual('Place the ball and bet: the ball stays sealed until the punter bet.');
-        expect(element().querySelector('#place-form mat-error')).toBeNull();
         expect(formError()).toEqual('');
 
         // When the fourth game: Alice bets again
@@ -409,7 +484,6 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
 
         // Then
         expect(element().querySelector('#bet-form')).not.toBeNull();
-        expect(element().querySelector('#bet-form mat-error')).toBeNull();
         expect(formError()).toEqual('');
     });
 
@@ -451,6 +525,23 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         // When
         hub.release();
         await until(() => session().over());
+        await until(() => element().querySelector('.rolling') !== null);
+
+        // Then the table keeps the end of the match for itself while the ball rolls
+        expect(status()).toEqual('The ball is revealed…');
+        expect(element().querySelector('#result')).toBeNull();
+        expect(button('Play again')).toBeUndefined();
+
+        // When the ball reached its pocket
+        await rolled(true);
+
+        // Then the match is over, its ball staying a moment: the next match waits for it
+        expect(status()).toEqual('The match is over.');
+        expect(text('#result')).toEqual('A draw, 500 chips each');
+        expect(button('Play again')).toBeUndefined();
+
+        // When
+        await rested();
 
         // Then
         expect(status()).toEqual('The match is over.');
@@ -458,7 +549,7 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         expect(text('#result')).toEqual('A draw, 500 chips each');
         expect(element().querySelector('#result')?.classList).toContain('badge-draw');
         expect(seatOf('bottom')).toEqual(['alice', null, '500 chips']);
-        expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, 0.7);
+        expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, ROLL);
         expect(play).toHaveBeenCalledWith(SoundEffect.GAME_DRAW, expect.any(Number));
         expect(history()).toHaveLength(2);
         expect(inMatch()).toBe(false);
@@ -480,9 +571,9 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         // Given 10 chips each, Bob winning 4 of Alice in the first game
         await started({ ...LIGHT, startChips: 10 });
         await placed(2, ['4', '', '', '']);
-        const launch = vi.spyOn(flights(), 'launch');
         await betBy('bob', [0, 4, 0, 0]);
         await placedBy('bob', 2, [8, 0, 0, 0]);
+        const launch = vi.spyOn(flights(), 'launch');
 
         // Then
         expect(text('#bet-form p')).toEqual('bob bets 8 chips: bet all your chips, on 2 pockets at most.');
@@ -503,14 +594,15 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         expect(text('#bank')).toEqual('Bank: 14 chips');
         expect(text('#result')).toEqual('bob wins: alice has no chip left');
         expect(element().querySelector('#result')?.classList).toContain('badge-win');
-        expect(flown(launch).filter(([, delay]: [number, number | undefined]) => delay === 700)).toEqual([[4, 700], [4, 700], [8, 700], [6, 700]]);
+        // The bet of Alice, then the chips of both players to the bank
+        expect(flown(launch)).toEqual([[6, 0], [8, 0], [6, 0]]);
     });
 
     test('should show no error of a form a player out of time left touched, in its next match', async () => {
         // Given Alice, the croupier, sends her form empty, then runs out of time
         await started();
         await click('Place the ball and bet');
-        expect(formError()).toEqual('Bet 1 chip at least');
+        expect(formError()).toEqual('Pick the pocket of the ball');
         hub.time = LATER;
         of('bob').claimTimeout();
         await until(() => session().over());
@@ -522,7 +614,6 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await until(() => status() === 'Place the ball and bet: the ball stays sealed until the punter bet.');
 
         // Then
-        expect(element().querySelector('#place-form mat-error')).toBeNull();
         expect(formError()).toEqual('');
     });
 
@@ -597,6 +688,35 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         // Then
         expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, 0);
         expect(launch).not.toHaveBeenCalled();
+
+        // When the game is settled
+        const settled: number = session().step();
+        await eventually(() => expect(of('bob').canBet()).toBe(true));
+        of('bob').bet([5, 0, 0, 0]);
+        await until(() => session().step() > settled + 1);
+
+        // Then the table shows it at once, its ball in its pocket: the animations of a hidden page would wait for it
+        expect(element().querySelector('.rolling')).toBeNull();
+        expect(diskBall()).toBeNull();
+        expect(text('#last-game')).toEqual('Game 1: ball in pocket 1, both players on it. alice (croupier) 0 chips, bob (punter) 0 chips');
+        expect(play).toHaveBeenCalledWith(SoundEffect.FIXED_BALL_DROP, 0);
+        expect(play).toHaveBeenCalledWith(SoundEffect.CHIPS, ROLL);
+        expect(launch).not.toHaveBeenCalled();
+    });
+
+    test('should settle the chips at once, in the sounds too, on a page asking for no motion', async () => {
+        // Given
+        TestBed.configureTestingModule({ providers: [{ provide: ReducedMotionService, useValue: { reduced: signal(true) } }] });
+        await started();
+        await placed(1, ['5', '', '', '']);
+        const play = vi.spyOn(TestBed.inject(SoundService), 'play');
+
+        // When
+        await betBy('bob', [0, 5, 0, 0]);
+
+        // Then
+        expect(play).toHaveBeenCalledWith(SoundEffect.FIXED_BALL_DROP, 0);
+        expect(play).toHaveBeenCalledWith(SoundEffect.POKER_POT_WON, 0);
     });
 
     test('should fly no chip to a player gone from its seat before the table shows the last game', async () => {
@@ -622,8 +742,8 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await until(() => session().over());
         expect(text('#seat-top')).toEqual('Free seat');
         expect(text('#result')).toEqual('alice wins, 503 chips to 497 chips');
-        // The chips of Alice back to her and the chips of Bob won by her, none flying back to Bob
-        expect(flown(launch).filter(([, delay]: [number, number | undefined]) => delay === 700)).toEqual([[4, 700], [3, 700]]);
+        // The bet of Alice, then her chips back to her and the chips of Bob won by her, none flying back to Bob
+        expect(flown(launch)).toEqual([[4, 0], [4, 0], [3, 0]]);
     });
 
     test('should show a player out of the match taking a seat once it is over, and let a player free the seat of a player away', async () => {

@@ -1,0 +1,11 @@
+// The chips won or lost pop up on the seat, once the chips of the game reached it
+.gain-shown {
+    animation: gain-shown var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--app-motion-slow) backwards;
+}
+
+@keyframes gain-shown {
+    from {
+        opacity: 0;
+        transform: scale(0.4);
+    }
+}

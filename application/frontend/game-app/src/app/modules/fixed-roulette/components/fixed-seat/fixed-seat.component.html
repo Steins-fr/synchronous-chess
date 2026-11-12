@@ -1,13 +1,14 @@
 <ng-container *transloco="let t; prefix: 'fixed.table.seat'">
-    <span class="min-w-0 truncate font-medium">{{ name() ?? t('free') }}</span>
+    <!-- As high as the clock and the buttons beside it: the seat keeps its height as they come and go -->
+    <span class="min-w-0 truncate font-medium leading-10">{{ name() ?? t('free') }}</span>
     @if (side(); as part) {
-    <span class="badge badge-draw">{{ t('side', { side: part }) }}</span>
+    <span class="badge" [class.badge-win]="part === sides.CROUPIER" [class.badge-draw]="part !== sides.CROUPIER">{{ t('side', { side: part }) }}</span>
     }
     @if (clock(); as left) {
-    <span class="ml-auto text-sm font-bold tabular-nums" [class.text-app-clock-low]="clockLow()">{{ left.key | transloco: left.params }}</span>
+    <span class="clock-ring ml-auto" [class.clock-low]="clockLow()" [style.--clock-left]="timeLeft()">{{ left.key | transloco: left.params }}</span>
     }
     @if (canTake()) {
-    <button class="ml-auto" mat-stroked-button type="button" (click)="take.emit()">{{ t('take') }}</button>
+    <button class="action-pulse ml-auto" mat-flat-button type="button" (click)="take.emit()">{{ t('take') }}</button>
     }
     @if (canLeave()) {
     <button class="ml-auto" mat-stroked-button type="button" (click)="leave.emit()">{{ t('leave') }}</button>
@@ -21,6 +22,11 @@
     <span class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-sm">
         <app-chip-stack #stack [amount]="count" />
         <span class="font-medium tabular-nums">{{ t('chips', { count }) }}</span>
+        @let won = gain();
+        @if (won !== null && won !== 0) {
+        <!-- What the game settled last gave or took, once its chips reached the seat -->
+        <span class="gain badge" [class.badge-win]="won > 0" [class.badge-loss]="won < 0" animate.enter="gain-shown">{{ t('gain', { sign: won > 0 ? 'plus' : 'minus', count: won > 0 ? won : -won }) }}</span>
+        }
     </span>
     }
 </ng-container>

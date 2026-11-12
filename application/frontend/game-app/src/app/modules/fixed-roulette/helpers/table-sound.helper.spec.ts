@@ -7,8 +7,10 @@ import {
 } from '../classes/rules/fixed-roulette-game-state';
 import { Bets, Side } from '../classes/rules/fixed-roulette-rules';
 import { settle } from '../classes/rules/settlement';
-import { BALL_DROP, HeardFixedTable, tableSounds, TimedSound } from './table-sound.helper';
+import { HeardFixedTable, tableSounds, TimedSound } from './table-sound.helper';
 
+/** The time the ball rolls to its pocket, in seconds */
+const BALL_DROP: number = 2.5;
 const EMPTY: HeardFixedTable = { seatsTaken: 0, events: [], result: null };
 /** A game of bob, croupier, and alice: the ball on the pocket of the croupier alone */
 const settled = (ball: number, croupierBets: Bets = [0, 0, 40, 0], punterBets: Bets = [40, 0, 0, 0]): SettledEvent => {
@@ -44,7 +46,7 @@ describe('tableSounds', () => {
             ...EMPTY, events: [{ kind: FixedRouletteEventKind.CHEATED, round: 0, player: 1, reason: CheatKind.ILLEGAL_POCKET }], result: { ...RESULT, winner: null },
         }, me: 0, sounds: [at(SoundEffect.CHIPS), at(SoundEffect.GAME_DRAW, SOUND_GAP)] },
     ])('should play $name', ({ after, me, sounds }) => {
-        expect(tableSounds(EMPTY, after, me)).toEqual(sounds);
+        expect(tableSounds(EMPTY, after, me, BALL_DROP)).toEqual(sounds);
     });
 
     test('should play nothing for what the page heard already', () => {
@@ -52,7 +54,7 @@ describe('tableSounds', () => {
         const heard: HeardFixedTable = { seatsTaken: 2, events: [PLACED, BET, settled(3)], result: RESULT };
 
         // Then
-        expect(tableSounds(heard, heard, 0)).toEqual([]);
-        expect(tableSounds(heard, { ...heard, seatsTaken: 1 }, 0)).toEqual([]);
+        expect(tableSounds(heard, heard, 0, BALL_DROP)).toEqual([]);
+        expect(tableSounds(heard, { ...heard, seatsTaken: 1 }, 0, BALL_DROP)).toEqual([]);
     });
 });
