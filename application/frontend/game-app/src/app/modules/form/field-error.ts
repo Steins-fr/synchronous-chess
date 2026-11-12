@@ -11,8 +11,16 @@ export function fieldError<T>(field: FieldTree<T>): TranslatableText | undefined
     return errorText(field().errors()[0]);
 }
 
+/**
+ * The first error among the fields of a group touched, the group itself included: for a form telling the errors of fields
+ * showing no message of their own (the stake fields, the choice areas) on one line
+ */
+export function touchedError(field: FieldTree<unknown>): TranslatableText | undefined {
+    return errorText(field().errorSummary().find((error: ValidationError.WithFieldTree) => error.fieldTree().touched()));
+}
+
 /** The message of an error of a field, none without error */
-export function errorText(error: ValidationError.WithFieldTree | undefined): TranslatableText | undefined {
+function errorText(error: ValidationError.WithFieldTree | undefined): TranslatableText | undefined {
     if (error?.message === undefined) {
         return error && { key: marker('form.unreadable') };
     }

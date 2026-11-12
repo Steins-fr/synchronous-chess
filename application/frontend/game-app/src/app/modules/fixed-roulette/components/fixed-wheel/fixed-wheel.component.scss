@@ -14,6 +14,8 @@
     --ball-travel: var(--ball-rest);
     // The ball always rolls for a moment, a page asking for no motion included: its end tells the table to settle the chips
     --roll: max(var(--ball-roll), 20ms);
+    // The ball revealed fades out once it stayed its moment in its pocket: its end tells the table to take it away
+    --fade: max(var(--app-motion-fast), 20ms);
 }
 
 .wheel-disk {
@@ -45,10 +47,13 @@
     filter: brightness(1.18);
 }
 
-// The pocket of the ball: a gold ring, flashing as the ball reaches it; dashed while the ball is sealed
+// The pocket of the ball: a gold ring, flashing as the ball reaches it, fading out with the ball once it stayed its
+// moment; dashed while the ball is sealed
 .pocket-hit {
     box-shadow: inset 0 0 0 3px var(--app-pocket-hit);
-    animation: pocket-hit var(--app-motion-medium) ease-out 2;
+    animation:
+        pocket-hit var(--app-motion-medium) ease-out 2,
+        pocket-out var(--fade) ease-in var(--ball-stay) forwards;
 }
 
 .pocket-sealed {
@@ -59,6 +64,12 @@
 @keyframes pocket-hit {
     50% {
         filter: brightness(1.6);
+    }
+}
+
+@keyframes pocket-out {
+    to {
+        box-shadow: inset 0 0 0 3px transparent;
     }
 }
 
@@ -144,6 +155,17 @@
     opacity: 0.75;
     outline: 2px dashed var(--app-ball);
     outline-offset: 2px;
+}
+
+// The ball revealed stays its moment in its pocket, then fades out
+.ball-resting {
+    animation: ball-out-of-sight var(--fade) ease-in var(--ball-stay) forwards;
+}
+
+@keyframes ball-out-of-sight {
+    to {
+        opacity: 0;
+    }
 }
 
 .ball-ghost {
@@ -237,7 +259,10 @@
         animation-duration: 20ms;
     }
 
-    .pocket-hit,
+    .pocket-hit {
+        animation: pocket-out var(--fade) ease-in var(--ball-stay) forwards;
+    }
+
     .socket-calling .socket {
         animation: none;
     }

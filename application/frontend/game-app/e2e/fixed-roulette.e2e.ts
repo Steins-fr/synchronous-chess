@@ -20,7 +20,7 @@ const seatOf = (participant: RoomParticipant, player: RoomParticipant): Locator 
 /** The wheel of the page of a participant: its pockets hold the fields of the local player, the forms under the table their buttons */
 const wheel = (participant: RoomParticipant): Locator => table(participant).locator('app-fixed-wheel');
 
-/** What stays in place on the page of the Fixed Roulette while the match is played: the status, the cloth, the seat below, the actions */
+/** What stays in place on the page of the Fixed Roulette while the match is played: the status, the cloth, the seat below, the actions on the cloth */
 const STEADY: ReadonlyArray<string> = ['app-fixed-table output', '#cloth', '#seat-bottom', '#actions'];
 
 /** The chips bet on each pocket, pocket 1 first */
@@ -156,7 +156,8 @@ async function overflowing(participant: RoomParticipant): Promise<string[]> {
 }
 
 test.describe('Fixed Roulette', () => {
-    test('plays a match of 10 games to its end, watched by a spectator, then a new one', async ({ fixedRoulette }) => {
+    test('plays a match of 10 games to its end, watched by a spectator, then a new one', SLOW, async ({ fixedRoulette }) => {
+        // Slow: the ball revealed stays a second in its pocket each game, before the next one
         const match: Match = await started(fixedRoulette, ['alice', 'bob'], 'carol');
         const [alice, bob] = match.players;
         const carol: RoomParticipant = match.spectator;
@@ -210,8 +211,9 @@ test.describe('Fixed Roulette', () => {
         await betOn(match, first, 1, [0, 35, 0, 30]);
         await expect(carol.historyLines().first())
             .toHaveText(`Game 1: ball in pocket 2, both players on it. ${ croupier } (croupier) −26 chips, ${ punter } (punter) +26 chips`);
-        await expect(table(carol).locator('#pocket-2')).toHaveAccessibleName('Pocket 2, the last ball');
-        await expect(table(carol).locator('app-fixed-wheel')).toContainText('Last ball: pocket 2');
+        // The ball revealed stayed a moment in its pocket, then left the wheel bare
+        await expect(table(carol).locator('#pocket-2')).toHaveAccessibleName('Pocket 2');
+        await expectNoBall(carol);
 
         // The croupier alone on the ball, the roles swapped: it takes every chip of the other pockets
         await played(match, 2, (): GameMoves => ({ ball: 3, croupier: [0, 15, 50, 0], punter: [0, 35, 0, 30] }));
@@ -285,10 +287,22 @@ test.describe('Fixed Roulette', () => {
             await expect(table(participant).locator('#pocket-2')).toContainClass('pocket-hit');
         }
         await expect(table(carol).locator('#pocket-2')).toHaveAccessibleName('Pocket 2, the last ball');
+        await expect(wheel(carol)).toContainText('Last ball: pocket 2');
         await expect(seatOf(carol, roles.croupier)).toContainText('474 chips');
         await expect(seatOf(carol, roles.croupier)).toContainText('−26');
         await expect(seatOf(carol, roles.punter)).toContainText('+26');
         await expect(table(carol).locator('#game')).toHaveText('Game 2 of 10');
+
+        // The ball stays a second in its pocket, then goes with the ring of its pocket: the wheel is bare for the next
+        // game, whose croupier places its ball
+        for (const participant of everyone) {
+            // eslint-disable-next-line no-await-in-loop -- each page in turn
+            await expectNoBall(participant);
+            // eslint-disable-next-line no-await-in-loop -- each page in turn
+            await expect(wheel(participant).locator('.pocket-hit')).toHaveCount(0);
+        }
+        await expect(wheel(roles.punter).getByRole('radio')).toHaveCount(4);
+        await expect(table(roles.punter).locator('#cloth #place-form').getByRole('button', { name: 'Place the ball and bet', exact: true })).toBeVisible();
         for (const participant of everyone) {
             // eslint-disable-next-line no-await-in-loop -- each page in turn
             expect(await movedElements(participant.page), participant.name).toEqual([]);
@@ -397,7 +411,6 @@ test.describe('Fixed Roulette', () => {
         await betOn(match, roles, 1, [20, 0, 0, 0]);
         await expect(carol.historyLines().first())
             .toHaveText(`Game 1: ball in pocket 3, the croupier alone on it. ${ roles.croupier.name } (croupier) +20 chips, ${ roles.punter.name } (punter) −20 chips`);
-        await expect(table(roles.punter).locator('#pocket-3')).toHaveAccessibleName('Pocket 3, the last ball');
     });
 
     test('shows the conversation of the players to the whole room, the players writing in it, the host muting one of them', async ({ fixedRoulette }) => {

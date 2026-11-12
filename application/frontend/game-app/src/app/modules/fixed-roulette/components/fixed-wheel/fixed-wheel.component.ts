@@ -16,7 +16,7 @@ export enum StakeRow {
 export enum BallKind {
     /** The ball the local player, croupier, sealed: shown on its page only, until it is revealed */
     SEALED = 'sealed',
-    /** The ball of the game settled last, until the croupier of the next game places its own */
+    /** The ball of the game settled last, revealed: it rolls to its pocket, stays there a moment, then goes */
     LAST = 'last',
 }
 
@@ -47,6 +47,9 @@ export const BALL_ROLL = new InjectionToken<number>('BALL_ROLL', { factory: (): 
 
 let nextId: number = 0;
 
+/** The time the ball revealed stays in its pocket once there, in milliseconds, before it goes with the ring of its pocket */
+export const BALL_STAY = new InjectionToken<number>('BALL_STAY', { factory: (): number => 1000 });
+
 /** The pockets lie in reading order, two by row: where each one is around the hub, in degrees from the top, clockwise */
 const POCKET_ANGLES: ReadonlyArray<number> = [315, 45, 225, 135];
 /**
@@ -71,14 +74,14 @@ const isRed = (index: number): boolean => (Math.floor(index / 2) + index % 2) % 
  * seat. The local player types its stakes in the pockets, and the croupier places its ball by clicking a pocket, or
  * its socket against the rim, where the ball will lie: a pale ball shows there under the pointer, then the ball picked.
  * The ball lies in its pocket, against the rim, never on it: the ball the local player sealed, on its page only, then the ball revealed, rolling there from the
- * hub, until the next game places its own. Each pocket tells its number, the ball and the stakes to a screen reader
+ * hub, which stays a moment then goes, leaving the wheel bare for the next game. Each pocket tells its number, the ball and the stakes to a screen reader
  */
 @Component({
     selector: 'app-fixed-wheel',
     templateUrl: './fixed-wheel.component.html',
     styleUrl: './fixed-wheel.component.scss',
     imports: [ChipStackComponent, ChoiceAreaComponent, StakeFieldComponent, TranslocoDirective, TranslocoPipe],
-    host: { 'class': 'flex flex-col items-center gap-2', '[style.--ball-roll.ms]': 'roll' },
+    host: { 'class': 'flex flex-col items-center gap-2', '[style.--ball-roll.ms]': 'roll', '[style.--ball-stay.ms]': 'stay' },
 })
 export class FixedWheelComponent {
     /** The chips of the players on each pocket, the first pocket first: the player of the top seat, then the bottom one */
@@ -97,11 +100,14 @@ export class FixedWheelComponent {
     public readonly formId = input<string | null>(null);
     /** The ball reached its pocket */
     public readonly rolled = output<void>();
+    /** The ball revealed stayed its moment in its pocket: it fades out, the table takes it away */
+    public readonly rested = output<void>();
 
     protected readonly ballKinds = BallKind;
     protected readonly rows = StakeRow;
     protected readonly angles: ReadonlyArray<number> = POCKET_ANGLES;
     protected readonly roll: number = inject(BALL_ROLL);
+    protected readonly stay: number = inject(BALL_STAY);
     /** The id of the radio button of each pocket, followed by its number: the pocket itself is a label of it */
     protected readonly radioId: string = `fixed-wheel-${ ++nextId }-pocket-`;
     private readonly host: HTMLElement = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -140,10 +146,12 @@ export class FixedWheelComponent {
         return this.host.querySelector(`[data-stake="${ pocket }-${ row }"]`) as HTMLElement;
     }
 
-    /** The ball rolling reached its pocket: an animation of the ball itself, not one of its ring */
-    protected end(event: AnimationEvent): void {
-        if (this.rolling() && event.target === event.currentTarget) {
+    /** The ball rolling reached its pocket, or the ball revealed faded out there: an animation of the ball itself, which holds no element */
+    protected end(): void {
+        if (this.rolling()) {
             this.rolled.emit();
+        } else if (this.ball()?.kind === BallKind.LAST) {
+            this.rested.emit();
         }
     }
 }

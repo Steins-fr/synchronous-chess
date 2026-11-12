@@ -20,29 +20,62 @@
         [clock]="top.awaited ? left : null" [clockLow]="clock.low()" [timeLeft]="part"
         [canRelease]="seats.canRelease(top.seat)" (release)="release(top.seat)" />
 
-    <!-- The cloth: the bank, the fixed wheel, the bets and the fields of the local player in its pockets, the game over last keeping its lines -->
+    <!-- The cloth: the bank, the fixed wheel, the bets and the fields of the local player in its pockets, its actions, the game over last keeping its lines -->
     @let last = lastGame();
     <div id="cloth" appSteadyHeight class="relative flex flex-col items-center gap-3 rounded-3xl bg-app-felt p-2 pt-3 text-app-on-color shadow-md sm:p-4">
         <p #bankView id="bank" class="m-0 flex items-center gap-2 rounded-full bg-app-felt-inset px-3 text-sm font-medium">
             <app-chip-stack [amount]="shown.bank" />
             <span>{{ t('bank', { chips: shown.bank }) }}</span>
         </p>
-        <app-fixed-wheel #wheel class="w-full max-w-md"
-            [stakes]="shown.stakes" [names]="shown.names" [ball]="shown.ball" [rolling]="ballRolling()"
-            [stakeFields]="stakeFields()" [pocketField]="canPlace() ? placeForm.pocket : null" [formId]="formId()"
-            (rolled)="rolled()" />
+        <div class="relative flex w-full max-w-md flex-col items-center">
+            <app-fixed-wheel #wheel class="w-full"
+                [stakes]="shown.stakes" [names]="shown.names" [ball]="shown.ball" [rolling]="ballRolling()"
+                [stakeFields]="stakeFields()" [pocketField]="canPlace() ? placeForm.pocket : null" [formId]="formId()"
+                (rolled)="rolled()" (rested)="rested()" />
+            <!-- The result of the match, over the wheel: its line below keeps its place -->
+            @if (shown.result; as current) {
+            <p class="result-banner pointer-events-none absolute inset-x-0 top-[45%] m-0 -translate-y-1/2 rounded-2xl bg-app-surface-raised px-4 py-3 text-center text-app-text shadow-lg mat-title-medium"
+                aria-hidden="true" animate.enter="result-shown">
+                {{ current.text.key | transloco: current.text.params }}
+            </p>
+            }
+        </div>
+        <!-- The actions of the local player, on the cloth: why its bets are refused, in place of the hint of its form, and the button sending them. Their place is kept -->
+        <div id="actions" class="flex min-h-[calc(2lh+3.25rem)] w-full flex-col items-center">
+            @if (canPlace()) {
+            <!-- Its fields lie in the pockets of the wheel. Validated by the form: the browser would show its own message for an amount out of its bounds -->
+            <form id="place-form" class="flex w-full max-w-md flex-col items-center gap-2" (submit)="$event.preventDefault(); place()" novalidate>
+                <p class="m-0 flex min-h-[2lh] items-center text-center text-sm" aria-live="polite">
+                    @if (formError(); as error) {
+                    <span class="form-error badge badge-loss">{{ error.key | transloco: error.params }}</span>
+                    } @else {
+                    {{ t('place.hint') }}
+                    }
+                </p>
+                <button class="action-pulse" mat-flat-button type="submit">{{ t('place.submit') }}</button>
+            </form>
+            }
+            @if (canBet()) {
+            <form id="bet-form" class="flex w-full max-w-md flex-col items-center gap-2" (submit)="$event.preventDefault(); bet()" novalidate>
+                <p class="m-0 flex min-h-[2lh] items-center text-center text-sm" aria-live="polite">
+                    @if (formError(); as error) {
+                    <span class="form-error badge badge-loss">{{ error.key | transloco: error.params }}</span>
+                    } @else {
+                    {{ betHint().key | transloco: betHint().params }}
+                    }
+                </p>
+                <button class="action-pulse" mat-flat-button type="submit">{{ t('bets.submit') }}</button>
+            </form>
+            }
+            @if (canRematch()) {
+            <button class="action-pulse my-auto" mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
+            }
+        </div>
         <p id="last-game" class="m-0 min-h-[3lh] text-center text-sm">
             @if (last) {
             <span class="line-shown" animate.enter="line-shown">{{ last.key | transloco: last.params }}</span>
             }
         </p>
-        <!-- The result of the match, over the wheel: its line below keeps its place -->
-        @if (shown.result; as current) {
-        <p class="result-banner pointer-events-none absolute inset-x-3 top-1/2 m-0 -translate-y-1/2 rounded-2xl bg-app-surface-raised px-4 py-3 text-center text-app-text shadow-lg mat-title-medium"
-            aria-hidden="true" animate.enter="result-shown">
-            {{ current.text.key | transloco: current.text.params }}
-        </p>
-        }
     </div>
 
     @let bottom = shown.bottom;
@@ -52,33 +85,12 @@
         [canTake]="seats.canTake(bottom.seat)" [canLeave]="seats.mySeat() === bottom.seat && seats.canLeave()" [canRelease]="seats.canRelease(bottom.seat)"
         (take)="takeSeat(bottom.seat)" (leave)="leaveSeat()" (release)="release(bottom.seat)" />
 
-    <!-- What the table waits for, the forms of the local player and the result, their place kept as they come and go -->
+    <!-- What the table waits for and the result, their place kept as they come and go -->
     <div appSteadyHeight class="flex flex-col gap-3">
         <div class="flex items-center gap-3">
             <output class="table-status flex-1" [class.text-app-accent-text]="myTurn() && !held">{{ shown.status.key | transloco: shown.status.params }}</output>
             @if (left) {
             <span id="clock" class="text-sm font-bold tabular-nums" [class.text-app-clock-low]="clock.low()">{{ left.key | transloco: left.params }}</span>
-            }
-        </div>
-
-        <div id="actions" class="flex flex-col items-center gap-3">
-            @if (canPlace()) {
-            <!-- Its fields lie in the pockets of the wheel. Validated by the form: the browser would show its own message for an amount out of its bounds -->
-            <form id="place-form" class="flex w-full max-w-md flex-col items-center gap-1" (submit)="$event.preventDefault(); place()" novalidate>
-                <p class="m-0 min-h-lh text-center text-sm muted-note">{{ t('place.hint') }}</p>
-                <app-form-error [field]="placeForm" summary />
-                <button class="action-pulse" mat-flat-button type="submit">{{ t('place.submit') }}</button>
-            </form>
-            }
-            @if (canBet()) {
-            <form id="bet-form" class="flex w-full max-w-md flex-col items-center gap-1" (submit)="$event.preventDefault(); bet()" novalidate>
-                <p class="m-0 min-h-lh text-center text-sm muted-note">{{ betHint().key | transloco: betHint().params }}</p>
-                <app-form-error [field]="betForm" summary />
-                <button class="action-pulse" mat-flat-button type="submit">{{ t('bets.submit') }}</button>
-            </form>
-            }
-            @if (canRematch()) {
-            <button class="action-pulse" mat-flat-button type="button" (click)="rematch()">{{ t('action.rematch') }}</button>
             }
         </div>
 

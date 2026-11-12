@@ -90,10 +90,15 @@
         </div>
         <span class="wheel-hub pointer-events-none absolute top-1/2 left-1/2 size-[15%] -translate-1/2 rounded-full bg-app-wheel-rim shadow-md" aria-hidden="true"></span>
         @if (ball(); as shown) {
-        <!-- The ball sealed shows dashed and pale, on the page of its croupier only; revealed, it rolls from the hub -->
+        <!-- The ball sealed shows dashed and pale, on the page of its croupier only; revealed, it rolls from the hub, stays a moment, then fades out -->
         <span class="pointer-events-none absolute inset-0 z-30" animate.enter="ball-placed" animate.leave="ball-taken" aria-hidden="true">
             <span class="ball-orbit" [class.rolling]="rolling()" [style.--ball-angle.deg]="angles[shown.pocket - 1]">
-                <span class="ball" [class.ball-sealed]="shown.kind === ballKinds.SEALED" [attr.data-ball]="shown.kind" (animationend)="end($event)"></span>
+                <span
+                    class="ball"
+                    [class.ball-sealed]="shown.kind === ballKinds.SEALED"
+                    [class.ball-resting]="shown.kind === ballKinds.LAST && !rolling()"
+                    [attr.data-ball]="shown.kind"
+                    (animationend)="end()"></span>
             </span>
         </span>
         }

@@ -142,7 +142,8 @@ run by the CI.
   more for a player away, a vote of the Minority Game timing out after 30 seconds, its score variant played over 10
   rounds, a trunk of the Contraband not revealed, claimed after 15 seconds and 15 more for a player away, the 13 rounds
   of the Garden of Eden, an apple missed after 30 seconds, a punter of the Fixed Roulette not betting in 30 seconds, a
-  ball not revealed, claimed after 15 seconds and 15 more for a player away. Tag a new scenario lasting 20 seconds or
+  ball not revealed, claimed after 15 seconds and 15 more for a player away, its match of 10 games, the ball revealed
+  staying a second in its pocket each game. Tag a new scenario lasting 20 seconds or
   more. `npm run e2e` runs both.
 - Starting the servers takes Playwright several minutes: to run the suites more than once, start the local API and
   the game app apart (`npm run serve:local` in each), then stop them.
@@ -358,16 +359,16 @@ run by the CI.
   the fields of the local player: the croupier clicks a pocket, or its socket against the rim, radio buttons `1` to `4` of the
   group `Pocket of the ball` (a pale ball shows in the socket of the pocket under the pointer, `[data-ghost]`), fills the
   number fields `Chips on 1` to `Chips on 4` (role `spinbutton`, an empty field betting no chip), then clicks `Place the
-  ball and bet` (`#place-form`, under the table); the punter fills the same fields, the hint of `#bet-form` telling the
+  ball and bet` (`#place-form`, on the cloth under the wheel, in `#actions`); the punter fills the same fields, the hint of `#bet-form` telling the
   least it bets (`alice bets 65 chips: bet as many at least, on 2 pockets at most.`), then clicks `Bet`. Bets refused tell
-  why in the form (`Bet 65 chips at least, as many as alice`). The page of the croupier reveals the ball by itself.
+  why in the form, in place of its hint (`.form-error`, `Bet 65 chips at least, as many as alice`). The page of the croupier reveals the ball by itself.
 - The ball lies in its pocket, against the rim, on the page of its croupier only until revealed: `Your ball, sealed: pocket 3`
-  in `app-fixed-wheel`, `[data-ball="sealed"]`; then on every page until the next ball is placed (`Last ball: pocket 2`,
-  `[data-ball="last"]`, its pocket `.pocket-hit`). The pockets are images named by the ball and the stakes (`Pocket 3,
+  in `app-fixed-wheel`, `[data-ball="sealed"]`; then on every page for a second once revealed (`Last ball: pocket 2`,
+  `[data-ball="last"]`, its pocket `.pocket-hit`), the wheel bare again after it: assert the game over on `#last-game`. The pockets are images named by the ball and the stakes (`Pocket 3,
   alice: 50 chips`, `Pocket 2, the last ball`), groups while they hold a field.
 - The ball revealed rolls from the hub straight down its pocket to the rim for 2.5 seconds (`.rolling`): until it is there, the table shows the
   game as it was (the stakes, the chips, `#game`, `The ball is revealed…`, no `#last-game` nor `#result` of it, no form of
-  the next game). A page asking for no motion shows it at once: `still()` of `e2e/fixed-roulette.e2e.ts` emulates it for
+  the next game, which shows once the ball left the wheel). A page asking for no motion shows it at once: `still()` of `e2e/fixed-roulette.e2e.ts` emulates it for
   the scenarios playing several games. The seats show the gain of the game settled last (`+26`, `−26`).
 - The `status` role (`<output>`) tells what the table waits for (`bob bets…`, `Hurry: your time runs out!` in the last 5
   seconds of the player to act, `Waiting for alice to come back…`), `#clock` the time left, `#bank` the chips the bank

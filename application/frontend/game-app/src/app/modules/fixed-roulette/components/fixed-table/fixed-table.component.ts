@@ -9,7 +9,7 @@ import { canRematchOf, pastResultsOf, watchMatch } from '@app/modules/commit-rev
 import { phaseClock, PhaseClock } from '@app/modules/commit-reveal/helpers/phase-clock.helper';
 import { setupTimeOf, setupTimeOptions } from '@app/modules/commit-reveal/helpers/table-texts.helper';
 import { ChoiceFieldComponent, ChoiceOption } from '@app/modules/form/choice-field/choice-field.component';
-import { FormErrorComponent } from '@app/modules/form/form-error/form-error.component';
+import { touchedError } from '@app/modules/form/field-error';
 import { ChipFlight, ChipFlightsComponent } from '@app/modules/game-table/components/chip-flights/chip-flights.component';
 import { middle, TablePoint } from '@app/modules/game-table/helpers/table-point.helper';
 import { ChipStackComponent } from '@app/modules/playing-cards/components/chip-stack/chip-stack.component';
@@ -167,7 +167,7 @@ const isSettled = (event: Readonly<FixedRouletteEvent>): event is Readonly<Settl
     templateUrl: './fixed-table.component.html',
     styleUrl: './fixed-table.component.scss',
     imports: [
-        ChipFlightsComponent, ChipStackComponent, ChoiceFieldComponent, FixedSeatComponent, FixedWheelComponent, FormErrorComponent, MatButtonModule, SteadyHeightDirective, TranslocoDirective, TranslocoPipe,
+        ChipFlightsComponent, ChipStackComponent, ChoiceFieldComponent, FixedSeatComponent, FixedWheelComponent, MatButtonModule, SteadyHeightDirective, TranslocoDirective, TranslocoPipe,
     ],
     host: { class: 'block max-w-[1100px] mx-auto px-4' },
 })
@@ -254,9 +254,11 @@ export class FixedTableComponent implements OnDestroy {
     /** The chips the bank took in the match */
     private readonly bank: Signal<number> = computed((): number => this.game()?.bank() ?? 0);
 
+    /** The pocket of the ball revealed, which stays there a moment once it rolled to it: the wheel is bare again after it */
+    private readonly _resting = signal<number | null>(null);
     /**
-     * The ball the wheel shows: the one the local player sealed, on its page only, until it is revealed; then the ball of
-     * the game settled last, until the croupier of the next game places its own
+     * The ball the wheel shows: the one the local player sealed, on its page only, until it is revealed; then the ball
+     * revealed, for the moment it stays in its pocket
      */
     private readonly ball: Signal<Readonly<ShownBall> | null> = computed((): Readonly<ShownBall> | null => {
         const mine: number | null = this.session().myBall();
@@ -264,8 +266,8 @@ export class FixedTableComponent implements OnDestroy {
         if (mine !== null) {
             return { pocket: mine, kind: BallKind.SEALED };
         }
-        const last: Readonly<FixedRouletteEvent> | undefined = this.game()?.events().at(-1);
-        return last?.kind === FixedRouletteEventKind.SETTLED ? { pocket: last.ball, kind: BallKind.LAST } : null;
+        const resting: number | null = this._resting();
+        return resting === null ? null : { pocket: resting, kind: BallKind.LAST };
     });
 
     /** The games over of the match: settled, or ending it on a player late or cheating */
@@ -373,8 +375,12 @@ export class FixedTableComponent implements OnDestroy {
         return this.canBet() ? 'bet-form' : null;
     });
 
-    /** The table holds the game back while its ball rolls: no form of the next game, nor its clock */
-    protected readonly busy: Signal<boolean> = computed((): boolean => this.rolling() !== null || this.unplayed());
+    /** The table holds the game back while its ball rolls, then stays in its pocket: no form of the next game, nor its clock */
+    protected readonly busy: Signal<boolean> = computed((): boolean => this.rolling() !== null || this.unplayed() || this._resting() !== null);
+    /** Why the bets of the form of the local player are refused, once it typed them: the first error among its fields touched */
+    protected readonly formError: Signal<TranslatableText | undefined> = computed((): TranslatableText | undefined => {
+        return touchedError(this.canPlace() ? this.placeForm : this.betForm);
+    });
     /** The ball shown rolls to its pocket */
     protected readonly ballRolling: Signal<boolean> = computed((): boolean => this.rolling() !== null);
     /** What the table shows: the game before its ball revealed, until the ball reached its pocket */
@@ -519,11 +525,17 @@ export class FixedTableComponent implements OnDestroy {
         void submit(this.betForm, { action: () => Promise.resolve(this.session().bet(this.betsOf(this.betModel().chips))) });
     }
 
-    /** The ball reached its pocket: the table shows the game settled, its chips flying to their takers */
+    /** The ball reached its pocket: the table shows the game settled, its chips flying to their takers, the ball staying a moment */
     protected rolled(): void {
         const rolling: Readonly<Rolling> = this.rolling() as Readonly<Rolling>;
         this._rolling.set(null);
+        this._resting.set(rolling.event.ball);
         this.chipFlights().launch(this.flightsOf(rolling.event, this.heardTable().events));
+    }
+
+    /** The ball revealed stayed its moment: the wheel is bare for the next game, whose form shows */
+    protected rested(): void {
+        this._resting.set(null);
     }
 
     protected rematch(): void {

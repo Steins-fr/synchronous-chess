@@ -295,8 +295,9 @@ The bets are 4 whole numbers of chips, 0 or more, the first pocket first. The co
   `#seat-bottom`: the player, `Croupier` or `Punter`, the clock of the phase, `500 chips`, `Sit here`, `Leave`, `Free the
   seat`); the cloth (`#cloth`): the chips the bank took (`#bank`, `Bank: 130 chips`), the wheel (`app-fixed-wheel`) and
   the game over last (`#last-game`, 3 lines kept); the status line (`<output>`, the `status` role) and the clock of the
-  phase (`#clock`); the actions of the local player (`#actions`): the form of the croupier (`#place-form`: its hint and
-  `Place the ball and bet`), the form of the punter (`#bet-form`: its hint, `Bet`), `Play again`; the result (`#result`);
+  phase (`#clock`); the actions of the local player, on the cloth under the wheel (`#actions`, their place kept): the form of
+  the croupier (`#place-form`: its hint and `Place the ball and bet`), the form of the punter (`#bet-form`: its hint, `Bet`),
+  `Play again`; the result (`#result`);
   the setup of the next match (`#setup`: the time of the bets as radio buttons, then `Start the match`). The fields of both
   forms lie in the pockets of the wheel, tied to their form by its id.
 - **The wheel** is a disk that never turns, in its square: its 4 pockets in reading order (1 and 2 above 3 and 4) around
@@ -309,19 +310,21 @@ The bets are 4 whole numbers of chips, 0 or more, the first pocket first. The co
   socket of the pocket under its pointer (`data-ghost`), then the ball in the one picked, its pocket ringed.
 - **The ball** lies in its pocket, against the rim, never on it. It shows sealed, dashed, on the page of its croupier only, until revealed
   (`Your ball, sealed: pocket 3`, `Pocket 3, your ball, sealed, alice: 20 chips`), then on every page as the last ball
-  until the croupier of the next game places its own (`Last ball: pocket 2`, `Pocket 2, the last ball`), its pocket ringed
-  in gold. It carries `data-ball`, `sealed` or `last`.
+  (`Last ball: pocket 2`, `Pocket 2, the last ball`), its pocket ringed in gold along its arc, for a second (`BALL_STAY`):
+  the ball and the ring fade out then (`rested`), and the wheel is bare for the next game. It carries `data-ball`, `sealed`
+  or `last`.
 - **The ball revealed rolls** for 2.5 seconds (`BALL_ROLL`): it comes out of the hub, wavers there, then rolls straight
   down its pocket to the rim and bounces against it, the wheel never spinning.
   Until it is there, the table keeps the game as it was (`view()`): the stakes on the pockets, the chips and the roles of
   the seats, the bank, the game and its status (`The ball is revealed…`), no form nor clock of the next game, no result of
-  the match, the history of the room included. Once there (`rolled`), the table shows the game settled and its chips fly.
+  the match, the history of the room included. Once there (`rolled`), the table shows the game settled and its chips fly; the form of the next game waits for the ball
+  to leave the wheel, a second later.
   A page asking for no motion shows the ball in its pocket at once; a hidden page, whose animations would wait for it,
-  shows the game settled at once; the history of the room rolls nothing.
+  shows the game settled at once, without ball; the history of the room rolls nothing.
 - **The forms** show no error before the player types, and are empty again for each game. An empty field bets no chip; a
   field refuses a negative number (`No negative bet`) or a part of a chip (`Bet whole chips`), the croupier's form a
   missing pocket (`Pick the pocket of the ball`): the field refused is ringed, and the form tells the first error of the
-  fields touched on one line (`FormErrorComponent`, `summary`), with the error of `betError` telling why the bets are refused
+  fields touched (`touchedError()`) on the cloth, in place of its hint, above its button, with the error of `betError` telling why the bets are refused
   (`Bet 1 chip at least`, `You hold 40 chips only`, `Bet on 2 pockets at most`, `Bet 65 chips at least, as many as alice`,
   `You hold fewer chips than alice bet: bet all your chips`).
 - The seats, the cloth and the status block keep their tallest height (`SteadyHeightDirective`), the line of the game over

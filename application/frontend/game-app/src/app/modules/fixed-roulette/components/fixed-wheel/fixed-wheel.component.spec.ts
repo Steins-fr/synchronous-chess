@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { form } from '@angular/forms/signals';
 import { SeatPair } from '@app/helpers/seat-pair.helper';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { BALL_ROLL, BallKind, FixedWheelComponent, ShownBall, StakeRow } from './fixed-wheel.component';
+import { BALL_ROLL, BALL_STAY, BallKind, FixedWheelComponent, ShownBall, StakeRow } from './fixed-wheel.component';
 
 const NO_STAKES: ReadonlyArray<SeatPair<number>> = [[0, 0], [0, 0], [0, 0], [0, 0]];
 
@@ -41,7 +41,7 @@ describe('FixedWheelComponent', () => {
     }
 
     beforeEach(async () => {
-        TestBed.configureTestingModule({ providers: [{ provide: BALL_ROLL, useValue: 40 }] });
+        TestBed.configureTestingModule({ providers: [{ provide: BALL_ROLL, useValue: 40 }, { provide: BALL_STAY, useValue: 60 }] });
         fixture = TestBed.createComponent(FixedWheelComponent);
         await show({ stakes: NO_STAKES });
     });
@@ -64,8 +64,9 @@ describe('FixedWheelComponent', () => {
         expect(element().querySelector('[data-ghost]')).toBeNull();
         expect(caption()).toEqual('');
         expect(cell(1).classList).not.toContain('pocket-hit');
-        // The time of the roll of the ball, for its animation
+        // The times of the roll of the ball and of its stay in its pocket, for its animations
         expect(element().style.getPropertyValue('--ball-roll')).toEqual('40ms');
+        expect(element().style.getPropertyValue('--ball-stay')).toEqual('60ms');
     });
 
     test('should show the stakes of the top and the bottom players on each pocket, their chips counted and named', async () => {
@@ -95,9 +96,18 @@ describe('FixedWheelComponent', () => {
         expect(cell(2).classList).toContain('pocket-sealed');
         expect(cell(2).classList).not.toContain('pocket-hit');
         expect(cell(1).classList).not.toContain('pocket-sealed');
+        expect(ball()?.classList).not.toContain('ball-resting');
+
+        // When an animation of the ball sealed ends
+        const rested = vi.fn();
+        fixture.componentInstance.rested.subscribe(rested);
+        ball()?.dispatchEvent(new Event('animationend', { bubbles: true }));
+
+        // Then it stays
+        expect(rested).not.toHaveBeenCalled();
     });
 
-    test('should show the last ball revealed, until another one shows', async () => {
+    test('should show the ball revealed in its pocket, its pocket ringed, until the table takes it away', async () => {
         // When
         await show({ ball: { pocket: 3, kind: BallKind.LAST } });
 
@@ -121,7 +131,9 @@ describe('FixedWheelComponent', () => {
     test('should roll the ball revealed to its pocket, telling its pocket once there only', async () => {
         // Given
         const rolled = vi.fn();
+        const rested = vi.fn();
         fixture.componentInstance.rolled.subscribe(rolled);
+        fixture.componentInstance.rested.subscribe(rested);
         const last: ShownBall = { pocket: 4, kind: BallKind.LAST };
 
         // When
@@ -129,6 +141,7 @@ describe('FixedWheelComponent', () => {
 
         // Then the ball rolls, its pocket not told yet
         expect(orbit(ball()).classList).toContain('rolling');
+        expect(ball()?.classList).not.toContain('ball-resting');
         expect(orbit(ball()).style.getPropertyValue('--ball-angle')).toEqual('135deg');
         expect(caption()).toEqual('');
         expect(labels()[3]).toEqual('Pocket 4');
@@ -141,6 +154,7 @@ describe('FixedWheelComponent', () => {
 
         // Then
         expect(rolled).toHaveBeenCalledOnce();
+        expect(rested).not.toHaveBeenCalled();
 
         // When the table shows the game settled
         await show({ rolling: false });
@@ -151,11 +165,14 @@ describe('FixedWheelComponent', () => {
         expect(labels()[3]).toEqual('Pocket 4, the last ball');
         expect(cell(4).classList).toContain('pocket-hit');
 
-        // When an animation of the ball at rest ends
+        expect(ball()?.classList).toContain('ball-resting');
+
+        // When the ball stayed its moment there, and faded out
         ball()?.dispatchEvent(new Event('animationend', { bubbles: true }));
 
-        // Then
+        // Then the table is told to take it away
         expect(rolled).toHaveBeenCalledOnce();
+        expect(rested).toHaveBeenCalledOnce();
     });
 
     test('should give the place of each stake, for the chips flying to it and from it', () => {
