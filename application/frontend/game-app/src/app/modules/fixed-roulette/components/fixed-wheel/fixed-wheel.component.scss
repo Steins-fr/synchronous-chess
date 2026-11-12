@@ -23,16 +23,25 @@
 }
 
 .pocket-number {
-    font-size: 11cqw;
+    color: var(--app-pocket-ink);
+    font-size: 24cqw;
     font-weight: 900;
     line-height: 1;
-    opacity: 0.85;
-    // A click on the number of a pocket to pick reaches its radio button
+    // A click on a pocket goes through its number
     pointer-events: none;
     user-select: none;
 }
 
-// The number of a pocket the croupier may click: a dashed pill tells it, lit under the pointer
+// The place of the ball of a pocket the croupier may click: a dashed pill holding the outline of a ball, lit under the pointer
+.pick-ball {
+    width: var(--ball-size);
+    height: var(--ball-size);
+    border: 2px dashed var(--app-on-color);
+    border-radius: 50%;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
 .pocket-pick {
     width: 82%;
     height: min(100%, 15cqw);

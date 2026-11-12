@@ -9,7 +9,7 @@
             [attr.aria-label]="pick ? ('fixed.table.place.pocket' | transloco) : null">
             @for (cell of pockets(); track cell.pocket) {
             <div
-                class="pocket flex min-w-0 flex-col text-app-on-color"
+                class="pocket relative flex min-w-0 flex-col text-app-on-color"
                 [class]="cell.layout"
                 [id]="'pocket-' + cell.pocket"
                 [class.bg-app-pocket-red-felt]="cell.red"
@@ -27,9 +27,11 @@
                     bottom: names()[1],
                     bottomChips: cell.bottom
                 })">
-                <div class="flex h-full w-[78%] flex-col items-center gap-1">
-                    <!-- Its number, on the side of the rim: the croupier clicks it to place its ball there -->
-                    <div class="flex min-h-0 w-full flex-1 items-center justify-center" [class.order-first]="cell.numberFirst" [class.order-last]="!cell.numberFirst">
+                <!-- Its number, printed on the cloth in the middle of its quarter: the stakes lie over it -->
+                <span class="pocket-number absolute inset-0 flex items-center justify-center" [class]="cell.inset" aria-hidden="true">{{ cell.pocket }}</span>
+                <div class="relative flex h-full w-[78%] flex-col items-center gap-1">
+                    <!-- The place of its ball, on the side of the rim: the croupier clicks it to place its ball there -->
+                    <div class="flex min-h-0 w-full flex-1 items-center justify-center" [class.order-first]="cell.rimFirst" [class.order-last]="!cell.rimFirst">
                         @if (pick) {
                         <app-choice-area
                             class="pocket-pick"
@@ -38,10 +40,9 @@
                             [formId]="formId()"
                             (pointerenter)="hovered.set(cell.pocket)"
                             (pointerleave)="hovered.set(null)">
-                            <span class="pocket-number">{{ cell.pocket }}</span>
+                            <span class="pick-ball" aria-hidden="true"></span>
+                            <span class="sr-only">{{ cell.pocket }}</span>
                         </app-choice-area>
-                        } @else {
-                        <span class="pocket-number" aria-hidden="true">{{ cell.pocket }}</span>
                         }
                     </div>
                     <span class="pocket-stake" [attr.data-stake]="cell.pocket + '-' + rows.TOP">

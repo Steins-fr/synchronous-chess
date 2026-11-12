@@ -300,11 +300,11 @@ The bets are 4 whole numbers of chips, 0 or more, the first pocket first. The co
   the setup of the next match (`#setup`: the time of the bets as radio buttons, then `Start the match`). The fields of both
   forms lie in the pockets of the wheel, tied to their form by its id.
 - **The wheel** is a disk that never turns, in its square: its 4 pockets in reading order (1 and 2 above 3 and 4) around
-  a hub, red and black by turns around it (`#pocket-1` to `#pocket-4`). Each pocket holds its number on the side of the
-  rim, then the stake of the player of the top seat above the one of the player of the bottom seat, against the hub; it is
+  a hub, red and black by turns around it (`#pocket-1` to `#pocket-4`). Each pocket holds its number, printed
+  in its middle, under the stake of the player of the top seat above the one of the player of the bottom seat, against the hub; it is
   an image named by its stakes (`Pocket 3, alice: 50 chips`), a group once it holds a field. The local player types its
   stakes in the pockets, in place of its own stakes (`StakeFieldComponent`: `Chips on 1` to `Chips on 4`, two buttons
-  stepping the stake by 5 for a pointer), and the croupier places its ball by clicking the number of a pocket
+  stepping the stake by 5 for a pointer), and the croupier places its ball by clicking the place of the ball of a pocket, a dashed pill beside its rim
   (`ChoiceAreaComponent`: the radio buttons `1` to `4` of the group `Pocket of the ball`): a pale ball shows on the rim of
   the pocket under its pointer (`data-ghost`), then on the one picked.
 - **The ball** lies on the rim of its pocket. It shows sealed, dashed, on the page of its croupier only, until revealed

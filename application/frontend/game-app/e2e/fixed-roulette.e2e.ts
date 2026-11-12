@@ -100,7 +100,7 @@ async function typed(form: Locator, bets: Bets, label: (pocket: number) => strin
 
 /** The croupier places the ball and bets: the punter bets next, on every page */
 async function placed(match: Match, roles: Roles, ball: number, bets: Bets): Promise<void> {
-    // The croupier clicks the number of the pocket of its ball
+    // The croupier clicks the place of the ball of its pocket, beside the rim
     await wheel(roles.croupier).getByRole('radio', { name: `${ ball }`, exact: true }).click();
     await typed(wheel(roles.croupier), bets);
     await table(roles.croupier).locator('#place-form').getByRole('button', { name: 'Place the ball and bet', exact: true }).click();

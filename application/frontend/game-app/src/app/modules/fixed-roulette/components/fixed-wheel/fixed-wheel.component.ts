@@ -36,8 +36,10 @@ interface WheelPocket {
     readonly ball: BallKind | null;
     /** The classes laying its content in its quarter of the disk: against the hub, its number on the side of the rim */
     readonly layout: string;
-    /** Whether its number lies above its stakes: the pockets of the first row */
-    readonly numberFirst: boolean;
+    /** Whether the place of its ball lies above its stakes: the pockets of the first row */
+    readonly rimFirst: boolean;
+    /** The classes pushing its number from the rim to the middle of its quarter of the disk */
+    readonly inset: string;
 }
 
 /** The time the ball revealed rolls from the hub to the rim of its pocket, in milliseconds: none for the specs */
@@ -47,17 +49,21 @@ export const BALL_ROLL = new InjectionToken<number>('BALL_ROLL', { factory: (): 
 const POCKET_ANGLES: ReadonlyArray<number> = [315, 45, 225, 135];
 /**
  * The content of a pocket lies against the hub, where its quarter of the disk is the widest: its stakes along the line
- * between the rows, its number on the side of the rim
+ * between the rows, the place the croupier clicks for its ball on the side of the rim
  */
 const POCKET_LAYOUTS: ReadonlyArray<string> = ['items-end pr-[14%] pb-[9%]', 'items-start pl-[14%] pb-[9%]', 'items-end pr-[14%] pt-[9%]', 'items-start pl-[14%] pt-[9%]'];
+
+/** The number of a pocket, printed in the middle of its quarter of the disk: pushed from the rim of its corner */
+const NUMBER_INSETS: ReadonlyArray<string> = ['pt-[14%] pl-[14%]', 'pt-[14%] pr-[14%]', 'pb-[14%] pl-[14%]', 'pb-[14%] pr-[14%]'];
 
 /** The pockets of a roulette are red and black by turns around the wheel, the first one red: the same colors face each other */
 const isRed = (index: number): boolean => (Math.floor(index / 2) + index % 2) % 2 === 0;
 
 /**
  * The fixed wheel of the roulette: a disk that never spins in its square, its four pockets in reading order around a
- * hub, red and black, each one holding its number and the stake of the player of the top seat above the one of the bottom seat. The
- * local player types its stakes in the pockets, and the croupier places its ball by clicking the number of one. The ball lies on the
+ * hub, red and black, each one its number printed in its middle, under the stake of the player of the top seat above the one of the bottom
+ * seat. The local player types its stakes in the pockets, and the croupier places its ball by clicking the place of
+ * the ball of one, beside its rim. The ball lies on the
  * rim of its pocket: the ball the local player sealed, on its page only, then the ball revealed, rolling there from the
  * hub, until the next game places its own. Each pocket tells its number, the ball and the stakes to a screen reader
  */
@@ -104,7 +110,8 @@ export class FixedWheelComponent {
             bottom,
             ball: ball?.pocket === index + 1 ? ball.kind : null,
             layout: POCKET_LAYOUTS[index],
-            numberFirst: index < 2,
+            rimFirst: index < 2,
+            inset: NUMBER_INSETS[index],
         }));
     });
 

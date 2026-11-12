@@ -51,7 +51,8 @@ describe('FixedWheelComponent', () => {
         const pockets: HTMLElement[] = [1, 2, 3, 4].map((pocket: number) => cell(pocket));
         expect(pockets.map((pocket: HTMLElement) => pocket.classList.contains('bg-app-pocket-red-felt'))).toEqual([true, false, false, true]);
         expect(pockets.map((pocket: HTMLElement) => pocket.classList.contains('bg-app-pocket-black-felt'))).toEqual([false, true, true, false]);
-        // Then the numbers lie on the side of the rim: above the stakes in the first row, below in the second one
+        // Then the place of the ball lies on the side of the rim: above the stakes in the first row, below in the second one
+        expect(pockets.map((pocket: HTMLElement) => pocket.querySelector('.pocket-number')?.getAttribute('aria-hidden'))).toEqual(['true', 'true', 'true', 'true']);
         expect(pockets.map((pocket: HTMLElement) => pocket.querySelector('.order-first') !== null)).toEqual([true, true, false, false]);
         expect(pockets.map((pocket: HTMLElement) => pocket.querySelector('.order-last') !== null)).toEqual([false, false, true, true]);
         expect(pockets.map((pocket: HTMLElement) => pocket.getAttribute('role'))).toEqual(['img', 'img', 'img', 'img']);
@@ -209,8 +210,8 @@ describe('FixedWheelComponent', () => {
             expect(cell(2, root()).getAttribute('role')).toEqual('img');
         });
 
-        test('should let the croupier place its ball by clicking the number of a pocket, the ball to place shown on its rim', async () => {
-            // Then the numbers are radio buttons, in a group
+        test('should let the croupier place its ball by clicking the place of the ball of a pocket, the ball to place shown on its rim', async () => {
+            // Then the places of the ball are radio buttons named by their pocket, in a group
             const disk: HTMLElement = root().querySelector('.wheel-disk') as HTMLElement;
             expect(disk.getAttribute('role')).toEqual('radiogroup');
             expect(disk.getAttribute('aria-label')).toEqual('Pocket of the ball');
@@ -218,7 +219,7 @@ describe('FixedWheelComponent', () => {
                 .toEqual([['1', '1', 'place-form'], ['2', '2', 'place-form'], ['3', '3', 'place-form'], ['4', '4', 'place-form']]);
             expect(ghost()).toBeNull();
 
-            // When the pointer comes over the number of a pocket
+            // When the pointer comes over the place of the ball of a pocket
             const areas: HTMLElement[] = Array.from(root().querySelectorAll('app-choice-area'));
             areas[1].dispatchEvent(new Event('pointerenter'));
             await table.whenStable();
@@ -236,7 +237,7 @@ describe('FixedWheelComponent', () => {
             // Then
             expect(ghost()).toBeNull();
 
-            // When the croupier clicks the number of a pocket
+            // When the croupier clicks the place of the ball of a pocket
             radios()[2].click();
             await table.whenStable();
 

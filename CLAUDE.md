@@ -355,7 +355,7 @@ run by the CI.
 - The croupier is drawn: read it from the status of a spectator (`alice places the ball and bets…`) once `#game` shows the
   game (`Game 1 of 10`); the seats show `Croupier` and `Punter`.
 - The wheel (`app-fixed-wheel`) is a round board of 4 pockets in reading order, `#pocket-1` to `#pocket-4`, which hold
-  the fields of the local player: the croupier clicks the number of the pocket of its ball, radio buttons `1` to `4` of the
+  the fields of the local player: the croupier clicks the place of the ball of a pocket, a dashed pill beside its rim, radio buttons `1` to `4` of the
   group `Pocket of the ball` (a pale ball shows on the rim of the pocket under the pointer, `[data-ghost]`), fills the
   number fields `Chips on 1` to `Chips on 4` (role `spinbutton`, an empty field betting no chip), then clicks `Place the
   ball and bet` (`#place-form`, under the table); the punter fills the same fields, the hint of `#bet-form` telling the

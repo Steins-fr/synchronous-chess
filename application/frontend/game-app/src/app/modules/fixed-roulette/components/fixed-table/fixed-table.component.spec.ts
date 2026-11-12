@@ -102,7 +102,7 @@ describe('FixedTableComponent', { timeout: 30_000 }, () => {
         await fixture.whenStable();
     }
 
-    /** The croupier clicks the number of the pocket of its ball */
+    /** The croupier clicks the place of the ball of its pocket */
     async function pickBall(pocket: number): Promise<void> {
         choiceAreaOption(element(), 'Pocket of the ball', String(pocket)).click();
         await fixture.whenStable();
