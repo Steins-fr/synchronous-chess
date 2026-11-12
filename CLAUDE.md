@@ -354,15 +354,21 @@ run by the CI.
   croupier by themselves, then the players swap their roles each game. See `documentation/fixed-roulette-session.md`.
 - The croupier is drawn: read it from the status of a spectator (`alice places the ball and bets…`) once `#game` shows the
   game (`Game 1 of 10`); the seats show `Croupier` and `Punter`.
-- The croupier picks the pocket of the ball, radio buttons `1` to `4` of `#place-form`, fills the number fields `Chips on
-  1` to `Chips on 4` (role `spinbutton`, an empty field betting no chip), then clicks `Place the ball and bet`; the punter
-  fills the same fields of `#bet-form`, its hint telling the least it bets (`alice bets 65 chips: bet as many at least, on 2
-  pockets at most.`), then clicks `Bet`. Bets refused tell why under the fields (`Bet 65 chips at least, as many as
-  alice`). The page of the croupier reveals the ball by itself.
-- The ball shows on the page of its croupier only until revealed: `Your ball, sealed: pocket 3` in `app-fixed-wheel`,
-  `[data-ball="sealed"]` on its disk; then on every page until the next ball is placed (`Last ball: pocket 2`,
-  `[data-ball="last"]`). The pockets `#pocket-1` to `#pocket-4` are images named by the ball and the stakes (`Pocket 3,
-  alice: 50 chips`, `Pocket 2, the last ball`).
+- The wheel (`app-fixed-wheel`) is a round board of 4 pockets in reading order, `#pocket-1` to `#pocket-4`, which hold
+  the fields of the local player: the croupier clicks the number of the pocket of its ball, radio buttons `1` to `4` of the
+  group `Pocket of the ball` (a pale ball shows on the rim of the pocket under the pointer, `[data-ghost]`), fills the
+  number fields `Chips on 1` to `Chips on 4` (role `spinbutton`, an empty field betting no chip), then clicks `Place the
+  ball and bet` (`#place-form`, under the table); the punter fills the same fields, the hint of `#bet-form` telling the
+  least it bets (`alice bets 65 chips: bet as many at least, on 2 pockets at most.`), then clicks `Bet`. Bets refused tell
+  why in the form (`Bet 65 chips at least, as many as alice`). The page of the croupier reveals the ball by itself.
+- The ball lies on the rim of its pocket, on the page of its croupier only until revealed: `Your ball, sealed: pocket 3`
+  in `app-fixed-wheel`, `[data-ball="sealed"]`; then on every page until the next ball is placed (`Last ball: pocket 2`,
+  `[data-ball="last"]`, its pocket `.pocket-hit`). The pockets are images named by the ball and the stakes (`Pocket 3,
+  alice: 50 chips`, `Pocket 2, the last ball`), groups while they hold a field.
+- The ball revealed rolls from the hub to its pocket for 2.5 seconds (`.rolling`): until it is there, the table shows the
+  game as it was (the stakes, the chips, `#game`, `The ball is revealed…`, no `#last-game` nor `#result` of it, no form of
+  the next game). A page asking for no motion shows it at once: `still()` of `e2e/fixed-roulette.e2e.ts` emulates it for
+  the scenarios playing several games. The seats show the gain of the game settled last (`+26`, `−26`).
 - The `status` role (`<output>`) tells what the table waits for (`bob bets…`, `Hurry: your time runs out!` in the last 5
   seconds of the player to act, `Waiting for alice to come back…`), `#clock` the time left, `#bank` the chips the bank
   took (`Bank: 130 chips`), `#last-game` the game over last (`Game 1: ball in pocket 2, both players on it. alice

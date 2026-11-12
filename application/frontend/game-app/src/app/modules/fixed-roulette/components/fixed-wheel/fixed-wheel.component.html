@@ -27,7 +27,7 @@
                     bottom: names()[1],
                     bottomChips: cell.bottom
                 })">
-                <div class="flex h-full w-[64%] flex-col items-center gap-1">
+                <div class="flex h-full w-[78%] flex-col items-center gap-1">
                     <!-- Its number, on the side of the rim: the croupier clicks it to place its ball there -->
                     <div class="flex min-h-0 w-full flex-1 items-center justify-center" [class.order-first]="cell.numberFirst" [class.order-last]="!cell.numberFirst">
                         @if (pick) {
@@ -67,14 +67,14 @@
         <span class="wheel-hub pointer-events-none absolute top-1/2 left-1/2 size-[15%] -translate-1/2 rounded-full bg-app-wheel-rim shadow-md" aria-hidden="true"></span>
         <!-- The ball the croupier is about to place: under its pointer, pale, then on the pocket it picked -->
         @if (ghost(); as placing) {
-        <span class="ball-orbit pointer-events-none absolute inset-0" [style.--ball-angle.deg]="angles[placing.pocket - 1]" aria-hidden="true">
+        <span class="ball-orbit pointer-events-none" [style.--ball-angle.deg]="angles[placing.pocket - 1]" aria-hidden="true">
             <span class="ball" [class.ball-ghost]="!placing.picked" [class.ball-sealed]="placing.picked" [attr.data-ghost]="placing.pocket"></span>
         </span>
         }
         @if (ball(); as shown) {
         <!-- The ball sealed shows dashed and pale, on the page of its croupier only; revealed, it rolls from the hub -->
         <span class="pointer-events-none absolute inset-0" animate.enter="ball-placed" animate.leave="ball-taken" aria-hidden="true">
-            <span class="ball-orbit absolute inset-0" [class.rolling]="rolling()" [style.--ball-angle.deg]="angles[shown.pocket - 1]">
+            <span class="ball-orbit" [class.rolling]="rolling()" [style.--ball-angle.deg]="angles[shown.pocket - 1]">
                 <span class="ball" [class.ball-sealed]="shown.kind === ballKinds.SEALED" [attr.data-ball]="shown.kind" (animationend)="end($event)"></span>
             </span>
         </span>

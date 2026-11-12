@@ -49,7 +49,7 @@ const POCKET_ANGLES: ReadonlyArray<number> = [315, 45, 225, 135];
  * The content of a pocket lies against the hub, where its quarter of the disk is the widest: its stakes along the line
  * between the rows, its number on the side of the rim
  */
-const POCKET_LAYOUTS: ReadonlyArray<string> = ['items-end pr-[15%] pb-[9%]', 'items-start pl-[15%] pb-[9%]', 'items-end pr-[15%] pt-[9%]', 'items-start pl-[15%] pt-[9%]'];
+const POCKET_LAYOUTS: ReadonlyArray<string> = ['items-end pr-[14%] pb-[9%]', 'items-start pl-[14%] pb-[9%]', 'items-end pr-[14%] pt-[9%]', 'items-start pl-[14%] pt-[9%]'];
 
 /** The pockets of a roulette are red and black by turns around the wheel, the first one red: the same colors face each other */
 const isRed = (index: number): boolean => (Math.floor(index / 2) + index % 2) % 2 === 0;

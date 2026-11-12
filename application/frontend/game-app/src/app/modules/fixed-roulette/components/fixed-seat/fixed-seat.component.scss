@@ -1,26 +1,3 @@
-// The ring around the seat of the player to act, widening as it fades out
-:host(.acting)::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border: 2px solid var(--app-accent-text);
-    border-radius: 1rem;
-    pointer-events: none;
-    animation: turn-ring 2.4s ease-out infinite;
-}
-
-@keyframes turn-ring {
-    from {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    to {
-        opacity: 0;
-        transform: scale(1.04);
-    }
-}
-
 // The chips won or lost pop up on the seat, once the chips of the game reached it
 .gain-shown {
     animation: gain-shown var(--app-motion-slow) cubic-bezier(0.2, 0.8, 0.2, 1) var(--app-motion-slow) backwards;
@@ -30,12 +7,5 @@
     from {
         opacity: 0;
         transform: scale(0.4);
-    }
-}
-
-// No motion asked: the ring stays still around the seat, rather than an endless animation lasting no time
-@media (prefers-reduced-motion: reduce) {
-    :host(.acting)::after {
-        animation: none;
     }
 }

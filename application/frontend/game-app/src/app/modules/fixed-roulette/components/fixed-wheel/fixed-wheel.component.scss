@@ -66,15 +66,21 @@
     }
 }
 
-// The ball lies on the rim, in the middle of its pocket: its ring turns it there around the hub
+// The ball lies on the rim, in the middle of its pocket: its ring, a point on the hub, turns it there. A ring as wide as
+// the wheel would run out of it once turned, and out of a narrow window
 .ball-orbit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
     transform: rotate(var(--ball-angle));
 }
 
 .ball {
     position: absolute;
-    top: calc((var(--wheel-rim) - var(--ball-size)) / 2);
-    left: calc(50% - var(--ball-size) / 2);
+    top: calc((var(--wheel-rim) - var(--ball-size)) / 2 - 50cqw);
+    left: calc(var(--ball-size) / -2);
     width: var(--ball-size);
     height: var(--ball-size);
     border-radius: 50%;

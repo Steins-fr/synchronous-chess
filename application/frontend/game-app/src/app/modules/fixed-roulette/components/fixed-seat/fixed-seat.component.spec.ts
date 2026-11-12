@@ -46,7 +46,7 @@ describe('FixedSeatComponent', () => {
         // Then
         expect(shown()).toEqual(['bob', 'Croupier', '0:04', '435 chips']);
         expect(host().classList).toContain('outline-2');
-        expect(host().classList).toContain('acting');
+        expect(host().classList).toContain('action-pulse');
         expect(host().querySelector('.badge')?.classList).toContain('badge-win');
         expect(host().querySelector('.clock-ring')?.classList).toContain('clock-low');
         expect(fixture.componentInstance.chipsPlace().tagName).toEqual('APP-CHIP-STACK');
@@ -57,7 +57,7 @@ describe('FixedSeatComponent', () => {
         // Then
         expect(shown()).toEqual(['bob', 'Punter', '1 chip']);
         expect(host().classList).not.toContain('outline-2');
-        expect(host().classList).not.toContain('acting');
+        expect(host().classList).not.toContain('action-pulse');
         expect(host().querySelector('.badge')?.classList).toContain('badge-draw');
     });
 

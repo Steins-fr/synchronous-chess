@@ -1,5 +1,6 @@
 <ng-container *transloco="let t; prefix: 'fixed.table.seat'">
-    <span class="min-w-0 truncate font-medium">{{ name() ?? t('free') }}</span>
+    <!-- As high as the clock and the buttons beside it: the seat keeps its height as they come and go -->
+    <span class="min-w-0 truncate font-medium leading-10">{{ name() ?? t('free') }}</span>
     @if (side(); as part) {
     <span class="badge" [class.badge-win]="part === sides.CROUPIER" [class.badge-draw]="part !== sides.CROUPIER">{{ t('side', { side: part }) }}</span>
     }

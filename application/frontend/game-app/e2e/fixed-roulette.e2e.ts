@@ -17,6 +17,8 @@ const table = (participant: RoomParticipant): Locator => participant.page.locato
 const status = (participant: RoomParticipant): Locator => table(participant).getByRole('status');
 /** The seat of a player, on the page of a participant */
 const seatOf = (participant: RoomParticipant, player: RoomParticipant): Locator => table(participant).locator('app-fixed-seat', { hasText: player.name });
+/** The wheel of the page of a participant: its pockets hold the fields of the local player, the forms under the table their buttons */
+const wheel = (participant: RoomParticipant): Locator => table(participant).locator('app-fixed-wheel');
 
 /** What stays in place on the page of the Fixed Roulette while the match is played: the status, the cloth, the seat below, the actions */
 const STEADY: ReadonlyArray<string> = ['app-fixed-table output', '#cloth', '#seat-bottom', '#actions'];
@@ -69,6 +71,14 @@ async function started(room: TestRoom, players: readonly [string, string], spect
     return match;
 }
 
+/**
+ * The pages ask for no motion: the ball revealed shows in its pocket at once, rather than rolling there for 2.5 seconds
+ * each game
+ */
+async function still(match: Match): Promise<void> {
+    await Promise.all([...match.players, match.spectator].map((participant: RoomParticipant) => participant.page.emulateMedia({ reducedMotion: 'reduce' })));
+}
+
 /** The roles of a game, read from the status of the spectator while the croupier places the ball */
 async function rolesOf(match: Match, game: number): Promise<Roles> {
     await expect(table(match.spectator).locator('#game')).toHaveText(`Game ${ game } of 10`);
@@ -78,7 +88,7 @@ async function rolesOf(match: Match, game: number): Promise<Roles> {
     return first.name === name ? { croupier: first, punter: second } : { croupier: second, punter: first };
 }
 
-/** Types the bets of a form, an empty field betting no chip */
+/** Types the bets in the pockets of a wheel, an empty field betting no chip */
 async function typed(form: Locator, bets: Bets, label: (pocket: number) => string = (pocket: number) => `Chips on ${ pocket }`): Promise<void> {
     for (const [index, chips] of bets.entries()) {
         if (chips > 0) {
@@ -90,18 +100,17 @@ async function typed(form: Locator, bets: Bets, label: (pocket: number) => strin
 
 /** The croupier places the ball and bets: the punter bets next, on every page */
 async function placed(match: Match, roles: Roles, ball: number, bets: Bets): Promise<void> {
-    const form: Locator = table(roles.croupier).locator('#place-form');
-    await form.getByRole('radio', { name: `${ ball }`, exact: true }).click();
-    await typed(form, bets);
-    await form.getByRole('button', { name: 'Place the ball and bet', exact: true }).click();
+    // The croupier clicks the number of the pocket of its ball
+    await wheel(roles.croupier).getByRole('radio', { name: `${ ball }`, exact: true }).click();
+    await typed(wheel(roles.croupier), bets);
+    await table(roles.croupier).locator('#place-form').getByRole('button', { name: 'Place the ball and bet', exact: true }).click();
     await expect(status(match.spectator)).toHaveText(`${ roles.punter.name } bets…`);
 }
 
 /** The punter bets: the page of the croupier reveals the ball, the game over shows on the page of the spectator */
 async function betOn(match: Match, roles: Roles, game: number, bets: Bets): Promise<void> {
-    const form: Locator = table(roles.punter).locator('#bet-form');
-    await typed(form, bets);
-    await form.getByRole('button', { name: 'Bet', exact: true }).click();
+    await typed(wheel(roles.punter), bets);
+    await table(roles.punter).locator('#bet-form').getByRole('button', { name: 'Bet', exact: true }).click();
     await expect(table(match.spectator).locator('#last-game')).toHaveText(new RegExp(String.raw`^\s*Game ${ game }:`));
 }
 
@@ -151,6 +160,7 @@ test.describe('Fixed Roulette', () => {
         const match: Match = await started(fixedRoulette, ['alice', 'bob'], 'carol');
         const [alice, bob] = match.players;
         const carol: RoomParticipant = match.spectator;
+        await still(match);
         await expect(table(carol).locator('#terms')).toHaveText('Bets of 1 min');
         await expect(seatOf(carol, alice)).toContainText('500 chips');
 
@@ -186,6 +196,7 @@ test.describe('Fixed Roulette', () => {
         const match: Match = await started(fixedRoulette, ['alice', 'bob'], 'carol');
         const carol: RoomParticipant = match.spectator;
         const everyone: RoomParticipant[] = [...match.players, carol];
+        await still(match);
         await Promise.all(everyone.map((participant: RoomParticipant) => watchSteadiness(participant.page, STEADY)));
 
         // Both on the ball: they share the chips of the other pockets, 15 to 35
@@ -232,6 +243,58 @@ test.describe('Fixed Roulette', () => {
         }
     });
 
+    test('rolls the ball revealed from the hub to its pocket, the table keeping the game until it is there, the page keeping its place', async ({ fixedRoulette }) => {
+        const match: Match = await started(fixedRoulette, ['alice', 'bob'], 'carol');
+        const carol: RoomParticipant = match.spectator;
+        const everyone: RoomParticipant[] = [...match.players, carol];
+        const roles: Roles = await rolesOf(match, 1);
+        await Promise.all(everyone.map((participant: RoomParticipant) => watchSteadiness(participant.page, STEADY)));
+
+        // The croupier sees where its ball would lie under its pointer, then on the pocket it clicks
+        const pockets: Locator = wheel(roles.croupier).getByRole('radiogroup', { name: 'Pocket of the ball' });
+        await expect(wheel(roles.croupier).locator('[data-ghost]')).toHaveCount(0);
+        await pockets.getByRole('radio', { name: '4', exact: true }).hover();
+        await expect(wheel(roles.croupier).locator('[data-ghost="4"]')).toBeVisible();
+        await pockets.getByRole('radio', { name: '2', exact: true }).click();
+        await expect(pockets.getByRole('radio', { name: '2', exact: true })).toBeChecked();
+        await expect(wheel(roles.croupier).locator('[data-ghost="2"]')).toBeVisible();
+        await placed(match, roles, 2, [0, 15, 50, 0]);
+        await expect(wheel(roles.croupier).getByRole('radio')).toHaveCount(0);
+        await expect(wheel(roles.croupier).getByRole('spinbutton')).toHaveCount(0);
+
+        // The punter bets: the ball rolls on every page, the game settled kept until it reached its pocket
+        await typed(wheel(roles.punter), [0, 35, 0, 30]);
+        await table(roles.punter).locator('#bet-form').getByRole('button', { name: 'Bet', exact: true }).click();
+        for (const participant of everyone) {
+            // eslint-disable-next-line no-await-in-loop -- each page in turn, within the roll of the ball
+            await expect(wheel(participant).locator('.rolling [data-ball="last"]')).toBeVisible();
+            // eslint-disable-next-line no-await-in-loop -- each page in turn, within the roll of the ball
+            await expect(table(participant).locator('#last-game')).toBeEmpty();
+            // eslint-disable-next-line no-await-in-loop -- each page in turn, within the roll of the ball
+            await expect(table(participant).locator('#game')).toHaveText('Game 1 of 10');
+        }
+        await expect(seatOf(carol, roles.croupier)).toContainText('435 chips');
+
+        // The ball in its pocket: the chips settled, the gain of each player on its seat, the next game
+        for (const participant of everyone) {
+            // eslint-disable-next-line no-await-in-loop -- each page in turn
+            await expect(table(participant).locator('#last-game')).toHaveText(/^\s*Game 1: ball in pocket 2, both players on it\./);
+            // eslint-disable-next-line no-await-in-loop -- each page in turn
+            await expect(wheel(participant).locator('.rolling')).toHaveCount(0);
+            // eslint-disable-next-line no-await-in-loop -- each page in turn
+            await expect(table(participant).locator('#pocket-2')).toContainClass('pocket-hit');
+        }
+        await expect(table(carol).locator('#pocket-2')).toHaveAccessibleName('Pocket 2, the last ball');
+        await expect(seatOf(carol, roles.croupier)).toContainText('474 chips');
+        await expect(seatOf(carol, roles.croupier)).toContainText('−26');
+        await expect(seatOf(carol, roles.punter)).toContainText('+26');
+        await expect(table(carol).locator('#game')).toHaveText('Game 2 of 10');
+        for (const participant of everyone) {
+            // eslint-disable-next-line no-await-in-loop -- each page in turn
+            expect(await movedElements(participant.page), participant.name).toEqual([]);
+        }
+    });
+
     test('plays a game on a phone in German, nothing running out of the window', async ({ fixedRoulette }) => {
         const match: Match = await started(fixedRoulette, ['alice', 'bob'], 'carol');
         const carol: RoomParticipant = match.spectator;
@@ -257,19 +320,19 @@ test.describe('Fixed Roulette', () => {
         await expect(status(roles.croupier)).toHaveText('Lege die Kugel und setze: Die Kugel bleibt versiegelt, bis der Pointeur gesetzt hat.');
         await expectInWindow();
         const placeForm: Locator = table(roles.croupier).locator('#place-form');
-        await placeForm.getByRole('radio', { name: '2', exact: true }).click();
-        await typed(placeForm, [0, 15, 50, 0], (pocket: number) => `Chips auf ${ pocket }`);
+        await wheel(roles.croupier).getByRole('radio', { name: '2', exact: true }).click();
+        await typed(wheel(roles.croupier), [0, 15, 50, 0], (pocket: number) => `Chips auf ${ pocket }`);
         await placeForm.getByRole('button', { name: 'Kugel legen und setzen', exact: true }).click();
         await expect(status(carol)).toHaveText(`${ roles.punter.name } setzt…`);
         await expect(table(roles.croupier).locator('app-fixed-wheel')).toContainText('Deine Kugel, versiegelt: Fach 2');
 
         // The punter bets too little first: its form, its hint and its error in the window
         const betForm: Locator = table(roles.punter).locator('#bet-form');
-        await typed(betForm, [0, 35, 0, 0], (pocket: number) => `Chips auf ${ pocket }`);
+        await typed(wheel(roles.punter), [0, 35, 0, 0], (pocket: number) => `Chips auf ${ pocket }`);
         await betForm.getByRole('button', { name: 'Setzen', exact: true }).click();
         await expect(betForm).toContainText(`Setze mindestens 65 Chips, so viel wie ${ roles.croupier.name }`);
         await expectInWindow();
-        await typed(betForm, [0, 35, 0, 30], (pocket: number) => `Chips auf ${ pocket }`);
+        await typed(wheel(roles.punter), [0, 35, 0, 30], (pocket: number) => `Chips auf ${ pocket }`);
         await betForm.getByRole('button', { name: 'Setzen', exact: true }).click();
 
         // The game over, told on 3 lines at most
@@ -409,7 +472,7 @@ test.describe('Fixed Roulette', () => {
 
         // The croupier leaves with its ball sealed, then the punter bets
         await roles.croupier.close();
-        await table(roles.punter).locator('#bet-form').getByRole('spinbutton', { name: 'Chips on 1', exact: true }).fill('40');
+        await wheel(roles.punter).getByRole('spinbutton', { name: 'Chips on 1', exact: true }).fill('40');
         await table(roles.punter).locator('#bet-form').getByRole('button', { name: 'Bet', exact: true }).click();
         await expect(status(carol)).toHaveText(`Waiting for ${ roles.croupier.name } to come back…`);
         await expect(table(carol).locator('#result'))

@@ -202,9 +202,10 @@
     initial-value: 1;
 }
 
-/* The time left to a player in a ring emptying with it (--clock-left, from 1 to 0), red and beating once it runs out */
+/* The time left to a player in a ring emptying with it (--clock-left, from 1 to 0), red and beating once it runs out: as
+   high as a button of a seat, the seat keeping its height with it */
 @utility clock-ring {
-    @apply inline-flex items-center justify-center min-w-12 h-12 px-1 rounded-full text-sm font-bold tabular-nums;
+    @apply inline-flex items-center justify-center size-10 rounded-full text-xs font-bold tabular-nums;
     --clock-color: var(--app-accent-text);
     background:
         radial-gradient(closest-side, var(--app-surface-raised) calc(100% - 4px), transparent calc(100% - 3px)),

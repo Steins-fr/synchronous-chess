@@ -8,7 +8,7 @@ import { Side } from '../../classes/rules/fixed-roulette-rules';
 /**
  * A seat of the table: its player, its part in the game in progress, croupier or punter, and its chips off the table,
  * in a stack and counted, beside what the game settled last gave or took. The seat the game waits for is outlined, a
- * ring widening around it, with the time left to its player
+ * halo beating around it, with the time left to its player
  */
 @Component({
     selector: 'app-fixed-seat',
@@ -19,7 +19,7 @@ import { Side } from '../../classes/rules/fixed-roulette-rules';
         class: 'table-seat',
         '[class.outline-2]': 'awaited()',
         '[class.outline-app-accent-text]': 'awaited()',
-        '[class.acting]': 'awaited()',
+        '[class.action-pulse]': 'awaited()',
     },
 })
 export class FixedSeatComponent {
