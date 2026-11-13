@@ -257,6 +257,38 @@ describe('RoomSetupComponent', () => {
         expect(roomSetupService.setup).toHaveBeenCalledExactlyOnceWith({ type: 'join', game: RoomGame.CHESS, roomName: room.roomName, playerName: 'bob', password: join.password, token: 'token' });
     });
 
+    test('should open the join dialog again, asking another name, once another player holds the name in the room', async () => {
+        // Given
+        await createComponent();
+        await joinOpenRoom('private', { playerName: 'bob', password: 'secret' });
+        vi.mocked(dialogService.open).mockResolvedValueOnce({ playerName: 'carol', password: 'secret' });
+
+        // When: the room given up, already told
+        roomSetupService.roomIsSetup(false);
+        roomSetupService.nameTaken('private');
+        await vi.waitFor(() => expect(roomSetupService.setup).toHaveBeenCalledTimes(2));
+
+        // Then
+        expect(dialogService.open).toHaveBeenNthCalledWith(2, RoomJoinDialog, {
+            title: 'rooms.join.title',
+            inputs: { roomName: 'private', isPrivate: true, playerName: '' },
+        });
+        expect(roomSetupService.setup).toHaveBeenLastCalledWith({ type: 'join', game: RoomGame.CHESS, roomName: 'private', playerName: 'carol', password: 'secret', token: 'token' });
+    });
+
+    test('should not open the join dialog of a room refusing a name once another one was joined', async () => {
+        // Given
+        await createComponent();
+        await joinOpenRoom('public', { playerName: 'bob' });
+
+        // When
+        roomSetupService.nameTaken('private');
+        await fixture.whenStable();
+
+        // Then
+        expect(dialogService.open).toHaveBeenCalledOnce();
+    });
+
     test('should set no room up once a dialog is closed', async () => {
         // Given
         await createComponent();

@@ -2,7 +2,7 @@ import BadRequestException from '@exceptions/bad-request-exception';
 import { isPassword, verifyPassword } from '@helpers/password.helper';
 import { hashSource } from '@helpers/source.helper';
 import { epochSeconds } from '@helpers/time.helper';
-import { hashToken } from '@helpers/token.helper';
+import RoomHelper from '@helpers/room-helper';
 import Room from '@models/room';
 import RoomJoinRequest from '@protocol/requests/room-join-request';
 import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
@@ -30,7 +30,7 @@ export default class RoomPasswordService {
      * password is not the one of the private room (WRONG_PASSWORD)
      */
     public async passwordGuard(room: Room, request: Pick<RoomJoinRequest, 'playerName' | 'password' | 'token'>, sourceIp: string): Promise<void> {
-        if (room.passwordHash === undefined || room.tokenHashes[request.playerName] === hashToken(request.token)) {
+        if (room.passwordHash === undefined || RoomHelper.isTokenOf(room, request.playerName, request.token)) {
             return;
         }
 

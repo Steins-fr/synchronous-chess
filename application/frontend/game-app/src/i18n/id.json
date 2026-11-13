@@ -112,6 +112,7 @@
       "title": "Buat ruang"
     },
     "errors": {
+      "formerConnection": "Koneksi Anda sebelumnya masih ada di ruang: coba lagi sebentar lagi.",
       "fullOrGone": "Ruang ini penuh atau sudah tidak ada.",
       "hostDisconnected": "Tuan rumah ruang ini terputus.",
       "nameInRoom": "Pemain dengan nama ini sudah ada di ruang.",
@@ -160,10 +161,10 @@
       "title": "Tinggalkan permainan?"
     },
     "notifications": {
+      "formerConnection": "Koneksi Anda sebelumnya masih ada di ruang, menyambung ulang…",
       "hostReconnecting": "Tuan rumah ruang sedang menyambung ulang…",
       "hostUnreachable": "Koneksi ke tuan rumah ruang gagal.",
       "joiningAgain": "Koneksi ke tuan rumah ruang gagal, mencoba lagi…",
-      "nameStillInRoom": "Nama ini masih ada di ruang, menyambung ulang…",
       "removed": "Tuan rumah mengeluarkan Anda dari ruang.",
       "roomFull": "Ruang ini penuh.",
       "roomGone": "Ruang ini sudah berakhir atau tidak ada.",

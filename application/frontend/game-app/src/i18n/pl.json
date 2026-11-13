@@ -112,6 +112,7 @@
       "title": "Utwórz pokój"
     },
     "errors": {
+      "formerConnection": "Twoje poprzednie połączenie jest wciąż w pokoju: spróbuj ponownie za chwilę.",
       "fullOrGone": "Pokój jest pełny albo już nie istnieje.",
       "hostDisconnected": "Gospodarz pokoju się rozłączył.",
       "nameInRoom": "Gracz o tej nazwie jest już w pokoju.",
@@ -160,10 +161,10 @@
       "title": "Opuścić partię?"
     },
     "notifications": {
+      "formerConnection": "Twoje poprzednie połączenie jest wciąż w pokoju, ponowne łączenie…",
       "hostReconnecting": "Gospodarz pokoju łączy się ponownie…",
       "hostUnreachable": "Nie udało się połączyć z gospodarzem pokoju.",
       "joiningAgain": "Nie udało się połączyć z gospodarzem pokoju, ponowna próba…",
-      "nameStillInRoom": "Ta nazwa jest wciąż w pokoju, ponowne łączenie…",
       "removed": "Gospodarz usunął cię z pokoju.",
       "roomFull": "Pokój jest pełny.",
       "roomGone": "Ten pokój został zamknięty lub nie istnieje.",

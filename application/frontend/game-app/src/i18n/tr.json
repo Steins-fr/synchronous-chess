@@ -112,6 +112,7 @@
       "title": "Oda oluştur"
     },
     "errors": {
+      "formerConnection": "Önceki bağlantınız hâlâ odada: birazdan tekrar deneyin.",
       "fullOrGone": "Oda dolu ya da artık yok.",
       "hostDisconnected": "Odanın ev sahibinin bağlantısı kesildi.",
       "nameInRoom": "Bu adda bir oyuncu zaten odada.",
@@ -160,10 +161,10 @@
       "title": "Oyundan çıkılsın mı?"
     },
     "notifications": {
+      "formerConnection": "Önceki bağlantınız hâlâ odada, yeniden bağlanılıyor…",
       "hostReconnecting": "Odanın ev sahibi yeniden bağlanıyor…",
       "hostUnreachable": "Odanın ev sahibine bağlanılamadı.",
       "joiningAgain": "Odanın ev sahibine bağlanılamadı, yeniden deneniyor…",
-      "nameStillInRoom": "Bu ad hâlâ odada, yeniden bağlanılıyor…",
       "removed": "Ev sahibi sizi odadan çıkardı.",
       "roomFull": "Oda dolu.",
       "roomGone": "Bu oda kapandı veya mevcut değil.",

@@ -6,15 +6,14 @@ import { RoomApiRequestTypeEnum } from '@protocol/socket-packet-payload.type';
 import { RoomSocketApi } from './room-socket.api';
 
 /**
- * A player reloading the page joins again under its name before the host noticed it left: the websocket API refuses
- * the name until the host removes the former connection, which takes a few seconds. Joins are refused as well while
- * the host reconnects its room to a new socket
+ * A player reloading the page joins again under its name, with its token, before the host noticed it left: the
+ * websocket API refuses its former connection until the host removes it, which takes a few seconds. Joins are refused
+ * as well while the host reconnects its room to a new socket. A name another player holds is refused at once
  */
 const JOIN_RETRY_DELAY: number = 2000;
 const JOIN_RETRIES: number = 10;
 const RETRIED_ERRORS: ReadonlySet<string> = new Set<string>([
-    RoomApiErrorMessage.ALREADY_IN_GAME,
-    RoomApiErrorMessage.ALREADY_IN_QUEUE,
+    RoomApiErrorMessage.FORMER_CONNECTION,
     RoomApiErrorMessage.HOST_DISCONNECTED,
 ]);
 

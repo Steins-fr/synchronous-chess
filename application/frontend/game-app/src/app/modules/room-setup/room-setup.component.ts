@@ -1,5 +1,5 @@
 import { afterNextRender, Component, DOCUMENT, Signal, inject, input, signal, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
@@ -61,8 +61,14 @@ export class RoomSetupComponent {
     private createdRoomName: string = '';
     private playerName: string = storedText(this.window, RoomSetupComponent.PLAYER_NAME_KEY) ?? '';
 
+    // The room joined last through its dialog, with its list: its dialog opens again once the API refused the name
+    private joinedRoom?: { room: Readonly<OpenRoom>, openRooms: OpenRoomsComponent };
+
     // Once the list is rendered: it wakes the database, the room waiting for it
     private readonly urlRoomOpening = afterNextRender(() => void this.openRoomOfUrl());
+    // The room joined through its dialog refusing the name: its dialog asks another one
+    private readonly nameTakenAsking = this.roomSetupService.nameTaken$.pipe(takeUntilDestroyed())
+        .subscribe((roomId: string) => void this.askAnotherName(roomId));
 
     /**
      * The room in the URL of the page: resumed at once with the session the tab kept of it, a reload. Else, a link
@@ -148,7 +154,18 @@ export class RoomSetupComponent {
             // The name the tab kept for the room, its lock not released in time: its token spares the password
             const session: Readonly<RoomSession> | undefined = this.roomSessions.get(room.roomName);
             const token: string | undefined = session?.playerName === join.playerName ? session.token : undefined;
+            this.joinedRoom = { room, openRooms };
             await this.setUpOnceReady(openRooms, 'join', room.roomName, join.playerName, join.password, token);
+        }
+    }
+
+    /** Another player holds the name in the room joined through its dialog, already told: the dialog asks another one */
+    private async askAnotherName(roomId: string): Promise<void> {
+        const joined: { room: Readonly<OpenRoom>, openRooms: OpenRoomsComponent } | undefined = this.joinedRoom;
+
+        if (joined?.room.roomName === roomId) {
+            this.playerName = '';
+            await this.joinOpenRoom(joined.room, joined.openRooms);
         }
     }
 

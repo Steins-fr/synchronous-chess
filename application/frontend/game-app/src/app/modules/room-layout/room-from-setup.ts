@@ -7,6 +7,7 @@ import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import { RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService, { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
+import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { notifyCheatFlags } from './cheat-notifications';
 import { MatchLeaveWarning } from './match-leave-warning';
 import { showRoomInUrl } from './room-url';
@@ -93,6 +94,10 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
                 return;
             }
             giveUp(setup.roomName);
+            // Another player holds the name: the join dialog asks another one
+            if (setup.type === 'join' && isNameTaken(e)) {
+                roomSetupService.nameTaken(setup.roomName);
+            }
         } finally {
             building = undefined;
         }
@@ -116,4 +121,10 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     notifyCheatFlags(() => room()?.cheatFlags());
 
     return room.asReadonly();
+}
+
+/** The API refused the name: another player holds it in the room, or waits to enter it */
+function isNameTaken(error: unknown): boolean {
+    return error instanceof RoomApiError
+        && (error.message === RoomApiErrorMessage.ALREADY_IN_GAME || error.message === RoomApiErrorMessage.ALREADY_IN_QUEUE);
 }

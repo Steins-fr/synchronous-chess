@@ -112,6 +112,7 @@
       "title": "Créer une salle"
     },
     "errors": {
+      "formerConnection": "Votre connexion précédente est encore dans la salle : réessayez dans un instant.",
       "fullOrGone": "La salle est pleine ou elle n'existe plus.",
       "hostDisconnected": "L'hôte de la salle s'est déconnecté.",
       "nameInRoom": "Un joueur de ce nom est déjà dans la salle.",
@@ -160,10 +161,10 @@
       "title": "Quitter la partie ?"
     },
     "notifications": {
+      "formerConnection": "Votre connexion précédente est encore dans la salle, reconnexion en cours…",
       "hostReconnecting": "L'hôte de la salle se reconnecte…",
       "hostUnreachable": "La connexion à l'hôte de la salle a échoué.",
       "joiningAgain": "La connexion à l'hôte de la salle a échoué, nouvelle tentative…",
-      "nameStillInRoom": "Ce nom est encore dans la salle, reconnexion en cours…",
       "removed": "L'hôte vous a exclu de la salle.",
       "roomFull": "La salle est pleine.",
       "roomGone": "Cette salle est terminée ou n'existe pas.",

@@ -150,7 +150,7 @@ export default class RoomManagerService {
         return {
             key: error === RoomApiErrorMessage.HOST_DISCONNECTED
                 ? marker('rooms.notifications.hostReconnecting')
-                : marker('rooms.notifications.nameStillInRoom'),
+                : marker('rooms.notifications.formerConnection'),
         };
     }
 
@@ -177,6 +177,8 @@ export default class RoomManagerService {
                 return marker('rooms.errors.nameInRoom');
             case RoomApiErrorMessage.ALREADY_IN_QUEUE:
                 return marker('rooms.errors.nameWaiting');
+            case RoomApiErrorMessage.FORMER_CONNECTION:
+                return marker('rooms.errors.formerConnection');
             case RoomApiErrorMessage.HOST_DISCONNECTED:
                 return marker('rooms.errors.hostDisconnected');
             case RoomApiErrorMessage.WRONG_PASSWORD:

@@ -112,6 +112,7 @@
       "title": "Criar uma sala"
     },
     "errors": {
+      "formerConnection": "A sua ligação anterior ainda está na sala: tente novamente daqui a pouco.",
       "fullOrGone": "A sala está cheia ou já não existe.",
       "hostDisconnected": "O anfitrião da sala desligou-se.",
       "nameInRoom": "Já existe um jogador com este nome na sala.",
@@ -160,10 +161,10 @@
       "title": "Sair da partida?"
     },
     "notifications": {
+      "formerConnection": "A sua ligação anterior ainda está na sala, a ligar novamente…",
       "hostReconnecting": "O anfitrião da sala está a ligar-se novamente…",
       "hostUnreachable": "A ligação ao anfitrião da sala falhou.",
       "joiningAgain": "A ligação ao anfitrião da sala falhou, nova tentativa…",
-      "nameStillInRoom": "Este nome ainda está na sala, a ligar novamente…",
       "removed": "O anfitrião removeu-o da sala.",
       "roomFull": "A sala está cheia.",
       "roomGone": "Esta sala terminou ou não existe.",

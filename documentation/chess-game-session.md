@@ -226,10 +226,15 @@ The tab keeps the name of the player and the token of its join in its session st
 A page loading with a room in its URL and a session for it joins the room again at once, as `resume`,
 without dialog (`RoomSetupComponent`): the name keeps the key pair, the seat and the stored secrets of the
 player, the token lets the API take it without the password of a private room. The host notices at once
-that its former page left, since the data channels close with it, but the websocket API refuses the name
-(`Already in game`) until the host removed the former connection: the page asks to join again every 2
-seconds, for 20 seconds at most (`joinRoom`), then tells the name is taken. A resume refused for a while only
-(the name still in the room, the API not answering) keeps the session and the URL: a reload tries again.
+that its former page left, since the data channels close with it, but the websocket API refuses its former
+connection, the token the same (`Former connection`), until the host removed it: the page asks to join again
+every 2 seconds, for 20 seconds at most (`joinRoom`), telling the player its previous connection is still in
+the room. A resume refused for a while only (its former connection still in the room, the API not answering)
+keeps the session and the URL: a reload tries again.
+
+A player of another token joining under a name in the room, or waiting to enter it, is refused at once
+(`Already in game`, `Already in queue`): nothing reconnects. Joined through its dialog, the dialog of the
+room opens again, its name emptied, to ask another one.
 
 The host reloading its page is no exception: once the others agree it left, the sequencer takes the
 room over (see [Taking the room over](blockchain-and-anti-cheat.md#changing-the-sequencer)), and the

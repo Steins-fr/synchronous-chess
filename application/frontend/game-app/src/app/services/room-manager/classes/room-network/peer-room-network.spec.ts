@@ -256,7 +256,7 @@ describe('PeerRoomNetwork', () => {
         test('should join again later while the API keeps the former connection in the room', async () => {
             // Given
             vi.spyOn(console, 'error').mockImplementation(() => undefined);
-            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Already in game'));
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Former connection'));
 
             // When
             const rejoining: Promise<RejoinResult> = network.rejoin();
@@ -269,8 +269,8 @@ describe('PeerRoomNetwork', () => {
         test('should tell once the API refuses it joining again for a while', async () => {
             // Given
             vi.mocked(roomSocketApi.send)
-                .mockRejectedValueOnce(new RoomApiError('Already in game'))
-                .mockRejectedValueOnce(new RoomApiError('Already in game'))
+                .mockRejectedValueOnce(new RoomApiError('Former connection'))
+                .mockRejectedValueOnce(new RoomApiError('Former connection'))
                 .mockResolvedValue({ playerName: 'host' });
             const joinDelayed: string[] = [];
             network.joinDelayed$.subscribe((error: string) => joinDelayed.push(error));
@@ -283,7 +283,7 @@ describe('PeerRoomNetwork', () => {
             // Then
             expect(await rejoining).toEqual(RejoinResult.JOINED);
             expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
-            expect(joinDelayed).toEqual(['Already in game']);
+            expect(joinDelayed).toEqual(['Former connection']);
         });
 
         test('should tell the host is gone once the negotiation with the host failed and the API refuses the join', async () => {
@@ -340,7 +340,7 @@ describe('PeerRoomNetwork', () => {
         test('should stop joining again once cleared', async () => {
             // Given
             vi.spyOn(console, 'error').mockImplementation(() => undefined);
-            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Already in game'));
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Former connection'));
             const rejoining: Promise<RejoinResult> = network.rejoin();
             await vi.advanceTimersByTimeAsync(0);
 
@@ -481,7 +481,7 @@ describe('PeerRoomNetwork', () => {
         test('should stop joining the room once cleared, silently', async () => {
             // Given
             vi.spyOn(console, 'error').mockImplementation(() => undefined);
-            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Already in queue'));
+            vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError('Former connection'));
             await vi.advanceTimersByTimeAsync(15_000);
 
             // When

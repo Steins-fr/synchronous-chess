@@ -32,16 +32,9 @@ export default class JoinHandler extends MessageHandler {
         // Before the names of the room: they are told to the players giving its password only
         await this.roomPasswordService.passwordGuard(room, data, this.sourceIp);
         // After the password: a removal is told to the players of the room only. Before the names of the room: the player
-        // removed is refused at once, while the host has not told the API it left yet (ALREADY_IN_GAME, asked again)
+        // removed is refused at once, while the host has not told the API it left yet (FORMER_CONNECTION, asked again)
         await this.roomService.notBannedGuard(room, data.playerName, data.browserId);
-
-        if (RoomHelper.isInGame(room, data.playerName)) {
-            throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_GAME);
-        }
-
-        if (RoomHelper.isInQueue(room, data.playerName)) {
-            throw new BadRequestException(RoomApiErrorMessage.ALREADY_IN_QUEUE);
-        }
+        this.nameGuard(room, data.playerName, data.token);
 
         await this.createConnection(room.id);
         await this.roomService.addPlayerToQueue(data.playerName, this.connectionId, data.token, data.browserId, room);
@@ -52,5 +45,24 @@ export default class JoinHandler extends MessageHandler {
         await this.reply(RoomApiResponseTypeEnum.JOINING_ROOM, {
             playerName: room.hostPlayer,
         });
+    }
+
+    /**
+     * The name is free, or held by the former connection of the player, its token the same: its page reloaded or lost
+     * its connections, refused until the host tells it left (FORMER_CONNECTION, asked again). Another player holding
+     * the name is refused at once: nothing reconnects
+     */
+    private nameGuard(room: Room, playerName: string, token: string): void {
+        const inGame: boolean = RoomHelper.isInGame(room, playerName);
+
+        if (!inGame && !RoomHelper.isInQueue(room, playerName)) {
+            return;
+        }
+
+        if (RoomHelper.isTokenOf(room, playerName, token)) {
+            throw new BadRequestException(RoomApiErrorMessage.FORMER_CONNECTION);
+        }
+
+        throw new BadRequestException(inGame ? RoomApiErrorMessage.ALREADY_IN_GAME : RoomApiErrorMessage.ALREADY_IN_QUEUE);
     }
 }

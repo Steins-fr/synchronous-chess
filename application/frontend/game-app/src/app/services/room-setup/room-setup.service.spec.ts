@@ -56,6 +56,19 @@ describe('RoomSetupService', () => {
         expect(leave).toHaveBeenCalledOnce();
     });
 
+    test('nameTaken should emit the room refusing the name', () => {
+        // Given
+        const service: RoomSetupService = new RoomSetupService();
+        const nameTaken = vi.fn();
+        service.nameTaken$.subscribe(nameTaken);
+
+        // When
+        service.nameTaken('room#000001');
+
+        // Then
+        expect(nameTaken).toHaveBeenCalledExactlyOnceWith('room#000001');
+    });
+
     describe('lock', () => {
         afterEach(() => {
             vi.restoreAllMocks();
