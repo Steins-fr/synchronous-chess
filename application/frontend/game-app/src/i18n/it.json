@@ -112,6 +112,7 @@
       "title": "Crea una stanza"
     },
     "errors": {
+      "formerConnection": "La tua connessione precedente è ancora nella stanza: riprova tra un momento.",
       "fullOrGone": "La stanza è piena o non esiste più.",
       "hostDisconnected": "L'host della stanza si è disconnesso.",
       "nameInRoom": "Un giocatore con questo nome è già nella stanza.",
@@ -160,10 +161,10 @@
       "title": "Lasciare la partita?"
     },
     "notifications": {
+      "formerConnection": "La tua connessione precedente è ancora nella stanza, riconnessione in corso…",
       "hostReconnecting": "L'host della stanza si sta riconnettendo…",
       "hostUnreachable": "La connessione all'host della stanza non è riuscita.",
       "joiningAgain": "La connessione all'host della stanza non è riuscita, nuovo tentativo…",
-      "nameStillInRoom": "Questo nome è ancora nella stanza, riconnessione in corso…",
       "removed": "L'host ti ha rimosso dalla stanza.",
       "roomFull": "La stanza è piena.",
       "roomGone": "Questa stanza è terminata o non esiste.",

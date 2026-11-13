@@ -1,6 +1,6 @@
 import Player from '@models/player';
 import Room from '@models/room';
-import { aRoom, GUEST_CONNECTION } from '@testing/api-mocks';
+import { aRoom, GUEST_CONNECTION, GUEST_TOKEN, HOST_TOKEN } from '@testing/api-mocks';
 import { beforeEach, describe, expect, test } from 'vitest';
 import RoomHelper from './room-helper';
 
@@ -28,6 +28,13 @@ describe('RoomHelper', () => {
         expect(RoomHelper.isInGame(room, 'guest')).toEqual(false);
         expect(RoomHelper.isInQueue(room, 'guest')).toEqual(true);
         expect(RoomHelper.isInQueue(room, 'host')).toEqual(false);
+    });
+
+    test('should tell whether a token is the one of a player of the room', () => {
+        expect(RoomHelper.isTokenOf(room, 'host', HOST_TOKEN)).toEqual(true);
+        expect(RoomHelper.isTokenOf(room, 'guest', GUEST_TOKEN)).toEqual(true);
+        expect(RoomHelper.isTokenOf(room, 'host', GUEST_TOKEN)).toEqual(false);
+        expect(RoomHelper.isTokenOf(room, 'unknown', HOST_TOKEN)).toEqual(false);
     });
 
     test('should find no player in a missing list', () => {

@@ -9,7 +9,7 @@ import { SLOW, test } from './test-room';
 test.describe('Room participants', () => {
     // Reconnections wait for the departures, the joins refused for 20 seconds and the socket replacements
     const RECONNECTION_TIMEOUT: number = 60_000;
-    // The players joining under a name in the room are refused for 20 seconds, as a player reloading its page
+    // The players joining a room waiting for its host are refused for 20 seconds
     const REFUSED_JOIN_TIMEOUT: number = 40_000;
     // Shorter than the 15 seconds a negotiation takes to time out
     const NEGOTIATION_TIMEOUT: number = 10_000;
@@ -60,19 +60,27 @@ test.describe('Room participants', () => {
         await Promise.all(everyone.map((participant: RoomParticipant) => participant.expectMessage('dave', 'hello')));
     });
 
-    test('refuses a player joining under the name of a participant, the participant staying in the room', SLOW, async ({ room }) => {
+    test('refuses at once a player joining under the name of a participant, asking another name, the participant staying in the room', async ({ room }) => {
         // Given
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
-        // When
-        const impostor: RoomParticipant = await room.join('bob');
+        const dave: RoomParticipant = await room.visit('dave');
 
-        // Then
-        await impostor.expectNotification('A player of this name is already in the room.', REFUSED_JOIN_TIMEOUT);
-        await impostor.expectSetupForm();
+        // When
+        await dave.joinListedRoom(room.id, undefined, 'bob');
+
+        // Then: nothing reconnects
+        await dave.expectNotification('A player of this name is already in the room.');
+        await dave.expectJoinDialog(room.id, '');
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'])));
         await alice.sendMessage('still there?');
         await bob.expectMessage('alice', 'still there?');
+
+        // When: under another name
+        await dave.sendJoinDialog();
+
+        // Then
+        await Promise.all([alice, bob, carol, dave].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol', 'dave'])));
     });
 
     test('tells a player the room is full, the participants not waiting for it', async ({ room }) => {

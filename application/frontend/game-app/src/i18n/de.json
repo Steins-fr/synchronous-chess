@@ -112,6 +112,7 @@
       "title": "Raum erstellen"
     },
     "errors": {
+      "formerConnection": "Deine vorherige Verbindung ist noch im Raum: versuche es gleich noch einmal.",
       "fullOrGone": "Der Raum ist voll oder existiert nicht mehr.",
       "hostDisconnected": "Der Gastgeber des Raums hat die Verbindung getrennt.",
       "nameInRoom": "Ein Spieler mit diesem Namen ist bereits im Raum.",
@@ -160,10 +161,10 @@
       "title": "Partie verlassen?"
     },
     "notifications": {
+      "formerConnection": "Deine vorherige Verbindung ist noch im Raum, Verbindung wird wiederhergestellt…",
       "hostReconnecting": "Der Gastgeber des Raums verbindet sich neu…",
       "hostUnreachable": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen.",
       "joiningAgain": "Die Verbindung zum Gastgeber des Raums ist fehlgeschlagen, neuer Versuch…",
-      "nameStillInRoom": "Dieser Name ist noch im Raum, Verbindung wird wiederhergestellt…",
       "removed": "Der Gastgeber hat dich aus dem Raum entfernt.",
       "roomFull": "Der Raum ist voll.",
       "roomGone": "Dieser Raum ist beendet oder existiert nicht.",

@@ -1,3 +1,4 @@
+import { hashToken } from '@helpers/token.helper';
 import Player from '@models/player';
 import Room from '@models/room';
 
@@ -42,5 +43,10 @@ export default abstract class RoomHelper {
 
     public static isInGame(room: Room, playerName: string): boolean {
         return RoomHelper.findPlayerByName(room.players, playerName) !== null;
+    }
+
+    /** The token is the one the player of that name joined the room with, or created it with */
+    public static isTokenOf(room: Room, playerName: string, token: string): boolean {
+        return room.tokenHashes[playerName] === hashToken(token);
     }
 }

@@ -197,10 +197,13 @@ export class RoomParticipant {
         await expect(dialog.getByRole('textbox', { name: 'Player name' })).toHaveValue(playerName);
     }
 
-    /** Sends the join dialog open, under the name of the player, with the password of a private room */
-    public async sendJoinDialog(password?: string): Promise<void> {
+    /**
+     * Sends the join dialog open, with the password of a private room
+     * @param playerName the name typed, the one of the player by default
+     */
+    public async sendJoinDialog(password?: string, playerName: string = this.name): Promise<void> {
         const dialog: Locator = this.page.locator('app-room-join-dialog');
-        await dialog.getByRole('textbox', { name: 'Player name' }).fill(this.name);
+        await dialog.getByRole('textbox', { name: 'Player name' }).fill(playerName);
         if (password !== undefined) {
             await dialog.getByLabel('Password').fill(password);
         }
@@ -217,14 +220,14 @@ export class RoomParticipant {
      * full or waiting for its host is listed too, its join retried by the page until it has a place or its host is back.
      * The dialog asks the name of the player, and the password of a private room
      */
-    public async joinListedRoom(roomName: string, password?: string): Promise<void> {
+    public async joinListedRoom(roomName: string, password?: string, playerName: string = this.name): Promise<void> {
         const joinButton: Locator = this.page.getByRole('button', { name: `Join the room ${ roomName }`, exact: true });
         await expect(async () => {
             await this.page.getByRole('button', { name: 'Refresh the rooms' }).click();
             await expect(joinButton).toBeVisible({ timeout: 2000 });
         }).toPass({ timeout: RoomParticipant.LISTING_TIMEOUT });
         await joinButton.click();
-        await this.sendJoinDialog(password);
+        await this.sendJoinDialog(password, playerName);
     }
 
     /** A room of the list of the open rooms, private or public */

@@ -33,6 +33,10 @@ export default class RoomSetupService {
     /** The player leaves the room of the page, staying on it */
     public readonly leave$ = this.leaveSubject.asObservable();
 
+    private readonly nameTakenSubject = new Subject<string>();
+    /** The id of a room joined under a name another player holds in it: the page asks another name */
+    public readonly nameTaken$ = this.nameTakenSubject.asObservable();
+
     public setup(setup: RoomSetupInterface): void {
         this.loadingSubject.next(true);
         this.setupSubject.next(setup);
@@ -40,6 +44,10 @@ export default class RoomSetupService {
 
     public leave(): void {
         this.leaveSubject.next();
+    }
+
+    public nameTaken(roomId: string): void {
+        this.nameTakenSubject.next(roomId);
     }
 
     // The lock of the player in the room the page holds, held or asked, and its name: a page holds one room at a time

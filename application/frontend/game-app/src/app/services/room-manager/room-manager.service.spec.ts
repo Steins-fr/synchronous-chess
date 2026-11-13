@@ -210,7 +210,7 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
-        { error: RoomApiErrorMessage.ALREADY_IN_GAME, message: { key: 'rooms.notifications.nameStillInRoom' } },
+        { error: RoomApiErrorMessage.FORMER_CONNECTION, message: { key: 'rooms.notifications.formerConnection' } },
     ])('should tell a peer the API refuses it joining the room again for a while, $error', async ({ error, message }) => {
         // Given
         vi.mocked(roomSocketApi.send).mockResolvedValue({ playerName: 'host' });
@@ -251,12 +251,12 @@ describe('RoomManagerService', () => {
         expect(notificationService.error).toHaveBeenCalledWith({ key: 'rooms.errors.fullOrGone' });
     });
 
-    test('should join again while its name is still in the room, as after a reload of the page', async () => {
+    test('should join again while its former connection is still in the room, as after a reload of the page', async () => {
         // Given the host has not noticed yet the former connection of the player left
         vi.useFakeTimers();
         vi.mocked(roomSocketApi.send)
-            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.ALREADY_IN_GAME))
-            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.ALREADY_IN_QUEUE))
+            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.FORMER_CONNECTION))
+            .mockRejectedValueOnce(new Error(RoomApiErrorMessage.FORMER_CONNECTION))
             .mockResolvedValue({ playerName: 'host' });
 
         // When
@@ -266,7 +266,7 @@ describe('RoomManagerService', () => {
 
         // Then
         expect(roomSocketApi.send).toHaveBeenCalledTimes(3);
-        expect(notificationService.info).toHaveBeenCalledTimes(1);
+        expect(notificationService.info).toHaveBeenCalledExactlyOnceWith({ key: 'rooms.notifications.formerConnection' });
         expect(notificationService.error).not.toHaveBeenCalled();
         expect(room.roomConnection).toBeInstanceOf(PeerRoomNetwork);
     });
@@ -406,7 +406,7 @@ describe('RoomManagerService', () => {
     test('should stop joining once the page left, without notifying it', async () => {
         // Given
         vi.useFakeTimers();
-        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.ALREADY_IN_GAME));
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new Error(RoomApiErrorMessage.FORMER_CONNECTION));
         const left: AbortController = new AbortController();
         const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer', token: 'token' }, 2, { move: BlockChainName.CHESS }, left.signal);
         const rejected = expect(build).rejects.toThrow(DOMException);
@@ -459,8 +459,7 @@ describe('RoomManagerService', () => {
     });
 
     test.each([
-        { error: RoomApiErrorMessage.ALREADY_IN_GAME, notification: { key: 'rooms.errors.nameInRoom' } },
-        { error: RoomApiErrorMessage.ALREADY_IN_QUEUE, notification: { key: 'rooms.errors.nameWaiting' } },
+        { error: RoomApiErrorMessage.FORMER_CONNECTION, notification: { key: 'rooms.errors.formerConnection' } },
         { error: RoomApiErrorMessage.HOST_DISCONNECTED, notification: { key: 'rooms.errors.hostDisconnected' } },
     ])('should give up joining after 20 seconds, on $error', async ({ error, notification }) => {
         // Given
@@ -476,6 +475,23 @@ describe('RoomManagerService', () => {
         await rejected;
         expect(roomSocketApi.send).toHaveBeenCalledTimes(11);
         expect(notificationService.error).toHaveBeenCalledWith(notification);
+    });
+
+    test.each([
+        { error: RoomApiErrorMessage.ALREADY_IN_GAME, notification: { key: 'rooms.errors.nameInRoom' } },
+        { error: RoomApiErrorMessage.ALREADY_IN_QUEUE, notification: { key: 'rooms.errors.nameWaiting' } },
+    ])('should refuse at once a name another player holds, on $error', async ({ error, notification }) => {
+        // Given
+        vi.mocked(roomSocketApi.send).mockRejectedValue(new RoomApiError(error));
+
+        // When
+        const build = service.buildBlockRoom({ type: 'join', game: RoomGame.CHESS, roomName: 'room', playerName: 'peer', token: 'token' }, 2, { move: BlockChainName.CHESS });
+
+        // Then: nothing reconnects
+        await expect(build).rejects.toThrow(error);
+        expect(roomSocketApi.send).toHaveBeenCalledOnce();
+        expect(notificationService.info).not.toHaveBeenCalled();
+        expect(notificationService.error).toHaveBeenCalledExactlyOnceWith(notification);
     });
 
     test('should not join again on a failure which is not an error', async () => {

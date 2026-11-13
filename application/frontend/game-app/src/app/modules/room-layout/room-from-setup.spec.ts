@@ -156,6 +156,43 @@ describe('roomFromSetup', () => {
         expect(sessions.get('room#000001')).toBeUndefined();
     });
 
+    test.each([RoomApiErrorMessage.ALREADY_IN_GAME, RoomApiErrorMessage.ALREADY_IN_QUEUE])('should ask another name for a room joined under a name another player holds: %s', async (error: RoomApiErrorMessage) => {
+        // Given
+        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(new RoomApiError(error));
+        const nameTaken: string[] = [];
+        roomSetupService.nameTaken$.subscribe((roomId: string) => nameTaken.push(roomId));
+        const roomIsSetup: boolean[] = [];
+        roomSetupService.roomIsSetup$.subscribe((value: boolean) => roomIsSetup.push(value));
+
+        // When
+        roomSetupService.setup(setup);
+
+        // Then: once the room given up, its form available again
+        await vi.waitFor(() => expect(nameTaken).toEqual(['room#000001']));
+        expect(roomIsSetup).toEqual([false, false]);
+    });
+
+    test.each<[string, RoomSetupInterface, Error]>([
+        ['a room resumed under a name another player took', { ...setup, type: 'resume' }, new RoomApiError(RoomApiErrorMessage.ALREADY_IN_GAME)],
+        ['a room created', { ...setup, type: 'create' }, new RoomApiError(RoomApiErrorMessage.ALREADY_IN_GAME)],
+        ['a room joined refused otherwise', setup, new RoomApiError(RoomApiErrorMessage.WRONG_PASSWORD)],
+        ['a room joined failed', setup, new Error(RoomApiErrorMessage.ALREADY_IN_GAME)],
+    ])('should ask no other name for %s', async (_case: string, given: RoomSetupInterface, error: Error) => {
+        // Given
+        vi.mocked(roomManagerService.buildBlockRoom).mockRejectedValue(error);
+        const nameTaken = vi.fn();
+        roomSetupService.nameTaken$.subscribe(nameTaken);
+        const loading: boolean[] = [];
+        roomSetupService.loading$.subscribe((value: boolean) => loading.push(value));
+
+        // When
+        roomSetupService.setup(given);
+        await vi.waitFor(() => expect(loading).toEqual([false, true, false]));
+
+        // Then
+        expect(nameTaken).not.toHaveBeenCalled();
+    });
+
     test('should keep the URL of a room not built once the page left', async () => {
         // Given
         await router.navigateByUrl('/?room=room%23000001');
@@ -219,7 +256,7 @@ describe('roomFromSetup', () => {
     });
 
     test.each<[string, Error]>([
-        ['its name still in the room', new RoomApiError(RoomApiErrorMessage.ALREADY_IN_GAME)],
+        ['its former connection still in the room', new RoomApiError(RoomApiErrorMessage.FORMER_CONNECTION)],
         ['the API not answering', new Error('Timeout')],
     ])('should keep the session and the URL of a room resumed refused for a while only: %s', async (_case: string, error: Error) => {
         // Given
