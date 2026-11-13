@@ -1,13 +1,12 @@
 import { DestroyRef, effect, inject, Provider, Signal, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { isTemporaryJoinError } from '@app/services/room-api/join-room';
+import { isNameTakenError, isTemporaryJoinError } from '@app/services/room-api/join-room';
 import { RoomApiError, RoomSocketApi } from '@app/services/room-api/room-socket.api';
 import { BlockRoom, NonEmptyBlockChainRouting } from '@app/services/room-manager/classes/room/block-room/block-room';
 import RoomManagerService from '@app/services/room-manager/room-manager.service';
 import { RoomSessionStore } from '@app/services/room-session/room-session.store';
 import RoomSetupService, { RoomSetupInterface } from '@app/services/room-setup/room-setup.service';
-import { RoomApiErrorMessage } from '@protocol/room-api-error-message.enum';
 import { notifyCheatFlags } from './cheat-notifications';
 import { MatchLeaveWarning } from './match-leave-warning';
 import { showRoomInUrl } from './room-url';
@@ -86,8 +85,8 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             if (destroyed.signal.aborted) {
                 return;
             }
-            // A room resumed refused for a while only (its name still in it, the API not answering): its session and URL
-            // kept, a reload resumes it
+            // A room resumed refused for a while only (its former connection still in it, the API not answering): its
+            // session and URL kept, a reload resumes it
             if (setup.type === 'resume' && !(e instanceof RoomApiError && !isTemporaryJoinError(e))) {
                 roomSetupService.roomIsSetup(false);
                 roomSetupService.releaseLock();
@@ -95,7 +94,7 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
             }
             giveUp(setup.roomName);
             // Another player holds the name: the join dialog asks another one
-            if (setup.type === 'join' && isNameTaken(e)) {
+            if (setup.type === 'join' && isNameTakenError(e)) {
                 roomSetupService.nameTaken(setup.roomName);
             }
         } finally {
@@ -121,10 +120,4 @@ export function roomFromSetup<M extends object>(maxPlayer: number, routing: NonE
     notifyCheatFlags(() => room()?.cheatFlags());
 
     return room.asReadonly();
-}
-
-/** The API refused the name: another player holds it in the room, or waits to enter it */
-function isNameTaken(error: unknown): boolean {
-    return error instanceof RoomApiError
-        && (error.message === RoomApiErrorMessage.ALREADY_IN_GAME || error.message === RoomApiErrorMessage.ALREADY_IN_QUEUE);
 }

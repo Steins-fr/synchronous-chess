@@ -151,9 +151,13 @@ export class RoomSetupComponent {
         });
 
         if (join) {
-            // The name the tab kept for the room, its lock not released in time: its token spares the password
+            // The name the tab kept for the room, its lock not released in time: its token spares the password. Not while
+            // another tab holds the room under it (a duplicated tab, its session copied): the API would take the join for
+            // the former connection of the player, asked again for a while, when another player holds the name
             const session: Readonly<RoomSession> | undefined = this.roomSessions.get(room.roomName);
-            const token: string | undefined = session?.playerName === join.playerName ? session.token : undefined;
+            const token: string | undefined = session?.playerName === join.playerName && !await RoomLocks.isHeld(room.roomName, join.playerName)
+                ? session.token
+                : undefined;
             this.joinedRoom = { room, openRooms };
             await this.setUpOnceReady(openRooms, 'join', room.roomName, join.playerName, join.password, token);
         }

@@ -460,13 +460,16 @@ describe('RoomSetupComponent', () => {
             expect(releaseLock).toHaveBeenCalledOnce();
         });
 
-        test.each<[string, string]>([
-            ['alice', 'kept'],
-            ['bob', 'token'],
-        ])('should join under %s with the token %s, the token of the session of the tab under its name only', async (playerName: string, token: string) => {
+        test.each<[string, boolean, string]>([
+            ['alice', false, 'kept'],
+            ['bob', false, 'token'],
+            // A duplicated tab, its session copied, the first tab holding the room under the name
+            ['alice', true, 'token'],
+        ])('should join under %s (held by another tab: %s) with the token %s, the token of the session of the tab under its name only, not held by another tab', async (playerName: string, held: boolean, token: string) => {
             // Given the lock of the reloaded page not released in time
             keepSession();
             vi.mocked(RoomSetupService.prototype.holdLock).mockResolvedValue(false);
+            vi.spyOn(RoomLocks, 'isHeld').mockResolvedValue(held);
             await createComponent(true, url);
             vi.mocked(dialogService.open).mockResolvedValueOnce({ playerName });
 

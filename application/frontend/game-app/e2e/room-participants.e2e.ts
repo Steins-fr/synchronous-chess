@@ -64,15 +64,23 @@ test.describe('Room participants', () => {
         // Given
         const [alice, bob, carol]: RoomParticipant[] = await room.connect('alice', 'bob', 'carol');
 
+        const dave: RoomParticipant = await room.visit('dave');
+
         // When
-        const impostor: RoomParticipant = await room.join('bob');
+        await dave.joinListedRoom(room.id, undefined, 'bob');
 
         // Then: nothing reconnects
-        await impostor.expectNotification('A player of this name is already in the room.');
-        await impostor.expectJoinDialog(room.id, '');
+        await dave.expectNotification('A player of this name is already in the room.');
+        await dave.expectJoinDialog(room.id, '');
         await Promise.all([alice, bob, carol].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol'])));
         await alice.sendMessage('still there?');
         await bob.expectMessage('alice', 'still there?');
+
+        // When: under another name
+        await dave.sendJoinDialog();
+
+        // Then
+        await Promise.all([alice, bob, carol, dave].map((participant: RoomParticipant) => participant.expectConnected(['alice', 'bob', 'carol', 'dave'])));
     });
 
     test('tells a player the room is full, the participants not waiting for it', async ({ room }) => {
